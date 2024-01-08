@@ -27,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
@@ -38,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.*
@@ -50,7 +50,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMess
   /**
    * The user that made the request.
    */
-  def requestingUser: UserADM
+  def requestingUser: User
 }
 
 /**
@@ -73,7 +73,7 @@ case class ResourcesGetRequestV2(
   withDeleted: Boolean = true,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[Rendering] = Set.empty,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -88,7 +88,7 @@ case class ResourcesPreviewGetRequestV2(
   resourceIris: Seq[IRI],
   withDeletedResource: Boolean = true,
   targetSchema: ApiV2Schema,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -100,7 +100,7 @@ case class ResourcesPreviewGetRequestV2(
  */
 case class ResourceIIIFManifestGetRequestV2(
   resourceIri: IRI,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -131,7 +131,7 @@ case class ResourceVersionHistoryGetRequestV2(
   withDeletedResource: Boolean = false,
   startDate: Option[Instant] = None,
   endDate: Option[Instant] = None,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -142,7 +142,7 @@ case class ResourceVersionHistoryGetRequestV2(
  */
 case class ResourceHistoryEventsGetRequestV2(
   resourceIri: IRI,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   Iri
@@ -161,7 +161,7 @@ case class ResourceHistoryEventsGetRequestV2(
  */
 case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2 {
   Iri
     .validateAndEscapeIri(projectIri)
@@ -249,7 +249,7 @@ case class ResourceTEIGetRequestV2(
   mappingIri: Option[IRI],
   gravsearchTemplateIri: Option[IRI],
   headerXSLTIri: Option[IRI],
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -657,7 +657,7 @@ case class CreateResourceV2(
  */
 case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID,
   ingestState: AssetIngestState = AssetInTemp
 ) extends ResourcesResponderRequestV2
@@ -681,7 +681,7 @@ object CreateResourceRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
+    requestingUser: User,
     ingestState: AssetIngestState = AssetInTemp
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
@@ -877,7 +877,7 @@ case class UpdateResourceMetadataRequestV2(
   maybeLabel: Option[String] = None,
   maybePermissions: Option[String] = None,
   maybeNewModificationDate: Option[Instant] = None,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
@@ -893,7 +893,7 @@ object UpdateResourceMetadataRequestV2 {
    */
   def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[StringFormatter & IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
     val body = jsonLDDocument.body
@@ -1073,7 +1073,7 @@ case class DeleteOrEraseResourceRequestV2(
   maybeDeleteDate: Option[Instant] = None,
   maybeLastModificationDate: Option[Instant] = None,
   erase: Boolean = false,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
@@ -1089,7 +1089,7 @@ object DeleteOrEraseResourceRequestV2 {
    */
   def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[StringFormatter & IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
@@ -1333,7 +1333,7 @@ case class GraphDataGetRequestV2(
   inbound: Boolean,
   outbound: Boolean,
   excludeProperty: Option[SmartIri],
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ResourcesResponderRequestV2 {
   if (!(inbound || outbound)) {
     throw BadRequestException("No link direction selected")

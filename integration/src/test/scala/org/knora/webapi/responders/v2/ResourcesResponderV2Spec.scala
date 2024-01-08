@@ -23,7 +23,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -38,6 +37,7 @@ import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -479,7 +479,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   )
 
-  private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
+  private def getResource(resourceIri: IRI, requestingUser: User): ReadResourceV2 = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -497,7 +497,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     outputResource: ReadResourceV2,
     defaultResourcePermissions: String,
     defaultValuePermissions: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): Unit = {
     assert(outputResource.resourceIri == inputResourceIri)
     assert(outputResource.resourceClassIri == inputResource.resourceClassIri)

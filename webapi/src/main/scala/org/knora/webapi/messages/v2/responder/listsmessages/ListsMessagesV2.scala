@@ -13,12 +13,12 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
@@ -31,7 +31,7 @@ sealed trait ListsResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
  * @param listIri              the IRI of the list (Iri of the list's root node).
  * @param requestingUser       the user making the request.
  */
-case class ListGetRequestV2(listIri: IRI, requestingUser: UserADM) extends ListsResponderRequestV2
+case class ListGetRequestV2(listIri: IRI, requestingUser: User) extends ListsResponderRequestV2
 
 /**
  * An abstract trait providing a convenience method for language handling.
@@ -187,7 +187,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
  *
  * @param nodeIri              the IRI of the node to retrieve.
  */
-case class NodeGetRequestV2(nodeIri: IRI, requestingUser: UserADM) extends ListsResponderRequestV2
+case class NodeGetRequestV2(nodeIri: IRI, requestingUser: User) extends ListsResponderRequestV2
 
 /**
  * Represents a response to a [[NodeGetRequestV2]].

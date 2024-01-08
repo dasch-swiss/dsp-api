@@ -20,13 +20,13 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.event.LogSource
 
@@ -856,7 +856,7 @@ final case class InferringGravsearchTypeInspector(
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[IntermediateTypeInspectionResult] = {
     logger.debug("========== Starting type inference ==========")
 
@@ -895,7 +895,7 @@ final case class InferringGravsearchTypeInspector(
    */
   def getUsageIndexAndEntityInfos(
     whereClause: WhereClause,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[(UsageIndex, EntityInfoGetResponseV2)] =
     for {
       // Make an index of entity usage in the query.

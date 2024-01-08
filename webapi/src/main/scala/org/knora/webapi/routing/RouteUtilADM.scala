@@ -27,6 +27,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Convenience methods for Knora Admin routes.
@@ -54,7 +55,7 @@ object RouteUtilADM {
         group.copy(project = projectExternal)
       }
 
-      def userAsExternalRepresentation(user: UserADM): UserADM = {
+      def userAsExternalRepresentation(user: User): User = {
         val groupsExternal   = user.groups.map(groupAsExternalRepresentation)
         val projectsExternal = user.projects.map(projectAsExternalRepresentation)
         user.copy(groups = groupsExternal, projects = projectsExternal)
@@ -130,9 +131,9 @@ object RouteUtilADM {
   private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
     ZIO.fromFuture(_ => ctx.complete(response))
 
-  case class IriUserUuid(iri: IRI, user: UserADM, uuid: UUID)
-  case class IriUser(iri: IRI, user: UserADM)
-  case class UserUuid(user: UserADM, uuid: UUID)
+  case class IriUserUuid(iri: IRI, user: User, uuid: UUID)
+  case class IriUser(iri: IRI, user: User)
+  case class UserUuid(user: User, uuid: UUID)
 
   def getIriUserUuid(
     iri: String,

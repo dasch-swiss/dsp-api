@@ -16,14 +16,14 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
 
   private val activeNormalUser =
-    UserADM("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
+    User("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
 
   private val inactiveNormalUser = activeNormalUser.copy(status = false)
 

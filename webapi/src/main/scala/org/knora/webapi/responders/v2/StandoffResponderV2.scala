@@ -29,7 +29,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
@@ -49,6 +48,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -173,7 +173,7 @@ final case class StandoffResponderV2Live(
    */
   private def getXSLTransformation(
     xslTransformationIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[GetXSLTransformationResponseV2] = {
 
     val xsltUrlFuture = for {
@@ -275,7 +275,7 @@ final case class StandoffResponderV2Live(
     label: String,
     projectIri: SmartIri,
     mappingName: String,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[CreateMappingResponseV2] = {
 
@@ -284,7 +284,7 @@ final case class StandoffResponderV2Live(
       label: String,
       mappingIri: IRI,
       namedGraph: String,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[CreateMappingResponseV2] = {
 
       val createMappingFuture = for {
@@ -753,7 +753,7 @@ final case class StandoffResponderV2Live(
    */
   private def getMappingV2(
     mappingIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[GetMappingResponseV2] = {
 
     val mappingFuture: Task[GetMappingResponseV2] =
@@ -909,7 +909,7 @@ final case class StandoffResponderV2Live(
    */
   private def getStandoffEntitiesFromMappingV2(
     mappingXMLtoStandoff: MappingXMLtoStandoff,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[StandoffEntityInfoGetResponseV2] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

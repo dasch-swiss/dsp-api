@@ -19,11 +19,11 @@ import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -546,7 +546,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(4)
 
         clientTestDataCollector.addFile(
@@ -569,7 +569,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(4)
       }
 
@@ -581,7 +581,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(4)
       }
 
@@ -593,7 +593,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -615,7 +615,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
       }
 
@@ -627,7 +627,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
       }
     }

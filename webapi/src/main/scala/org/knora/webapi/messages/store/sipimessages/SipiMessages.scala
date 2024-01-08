@@ -9,9 +9,9 @@ import org.apache.pekko
 import spray.json.*
 
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
@@ -29,7 +29,7 @@ sealed trait SipiRequest extends IIIFRequest
  * @param prefix           the prefix under which the file should be stored.
  * @param requestingUser   the user making the request.
  */
-case class MoveTemporaryFileToPermanentStorageRequest(internalFilename: String, prefix: String, requestingUser: UserADM)
+case class MoveTemporaryFileToPermanentStorageRequest(internalFilename: String, prefix: String, requestingUser: User)
     extends SipiRequest
 
 /**
@@ -38,7 +38,7 @@ case class MoveTemporaryFileToPermanentStorageRequest(internalFilename: String, 
  * @param internalFilename the name of the file.
  * @param requestingUser   the user making the request.
  */
-case class DeleteTemporaryFileRequest(internalFilename: String, requestingUser: UserADM) extends SipiRequest
+case class DeleteTemporaryFileRequest(internalFilename: String, requestingUser: User) extends SipiRequest
 
 /**
  * Asks Sipi for a text file. Currently only for UTF8 encoded text files.
@@ -46,7 +46,7 @@ case class DeleteTemporaryFileRequest(internalFilename: String, requestingUser: 
  * @param fileUrl        the URL pointing to the file.
  * @param requestingUser the user making the request.
  */
-case class SipiGetTextFileRequest(fileUrl: String, requestingUser: UserADM, senderName: String)
+case class SipiGetTextFileRequest(fileUrl: String, requestingUser: User, senderName: String)
     extends SipiRequest
     with RequestWithSender
 

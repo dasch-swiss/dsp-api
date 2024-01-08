@@ -13,7 +13,6 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -24,6 +23,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectU
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
@@ -36,31 +36,31 @@ trait ProjectADMRestService {
 
   def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
 
-  def createProject(createReq: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM]
+  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM]
 
   def updateProject(
     id: IriIdentifier,
     updateReq: ProjectUpdateRequest,
-    user: UserADM
+    user: User
   ): Task[ProjectOperationResponseADM]
 
-  def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM]
+  def deleteProject(id: IriIdentifier, user: User): Task[ProjectOperationResponseADM]
 
-  def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM]
+  def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM]
 
-  def exportProject(shortcode: String, user: UserADM): Task[Unit]
-  def exportProject(id: ShortcodeIdentifier, user: UserADM): Task[Unit]
+  def exportProject(shortcode: String, user: User): Task[Unit]
+  def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit]
 
-  def importProject(shortcode: String, user: UserADM): Task[ProjectImportResponse]
+  def importProject(shortcode: String, user: User): Task[ProjectImportResponse]
 
-  def importProject(shortcode: ShortcodeIdentifier, user: UserADM): Task[ProjectImportResponse] =
+  def importProject(shortcode: ShortcodeIdentifier, user: User): Task[ProjectImportResponse] =
     importProject(shortcode.value.value, user)
 
-  def listExports(user: UserADM): Task[Chunk[ProjectExportInfoResponse]]
+  def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]]
 
-  def getProjectMembers(user: UserADM, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM]
+  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM]
 
-  def getProjectAdminMembers(user: UserADM, id: ProjectIdentifierADM): Task[ProjectAdminMembersGetResponseADM]
+  def getProjectAdminMembers(user: User, id: ProjectIdentifierADM): Task[ProjectAdminMembersGetResponseADM]
 
   def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM]
 
@@ -70,7 +70,7 @@ trait ProjectADMRestService {
 
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
-    user: UserADM,
+    user: User,
     setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM]
 }
@@ -109,7 +109,7 @@ final case class ProjectsADMRestServiceLive(
    * Creates a project from the given payload.
    *
    * @param createReq the [[ProjectCreateRequest]] from which to create the project
-   * @param user      the [[UserADM]] making the request
+   * @param user      the [[User]] making the request
    * @return
    *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
@@ -117,21 +117,21 @@ final case class ProjectsADMRestServiceLive(
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(createReq: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM] =
+  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] =
     ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
 
   /**
    * Deletes the project by its [[ProjectIri]].
    *
-   * @param id           the [[ProjectIri]] of the project
-   * @param user                 the [[UserADM]] making the request
+   * @param id   the [[ProjectIri]] of the project
+   * @param user the [[User]] making the request
    * @return
    *     '''success''': a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM] = {
+  def deleteProject(id: IriIdentifier, user: User): Task[ProjectOperationResponseADM] = {
     val updatePayload = ProjectUpdateRequest(status = Some(Status.Inactive))
     for {
       apiId    <- Random.nextUUID
@@ -142,9 +142,9 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Updates a project, identified by its [[ProjectIri]].
    *
-   * @param id           the [[ProjectIri]] of the project
-   * @param updateReq              the [[ProjectUpdateRequest]]
-   * @param user       the [[UserADM]] making the request
+   * @param id        the [[ProjectIri]] of the project
+   * @param updateReq the [[ProjectUpdateRequest]]
+   * @param user      the [[User]] making the request
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
    *
@@ -154,22 +154,22 @@ final case class ProjectsADMRestServiceLive(
   def updateProject(
     id: IriIdentifier,
     updateReq: ProjectUpdateRequest,
-    user: UserADM
+    user: User
   ): Task[ProjectOperationResponseADM] =
     Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].
    *
-   * @param id    the [[IriIdentifier]] of the project
-   * @param user       the [[UserADM]] making the request
+   * @param id   the [[IriIdentifier]] of the project
+   * @param user the [[User]] making the request
    * @return
    *     '''success''': data of the project as [[ProjectDataGetResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM] =
+  def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM] =
     for {
       project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
       _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
@@ -179,22 +179,22 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
    *
-   * @param id    the [[ProjectIdentifierADM]] of the project
-   * @param user       the [[UserADM]] making the request
+   * @param id   the [[ProjectIdentifierADM]] of the project
+   * @param user the [[User]] making the request
    * @return
    *     '''success''': list of project members as [[ProjectMembersGetResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getProjectMembers(user: UserADM, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] =
+  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] =
     responder.projectMembersGetRequestADM(id, user)
 
   /**
    * Returns all project admins of a specific project, identified by its [[ProjectIdentifierADM]].
    *
-   * @param id    the [[ProjectIdentifierADM]] of the project
-   * @param user       the [[UserADM]] making the request
+   * @param id   the [[ProjectIdentifierADM]] of the project
+   * @param user the [[User]] making the request
    * @return
    *     '''success''': list of project admins as [[ProjectAdminMembersGetResponseADM]]
    *
@@ -202,7 +202,7 @@ final case class ProjectsADMRestServiceLive(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def getProjectAdminMembers(
-    user: UserADM,
+    user: User,
     id: ProjectIdentifierADM
   ): Task[ProjectAdminMembersGetResponseADM] =
     responder.projectAdminMembersGetRequestADM(id, user)
@@ -251,7 +251,7 @@ final case class ProjectsADMRestServiceLive(
    */
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
-    user: UserADM,
+    user: User,
     setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
@@ -261,10 +261,10 @@ final case class ProjectsADMRestServiceLive(
       _       <- projectRepo.setProjectRestrictedViewSize(project, size)
     } yield ProjectRestrictedViewSizeResponseADM(size)
 
-  override def exportProject(shortcodeStr: String, user: UserADM): Task[Unit] =
+  override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
 
-  override def exportProject(id: ShortcodeIdentifier, user: UserADM): Task[Unit] = for {
+  override def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit] = for {
     _       <- permissionService.ensureSystemAdmin(user)
     project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
@@ -275,7 +275,7 @@ final case class ProjectsADMRestServiceLive(
 
   override def importProject(
     shortcodeStr: String,
-    user: UserADM
+    user: User
   ): Task[ProjectImportResponse] = for {
     _         <- permissionService.ensureSystemAdmin(user)
     shortcode <- convertStringToShortcodeId(shortcodeStr)
@@ -288,7 +288,7 @@ final case class ProjectsADMRestServiceLive(
         }
   } yield ProjectImportResponse(path)
 
-  override def listExports(user: UserADM): Task[Chunk[ProjectExportInfoResponse]] = for {
+  override def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- permissionService.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports

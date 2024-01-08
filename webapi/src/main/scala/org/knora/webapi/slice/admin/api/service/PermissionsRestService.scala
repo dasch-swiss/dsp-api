@@ -27,12 +27,12 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -45,7 +45,7 @@ final case class PermissionsRestService(
 ) {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
-    user: UserADM
+    user: User
   ): Task[AdministrativePermissionCreateResponseADM] =
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
@@ -54,13 +54,13 @@ final case class PermissionsRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: UserADM): Task[KnoraProject] =
+  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] =
     for {
       projectIri <- KnoraProject.ProjectIri.from(projectIri).toZIO.mapError(e => BadRequestException(e.getMessage))
       project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
     } yield project
 
-  private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: UserADM): Task[KnoraProject] =
+  private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: User): Task[KnoraProject] =
     projectRepo
       .findById(projectIri)
       .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
@@ -68,7 +68,7 @@ final case class PermissionsRestService(
 
   def getPermissionsApByProjectIri(
     value: ProjectIri,
-    user: UserADM
+    user: User
   ): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
@@ -76,14 +76,14 @@ final case class PermissionsRestService(
       ext    <- format.toExternal(result)
     } yield ext
 
-  def getPermissionsByProjectIri(projectIri: ProjectIri, user: UserADM): Task[PermissionsForProjectGetResponseADM] =
+  def getPermissionsByProjectIri(projectIri: ProjectIri, user: User): Task[PermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsByProjectIri(projectIri)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def deletePermission(permissionIri: PermissionIri, user: UserADM): Task[PermissionDeleteResponseADM] =
+  def deletePermission(permissionIri: PermissionIri, user: User): Task[PermissionDeleteResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
@@ -93,7 +93,7 @@ final case class PermissionsRestService(
 
   def createDefaultObjectAccessPermission(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: UserADM
+    user: User
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
@@ -105,7 +105,7 @@ final case class PermissionsRestService(
   def updatePermissionHasPermissions(
     permissionIri: PermissionIri,
     request: ChangePermissionHasPermissionsApiRequestADM,
-    user: UserADM
+    user: User
   ): Task[PermissionGetResponseADM] =
     for {
       _    <- auth.ensureSystemAdmin(user)
@@ -120,7 +120,7 @@ final case class PermissionsRestService(
   def updatePermissionProperty(
     permissionIri: PermissionIri,
     request: ChangePermissionPropertyApiRequestADM,
-    user: UserADM
+    user: User
   ): Task[PermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
@@ -132,7 +132,7 @@ final case class PermissionsRestService(
   def updatePermissionResourceClass(
     permissionIri: PermissionIri,
     request: ChangePermissionResourceClassApiRequestADM,
-    user: UserADM
+    user: User
   ): Task[PermissionGetResponseADM] =
     for {
       _      <- auth.ensureSystemAdmin(user)
@@ -144,7 +144,7 @@ final case class PermissionsRestService(
   def updatePermissionGroup(
     permissionIri: PermissionIri,
     request: ChangePermissionGroupApiRequestADM,
-    user: UserADM
+    user: User
   ): Task[PermissionGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdmin(user)
@@ -156,7 +156,7 @@ final case class PermissionsRestService(
 
   def getPermissionsDaopByProjectIri(
     projectIri: ProjectIri,
-    user: UserADM
+    user: User
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
@@ -167,7 +167,7 @@ final case class PermissionsRestService(
   def getPermissionsApByProjectAndGroupIri(
     projectIri: ProjectIri,
     groupIri: GroupIri,
-    user: UserADM
+    user: User
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
@@ -179,13 +179,13 @@ final case class PermissionsRestService(
 object PermissionsRestService {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
-    user: UserADM
+    user: User
   ): ZIO[PermissionsRestService, Throwable, AdministrativePermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
 
   def createDefaultObjectAccessPermission(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: UserADM
+    user: User
   ): ZIO[PermissionsRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
 

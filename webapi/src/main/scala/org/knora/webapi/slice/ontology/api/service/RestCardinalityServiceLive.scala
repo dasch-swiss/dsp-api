@@ -15,12 +15,12 @@ import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey
@@ -38,7 +38,7 @@ trait RestCardinalityService {
 
   def canChangeCardinality(
     classIri: String,
-    user: UserADM,
+    user: User,
     propertyIri: Option[String],
     newCardinality: Option[String]
   ): Task[CanDoResponseV2] =
@@ -49,18 +49,18 @@ trait RestCardinalityService {
       case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
     }
 
-  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2]
+  def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2]
 
   def canSetCardinality(
     classIri: String,
     propertyIri: String,
     cardinality: String,
-    user: UserADM
+    user: User
   ): Task[CanDoResponseV2]
 }
 
 private final case class PermissionService(ontologyRepo: OntologyRepo) {
-  def hasOntologyWriteAccess(user: UserADM, ontologyIri: InternalIri): Task[Boolean] = {
+  def hasOntologyWriteAccess(user: User, ontologyIri: InternalIri): Task[Boolean] = {
     val permissions = user.permissions
     for {
       data           <- ontologyRepo.findById(ontologyIri)
@@ -84,7 +84,7 @@ case class RestCardinalityServiceLive(
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
   private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
-  def canReplaceCardinality(classIri: String, user: UserADM): Task[CanDoResponseV2] =
+  def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2] =
     for {
       classIri <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
       _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
@@ -96,7 +96,7 @@ case class RestCardinalityServiceLive(
     case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
   }
 
-  private def checkUserHasWriteAccessToOntologyOfClass(user: UserADM, classIri: InternalIri): Task[Unit] = {
+  private def checkUserHasWriteAccessToOntologyOfClass(user: User, classIri: InternalIri): Task[Unit] = {
     val hasWriteAccess = for {
       ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri)
       hasWriteAccess <- permissionService.hasOntologyWriteAccess(user, ontologyIri)
@@ -111,7 +111,7 @@ case class RestCardinalityServiceLive(
     classIri: String,
     propertyIri: String,
     cardinality: String,
-    user: UserADM
+    user: User
   ): Task[CanDoResponseV2] =
     for {
       classIri       <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))

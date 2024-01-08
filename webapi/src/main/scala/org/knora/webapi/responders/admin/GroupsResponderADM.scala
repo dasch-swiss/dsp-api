@@ -37,6 +37,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -95,7 +96,7 @@ trait GroupsResponderADM {
    * @param requestingUser the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Task[GroupMembersGetResponseADM]
+  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM]
 
   /**
    * Create a new group.
@@ -107,7 +108,7 @@ trait GroupsResponderADM {
    */
   def createGroupADM(
     createRequest: GroupCreatePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM]
 
@@ -123,7 +124,7 @@ trait GroupsResponderADM {
   def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM]
 
@@ -139,7 +140,7 @@ trait GroupsResponderADM {
   def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM]
 }
@@ -270,16 +271,16 @@ final case class GroupsResponderADMLive(
     ZioHelper.sequence(groupIris.map(groupGetRequestADM))
 
   /**
-   * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
+   * Gets the members with the given group IRI and returns the information as a sequence of [[User]].
    *
    * @param groupIri             the IRI of the group.
    * @param requestingUser       the user initiating the request.
-   * @return A sequence of [[UserADM]]
+   * @return A sequence of [[User]]
    */
   private def groupMembersGetADM(
     groupIri: IRI,
-    requestingUser: UserADM
-  ): Task[Seq[UserADM]] =
+    requestingUser: User
+  ): Task[Seq[User]] =
     for {
       group <- groupGetADM(groupIri)
                  .flatMap(ZIO.fromOption(_))
@@ -304,10 +305,10 @@ final case class GroupsResponderADMLive(
           Seq.empty[IRI]
         }
 
-      usersMaybeTasks: Seq[Task[Option[UserADM]]] =
+      usersMaybeTasks: Seq[Task[Option[User]]] =
         groupMemberIris.map { userIri =>
           messageRelay
-            .ask[Option[UserADM]](
+            .ask[Option[User]](
               UserGetADM(
                 UserIdentifierADM(maybeIri = Some(userIri)),
                 UserInformationTypeADM.Restricted,
@@ -326,7 +327,7 @@ final case class GroupsResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  override def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Task[GroupMembersGetResponseADM] =
+  override def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM] =
     groupMembersGetADM(groupIri, requestingUser).map(GroupMembersGetResponseADM)
 
   /**
@@ -339,12 +340,12 @@ final case class GroupsResponderADMLive(
    */
   override def createGroupADM(
     createRequest: GroupCreatePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM] = {
     def createGroupTask(
       createRequest: GroupCreatePayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[GroupOperationResponseADM] =
       for {
         /* check if the requesting user is allowed to create group */
@@ -419,7 +420,7 @@ final case class GroupsResponderADMLive(
   override def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM] = {
 
@@ -429,7 +430,7 @@ final case class GroupsResponderADMLive(
     def changeGroupTask(
       groupIri: IRI,
       changeGroupRequest: GroupUpdatePayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[GroupOperationResponseADM] =
       for {
         // check if necessary information is present
@@ -477,7 +478,7 @@ final case class GroupsResponderADMLive(
   override def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupOperationResponseADM] = {
 
@@ -487,7 +488,7 @@ final case class GroupsResponderADMLive(
     def changeGroupStatusTask(
       groupIri: IRI,
       changeGroupRequest: ChangeGroupApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[GroupOperationResponseADM] =
       for {
 
@@ -631,7 +632,7 @@ final case class GroupsResponderADMLive(
           )
 
         seqOfFutures: Seq[Task[UserOperationResponseADM]] =
-          members.map { (user: UserADM) =>
+          members.map { (user: User) =>
             messageRelay
               .ask[UserOperationResponseADM](
                 UserGroupMembershipRemoveRequestADM(
