@@ -11,6 +11,7 @@ import eu.timepit.refined.string.MatchesRegex
 import spray.json.JsValue
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -169,5 +170,14 @@ object Email {
   object Email extends RefinedTypeOps[Email, String] {
     //  implicit val codec: JsonCodec[Email] = JsonCodec[String].transformOrFail(Email.from, _.toString)
   }
+
+}
+
+final case class UserIri private (iri: String) extends AnyVal
+object UserIri {
+  def from(iri: String): Either[String, UserIri] =
+    if (Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/"))
+      Iri.toSparqlEncodedString(iri).map(UserIri(_)).toRight(s"Invalid user IRI: $iri")
+    else Left(s"Invalid user IRI: $iri")
 
 }
