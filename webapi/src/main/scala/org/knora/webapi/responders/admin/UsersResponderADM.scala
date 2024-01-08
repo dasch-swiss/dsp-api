@@ -42,6 +42,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -1807,7 +1808,7 @@ final case class UsersResponderADMLive(
         } else {
           for {
             _ <- ZIO
-                   .fromOption(stringFormatter.validateEmail(email.value))
+                   .fromEither(model.Email.Email.from(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
             userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
           } yield userExists

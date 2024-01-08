@@ -50,7 +50,17 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val emailSuite = suite("Email")()
+  private val emailSuite = suite("Email")(
+    test("Email must be a correct email address") {
+      assertTrue(Email.Email.from("j.doe@example.com").isRight)
+    },
+    test("Email must not be empty") {
+      assertTrue(Email.Email.from("").isLeft)
+    },
+    test("Email must not be a username") {
+      assertTrue(Email.Email.from("j.doe").isLeft)
+    }
+  )
 
   val spec: Spec[Any, Nothing] = suite("UserSpec")(
     userSuite,

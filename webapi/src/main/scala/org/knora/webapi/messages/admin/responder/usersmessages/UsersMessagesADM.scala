@@ -569,7 +569,10 @@ object UserIdentifierADM {
       Iri.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
     )
 
-    val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+    val userEmail =
+      maybeEmail
+        .map(e => model.Email.Email.from(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+        .map(_.value)
     val username = maybeUsername.map(u =>
       model.Username.Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value
     )

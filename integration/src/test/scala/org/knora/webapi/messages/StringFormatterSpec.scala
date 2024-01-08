@@ -948,11 +948,4 @@ class StringFormatterSpec extends CoreSpec {
 
   }
 
-  "The StringFormatter class for User" should {
-
-    "validate email" in {
-      stringFormatter.validateEmail("donald.duck@example.com") should be(Some("donald.duck@example.com"))
-      assert(stringFormatter.validateEmail("donald.duck").isEmpty)
-    }
-  }
 }
