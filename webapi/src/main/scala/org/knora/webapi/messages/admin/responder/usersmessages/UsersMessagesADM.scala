@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.prelude.Validation
 
@@ -28,9 +28,8 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonPro
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.User
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -572,7 +571,7 @@ object UserIdentifierADM {
 
     val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
     val username = maybeUsername.map(u =>
-      sf.validateUsername(u).getOrElse(throw BadRequestException(s"Invalid username $maybeUsername"))
+      model.Username.Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value
     )
 
     new UserIdentifierADM(

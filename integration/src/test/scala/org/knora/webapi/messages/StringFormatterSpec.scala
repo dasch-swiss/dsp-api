@@ -950,29 +950,6 @@ class StringFormatterSpec extends CoreSpec {
 
   "The StringFormatter class for User" should {
 
-    "validate username" in {
-      // 4 - 50 characters long
-      assert(stringFormatter.validateUsername("abc").isEmpty)
-      assert(stringFormatter.validateUsername("123456789012345678901234567890123456789012345678901").isEmpty)
-
-      // only contain alphanumeric, underscore, and dot
-      stringFormatter.validateUsername("a_2.3") should be(Some("a_2.3"))
-      assert(stringFormatter.validateUsername("a_2.3-4").isEmpty)
-
-      // not allow @
-      assert(stringFormatter.validateUsername("donald.duck@example.com").isEmpty)
-
-      // Underscore and dot can't be at the end or start of a username
-      assert(stringFormatter.validateUsername("_username").isEmpty)
-      assert(stringFormatter.validateUsername("username_").isEmpty)
-      assert(stringFormatter.validateUsername(".username").isEmpty)
-      assert(stringFormatter.validateUsername("username.").isEmpty)
-
-      // Underscore or dot can't be used multiple times in a row
-      assert(stringFormatter.validateUsername("user__name").isEmpty)
-      assert(stringFormatter.validateUsername("user..name").isEmpty)
-    }
-
     "validate email" in {
       stringFormatter.validateEmail("donald.duck@example.com") should be(Some("donald.duck@example.com"))
       assert(stringFormatter.validateEmail("donald.duck").isEmpty)

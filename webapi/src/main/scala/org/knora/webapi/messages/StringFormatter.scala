@@ -669,16 +669,6 @@ class StringFormatter private (
     """0+$""".r
 
   /**
-   * A regex that matches a valid username
-   * - 4 - 50 characters long
-   * - Only contains alphanumeric characters, underscore and dot.
-   * - Underscore and dot can't be at the end or start of a username
-   * - Underscore or dot can't be used multiple times in a row
-   */
-  private val UsernameRegex: Regex =
-    """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
-
-  /**
    * The information that is stored about non-Knora IRIs.
    */
   private val UnknownIriInfo = SmartIriInfo(
@@ -1554,15 +1544,6 @@ class StringFormatter private (
    */
   def validateEmail(email: String): Option[String] =
     EmailAddressRegex.findFirstIn(email)
-
-  /**
-   * Check that the string represents a valid username.
-   *
-   * @param value    the string to be checked.
-   * @return the same string.
-   */
-  def validateUsername(value: String): Option[String] =
-    UsernameRegex.findFirstIn(value)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
