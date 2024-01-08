@@ -19,12 +19,12 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -51,7 +51,7 @@ class UsersADME2ESpec
   private def addRootUserCredentials()         = addCredentials(rootUser)
   private def addProjectAdminUserCredentials() = addCredentials(projectAdminUser)
   private def addNormalUserCredentials()       = addCredentials(normalUser)
-  private def addCredentials(user: UserADM): RequestTransformer = addCredentials(
+  private def addCredentials(user: User): RequestTransformer = addCredentials(
     BasicHttpCredentials(user.email, "test")
   )
 
@@ -215,7 +215,7 @@ class UsersADME2ESpec
         val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addProjectAdminUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.givenName should be(SharedTestDataADM.normalUser.givenName)
         result.familyName should be(SharedTestDataADM.normalUser.familyName)
         result.status should be(false)
@@ -237,7 +237,7 @@ class UsersADME2ESpec
         val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc")
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.givenName should be(SharedTestDataADM.normalUser.givenName)
         result.familyName should be(SharedTestDataADM.normalUser.familyName)
         result.status should be(false)
@@ -328,7 +328,7 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
 
         // check that the custom IRI is correctly assigned
         result.id should be(customUserIri)
@@ -394,7 +394,7 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
 
         // check that the special characters were escaped correctly
         result.id should equal(otherCustomUserIri)
@@ -419,7 +419,7 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.givenName should be("Updated\tGivenName")
         result.familyName should be("Updated\"FamilyName")
       }
@@ -432,7 +432,7 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.givenName should be("Updated\tGivenName")
         result.familyName should be("Updated\"FamilyName")
       }
@@ -468,7 +468,7 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.username should be("donald.duck")
         result.email should be("donald.duck@example.org")
         result.givenName should be("Donald")
@@ -626,7 +626,7 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.username should be("donald.big.duck")
         result.email should be("donald.big.duck@example.org")
         result.givenName should be("Big Donald")
@@ -887,7 +887,7 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.status should be(false)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -942,7 +942,7 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        val result: User = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[User]
         result.permissions.groupsPerProject
           .get("http://www.knora.org/ontology/knora-admin#SystemProject")
           .head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))

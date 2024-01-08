@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,8 +12,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
@@ -42,7 +42,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val projectIri: IRI  = IriTestConstants.Project.TestProject
   private val classIri: IRI    = IriTestConstants.Biblio.Class.Article.value
   private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
-  private val userWithAccess: UserADM =
+  private val userWithAccess: User =
     SystemUser.copy(permissions =
       SystemUser.permissions.copy(groupsPerProject = Map(projectIri -> List(OntologyConstants.KnoraAdmin.ProjectAdmin)))
     )

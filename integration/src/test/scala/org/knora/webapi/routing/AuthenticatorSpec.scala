@@ -13,12 +13,12 @@ import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -34,7 +34,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private def testUserAdmFromIri(iri: String) = UserADM(iri, "", "", "", "", false, "")
+  private def testUserAdmFromIri(iri: String) = User(iri, "", "", "", "", false, "")
 
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {

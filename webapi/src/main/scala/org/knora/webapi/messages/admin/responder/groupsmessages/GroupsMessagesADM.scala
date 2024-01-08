@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,8 +21,8 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
@@ -143,7 +143,7 @@ case class MultipleGroupsGetRequestADM(
  * @param groupIri             IRI of the group.
  * @param requestingUser       the user initiating the request.
  */
-case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
 
 /**
  * Requests the creation of a new group.
@@ -154,7 +154,7 @@ case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) ext
  */
 case class GroupCreateRequestADM(
   createRequest: GroupCreatePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends GroupsResponderRequestADM
 
@@ -169,7 +169,7 @@ case class GroupCreateRequestADM(
 case class GroupChangeRequestADM(
   groupIri: IRI,
   changeGroupRequest: GroupUpdatePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends GroupsResponderRequestADM
 
@@ -184,7 +184,7 @@ case class GroupChangeRequestADM(
 case class GroupChangeStatusRequestADM(
   groupIri: IRI,
   changeGroupRequest: ChangeGroupApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends GroupsResponderRequestADM
 
@@ -194,8 +194,7 @@ case class GroupChangeStatusRequestADM(
  * @param requestingUser the user initiating the request.
  * @param apiRequestID   the ID of the API request.
  */
-case class GroupPermissionUpdateRequestADM(requestingUser: UserADM, apiRequestID: UUID)
-    extends GroupsResponderRequestADM
+case class GroupPermissionUpdateRequestADM(requestingUser: User, apiRequestID: UUID) extends GroupsResponderRequestADM
 
 // Responses
 /**
@@ -221,7 +220,7 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with Gr
  *
  * @param members the group's members.
  */
-case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
+case class GroupMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 

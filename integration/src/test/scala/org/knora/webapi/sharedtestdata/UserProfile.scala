@@ -8,7 +8,7 @@ package org.knora.webapi.sharedtestdata
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Represents a user's profile.
@@ -27,7 +27,7 @@ case class UserProfile(
   permissionData: PermissionsDataADM = PermissionsDataADM()
 )
 object UserProfile {
-  def from(userADM: UserADM): UserProfile =
+  def from(userADM: User): UserProfile =
     if (userADM.isAnonymousUser) {
       UserProfile()
     } else {
@@ -52,7 +52,7 @@ object UserProfile {
       )
     }
 
-  private def asUserData(userADM: UserADM): UserData =
+  private def asUserData(userADM: User): UserData =
     UserData(
       user_id = if (userADM.isAnonymousUser) {
         None

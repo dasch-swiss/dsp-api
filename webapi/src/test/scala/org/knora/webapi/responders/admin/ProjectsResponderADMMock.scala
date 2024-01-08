@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,10 +16,10 @@ import zio.mock.Proxy
 import java.util.UUID
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 
@@ -27,9 +27,9 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object GetProjectFromCacheOrTriplestore extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectADM]]
   object GetSingleProjectADMRequest       extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object ProjectMembersGetRequestADM
-      extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
+      extends Effect[(ProjectIdentifierADM, User), Throwable, ProjectMembersGetResponseADM]
   object ProjectAdminMembersGetRequestADM
-      extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
+      extends Effect[(ProjectIdentifierADM, User), Throwable, ProjectAdminMembersGetResponseADM]
   object ProjectsKeywordsGetRequestADM extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
   object ProjectKeywordsGetRequestADM  extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
   object ProjectRestrictedViewSettingsGetADM
@@ -37,9 +37,9 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectRestrictedViewSettingsGetRequestADM
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
   object ProjectCreateRequestADM
-      extends Effect[(ProjectCreateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectCreateRequest, User, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
-      extends Effect[(ProjectIri, ProjectUpdateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectIri, ProjectUpdateRequest, User, UUID), Throwable, ProjectOperationResponseADM]
 
   val compose: URLayer[mock.Proxy, ProjectsResponderADM] =
     ZLayer {
@@ -54,12 +54,12 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           proxy(GetSingleProjectADMRequest, id)
         override def projectMembersGetRequestADM(
           id: ProjectIdentifierADM,
-          user: UserADM
+          user: User
         ): Task[ProjectMembersGetResponseADM] =
           proxy(ProjectMembersGetRequestADM, (id, user))
         override def projectAdminMembersGetRequestADM(
           id: ProjectIdentifierADM,
-          user: UserADM
+          user: User
         ): Task[ProjectAdminMembersGetResponseADM] =
           proxy(ProjectAdminMembersGetRequestADM, (id, user))
         override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
@@ -76,14 +76,14 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
           createReq: ProjectCreateRequest,
-          requestingUser: UserADM,
+          requestingUser: User,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ProjectCreateRequestADM, (createReq, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
           projectIri: ProjectIri,
           updateReq: ProjectUpdateRequest,
-          user: UserADM,
+          user: User,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updateReq, user, apiRequestID))

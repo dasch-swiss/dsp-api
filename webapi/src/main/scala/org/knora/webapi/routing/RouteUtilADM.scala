@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Convenience methods for Knora Admin routes.
@@ -57,7 +58,7 @@ object RouteUtilADM {
         group.copy(project = projectExternal)
       }
 
-      def userAsExternalRepresentation(user: UserADM): UserADM = {
+      def userAsExternalRepresentation(user: User): User = {
         val groupsExternal   = user.groups.map(groupAsExternalRepresentation)
         val projectsExternal = user.projects.map(projectAsExternalRepresentation)
         user.copy(groups = groupsExternal, projects = projectsExternal)
@@ -152,9 +153,9 @@ object RouteUtilADM {
     runtime: Runtime[R]
   ): Future[RouteResult] = UnsafeZioRun.runToFuture(response.flatMap(completeContext(ctx, _)))
 
-  case class IriUserUuid(iri: IRI, user: UserADM, uuid: UUID)
-  case class IriUser(iri: IRI, user: UserADM)
-  case class UserUuid(user: UserADM, uuid: UUID)
+  case class IriUserUuid(iri: IRI, user: User, uuid: UUID)
+  case class IriUser(iri: IRI, user: User)
+  case class UserUuid(user: User, uuid: UUID)
 
   def getIriUserUuid(
     iri: String,

@@ -19,7 +19,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
@@ -34,6 +33,7 @@ import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -185,7 +185,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private def getResourceWithValues(
     resourceIri: IRI,
     propertyIrisForGravsearch: Seq[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): ReadResourceV2 = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
@@ -235,7 +235,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
     deleteComment: Option[String] = None,
-    requestingUser: UserADM,
+    requestingUser: User,
     isLinkValue: Boolean = false
   ): Unit = {
     appActor ! ResourcesGetRequestV2(
@@ -315,7 +315,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     checkLastModDateChanged: Boolean = true
   ): ReadValueV2 = {
     val resource = getResourceWithValues(
@@ -338,7 +338,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   }
 
-  private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
+  private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: User): Option[Instant] = {
     appActor ! ResourcesPreviewGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,

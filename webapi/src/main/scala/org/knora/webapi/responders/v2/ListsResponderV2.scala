@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,9 +17,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.listsmessages.*
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Responds to requests relating to lists and nodes.
@@ -53,7 +53,7 @@ final case class ListsResponderV2Live(
    */
   private def getList(
     listIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ListGetResponseV2] =
     for {
       listResponseADM <-
@@ -81,7 +81,7 @@ final case class ListsResponderV2Live(
    */
   private def getNode(
     nodeIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[NodeGetResponseV2] =
     for {
       nodeResponse <-

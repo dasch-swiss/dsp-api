@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,8 +13,8 @@ import zio.json.JsonDecoder
 import zio.json.ast.Json
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.common.api.RestPermissionService
 
@@ -24,7 +24,7 @@ final case class MaintenanceRestService(
 ) {
 
   private val fixTopLeftAction = "fix-top-left"
-  def executeMaintenanceAction(user: UserADM, action: String, jsonMaybe: Option[Json]): Task[Unit] =
+  def executeMaintenanceAction(user: User, action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
         case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)

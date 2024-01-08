@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,13 +15,13 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
@@ -194,7 +194,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -207,7 +207,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -220,7 +220,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -236,7 +236,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -249,7 +249,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -262,7 +262,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService

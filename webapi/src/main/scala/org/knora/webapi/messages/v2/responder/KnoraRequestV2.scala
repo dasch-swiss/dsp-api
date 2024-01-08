@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,8 +13,8 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A trait for objects that can generate case class instances based on JSON-LD input.
@@ -36,7 +36,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
   def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
+    requestingUser: User,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]

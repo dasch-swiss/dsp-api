@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,14 +16,14 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 
 object RestPermissionServiceSpec extends ZIOSpecDefault {
 
   private val activeNormalUser =
-    UserADM("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
+    User("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
 
   private val inactiveNormalUser = activeNormalUser.copy(status = false)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,11 +15,11 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
@@ -178,7 +178,7 @@ final case class ProjectsEndpointsHandler(
 
   val getAdminProjectsByIriAllDataHandler = {
     implicit val ec: ExecutionContext = ExecutionContext.global
-    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: UserADM) =>
+    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: User) =>
       (iri: IriIdentifier) =>
         // Future[Either[RequestRejectedException, (String, String, PekkoStreams.BinaryStream]]
         mapper.runToFuture(

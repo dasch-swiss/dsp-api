@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,12 +25,12 @@ import scala.concurrent.Future
 
 import dsp.errors.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.User
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 
@@ -81,12 +81,12 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
     case _ => Future.successful(Right(AnonymousUser))
   }
 
-  private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
+  private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
       authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either
     )
 
-  private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, UserADM]] =
+  private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
       ZIO
         .attempt(UserIdentifierADM(maybeEmail = Some(basic.username))(StringFormatter.getGeneralInstance))

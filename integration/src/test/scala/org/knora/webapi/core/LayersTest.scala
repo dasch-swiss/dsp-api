@@ -60,7 +60,9 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 
@@ -70,7 +72,10 @@ object LayersTest {
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
-  type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
+  type DefaultTestEnvironmentWithSipi = DefaultTestEnvironmentWithoutSipi
+    with SipiTestContainer
+    with DspIngestTestContainer
+    with SharedVolumes.Images
 
   type CommonR0 = ActorSystem with AppConfigurations with SipiService with JwtService with StringFormatter
   type CommonR =
@@ -202,18 +207,23 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      FusekiTestContainer
-        with SipiTestContainer
-        with AppConfigurations
+      AppConfigurations
+        with DspIngestTestContainer
+        with FusekiTestContainer
         with JwtService
+        with SharedVolumes.Images
         with SipiService
+        with SipiTestContainer
         with StringFormatter
     ](
       AppConfigForTestContainers.testcontainers,
+      DspIngestClientLive.layer,
+      DspIngestTestContainer.layer,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
       SipiServiceLive.layer,
       JwtServiceLive.layer,
+      SharedVolumes.Images.layer,
       StringFormatter.test
     )
 
