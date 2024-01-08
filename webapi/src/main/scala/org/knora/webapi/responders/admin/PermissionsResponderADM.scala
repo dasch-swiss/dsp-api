@@ -1481,7 +1481,7 @@ final case class PermissionsResponderADMLive(
       case (Some(_), _, Some(_)) =>
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
       case (Some(groupIri), None, None) =>
-          GroupIri.from(groupIri).getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
+        GroupIri.from(groupIri).getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
       case (None, resourceClassIriMaybe, propertyIriMaybe) =>
         resourceClassIriMaybe.foreach { resourceClassIri =>
           if (!sf.toSmartIri(resourceClassIri).isKnoraEntityIri) {
