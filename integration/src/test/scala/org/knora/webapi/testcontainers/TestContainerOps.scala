@@ -6,12 +6,7 @@
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.lifecycle.Startable
-import zio.Scope
-import zio.Tag
-import zio.ULayer
-import zio.URIO
-import zio.ZIO
-import zio.ZLayer
+import zio.*
 
 object ZioTestContainers {
 
