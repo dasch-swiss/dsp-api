@@ -78,7 +78,7 @@ trait SipiService {
    * @param assetId for the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadataFromDspIngestApi(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse]
+  def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse]
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.

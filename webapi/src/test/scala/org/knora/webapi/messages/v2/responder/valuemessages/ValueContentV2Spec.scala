@@ -77,7 +77,7 @@ object ValueContentV2Spec extends ZIOSpecDefault {
       if (flag == AssetInTemp) { ZIO.succeed(expected) }
       else { ZIO.fail(AssertionException("fail")) }
 
-    override def getFileMetadataFromDspIngestApi(
+    override def getFileMetadataFromDspIngest(
       shortcode: KnoraProject.Shortcode,
       assetId: AssetId
     ): Task[FileMetadataSipiResponse] =

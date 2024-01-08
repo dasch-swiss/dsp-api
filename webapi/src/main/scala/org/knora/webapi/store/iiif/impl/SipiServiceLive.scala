@@ -89,7 +89,7 @@ final case class SipiServiceLive(
                .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
     } yield res
 
-  override def getFileMetadataFromDspIngestApi(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
+  override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
     for {
       response <- dspIngestClient.getAssetInfo(shortcode, assetId)
     } yield FileMetadataSipiResponse(

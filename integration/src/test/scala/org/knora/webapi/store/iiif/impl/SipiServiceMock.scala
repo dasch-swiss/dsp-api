@@ -65,7 +65,7 @@ case class SipiServiceMock() extends SipiService {
 
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = ???
 
-  override def getFileMetadataFromDspIngestApi(
+  override def getFileMetadataFromDspIngest(
     shortcode: KnoraProject.Shortcode,
     assetId: AssetId
   ): Task[FileMetadataSipiResponse] = ???
