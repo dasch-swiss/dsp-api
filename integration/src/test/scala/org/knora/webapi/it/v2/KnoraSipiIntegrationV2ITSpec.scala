@@ -504,9 +504,6 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
@@ -522,9 +519,6 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")

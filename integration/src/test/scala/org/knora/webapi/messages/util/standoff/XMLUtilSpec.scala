@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.standoff
+package org.knora.webapi.messages.util.standoff
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -12,14 +14,9 @@ import org.xmlunit.diff.Diff
 import java.nio.file.Paths
 
 import dsp.errors.StandoffConversionException
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.util.FileUtil
 
-/**
- * Tests [[org.knora.webapi.messages.util.standoff.XMLToStandoffUtil]].
- */
-class XMLUtilSpec extends CoreSpec {
+class XMLUtilSpec extends AnyWordSpec with Matchers {
 
   "The XML to standoff utility" should {
 

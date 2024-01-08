@@ -13,7 +13,8 @@ import java.io.IOException
 
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
@@ -24,15 +25,6 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
     for {
       exportDirectory <- Files.createTempDirectory(Path(""), None, List.empty)
     } yield ProjectExportStorageServiceLive(exportDirectory)
-  }
-
-  private val dspIngestClientLayer: ULayer[DspIngestClient] = ZLayer.succeed {
-    new DspIngestClient {
-      override def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
-        ZIO.succeed(Path("unused"))
-      override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
-        ZIO.succeed(Path("unused"))
-    }
   }
 
   private val importServiceTestLayer
@@ -58,7 +50,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           profileQueries = false
         )
     } yield ProjectImportServiceLive(config, exportStorageService, dspIngestClient))
-      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](dspIngestClientLayer)
+      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](DspIngestClientITMock.layer)
   }
 
   private val trigContent =
@@ -116,4 +108,27 @@ object FileTestUtil {
     filePath <- Files.createTempFileScoped(suffix)
     _        <- Files.writeBytes(filePath, Chunk.fromIterable(content.getBytes))
   } yield filePath
+}
+
+final case class DspIngestClientITMock() extends DspIngestClient {
+  override def exportProject(shortcode: KnoraProject.Shortcode): ZIO[Scope, Throwable, Path] =
+    ZIO.succeed(Path("/tmp/test.zip"))
+  override def importProject(shortcode: KnoraProject.Shortcode, fileToImport: Path): Task[Path] =
+    ZIO.succeed(Path("/tmp/test.zip"))
+
+  override def getAssetInfo(shortcode: KnoraProject.Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
+    ZIO.succeed(
+      AssetInfoResponse(
+        s"$assetId.txt",
+        s"$assetId.txt.orig",
+        "test.txt",
+        "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
+        "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
+        internalMimeType = Some("text/plain"),
+        originalMimeType = Some("text/plain")
+      )
+    )
+}
+object DspIngestClientITMock {
+  val layer = ZLayer.derive[DspIngestClientITMock]
 }

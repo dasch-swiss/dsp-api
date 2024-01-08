@@ -11,6 +11,7 @@ import zio.nio.file.Path
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -28,7 +29,7 @@ case class SipiServiceMock() extends SipiService {
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  override def getFileMetadataFromTemp(filename: String): Task[FileMetadataSipiResponse] =
+  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
     ZIO.succeed(
       FileMetadataSipiResponse(
         originalFilename = Some("test2.tiff"),
@@ -64,8 +65,10 @@ case class SipiServiceMock() extends SipiService {
 
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = ???
 
-  override def getFileMetadata(filename: String, shortcode: KnoraProject.Shortcode): Task[FileMetadataSipiResponse] =
-    ???
+  override def getFileMetadataFromDspIngest(
+    shortcode: KnoraProject.Shortcode,
+    assetId: AssetId
+  ): Task[FileMetadataSipiResponse] = ???
 }
 
 object SipiServiceMock {

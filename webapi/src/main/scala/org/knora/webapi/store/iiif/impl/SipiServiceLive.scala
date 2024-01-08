@@ -40,8 +40,10 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.Asset
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -58,7 +60,8 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
 final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
-  private val httpClient: CloseableHttpClient
+  private val httpClient: CloseableHttpClient,
+  private val dspIngestClient: DspIngestClient
 ) extends SipiService {
 
   private object SipiRoutes {
@@ -75,29 +78,30 @@ final case class SipiServiceLive(
    * @param filename the file name
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  override def getFileMetadataFromTemp(filename: String): Task[FileMetadataSipiResponse] =
-    getFileMetadataFromUrl(s"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
-
-  /**
-   * Asks Sipi for metadata about a file in permanent location, served from the 'knora.json' route.
-   *
-   * @param filename  the path to the file.
-   * @param shortcode the shortcode of the project.
-   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
-   */
-  override def getFileMetadata(filename: String, shortcode: KnoraProject.Shortcode): Task[FileMetadataSipiResponse] =
-    getFileMetadataFromUrl(s"${sipiConfig.internalBaseUrl}/${shortcode.value}/$filename/knora.json")
-
-  private def getFileMetadataFromUrl(url: String): Task[FileMetadataSipiResponse] =
+  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
     for {
       jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
-      request  = new HttpGet(url)
+      request  = new HttpGet(s"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
       _        = request.addHeader(new BasicHeader("Authorization", s"Bearer ${jwt.jwtString}"))
       bodyStr <- doSipiRequest(request)
       res <- ZIO
                .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
                .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
     } yield res
+
+  override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
+    for {
+      response <- dspIngestClient.getAssetInfo(shortcode, assetId)
+    } yield FileMetadataSipiResponse(
+      Some(response.originalFilename),
+      response.originalMimeType,
+      response.internalMimeType.getOrElse("application/octet-stream"),
+      response.width,
+      response.height,
+      None,
+      response.duration.map(BigDecimal(_)),
+      response.fps.map(BigDecimal(_))
+    )
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.
@@ -408,12 +412,13 @@ object SipiServiceLive {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig & JwtService, SipiService] =
+  val layer: URLayer[AppConfig & DspIngestClient & JwtService, SipiService] =
     ZLayer.scoped {
       for {
-        config     <- ZIO.serviceWith[AppConfig](_.sipi)
-        jwtService <- ZIO.service[JwtService]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield SipiServiceLive(config, jwtService, httpClient)
+        config          <- ZIO.serviceWith[AppConfig](_.sipi)
+        jwtService      <- ZIO.service[JwtService]
+        httpClient      <- ZIO.acquireRelease(acquire(config))(release)
+        dspIngestClient <- ZIO.service[DspIngestClient]
+      } yield SipiServiceLive(config, jwtService, httpClient, dspIngestClient)
     }
 }
