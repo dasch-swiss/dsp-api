@@ -482,7 +482,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionsRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIRIWithUUIDVersion3),
-            forProject = SharedTestDataADM.anythingProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
@@ -496,7 +496,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val exit = UnsafeZioRun.run(
         PermissionsRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.anythingProjectIri,
+            forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
           ),
@@ -604,7 +604,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
       assertFailsWithA[ForbiddenException](
         exit,
-        "A new default object access permission can only be added by a system admin."
+        "You are logged in with username 'anything.user02', but only a system administrator or project administrator has permissions for this operation."
       )
     }
 
@@ -617,7 +617,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          SharedTestDataADM.imagesUser01
+          SharedTestDataADM.rootUser
         )
       )
       assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and resourceClassIri together.")
@@ -632,7 +632,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          SharedTestDataADM.imagesUser01
+          SharedTestDataADM.rootUser
         )
       )
       assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and propertyIri together.")
@@ -646,7 +646,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          SharedTestDataADM.imagesUser01
+          SharedTestDataADM.rootUser
         )
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
@@ -660,7 +660,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          SharedTestDataADM.imagesUser01
+          SharedTestDataADM.rootUser
         )
       )
       assertFailsWithA[BadRequestException](
@@ -676,7 +676,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          SharedTestDataADM.imagesUser01
+          SharedTestDataADM.rootUser
         )
       )
       assertFailsWithA[BadRequestException](

@@ -1469,39 +1469,29 @@ final case class PermissionsResponderADMLive(
       .validateAndEscapeProjectIri(req.forProject)
       .getOrElse(throw BadRequestException(s"Invalid project IRI ${req.forProject}"))
 
-    req.forGroup match {
-      case Some(iri: IRI) =>
-        if (req.forResourceClass.isDefined)
-          throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
-        else if (req.forProperty.isDefined)
-          throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-        else {
-          if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
-            GroupIri.from(iri).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup.get}"))
+    (req.forGroup, req.forResourceClass, req.forProperty) match {
+      case (None, None, None) =>
+        throw BadRequestException(
+          "Either a group, a resource class, a property, or a combination of resource class and property must be given."
+        )
+      case (Some(_), Some(_), _) =>
+        throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+      case (Some(_), _, Some(_)) =>
+        throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
+      case (Some(groupIri), None, None) =>
+          GroupIri.from(groupIri).getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
+      case (None, resourceClassIriMaybe, propertyIriMaybe) =>
+        resourceClassIriMaybe.foreach { resourceClassIri =>
+          if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
           }
         }
-      case None =>
-        if (req.forResourceClass.isEmpty && req.forProperty.isEmpty) {
-          throw BadRequestException(
-            "Either a group, a resource class, a property, or a combination of resource class and property must be given."
-          )
+        propertyIriMaybe.foreach { propertyIri =>
+          if (!stringFormatter.toSmartIri(propertyIri).isKnoraEntityIri) {
+            throw BadRequestException(s"Invalid property IRI: $propertyIri")
+          }
         }
-    }
-
-    req.forResourceClass match {
-      case Some(iri) =>
-        if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
-          throw BadRequestException(s"Invalid resource class IRI: $iri")
-        }
-      case None => None
-    }
-
-    req.forProperty match {
-      case Some(iri) =>
-        if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
-          throw BadRequestException(s"Invalid property IRI: $iri")
-        }
-      case None => None
+      case _ => ()
     }
 
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
