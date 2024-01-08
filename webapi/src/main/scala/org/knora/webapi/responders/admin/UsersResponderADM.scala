@@ -43,7 +43,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -56,7 +56,7 @@ import org.knora.webapi.util.ZioHelper
  */
 @accessible
 trait UsersResponderADM {
-  def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM]
+  def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM]
 }
 
 final case class UsersResponderADMLive(
@@ -162,12 +162,12 @@ final case class UsersResponderADMLive(
   }
 
   /**
-   * Gets all the users and returns them as a sequence of [[UserADM]].
+   * Gets all the users and returns them as a sequence of [[User]].
    *
    * @param requestingUser       the user initiating the request.
-   * @return all the users as a sequence of [[UserADM]].
+   * @return all the users as a sequence of [[User]].
    */
-  private def getAllUserADM(requestingUser: UserADM) =
+  private def getAllUserADM(requestingUser: User) =
     for {
       _ <- ZIO.attempt(
              if (
@@ -185,69 +185,69 @@ final case class UsersResponderADMLive(
                       .flatMap(_.asExtended)
                       .map(_.statements.toList)
 
-      users: Seq[UserADM] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                              UserADM(
-                                id = userIri.toString,
-                                username = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'username' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                email = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                                    throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                givenName = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'givenName' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                familyName = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'familyName' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value,
-                                status = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'status' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[BooleanLiteralV2]
-                                  .value,
-                                lang = propsMap
-                                  .getOrElse(
-                                    OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                                    throw InconsistentRepositoryDataException(
-                                      s"User: $userIri has no 'preferedLanguage' defined."
-                                    )
-                                  )
-                                  .head
-                                  .asInstanceOf[StringLiteralV2]
-                                  .value
-                              )
-                            }
+      users: Seq[User] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                           User(
+                             id = userIri.toString,
+                             username = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.Username.toSmartIri,
+                                 throw InconsistentRepositoryDataException(
+                                   s"User: $userIri has no 'username' defined."
+                                 )
+                               )
+                               .head
+                               .asInstanceOf[StringLiteralV2]
+                               .value,
+                             email = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.Email.toSmartIri,
+                                 throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
+                               )
+                               .head
+                               .asInstanceOf[StringLiteralV2]
+                               .value,
+                             givenName = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
+                                 throw InconsistentRepositoryDataException(
+                                   s"User: $userIri has no 'givenName' defined."
+                                 )
+                               )
+                               .head
+                               .asInstanceOf[StringLiteralV2]
+                               .value,
+                             familyName = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
+                                 throw InconsistentRepositoryDataException(
+                                   s"User: $userIri has no 'familyName' defined."
+                                 )
+                               )
+                               .head
+                               .asInstanceOf[StringLiteralV2]
+                               .value,
+                             status = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
+                                 throw InconsistentRepositoryDataException(
+                                   s"User: $userIri has no 'status' defined."
+                                 )
+                               )
+                               .head
+                               .asInstanceOf[BooleanLiteralV2]
+                               .value,
+                             lang = propsMap
+                               .getOrElse(
+                                 OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
+                                 throw InconsistentRepositoryDataException(
+                                   s"User: $userIri has no 'preferedLanguage' defined."
+                                 )
+                               )
+                               .head
+                               .asInstanceOf[StringLiteralV2]
+                               .value
+                           )
+                         }
 
     } yield users.sorted
 
@@ -257,12 +257,12 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
-  def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM] =
+  def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
     for {
       maybeUsersListToReturn <- getAllUserADM(requestingUser)
 
       result = maybeUsersListToReturn match {
-                 case users: Seq[UserADM] if users.nonEmpty =>
+                 case users: Seq[User] if users.nonEmpty =>
                    UsersGetResponseADM(users = users)
                  case _ =>
                    throw NotFoundException(s"No users found")
@@ -271,7 +271,7 @@ final case class UsersResponderADMLive(
 
   /**
    * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[UserADM]].
+   * Gets information about a Knora user, and returns it as a [[User]].
    * If possible, tries to retrieve it from the cache. If not, it retrieves
    * it from the triplestore, and then writes it to the cache. Writes to the
    * cache are always `UserInformationTypeADM.FULL`.
@@ -279,18 +279,17 @@ final case class UsersResponderADMLive(
    * @param identifier           the IRI, email, or username of the user.
    * @param userInformationType  the type of the requested profile (restricted
    *                             of full).
-   *
    * @param requestingUser       the user initiating the request.
    * @param skipCache            the flag denotes to skip the cache and instead
    *                             get data from the triplestore
-   * @return a [[UserADM]] describing the user.
+   * @return a [[User]] describing the user.
    */
   private def getSingleUserADM(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     skipCache: Boolean = false
-  ): Task[Option[UserADM]] = {
+  ): Task[Option[User]] = {
 
     logger.debug(
       s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
@@ -311,7 +310,7 @@ final case class UsersResponderADMLive(
         }
 
       // return the correct amount of information depending on either the request or user permission
-      finalResponse: Option[UserADM] =
+      finalResponse: Option[User] =
         if (
           requestingUser.permissions.isSystemAdmin || requestingUser
             .isSelf(identifier) || requestingUser.isSystemUser
@@ -344,7 +343,7 @@ final case class UsersResponderADMLive(
   private def getSingleUserADMRequest(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[UserResponseADM] =
     for {
       maybeUserADM <- getSingleUserADM(
@@ -375,7 +374,7 @@ final case class UsersResponderADMLive(
   private def changeBasicUserInformationADM(
     userIri: IRI,
     userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -387,7 +386,7 @@ final case class UsersResponderADMLive(
     def changeBasicUserDataTask(
       userIri: IRI,
       userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -462,7 +461,7 @@ final case class UsersResponderADMLive(
   private def changePasswordADM(
     userIri: IRI,
     userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -472,7 +471,7 @@ final case class UsersResponderADMLive(
     def changePasswordTask(
       userIri: IRI,
       userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -526,7 +525,7 @@ final case class UsersResponderADMLive(
   private def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -538,7 +537,7 @@ final case class UsersResponderADMLive(
     def changeUserStatusTask(
       userIri: IRI,
       status: UserStatus,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -580,7 +579,7 @@ final case class UsersResponderADMLive(
   private def changeUserSystemAdminMembershipStatusADM(
     userIri: IRI,
     systemAdmin: SystemAdmin,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -590,7 +589,7 @@ final case class UsersResponderADMLive(
     def changeUserSystemAdminMembershipStatusTask(
       userIri: IRI,
       systemAdmin: SystemAdmin,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. system admin)
@@ -654,7 +653,7 @@ final case class UsersResponderADMLive(
   private def userProjectMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -666,7 +665,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -728,7 +727,7 @@ final case class UsersResponderADMLive(
   private def userProjectMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -738,7 +737,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -866,7 +865,7 @@ final case class UsersResponderADMLive(
   private def userProjectAdminMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -876,7 +875,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. project admin or system admin)
@@ -951,7 +950,7 @@ final case class UsersResponderADMLive(
   private def userProjectAdminMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -961,7 +960,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -1035,7 +1034,7 @@ final case class UsersResponderADMLive(
   private def userGroupMembershipAddRequestADM(
     userIri: IRI,
     groupIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -1045,7 +1044,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipAddRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1056,10 +1055,10 @@ final case class UsersResponderADMLive(
                        skipCache = true
                      )
 
-        userToChange: UserADM = maybeUser match {
-                                  case Some(user) => user
-                                  case None       => throw NotFoundException(s"The user $userIri does not exist.")
-                                }
+        userToChange: User = maybeUser match {
+                               case Some(user) => user
+                               case None       => throw NotFoundException(s"The user $userIri does not exist.")
+                             }
 
         // check if group exists
         groupExists <- groupExists(groupIri)
@@ -1118,7 +1117,7 @@ final case class UsersResponderADMLive(
   private def userGroupMembershipRemoveRequestADM(
     userIri: IRI,
     groupIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -1128,7 +1127,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipRemoveRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1192,7 +1191,7 @@ final case class UsersResponderADMLive(
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: IRI, userUpdatePayload: UserChangeRequestADM, requestingUser: UserADM) = {
+  private def updateUserADM(userIri: IRI, userUpdatePayload: UserChangeRequestADM, requestingUser: User) = {
 
     logger.debug("updateUserADM - userUpdatePayload: {}", userUpdatePayload)
 
@@ -1306,7 +1305,7 @@ final case class UsersResponderADMLive(
                                skipCache = true
                              )
 
-      updatedUserADM: UserADM =
+      updatedUserADM: User =
         maybeUpdatedUserADM.getOrElse(
           throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
         )
@@ -1394,7 +1393,7 @@ final case class UsersResponderADMLive(
    *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
    *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
    */
-  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: UserADM) = {
+  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: User) = {
 
     // check if it is a request for a built-in user
     if (
@@ -1432,7 +1431,7 @@ final case class UsersResponderADMLive(
                                skipCache = true
                              )
 
-      updatedUserADM: UserADM =
+      updatedUserADM: User =
         maybeUpdatedUserADM.getOrElse(
           throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
         )
@@ -1568,7 +1567,7 @@ final case class UsersResponderADMLive(
   ////////////////////
 
   /**
-   * Tries to retrieve a [[UserADM]] either from triplestore or cache if caching is enabled.
+   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
    * If user is not found in cache but in triplestore, then user is written to cache.
    *
    * @param identifier The identifier of the user (can be IRI, e-mail or username)
@@ -1576,7 +1575,7 @@ final case class UsersResponderADMLive(
    */
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM
-  ): Task[Option[UserADM]] =
+  ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
@@ -1606,14 +1605,14 @@ final case class UsersResponderADMLive(
     }
 
   /**
-   * Tries to retrieve a [[UserADM]] from the triplestore.
+   * Tries to retrieve a [[User]] from the triplestore.
    *
    * @param identifier The identifier of the user (can be IRI, e-mail or username)
    * @return a [[Option[UserADM]]]
    */
   private def getUserFromTriplestore(
     identifier: UserIdentifierADM
-  ): Task[Option[UserADM]] = {
+  ): Task[Option[User]] = {
     val query = Construct(
       sparql.admin.txt.getUsers(
         maybeIri = identifier.toIriOption,
@@ -1629,14 +1628,14 @@ final case class UsersResponderADMLive(
   }
 
   /**
-   * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
+   * Helper method used to create a [[User]] from the [[SparqlExtendedConstructResponse]] containing user data.
    *
    * @param statements           result from the SPARQL query containing user data.
    * @return a [[Option[UserADM]]]
    */
   private def statements2UserADM(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
-  ): Task[Option[UserADM]] = {
+  ): Task[Option[User]] = {
 
     val userIri: IRI                            = statements._1.toString
     val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
@@ -1698,7 +1697,7 @@ final case class UsersResponderADMLive(
         projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
 
         /* construct the user profile from the different parts */
-        user = model.UserADM(
+        user = model.User(
                  id = userIri,
                  username = propsMap
                    .getOrElse(
@@ -1757,7 +1756,7 @@ final case class UsersResponderADMLive(
                  permissions = permissionData
                )
 
-        result: Option[UserADM] = Some(user)
+        result: Option[User] = Some(user)
       } yield result
 
     } else {
@@ -1837,13 +1836,13 @@ final case class UsersResponderADMLive(
     triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByIri(groupIri)))
 
   /**
-   * Tries to retrieve a [[UserADM]] from the cache.
+   * Tries to retrieve a [[User]] from the cache.
    *
    * @param identifier the user's identifier (could be IRI, e-mail or username)
    * @return a [[Option[UserADM]]]
    */
-  private def getUserFromCache(identifier: UserIdentifierADM): Task[Option[UserADM]] = {
-    val result = messageRelay.ask[Option[UserADM]](CacheServiceGetUserADM(identifier))
+  private def getUserFromCache(identifier: UserIdentifierADM): Task[Option[User]] = {
+    val result = messageRelay.ask[Option[User]](CacheServiceGetUserADM(identifier))
     result.map {
       case Some(user) =>
         logger.debug("getUserFromCache - cache hit for: {}", identifier)
@@ -1857,10 +1856,10 @@ final case class UsersResponderADMLive(
   /**
    * Writes the user profile to cache.
    *
-   * @param user a [[UserADM]].
+   * @param user a [[User]].
    * @return Unit
    */
-  private def writeUserADMToCache(user: UserADM): Task[Unit] =
+  private def writeUserADMToCache(user: User): Task[Unit] =
     messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
       ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
 
@@ -1870,7 +1869,7 @@ final case class UsersResponderADMLive(
    * @param maybeUser the optional user which is removed from the cache
    * @return a [[Unit]]
    */
-  private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Task[Unit] =
+  private def invalidateCachedUserADM(maybeUser: Option[User]): Task[Unit] =
     if (appConfig.cacheService.enabled) {
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to cache if keys are not empty

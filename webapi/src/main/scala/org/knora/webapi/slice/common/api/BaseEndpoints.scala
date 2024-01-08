@@ -30,7 +30,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 
@@ -81,12 +81,12 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
     case _ => Future.successful(Right(AnonymousUser))
   }
 
-  private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
+  private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
       authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either
     )
 
-  private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, UserADM]] =
+  private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
       ZIO
         .attempt(UserIdentifierADM(maybeEmail = Some(basic.username))(StringFormatter.getGeneralInstance))

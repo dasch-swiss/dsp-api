@@ -16,10 +16,10 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
- * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
+ * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
  */
 class UsersMessagesADMSpec extends CoreSpec {
 
@@ -40,7 +40,7 @@ class UsersMessagesADMSpec extends CoreSpec {
 
   "The UserADM case class" should {
     "return a RESTRICTED UserADM when requested " in {
-      val rootUser = UserADM(
+      val rootUser = User(
         id = id,
         username = username,
         email = email,
@@ -54,7 +54,7 @@ class UsersMessagesADMSpec extends CoreSpec {
         projects = projects,
         permissions = permissions
       )
-      val rootUserRestricted = UserADM(
+      val rootUserRestricted = User(
         id = id,
         username = username,
         email = email,
@@ -89,7 +89,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the SCrypt passwords" in {
       val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
       val hp      = encoder.encode("123456")
-      val up = model.UserADM(
+      val up = model.User(
         id = "something",
         username = "something",
         email = "something",
@@ -114,7 +114,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the BCrypt passwords" in {
       val encoder = new BCryptPasswordEncoder()
       val hp      = encoder.encode("123456")
-      val up = model.UserADM(
+      val up = model.User(
         id = "something",
         username = "something",
         email = "something",
@@ -171,7 +171,7 @@ class UsersMessagesADMSpec extends CoreSpec {
       val userEmail = "user@example.org"
       val username  = "user"
 
-      val user = UserADM(
+      val user = User(
         id = "http://rdfh.ch/users/example",
         username = username,
         email = userEmail,

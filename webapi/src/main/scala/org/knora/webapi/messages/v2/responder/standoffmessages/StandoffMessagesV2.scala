@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
@@ -50,7 +50,7 @@ case class GetStandoffRequestV2(
   resourceIri: IRI,
   valueIri: IRI,
   targetSchema: ApiV2Schema,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends StandoffResponderRequestV2
 
 /**
@@ -115,7 +115,7 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2]) ex
 case class CreateMappingRequestV2(
   metadata: CreateMappingRequestMetadataV2,
   xml: CreateMappingRequestXMLV2,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends StandoffResponderRequestV2
 
@@ -134,7 +134,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
+    requestingUser: User,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
@@ -223,7 +223,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
  * @param mappingIri           the IRI of the mapping.
  * @param requestingUser       the the user making the request.
  */
-case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetMappingRequestV2(mappingIri: IRI, requestingUser: User) extends StandoffResponderRequestV2
 
 /**
  * Represents a response to a [[GetMappingRequestV2]].
@@ -246,7 +246,7 @@ case class GetMappingResponseV2(
  */
 case class GetXSLTransformationRequestV2(
   xsltTextRepresentationIri: IRI,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends StandoffResponderRequestV2
 
 /**

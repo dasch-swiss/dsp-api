@@ -43,14 +43,14 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 import pekko.actor.ActorRef
 import pekko.util.Timeout
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
  */
 sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
 
-  def requestingUser: UserADM
+  def requestingUser: User
 }
 
 /**
@@ -71,7 +71,7 @@ case class CreateOntologyRequestV2(
   label: String,
   comment: Option[String] = None,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -90,7 +90,7 @@ object CreateOntologyRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ZIO[StringFormatter, Throwable, CreateOntologyRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit sf: StringFormatter =>
       for {
@@ -138,7 +138,7 @@ object CreateOntologyRequestV2 {
  */
 case class CanDeleteOntologyRequestV2(
   ontologyIri: SmartIri,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -153,7 +153,7 @@ case class DeleteOntologyRequestV2(
   ontologyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -372,7 +372,7 @@ case class CreatePropertyRequestV2(
   propertyInfoContent: PropertyInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -391,7 +391,7 @@ object CreatePropertyRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): CreatePropertyRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -449,7 +449,7 @@ case class CreateClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -468,7 +468,7 @@ object CreateClassRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): CreateClassRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -506,7 +506,7 @@ case class AddCardinalitiesToClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -525,7 +525,7 @@ object AddCardinalitiesToClassRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): AddCardinalitiesToClassRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
 
@@ -561,7 +561,7 @@ case class ReplaceClassCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -580,7 +580,7 @@ object ReplaceClassCardinalitiesRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ReplaceClassCardinalitiesRequestV2 = {
     val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
@@ -609,7 +609,7 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -628,7 +628,7 @@ object CanDeleteCardinalitiesFromClassRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): CanDeleteCardinalitiesFromClassRequestV2 = {
     val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
@@ -657,7 +657,7 @@ final case class DeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -676,7 +676,7 @@ object DeleteCardinalitiesFromClassRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): DeleteCardinalitiesFromClassRequestV2 = {
     val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
@@ -704,7 +704,7 @@ case class DeleteClassRequestV2(
   classIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -715,7 +715,7 @@ case class DeleteClassRequestV2(
  */
 case class CanDeleteClassRequestV2(
   classIri: SmartIri,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -730,7 +730,7 @@ case class DeletePropertyRequestV2(
   propertyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -741,7 +741,7 @@ case class DeletePropertyRequestV2(
  */
 case class CanDeletePropertyRequestV2(
   propertyIri: SmartIri,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -774,7 +774,7 @@ case class ChangePropertyGuiElementRequest(
   newGuiObject: Schema.GuiObject,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -796,7 +796,7 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM,
+    requestingUser: User,
     appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
@@ -823,7 +823,7 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
     with ChangeLabelsOrCommentsRequest
 
@@ -843,7 +843,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ChangePropertyLabelsOrCommentsRequestV2 = {
     val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val propertyUpdateInfo    = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
@@ -876,7 +876,7 @@ case class DeletePropertyCommentRequestV2(
   propertyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -895,7 +895,7 @@ object DeletePropertyCommentRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): DeletePropertyCommentRequestV2 = {
     val inputOntologyV2      = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologyV2)
@@ -927,7 +927,7 @@ case class ChangeClassLabelsOrCommentsRequestV2(
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
     with ChangeLabelsOrCommentsRequest
 
@@ -947,7 +947,7 @@ object ChangeClassLabelsOrCommentsRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ChangeClassLabelsOrCommentsRequestV2 = {
     val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo       = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
@@ -980,7 +980,7 @@ case class DeleteClassCommentRequestV2(
   classIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -999,7 +999,7 @@ object DeleteClassCommentRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): DeleteClassCommentRequestV2 = {
     val inputOntologyV2: InputOntologyV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val classUpdateInfo: ClassUpdateInfo     = OntologyUpdateHelper.getClassDef(inputOntologyV2)
@@ -1019,7 +1019,7 @@ case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 object ChangeGuiOrderRequestV2 {
@@ -1027,7 +1027,7 @@ object ChangeGuiOrderRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ChangeGuiOrderRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
 
@@ -1067,7 +1067,7 @@ case class ChangeOntologyMetadataRequestV2(
   comment: Option[String] = None,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1086,7 +1086,7 @@ object ChangeOntologyMetadataRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: User
   ): ChangeOntologyMetadataRequestV2 = {
     val inputOntologyV2         = InputOntologyV2.fromJsonLD(jsonLDDocument)
     val inputMetadata           = inputOntologyV2.ontologyMetadata
@@ -1120,7 +1120,7 @@ case class DeleteOntologyCommentRequestV2(
   ontologyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1134,7 +1134,7 @@ case class DeleteOntologyCommentRequestV2(
 case class EntityInfoGetRequestV2(
   classIris: Set[SmartIri] = Set.empty[SmartIri],
   propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1159,7 +1159,7 @@ case class EntityInfoGetResponseV2(
 case class StandoffEntityInfoGetRequestV2(
   standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
   standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1179,7 +1179,7 @@ case class StandoffEntityInfoGetResponseV2(
  *
  * @param requestingUser the user making the request.
  */
-case class StandoffClassesWithDataTypeGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class StandoffClassesWithDataTypeGetRequestV2(requestingUser: User) extends OntologiesResponderRequestV2
 
 /**
  * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
@@ -1194,7 +1194,7 @@ case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[Sm
  *
  * @param requestingUser the user making the request.
  */
-case class StandoffAllPropertyEntitiesGetRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class StandoffAllPropertyEntitiesGetRequestV2(requestingUser: User) extends OntologiesResponderRequestV2
 
 /**
  * Represents assertions about all standoff all standoff property entities.
@@ -1212,7 +1212,7 @@ case class StandoffAllPropertyEntitiesGetResponseV2(
  * @param subClassIri   the IRI of the subclass.
  * @param superClassIri the IRI of the superclass.
  */
-case class CheckSubClassRequestV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: UserADM)
+case class CheckSubClassRequestV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1229,8 +1229,7 @@ case class CheckSubClassResponseV2(isSubClass: Boolean)
  * @param resourceClassIri the IRI of the given resource class.
  * @param requestingUser   the user making the request.
  */
-case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: UserADM)
-    extends OntologiesResponderRequestV2
+case class SubClassesGetRequestV2(resourceClassIri: SmartIri, requestingUser: User) extends OntologiesResponderRequestV2
 
 /**
  * Provides information about the subclasses of a Knora resource class.
@@ -1246,7 +1245,7 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
  * @param ontologyIri    the IRI of the named graph.
  * @param requestingUser the user making the request.
  */
-case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: UserADM)
+case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1258,7 +1257,7 @@ case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requesting
  */
 case class OntologyMetadataGetByProjectRequestV2(
   projectIris: Set[SmartIri] = Set.empty[SmartIri],
-  requestingUser: UserADM
+  requestingUser: User
 ) extends OntologiesResponderRequestV2
 
 /**
@@ -1268,7 +1267,7 @@ case class OntologyMetadataGetByProjectRequestV2(
  *                       about all ontologies is returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM)
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1278,7 +1277,7 @@ case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.e
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM)
+case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1288,7 +1287,7 @@ case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boo
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM)
+case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1298,7 +1297,7 @@ case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, 
  * @param allLanguages   true if information in all available languages should be returned.
  * @param requestingUser the user making the request.
  */
-case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM)
+case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: User)
     extends OntologiesResponderRequestV2
 
 /**

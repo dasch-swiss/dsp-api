@@ -39,7 +39,7 @@ import pekko.http.scaladsl.model.headers.HttpCookiePair
 import pekko.http.scaladsl.server.RequestContext
 import pekko.util.ByteString
 
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -56,9 +56,9 @@ trait Authenticator {
    * corresponding error is returned.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[UserADM]]
+   * @return a [[User]]
    */
-  def getUserADM(requestContext: RequestContext): Task[UserADM]
+  def getUserADM(requestContext: RequestContext): Task[User]
 
   /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string
@@ -72,17 +72,17 @@ trait Authenticator {
   def calculateCookieName(): String
 
   /**
-   * Tries to retrieve a [[UserADM]] based on the supplied credentials. If both email/password and session
+   * Tries to retrieve a [[User]] based on the supplied credentials. If both email/password and session
    * token are supplied, then the user profile for the session token is returned. This method should only be used
    * with authenticated credentials.
    *
    * @param credentials          the user supplied credentials.
-   * @return a [[UserADM]]
+   * @return a [[User]]
    *
    *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
    */
-  def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[UserADM]
-  def verifyJwt(jwtToken: String): Task[UserADM] = getUserADMThroughCredentialsV2(
+  def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[User]
+  def verifyJwt(jwtToken: String): Task[User] = getUserADMThroughCredentialsV2(
     Some(KnoraJWTTokenCredentialsV2(jwtToken))
   )
 
@@ -135,14 +135,14 @@ trait Authenticator {
   def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[Boolean]
 
   /**
-   * Tries to get a [[UserADM]].
+   * Tries to get a [[User]].
    *
    * @param identifier           the IRI, email, or username of the user to be queried
-   * @return a [[UserADM]]
+   * @return a [[User]]
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  def getUserByIdentifier(identifier: UserIdentifierADM): Task[UserADM]
+  def getUserByIdentifier(identifier: UserIdentifierADM): Task[User]
 }
 
 object Authenticator {
@@ -364,9 +364,9 @@ final case class AuthenticatorLive(
    * corresponding error is returned.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[UserADM]]
+   * @return a [[User]]
    */
-  override def getUserADM(requestContext: RequestContext): Task[UserADM] = {
+  override def getUserADM(requestContext: RequestContext): Task[User] = {
     val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
     if (credentials.isEmpty) {
       ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser)
@@ -584,16 +584,16 @@ final case class AuthenticatorLive(
   }
 
   /**
-   * Tries to retrieve a [[UserADM]] based on the supplied credentials. If both email/password and session
+   * Tries to retrieve a [[User]] based on the supplied credentials. If both email/password and session
    * token are supplied, then the user profile for the session token is returned. This method should only be used
    * with authenticated credentials.
    *
    * @param credentials          the user supplied credentials.
-   * @return a [[UserADM]]
+   * @return a [[User]]
    *
    *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
    */
-  override def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[UserADM] =
+  override def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[User] =
     for {
       _ <- authenticateCredentialsV2(credentials)
 
@@ -632,16 +632,16 @@ final case class AuthenticatorLive(
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Tries to get a [[UserADM]].
+   * Tries to get a [[User]].
    *
    * @param identifier           the IRI, email, or username of the user to be queried
-   * @return a [[UserADM]]
+   * @return a [[User]]
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  override def getUserByIdentifier(identifier: UserIdentifierADM): Task[UserADM] =
+  override def getUserByIdentifier(identifier: UserIdentifierADM): Task[User] =
     messageRelay
-      .ask[Option[UserADM]](UserGetADM(identifier, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
+      .ask[Option[User]](UserGetADM(identifier, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
       .flatMap(ZIO.fromOption(_))
       .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
 

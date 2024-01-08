@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -53,19 +53,19 @@ import org.knora.webapi.util.ZioHelper
 trait ValuesResponderV2 {
   def createValueV2(
     createValue: CreateValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[CreateValueResponseV2]
 
   def updateValueV2(
     updateValue: UpdateValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestId: UUID
   ): Task[UpdateValueResponseV2]
 
   def deleteValueV2(
     deleteValue: DeleteValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestId: UUID
   ): Task[SuccessResponseV2]
 }
@@ -103,7 +103,7 @@ final case class ValuesResponderV2Live(
    */
   override def createValueV2(
     valueToCreate: CreateValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[CreateValueResponseV2] = {
     def taskZio: Task[CreateValueResponseV2] = {
@@ -669,7 +669,7 @@ final case class ValuesResponderV2Live(
     valueToCreate: GenerateSparqlForValueInNewResourceV2,
     valueHasOrder: Int,
     resourceCreationDate: Instant,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[InsertSparqlWithUnverifiedValue] =
     for {
       // Make new value UUID.
@@ -844,7 +844,7 @@ final case class ValuesResponderV2Live(
    */
   override def updateValueV2(
     updateValue: UpdateValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestId: UUID
   ): Task[UpdateValueResponseV2] = {
 
@@ -1274,7 +1274,7 @@ final case class ValuesResponderV2Live(
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[UnverifiedValueV2] =
     for {
       newValueIri <-
@@ -1397,7 +1397,7 @@ final case class ValuesResponderV2Live(
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[UnverifiedValueV2] =
     // Are we changing the link target?
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
@@ -1493,7 +1493,7 @@ final case class ValuesResponderV2Live(
    */
   override def deleteValueV2(
     deleteValue: DeleteValueV2,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestId: UUID
   ): Task[SuccessResponseV2] = {
     def deleteTask(): Task[SuccessResponseV2] = {
@@ -1703,7 +1703,7 @@ final case class ValuesResponderV2Live(
     deleteComment: Option[String],
     deleteDate: Option[Instant],
     currentValue: ReadValueV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[IRI] =
     currentValue.valueContent match {
       case _: LinkValueContentV2 =>
@@ -1748,7 +1748,7 @@ final case class ValuesResponderV2Live(
     currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[IRI] =
     // Make a new version of of the LinkValue with a reference count of 0, and mark the new
     // version as deleted. Give the new version the same permissions as the previous version.
@@ -1804,7 +1804,7 @@ final case class ValuesResponderV2Live(
     currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[IRI] = {
     // Mark the existing version of the value as deleted.
 
@@ -1858,7 +1858,7 @@ final case class ValuesResponderV2Live(
     submittedPropertyIri: SmartIri,
     maybeSubmittedValueType: Option[SmartIri],
     propertyInfoForSubmittedProperty: ReadPropertyInfoV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadPropertyInfoV2] = {
     val submittedInternalPropertyIri: SmartIri = submittedPropertyIri.toOntologySchema(InternalSchema)
 
@@ -1908,7 +1908,7 @@ final case class ValuesResponderV2Live(
    *
    * @param requestingUser       the user making the request.
    */
-  private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Task[Unit] =
+  private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: User): Task[Unit] =
     messageRelay
       .ask[ReadResourcesSequenceV2](
         ResourcesPreviewGetRequestV2(
@@ -1936,7 +1936,7 @@ final case class ValuesResponderV2Live(
   private def getResourceWithPropertyValues(
     resourceIri: IRI,
     propertyInfo: ReadPropertyInfoV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourceV2] =
     for {
       // Get the property's object class constraint.
@@ -1992,7 +1992,7 @@ final case class ValuesResponderV2Live(
     linkPropertyIri: SmartIri,
     objectClassConstraint: SmartIri,
     linkValueContent: LinkValueContentV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit] =
     for {
       // Get a preview of the target resource, because we only need to find out its class and whether the user has permission to view it.
@@ -2041,7 +2041,7 @@ final case class ValuesResponderV2Live(
     propertyIri: SmartIri,
     objectClassConstraint: SmartIri,
     valueContent: ValueContentV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit] =
     // Is the value type the same as the property's object class constraint?
     ZIO
@@ -2082,7 +2082,7 @@ final case class ValuesResponderV2Live(
   private def checkPropertyObjectClassConstraint(
     propertyInfo: ReadPropertyInfoV2,
     valueContent: ValueContentV2,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit] = {
     val propertyIri = propertyInfo.entityInfoContent.propertyIri
     for {

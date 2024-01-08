@@ -19,7 +19,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
@@ -178,7 +178,7 @@ final case class ProjectsEndpointsHandler(
 
   val getAdminProjectsByIriAllDataHandler = {
     implicit val ec: ExecutionContext = ExecutionContext.global
-    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: UserADM) =>
+    projectsEndpoints.Secured.getAdminProjectsByIriAllData.serverLogic((user: User) =>
       (iri: IriIdentifier) =>
         // Future[Either[RequestRejectedException, (String, String, PekkoStreams.BinaryStream]]
         mapper.runToFuture(

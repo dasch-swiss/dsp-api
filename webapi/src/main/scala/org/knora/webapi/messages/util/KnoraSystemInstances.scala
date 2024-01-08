@@ -11,7 +11,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * This object represents built-in User and Project instances.
@@ -23,7 +23,7 @@ object KnoraSystemInstances {
     /**
      * Represents the anonymous user.
      */
-    val AnonymousUser = model.UserADM(
+    val AnonymousUser = model.User(
       id = OntologyConstants.KnoraAdmin.AnonymousUser,
       username = "anonymous",
       email = "anonymous@localhost",
@@ -41,7 +41,7 @@ object KnoraSystemInstances {
     /**
      * Represents the system user used internally.
      */
-    val SystemUser = model.UserADM(
+    val SystemUser = model.User(
       id = OntologyConstants.KnoraAdmin.SystemUser,
       username = "system",
       email = "system@localhost",

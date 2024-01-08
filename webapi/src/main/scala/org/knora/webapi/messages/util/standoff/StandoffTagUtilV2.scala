@@ -31,7 +31,7 @@ import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -46,7 +46,7 @@ trait StandoffTagUtilV2 {
    */
   def createStandoffTagsV2FromConstructResults(
     standoffAssertions: Map[IRI, Map[SmartIri, LiteralV2]],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Vector[StandoffTagV2]]
 
   /**
@@ -57,7 +57,7 @@ trait StandoffTagUtilV2 {
    */
   def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Vector[StandoffTagV2]]
 }
 
@@ -74,7 +74,7 @@ final case class StandoffTagUtilV2Live(
    */
   override def createStandoffTagsV2FromConstructResults(
     standoffAssertions: Map[IRI, Map[SmartIri, LiteralV2]],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Vector[StandoffTagV2]] = {
     val unwrappedStandoffAssertions: Map[IRI, Map[IRI, String]] = standoffAssertions.map {
       case (standoffTagIri, standoffTagAssertions: Map[SmartIri, LiteralV2]) =>
@@ -93,7 +93,7 @@ final case class StandoffTagUtilV2Live(
    */
   override def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Vector[StandoffTagV2]] = {
 
     val standoffClassIris: Set[SmartIri] = standoffAssertions.map { case (_, standoffTagAssertions: Map[IRI, String]) =>

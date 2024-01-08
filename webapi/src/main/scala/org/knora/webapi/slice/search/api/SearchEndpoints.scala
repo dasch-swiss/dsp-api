@@ -20,7 +20,7 @@ import zio.ZLayer
 import dsp.valueobjects.Iri
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -268,7 +268,7 @@ final case class SearchRestService(
     offset: Offset,
     project: Option[ProjectIri],
     limitByResourceClass: Option[InputIri],
-    user: UserADM
+    user: User
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
     searchResult <-
@@ -288,12 +288,12 @@ final case class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearch(query: String, opts: FormatOptions, user: UserADM): Task[(RenderedResponse, MediaType)] = for {
+  def gravsearch(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
     searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
 
-  def gravsearchCount(query: String, opts: FormatOptions, user: UserADM): Task[(RenderedResponse, MediaType)] = for {
+  def gravsearchCount(query: String, opts: FormatOptions, user: User): Task[(RenderedResponse, MediaType)] = for {
     searchResult <- searchResponderV2.gravsearchCountV2(query, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
@@ -306,7 +306,7 @@ final case class SearchRestService(
     resourceClass: Option[InputIri],
     standoffClass: Option[InputIri],
     returnFiles: Boolean,
-    user: UserADM
+    user: User
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)

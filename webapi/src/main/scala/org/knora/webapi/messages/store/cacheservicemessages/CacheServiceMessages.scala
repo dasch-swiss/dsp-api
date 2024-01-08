@@ -10,7 +10,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 sealed trait CacheServiceRequest extends StoreRequest with RelayedMessage
 
@@ -27,7 +27,7 @@ case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends C
 /**
  * Message requesting to write user to cache.
  */
-case class CacheServicePutUserADM(value: UserADM) extends CacheServiceRequest
+case class CacheServicePutUserADM(value: User) extends CacheServiceRequest
 
 /**
  * Message requesting to retrieve user from cache.
@@ -52,7 +52,7 @@ case class CacheServiceRemoveValues(keys: Set[String]) extends CacheServiceReque
 /**
  * Message requesting to completely empty the cache (wipe everything).
  */
-case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequest
+case class CacheServiceFlushDB(requestingUser: User) extends CacheServiceRequest
 
 /**
  * Queries Cache Service status.

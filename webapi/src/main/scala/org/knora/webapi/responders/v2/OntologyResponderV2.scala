@@ -36,7 +36,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -153,7 +153,7 @@ final case class OntologyResponderV2Live(
   private def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[EntityInfoGetResponseV2] = ontologyHelpers.getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
 
   /**
@@ -270,7 +270,7 @@ final case class OntologyResponderV2Live(
    * @param classIri the IRI of the class whose subclasses should be returned.
    * @return a [[SubClassesGetResponseV2]].
    */
-  private def getSubClassesV2(classIri: SmartIri, requestingUser: UserADM): Task[SubClassesGetResponseV2] =
+  private def getSubClassesV2(classIri: SmartIri, requestingUser: User): Task[SubClassesGetResponseV2] =
     for {
       cacheData <- ontologyCache.getCacheData
       subClasses <-
@@ -370,7 +370,7 @@ final case class OntologyResponderV2Live(
   private def getOntologyEntitiesV2(
     ontologyIri: SmartIri,
     allLanguages: Boolean,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadOntologyV2] =
     for {
       cacheData <- ontologyCache.getCacheData
@@ -406,7 +406,7 @@ final case class OntologyResponderV2Live(
   private def getPropertyDefinitionsFromOntologyV2(
     propertyIris: Set[SmartIri],
     allLanguages: Boolean,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadOntologyV2] =
     for {
       cacheData <- ontologyCache.getCacheData

@@ -17,7 +17,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.
@@ -34,7 +34,7 @@ sealed trait SipiResponderRequestADM extends KnoraRequestADM with RelayedMessage
 case class SipiFileInfoGetRequestADM(
   projectID: Shortcode,
   filename: String,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends SipiResponderRequestADM
 
 /**

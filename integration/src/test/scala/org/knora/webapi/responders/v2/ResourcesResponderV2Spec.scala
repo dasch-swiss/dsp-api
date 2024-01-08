@@ -43,7 +43,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util._
 
 import pekko.testkit.ImplicitSender
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -479,7 +479,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   )
 
-  private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
+  private def getResource(resourceIri: IRI, requestingUser: User): ReadResourceV2 = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -497,7 +497,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     outputResource: ReadResourceV2,
     defaultResourcePermissions: String,
     defaultValuePermissions: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): Unit = {
     assert(outputResource.resourceIri == inputResourceIri)
     assert(outputResource.resourceClassIri == inputResource.resourceClassIri)

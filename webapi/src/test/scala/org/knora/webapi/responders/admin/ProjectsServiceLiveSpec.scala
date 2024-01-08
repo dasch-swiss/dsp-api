@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectU
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
@@ -194,7 +194,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -207,7 +207,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -220,7 +220,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -236,7 +236,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectIriIdentifier(iri)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -249,7 +249,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService
@@ -262,7 +262,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
       val mockResponder = ProjectsResponderADMMock.ProjectAdminMembersGetRequestADM(
         assertion = Assertion.equalTo(identifier, SystemUser),
-        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[UserADM]))
+        result = Expectation.value(ProjectAdminMembersGetResponseADM(Seq.empty[User]))
       )
       for {
         _ <- ProjectADMRestService

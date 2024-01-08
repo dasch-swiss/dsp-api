@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -76,7 +76,7 @@ trait OntologyHelpers {
   def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[EntityInfoGetResponseV2]
 
   /**
@@ -89,7 +89,7 @@ trait OntologyHelpers {
   def getClassDefinitionsFromOntologyV2(
     classIris: Set[SmartIri],
     allLanguages: Boolean,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadOntologyV2]
 
   /**
@@ -133,7 +133,7 @@ trait OntologyHelpers {
    * @param requestingUser      the user making the request.
    * @return `true` if the user has permission to update the ontology
    */
-  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[Boolean]
+  def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean]
 
   /**
    * Checks whether an ontology IRI is valid for an update.
@@ -154,7 +154,7 @@ trait OntologyHelpers {
   def checkOntologyAndEntityIrisForUpdate(
     externalOntologyIri: SmartIri,
     externalEntityIri: SmartIri,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit]
 
   /**
@@ -164,7 +164,7 @@ trait OntologyHelpers {
    * @param requestingUser      the user making the request.
    * @return the project IRI.
    */
-  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[SmartIri]
+  def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: User): Task[SmartIri]
 }
 
 object OntologyHelpers {
@@ -1722,7 +1722,7 @@ final case class OntologyHelpersLive(
   override def checkOntologyAndEntityIrisForUpdate(
     externalOntologyIri: SmartIri,
     externalEntityIri: SmartIri,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit] =
     for {
       _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
@@ -1756,7 +1756,7 @@ final case class OntologyHelpersLive(
   override def getEntityInfoResponseV2(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[EntityInfoGetResponseV2] = {
     for {
       cacheData <- ontologyCache.getCacheData
@@ -1961,7 +1961,7 @@ final case class OntologyHelpersLive(
   override def getClassDefinitionsFromOntologyV2(
     classIris: Set[SmartIri],
     allLanguages: Boolean,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadOntologyV2] =
     for {
       cacheData <- ontologyCache.getCacheData
@@ -2086,7 +2086,7 @@ final case class OntologyHelpersLive(
    * @param requestingUser      the user making the request.
    * @return `true` if the user has permission to update the ontology
    */
-  override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: UserADM): Task[Boolean] =
+  override def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: User): Task[Boolean] =
     for {
       cacheData <- ontologyCache.getCacheData
 
@@ -2110,7 +2110,7 @@ final case class OntologyHelpersLive(
    */
   override def checkPermissionsForOntologyUpdate(
     internalOntologyIri: SmartIri,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[SmartIri] =
     for {
       cacheData <- ontologyCache.getCacheData

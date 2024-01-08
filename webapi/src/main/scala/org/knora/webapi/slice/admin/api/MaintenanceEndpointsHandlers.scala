@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 import zio.json.ast.Json
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
@@ -21,7 +21,7 @@ final case class MaintenanceEndpointsHandlers(
   private val postMaintenanceHandler =
     SecuredEndpointAndZioHandler[(String, Option[Json]), Unit](
       endpoints.postMaintenance,
-      (user: UserADM) => { case (action: String, jsonMaybe: Option[Json]) =>
+      (user: User) => { case (action: String, jsonMaybe: Option[Json]) =>
         restService.executeMaintenanceAction(user, action, jsonMaybe)
       }
     )

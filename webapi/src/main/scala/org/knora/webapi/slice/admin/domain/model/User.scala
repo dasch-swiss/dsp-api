@@ -26,10 +26,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
  * @param lang        The ISO 639-1 code of the user's preferred language.
  * @param groups      The groups that the user belongs to.
  * @param projects    The projects that the user belongs to.
- * @param sessionId   The sessionId,.
  * @param permissions The user's permissions.
  */
-final case class UserADM(
+final case class User(
   id: String,
   username: String,
   email: String,
@@ -42,12 +41,12 @@ final case class UserADM(
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   permissions: PermissionsDataADM = PermissionsDataADM()
-) extends Ordered[UserADM] { self =>
+) extends Ordered[User] { self =>
 
   /**
    * Allows to sort collections of UserADM. Sorting is done by the id.
    */
-  def compare(that: UserADM): Int = this.id.compareTo(that.id)
+  def compare(that: User): Int = this.id.compareTo(that.id)
 
   /**
    * Check password (in clear text) using SCrypt. The password supplied in clear text is hashed and
@@ -77,11 +76,11 @@ final case class UserADM(
     }
 
   /**
-   * Creating a [[UserADM]] of the requested type.
+   * Creating a [[User]] of the requested type.
    *
-   * @return a [[UserADM]]
+   * @return a [[User]]
    */
-  def ofType(userTemplateType: UserInformationTypeADM): UserADM =
+  def ofType(userTemplateType: UserInformationTypeADM): User =
     userTemplateType match {
       case UserInformationTypeADM.Public =>
         self.copy(

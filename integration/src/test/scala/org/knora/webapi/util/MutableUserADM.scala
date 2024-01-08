@@ -5,19 +5,19 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Holds an optional, mutable IRI for use in tests.
  */
 class MutableUserADM {
-  private var maybeUserProfile: Option[UserADM] = None
+  private var maybeUserProfile: Option[User] = None
 
   /**
    * Stores the user's profile.
    * @param userProfile the user's profile to be stored.
    */
-  def set(userProfile: UserADM): Unit =
+  def set(userProfile: User): Unit =
     maybeUserProfile = Some(userProfile)
 
   /**
@@ -30,7 +30,7 @@ class MutableUserADM {
    * Gets the stored IRI, or throws an exception if the IRI is not set.
    * @return the stored IRI.
    */
-  def get: UserADM =
+  def get: User =
     maybeUserProfile.getOrElse(
       throw TestUserProfileException("This test could not be run because a previous test failed")
     )

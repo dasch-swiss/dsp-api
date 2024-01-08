@@ -14,7 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Utility functions for working with users.
@@ -24,19 +24,19 @@ object UserUtilADM {
   /**
    * Allows a system admin or project admin to perform an operation as another user in a specified project.
    * Checks whether the requesting user is a system admin or a project admin in the project, and if so,
-   * returns a [[UserADM]] representing the requested user. Otherwise, returns a failed future containing
+   * returns a [[User]] representing the requested user. Otherwise, returns a failed future containing
    * [[ForbiddenException]].
    *
    * @param requestingUser   the requesting user.
    * @param requestedUserIri the IRI of the requested user.
    * @param projectIri       the IRI of the project.
-   * @return a [[UserADM]] representing the requested user.
+   * @return a [[User]] representing the requested user.
    */
   def switchToUser(
-    requestingUser: UserADM,
+    requestingUser: User,
     requestedUserIri: IRI,
     projectIri: IRI
-  ): ZIO[StringFormatter & MessageRelay, Throwable, UserADM] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, User] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       if (requestingUser.id == requestedUserIri) {
         ZIO.succeed(requestingUser)

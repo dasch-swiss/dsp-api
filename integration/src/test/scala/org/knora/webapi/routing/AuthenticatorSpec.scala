@@ -22,7 +22,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
 
 import pekko.testkit.ImplicitSender
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser
@@ -34,7 +34,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private def testUserAdmFromIri(iri: String) = UserADM(iri, "", "", "", "", false, "")
+  private def testUserAdmFromIri(iri: String) = User(iri, "", "", "", "", false, "")
 
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {

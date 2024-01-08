@@ -33,7 +33,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
@@ -51,7 +51,7 @@ trait JwtService {
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt]
+  def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt]
   def createJwtForDspIngest(): UIO[Jwt]
 
   /**
@@ -81,7 +81,7 @@ final case class JwtServiceLive(
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
 
-  override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
+  override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
     val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
     else { Set("Knora", "Sipi") }
     createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)))
@@ -126,7 +126,7 @@ final case class JwtServiceLive(
    * @return a [[Boolean]].
    */
   override def validateToken(token: String): Task[Boolean] =
-    ZIO.attempt(if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
+    ZIO.attempt(if (CacheUtil.get[User](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
       // token invalidated so no need to decode
       logger.debug("validateToken - token found in invalidation cache, so not valid")
       false

@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
 import pekko.event.LogSource
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
@@ -856,7 +856,7 @@ final case class InferringGravsearchTypeInspector(
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[IntermediateTypeInspectionResult] = {
     logger.debug("========== Starting type inference ==========")
 
@@ -895,7 +895,7 @@ final case class InferringGravsearchTypeInspector(
    */
   def getUsageIndexAndEntityInfos(
     whereClause: WhereClause,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[(UsageIndex, EntityInfoGetResponseV2)] =
     for {
       // Make an index of entity usage in the query.

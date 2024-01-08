@@ -40,7 +40,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -627,7 +627,7 @@ final case class ListsResponderADMLive(
    * @param queryNodeIri   the IRI of the node whose path is to be queried.
    * @param requestingUser the user making the request.
    */
-  private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Task[NodePathGetResponseADM] = {
+  private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: User): Task[NodePathGetResponseADM] = {
 
     /**
      * Recursively constructs the path to a node.
@@ -1043,7 +1043,7 @@ final case class ListsResponderADMLive(
   private def nodeNameChangeRequest(
     nodeIri: IRI,
     changeNodeNameRequest: NodeNameChangePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
 
@@ -1053,7 +1053,7 @@ final case class ListsResponderADMLive(
     def nodeNameChangeTask(
       nodeIri: IRI,
       changeNodeNameRequest: NodeNameChangePayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1110,7 +1110,7 @@ final case class ListsResponderADMLive(
   private def nodeLabelsChangeRequest(
     nodeIri: IRI,
     changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
 
@@ -1120,7 +1120,7 @@ final case class ListsResponderADMLive(
     def nodeLabelsChangeTask(
       nodeIri: IRI,
       changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1175,7 +1175,7 @@ final case class ListsResponderADMLive(
   private def nodeCommentsChangeRequest(
     nodeIri: IRI,
     changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
 
@@ -1185,7 +1185,7 @@ final case class ListsResponderADMLive(
     def nodeCommentsChangeTask(
       nodeIri: IRI,
       changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1241,7 +1241,7 @@ final case class ListsResponderADMLive(
   private def nodePositionChangeRequest(
     nodeIri: IRI,
     changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[NodePositionChangeResponseADM] = {
 
@@ -1473,7 +1473,7 @@ final case class ListsResponderADMLive(
     def nodePositionChangeTask(
       nodeIri: IRI,
       changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[NodePositionChangeResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1581,7 +1581,7 @@ final case class ListsResponderADMLive(
    */
   private def deleteListItemRequestADM(
     nodeIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[ListItemDeleteResponseADM] = {
 
@@ -1719,7 +1719,7 @@ final case class ListsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def nodeDeleteTask(nodeIri: IRI, requestingUser: UserADM) =
+    def nodeDeleteTask(nodeIri: IRI, requestingUser: User) =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 

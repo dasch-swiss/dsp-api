@@ -22,11 +22,11 @@ import java.net.http.HttpClient
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 @accessible
 trait ProjectImportService {
-  def importProject(id: Shortcode, user: UserADM): Task[Option[Path]]
+  def importProject(id: Shortcode, user: User): Task[Option[Path]]
   def importTrigFile(file: Path): Task[Unit]
   def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
@@ -79,7 +79,7 @@ final case class ProjectImportServiceLive(
     ZIO.acquireRelease(acquire)(release).map(executor)
   }
 
-  override def importProject(projectShortcode: Shortcode, user: UserADM): Task[Option[Path]] = {
+  override def importProject(projectShortcode: Shortcode, user: User): Task[Option[Path]] = {
     val projectImport = exportStorage.projectExportFullPath(projectShortcode)
     ZIO.whenZIO(Files.exists(projectImport))(importProject(projectImport, projectShortcode))
   }

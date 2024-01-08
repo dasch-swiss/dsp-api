@@ -8,14 +8,14 @@ package org.knora.webapi.e2e.admin.lists
 import org.apache.pekko
 
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Representing user's credentials
  *
  * @param user the user's information.
  */
-case class CredentialsADM(user: UserADM, password: String) {
+case class CredentialsADM(user: User, password: String) {
 
   def iri = user.id
 

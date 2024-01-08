@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheKey
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheName
@@ -433,7 +433,7 @@ trait OntologyCache {
    * @param requestingUser the user making the request.
    * @return [[Unit]]
    */
-  def loadOntologies(requestingUser: UserADM): Task[Unit]
+  def loadOntologies(requestingUser: User): Task[Unit]
 
   /**
    * Gets the ontology data from the cache.
@@ -498,7 +498,7 @@ final case class OntologyCacheLive(
    * @param requestingUser the user making the request.
    * @return a [[SuccessResponseV2]].
    */
-  override def loadOntologies(requestingUser: UserADM): Task[Unit] =
+  override def loadOntologies(requestingUser: User): Task[Unit] =
     for {
       _ <-
         ZIO

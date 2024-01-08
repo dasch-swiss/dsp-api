@@ -52,7 +52,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -96,10 +96,10 @@ trait SearchResponderV2 {
   def gravsearchV2(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
-    user: UserADM
+    user: User
   ): Task[ReadResourcesSequenceV2]
 
-  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: UserADM): Task[ReadResourcesSequenceV2] = for {
+  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] = for {
     q <- ZIO.attempt(GravsearchParser.parseQuery(query))
     r <- gravsearchV2(q, rendering, user)
   } yield r
@@ -111,8 +111,8 @@ trait SearchResponderV2 {
    * @param user  the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
-  def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2]
-  def gravsearchCountV2(query: IRI, user: UserADM): Task[ResourceCountV2] =
+  def gravsearchCountV2(query: ConstructQuery, user: User): Task[ResourceCountV2]
+  def gravsearchCountV2(query: IRI, user: User): Task[ResourceCountV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
       r <- gravsearchCountV2(q, user)
@@ -157,7 +157,7 @@ trait SearchResponderV2 {
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -191,7 +191,7 @@ trait SearchResponderV2 {
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -211,7 +211,7 @@ trait SearchResponderV2 {
     orderByProperty: Option[SmartIri],
     page: RuntimeFlags,
     schemaAndOptions: SchemaRendering,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2]
 }
 
@@ -302,7 +302,7 @@ final case class SearchResponderV2Live(
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
@@ -418,7 +418,7 @@ final case class SearchResponderV2Live(
     } yield apiResponse
   }
 
-  override def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2] =
+  override def gravsearchCountV2(query: ConstructQuery, user: User): Task[ResourceCountV2] =
     for {
       _ <- // make sure that OFFSET is 0
         ZIO
@@ -486,7 +486,7 @@ final case class SearchResponderV2Live(
   override def gravsearchV2(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
-    user: UserADM
+    user: User
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -695,7 +695,7 @@ final case class SearchResponderV2Live(
     orderByProperty: Option[SmartIri],
     page: Int,
     schemaAndOptions: SchemaRendering,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
     val internalClassIri = resourceClass.toOntologySchema(InternalSchema)
     val maybeInternalOrderByPropertyIri: Option[SmartIri] =
@@ -922,7 +922,7 @@ final case class SearchResponderV2Live(
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage

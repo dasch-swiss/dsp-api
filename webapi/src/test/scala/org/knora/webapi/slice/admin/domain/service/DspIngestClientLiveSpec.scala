@@ -46,7 +46,7 @@ import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.UserADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
@@ -129,10 +129,10 @@ object DspIngestClientLiveSpecLayers {
   val jwtServiceMockLayer: ULayer[JwtService] = ZLayer.succeed {
     val unsupported = ZIO.die(new UnsupportedOperationException("not implemented"))
     new JwtService {
-      override def createJwtForDspIngest(): UIO[Jwt]                                 = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
-      override def createJwt(user: UserADM, content: Map[String, JsValue]): UIO[Jwt] = unsupported
-      override def validateToken(token: String): Task[Boolean]                       = unsupported
-      override def extractUserIriFromToken(token: String): Task[Option[IRI]]         = unsupported
+      override def createJwtForDspIngest(): UIO[Jwt]                              = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
+      override def createJwt(user: User, content: Map[String, JsValue]): UIO[Jwt] = unsupported
+      override def validateToken(token: String): Task[Boolean]                    = unsupported
+      override def extractUserIriFromToken(token: String): Task[Option[IRI]]      = unsupported
     }
   }
 
