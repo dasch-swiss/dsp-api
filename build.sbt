@@ -1,12 +1,15 @@
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper.*
-import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
-import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
-import org.knora.Dependencies
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerRepository
+import com.typesafe.sbt.packager.docker.Cmd
+import com.typesafe.sbt.packager.docker.ExecCmd
 import sbt.*
 import sbt.Keys.version
 
 import scala.language.postfixOps
 import scala.sys.process.*
+
+import org.knora.Dependencies
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
