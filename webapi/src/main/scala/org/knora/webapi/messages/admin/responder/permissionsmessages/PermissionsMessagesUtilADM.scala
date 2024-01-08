@@ -34,19 +34,14 @@ object PermissionsMessagesUtilADM {
    * @param hasPermissions       Set of the permissions.
    */
   def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] = {
-    val updatedPermissions = hasPermissions.map { permission =>
+    hasPermissions.foreach(permission =>
       if (!AdministrativePermissionAbbreviations.contains(permission.name))
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
             s"${AdministrativePermissionAbbreviations.toString}"
         )
-      PermissionADM(
-        name = permission.name,
-        additionalInformation = None,
-        permissionCode = None
-      )
-    }
-    updatedPermissions
+    )
+    hasPermissions
   }
 
   def checkPermissionIri(iri: IRI): IRI = PermissionIri.from(iri).fold(e => throw BadRequestException(e), _.value)

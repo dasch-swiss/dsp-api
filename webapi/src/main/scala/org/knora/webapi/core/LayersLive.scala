@@ -73,7 +73,7 @@ object LayersLive {
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & IriService & JwtService & SipiService &
       KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyRepo & OntologyResponderV2 & PermissionsResponderADM & PermissionUtilADM & PredicateObjectMapper &
+      OntologyRepo & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
       AuthorizationRestService & ResourcesResponderV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &

@@ -690,7 +690,7 @@ final case class ProjectsResponderADMLive(
                  forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
                  hasPermissions =
                    Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-               ).prepareHasPermissions,
+               ),
                requestingUser,
                UUID.randomUUID()
              )
@@ -701,7 +701,7 @@ final case class ProjectsResponderADMLive(
                  forProject = projectIri,
                  forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                  hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-               ).prepareHasPermissions,
+               ),
                requestingUser,
                UUID.randomUUID()
              )

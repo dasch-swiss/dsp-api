@@ -23,8 +23,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,24 +42,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
   forGroup: IRI,
   hasPermissions: Set[PermissionADM]
 ) extends PermissionsADMJsonProtocol {
-  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
-
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
-
-  ProjectIri.from(forProject).fold(msg => throw BadRequestException(msg.head.getMessage), _ => ())
-
-  if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
-
-  if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
-    GroupIri.from(forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI $forGroup"))
-  }
-
-  def prepareHasPermissions: CreateAdministrativePermissionAPIRequestADM =
-    copy(
-      hasPermissions = PermissionsMessagesUtilADM.verifyHasPermissionsAP(hasPermissions)
-    )
 }
 
 /**
@@ -82,50 +63,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM]
 ) extends PermissionsADMJsonProtocol {
-  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
-
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
-
-  Iri.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
-
-  forGroup match {
-    case Some(iri: IRI) =>
-      if (forResourceClass.isDefined)
-        throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
-      else if (forProperty.isDefined)
-        throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-      else {
-        if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
-          GroupIri.from(iri).getOrElse(throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
-        }
-      }
-    case None =>
-      if (forResourceClass.isEmpty && forProperty.isEmpty) {
-        throw BadRequestException(
-          "Either a group, a resource class, a property, or a combination of resource class and property must be given."
-        )
-      }
-  }
-
-  forResourceClass match {
-    case Some(iri) =>
-      if (!sf.toSmartIri(iri).isKnoraEntityIri) {
-        throw BadRequestException(s"Invalid resource class IRI: $iri")
-      }
-    case None => None
-  }
-
-  forProperty match {
-    case Some(iri) =>
-      if (!sf.toSmartIri(iri).isKnoraEntityIri) {
-        throw BadRequestException(s"Invalid property IRI: $iri")
-      }
-    case None => None
-  }
-
-  if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 }
 
 /**

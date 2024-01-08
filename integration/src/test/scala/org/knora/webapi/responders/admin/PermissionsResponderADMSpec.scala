@@ -221,7 +221,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               forProject = imagesProjectIri,
               forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
               hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-            ).prepareHasPermissions,
+            ),
             rootUser,
             UUID.randomUUID()
           )
@@ -244,7 +244,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               forProject = SharedTestDataADM.anythingProjectIri,
               forGroup = SharedTestDataADM.thingSearcherGroup.id,
               hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-            ).prepareHasPermissions,
+            ),
             rootUser,
             UUID.randomUUID()
           )
@@ -277,7 +277,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               forProject = SharedTestDataADM.anythingProjectIri,
               forGroup = OntologyConstants.KnoraAdmin.KnownUser,
               hasPermissions = hasPermissions
-            ).prepareHasPermissions,
+            ),
             rootUser,
             UUID.randomUUID()
           )

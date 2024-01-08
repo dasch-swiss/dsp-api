@@ -109,6 +109,7 @@ object LayersTest {
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
+      with PermissionsRestService
       with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService

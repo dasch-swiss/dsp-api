@@ -56,11 +56,8 @@ final case class PermissionsRestService(
 
   private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: UserADM): Task[KnoraProject] =
     for {
-      projectIri <- KnoraProject.ProjectIri
-                      .from(projectIri)
-                      .toZIO
-                      .mapError(e => BadRequestException(s"Invalid projectIri: ${e.getMessage}"))
-      project <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      projectIri <- KnoraProject.ProjectIri.from(projectIri).toZIO.mapError(e => BadRequestException(e.getMessage))
+      project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
     } yield project
 
   private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: UserADM): Task[KnoraProject] =
@@ -180,6 +177,17 @@ final case class PermissionsRestService(
 }
 
 object PermissionsRestService {
+  def createAdministrativePermission(
+    request: CreateAdministrativePermissionAPIRequestADM,
+    user: UserADM
+  ): ZIO[PermissionsRestService, Throwable, AdministrativePermissionCreateResponseADM] =
+    ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
+
+  def createDefaultObjectAccessPermission(
+    request: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: UserADM
+  ): ZIO[PermissionsRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
+    ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
 
   val layer = ZLayer.derive[PermissionsRestService]
 }

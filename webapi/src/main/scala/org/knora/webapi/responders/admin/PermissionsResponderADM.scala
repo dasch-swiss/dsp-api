@@ -13,6 +13,7 @@ import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 
 import dsp.errors.*
+import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -682,6 +683,20 @@ final case class PermissionsResponderADMLive(
                }
     } yield result
 
+  private def validate(req: CreateAdministrativePermissionAPIRequestADM): Task[Unit] = ZIO.attempt {
+    req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
+
+    ProjectIri.from(req.forProject).fold(msg => throw BadRequestException(msg.head.getMessage), _ => ())
+
+    if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
+
+    if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(req.forGroup)) {
+      GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
+    }
+
+    PermissionsMessagesUtilADM.verifyHasPermissionsAP(req.hasPermissions)
+  }.unit
+
   override def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
     requestingUser: UserADM,
@@ -689,6 +704,7 @@ final case class PermissionsResponderADMLive(
   ): Task[AdministrativePermissionCreateResponseADM] = {
     val createAdministrativePermissionTask =
       for {
+        _ <- validate(createRequest)
         // does the permission already exist
         checkResult <- administrativePermissionForProjectGroupGetADM(createRequest.forProject, createRequest.forGroup)
 
@@ -1446,6 +1462,51 @@ final case class PermissionsResponderADMLive(
                }
     } yield result
 
+  private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
+    req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
+
+    Iri
+      .validateAndEscapeProjectIri(req.forProject)
+      .getOrElse(throw BadRequestException(s"Invalid project IRI ${req.forProject}"))
+
+    req.forGroup match {
+      case Some(iri: IRI) =>
+        if (req.forResourceClass.isDefined)
+          throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
+        else if (req.forProperty.isDefined)
+          throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
+        else {
+          if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
+            GroupIri.from(iri).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup.get}"))
+          }
+        }
+      case None =>
+        if (req.forResourceClass.isEmpty && req.forProperty.isEmpty) {
+          throw BadRequestException(
+            "Either a group, a resource class, a property, or a combination of resource class and property must be given."
+          )
+        }
+    }
+
+    req.forResourceClass match {
+      case Some(iri) =>
+        if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+          throw BadRequestException(s"Invalid resource class IRI: $iri")
+        }
+      case None => None
+    }
+
+    req.forProperty match {
+      case Some(iri) =>
+        if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+          throw BadRequestException(s"Invalid property IRI: $iri")
+        }
+      case None => None
+    }
+
+    if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
+  }
+
   override def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
     user: UserADM,
@@ -1457,6 +1518,7 @@ final case class PermissionsResponderADMLive(
      */
     val createPermissionTask =
       for {
+        _ <- validate(createRequest)
         projectIri <- ZIO
                         .fromEither(ProjectIri.from(createRequest.forProject).toEither)
                         .mapError(_.map(_.getMessage).mkString(","))
