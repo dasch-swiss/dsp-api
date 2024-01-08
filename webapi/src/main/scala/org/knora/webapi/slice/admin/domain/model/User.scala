@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
 import spray.json.JsValue
 
@@ -144,13 +145,22 @@ final case class User(
   def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
 
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
+
 }
 
-/**
- * Username validated by regex:
- * - 4 - 50 characters long
- * - Only contains alphanumeric characters, underscore and dot.
- * - Underscore and dot can't be at the end or start of a username
- * - Underscore or dot can't be used multiple times in a row
- */
-type Username = String Refined MatchesRegex["^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"]
+object Username {
+
+  /**
+   * Username validated by regex:
+   * - 4 - 50 characters long
+   * - Only contains alphanumeric characters, underscore and dot.
+   * - Underscore and dot can't be at the end or start of a username
+   * - Underscore or dot can't be used multiple times in a row
+   */
+  type Username = String Refined MatchesRegex["^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"]
+
+  object Username extends RefinedTypeOps[Username, String] {
+    //  implicit val codec: JsonCodec[Username] = JsonCodec[String].transformOrFail(Username.from, _.toString)
+  }
+
+}
