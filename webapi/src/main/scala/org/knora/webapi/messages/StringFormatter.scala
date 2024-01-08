@@ -624,9 +624,6 @@ class StringFormatter private (
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
 
-  // A regex for matching a string containing the project ID.
-  private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
-
   // A regex for the URL path of an API v2 ontology (built-in or project-specific).
   private val ApiV2OntologyUrlPathRegex: Regex = (
     "^" + "/ontology/((" +
