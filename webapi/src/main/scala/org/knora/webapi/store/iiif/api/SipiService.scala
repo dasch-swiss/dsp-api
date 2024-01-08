@@ -72,7 +72,7 @@ trait SipiService {
   def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse]
 
   /**
-   * Asks dsp-ingest for metadata about a file in permanent location, served from the 'knora.json' route.
+   * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
    * @param shortcode the shortcode of the project.
    * @param assetId for the file.
