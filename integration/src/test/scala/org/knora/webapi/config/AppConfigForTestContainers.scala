@@ -78,7 +78,7 @@ object AppConfigForTestContainers {
   private val config: UIO[AppConfig] = (read(descriptor[AppConfig].mapKey(toKebabCase) from source)).orDie
 
   /**
-   * Altered AppConfig with ports from TestContainers for Dsp-Ingest, Fuseki and Sipi.
+   * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
    */
   val testcontainers
     : ZLayer[DspIngestTestContainer & FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
