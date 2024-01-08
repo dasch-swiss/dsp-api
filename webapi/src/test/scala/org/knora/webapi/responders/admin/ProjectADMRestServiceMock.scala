@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +13,6 @@ import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
@@ -22,17 +21,18 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectS
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
-  object CreateProject    extends Effect[(ProjectCreateRequest, UserADM), Throwable, ProjectOperationResponseADM]
-  object DeleteProject    extends Effect[(IriIdentifier, UserADM), Throwable, ProjectOperationResponseADM]
+  object CreateProject    extends Effect[(ProjectCreateRequest, User), Throwable, ProjectOperationResponseADM]
+  object DeleteProject    extends Effect[(IriIdentifier, User), Throwable, ProjectOperationResponseADM]
   object UpdateProject
-      extends Effect[(IriIdentifier, ProjectUpdateRequest, UserADM), Throwable, ProjectOperationResponseADM]
-  object GetAllProjectData       extends Effect[(IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
-  object GetProjectMembers       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
-  object GetProjectAdmins        extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
+      extends Effect[(IriIdentifier, ProjectUpdateRequest, User), Throwable, ProjectOperationResponseADM]
+  object GetAllProjectData       extends Effect[(IriIdentifier, User), Throwable, ProjectDataGetResponseADM]
+  object GetProjectMembers       extends Effect[(ProjectIdentifierADM, User), Throwable, ProjectMembersGetResponseADM]
+  object GetProjectAdmins        extends Effect[(ProjectIdentifierADM, User), Throwable, ProjectAdminMembersGetResponseADM]
   object GetKeywords             extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
   object GetKeywordsByProjectIri extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
   object GetRestrictedViewSettings
@@ -52,37 +52,37 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         def createProject(
           createReq: ProjectCreateRequest,
-          requestingUser: UserADM
+          requestingUser: User
         ): Task[ProjectOperationResponseADM] =
           proxy(CreateProject, (createReq, requestingUser))
 
         def deleteProject(
           id: ProjectIdentifierADM.IriIdentifier,
-          requestingUser: UserADM
+          requestingUser: User
         ): Task[ProjectOperationResponseADM] =
           proxy(DeleteProject, (id, requestingUser))
 
         def updateProject(
           id: IriIdentifier,
           updateReq: ProjectUpdateRequest,
-          requestingUser: UserADM
+          requestingUser: User
         ): Task[ProjectOperationResponseADM] =
           proxy(UpdateProject, (id, updateReq, requestingUser))
 
         def getAllProjectData(
           id: ProjectIdentifierADM.IriIdentifier,
-          user: UserADM
+          user: User
         ): Task[ProjectDataGetResponseADM] =
           proxy(GetAllProjectData, (id, user))
 
         def getProjectMembers(
-          requestingUser: UserADM,
+          requestingUser: User,
           identifier: ProjectIdentifierADM
         ): Task[ProjectMembersGetResponseADM] =
           proxy(GetProjectMembers, (identifier, requestingUser))
 
         def getProjectAdminMembers(
-          requestingUser: UserADM,
+          requestingUser: User,
           identifier: ProjectIdentifierADM
         ): Task[ProjectAdminMembersGetResponseADM] =
           proxy(GetProjectAdmins, (identifier, requestingUser))
@@ -100,17 +100,17 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(GetRestrictedViewSettings, identifier)
 
-        override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[Unit] = ???
+        override def exportProject(projectIri: IRI, requestingUser: User): Task[Unit] = ???
 
-        override def exportProject(shortcode: ShortcodeIdentifier, requestingUser: UserADM): Task[Unit] = ???
+        override def exportProject(shortcode: ShortcodeIdentifier, requestingUser: User): Task[Unit] = ???
 
-        override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
+        override def importProject(projectIri: IRI, requestingUser: User): Task[ProjectImportResponse] = ???
 
-        override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
+        override def listExports(requestingUser: User): Task[Chunk[ProjectExportInfoResponse]] = ???
 
         override def updateProjectRestrictedViewSettings(
           id: ProjectIdentifierADM,
-          user: UserADM,
+          user: User,
           setSizeReq: ProjectSetRestrictedViewSizeRequest
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }

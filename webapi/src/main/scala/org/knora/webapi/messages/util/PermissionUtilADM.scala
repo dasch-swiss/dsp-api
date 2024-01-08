@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,11 +23,11 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponse
 import org.knora.webapi.messages.admin.responder.groupsmessages.MultipleGroupsGetRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
@@ -204,7 +204,7 @@ object PermissionUtilADM extends LazyLogging {
     entityCreator: IRI,
     entityProject: IRI,
     entityPermissionLiteral: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): Option[EntityPermission] = {
     val maybePermissionLevel =
       if (
@@ -294,7 +294,7 @@ object PermissionUtilADM extends LazyLogging {
     entityProject: IRI,
     permissionLiteralA: String,
     permissionLiteralB: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): PermissionComparisonResult = {
     val maybePermissionA: Option[EntityPermission] = getUserPermissionADM(
       entityCreator = requestingUser.id,
@@ -344,7 +344,7 @@ object PermissionUtilADM extends LazyLogging {
   def getUserPermissionFromConstructAssertionsADM(
     entityIri: IRI,
     assertions: ConstructPredicateObjects,
-    requestingUser: UserADM
+    requestingUser: User
   ): Option[EntityPermission] = {
     val assertionsAsStrings: Seq[(IRI, String)] = assertions.toSeq.flatMap {
       case (pred: SmartIri, objs: Seq[LiteralV2]) =>
@@ -377,7 +377,7 @@ object PermissionUtilADM extends LazyLogging {
   def getUserPermissionFromAssertionsADM(
     entityIri: IRI,
     assertions: Seq[(IRI, String)],
-    requestingUser: UserADM
+    requestingUser: User
   ): Option[EntityPermission] = {
     // Get the entity's creator, project, and permissions.
     val assertionMap: Map[IRI, String] = assertions.toMap

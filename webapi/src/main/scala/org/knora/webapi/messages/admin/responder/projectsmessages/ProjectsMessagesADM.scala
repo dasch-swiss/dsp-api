@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,11 +32,11 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -80,7 +80,7 @@ case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsRespo
  */
 case class ProjectMembersGetRequestADM(
   identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -91,7 +91,7 @@ case class ProjectMembersGetRequestADM(
  */
 case class ProjectAdminMembersGetRequestADM(
   identifier: ProjectIdentifierADM,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -135,7 +135,7 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
  */
 case class ProjectCreateRequestADM(
   createRequest: ProjectCreateRequest,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
 
@@ -150,7 +150,7 @@ case class ProjectCreateRequestADM(
 case class ProjectChangeRequestADM(
   projectIri: ProjectIri,
   projectUpdatePayload: ProjectUpdateRequest,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
 
@@ -179,7 +179,7 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
  *
  * @param members a list of members.
  */
-case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 }
@@ -189,9 +189,7 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
  *
  * @param members a list of admin members.
  */
-case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM])
-    extends KnoraResponseADM
-    with ProjectsADMJsonProtocol {
+case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 }

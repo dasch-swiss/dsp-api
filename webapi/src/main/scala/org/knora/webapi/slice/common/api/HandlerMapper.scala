@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,8 +16,8 @@ import zio.ZLayer
 import scala.concurrent.Future
 
 import dsp.errors.RequestRejectedException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.InputType.SecurityIn
 
 object InputType {
@@ -32,21 +32,21 @@ case class EndpointAndZioHandler[SECURITY_INPUT, INPUT, OUTPUT](
 case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
   endpoint: PartialServerEndpoint[
     SecurityIn,
-    UserADM,
+    User,
     INPUT,
     RequestRejectedException,
     OUTPUT,
     Any,
     Future
   ],
-  handler: UserADM => INPUT => Task[OUTPUT]
+  handler: User => INPUT => Task[OUTPUT]
 )
 
 final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
     handlerAndEndpoint: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
-  ): Full[SecurityIn, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
+  ): Full[SecurityIn, User, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     handlerAndEndpoint.endpoint.serverLogic(user => in => { runToFuture(handlerAndEndpoint.handler(user)(in)) })
 
   def mapEndpointAndHandler[INPUT, OUTPUT](

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,7 +25,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
@@ -55,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -71,7 +71,7 @@ trait ConstructResponseUtilV2 {
    */
   def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
-    requestingUser: UserADM
+    requestingUser: User
   ): MainResourcesAndValueRdfData
 
   /**
@@ -107,7 +107,7 @@ trait ConstructResponseUtilV2 {
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -120,7 +120,7 @@ trait ConstructResponseUtilV2 {
    */
   def getMappingsFromQueryResultsSeparated(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    requestingUser: UserADM
+    requestingUser: User
   ): zio.Task[Map[IRI, MappingAndXSLTransformation]]
 }
 object ConstructResponseUtilV2 {
@@ -439,7 +439,7 @@ final case class ConstructResponseUtilV2Live(
    */
   override def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
-    requestingUser: UserADM
+    requestingUser: User
   ): MainResourcesAndValueRdfData = {
 
     // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
@@ -615,7 +615,7 @@ final case class ConstructResponseUtilV2Live(
   private def makeRdfPropertyValuesForResource(
     valuePropertyToObjectIris: Map[SmartIri, Seq[IRI]],
     resourceIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     assertionsExplicit: ConstructPredicateObjects,
     nonResourceStatements: Statements
   )(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
@@ -1008,7 +1008,7 @@ final case class ConstructResponseUtilV2Live(
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
@@ -1147,7 +1147,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ) = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1204,7 +1204,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ) = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
@@ -1406,7 +1406,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
       val mayHaveDeletedStatements: Option[Boolean] =
@@ -1589,7 +1589,7 @@ final case class ConstructResponseUtilV2Live(
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
 
     val visibleResourceIris: Seq[IRI] =
@@ -1633,7 +1633,7 @@ final case class ConstructResponseUtilV2Live(
    */
   override def getMappingsFromQueryResultsSeparated(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Map[IRI, MappingAndXSLTransformation]] = {
 
     // collect the Iris of the mappings referred to in the resources' text values

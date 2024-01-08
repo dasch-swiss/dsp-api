@@ -13,8 +13,8 @@ import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.testkit.ImplicitSender
 
@@ -40,7 +40,7 @@ class JwtServiceSpec extends CoreSpec with ImplicitSender {
       UnsafeZioRun.runOrThrow(audience) should contain("http://localhost:3340")
     }
 
-    def createTokenAndExtractAudience(user: UserADM) = for {
+    def createTokenAndExtractAudience(user: User) = for {
       token     <- JwtService.createJwt(user)
       jwtConfig <- ZIO.service[JwtConfig]
       decoded    = JwtSprayJson.decodeAll(token.jwtString, jwtConfig.secret, Seq(JwtAlgorithm.HS256))

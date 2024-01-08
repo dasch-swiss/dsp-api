@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,7 +30,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
@@ -44,7 +43,9 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -251,7 +252,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(
   resourceIri: IRI,
   values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
   creationDate: Instant,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ValuesResponderRequestV2 {
   lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
 }
@@ -626,7 +627,7 @@ object CreateValueV2 {
   def fromJsonLd(
     ingestState: AssetIngestState,
     jsonLdString: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
@@ -751,7 +752,7 @@ object UpdateValueV2 {
    */
   def fromJsonLd(
     jsonLdString: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       def makeUpdateValueContentV2(
@@ -1055,14 +1056,13 @@ object ValueContentV2 {
   /**
    * Converts a JSON-LD object to a [[ValueContentV2]].
    *
-   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]].
    */
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
-    requestingUser: UserADM,
+    requestingUser: User,
     fileInfo: Option[FileInfo]
   ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
@@ -1134,17 +1134,18 @@ object ValueContentV2 {
     jsonLdObject: JsonLDObject
   ): ZIO[SipiService, Throwable, FileInfo] =
     for {
-      internalFilename <- ZIO.attempt {
-                            val validationFun: (IRI, => Nothing) => IRI =
-                              (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                            jsonLdObject.requireStringWithValidation(FileValueHasFilename, validationFun)
-                          }
+      internalFilename <- {
+        val fileNameEncoded = jsonLdObject
+          .getRequiredString(FileValueHasFilename)
+          .flatMap(it => Iri.toSparqlEncodedString(it).toRight(s"$FileValueHasFilename is invalid."))
+        ZIO.fromEither(fileNameEncoded).mapError(BadRequestException(_))
+      }
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
-                      SipiService.getFileMetadata(internalFilename, Shortcode.unsafeFrom(shortcode))
-                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromTemp(internalFilename)
+                      val assetId = AssetId.unsafeFrom(internalFilename.substring(0, internalFilename.indexOf('.')))
+                      SipiService.getFileMetadataFromDspIngest(Shortcode.unsafeFrom(shortcode), assetId).logError
+                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromSipiTemp(internalFilename)
                   }
-
     } yield FileInfo(internalFilename, metadata)
 }
 
@@ -1730,7 +1731,7 @@ object TextValueContentV2 {
    */
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
-    requestingUser: UserADM
+    requestingUser: User
   ): ZIO[StringFormatter & MessageRelay, Throwable, TextValueContentV2] =
     for {
       maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)

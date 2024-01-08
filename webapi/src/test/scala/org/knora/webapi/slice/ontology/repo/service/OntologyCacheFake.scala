@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,8 +11,8 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {
@@ -27,7 +27,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
    * @param requestingUser the user making the request.
    * @return a [[Unit]].
    */
-  override def loadOntologies(requestingUser: UserADM): Task[Unit] =
+  override def loadOntologies(requestingUser: User): Task[Unit] =
     throw new UnsupportedOperationException("Not possible in tests. Provide the respective test data as Ref.")
 
   /**

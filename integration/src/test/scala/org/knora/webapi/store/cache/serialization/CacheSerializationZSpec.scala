@@ -10,8 +10,8 @@ import zio.test.TestAspect.ignore
 import zio.test._
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * This spec is used to test [[CacheSerialization]].
@@ -25,7 +25,7 @@ object CacheSerializationZSpec extends ZIOSpecDefault {
     test("successfully serialize and deserialize a user") {
       for {
         serialized   <- CacheSerialization.serialize(user)
-        deserialized <- CacheSerialization.deserialize[UserADM](serialized)
+        deserialized <- CacheSerialization.deserialize[User](serialized)
       } yield assert(deserialized)(equalTo(Some(user)))
     } @@ ignore +
       test("successfully serialize and deserialize a project") {

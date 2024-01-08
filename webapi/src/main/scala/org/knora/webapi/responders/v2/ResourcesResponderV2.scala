@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -27,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
@@ -54,6 +53,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -721,7 +721,7 @@ final case class ResourcesResponderV2Live(
     defaultResourcePermissions: String,
     defaultPropertyPermissions: Map[SmartIri, String],
     creationDate: Instant,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
@@ -878,7 +878,7 @@ final case class ResourcesResponderV2Live(
   private def getLinkTargetClasses(
     resourceIri: IRI,
     internalCreateResources: Seq[CreateResourceV2],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Map[IRI, SmartIri]] = {
     // Get the IRIs of the new and existing resources that are targets of links.
     val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) =
@@ -1058,7 +1058,7 @@ final case class ResourcesResponderV2Live(
    */
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Unit] = {
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
@@ -1132,7 +1132,7 @@ final case class ResourcesResponderV2Live(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Task[GenerateSparqlForValueInNewResourceV2]]] =
       values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
@@ -1209,7 +1209,7 @@ final case class ResourcesResponderV2Live(
   private def getResourceClassDefaultPermissions(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Map[SmartIri, String]] = {
     val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
       val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
@@ -1239,7 +1239,7 @@ final case class ResourcesResponderV2Live(
   private def getDefaultPropertyPermissions(
     projectIri: IRI,
     resourceClassProperties: Map[SmartIri, Set[SmartIri]],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Map[SmartIri, Map[SmartIri, String]]] = {
     val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
@@ -1270,7 +1270,7 @@ final case class ResourcesResponderV2Live(
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
     projectIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
@@ -1379,7 +1379,7 @@ final case class ResourcesResponderV2Live(
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
     val query =
       Construct(
@@ -1425,7 +1425,7 @@ final case class ResourcesResponderV2Live(
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1527,7 +1527,7 @@ final case class ResourcesResponderV2Live(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ReadResourcesSequenceV2] = {
 
     // eliminate duplicate Iris
@@ -1592,7 +1592,7 @@ final case class ResourcesResponderV2Live(
    */
   private def getGravsearchTemplate(
     gravsearchTemplateIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[String] = {
 
     val gravsearchUrlTask = for {
@@ -1680,7 +1680,7 @@ final case class ResourcesResponderV2Live(
     mappingIri: Option[IRI],
     gravsearchTemplateIri: Option[IRI],
     headerXSLTIri: Option[String],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[ResourceTEIGetResponseV2] = {
 
     /**
@@ -2465,7 +2465,7 @@ final case class ResourcesResponderV2Live(
   private def extractEventsFromHistory(
     resourceIri: IRI,
     resourceHistory: Seq[ResourceHistoryEntry],
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Seq[ResourceAndValueHistoryEvent]] =
     for {
       resourceHist <- ZIO.succeed(resourceHistory.reverse)
@@ -2527,7 +2527,7 @@ final case class ResourcesResponderV2Live(
   private def getResourceAtGivenTime(
     resourceIri: IRI,
     versionHist: ResourceHistoryEntry,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
       resourceFullRepAtCreationTime <- getResourcesV2(
