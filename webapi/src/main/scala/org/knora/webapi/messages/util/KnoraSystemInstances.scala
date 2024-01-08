@@ -10,8 +10,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * This object represents built-in User and Project instances.

@@ -24,6 +24,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -32,7 +33,6 @@ import pekko.http.scaladsl.model._
 import pekko.http.scaladsl.model.headers._
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * End-to-End (E2E) test specification for testing users endpoint.

@@ -7,8 +7,9 @@ package org.knora.webapi.e2e.admin.lists
 
 import org.apache.pekko
 
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.knora.webapi.slice.admin.domain.model.User
+
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Representing user's credentials

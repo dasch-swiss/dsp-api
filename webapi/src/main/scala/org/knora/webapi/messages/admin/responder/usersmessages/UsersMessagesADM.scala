@@ -20,19 +20,17 @@ import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-
 import org.knora.webapi.slice.admin.domain.model.User
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

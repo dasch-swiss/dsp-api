@@ -39,11 +39,11 @@ import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 import pekko.actor.ActorRef
 import pekko.util.Timeout
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

@@ -22,9 +22,9 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

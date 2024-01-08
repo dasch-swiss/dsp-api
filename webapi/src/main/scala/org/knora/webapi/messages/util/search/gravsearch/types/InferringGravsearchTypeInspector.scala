@@ -26,9 +26,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequ
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.event.LogSource
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.

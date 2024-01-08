@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -33,7 +34,6 @@ import pekko.http.scaladsl.model.StatusCodes
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 import pekko.util.Timeout
-import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.

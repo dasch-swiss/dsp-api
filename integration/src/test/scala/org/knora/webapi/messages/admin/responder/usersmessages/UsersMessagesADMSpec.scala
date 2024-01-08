@@ -15,7 +15,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model
-import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**

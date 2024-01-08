@@ -18,11 +18,11 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
 
 import pekko.testkit.ImplicitSender
-import org.knora.webapi.slice.admin.domain.model.User
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser
