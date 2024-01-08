@@ -23,6 +23,6 @@ object ZioScalaTestUtil {
       err.squash shouldBe a[T]
       err.squash.getMessage shouldEqual (expectedError)
     }
-    case _ => Assertions.fail(s"Expected Exit.Failure with specific T.")
+    case _ => Assertions.fail(s"Expected Exit. Failure with specific T.")
   }
 }
