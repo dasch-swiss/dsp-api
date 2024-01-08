@@ -24,7 +24,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
@@ -41,6 +40,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -90,7 +90,7 @@ trait ProjectsResponderADM {
    * @param user the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  def projectMembersGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectMembersGetResponseADM]
+  def projectMembersGetRequestADM(id: ProjectIdentifierADM, user: User): Task[ProjectMembersGetResponseADM]
 
   /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
@@ -100,7 +100,7 @@ trait ProjectsResponderADM {
    * @param user the user making the request.
    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
    */
-  def projectAdminMembersGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectAdminMembersGetResponseADM]
+  def projectAdminMembersGetRequestADM(id: ProjectIdentifierADM, user: User): Task[ProjectAdminMembersGetResponseADM]
 
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
@@ -151,7 +151,7 @@ trait ProjectsResponderADM {
    */
   def projectCreateRequestADM(
     createReq: ProjectCreateRequest,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
 
@@ -169,7 +169,7 @@ trait ProjectsResponderADM {
   def changeBasicInformationRequestADM(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
-    user: UserADM,
+    user: User,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
 
@@ -271,7 +271,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectMembersGetRequestADM(
     id: ProjectIdentifierADM,
-    user: UserADM
+    user: User
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
@@ -306,10 +306,10 @@ final case class ProjectsResponderADMLive(
         if (statements.nonEmpty) { statements.map(_._1.toString) }
         else { Seq.empty[IRI] }
 
-      maybeUserFutures: Seq[Task[Option[UserADM]]] =
+      maybeUserFutures: Seq[Task[Option[User]]] =
         userIris.map { userIri =>
           messageRelay
-            .ask[Option[UserADM]](
+            .ask[Option[User]](
               UserGetADM(
                 identifier = UserIdentifierADM(maybeIri = Some(userIri)),
                 userInformationTypeADM = UserInformationTypeADM.Restricted,
@@ -317,8 +317,8 @@ final case class ProjectsResponderADMLive(
               )
             )
         }
-      maybeUsers         <- ZioHelper.sequence(maybeUserFutures)
-      users: Seq[UserADM] = maybeUsers.flatten
+      maybeUsers      <- ZioHelper.sequence(maybeUserFutures)
+      users: Seq[User] = maybeUsers.flatten
 
     } yield ProjectMembersGetResponseADM(members = users)
 
@@ -332,7 +332,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectAdminMembersGetRequestADM(
     id: ProjectIdentifierADM,
-    user: UserADM
+    user: User
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
@@ -361,18 +361,18 @@ final case class ProjectsResponderADMLive(
       userIris = if (statements.nonEmpty) { statements.map(_._1.toString) }
                  else { Seq.empty[IRI] }
 
-      maybeUserTasks: Seq[Task[Option[UserADM]]] = userIris.map { userIri =>
-                                                     messageRelay
-                                                       .ask[Option[UserADM]](
-                                                         UserGetADM(
-                                                           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                                                           userInformationTypeADM = UserInformationTypeADM.Restricted,
-                                                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                         )
-                                                       )
-                                                   }
-      maybeUsers         <- ZioHelper.sequence(maybeUserTasks)
-      users: Seq[UserADM] = maybeUsers.flatten
+      maybeUserTasks: Seq[Task[Option[User]]] = userIris.map { userIri =>
+                                                  messageRelay
+                                                    .ask[Option[User]](
+                                                      UserGetADM(
+                                                        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                                        userInformationTypeADM = UserInformationTypeADM.Restricted,
+                                                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                      )
+                                                    )
+                                                }
+      maybeUsers      <- ZioHelper.sequence(maybeUserTasks)
+      users: Seq[User] = maybeUsers.flatten
 
     } yield ProjectAdminMembersGetResponseADM(members = users)
 
@@ -469,7 +469,7 @@ final case class ProjectsResponderADMLive(
   override def changeBasicInformationRequestADM(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
-    user: UserADM,
+    user: User,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
 
@@ -479,7 +479,7 @@ final case class ProjectsResponderADMLive(
     def changeProjectTask(
       projectIri: ProjectIri,
       updateReq: ProjectUpdateRequest,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
@@ -666,7 +666,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectCreateRequestADM(
     createReq: ProjectCreateRequest,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
 
@@ -750,7 +750,7 @@ final case class ProjectsResponderADMLive(
 
     def projectCreateTask(
       createProjectRequest: ProjectCreateRequest,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[ProjectOperationResponseADM] =
       for {
         // check if the supplied shortname is unique

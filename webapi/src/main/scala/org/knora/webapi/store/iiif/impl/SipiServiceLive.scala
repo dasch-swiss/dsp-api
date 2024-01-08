@@ -34,7 +34,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -42,6 +41,7 @@ import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -305,7 +305,7 @@ final case class SipiServiceLive(
    * @param user      The user who is downloading the asset.
    * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
    */
-  override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = {
+  override def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] = {
     def statusCode(response: HttpResponse): Int = response.getStatusLine.getStatusCode
     def executeDownloadRequest(uri: URI, jwt: Jwt, targetFilename: String) = ZIO.scoped {
       makeGetRequestWithAuthorization(uri, jwt).flatMap {

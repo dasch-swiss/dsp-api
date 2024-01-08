@@ -28,7 +28,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -37,6 +36,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -513,7 +513,7 @@ final case class PermissionsResponderADMLive(
    * @param requestingUser              the requesting user.
    * @return a single [[AdministrativePermissionADM]] object.
    */
-  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM) =
+  private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: User) =
     for {
       administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
       result = administrativePermission match {
@@ -603,7 +603,7 @@ final case class PermissionsResponderADMLive(
    */
   private def administrativePermissionCreateRequestADM(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[AdministrativePermissionCreateResponseADM] = {
     logger.debug("administrativePermissionCreateRequestADM")
@@ -613,7 +613,7 @@ final case class PermissionsResponderADMLive(
      */
     def createPermissionTask(
       createRequest: CreateAdministrativePermissionAPIRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[AdministrativePermissionCreateResponseADM] =
       for {
 
@@ -714,7 +714,7 @@ final case class PermissionsResponderADMLive(
    */
   private def objectAccessPermissionsForResourceGetADM(
     resourceIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Option[ObjectAccessPermissionADM]] =
     for {
       projectIri <- getProjectOfEntity(resourceIri)
@@ -763,7 +763,7 @@ final case class PermissionsResponderADMLive(
    */
   private def objectAccessPermissionsForValueGetADM(
     valueIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[Option[ObjectAccessPermissionADM]] =
     for {
       projectIri <- getProjectOfEntity(valueIri)
@@ -872,12 +872,12 @@ final case class PermissionsResponderADMLive(
    * Gets a single default object access permission identified by its IRI.
    *
    * @param permissionIri  the IRI of the default object access permission.
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser the [[User]] of the requesting user.
    * @return a single [[DefaultObjectAccessPermissionADM]] object.
    */
   private def defaultObjectAccessPermissionForIriGetRequestADM(
     permissionIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[DefaultObjectAccessPermissionGetResponseADM] =
     for {
       defaultObjectAccessPermission <- permissionGetADM(permissionIri, requestingUser)
@@ -1124,7 +1124,7 @@ final case class PermissionsResponderADMLive(
     resourceClassIri: IRI,
     propertyIri: Option[IRI],
     entityType: IRI,
-    targetUser: UserADM
+    targetUser: User
   ) =
     for {
       /* Get the groups the user is member of. */
@@ -1368,12 +1368,12 @@ final case class PermissionsResponderADMLive(
    * Gets a single permission identified by its IRI.
    *
    * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser the [[User]] of the requesting user.
    * @return a single [[DefaultObjectAccessPermissionADM]] object.
    */
   private def permissionByIriGetRequestADM(
     permissionIri: IRI,
-    requestingUser: UserADM
+    requestingUser: User
   ): Task[PermissionGetResponseADM] =
     for {
       permission <- permissionGetADM(permissionIri, requestingUser)
@@ -1549,7 +1549,7 @@ final case class PermissionsResponderADMLive(
    *
    * @param permissionIri                the IRI of the permission.
    * @param changePermissionGroupRequest the request to change group.
-   * @param requestingUser               the [[UserADM]] of the requesting user.
+   * @param requestingUser               the [[User]] of the requesting user.
    * @param apiRequestID                 the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
@@ -1557,7 +1557,7 @@ final case class PermissionsResponderADMLive(
   private def permissionGroupChangeRequestADM(
     permissionIri: IRI,
     changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
     /* verify that the permission group is updated */
@@ -1593,7 +1593,7 @@ final case class PermissionsResponderADMLive(
     def permissionGroupChangeTask(
       permissioniri: IRI,
       changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[PermissionGetResponseADM] =
       for {
         // get permission
@@ -1638,7 +1638,7 @@ final case class PermissionsResponderADMLive(
    *
    * @param permissionIri               the IRI of the permission.
    * @param changeHasPermissionsRequest the request to change hasPermissions.
-   * @param requestingUser              the [[UserADM]] of the requesting user.
+   * @param requestingUser              the [[User]] of the requesting user.
    * @param apiRequestID                the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
@@ -1646,7 +1646,7 @@ final case class PermissionsResponderADMLive(
   private def permissionHasPermissionsChangeRequestADM(
     permissionIri: IRI,
     changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
     val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
@@ -1678,7 +1678,7 @@ final case class PermissionsResponderADMLive(
     def permissionHasPermissionsChangeTask(
       permissionIri: IRI,
       changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[PermissionGetResponseADM] = {
       val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
       for {
@@ -1738,7 +1738,7 @@ final case class PermissionsResponderADMLive(
    *
    * @param permissionIri                 the IRI of the permission.
    * @param changePermissionResourceClass the request to change hasPermissions.
-   * @param requestingUser                the [[UserADM]] of the requesting user.
+   * @param requestingUser                the [[User]] of the requesting user.
    * @param apiRequestID                  the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
@@ -1746,7 +1746,7 @@ final case class PermissionsResponderADMLive(
   private def permissionResourceClassChangeRequestADM(
     permissionIri: IRI,
     changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
     val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
@@ -1781,7 +1781,7 @@ final case class PermissionsResponderADMLive(
     def permissionResourceClassChangeTask(
       permissionIri: IRI,
       changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[PermissionGetResponseADM] =
       for {
         // get permission
@@ -1824,7 +1824,7 @@ final case class PermissionsResponderADMLive(
    *
    * @param permissionIri                   the IRI of the permission.
    * @param changePermissionPropertyRequest the request to change hasPermissions.
-   * @param requestingUser                  the [[UserADM]] of the requesting user.
+   * @param requestingUser                  the [[User]] of the requesting user.
    * @param apiRequestID                    the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
@@ -1832,7 +1832,7 @@ final case class PermissionsResponderADMLive(
   private def permissionPropertyChangeRequestADM(
     permissionIri: IRI,
     changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
     val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
@@ -1867,7 +1867,7 @@ final case class PermissionsResponderADMLive(
     def permissionPropertyChangeTask(
       permissionIri: IRI,
       changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-      requestingUser: UserADM
+      requestingUser: User
     ): Task[PermissionGetResponseADM] =
       for {
         // get permission
@@ -1908,16 +1908,16 @@ final case class PermissionsResponderADMLive(
   /**
    * Delete a permission.
    *
-   * @param permissionIri                   the IRI of the permission.
-   * @param requestingUser                  the [[UserADM]] of the requesting user.
-   * @param apiRequestID                    the API request ID.
+   * @param permissionIri  the IRI of the permission.
+   * @param requestingUser the [[User]] of the requesting user.
+   * @param apiRequestID   the API request ID.
    * @return [[PermissionDeleteResponseADM]].
    *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
    *         fails with a NotFoundException if no permission is found for the given IRI.
    */
   private def permissionDeleteRequestADM(
     permissionIri: IRI,
-    requestingUser: UserADM,
+    requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionDeleteResponseADM] = {
     val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
@@ -1949,13 +1949,13 @@ final case class PermissionsResponderADMLive(
   /**
    * Checks that requesting user has right for the permission operation
    *
-   * @param requestingUser the [[UserADM]] of the requesting user.
-   * @param projectIri      the IRI of the project the permission is attached to.
-   * @param permissionIri the IRI of the permission.
+   * @param requestingUser the [[User]] of the requesting user.
+   * @param projectIri     the IRI of the project the permission is attached to.
+   * @param permissionIri  the IRI of the permission.
    *
-   *                      throws ForbiddenException if the user is not a project or system admin
+   *                       throws ForbiddenException if the user is not a project or system admin
    */
-  private def verifyUsersRightForOperation(requestingUser: UserADM, projectIri: IRI, permissionIri: IRI): Unit =
+  private def verifyUsersRightForOperation(requestingUser: User, projectIri: IRI, permissionIri: IRI): Unit =
     if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
 
       throw ForbiddenException(
@@ -1967,10 +1967,10 @@ final case class PermissionsResponderADMLive(
    * Get a permission.
    *
    * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser the [[User]] of the requesting user.
    * @return [[PermissionItemADM]].
    */
-  private def permissionGetADM(permissionIri: IRI, requestingUser: UserADM): Task[PermissionItemADM] =
+  private def permissionGetADM(permissionIri: IRI, requestingUser: User): Task[PermissionItemADM] =
     for {
       // SPARQL query statement to get permission by IRI.
       permissionQueryResponse <- triplestore.query(Select(sparql.admin.txt.getPermissionByIRI(permissionIri)))

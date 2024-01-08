@@ -11,13 +11,13 @@ import zio.stm.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
@@ -35,7 +35,7 @@ import org.knora.webapi.store.cache.api.EmptyValue
  * @param lut   a lookup table of username/email to IRI.
  */
 case class CacheServiceInMemImpl(
-  users: TMap[String, UserADM],
+  users: TMap[String, User],
   projects: TMap[String, ProjectADM],
   lut: TMap[String, String] // sealed trait for key type
 ) extends CacheService {
@@ -50,7 +50,7 @@ case class CacheServiceInMemImpl(
    *
    * @param value the value to be stored
    */
-  def putUserADM(value: UserADM): Task[Unit] =
+  def putUserADM(value: User): Task[Unit] =
     (for {
       _ <- users.put(value.id, value)
       _ <- lut.put(value.username, value.id)
@@ -65,7 +65,7 @@ case class CacheServiceInMemImpl(
    *
    * @param identifier the user identifier.
    */
-  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
+  def getUserADM(identifier: UserIdentifierADM): Task[Option[User]] =
     (identifier.hasType match {
       case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
       case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
@@ -76,18 +76,18 @@ case class CacheServiceInMemImpl(
    * Retrieves the user stored under the IRI.
    *
    * @param id the user's IRI.
-   * @return an optional [[UserADM]].
+   * @return an optional [[User]].
    */
-  def getUserByIri(id: String): UIO[Option[UserADM]] =
+  def getUserByIri(id: String): UIO[Option[User]] =
     users.get(id).commit
 
   /**
    * Retrieves the user stored under the username or email.
    *
    * @param usernameOrEmail of the user.
-   * @return an optional [[UserADM]].
+   * @return an optional [[User]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[UserADM]] =
+  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]] =
     (for {
       iri  <- lut.get(usernameOrEmail).some
       user <- users.get(iri).some
@@ -217,7 +217,7 @@ case class CacheServiceInMemImpl(
   /**
    * Flushes (removes) all stored content from the in-memory cache.
    */
-  def flushDB(requestingUser: UserADM): Task[Unit] =
+  def flushDB(requestingUser: User): Task[Unit] =
     (for {
       _ <- users.foreach((k, _) => users.delete(k))
       _ <- projects.foreach((k, _) => projects.delete(k))
@@ -235,7 +235,7 @@ object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {
       for {
-        users    <- TMap.empty[String, UserADM].commit
+        users    <- TMap.empty[String, User].commit
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)

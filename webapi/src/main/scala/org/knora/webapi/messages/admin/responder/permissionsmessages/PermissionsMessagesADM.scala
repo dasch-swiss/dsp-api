@@ -20,9 +20,9 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
@@ -223,7 +223,7 @@ case class PermissionDataGetADM(
   groupIris: Seq[IRI],
   isInProjectAdminGroups: Seq[IRI],
   isInSystemAdminGroup: Boolean,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends PermissionsResponderRequestADM {
 
   if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
@@ -239,7 +239,7 @@ case class PermissionDataGetADM(
  */
 case class PermissionsForProjectGetRequestADM(
   projectIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   Iri
@@ -268,7 +268,7 @@ case class PermissionsForProjectGetRequestADM(
 case class PermissionChangeGroupRequestADM(
   permissionIri: IRI,
   changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   if (!Iri.isPermissionIri(permissionIri))
@@ -287,7 +287,7 @@ case class PermissionChangeGroupRequestADM(
 case class PermissionChangeHasPermissionsRequestADM(
   permissionIri: IRI,
   changePermissionHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   if (!Iri.isPermissionIri(permissionIri))
@@ -306,7 +306,7 @@ case class PermissionChangeHasPermissionsRequestADM(
 case class PermissionChangeResourceClassRequestADM(
   permissionIri: IRI,
   changePermissionResourceClassRequest: ChangePermissionResourceClassApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   if (!Iri.isPermissionIri(permissionIri))
@@ -325,7 +325,7 @@ case class PermissionChangeResourceClassRequestADM(
 case class PermissionChangePropertyRequestADM(
   permissionIri: IRI,
   changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   if (!Iri.isPermissionIri(permissionIri))
@@ -344,7 +344,7 @@ case class PermissionChangePropertyRequestADM(
  */
 case class AdministrativePermissionsForProjectGetRequestADM(
   projectIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   Iri
@@ -371,7 +371,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(
  */
 case class AdministrativePermissionForIriGetRequestADM(
   administrativePermissionIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   PermissionsMessagesUtilADM.checkPermissionIri(administrativePermissionIri)
@@ -385,7 +385,7 @@ case class AdministrativePermissionForIriGetRequestADM(
  * @param groupIri       the group.
  * @param requestingUser the user initiating the request.
  */
-case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
+case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
   Iri
     .validateAndEscapeProjectIri(projectIri)
@@ -410,7 +410,7 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
  * @param groupIri
  * @param requestingUser
  */
-case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
+case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
   // Check user's permission for the operation
   if (
@@ -432,7 +432,7 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
  */
 case class AdministrativePermissionCreateRequestADM(
   createRequest: CreateAdministrativePermissionAPIRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   // check if the requesting user is allowed to add the administrative permission
@@ -454,7 +454,7 @@ case class AdministrativePermissionCreateRequestADM(
  *
  * @param resourceIri the IRI of the resource.
  */
-case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM)
+case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -470,7 +470,7 @@ case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requesting
  *
  * @param valueIri the IRI of the value.
  */
-case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM)
+case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -492,7 +492,7 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: 
  */
 case class DefaultObjectAccessPermissionsForProjectGetRequestADM(
   projectIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   Iri
@@ -524,7 +524,7 @@ case class DefaultObjectAccessPermissionGetRequestADM(
   groupIri: Option[IRI] = None,
   resourceClassIri: Option[IRI] = None,
   propertyIri: Option[IRI] = None,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -584,7 +584,7 @@ case class DefaultObjectAccessPermissionGetRequestADM(
  */
 case class DefaultObjectAccessPermissionForIriGetRequestADM(
   defaultObjectAccessPermissionIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   PermissionsMessagesUtilADM.checkPermissionIri(defaultObjectAccessPermissionIri)
@@ -602,8 +602,8 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
 case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
   projectIri: IRI,
   resourceClassIri: IRI,
-  targetUser: UserADM,
-  requestingUser: UserADM
+  targetUser: User,
+  requestingUser: User
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -643,8 +643,8 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
   projectIri: IRI,
   resourceClassIri: IRI,
   propertyIri: IRI,
-  targetUser: UserADM,
-  requestingUser: UserADM
+  targetUser: User,
+  requestingUser: User
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -682,7 +682,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
  */
 case class DefaultObjectAccessPermissionCreateRequestADM(
   createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
   // check if the requesting user is allowed to add the default object access permission
@@ -704,7 +704,7 @@ case class DefaultObjectAccessPermissionCreateRequestADM(
  * @param permissionIri  the iri of the default object access permission object.
  * @param requestingUser the user initiation the request.
  */
-case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: UserADM)
+case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
   PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
@@ -717,7 +717,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
  * @param requestingUser              the user initiating the request.
  * @param apiRequestID                the API request ID.
  */
-case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
+case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: User, apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
   PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }

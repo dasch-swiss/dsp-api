@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.User
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
@@ -164,7 +165,7 @@ sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessag
  */
 case class ListsGetRequestADM(
   projectIri: Option[IRI] = None,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ListsResponderRequestADM
 
 /**
@@ -173,7 +174,7 @@ case class ListsGetRequestADM(
  * @param iri                  the IRI of the node (root or child).
  * @param requestingUser       the user making the request.
  */
-case class ListGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
+case class ListGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
 
 /**
  * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
@@ -181,7 +182,7 @@ case class ListGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsRes
  * @param iri                  the IRI of the list node.
  * @param requestingUser       the user making the request.
  */
-case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
+case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
 
 /**
  * Requests the path from the root node of a list to a particular node. A successful response will be
@@ -190,7 +191,7 @@ case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: UserADM) extends 
  * @param iri                  the IRI of the node.
  * @param requestingUser       the user making the request.
  */
-case class NodePathGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
+case class NodePathGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
 
 /**
  * Requests the creation of a new list.
@@ -201,7 +202,7 @@ case class NodePathGetRequestADM(iri: IRI, requestingUser: UserADM) extends List
  */
 case class ListRootNodeCreateRequestADM(
   createRootNode: ListRootNodeCreatePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -216,7 +217,7 @@ case class ListRootNodeCreateRequestADM(
 case class NodeInfoChangeRequestADM(
   listIri: IRI,
   changeNodeRequest: ListNodeChangePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -229,7 +230,7 @@ case class NodeInfoChangeRequestADM(
  */
 case class ListChildNodeCreateRequestADM(
   createChildNodeRequest: ListChildNodeCreatePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -244,7 +245,7 @@ case class ListChildNodeCreateRequestADM(
 case class NodeNameChangeRequestADM(
   nodeIri: IRI,
   changeNodeNameRequest: NodeNameChangePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -259,7 +260,7 @@ case class NodeNameChangeRequestADM(
 case class NodeLabelsChangeRequestADM(
   nodeIri: IRI,
   changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -274,7 +275,7 @@ case class NodeLabelsChangeRequestADM(
 case class NodeCommentsChangeRequestADM(
   nodeIri: IRI,
   changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -289,7 +290,7 @@ case class NodeCommentsChangeRequestADM(
 case class NodePositionChangeRequestADM(
   nodeIri: IRI,
   changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -301,7 +302,7 @@ case class NodePositionChangeRequestADM(
  */
 case class ListItemDeleteRequestADM(
   nodeIri: IRI,
-  requestingUser: UserADM,
+  requestingUser: User,
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
@@ -311,7 +312,7 @@ case class ListItemDeleteRequestADM(
  * @param iri                  the IRI of the list node (root or child).
  * @param requestingUser       the user making the request.
  */
-case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
+case class CanDeleteListRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
 
 /**
  * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteResponseADM]]
@@ -321,7 +322,7 @@ case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends Li
  */
 case class ListNodeCommentsDeleteRequestADM(
   iri: IRI,
-  requestingUser: UserADM
+  requestingUser: User
 ) extends ListsResponderRequestADM
 
 ///////////////////////// Responses

@@ -16,7 +16,6 @@ import zio.test.assert
 import zio.test.assertTrue
 
 import dsp.errors.AssertionException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetIngested
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -97,7 +97,7 @@ object ValueContentV2Spec extends ZIOSpecDefault {
       ZIO.dieMessage("unsupported operation")
     def getStatus(): Task[IIIFServiceStatusResponse] =
       ZIO.dieMessage("unsupported operation")
-    def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] =
+    def downloadAsset(asset: Asset, targetDir: Path, user: User): Task[Option[Path]] =
       ZIO.dieMessage("unsupported operation")
   })
 }

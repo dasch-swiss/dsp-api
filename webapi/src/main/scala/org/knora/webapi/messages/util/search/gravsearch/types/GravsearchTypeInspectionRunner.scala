@@ -13,8 +13,8 @@ import dsp.errors.GravsearchException
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.
@@ -32,7 +32,7 @@ final case class GravsearchTypeInspectionRunner(
   private def typeInspectionPipeline(
     whereClause: WhereClause,
     initial: IntermediateTypeInspectionResult,
-    requestingUser: UserADM
+    requestingUser: User
   ) = for {
     annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause)
     inferredTypes  <- inferringInspector.inspectTypes(annotatedTypes, whereClause, requestingUser)
@@ -46,7 +46,7 @@ final case class GravsearchTypeInspectionRunner(
    * @param requestingUser the requesting user.
    * @return the result of the type inspection.
    */
-  def inspectTypes(whereClause: WhereClause, requestingUser: UserADM): Task[GravsearchTypeInspectionResult] =
+  def inspectTypes(whereClause: WhereClause, requestingUser: User): Task[GravsearchTypeInspectionResult] =
     for {
       // Get the set of typeable entities in the Gravsearch query.
       typeableEntities <- ZIO.attempt {
