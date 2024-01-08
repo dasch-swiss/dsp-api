@@ -163,4 +163,9 @@ object Username {
     //  implicit val codec: JsonCodec[Username] = JsonCodec[String].transformOrFail(Username.from, _.toString)
   }
 
+  type Email = String Refined MatchesRegex["^.+@.+$"]
+  object Email extends RefinedTypeOps[Email, String] {
+    //  implicit val codec: JsonCodec[Email] = JsonCodec[String].transformOrFail(Email.from, _.toString)
+  }
+
 }
