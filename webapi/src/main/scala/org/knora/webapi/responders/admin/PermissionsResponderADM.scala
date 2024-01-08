@@ -1463,6 +1463,8 @@ final case class PermissionsResponderADMLive(
     } yield result
 
   private def validate(req: CreateDefaultObjectAccessPermissionAPIRequestADM) = ZIO.attempt {
+    val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
     Iri
@@ -1482,12 +1484,12 @@ final case class PermissionsResponderADMLive(
           GroupIri.from(groupIri).getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
       case (None, resourceClassIriMaybe, propertyIriMaybe) =>
         resourceClassIriMaybe.foreach { resourceClassIri =>
-          if (!stringFormatter.toSmartIri(resourceClassIri).isKnoraResourceIri) {
+          if (!sf.toSmartIri(resourceClassIri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
           }
         }
         propertyIriMaybe.foreach { propertyIri =>
-          if (!stringFormatter.toSmartIri(propertyIri).isKnoraEntityIri) {
+          if (!sf.toSmartIri(propertyIri).isKnoraEntityIri) {
             throw BadRequestException(s"Invalid property IRI: $propertyIri")
           }
         }
