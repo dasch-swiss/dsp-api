@@ -17,7 +17,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   private val path = "admin" / "groups"
   private val tags = List("Groups", "Admin API")
 
-  val getGroups = baseEndpoints.securedEndpoint.get
+  val getGroups = baseEndpoints.publicEndpoint.get
     .in(path)
     .out(sprayJsonBody[GroupsGetResponseADM])
     .description("Returns all groups.")
