@@ -122,7 +122,7 @@ final case class User(
   /**
    * Given an identifier, returns true if it is the same user, and false if not.
    */
-  def isSelf(identifier: UserIdentifierADM): Boolean = { // TODO: this should be gone!
+  def isSelf(identifier: UserIdentifierADM): Boolean = {
 
     val iriEquals      = identifier.toIriOption.contains(id)
     val emailEquals    = identifier.toEmailOption.contains(email)
