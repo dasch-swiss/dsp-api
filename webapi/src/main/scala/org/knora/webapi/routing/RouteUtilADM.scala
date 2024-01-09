@@ -6,15 +6,12 @@
 package org.knora.webapi.routing
 
 import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
-import org.apache.pekko.http.scaladsl.model.StatusCodes.Accepted
 import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.RouteResult
 import org.apache.pekko.util.ByteString
 import zio.*
-import zio.json.EncoderOps
-import zio.json.JsonEncoder
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -43,7 +40,7 @@ object RouteUtilADM {
    * @param response the response that should be transformed
    * @return the transformed [[KnoraResponseADM]]
    */
-  private def transformResponseIntoExternalFormat(
+  def transformResponseIntoExternalFormat(
     response: KnoraResponseADM
   ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
     ZIO.attempt {
@@ -108,19 +105,6 @@ object RouteUtilADM {
   )(implicit runtime: Runtime[R & StringFormatter & MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
-  /**
-   * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
-   *
-   * @param requestFuture    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-   * @param requestContext The pekko-http [[RequestContext]].
-   * @return a [[Future]] containing a [[RouteResult]].
-   */
-  def runJsonRouteF(
-    requestFuture: Future[KnoraRequestADM],
-    requestContext: RequestContext
-  )(implicit runtime: Runtime[StringFormatter & MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(ZIO.fromFuture(_ => requestFuture).flatMap(doRunJsonRoute(_, requestContext)))
-
   def runJsonRoute(
     request: KnoraRequestADM,
     requestContext: RequestContext
@@ -139,19 +123,13 @@ object RouteUtilADM {
     for {
       knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
       knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
-    } yield okResponse(knoraResponseExternal)
-
-  def okResponse(response: KnoraResponseADM): HttpResponse                       = okResponse(response.toJsValue.asJsObject.compactPrint)
-  def okResponse[A](response: A)(implicit encoder: JsonEncoder[A]): HttpResponse = okResponse(response.toJson)
-  private def okResponse(body: String)                                           = HttpResponse(OK, entity = HttpEntity(`application/json`, ByteString(body)))
-  def acceptedResponse(body: String)                                             = HttpResponse(Accepted, entity = HttpEntity(`application/json`, ByteString(body)))
+    } yield HttpResponse(
+      OK,
+      entity = HttpEntity(`application/json`, ByteString(knoraResponseExternal.toJsValue.asJsObject.compactPrint))
+    )
 
   private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
     ZIO.fromFuture(_ => ctx.complete(response))
-
-  def completeContext[R](ctx: RequestContext, response: ZIO[R, Throwable, HttpResponse])(implicit
-    runtime: Runtime[R]
-  ): Future[RouteResult] = UnsafeZioRun.runToFuture(response.flatMap(completeContext(ctx, _)))
 
   case class IriUserUuid(iri: IRI, user: User, uuid: UUID)
   case class IriUser(iri: IRI, user: User)

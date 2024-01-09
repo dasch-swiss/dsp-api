@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
@@ -191,15 +192,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         newProjectIri.set(received.project.id)
 
         // Check Administrative Permissions
-        appActor ! AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = received.project.id,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        // Check Administrative Permission of ProjectAdmin
-        val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
-          expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
+        val receivedApAdmin =
+          UnsafeZioRun.runOrThrow(PermissionsResponderADM.getPermissionsApByProjectIri(received.project.id))
 
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
           ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
@@ -219,13 +213,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         hasAPForProjectMember.size shouldBe 1
 
         // Check Default Object Access permissions
-        appActor ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = received.project.id,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val receivedDoaps = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsDaopByProjectIri(ProjectIri.unsafeFrom(received.project.id))
         )
-        val receivedDoaps: DefaultObjectAccessPermissionsForProjectGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {

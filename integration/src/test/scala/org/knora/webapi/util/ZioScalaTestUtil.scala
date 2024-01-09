@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,5 +17,12 @@ object ZioScalaTestUtil {
   def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
     case Exit.Failure(err) => err.squash shouldBe a[T]
     case _                 => Assertions.fail(s"Expected Exit.Failure with specific T.")
+  }
+  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _], expectedError: String) = actual match {
+    case Exit.Failure(err) => {
+      err.squash shouldBe a[T]
+      err.squash.getMessage shouldEqual (expectedError)
+    }
+    case _ => Assertions.fail(s"Expected Exit. Failure with specific T.")
   }
 }

@@ -14,10 +14,11 @@ final case class AdminApiRoutes(
   maintenance: MaintenanceEndpointsHandlers,
   project: ProjectsEndpointsHandler,
   users: UsersEndpointsHandler,
+  permissions: PermissionsEndpointsHandlers,
   tapirToPekko: TapirToPekkoInterpreter
 ) {
 
-  private val handlers = maintenance.handlers ++ project.allHanders ++ users.allHanders
+  private val handlers = maintenance.handlers ++ project.allHanders ++ users.allHanders ++ permissions.allHanders
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }

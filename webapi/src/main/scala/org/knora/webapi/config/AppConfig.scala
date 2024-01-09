@@ -205,10 +205,12 @@ final case class InstrumentationServerConfig(
 object AppConfig {
   type AppConfigurations = AppConfig & JwtConfig & DspIngestConfig & Triplestore
 
+  val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
+
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {
-      val source = TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
-      read(descriptor[AppConfig].mapKey(toKebabCase) from source).orDie
+      val source = TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
+      read(descriptor from source).orDie
     }
     projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
   }

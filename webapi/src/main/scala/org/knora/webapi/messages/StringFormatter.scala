@@ -7,7 +7,6 @@ package org.knora.webapi.messages
 
 import spray.json.*
 import zio.ZLayer
-import zio.prelude.Validation
 
 import java.time.*
 import java.time.temporal.ChronoField
@@ -20,7 +19,6 @@ import scala.util.matching.Regex
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -127,7 +125,7 @@ object StringFormatter {
   /**
    * The domain name used to construct Knora IRIs.
    */
-  private val IriDomain: String = "rdfh.ch"
+  val IriDomain: String = "rdfh.ch"
 
   /*
 
@@ -1509,25 +1507,22 @@ class StringFormatter private (
     }
 
   /**
-   * Given the group IRI, checks if it is in a valid format.
+   * Given an email address, checks if it is in a valid format.
    *
-   * @param iri the group's IRI.
-   * @return the IRI of the list.
+   * @param email the email.
+   * @return the email
    */
-  def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (Iri.isGroupIri(iri)) Validation.succeed(iri)
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
+  def validateEmail(email: String): Option[String] =
+    EmailAddressRegex.findFirstIn(email)
 
   /**
-   * Given the permission IRI, checks if it is in a valid format.
+   * Check that the string represents a valid username.
    *
-   * @param iri the permission's IRI.
-   * @return either the IRI or the error message.
+   * @param value    the string to be checked.
+   * @return the same string.
    */
-  def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && UuidUtil.hasSupportedVersion(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !UuidUtil.hasSupportedVersion(iri)) Left(IriErrorMessages.UuidVersionInvalid)
-    else Left(s"Invalid permission IRI: $iri.")
+  def validateUsername(value: String): Option[String] =
+    UsernameRegex.findFirstIn(value)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
@@ -1665,17 +1660,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new group IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return a new group IRI.
-   */
-  def makeRandomGroupIri(shortcode: String): String = {
-    val knoraGroupUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
-  }
-
-  /**
    * Creates a new person IRI based on a UUID.
    *
    * @return a new person IRI.
@@ -1694,17 +1678,6 @@ class StringFormatter private (
   def makeRandomListIri(shortcode: String): String = {
     val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
-  }
-
-  /**
-   * Creates a new permission IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return the IRI of the permission object.
-   */
-  def makeRandomPermissionIri(shortcode: String): IRI = {
-    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
   }
 
   /**
