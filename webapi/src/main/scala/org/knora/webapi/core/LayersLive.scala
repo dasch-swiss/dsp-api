@@ -10,6 +10,7 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
+import org.knora.webapi.config.InstrumentationServerConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -50,6 +51,7 @@ import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
+import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -68,17 +70,18 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
-    ActorSystem & ApiRoutes & AppConfigurations & AppRouter & Authenticator & CacheService &
-      CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
-      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
-      IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & IriService & JwtService & SipiService &
-      KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyRepo & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
-      ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
-      AuthorizationRestService & ResourcesResponderV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
-      OntologyInferencer & SearchApiRoutes & SearchResponderV2 & SipiResponderADM & StandoffResponderV2 & StandoffTagUtilV2 & State &
-      StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
+    ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter & Authenticator &
+      AuthorizationRestService & CacheService & CacheServiceRequestMessageHandler & CardinalityHandler &
+      CardinalityService & ConstructResponseUtilV2 & ConstructTransformer & GravsearchTypeInspectionRunner &
+      GroupsResponderADM & HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService &
+      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponderADM &
+      ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
+      OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
+      PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
+      ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
+      ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
+      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
+      State & StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -87,6 +90,8 @@ object LayersLive {
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
       AdminApiRoutes.layer,
+      AdminApiEndpoints.layer,
+      ApiV2Endpoints.layer,
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
@@ -146,6 +151,7 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       RestResourceInfoServiceLive.layer,
       SearchApiRoutes.layer,
+      SearchEndpoints.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
       SipiServiceLive.layer,
