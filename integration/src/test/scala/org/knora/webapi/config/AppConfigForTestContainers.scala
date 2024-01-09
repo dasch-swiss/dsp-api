@@ -8,8 +8,7 @@ package org.knora.webapi.config
 import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
-import zio.config.magnolia._
-import zio.config.typesafe.TypesafeConfigSource
+import zio.config.typesafe.TypesafeConfigProvider
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.testcontainers.DspIngestTestContainer
@@ -66,16 +65,16 @@ object AppConfigForTestContainers {
   }
 
   /**
-   * Reads in the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
+   * Reads in the application configuration using ZIO-Config. ZIO-Config is capable of loading
    * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
    */
-  private val source: ConfigSource =
-    TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
+  private val source: ConfigProvider =
+    TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
 
   /**
-   * Intantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
+   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
-  private val config: UIO[AppConfig] = (read(descriptor[AppConfig].mapKey(toKebabCase) from source)).orDie
+  private val config: UIO[AppConfig] = read(AppConfig.descriptor from source).orDie
 
   /**
    * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
