@@ -9,9 +9,8 @@ import com.typesafe.config
 import com.typesafe.config.ConfigFactory
 import zio.*
 import zio.config.*
-import zio.config.ConfigDescriptor.*
-import zio.config.magnolia.descriptor
-import zio.config.typesafe.FromConfigTypesafe
+import zio.config.magnolia.deriveConfig
+import zio.config.typesafe.*
 import zio.nio.file.Path
 
 object Configuration {
@@ -45,12 +44,13 @@ object Configuration {
 
   final case class IngestConfig(bulkMaxParallel: Int)
 
+  private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
+
   private type AllConfigs = ServiceConfig with JwtConfig with StorageConfig with SipiConfig with IngestConfig
 
-  val layer: Layer[ReadError[String], AllConfigs] = {
-    val applicationConf = ZConfig.fromTypesafeConfig(
-      ZIO.attempt(ConfigFactory.defaultApplication().resolve()),
-      descriptor[ApplicationConf].mapKey(toKebabCase)
+  val layer: ZLayer[Any, Config.Error, AllConfigs] = {
+    val applicationConf = ZLayer.fromZIO(
+      read(configDescriptor from ConfigProvider.fromTypesafeConfig(ConfigFactory.defaultApplication().resolve()))
     )
     applicationConf.project(_.service) ++
       applicationConf.project(_.storage) ++

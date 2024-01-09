@@ -11,14 +11,13 @@ import swiss.dasch.config.Configuration.{JwtConfig, ServiceConfig, StorageConfig
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
-import zio.config.*
 import zio.http.*
 
 import java.io.IOException
 
 object Main extends ZIOAppDefault {
 
-  override val bootstrap: Layer[ReadError[String], ServiceConfig with JwtConfig with StorageConfig] =
+  override val bootstrap: Layer[Config.Error, ServiceConfig with JwtConfig with StorageConfig] =
     Configuration.layer >+> Logger.layer
 
   override val run: ZIO[Any, Any, Nothing] =

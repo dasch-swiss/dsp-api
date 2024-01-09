@@ -11,7 +11,7 @@ addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 val sipiVersion                 = "v30.6.0"
 val tapirVersion                = "1.9.6"
 val testContainersVersion       = "0.40.15"
-val zioConfigVersion            = "3.0.7"
+val zioConfigVersion            = "4.0.0"
 val zioHttpVersion              = "3.0.0-RC4"
 val zioJsonVersion              = "0.6.2"
 val zioLoggingVersion           = "2.1.16"
