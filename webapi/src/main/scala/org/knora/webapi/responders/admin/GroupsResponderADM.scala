@@ -7,6 +7,7 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.macros.accessible
 
 import java.util.UUID
 
@@ -48,6 +49,7 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Returns information about groups.
  */
+@accessible
 trait GroupsResponderADM {
 
   /**

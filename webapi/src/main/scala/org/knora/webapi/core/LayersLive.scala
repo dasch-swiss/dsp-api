@@ -29,6 +29,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.api.*
+import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
@@ -106,6 +107,9 @@ object LayersLive {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
+      GroupsEndpoints.layer,
+      GroupsEndpointsHandler.layer,
+      GroupsRestServiceLive.layer,
       GroupsResponderADMLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
