@@ -15,17 +15,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseA
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
-
-  private val projectsBase = "admin" / "users"
-
+  private val base = "admin" / "users"
   private val tags = List("Users", "Admin API")
 
   val getUsers = baseEndpoints.securedEndpoint.get
-    .in(projectsBase)
+    .in(base)
     .out(sprayJsonBody[UsersGetResponseADM])
     .description("Returns all users.")
     .tags(tags)
-
 }
 
 object UsersEndpoints {
