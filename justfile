@@ -10,3 +10,15 @@ docs-openapi-generate:
     mkdir -p {{openapiDir}}
     rm {{openapiDir}}/*.yml >> /dev/null 2>&1 || true
     sbt "webapi/runMain org.knora.webapi.slice.common.api.DocsGenerator {{openapiDir}}"
+
+# Start stack from latest images on dockerhub (no build required)
+alias ssl := start-stack-latest
+start-stack-latest:
+    docker compose down
+    docker compose pull
+    docker compose up -d
+
+# Stop stack
+alias stop := stop-stack
+stop-stack:
+    docker compose down
