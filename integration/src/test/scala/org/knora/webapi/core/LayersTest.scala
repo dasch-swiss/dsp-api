@@ -49,6 +49,7 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
+import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -81,6 +82,8 @@ object LayersTest {
   type CommonR0 = ActorSystem with AppConfigurations with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
+      with ApiV2Endpoints
+      with AdminApiEndpoints
       with AppRouter
       with Authenticator
       with AuthorizationRestService
@@ -138,6 +141,8 @@ object LayersTest {
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
       AdminApiRoutes.layer,
+      AdminApiEndpoints.layer,
+      ApiV2Endpoints.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticatorLive.layer,
@@ -194,6 +199,7 @@ object LayersTest {
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
+      SearchEndpoints.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV2Live.layer,

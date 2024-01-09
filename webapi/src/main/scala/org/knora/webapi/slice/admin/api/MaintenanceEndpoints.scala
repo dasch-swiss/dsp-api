@@ -21,21 +21,21 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
   val postMaintenance = baseEndpoints.securedEndpoint.post
     .in(
       maintenanceBase / path[String]
-        .name("Maintenance action name")
-        .description("""
-                       |The name of the maintenance action to be executed. 
+        .name("action-name")
+        .description("""The name of the maintenance action to be executed.
                        |Maintenance actions are executed asynchronously in the background.
                        |""".stripMargin)
         .example("fix-top-left-dimensions")
     )
     .in(
       zioJsonBody[Option[Json]]
-        .description("""
-                       |The optional parameters as json for the maintenance action. 
+        .description("""The optional parameters as json for the maintenance action.
                        |May be required by certain actions.
                        |""".stripMargin)
     )
     .out(statusCode(StatusCode.Accepted))
+
+  val endpoints: Seq[AnyEndpoint] = Seq(postMaintenance).map(_.endpoint)
 }
 
 object MaintenanceEndpoints {

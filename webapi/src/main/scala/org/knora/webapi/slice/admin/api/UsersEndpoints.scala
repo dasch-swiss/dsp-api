@@ -26,6 +26,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Returns all users.")
     .tags(tags)
 
+  val endpoints: Seq[AnyEndpoint] = Seq(getUsers).map(_.endpoint)
 }
 
 object UsersEndpoints {

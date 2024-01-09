@@ -94,6 +94,20 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Update a permission's property")
     .in(sprayJsonBody[ChangePermissionPropertyApiRequestADM])
     .out(sprayJsonBody[PermissionGetResponseADM])
+
+  val endpoints: Seq[AnyEndpoint] = Seq(
+    postPermissionsAp,
+    getPermissionsApByProjectIri,
+    getPermissionsApByProjectAndGroupIri,
+    getPermissionsDoapByProjectIri,
+    getPermissionsByProjectIri,
+    deletePermission,
+    postPermissionsDoap,
+    putPermissionsProjectIriGroup,
+    putPerrmissionsHasPermissions,
+    putPermisssionsResourceClass,
+    putPermissionsProperty
+  ).map(_.endpoint)
 }
 
 object PermissionsEndpoints {
