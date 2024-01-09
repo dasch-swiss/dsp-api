@@ -122,6 +122,12 @@ case class TriplestoreServiceLive(
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
+  override def queryRdf(sparql: Construct): Task[Model] =
+    for {
+      turtleStr <- executeSparqlQuery(sparql, mimeTypeTextTurtle)
+      rdfModel  <- RdfFormatUtil.parseTtlToJenaModel(turtleStr)
+    } yield rdfModel
+
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
    *
@@ -600,12 +606,6 @@ case class TriplestoreServiceLive(
         ZIO.logError(error.toString) *>
           ZIO.fail(error)
     }
-
-  override def queryRdf(sparql: Construct): Task[Model] =
-    for {
-      turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
-      rdfModel  <- RdfFormatUtil.parseTtlToJenaModel(turtleStr)
-    } yield rdfModel
 }
 
 object TriplestoreServiceLive {

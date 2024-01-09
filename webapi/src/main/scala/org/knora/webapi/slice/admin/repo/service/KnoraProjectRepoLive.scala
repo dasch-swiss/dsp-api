@@ -49,9 +49,8 @@ final case class KnoraProjectRepoLive(
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
-      construct <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.headOption)
-      project   <- ZIO.foreach(construct)(toKnoraProject)
-    } yield project
+      model <- triplestore.queryRdf(Construct(query))
+    } yield None
 
   override def findAll(): Task[List[KnoraProject]] = {
     val query = sparql.admin.txt.getProjects(None, None, None)
