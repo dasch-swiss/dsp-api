@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.domain.model
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
-import zio.ZIO
 import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
@@ -123,13 +122,12 @@ final case class User(
         self.copy(password = None, token = None)
       case UserInformationTypeADM.Full =>
         self
-      case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
     }
 
   /**
    * Given an identifier, returns true if it is the same user, and false if not.
    */
-  def isSelf(identifier: UserIdentifierADM): Boolean = {
+  def isSelf(identifier: UserIdentifierADM): Boolean = { // TODO: this should be gone!
 
     val iriEquals      = identifier.toIriOption.contains(id)
     val emailEquals    = identifier.toEmailOption.contains(email)
@@ -209,7 +207,7 @@ object Username { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[Username] =
     JsonCodec[String].transformOrFail(
-      value => Username.make(value).toEitherWith(e => e.head.getMessage()),
+      value => Username.make(value).toEitherWith(e => e.head.getMessage),
       username => username.value
     )
 
@@ -246,10 +244,7 @@ object Username { self =>
     Username
       .make(value)
       .fold(
-        e => {
-          ZIO.logError(e.head.getMessage())
-          Validation.succeed(Username(value))
-        },
+        _ => Validation.succeed(Username(value)),
         v => Validation.succeed(v)
       )
 }
@@ -259,7 +254,7 @@ object Email { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[Email] =
     JsonCodec[String].transformOrFail(
-      value => Email.make(value).toEitherWith(e => e.head.getMessage()),
+      value => Email.make(value).toEitherWith(e => e.head.getMessage),
       email => email.value
     )
 
@@ -281,7 +276,7 @@ object GivenName { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[GivenName] =
     JsonCodec[String].transformOrFail(
-      value => GivenName.make(value).toEitherWith(e => e.head.getMessage()),
+      value => GivenName.make(value).toEitherWith(e => e.head.getMessage),
       givenName => givenName.value
     )
 
@@ -298,7 +293,7 @@ object FamilyName { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[FamilyName] =
     JsonCodec[String].transformOrFail(
-      value => FamilyName.make(value).toEitherWith(e => e.head.getMessage()),
+      value => FamilyName.make(value).toEitherWith(e => e.head.getMessage),
       familyName => familyName.value
     )
 
@@ -344,16 +339,10 @@ final case class PasswordHash private (value: String, passwordStrength: Password
       // BCrypt
       val encoder = new BCryptPasswordEncoder()
       encoder.matches(passwordString, self.value)
-    } else {
-      ZIO.logError(UserErrorMessages.PasswordHashUnknown)
-      false
-    }
+    } else false
 
 }
 object PasswordHash {
-  // TODO: get the passwordStrength from appConfig instead (see CreateUser.scala as example)
-
-  // the decoder defines how to decode json to an object
   implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
     case (password: String, PasswordStrength(strength)) =>
       val passwordStrength =
@@ -361,7 +350,6 @@ object PasswordHash {
 
       PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage)
   }
-  // the encoder defines how to encode the object into json
   implicit val encoder: JsonEncoder[PasswordHash] =
     JsonEncoder[String].contramap((passwordHash: PasswordHash) => passwordHash.value)
 
@@ -443,9 +431,6 @@ object UserErrorMessages {
   val PasswordMissing                  = "Password cannot be empty."
   val PasswordInvalid                  = "Password is invalid."
   val PasswordStrengthInvalid          = "PasswordStrength is invalid."
-  val PasswordHashUnknown              = "The provided PasswordHash has an unknown format."
   val GivenNameMissing                 = "GivenName cannot be empty."
-  val GivenNameInvalid                 = "GivenName is invalid."
   val FamilyNameMissing                = "FamilyName cannot be empty."
-  val FamilyNameInvalid                = "FamilyName is invalid."
 }

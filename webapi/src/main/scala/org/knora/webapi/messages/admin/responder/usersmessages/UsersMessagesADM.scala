@@ -458,7 +458,6 @@ object UserInformationTypeADM {
   case object Restricted extends UserInformationTypeADM
   case object Full       extends UserInformationTypeADM
 
-  // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
 }
 
 /**
