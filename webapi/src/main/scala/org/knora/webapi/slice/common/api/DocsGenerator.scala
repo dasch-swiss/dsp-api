@@ -7,20 +7,31 @@ package org.knora.webapi.slice.common.api
 
 import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.slice.admin.api.{AdminApiEndpoints, MaintenanceEndpoints, PermissionsEndpoints, ProjectsEndpoints, UsersEndpoints}
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
-import org.knora.webapi.slice.search.api.SearchEndpoints
 import sttp.apispec.openapi.Server
 import sttp.apispec.openapi.circe.yaml.RichOpenAPI
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
-import zio.nio.file.{Files, Path}
-import zio.{Chunk, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
+import zio.Chunk
+import zio.Task
+import zio.ZIO
+import zio.ZIOAppArgs
+import zio.ZIOAppDefault
+import zio.ZLayer
+import zio.nio.file.Files
+import zio.nio.file.Path
+
+import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.slice.admin.api.AdminApiEndpoints
+import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
+import org.knora.webapi.slice.admin.api.PermissionsEndpoints
+import org.knora.webapi.slice.admin.api.ProjectsEndpoints
+import org.knora.webapi.slice.admin.api.UsersEndpoints
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
+import org.knora.webapi.slice.search.api.SearchEndpoints
 
 final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User]                                    = ???

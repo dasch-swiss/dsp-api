@@ -5,21 +5,33 @@
 
 package org.knora.webapi.slice.search.api
 
-import dsp.valueobjects.Iri
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
 import org.apache.pekko.http.scaladsl.server.Route
+import sttp.model.HeaderNames
+import sttp.model.MediaType
+import sttp.tapir.*
+import sttp.tapir.codec.refined.*
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
+import dsp.valueobjects.Iri
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.{FormatOptions, RenderedResponse}
-import org.knora.webapi.slice.common.api.{ApiV2, BaseEndpoints, HandlerMapper, KnoraResponseRenderer, SecuredEndpointAndZioHandler, TapirToPekkoInterpreter}
+import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.{InputIri, Offset}
-import sttp.model.{HeaderNames, MediaType}
-import sttp.tapir.*
-import sttp.tapir.codec.refined.*
-import zio.{Task, ZIO, ZLayer}
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
 object SearchEndpointsInputs {
 
