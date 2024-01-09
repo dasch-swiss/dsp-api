@@ -8,9 +8,6 @@ package org.knora.webapi.slice.admin.domain.model
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
-import zio.json.JsonCodec
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import java.security.MessageDigest
@@ -181,10 +178,6 @@ final case class User(
 
 final case class UserIri private (value: String) extends AnyVal
 object UserIri {
-  implicit val decoder: JsonDecoder[UserIri] =
-    JsonDecoder[String].mapOrFail(value => UserIri.from(value).toEitherWith(e => e.head.getMessage))
-  implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
-
   def from(value: String): Validation[Throwable, UserIri] =
     if (value.isEmpty) Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing))
     else {
@@ -204,12 +197,6 @@ object UserIri {
 
 final case class Username private (value: String) extends AnyVal
 object Username { self =>
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[Username] =
-    JsonCodec[String].transformOrFail(
-      value => Username.from(value).toEitherWith(e => e.head.getMessage),
-      username => username.value
-    )
 
   /**
    * A regex that matches a valid username
@@ -231,15 +218,6 @@ object Username { self =>
         case None        => Validation.fail(ValidationException(UserErrorMessages.UsernameInvalid))
       }
     }
-
-  /**
-   * Makes a Username value object even if the input is not valid. Instead of returning an Error, it
-   *     just logs the Error message and returns the Username. This is needed when the input value
-   *     was created at a time where the validation was different and couldn't be updated. Only use
-   *     this method in the repo layer or in tests!
-   *
-   * @param value The value the value object is created from
-   */
   def unsafeFrom(value: String): Validation[ValidationException, Username] =
     Username
       .from(value)
@@ -251,13 +229,6 @@ object Username { self =>
 
 final case class Email private (value: String) extends AnyVal
 object Email { self =>
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[Email] =
-    JsonCodec[String].transformOrFail(
-      value => Email.from(value).toEitherWith(e => e.head.getMessage),
-      email => email.value
-    )
-
   private val EmailRegex: Regex = """^.+@.+$""".r
 
   def from(value: String): Validation[ValidationException, Email] =
@@ -273,13 +244,6 @@ object Email { self =>
 
 final case class GivenName private (value: String) extends AnyVal
 object GivenName { self =>
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[GivenName] =
-    JsonCodec[String].transformOrFail(
-      value => GivenName.from(value).toEitherWith(e => e.head.getMessage),
-      givenName => givenName.value
-    )
-
   def from(value: String): Validation[ValidationException, GivenName] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
@@ -290,13 +254,6 @@ object GivenName { self =>
 
 final case class FamilyName private (value: String) extends AnyVal
 object FamilyName { self =>
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[FamilyName] =
-    JsonCodec[String].transformOrFail(
-      value => FamilyName.from(value).toEitherWith(e => e.head.getMessage),
-      familyName => familyName.value
-    )
-
   def from(value: String): Validation[ValidationException, FamilyName] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
@@ -343,16 +300,6 @@ final case class PasswordHash private (value: String, passwordStrength: Password
 
 }
 object PasswordHash {
-  implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
-    case (password: String, PasswordStrength(strength)) =>
-      val passwordStrength =
-        PasswordStrength.from(strength).fold(e => throw new ValidationException(e.head.getMessage), v => v)
-
-      PasswordHash.from(password, passwordStrength).toEitherWith(e => e.head.getMessage)
-  }
-  implicit val encoder: JsonEncoder[PasswordHash] =
-    JsonEncoder[String].contramap((passwordHash: PasswordHash) => passwordHash.value)
-
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
   def from(value: String, passwordStrength: PasswordStrength): Validation[ValidationException, PasswordHash] =
@@ -375,14 +322,6 @@ object PasswordHash {
 
 final case class PasswordStrength private (value: Int) extends AnyVal
 object PasswordStrength {
-
-  // the codec defines how to decode json to an object and vice versa
-  implicit val codec: JsonCodec[PasswordStrength] =
-    JsonCodec[Int].transformOrFail(
-      value => PasswordStrength.from(value).toEitherWith(e => e.head.getMessage),
-      passwordStrength => passwordStrength.value
-    )
-
   def from(i: Int): Validation[ValidationException, PasswordStrength] =
     if (i < 4 || i > 31) {
       Validation.fail(ValidationException(UserErrorMessages.PasswordStrengthInvalid))
@@ -390,34 +329,17 @@ object PasswordStrength {
       Validation.succeed(PasswordStrength(i))
     }
 
-  // ignores the assertion!
   def unsafeMake(value: Int): PasswordStrength = PasswordStrength(value)
 
 }
 
 final case class UserStatus private (value: Boolean) extends AnyVal
 object UserStatus {
-
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[UserStatus] =
-    JsonCodec[Boolean].transformOrFail(
-      value => Right(UserStatus.from(value)),
-      userStatus => userStatus.value
-    )
-
   def from(value: Boolean): UserStatus = UserStatus(value)
 }
 
 final case class SystemAdmin private (value: Boolean) extends AnyVal
 object SystemAdmin {
-
-  // the codec defines how to decode/encode the object from/into json
-  implicit val codec: JsonCodec[SystemAdmin] =
-    JsonCodec[Boolean].transformOrFail(
-      value => Right(SystemAdmin.from(value)),
-      systemAdmin => systemAdmin.value
-    )
-
   def from(value: Boolean): SystemAdmin = SystemAdmin(value)
 }
 

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.json.*
 import zio.prelude.Validation
 import zio.test.*
 
@@ -190,20 +189,6 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(
         PasswordStrength.from(12) == Validation.succeed(pwStrength)
       )
-    },
-    test("decode a PasswordHash from JSON") {
-      val passwordHashFromJson =
-        """[ "$2a$12$DulNTvjUALMJufhJ.FR37uqXOCeXp7HFHWzwcjodLlmhUSMe2XKT", 12 ]""".fromJson[PasswordHash]
-      val result = passwordHashFromJson match {
-        case Right(passwordHash) => passwordHash.value.startsWith("$2a")
-        case Left(_)             => false
-      }
-      assertTrue(result)
-    },
-    test("encode a PasswordHash into JSON") {
-      val passwordHash     = PasswordHash.from("test", pwStrength).getOrElse(validPasswordHash)
-      val passwordHashJson = passwordHash.toJson
-      assertTrue(passwordHashJson.startsWith(""""$2a"""))
     }
   )
 
