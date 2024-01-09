@@ -33,142 +33,142 @@ object UserSpec extends ZIOSpecDefault {
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
   private val pwStrength                                  = PasswordStrength.unsafeMake(12)
-  private val validPasswordHash                           = PasswordHash.make("test", pwStrength).fold(e => throw e.head, v => v)
+  private val validPasswordHash                           = PasswordHash.from("test", pwStrength).fold(e => throw e.head, v => v)
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Username.make("") == Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
+        Username.from("") == Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        Username.make(invalidUsername) == Validation.fail(
+        Username.from(invalidUsername) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too short value and return an error") {
       assertTrue(
-        Username.make(tooShortUsername) == Validation.fail(
+        Username.from(tooShortUsername) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too long value and return an error") {
       assertTrue(
-        Username.make(tooLongUsername) == Validation.fail(
+        Username.from(tooLongUsername) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the first char and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
+        Username.from(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the last char and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
+        Username.from(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' used multiple times in a row and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
+        Username.from(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the first char and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithDotAsFirstChar) == Validation.fail(
+        Username.from(invalidUsernameWithDotAsFirstChar) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the last char and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithDotAsLastChar) == Validation.fail(
+        Username.from(invalidUsernameWithDotAsLastChar) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' used multiple times in a row and return an error") {
       assertTrue(
-        Username.make(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
+        Username.from(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
           ValidationException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Username.make(validUsername).toOption.get.value == validUsername)
+      assertTrue(Username.from(validUsername).toOption.get.value == validUsername)
     }
   )
 
   private val emailTest = suite("Email")(
     test("pass an empty value and return an error") {
-      assertTrue(Email.make("") == Validation.fail(ValidationException(UserErrorMessages.EmailMissing)))
+      assertTrue(Email.from("") == Validation.fail(ValidationException(UserErrorMessages.EmailMissing)))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        Email.make(invalidEmailAddress) == Validation.fail(
+        Email.from(invalidEmailAddress) == Validation.fail(
           ValidationException(UserErrorMessages.EmailInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Email.make(validEmailAddress).toOption.get.value == validEmailAddress)
+      assertTrue(Email.from(validEmailAddress).toOption.get.value == validEmailAddress)
     }
   )
 
   private val givenNameTest = suite("GivenName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        GivenName.make("") == Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
+        GivenName.from("") == Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(GivenName.make(validGivenName).toOption.get.value == validGivenName)
+      assertTrue(GivenName.from(validGivenName).toOption.get.value == validGivenName)
     }
   )
 
   private val familyNameTest = suite("FamilyName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        FamilyName.make("") == Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
+        FamilyName.from("") == Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(FamilyName.make(validFamilyName).toOption.get.value == validFamilyName)
+      assertTrue(FamilyName.from(validFamilyName).toOption.get.value == validFamilyName)
     }
   )
 
   private val passwordTest = suite("Password")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Password.make("") == Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
+        Password.from("") == Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Password.make(validPassword).toOption.get.value == validPassword)
+      assertTrue(Password.from(validPassword).toOption.get.value == validPassword)
     }
   )
 
   private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and return an error") {
       assertTrue(
-        PasswordHash.make("", pwStrength) == Validation.fail(
+        PasswordHash.from("", pwStrength) == Validation.fail(
           ValidationException(UserErrorMessages.PasswordMissing)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       val passwordString = "password1"
-      val password       = PasswordHash.make("password1", pwStrength).fold(e => throw e.head, v => v)
+      val password       = PasswordHash.from("password1", pwStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordString))
     },
@@ -177,18 +177,18 @@ object UserSpec extends ZIOSpecDefault {
       val passwordEqualString    = "password1"
       val passwordNotEqualString = "password2"
 
-      val password = PasswordHash.make(passwordString, pwStrength).fold(e => throw e.head, v => v)
+      val password = PasswordHash.from(passwordString, pwStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordEqualString), !password.matches(passwordNotEqualString))
     },
     test("pass an invalid password strength value and return an error") {
       assertTrue(
-        PasswordStrength.make(-1) == Validation.fail(ValidationException("PasswordStrength is invalid."))
+        PasswordStrength.from(-1) == Validation.fail(ValidationException("PasswordStrength is invalid."))
       )
     },
     test("pass a valid password strength value and create value object") {
       assertTrue(
-        PasswordStrength.make(12) == Validation.succeed(pwStrength)
+        PasswordStrength.from(12) == Validation.succeed(pwStrength)
       )
     },
     test("decode a PasswordHash from JSON") {
@@ -201,7 +201,7 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(result)
     },
     test("encode a PasswordHash into JSON") {
-      val passwordHash     = PasswordHash.make("test", pwStrength).getOrElse(validPasswordHash)
+      val passwordHash     = PasswordHash.from("test", pwStrength).getOrElse(validPasswordHash)
       val passwordHashJson = passwordHash.toJson
       assertTrue(passwordHashJson.startsWith(""""$2a"""))
     }
@@ -209,7 +209,7 @@ object UserSpec extends ZIOSpecDefault {
 
   private val systemAdminTest = suite("SystemAdmin")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(SystemAdmin.make(true).value)
+      assertTrue(SystemAdmin.from(true).value)
     }
   )
 
@@ -217,73 +217,73 @@ object UserSpec extends ZIOSpecDefault {
 
   private val usernameSuite = suite("Username")(
     test("Username may contain alphanumeric characters, underscore and dot") {
-      assertTrue(Username.make("a_2.3").toEither.isRight)
+      assertTrue(Username.from("a_2.3").toEither.isRight)
     },
     test("Username has to be at least 4 characters long") {
-      assertTrue(Username.make("abc").toEither.isLeft)
+      assertTrue(Username.from("abc").toEither.isLeft)
     },
     test("Username has to be at most 50 characters long") {
-      assertTrue(Username.make("123456789012345678901234567890123456789012345678901").toEither.isLeft)
+      assertTrue(Username.from("123456789012345678901234567890123456789012345678901").toEither.isLeft)
     },
     test("Username must not contain other characters") {
       assertTrue(
-        Username.make("a_2.3!").toEither.isLeft,
-        Username.make("a_2-3").toEither.isLeft,
-        Username.make("a.b@example.com").toEither.isLeft
+        Username.from("a_2.3!").toEither.isLeft,
+        Username.from("a_2-3").toEither.isLeft,
+        Username.from("a.b@example.com").toEither.isLeft
       )
     },
     test("Username must not start with a dot") {
-      assertTrue(Username.make(".abc").toEither.isLeft)
+      assertTrue(Username.from(".abc").toEither.isLeft)
     },
     test("Username must not end with a dot") {
-      assertTrue(Username.make("abc.").toEither.isLeft)
+      assertTrue(Username.from("abc.").toEither.isLeft)
     },
     test("Username must not contain two dots in a row") {
-      assertTrue(Username.make("a..bc").toEither.isLeft)
+      assertTrue(Username.from("a..bc").toEither.isLeft)
     },
     test("Username must not start with an underscore") {
-      assertTrue(Username.make("_abc").toEither.isLeft)
+      assertTrue(Username.from("_abc").toEither.isLeft)
     },
     test("Username must not end with an underscore") {
-      assertTrue(Username.make("abc_").toEither.isLeft)
+      assertTrue(Username.from("abc_").toEither.isLeft)
     },
     test("Username must not contain two underscores in a row") {
-      assertTrue(Username.make("a__bc").toEither.isLeft)
+      assertTrue(Username.from("a__bc").toEither.isLeft)
     }
   )
 
   private val emailSuite = suite("Email")(
     test("Email must be a correct email address") {
-      assertTrue(Email.make("j.doe@example.com").toEither.isRight)
+      assertTrue(Email.from("j.doe@example.com").toEither.isRight)
     },
     test("Email must not be empty") {
-      assertTrue(Email.make("").toEither.isLeft)
+      assertTrue(Email.from("").toEither.isLeft)
     },
     test("Email must not be a username") {
-      assertTrue(Email.make("j.doe").toEither.isLeft)
+      assertTrue(Email.from("j.doe").toEither.isLeft)
     }
   )
 
   private val iriSuite = suite("UserIri")(
     test("pass an empty value and return an error") {
-      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing)))
+      assertTrue(UserIri.from("") == Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing)))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        UserIri.make(invalidIri) == Validation.fail(
+        UserIri.from(invalidIri) == Validation.fail(
           BadRequestException(UserErrorMessages.UserIriInvalid(invalidIri))
         )
       )
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
-        UserIri.make(userIriWithUUIDVersion3) == Validation.fail(
+        UserIri.from(userIriWithUUIDVersion3) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      val userIri = UserIri.make(validUserIri)
+      val userIri = UserIri.from(validUserIri)
 
       (for {
         iri <- userIri

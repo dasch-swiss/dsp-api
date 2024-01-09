@@ -212,14 +212,14 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE the user and return it's profile if the supplied email is unique " in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.make("donald.duck").fold(e => throw e.head, v => v),
-            email = Email.make("donald.duck@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.make("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
-            password = Password.make("test").fold(e => throw e.head, v => v),
-            status = UserStatus.make(true),
+            username = Username.from("donald.duck").fold(e => throw e.head, v => v),
+            email = Email.from("donald.duck@example.com").fold(e => throw e.head, v => v),
+            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
+            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
+            password = Password.from("test").fold(e => throw e.head, v => v),
+            status = UserStatus.from(true),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false)
+            systemAdmin = SystemAdmin.from(false)
           ),
           requestingUser = SharedTestDataADM.anonymousUser,
           apiRequestID = UUID.randomUUID
@@ -236,14 +236,14 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.make("root").fold(e => throw e.head, v => v),
-            email = Email.make("root2@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.make("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
-            password = Password.make("test").fold(e => throw e.head, v => v),
-            status = UserStatus.make(true),
+            username = Username.from("root").fold(e => throw e.head, v => v),
+            email = Email.from("root2@example.com").fold(e => throw e.head, v => v),
+            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
+            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
+            password = Password.from("test").fold(e => throw e.head, v => v),
+            status = UserStatus.from(true),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false)
+            systemAdmin = SystemAdmin.from(false)
           ),
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
@@ -254,14 +254,14 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.make("root2").fold(e => throw e.head, v => v),
-            email = Email.make("root@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.make("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
-            password = Password.make("test").fold(e => throw e.head, v => v),
-            status = UserStatus.make(true),
+            username = Username.from("root2").fold(e => throw e.head, v => v),
+            email = Email.from("root@example.com").fold(e => throw e.head, v => v),
+            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
+            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
+            password = Password.from("test").fold(e => throw e.head, v => v),
+            status = UserStatus.from(true),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false)
+            systemAdmin = SystemAdmin.from(false)
           ),
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
@@ -276,7 +276,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.make("Donald").fold(e => throw e.head, v => v))
+            givenName = Some(GivenName.from("Donald").fold(e => throw e.head, v => v))
           ),
           requestingUser = SharedTestDataADM.normalUser,
           apiRequestID = UUID.randomUUID
@@ -289,7 +289,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            familyName = Some(FamilyName.make("Duck").fold(e => throw e.head, v => v))
+            familyName = Some(FamilyName.from("Duck").fold(e => throw e.head, v => v))
           ),
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
@@ -302,8 +302,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.make(SharedTestDataADM.normalUser.givenName).fold(e => throw e.head, v => v)),
-            familyName = Some(FamilyName.make(SharedTestDataADM.normalUser.familyName).fold(e => throw e.head, v => v))
+            givenName = Some(GivenName.from(SharedTestDataADM.normalUser.givenName).fold(e => throw e.head, v => v)),
+            familyName = Some(FamilyName.from(SharedTestDataADM.normalUser.familyName).fold(e => throw e.head, v => v))
           ),
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
@@ -316,7 +316,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val duplicateUsername =
-          Some(Username.make(SharedTestDataADM.anythingUser1.username).fold(e => throw e.head, v => v))
+          Some(Username.from(SharedTestDataADM.anythingUser1.username).fold(e => throw e.head, v => v))
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
@@ -335,7 +335,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
-        val duplicateEmail = Some(Email.make(SharedTestDataADM.anythingUser1.email).fold(e => throw e.head, v => v))
+        val duplicateEmail = Some(Email.from(SharedTestDataADM.anythingUser1.email).fold(e => throw e.head, v => v))
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
@@ -352,8 +352,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's password (by himself)" in {
-        val requesterPassword = Password.make("test").fold(e => throw e.head, v => v)
-        val newPassword       = Password.make("test123456").fold(e => throw e.head, v => v)
+        val requesterPassword = Password.from("test").fold(e => throw e.head, v => v)
+        val newPassword       = Password.from("test123456").fold(e => throw e.head, v => v)
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
@@ -380,8 +380,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's password (by a system admin)" in {
-        val requesterPassword = Password.make("test").fold(e => throw e.head, v => v)
-        val newPassword       = Password.make("test654321").fold(e => throw e.head, v => v)
+        val requesterPassword = Password.from("test").fold(e => throw e.head, v => v)
+        val newPassword       = Password.from("test654321").fold(e => throw e.head, v => v)
 
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
@@ -411,7 +411,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "UPDATE the user's status, (deleting) making him inactive " in {
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.make(false),
+          status = UserStatus.from(false),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -421,7 +421,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.make(true),
+          status = UserStatus.from(true),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -433,7 +433,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "UPDATE the user's system admin membership" in {
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(true),
+          systemAdmin = SystemAdmin.from(true),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -443,7 +443,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(false),
+          systemAdmin = SystemAdmin.from(false),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -458,7 +458,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           userIri = SharedTestDataADM.superUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             email = None,
-            givenName = Some(GivenName.make("Donald").fold(e => throw e.head, v => v)),
+            givenName = Some(GivenName.from("Donald").fold(e => throw e.head, v => v)),
             familyName = None,
             lang = None
           ),
@@ -476,8 +476,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.superUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = Password.make("test").fold(e => throw e.head, v => v),
-            newPassword = Password.make("test123456").fold(e => throw e.head, v => v)
+            requesterPassword = Password.from("test").fold(e => throw e.head, v => v),
+            newPassword = Password.from("test123456").fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
@@ -492,7 +492,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         /* Status is updated by other normal user */
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.superUser.id,
-          status = UserStatus.make(false),
+          status = UserStatus.from(false),
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
         )
@@ -504,7 +504,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         /* System admin group membership */
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(true),
+          systemAdmin = SystemAdmin.from(true),
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID()
         )
@@ -517,7 +517,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'BadRequest' if system user is requested to change" in {
         appActor ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.SystemUser.id,
-          status = UserStatus.make(false),
+          status = UserStatus.from(false),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -528,7 +528,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'BadRequest' if anonymous user is requested to change" in {
         appActor ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.AnonymousUser.id,
-          status = UserStatus.make(false),
+          status = UserStatus.from(false),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )

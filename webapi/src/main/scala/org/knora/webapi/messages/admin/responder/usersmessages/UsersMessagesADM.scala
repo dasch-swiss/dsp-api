@@ -575,10 +575,10 @@ object UserIdentifierADM {
 
     val userEmail =
       maybeEmail
-        .map(e => Email.make(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+        .map(e => Email.from(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
         .map(_.value)
     val username =
-      maybeUsername.map(u => Username.make(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value)
+      maybeUsername.map(u => Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value)
 
     new UserIdentifierADM(
       maybeIri = userIri,
@@ -693,10 +693,10 @@ object UserUpdateBasicInformationPayloadADM {
 
   def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
     Validation.validateWith(
-      validateWithOptionOrNone(req.username, Username.make),
-      validateWithOptionOrNone(req.email, Email.make),
-      validateWithOptionOrNone(req.givenName, GivenName.make),
-      validateWithOptionOrNone(req.familyName, FamilyName.make),
+      validateWithOptionOrNone(req.username, Username.from),
+      validateWithOptionOrNone(req.email, Email.from),
+      validateWithOptionOrNone(req.givenName, GivenName.from),
+      validateWithOptionOrNone(req.familyName, FamilyName.from),
       validateWithOptionOrNone(req.lang, LanguageCode.make)
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
@@ -705,10 +705,10 @@ case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword
 object UserUpdatePasswordPayloadADM {
   def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
     val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.from(_).mapError(_.getMessage))
       .getOrElse(Validation.fail("The requester's password is missing."))
     val newPasswordValidation = apiRequest.newPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.from(_).mapError(_.getMessage))
       .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
@@ -730,15 +730,15 @@ object UserCreatePayloadADM {
   def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
     Validation
       .validateWith(
-        apiRequest.id.map(UserIri.make(_).map(Some(_))).getOrElse(Validation.succeed(None)),
-        Username.make(apiRequest.username),
-        Email.make(apiRequest.email),
-        GivenName.make(apiRequest.givenName),
-        FamilyName.make(apiRequest.familyName),
-        Password.make(apiRequest.password),
-        Validation.succeed(UserStatus.make(apiRequest.status)),
+        apiRequest.id.map(UserIri.from(_).map(Some(_))).getOrElse(Validation.succeed(None)),
+        Username.from(apiRequest.username),
+        Email.from(apiRequest.email),
+        GivenName.from(apiRequest.givenName),
+        FamilyName.from(apiRequest.familyName),
+        Password.from(apiRequest.password),
+        Validation.succeed(UserStatus.from(apiRequest.status)),
         LanguageCode.make(apiRequest.lang),
-        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
+        Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
       .mapError(_.getMessage)
 }

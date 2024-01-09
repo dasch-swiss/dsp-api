@@ -182,10 +182,10 @@ final case class User(
 final case class UserIri private (value: String) extends AnyVal
 object UserIri {
   implicit val decoder: JsonDecoder[UserIri] =
-    JsonDecoder[String].mapOrFail(value => UserIri.make(value).toEitherWith(e => e.head.getMessage))
+    JsonDecoder[String].mapOrFail(value => UserIri.from(value).toEitherWith(e => e.head.getMessage))
   implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
 
-  def make(value: String): Validation[Throwable, UserIri] =
+  def from(value: String): Validation[Throwable, UserIri] =
     if (value.isEmpty) Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing))
     else {
       val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
@@ -207,7 +207,7 @@ object Username { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[Username] =
     JsonCodec[String].transformOrFail(
-      value => Username.make(value).toEitherWith(e => e.head.getMessage),
+      value => Username.from(value).toEitherWith(e => e.head.getMessage),
       username => username.value
     )
 
@@ -221,7 +221,7 @@ object Username { self =>
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
-  def make(value: String): Validation[ValidationException, Username] =
+  def from(value: String): Validation[ValidationException, Username] =
     if (value.isEmpty) {
       // remove exception return just the error
       Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
@@ -240,9 +240,9 @@ object Username { self =>
    *
    * @param value The value the value object is created from
    */
-  def unsafeMake(value: String): Validation[ValidationException, Username] =
+  def unsafeFrom(value: String): Validation[ValidationException, Username] =
     Username
-      .make(value)
+      .from(value)
       .fold(
         _ => Validation.succeed(Username(value)),
         v => Validation.succeed(v)
@@ -254,13 +254,13 @@ object Email { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[Email] =
     JsonCodec[String].transformOrFail(
-      value => Email.make(value).toEitherWith(e => e.head.getMessage),
+      value => Email.from(value).toEitherWith(e => e.head.getMessage),
       email => email.value
     )
 
   private val EmailRegex: Regex = """^.+@.+$""".r
 
-  def make(value: String): Validation[ValidationException, Email] =
+  def from(value: String): Validation[ValidationException, Email] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.EmailMissing))
     } else {
@@ -276,11 +276,11 @@ object GivenName { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[GivenName] =
     JsonCodec[String].transformOrFail(
-      value => GivenName.make(value).toEitherWith(e => e.head.getMessage),
+      value => GivenName.from(value).toEitherWith(e => e.head.getMessage),
       givenName => givenName.value
     )
 
-  def make(value: String): Validation[ValidationException, GivenName] =
+  def from(value: String): Validation[ValidationException, GivenName] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
     } else {
@@ -293,11 +293,11 @@ object FamilyName { self =>
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[FamilyName] =
     JsonCodec[String].transformOrFail(
-      value => FamilyName.make(value).toEitherWith(e => e.head.getMessage),
+      value => FamilyName.from(value).toEitherWith(e => e.head.getMessage),
       familyName => familyName.value
     )
 
-  def make(value: String): Validation[ValidationException, FamilyName] =
+  def from(value: String): Validation[ValidationException, FamilyName] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
     } else {
@@ -309,7 +309,7 @@ final case class Password private (value: String) extends AnyVal
 object Password { self =>
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
-  def make(value: String): Validation[ValidationException, Password] =
+  def from(value: String): Validation[ValidationException, Password] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
     } else {
@@ -346,16 +346,16 @@ object PasswordHash {
   implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
     case (password: String, PasswordStrength(strength)) =>
       val passwordStrength =
-        PasswordStrength.make(strength).fold(e => throw new ValidationException(e.head.getMessage), v => v)
+        PasswordStrength.from(strength).fold(e => throw new ValidationException(e.head.getMessage), v => v)
 
-      PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage)
+      PasswordHash.from(password, passwordStrength).toEitherWith(e => e.head.getMessage)
   }
   implicit val encoder: JsonEncoder[PasswordHash] =
     JsonEncoder[String].contramap((passwordHash: PasswordHash) => passwordHash.value)
 
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
-  def make(value: String, passwordStrength: PasswordStrength): Validation[ValidationException, PasswordHash] =
+  def from(value: String, passwordStrength: PasswordStrength): Validation[ValidationException, PasswordHash] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
     } else {
@@ -379,11 +379,11 @@ object PasswordStrength {
   // the codec defines how to decode json to an object and vice versa
   implicit val codec: JsonCodec[PasswordStrength] =
     JsonCodec[Int].transformOrFail(
-      value => PasswordStrength.make(value).toEitherWith(e => e.head.getMessage),
+      value => PasswordStrength.from(value).toEitherWith(e => e.head.getMessage),
       passwordStrength => passwordStrength.value
     )
 
-  def make(i: Int): Validation[ValidationException, PasswordStrength] =
+  def from(i: Int): Validation[ValidationException, PasswordStrength] =
     if (i < 4 || i > 31) {
       Validation.fail(ValidationException(UserErrorMessages.PasswordStrengthInvalid))
     } else {
@@ -401,11 +401,11 @@ object UserStatus {
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[UserStatus] =
     JsonCodec[Boolean].transformOrFail(
-      value => Right(UserStatus.make(value)),
+      value => Right(UserStatus.from(value)),
       userStatus => userStatus.value
     )
 
-  def make(value: Boolean): UserStatus = UserStatus(value)
+  def from(value: Boolean): UserStatus = UserStatus(value)
 }
 
 final case class SystemAdmin private (value: Boolean) extends AnyVal
@@ -414,11 +414,11 @@ object SystemAdmin {
   // the codec defines how to decode/encode the object from/into json
   implicit val codec: JsonCodec[SystemAdmin] =
     JsonCodec[Boolean].transformOrFail(
-      value => Right(SystemAdmin.make(value)),
+      value => Right(SystemAdmin.from(value)),
       systemAdmin => systemAdmin.value
     )
 
-  def make(value: Boolean): SystemAdmin = SystemAdmin(value)
+  def from(value: Boolean): SystemAdmin = SystemAdmin(value)
 }
 
 object UserErrorMessages {
