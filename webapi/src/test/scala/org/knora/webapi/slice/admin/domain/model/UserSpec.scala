@@ -82,7 +82,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Username.from(validUsername).contains(validUsername))
+      assertTrue(Username.from(validUsername).map(_.value).contains(validUsername))
     }
   )
 
@@ -96,7 +96,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Email.from(validEmailAddress).contains(validEmailAddress))
+      assertTrue(Email.from(validEmailAddress).map(_.value).contains(validEmailAddress))
     }
   )
 
@@ -107,7 +107,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(GivenName.from(validGivenName).contains(validGivenName))
+      assertTrue(GivenName.from(validGivenName).map(_.value).contains(validGivenName))
     }
   )
 
@@ -118,7 +118,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(FamilyName.from(validFamilyName).contains(validFamilyName))
+      assertTrue(FamilyName.from(validFamilyName).map(_.value).contains(validFamilyName))
     }
   )
 
@@ -129,7 +129,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Password.from(validPassword).contains(validPassword))
+      assertTrue(Password.from(validPassword).map(_.value).contains(validPassword))
     }
   )
 
@@ -238,11 +238,11 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(UserIri.from(validUserIri).contains(validUserIri))
+      assertTrue(UserIri.from(validUserIri).map(_.value).contains(validUserIri))
     }
   )
 
-  private val oldTests = suite("ordTests")(
+  private val oldTests = suite("oldTests")(
     usernameTest,
     emailTest,
     givenNameTest,
