@@ -16,7 +16,6 @@ import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -27,9 +26,15 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonPro
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -571,11 +576,10 @@ object UserIdentifierADM {
 
     val userEmail =
       maybeEmail
-        .map(e => model.Email.Email.from(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+        .map(e => Email.make(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
         .map(_.value)
-    val username = maybeUsername.map(u =>
-      model.Username.Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value
-    )
+    val username =
+      maybeUsername.map(u => Username.make(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value)
 
     new UserIdentifierADM(
       maybeIri = userIri,

@@ -12,7 +12,7 @@ import zio.test.assertTrue
 
 import java.time.Duration
 
-import dsp.valueobjects.User
+import org.knora.webapi.slice.admin.domain.model.PasswordStrength
 
 object AppConfigSpec extends ZIOSpecDefault {
 
@@ -29,7 +29,7 @@ object AppConfigSpec extends ZIOSpecDefault {
           appConfig.sipi.timeout == Duration.ofSeconds(120),
           appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
-          appConfig.bcryptPasswordStrength == User.PasswordStrength(12),
+          appConfig.bcryptPasswordStrength == PasswordStrength.unsafeMake(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",

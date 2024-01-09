@@ -10,7 +10,15 @@ import zio.prelude.Validation
 import zio.test.*
 
 import dsp.errors.ValidationException
-import dsp.valueobjects.User.*
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
+import org.knora.webapi.slice.admin.domain.model.PasswordStrength
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserErrorMessages
+import org.knora.webapi.slice.admin.domain.model.Username
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -31,7 +39,8 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword                               = "pass-word"
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
-  private val validPasswordHash                           = PasswordHash.make("test", PasswordStrength(12)).fold(e => throw e.head, v => v)
+  private val pwStrength                                  = PasswordStrength.unsafeMake(12)
+  private val validPasswordHash                           = PasswordHash.make("test", pwStrength).fold(e => throw e.head, v => v)
 
   def spec: Spec[Any, Any] =
     usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest
@@ -162,14 +171,14 @@ object UserSpec extends ZIOSpecDefault {
   private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and return an error") {
       assertTrue(
-        PasswordHash.make("", PasswordStrength(12)) == Validation.fail(
+        PasswordHash.make("", pwStrength) == Validation.fail(
           ValidationException(UserErrorMessages.PasswordMissing)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       val passwordString = "password1"
-      val password       = PasswordHash.make("password1", PasswordStrength(12)).fold(e => throw e.head, v => v)
+      val password       = PasswordHash.make("password1", pwStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordString))
     },
@@ -178,18 +187,18 @@ object UserSpec extends ZIOSpecDefault {
       val passwordEqualString    = "password1"
       val passwordNotEqualString = "password2"
 
-      val password = PasswordHash.make(passwordString, PasswordStrength(12)).fold(e => throw e.head, v => v)
+      val password = PasswordHash.make(passwordString, pwStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordEqualString), !password.matches(passwordNotEqualString))
     },
     test("pass an invalid password strength value and return an error") {
       assertTrue(
-        PasswordStrength.make(-1) == Validation.fail("-1 did not satisfy greaterThanOrEqualTo(4)")
+        PasswordStrength.make(-1) == Validation.fail(ValidationException("-1 did not satisfy greaterThanOrEqualTo(4)"))
       )
     },
     test("pass a valid password strength value and create value object") {
       assertTrue(
-        PasswordStrength.make(12) == Validation.succeed(PasswordStrength(12))
+        PasswordStrength.make(12) == Validation.succeed(pwStrength)
       )
     },
     test("decode a PasswordHash from JSON") {
@@ -202,7 +211,7 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(result)
     },
     test("encode a PasswordHash into JSON") {
-      val passwordHash     = PasswordHash.make("test", PasswordStrength(12)).getOrElse(validPasswordHash)
+      val passwordHash     = PasswordHash.make("test", pwStrength).getOrElse(validPasswordHash)
       val passwordHashJson = passwordHash.toJson
       assertTrue(passwordHashJson.startsWith(""""$2a"""))
     }

@@ -14,7 +14,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -42,8 +41,12 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -1808,7 +1811,7 @@ final case class UsersResponderADMLive(
         } else {
           for {
             _ <- ZIO
-                   .fromEither(model.Email.Email.from(email.value))
+                   .fromEither(Email.make(email.value).toEither)
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
             userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
           } yield userExists

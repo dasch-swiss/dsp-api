@@ -5,7 +5,8 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 
 import java.util.UUID
 
@@ -14,7 +15,6 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.User._
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
@@ -30,9 +30,13 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import pekko.actor.Status.Failure
-import pekko.testkit.ImplicitSender
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.

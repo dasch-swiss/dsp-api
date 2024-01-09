@@ -5,15 +5,21 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.api.RefinedTypeOps
-import eu.timepit.refined.string.MatchesRegex
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
+import zio.ZIO
+import zio.config.magnolia.Descriptor
+import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
 import zio.prelude.Validation
 
+import java.security.SecureRandom
+import scala.util.matching.Regex
+
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.isUserIri
 import dsp.valueobjects.Iri.validateAndEscapeUserIri
 import dsp.valueobjects.IriErrorMessages
@@ -140,7 +146,7 @@ final case class User(
    */
   def isSystemAdmin: Boolean =
     permissions.groupsPerProject
-      .getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI])
+      .getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[String])
       .contains(OntologyConstants.KnoraAdmin.SystemAdmin)
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
@@ -153,30 +159,30 @@ final case class User(
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
 
-object Username {
-
-  /**
-   * Username validated by regex:
-   * - 4 - 50 characters long
-   * - Only contains alphanumeric characters, underscore and dot.
-   * - Underscore and dot can't be at the end or start of a username
-   * - Underscore or dot can't be used multiple times in a row
-   */
-  type Username = String Refined MatchesRegex["^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"]
-
-  object Username extends RefinedTypeOps[Username, String] {
-    //  implicit val codec: JsonCodec[Username] = JsonCodec[String].transformOrFail(Username.from, _.toString)
-  }
-}
-
-object Email {
-
-  type Email = String Refined MatchesRegex["^.+@.+$"]
-  object Email extends RefinedTypeOps[Email, String] {
-    //  implicit val codec: JsonCodec[Email] = JsonCodec[String].transformOrFail(Email.from, _.toString)
-  }
-
-}
+//object Username {
+//
+//  /**
+//   * Username validated by regex:
+//   * - 4 - 50 characters long
+//   * - Only contains alphanumeric characters, underscore and dot.
+//   * - Underscore and dot can't be at the end or start of a username
+//   * - Underscore or dot can't be used multiple times in a row
+//   */
+//  type Username = String Refined MatchesRegex["^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"]
+//
+//  object Username extends RefinedTypeOps[Username, String] {
+//    //  implicit val codec: JsonCodec[Username] = JsonCodec[String].transformOrFail(Username.from, _.toString)
+//  }
+//}
+//
+//object Email {
+//
+//  type Email = String Refined MatchesRegex["^.+@.+$"]
+//  object Email extends RefinedTypeOps[Email, String] {
+//    //  implicit val codec: JsonCodec[Email] = JsonCodec[String].transformOrFail(Email.from, _.toString)
+//  }
+//
+//}
 
 final case class UserIri private (value: String) extends AnyVal
 object UserIri {
@@ -201,7 +207,255 @@ object UserIri {
     }
 }
 
+final case class Username private (value: String) extends AnyVal
+object Username { self =>
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[Username] =
+    JsonCodec[String].transformOrFail(
+      value => Username.make(value).toEitherWith(e => e.head.getMessage()),
+      username => username.value
+    )
+
+  /**
+   * A regex that matches a valid username
+   * - 4 - 50 characters long
+   * - Only contains alphanumeric characters, underscore and dot.
+   * - Underscore and dot can't be at the end or start of a username
+   * - Underscore or dot can't be used multiple times in a row
+   */
+  private val UsernameRegex: Regex =
+    """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
+
+  def make(value: String): Validation[ValidationException, Username] =
+    if (value.isEmpty) {
+      // remove exception return just the error
+      Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
+    } else {
+      UsernameRegex.findFirstIn(value) match {
+        case Some(value) => Validation.succeed(Username(value))
+        case None        => Validation.fail(ValidationException(UserErrorMessages.UsernameInvalid))
+      }
+    }
+
+  /**
+   * Makes a Username value object even if the input is not valid. Instead of returning an Error, it
+   *     just logs the Error message and returns the Username. This is needed when the input value
+   *     was created at a time where the validation was different and couldn't be updated. Only use
+   *     this method in the repo layer or in tests!
+   *
+   * @param value The value the value object is created from
+   */
+  def unsafeMake(value: String): Validation[ValidationException, Username] =
+    Username
+      .make(value)
+      .fold(
+        e => {
+          ZIO.logError(e.head.getMessage())
+          Validation.succeed(Username(value))
+        },
+        v => Validation.succeed(v)
+      )
+}
+
+final case class Email private (value: String) extends AnyVal
+object Email { self =>
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[Email] =
+    JsonCodec[String].transformOrFail(
+      value => Email.make(value).toEitherWith(e => e.head.getMessage()),
+      email => email.value
+    )
+
+  private val EmailRegex: Regex = """^.+@.+$""".r
+
+  def make(value: String): Validation[ValidationException, Email] =
+    if (value.isEmpty) {
+      Validation.fail(ValidationException(UserErrorMessages.EmailMissing))
+    } else {
+      EmailRegex.findFirstIn(value) match {
+        case Some(value) => Validation.succeed(Email(value))
+        case None        => Validation.fail(ValidationException(UserErrorMessages.EmailInvalid))
+      }
+    }
+}
+
+final case class GivenName private (value: String) extends AnyVal
+object GivenName { self =>
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[GivenName] =
+    JsonCodec[String].transformOrFail(
+      value => GivenName.make(value).toEitherWith(e => e.head.getMessage()),
+      givenName => givenName.value
+    )
+
+  def make(value: String): Validation[ValidationException, GivenName] =
+    if (value.isEmpty) {
+      Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
+    } else {
+      Validation.succeed(GivenName(value))
+    }
+}
+
+final case class FamilyName private (value: String) extends AnyVal
+object FamilyName { self =>
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[FamilyName] =
+    JsonCodec[String].transformOrFail(
+      value => FamilyName.make(value).toEitherWith(e => e.head.getMessage()),
+      familyName => familyName.value
+    )
+
+  def make(value: String): Validation[ValidationException, FamilyName] =
+    if (value.isEmpty) {
+      Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
+    } else {
+      Validation.succeed(FamilyName(value))
+    }
+}
+
+final case class Password private (value: String) extends AnyVal
+object Password { self =>
+  private val PasswordRegex: Regex = """^[\s\S]*$""".r
+
+  def make(value: String): Validation[ValidationException, Password] =
+    if (value.isEmpty) {
+      Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
+    } else {
+      PasswordRegex.findFirstIn(value) match {
+        case Some(value) => Validation.succeed(Password(value))
+        case None        => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
+      }
+    }
+}
+
+final case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
+
+  /**
+   * Check password (in clear text). The password supplied in clear text is compared against the
+   * stored hash.
+   *
+   * @param passwordString Password (clear text) to be checked
+   * @return true if password matches, false otherwise
+   */
+  def matches(passwordString: String): Boolean =
+    // check which type of hash we have
+    if (self.value.startsWith("$e0801$")) {
+      // SCrypt
+      val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
+      encoder.matches(passwordString, self.value)
+    } else if (self.value.startsWith("$2a$")) {
+      // BCrypt
+      val encoder = new BCryptPasswordEncoder()
+      encoder.matches(passwordString, self.value)
+    } else {
+      ZIO.logError(UserErrorMessages.PasswordHashUnknown)
+      false
+    }
+
+}
+object PasswordHash {
+  // TODO: get the passwordStrength from appConfig instead (see CreateUser.scala as example)
+
+  // the decoder defines how to decode json to an object
+  implicit val decoder: JsonDecoder[PasswordHash] = JsonDecoder[(String, PasswordStrength)].mapOrFail {
+    case (password: String, PasswordStrength(strength)) =>
+      val passwordStrength =
+        PasswordStrength.make(strength).fold(e => throw new ValidationException(e.head.getMessage), v => v)
+
+      PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage)
+  }
+  // the encoder defines how to encode the object into json
+  implicit val encoder: JsonEncoder[PasswordHash] =
+    JsonEncoder[String].contramap((passwordHash: PasswordHash) => passwordHash.value)
+
+  private val PasswordRegex: Regex = """^[\s\S]*$""".r
+
+  def make(value: String, passwordStrength: PasswordStrength): Validation[ValidationException, PasswordHash] =
+    if (value.isEmpty) {
+      Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
+    } else {
+      PasswordRegex.findFirstIn(value) match {
+        case Some(value) =>
+          val encoder =
+            new BCryptPasswordEncoder(
+              passwordStrength.value,
+              new SecureRandom()
+            )
+          val hashedValue = encoder.encode(value)
+          Validation.succeed(PasswordHash(hashedValue, passwordStrength))
+        case None => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
+      }
+    }
+}
+
+final case class PasswordStrength private (value: Int) extends AnyVal
+object PasswordStrength {
+
+  // the codec defines how to decode json to an object and vice versa
+  implicit val codec: JsonCodec[PasswordStrength] =
+    JsonCodec[Int].transformOrFail(
+      value => PasswordStrength.make(value).toEitherWith(e => e.head.getMessage),
+      passwordStrength => passwordStrength.value
+    )
+
+  // this is used for the configuration descriptor
+  implicit val descriptorForPasswordStrength: Descriptor[PasswordStrength] =
+    Descriptor[Int].transformOrFail(
+      int => PasswordStrength.make(int).toEitherWith(_.toString()),
+      r => Right(r.value)
+    )
+
+  def make(i: Int): Validation[ValidationException, PasswordStrength] =
+    if (i < 4 || i > 31) {
+      Validation.fail(ValidationException(UserErrorMessages.PasswordStrengthInvalid))
+    } else {
+      Validation.succeed(PasswordStrength(i))
+    }
+
+  // ignores the assertion!
+  def unsafeMake(value: Int): PasswordStrength = PasswordStrength(value)
+
+}
+
+final case class UserStatus private (value: Boolean) extends AnyVal
+object UserStatus {
+
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[UserStatus] =
+    JsonCodec[Boolean].transformOrFail(
+      value => Right(UserStatus.make(value)),
+      userStatus => userStatus.value
+    )
+
+  def make(value: Boolean): UserStatus = UserStatus(value)
+}
+
+final case class SystemAdmin private (value: Boolean) extends AnyVal
+object SystemAdmin {
+
+  // the codec defines how to decode/encode the object from/into json
+  implicit val codec: JsonCodec[SystemAdmin] =
+    JsonCodec[Boolean].transformOrFail(
+      value => Right(SystemAdmin.make(value)),
+      systemAdmin => systemAdmin.value
+    )
+
+  def make(value: Boolean): SystemAdmin = SystemAdmin(value)
+}
+
 object UserErrorMessages {
   val UserIriMissing: String           = "User IRI cannot be empty."
   val UserIriInvalid: String => String = (iri: String) => s"User IRI: $iri is invalid."
+  val UsernameMissing                  = "Username cannot be empty."
+  val UsernameInvalid                  = "Username is invalid."
+  val EmailMissing                     = "Email cannot be empty."
+  val EmailInvalid                     = "Email is invalid."
+  val PasswordMissing                  = "Password cannot be empty."
+  val PasswordInvalid                  = "Password is invalid."
+  val PasswordStrengthInvalid          = "PasswordStrength is invalid."
+  val PasswordHashUnknown              = "The provided PasswordHash has an unknown format."
+  val GivenNameMissing                 = "GivenName cannot be empty."
+  val GivenNameInvalid                 = "GivenName is invalid."
+  val FamilyNameMissing                = "FamilyName cannot be empty."
+  val FamilyNameInvalid                = "FamilyName is invalid."
 }

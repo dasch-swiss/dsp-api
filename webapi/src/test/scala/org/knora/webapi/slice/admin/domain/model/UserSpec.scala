@@ -13,7 +13,6 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.IriSpec.invalidIri
 import dsp.valueobjects.IriSpec.userIriWithUUIDVersion3
 import dsp.valueobjects.IriSpec.validUserIri
-import org.knora.webapi.slice.admin.domain.model.Username.Username
 
 object UserSpec extends ZIOSpecDefault {
 
@@ -21,61 +20,61 @@ object UserSpec extends ZIOSpecDefault {
 
   private val usernameSuite = suite("Username")(
     test("Username may contain alphanumeric characters, underscore and dot") {
-      assertTrue(Username.from("a_2.3").isRight)
+      assertTrue(Username.make("a_2.3").toEither.isRight)
     },
     test("Username has to be at least 4 characters long") {
-      assertTrue(Username.from("abc").isLeft)
+      assertTrue(Username.make("abc").toEither.isLeft)
     },
     test("Username has to be at most 50 characters long") {
-      assertTrue(Username.from("123456789012345678901234567890123456789012345678901").isLeft)
+      assertTrue(Username.make("123456789012345678901234567890123456789012345678901").toEither.isLeft)
     },
     test("Username must not contain other characters") {
       assertTrue(
-        Username.from("a_2.3!").isLeft,
-        Username.from("a_2-3").isLeft,
-        Username.from("a.b@example.com").isLeft
+        Username.make("a_2.3!").toEither.isLeft,
+        Username.make("a_2-3").toEither.isLeft,
+        Username.make("a.b@example.com").toEither.isLeft
       )
     },
     test("Username must not start with a dot") {
-      assertTrue(Username.from(".abc").isLeft)
+      assertTrue(Username.make(".abc").toEither.isLeft)
     },
     test("Username must not end with a dot") {
-      assertTrue(Username.from("abc.").isLeft)
+      assertTrue(Username.make("abc.").toEither.isLeft)
     },
     test("Username must not contain two dots in a row") {
-      assertTrue(Username.from("a..bc").isLeft)
+      assertTrue(Username.make("a..bc").toEither.isLeft)
     },
     test("Username must not start with an underscore") {
-      assertTrue(Username.from("_abc").isLeft)
+      assertTrue(Username.make("_abc").toEither.isLeft)
     },
     test("Username must not end with an underscore") {
-      assertTrue(Username.from("abc_").isLeft)
+      assertTrue(Username.make("abc_").toEither.isLeft)
     },
     test("Username must not contain two underscores in a row") {
-      assertTrue(Username.from("a__bc").isLeft)
+      assertTrue(Username.make("a__bc").toEither.isLeft)
     }
   )
 
   private val emailSuite = suite("Email")(
     test("Email must be a correct email address") {
-      assertTrue(Email.Email.from("j.doe@example.com").isRight)
+      assertTrue(Email.make("j.doe@example.com").toEither.isRight)
     },
     test("Email must not be empty") {
-      assertTrue(Email.Email.from("").isLeft)
+      assertTrue(Email.make("").toEither.isLeft)
     },
     test("Email must not be a username") {
-      assertTrue(Email.Email.from("j.doe").isLeft)
+      assertTrue(Email.make("j.doe").toEither.isLeft)
     }
   )
 
   private val iriSuite = suite("UserIri")(
     test("pass an empty value and return an error") {
-      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
+      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing)))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         UserIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid(invalidIri))
+          BadRequestException(UserErrorMessages.UserIriInvalid(invalidIri))
         )
       )
     },
