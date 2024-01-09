@@ -29,6 +29,7 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
+import org.apache.jena.rdf.model.Model
 import spray.json.*
 import zio.*
 import zio.metrics.Metric
@@ -599,6 +600,12 @@ case class TriplestoreServiceLive(
         ZIO.logError(error.toString) *>
           ZIO.fail(error)
     }
+
+  override def queryRdf(sparql: Construct): Task[Model] =
+    for {
+      turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
+      rdfModel  <- RdfFormatUtil.parseTtlToJenaModel(turtleStr)
+    } yield rdfModel
 }
 
 object TriplestoreServiceLive {
