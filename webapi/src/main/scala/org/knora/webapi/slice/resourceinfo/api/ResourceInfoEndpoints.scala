@@ -25,6 +25,9 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .in(query[Option[Order]](Order.queryParamKey))
     .in(query[Option[OrderBy]](OrderBy.queryParamKey))
     .out(jsonBody[ListResponseDto])
+
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(getResourcesInfo)
 }
 
 object ResourceInfoEndpoints {

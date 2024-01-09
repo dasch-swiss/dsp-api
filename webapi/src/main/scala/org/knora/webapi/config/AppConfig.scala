@@ -203,7 +203,7 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig & JwtConfig & DspIngestConfig & Triplestore
+  type AppConfigurations = AppConfig & JwtConfig & DspIngestConfig & InstrumentationServerConfig & Triplestore
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
 
@@ -216,7 +216,10 @@ object AppConfig {
   }
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
-    appConfigLayer ++ appConfigLayer.project(_.dspIngest) ++ appConfigLayer.project(_.triplestore) ++
+    appConfigLayer ++
+      appConfigLayer.project(_.dspIngest) ++
+      appConfigLayer.project(_.triplestore) ++
+      appConfigLayer.project(_.instrumentationServerConfig) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
