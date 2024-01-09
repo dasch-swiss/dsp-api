@@ -149,31 +149,6 @@ final case class User(
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
 
-//object Username {
-//
-//  /**
-//   * Username validated by regex:
-//   * - 4 - 50 characters long
-//   * - Only contains alphanumeric characters, underscore and dot.
-//   * - Underscore and dot can't be at the end or start of a username
-//   * - Underscore or dot can't be used multiple times in a row
-//   */
-//  type Username = String Refined MatchesRegex["^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"]
-//
-//  object Username extends RefinedTypeOps[Username, String] {
-//    //  implicit val codec: JsonCodec[Username] = JsonCodec[String].transformOrFail(Username.from, _.toString)
-//  }
-//}
-//
-//object Email {
-//
-//  type Email = String Refined MatchesRegex["^.+@.+$"]
-//  object Email extends RefinedTypeOps[Email, String] {
-//    //  implicit val codec: JsonCodec[Email] = JsonCodec[String].transformOrFail(Email.from, _.toString)
-//  }
-//
-//}
-
 final case class UserIri private (value: String) extends AnyVal
 object UserIri {
   def from(value: String): Either[String, UserIri] =
@@ -310,7 +285,7 @@ object PasswordHash {
 
   def from(value: String, passwordStrength: PasswordStrength): Either[String, PasswordHash] =
     if (value.isEmpty) {
-      Left((UserErrorMessages.PasswordMissing))
+      Left(UserErrorMessages.PasswordMissing)
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) =>

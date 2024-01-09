@@ -63,22 +63,22 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass an invalid value with '_' used multiple times in a row and return an error") {
       assertTrue(
-        Username.from(invalidUsernameWithMultipleUnderscoresInRow) == Left((UserErrorMessages.UsernameInvalid))
+        Username.from(invalidUsernameWithMultipleUnderscoresInRow) == Left(UserErrorMessages.UsernameInvalid)
       )
     },
     test("pass an invalid value with '.' as the first char and return an error") {
       assertTrue(
-        Username.from(invalidUsernameWithDotAsFirstChar) == Left((UserErrorMessages.UsernameInvalid))
+        Username.from(invalidUsernameWithDotAsFirstChar) == Left(UserErrorMessages.UsernameInvalid)
       )
     },
     test("pass an invalid value with '.' as the last char and return an error") {
       assertTrue(
-        Username.from(invalidUsernameWithDotAsLastChar) == Left((UserErrorMessages.UsernameInvalid))
+        Username.from(invalidUsernameWithDotAsLastChar) == Left(UserErrorMessages.UsernameInvalid)
       )
     },
     test("pass an invalid value with '.' used multiple times in a row and return an error") {
       assertTrue(
-        Username.from(invalidUsernameWithMultipleDotsInRow) == Left((UserErrorMessages.UsernameInvalid))
+        Username.from(invalidUsernameWithMultipleDotsInRow) == Left(UserErrorMessages.UsernameInvalid)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -88,11 +88,11 @@ object UserSpec extends ZIOSpecDefault {
 
   private val emailTest = suite("Email")(
     test("pass an empty value and return an error") {
-      assertTrue(Email.from("") == Left((UserErrorMessages.EmailMissing)))
+      assertTrue(Email.from("") == Left(UserErrorMessages.EmailMissing))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        Email.from(invalidEmailAddress) == Left((UserErrorMessages.EmailInvalid))
+        Email.from(invalidEmailAddress) == Left(UserErrorMessages.EmailInvalid)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -103,7 +103,7 @@ object UserSpec extends ZIOSpecDefault {
   private val givenNameTest = suite("GivenName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        GivenName.from("") == Left((UserErrorMessages.GivenNameMissing))
+        GivenName.from("") == Left(UserErrorMessages.GivenNameMissing)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -114,7 +114,7 @@ object UserSpec extends ZIOSpecDefault {
   private val familyNameTest = suite("FamilyName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        FamilyName.from("") == Left((UserErrorMessages.FamilyNameMissing))
+        FamilyName.from("") == Left(UserErrorMessages.FamilyNameMissing)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -125,7 +125,7 @@ object UserSpec extends ZIOSpecDefault {
   private val passwordTest = suite("Password")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Password.from("") == Left((UserErrorMessages.PasswordMissing))
+        Password.from("") == Left(UserErrorMessages.PasswordMissing)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -136,7 +136,7 @@ object UserSpec extends ZIOSpecDefault {
   private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and return an error") {
       assertTrue(
-        PasswordHash.from("", pwStrength) == Left((UserErrorMessages.PasswordMissing))
+        PasswordHash.from("", pwStrength) == Left(UserErrorMessages.PasswordMissing)
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -225,11 +225,11 @@ object UserSpec extends ZIOSpecDefault {
 
   private val iriSuite = suite("UserIri")(
     test("pass an empty value and return an error") {
-      assertTrue(UserIri.from("") == Left((UserErrorMessages.UserIriMissing)))
+      assertTrue(UserIri.from("") == Left(UserErrorMessages.UserIriMissing))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        UserIri.from(invalidIri) == Left((UserErrorMessages.UserIriInvalid(invalidIri)))
+        UserIri.from(invalidIri) == Left(UserErrorMessages.UserIriInvalid(invalidIri))
       )
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
