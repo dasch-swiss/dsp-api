@@ -98,8 +98,8 @@ final case class BulkIngestServiceLive(
 
   private def updateMappingCsv(asset: Asset, fileToIngest: Path, importDir: Path, csv: Path) =
     ZIO.logInfo(s"Updating mapping file $csv, $asset") *> {
-      val ingestedFileRelativePath = s"${importDir.relativize(fileToIngest)}"
-      val derivativeFilename       = asset.derivative.filename
+      val ingestedFileRelativePath = CsvUtil.escapeCsvValue(s"${importDir.relativize(fileToIngest)}")
+      val derivativeFilename       = CsvUtil.escapeCsvValue(asset.derivative.filename.toString)
       val line                     = s"$ingestedFileRelativePath,$derivativeFilename"
       Files.writeLines(csv, Seq(line), openOptions = Set(StandardOpenOption.APPEND))
     }
