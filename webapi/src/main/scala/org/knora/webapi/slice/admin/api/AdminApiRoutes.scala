@@ -19,7 +19,8 @@ final case class AdminApiRoutes(
   tapirToPekko: TapirToPekkoInterpreter
 ) {
 
-  private val handlers = groups.handlers ++ maintenance.handlers ++ permissions.allHanders ++ project.allHanders ++ users.allHanders
+  private val handlers =
+    groups.handlers ++ maintenance.handlers ++ permissions.allHanders ++ project.allHanders ++ users.allHanders
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }
