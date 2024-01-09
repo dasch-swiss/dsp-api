@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio._
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
@@ -28,10 +27,7 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.{GroupsRestServiceLive, MaintenanceRestService, ProjectADMRestService, ProjectsADMRestServiceLive, UsersADMRestServiceLive}
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api._
@@ -148,6 +144,9 @@ object LayersTest {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
+      GroupsEndpoints.layer,
+      GroupsEndpointsHandler.layer,
+      GroupsRestServiceLive.layer,
       GroupsResponderADMLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
