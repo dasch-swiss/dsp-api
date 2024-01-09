@@ -14,6 +14,8 @@ case class GroupsEndpointsHandler(
       endpoints.getGroups,
       (_: Unit) => restService.getAllGroups
     )
+
+  val handlers = List(getGroupsHandler).map(mapper.mapEndpointAndHandler)
 }
 
 object GroupsEndpointsHandler {
