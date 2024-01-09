@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
 
@@ -13,17 +13,15 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Group._
-import dsp.valueobjects.Iri._
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.actor.Status.Failure
 
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
@@ -107,9 +105,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
-            id = Some(
-              GroupIri.make(imagesReviewerGroup.id).fold(e => throw e.head, v => v)
-            ),
+            id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
             name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))

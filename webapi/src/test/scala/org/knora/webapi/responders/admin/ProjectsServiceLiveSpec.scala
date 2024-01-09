@@ -65,7 +65,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     ZLayer.make[ProjectADMRestService](
       ProjectsADMRestServiceLive.layer,
       exp.toLayer,
-      org.knora.webapi.slice.common.api.RestPermissionServiceLive.layer,
+      org.knora.webapi.slice.common.api.AuthorizationRestServiceLive.layer,
       ProjectExportServiceStub.layer,
       KnoraProjectRepoInMemory.layer,
       ProjectImportServiceLive.layer,

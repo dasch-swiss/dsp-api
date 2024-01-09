@@ -5,14 +5,15 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
@@ -21,11 +22,8 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API routes that deal with groups.
@@ -68,7 +66,9 @@ final case class GroupsRouteADM(
   private def createGroup(): Route = path(groupsBasePath) {
     post {
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val id: Validation[Throwable, Option[GroupIri]]            = GroupIri.make(apiRequest.id)
+        val id: Validation[Throwable, Option[GroupIri]] = apiRequest.id
+          .map(id => Validation.fromEither(GroupIri.from(id).map(Some(_))).mapError(BadRequestException(_)))
+          .getOrElse(Validation.succeed(None))
         val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
         val project: Validation[Throwable, ProjectIri]             = ProjectIri.from(apiRequest.project)

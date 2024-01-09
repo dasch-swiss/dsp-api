@@ -5,9 +5,12 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
 import zio.durationInt
+
+import java.net.URLEncoder
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -18,10 +21,9 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.AkkaHttpUtils
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
@@ -38,9 +40,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {
       "return a group's administrative permission" in {
-
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
-        val groupIri   = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
+        val projectIri =
+          URLEncoder.encode(ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id).value, "utf-8")
+        val groupIri =
+          URLEncoder.encode(GroupIri.unsafeFrom(OntologyConstants.KnoraAdmin.ProjectMember).value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
@@ -68,7 +71,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's administrative permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
+        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -93,7 +96,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's default object access permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
+        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -118,7 +121,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's all permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
+        val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -419,7 +422,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
     "updating permissions" should {
       "change the group of an administrative permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
@@ -461,7 +464,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       "change the group of a default object access permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
@@ -504,7 +507,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       "change the set of hasPermissions of an administrative permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
              |   "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
@@ -549,7 +552,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       "change the set of hasPermissions of a default object access permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
              |   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -600,7 +603,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       "change the resource class of a default object access permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val resourceClassIri     = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val updateResourceClass =
           s"""{
@@ -646,7 +649,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       "change the property of a default object access permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val propertyClassIri     = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
         val updateResourceClass =
           s"""{
@@ -691,7 +694,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
     "delete request" should {
       "erase a defaultObjectAccess permission" in {
         val permissionIri        = customDOAPIri
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
@@ -712,7 +715,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
       "erase an administrative permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )

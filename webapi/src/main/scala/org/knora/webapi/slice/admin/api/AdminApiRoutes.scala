@@ -13,12 +13,13 @@ import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 final case class AdminApiRoutes(
   groups: GroupsEndpointsHandler,
   maintenance: MaintenanceEndpointsHandlers,
+  permissions: PermissionsEndpointsHandlers,
   project: ProjectsEndpointsHandler,
   users: UsersEndpointsHandler,
   tapirToPekko: TapirToPekkoInterpreter
 ) {
 
-  private val handlers = groups.handlers ++ maintenance.handlers ++ project.allHanders ++ users.allHanders
+  private val handlers = groups.handlers ++ maintenance.handlers ++ permissions.allHanders ++ project.allHanders ++ users.allHanders
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }

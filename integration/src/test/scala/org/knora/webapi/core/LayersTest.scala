@@ -30,6 +30,7 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
@@ -78,11 +79,12 @@ object LayersTest {
     with DspIngestTestContainer
     with SharedVolumes.Images
 
-  type CommonR0 = ActorSystem with AppConfigurations with SipiService with JwtService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurations with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
       with AppRouter
       with Authenticator
+      with AuthorizationRestService
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -103,10 +105,12 @@ object LayersTest {
       with MessageRelay
       with OntologyCache
       with OntologyHelpers
+      with OntologyInferencer
       with OntologyRepo
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
+      with PermissionsRestService
       with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService
@@ -119,12 +123,10 @@ object LayersTest {
       with ResourceUtilV2
       with ResourcesResponderV2
       with RestCardinalityService
-      with RestPermissionService
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
       with SipiResponderADM
-      with OntologyInferencer
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -140,6 +142,7 @@ object LayersTest {
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticatorLive.layer,
+      AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -174,7 +177,10 @@ object LayersTest {
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
+      PermissionsEndpoints.layer,
+      PermissionsEndpointsHandlers.layer,
       PermissionsResponderADMLive.layer,
+      PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
@@ -191,7 +197,6 @@ object LayersTest {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      RestPermissionServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,

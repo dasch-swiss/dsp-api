@@ -30,6 +30,7 @@ import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
@@ -71,13 +72,13 @@ object LayersLive {
     ActorSystem & ApiRoutes & AppConfigurations & AppRouter & Authenticator & CacheService &
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
-      IIIFRequestMessageHandler & SipiService & InferenceOptimizationService & IriService & IriConverter & JwtService &
+      IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & IriService & JwtService & SipiService &
       KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyRepo & OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PredicateObjectMapper &
+      OntologyRepo & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
-      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & RestPermissionService & RestResourceInfoService &
-      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
+      AuthorizationRestService & ResourcesResponderV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
+      OntologyInferencer & SearchApiRoutes & SearchResponderV2 & SipiResponderADM & StandoffResponderV2 & StandoffTagUtilV2 & State &
       StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
@@ -91,6 +92,7 @@ object LayersLive {
       AppConfig.layer,
       AppRouter.layer,
       AuthenticatorLive.layer,
+      AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -126,7 +128,10 @@ object LayersLive {
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
+      PermissionsEndpoints.layer,
+      PermissionsEndpointsHandlers.layer,
       PermissionsResponderADMLive.layer,
+      PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
@@ -143,7 +148,6 @@ object LayersLive {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      RestPermissionServiceLive.layer,
       RestResourceInfoServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,

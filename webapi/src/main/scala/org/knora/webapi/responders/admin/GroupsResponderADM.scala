@@ -36,6 +36,8 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -377,7 +379,7 @@ final case class GroupsResponderADMLive(
         customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
         groupIri <- iriService.checkOrCreateEntityIri(
                       customGroupIri,
-                      stringFormatter.makeRandomGroupIri(projectADM.shortcode)
+                      GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value
                     )
 
         /* create the group */
