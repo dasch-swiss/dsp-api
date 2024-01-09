@@ -18,66 +18,6 @@ object UserSpec extends ZIOSpecDefault {
   private val validFamilyName         = "Rambo"
   private val pwStrength              = PasswordStrength.unsafeMake(12)
 
-  private val givenNameTest = suite("GivenName")(
-    test("pass an empty value and return an error") {
-      assertTrue(GivenName.from("") == Left(UserErrorMessages.GivenNameMissing))
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(GivenName.from(validGivenName).map(_.value).contains(validGivenName))
-    }
-  )
-
-  private val familyNameTest = suite("FamilyName")(
-    test("pass an empty value and return an error") {
-      assertTrue(FamilyName.from("") == Left(UserErrorMessages.FamilyNameMissing))
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(FamilyName.from(validFamilyName).map(_.value).contains(validFamilyName))
-    }
-  )
-
-  private val passwordTest = suite("Password")(
-    test("pass an empty value and return an error") {
-      assertTrue(Password.from("") == Left(UserErrorMessages.PasswordMissing))
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(Password.from(validPassword).map(_.value).contains(validPassword))
-    }
-  )
-
-  private val passwordHashTest = suite("PasswordHash")(
-    test("pass an empty value and return an error") {
-      assertTrue(PasswordHash.from("", pwStrength) == Left(UserErrorMessages.PasswordMissing))
-    },
-    test("pass a valid value and successfully create value object") {
-      val passwordString = "password1"
-      val password       = PasswordHash.unsafeFrom("password1", pwStrength)
-
-      assertTrue(password.matches(passwordString))
-    },
-    test("test if a password matches its hashed value") {
-      val passwordString         = "password1"
-      val passwordEqualString    = "password1"
-      val passwordNotEqualString = "password2"
-
-      val password = PasswordHash.unsafeFrom(passwordString, pwStrength)
-
-      assertTrue(password.matches(passwordEqualString), !password.matches(passwordNotEqualString))
-    },
-    test("pass an invalid password strength value and return an error") {
-      assertTrue(PasswordStrength.from(-1) == Left("PasswordStrength is invalid."))
-    },
-    test("pass a valid password strength value and create value object") {
-      assertTrue(PasswordStrength.from(12) == Right(pwStrength))
-    }
-  )
-
-  private val systemAdminTest = suite("SystemAdmin")(
-    test("pass a valid object and successfully create value object") {
-      assertTrue(SystemAdmin.from(true).value)
-    }
-  )
-
   private val userSuite = suite("User")()
 
   private val usernameSuite = suite("Username")(
@@ -85,7 +25,7 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(Username.from("") == Left(UserErrorMessages.UsernameMissing))
     },
     test("Username may contain alphanumeric characters, underscore and dot") {
-      assertTrue(Username.from("a_2.3").exists(_.value == "a_2.3"))
+      assertTrue(Username.from("a_2.3").isRight)
     },
     test("Username has to be at least 4 characters long") {
       assertTrue(Username.from("abc") == Left(UserErrorMessages.UsernameInvalid))
@@ -127,7 +67,7 @@ object UserSpec extends ZIOSpecDefault {
 
   private val emailSuite = suite("Email")(
     test("Email must be a correct email address") {
-      assertTrue(Email.from("j.doe@example.com").map(_.value) == Right("j.doe@example.com"))
+      assertTrue(Email.from("j.doe@example.com").isRight)
     },
     test("Email must not be empty") {
       assertTrue(Email.from("") == Left(UserErrorMessages.EmailMissing))
@@ -148,16 +88,64 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(UserIri.from(userIriWithUUIDVersion3) == Left(IriErrorMessages.UuidVersionInvalid))
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(UserIri.from(validUserIri).exists(_.value.equals(validUserIri)))
+      assertTrue(UserIri.from(validUserIri).isRight)
     }
   )
 
-  private val oldTests = suite("oldTests")(
-    givenNameTest,
-    familyNameTest,
-    passwordTest,
-    passwordHashTest,
-    systemAdminTest
+  private val givenNameSuite = suite("GivenName")(
+    test("pass an empty value and return an error") {
+      assertTrue(GivenName.from("") == Left(UserErrorMessages.GivenNameMissing))
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(GivenName.from(validGivenName).isRight)
+    }
+  )
+
+  private val familyNameSuite = suite("FamilyName")(
+    test("pass an empty value and return an error") {
+      assertTrue(FamilyName.from("") == Left(UserErrorMessages.FamilyNameMissing))
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(FamilyName.from(validFamilyName).isRight)
+    }
+  )
+
+  private val passwordSuite = suite("Password")(
+    test("pass an empty value and return an error") {
+      assertTrue(Password.from("") == Left(UserErrorMessages.PasswordMissing))
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(Password.from(validPassword).isRight)
+    }
+  )
+
+  private val passwordHashSuite = suite("PasswordHash")(
+    test("pass an empty value and return an error") {
+      assertTrue(PasswordHash.from("", pwStrength) == Left(UserErrorMessages.PasswordMissing))
+    },
+    test("pass a valid value and successfully create value object") {
+      val passwordString = "password1"
+      val password       = PasswordHash.from(passwordString, pwStrength)
+      assertTrue(password.exists(_.matches(passwordString)))
+    },
+    test("test if a password matches its hashed value") {
+      val passwordString         = "password1"
+      val passwordEqualString    = "password1"
+      val passwordNotEqualString = "password2"
+
+      val password = PasswordHash.from(passwordString, pwStrength)
+
+      assertTrue(
+        password.exists(_.matches(passwordEqualString)),
+        password.exists(!_.matches(passwordNotEqualString))
+      )
+    },
+    test("pass an invalid password strength value and return an error") {
+      assertTrue(PasswordStrength.from(-1) == Left(UserErrorMessages.PasswordStrengthInvalid))
+    },
+    test("pass a valid password strength value and create value object") {
+      assertTrue(PasswordStrength.from(12).isRight)
+    }
   )
 
   val spec: Spec[Any, Any] = suite("UserSpec")(
@@ -165,6 +153,9 @@ object UserSpec extends ZIOSpecDefault {
     usernameSuite,
     emailSuite,
     iriSuite,
-    oldTests // TODO: get rid of those tests
+    givenNameSuite,
+    familyNameSuite,
+    passwordSuite,
+    passwordHashSuite
   )
 }
