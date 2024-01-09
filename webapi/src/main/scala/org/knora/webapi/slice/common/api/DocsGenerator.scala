@@ -19,16 +19,18 @@ import zio.ZIOAppDefault
 import zio.ZLayer
 import zio.nio.file.Files
 import zio.nio.file.Path
-
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.slice.admin.api.AdminApiEndpoints
-import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
-import org.knora.webapi.slice.admin.api.PermissionsEndpoints
-import org.knora.webapi.slice.admin.api.ProjectsEndpoints
-import org.knora.webapi.slice.admin.api.UsersEndpoints
+import org.knora.webapi.slice.admin.api.{
+  AdminApiEndpoints,
+  GroupsEndpoints,
+  MaintenanceEndpoints,
+  PermissionsEndpoints,
+  ProjectsEndpoints,
+  UsersEndpoints
+}
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -66,6 +68,7 @@ object DocsGenerator extends ZIOAppDefault {
     ApiV2Endpoints.layer,
     BaseEndpoints.layer,
     DocsNoopAuthenticator.layer,
+    GroupsEndpoints.layer,
     MaintenanceEndpoints.layer,
     PermissionsEndpoints.layer,
     ProjectsEndpoints.layer,

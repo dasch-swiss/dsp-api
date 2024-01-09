@@ -23,6 +23,8 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupsGetResponseADM])
     .description("Returns all groups.")
     .tags(tags)
+
+  val endpoints: Seq[AnyEndpoint] = Seq(getGroups)
 }
 
 object GroupsEndpoints {
