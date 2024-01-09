@@ -154,6 +154,18 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
     .description("Search for resources by label.")
+
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(
+      postGravsearch,
+      getGravsearch,
+      postGravsearchCount,
+      getGravsearchCount,
+      getSearchByLabel,
+      getSearchByLabelCount,
+      getFullTextSearch,
+      getFullTextSearchCount
+    ).map(_.endpoint)
 }
 
 object SearchEndpoints {

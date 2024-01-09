@@ -195,6 +195,35 @@ final case class ProjectsEndpoints(
       .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
       .tags(tags)
   }
+
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(
+      Public.getAdminProjects,
+      Public.getAdminProjectsByProjectIri,
+      Public.getAdminProjectsByProjectIriRestrictedViewSettings,
+      Public.getAdminProjectsByProjectShortcode,
+      Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings,
+      Public.getAdminProjectsByProjectShortname,
+      Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
+      Public.getAdminProjectsKeywords,
+      Public.getAdminProjectsKeywordsByProjectIri
+    ) ++ Seq(
+      Secured.deleteAdminProjectsByIri,
+      Secured.getAdminProjectsByIriAllData,
+      Secured.getAdminProjectsByProjectIriAdminMembers,
+      Secured.getAdminProjectsByProjectIriMembers,
+      Secured.getAdminProjectsByProjectShortcodeAdminMembers,
+      Secured.getAdminProjectsByProjectShortcodeMembers,
+      Secured.getAdminProjectsByProjectShortnameAdminMembers,
+      Secured.getAdminProjectsByProjectShortnameMembers,
+      Secured.getAdminProjectsExports,
+      Secured.postAdminProjects,
+      Secured.postAdminProjectsByShortcodeExport,
+      Secured.postAdminProjectsByShortcodeImport,
+      Secured.putAdminProjectsByIri,
+      Secured.setAdminProjectsByProjectIriRestrictedViewSettings,
+      Secured.setAdminProjectsByProjectShortcodeRestrictedViewSettings
+    ).map(_.endpoint)
 }
 
 object ProjectsEndpoints {
