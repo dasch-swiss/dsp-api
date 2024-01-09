@@ -32,7 +32,6 @@ object UserSpec extends ZIOSpecDefault {
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
   private val pwStrength                                  = PasswordStrength.unsafeMake(12)
-  private val validPasswordHash                           = PasswordHash.from("test", pwStrength).fold(e => throw e.head, v => v)
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {

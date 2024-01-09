@@ -6,8 +6,8 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.*
 import zio.test.Assertion.*
+import zio.test.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException

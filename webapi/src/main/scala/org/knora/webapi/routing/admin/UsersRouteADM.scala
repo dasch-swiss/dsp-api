@@ -15,8 +15,8 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
