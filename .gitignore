@@ -52,3 +52,7 @@ dependencies.txt
 # exclude python virtual environments used for serving docs locally
 env/
 venv/
+
+# exclude generated openapi
+docs/03-endpoints/generated-openapi/*.yml
+

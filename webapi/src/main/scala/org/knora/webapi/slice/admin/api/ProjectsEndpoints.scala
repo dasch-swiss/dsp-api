@@ -5,25 +5,18 @@
 
 package org.knora.webapi.slice.admin.api
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.slice.admin.api.AdminPathVariables.{projectIri, projectShortcode, projectShortname}
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectSetRestrictedViewSizeRequest, ProjectUpdateRequest}
+import org.knora.webapi.slice.admin.api.model.{ProjectExportInfoResponse, ProjectImportResponse}
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
-import zio.Chunk
-import zio.ZLayer
-
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
-import org.knora.webapi.slice.common.api.BaseEndpoints
+import zio.{Chunk, ZLayer}
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
@@ -195,6 +188,35 @@ final case class ProjectsEndpoints(
       .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
       .tags(tags)
   }
+
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(
+      Public.getAdminProjects,
+      Public.getAdminProjectsByProjectIri,
+      Public.getAdminProjectsByProjectIriRestrictedViewSettings,
+      Public.getAdminProjectsByProjectShortcode,
+      Public.getAdminProjectsByProjectShortcodeRestrictedViewSettings,
+      Public.getAdminProjectsByProjectShortname,
+      Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
+      Public.getAdminProjectsKeywords,
+      Public.getAdminProjectsKeywordsByProjectIri
+    ) ++ Seq(
+      Secured.deleteAdminProjectsByIri,
+      Secured.getAdminProjectsByIriAllData,
+      Secured.getAdminProjectsByProjectIriAdminMembers,
+      Secured.getAdminProjectsByProjectIriMembers,
+      Secured.getAdminProjectsByProjectShortcodeAdminMembers,
+      Secured.getAdminProjectsByProjectShortcodeMembers,
+      Secured.getAdminProjectsByProjectShortnameAdminMembers,
+      Secured.getAdminProjectsByProjectShortnameMembers,
+      Secured.getAdminProjectsExports,
+      Secured.postAdminProjects,
+      Secured.postAdminProjectsByShortcodeExport,
+      Secured.postAdminProjectsByShortcodeImport,
+      Secured.putAdminProjectsByIri,
+      Secured.setAdminProjectsByProjectIriRestrictedViewSettings,
+      Secured.setAdminProjectsByProjectShortcodeRestrictedViewSettings
+    ).map(_.endpoint)
 }
 
 object ProjectsEndpoints {
