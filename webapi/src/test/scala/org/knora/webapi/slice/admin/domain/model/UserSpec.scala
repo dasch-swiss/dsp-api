@@ -127,7 +127,7 @@ object UserSpec extends ZIOSpecDefault {
 
   private val emailSuite = suite("Email")(
     test("Email must be a correct email address") {
-      assertTrue(Email.from("j.doe@example.com").contains(Right("j.doe@example.com")))
+      assertTrue(Email.from("j.doe@example.com").map(_.value) == Right("j.doe@example.com"))
     },
     test("Email must not be empty") {
       assertTrue(Email.from("") == Left(UserErrorMessages.EmailMissing))
