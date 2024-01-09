@@ -13,12 +13,14 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.slice.admin.api.{AdminApiEndpoints, MaintenanceEndpoints, PermissionsEndpoints, ProjectsEndpoints, UsersEndpoints}
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
+import org.knora.webapi.slice.search.api.SearchEndpoints
 import sttp.apispec.openapi.Server
 import sttp.apispec.openapi.circe.yaml.RichOpenAPI
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
-import zio.{Chunk, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 import zio.nio.file.{Files, Path}
+import zio.{Chunk, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 final case class DocsNoopAuthenticator() extends Authenticator {
   override def getUserADM(requestContext: RequestContext): Task[User]                                    = ???
@@ -43,19 +45,22 @@ object DocsGenerator extends ZIOAppDefault {
       _              <- ZIO.logInfo("Generating OpenAPI docs")
       args           <- getArgs
       adminEndpoints <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
+      v2Endpoints    <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
       path            = Path(args.headOption.getOrElse("/tmp"))
-      fileWritten    <- writeToFile(adminEndpoints, path, "maintenance")
-      _              <- ZIO.logInfo(s"Wrote to $fileWritten")
+      filesWritten   <- writeToFile(adminEndpoints, path, "maintenance") <*> writeToFile(v2Endpoints, path, "v2")
+      _              <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
   }.provideSome[ZIOAppArgs](
     AdminApiEndpoints.layer,
+    ApiV2Endpoints.layer,
     BaseEndpoints.layer,
     DocsNoopAuthenticator.layer,
     MaintenanceEndpoints.layer,
     PermissionsEndpoints.layer,
     ProjectsEndpoints.layer,
+    ResourceInfoEndpoints.layer,
+    SearchEndpoints.layer,
     UsersEndpoints.layer
-    //        ZLayer.Debug.mermaid ,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {
