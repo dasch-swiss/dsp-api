@@ -1507,24 +1507,6 @@ class StringFormatter private (
     }
 
   /**
-   * Given an email address, checks if it is in a valid format.
-   *
-   * @param email the email.
-   * @return the email
-   */
-  def validateEmail(email: String): Option[String] =
-    EmailAddressRegex.findFirstIn(email)
-
-  /**
-   * Check that the string represents a valid username.
-   *
-   * @param value    the string to be checked.
-   * @return the same string.
-   */
-  def validateUsername(value: String): Option[String] =
-    UsernameRegex.findFirstIn(value)
-
-  /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
    *
    * @param projectID      the shortcode of the project that the resource belongs to.

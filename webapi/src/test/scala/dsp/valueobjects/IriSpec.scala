@@ -6,8 +6,8 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -20,9 +20,7 @@ object IriSpec extends ZIOSpecDefault {
   private val uuidVersion3  = "cCmdcpn2MO211YYOplR1hQ"
   private val supportedUuid = "jDEEitJESRi3pDaDjjQ1WQ"
 
-  private val invalidIri               = "Invalid IRI"
-  private val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  private val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
+  private val invalidIri = "Invalid IRI"
 
   private val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
   private val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
@@ -30,47 +28,7 @@ object IriSpec extends ZIOSpecDefault {
   private val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
   private val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
 
-  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + uuidTest + roleIriTest
-
-  private val groupIriTest = suite("IriSpec - GroupIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        GroupIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing)),
-        GroupIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
-      )
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        GroupIri.make(invalidIri) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid)),
-        GroupIri.make(Some(invalidIri)) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-      )
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        GroupIri.make(groupIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        ),
-        GroupIri.make(Some(groupIriWithUUIDVersion3)) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      val groupIri      = GroupIri.make(validGroupIri)
-      val maybeGroupIri = GroupIri.make(Some(validGroupIri))
-
-      (for {
-        iri      <- groupIri
-        maybeIri <- maybeGroupIri
-      } yield assertTrue(iri.value == validGroupIri) &&
-        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        GroupIri.make(None) == Validation.succeed(None)
-      )
-    }
-  )
+  def spec: Spec[Any, Throwable] = listIriTest + uuidTest + roleIriTest
 
   private val listIriTest = suite("IriSpec - ListIri")(
     test("pass an empty value and return an error") {

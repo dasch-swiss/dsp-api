@@ -9,7 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
 import zio.ZIO
-import zio.config.magnolia.Descriptor
 import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
@@ -394,13 +393,6 @@ object PasswordStrength {
     JsonCodec[Int].transformOrFail(
       value => PasswordStrength.make(value).toEitherWith(e => e.head.getMessage),
       passwordStrength => passwordStrength.value
-    )
-
-  // this is used for the configuration descriptor
-  implicit val descriptorForPasswordStrength: Descriptor[PasswordStrength] =
-    Descriptor[Int].transformOrFail(
-      int => PasswordStrength.make(int).toEitherWith(_.toString()),
-      r => Right(r.value)
     )
 
   def make(i: Int): Validation[ValidationException, PasswordStrength] =
