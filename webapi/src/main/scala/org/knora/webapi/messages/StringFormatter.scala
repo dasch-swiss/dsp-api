@@ -7,7 +7,6 @@ package org.knora.webapi.messages
 
 import spray.json.*
 import zio.ZLayer
-import zio.prelude.Validation
 
 import java.time.*
 import java.time.temporal.ChronoField
@@ -20,7 +19,6 @@ import scala.util.matching.Regex
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -127,7 +125,7 @@ object StringFormatter {
   /**
    * The domain name used to construct Knora IRIs.
    */
-  private val IriDomain: String = "rdfh.ch"
+  val IriDomain: String = "rdfh.ch"
 
   /*
 
@@ -623,9 +621,6 @@ class StringFormatter private (
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
-
-  // A regex for matching a string containing the project ID.
-  private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
   // A regex for the URL path of an API v2 ontology (built-in or project-specific).
   private val ApiV2OntologyUrlPathRegex: Regex = (
@@ -1526,27 +1521,6 @@ class StringFormatter private (
     }
 
   /**
-   * Given the group IRI, checks if it is in a valid format.
-   *
-   * @param iri the group's IRI.
-   * @return the IRI of the list.
-   */
-  def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (Iri.isGroupIri(iri)) Validation.succeed(iri)
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
-
-  /**
-   * Given the permission IRI, checks if it is in a valid format.
-   *
-   * @param iri the permission's IRI.
-   * @return either the IRI or the error message.
-   */
-  def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && UuidUtil.hasSupportedVersion(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !UuidUtil.hasSupportedVersion(iri)) Left(IriErrorMessages.UuidVersionInvalid)
-    else Left(s"Invalid permission IRI: $iri.")
-
-  /**
    * Given an email address, checks if it is in a valid format.
    *
    * @param email the email.
@@ -1700,17 +1674,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new group IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return a new group IRI.
-   */
-  def makeRandomGroupIri(shortcode: String): String = {
-    val knoraGroupUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
-  }
-
-  /**
    * Creates a new person IRI based on a UUID.
    *
    * @return a new person IRI.
@@ -1729,17 +1692,6 @@ class StringFormatter private (
   def makeRandomListIri(shortcode: String): String = {
     val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
-  }
-
-  /**
-   * Creates a new permission IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return the IRI of the permission object.
-   */
-  def makeRandomPermissionIri(shortcode: String): IRI = {
-    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
   }
 
   /**

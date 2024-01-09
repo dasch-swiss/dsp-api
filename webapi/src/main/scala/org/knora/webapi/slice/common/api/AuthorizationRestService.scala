@@ -11,18 +11,20 @@ import zio.macros.accessible
 import dsp.errors.ForbiddenException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.RestPermissionService.isActive
-import org.knora.webapi.slice.common.api.RestPermissionService.isSystemAdmin
-import org.knora.webapi.slice.common.api.RestPermissionService.isSystemOrProjectAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
 
 /**
  * Provides methods for checking permissions.
  * This service is used by the REST API services.
  * All `ensure...` methods fail with a [[ForbiddenException]] if the user is not active or the respective check fails.
- * @see [[RestPermissionServiceLive]].
+ *
+ * @see [[AuthorizationRestServiceLive]].
  */
 @accessible
-trait RestPermissionService {
+trait AuthorizationRestService {
 
   /**
    * Checks if the user is a system administrator.
@@ -43,7 +45,12 @@ trait RestPermissionService {
    * @return [[Unit]] if the user is active and is a system or project administrator.
    *         Fails with a [[ForbiddenException]] otherwise.
    */
-  def ensureSystemOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit]
+  def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit]
+
+  def ensureSystemAdminSystemUserOrProjectAdmin(
+    user: User,
+    project: KnoraProject
+  ): IO[ForbiddenException, Unit]
 }
 
 /**
@@ -51,15 +58,18 @@ trait RestPermissionService {
  * All functions are pure.
  * Functions do not check if the user is active.
  */
-object RestPermissionService {
+object AuthorizationRestService {
   def isActive(userADM: User): Boolean                           = userADM.status
   def isSystemAdmin(user: User): Boolean                         = user.permissions.isSystemAdmin
+  def isSystemUser(user: User): Boolean                          = user.isSystemUser
   def isProjectAdmin(user: User, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id.value)
   def isSystemOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
     isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
+  def isSystemAdminSystemUserOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
+    isSystemUser(userADM) || isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
 }
 
-final case class RestPermissionServiceLive() extends RestPermissionService {
+final case class AuthorizationRestServiceLive() extends AuthorizationRestService {
   override def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
@@ -78,13 +88,21 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
     ZIO.fail(ForbiddenException(msg)).unless(isActive(user)).unit
   }
 
-  override def ensureSystemOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
+  override def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
     checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
   }
+  override def ensureSystemAdminSystemUserOrProjectAdmin(
+    user: User,
+    project: KnoraProject
+  ): IO[ForbiddenException, Unit] = {
+    lazy val msg =
+      s"You are logged in with username '${user.username}', but only a system administrator, system user or project administrator has permissions for this operation."
+    checkActiveUser(user, isSystemAdminSystemUserOrProjectAdmin(project), msg)
+  }
 }
 
-object RestPermissionServiceLive {
-  val layer: ULayer[RestPermissionService] = ZLayer.fromFunction(RestPermissionServiceLive.apply _)
+object AuthorizationRestServiceLive {
+  val layer: ULayer[AuthorizationRestService] = ZLayer.fromFunction(AuthorizationRestServiceLive.apply _)
 }
