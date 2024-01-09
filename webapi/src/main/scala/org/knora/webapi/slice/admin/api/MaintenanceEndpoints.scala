@@ -5,13 +5,14 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
 import zio.ZLayer
 import zio.json.ast.Json
+
+import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 

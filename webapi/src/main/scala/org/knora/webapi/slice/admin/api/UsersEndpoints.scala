@@ -5,13 +5,14 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
+
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 

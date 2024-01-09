@@ -5,18 +5,25 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.{projectIri, projectShortcode, projectShortname}
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectSetRestrictedViewSizeRequest, ProjectUpdateRequest}
-import org.knora.webapi.slice.admin.api.model.{ProjectExportInfoResponse, ProjectImportResponse}
-import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
-import zio.{Chunk, ZLayer}
+import zio.Chunk
+import zio.ZLayer
+
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
