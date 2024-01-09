@@ -50,7 +50,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Get all administrative permissions for a project and a group.")
     .out(sprayJsonBody[AdministrativePermissionGetResponseADM])
 
-  val getPermissionsDaopByProjectIri = base.securedEndpoint.get
+  val getPermissionsDoapByProjectIri = base.securedEndpoint.get
     .in(permissionsBase / "doap" / projectIri)
     .description("Get all default object access permissions for a project.")
     .out(sprayJsonBody[DefaultObjectAccessPermissionsForProjectGetResponseADM])

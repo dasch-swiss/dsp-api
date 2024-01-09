@@ -63,7 +63,7 @@ final case class PermissionsEndpointsHandlers(
 
   private val getPermissionsDaopByProjectIriHandler =
     SecuredEndpointAndZioHandler[IriIdentifier, DefaultObjectAccessPermissionsForProjectGetResponseADM](
-      permissionsEndpoints.getPermissionsDaopByProjectIri,
+      permissionsEndpoints.getPermissionsDoapByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsDaopByProjectIri(projectIri.value, user)
       }
