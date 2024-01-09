@@ -693,10 +693,10 @@ object UserUpdateBasicInformationPayloadADM {
 
   def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
     Validation.validateWith(
-      validateWithOptionOrNone(req.username, Username.from),
-      validateWithOptionOrNone(req.email, Email.from),
-      validateWithOptionOrNone(req.givenName, GivenName.from),
-      validateWithOptionOrNone(req.familyName, FamilyName.from),
+      validateWithOptionOrNone(req.username, Username.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.email, Email.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.givenName, GivenName.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.familyName, FamilyName.validationFrom).mapError(ValidationException(_)),
       validateWithOptionOrNone(req.lang, LanguageCode.make)
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
@@ -705,10 +705,10 @@ case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword
 object UserUpdatePasswordPayloadADM {
   def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
     val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(Password.from(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The requester's password is missing."))
     val newPasswordValidation = apiRequest.newPassword
-      .map(Password.from(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
@@ -730,12 +730,14 @@ object UserCreatePayloadADM {
   def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
     Validation
       .validateWith(
-        apiRequest.id.map(UserIri.from(_).map(Some(_))).getOrElse(Validation.succeed(None)),
-        Username.from(apiRequest.username),
-        Email.from(apiRequest.email),
-        GivenName.from(apiRequest.givenName),
-        FamilyName.from(apiRequest.familyName),
-        Password.from(apiRequest.password),
+        apiRequest.id
+          .map(UserIri.validationFrom(_).map(Some(_)).mapError(ValidationException(_)))
+          .getOrElse(Validation.succeed(None)),
+        Username.validationFrom(apiRequest.username).mapError(ValidationException(_)),
+        Email.validationFrom(apiRequest.email).mapError(ValidationException(_)),
+        GivenName.validationFrom(apiRequest.givenName).mapError(ValidationException(_)),
+        FamilyName.validationFrom(apiRequest.familyName).mapError(ValidationException(_)),
+        Password.validationFrom(apiRequest.password).mapError(ValidationException(_)),
         Validation.succeed(UserStatus.from(apiRequest.status)),
         LanguageCode.make(apiRequest.lang),
         Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))

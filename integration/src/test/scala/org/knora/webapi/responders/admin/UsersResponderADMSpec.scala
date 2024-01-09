@@ -212,11 +212,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE the user and return it's profile if the supplied email is unique " in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.from("donald.duck").fold(e => throw e.head, v => v),
-            email = Email.from("donald.duck@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
-            password = Password.from("test").fold(e => throw e.head, v => v),
+            username = Username.unsafeFrom("donald.duck"),
+            email = Email.unsafeFrom("donald.duck@example.com"),
+            givenName = GivenName.unsafeFrom("Donald"),
+            familyName = FamilyName.unsafeFrom("Duck"),
+            password = Password.unsafeFrom("test"),
             status = UserStatus.from(true),
             lang = LanguageCode.en,
             systemAdmin = SystemAdmin.from(false)
@@ -236,11 +236,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.from("root").fold(e => throw e.head, v => v),
-            email = Email.from("root2@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
-            password = Password.from("test").fold(e => throw e.head, v => v),
+            username = Username.unsafeFrom("root"),
+            email = Email.unsafeFrom("root2@example.com"),
+            givenName = GivenName.unsafeFrom("Donald"),
+            familyName = FamilyName.unsafeFrom("Duck"),
+            password = Password.unsafeFrom("test"),
             status = UserStatus.from(true),
             lang = LanguageCode.en,
             systemAdmin = SystemAdmin.from(false)
@@ -254,11 +254,11 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         appActor ! UserCreateRequestADM(
           userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.from("root2").fold(e => throw e.head, v => v),
-            email = Email.from("root@example.com").fold(e => throw e.head, v => v),
-            givenName = GivenName.from("Donald").fold(e => throw e.head, v => v),
-            familyName = FamilyName.from("Duck").fold(e => throw e.head, v => v),
-            password = Password.from("test").fold(e => throw e.head, v => v),
+            username = Username.unsafeFrom("root2"),
+            email = Email.unsafeFrom("root@example.com"),
+            givenName = GivenName.unsafeFrom("Donald"),
+            familyName = FamilyName.unsafeFrom("Duck"),
+            password = Password.unsafeFrom("test"),
             status = UserStatus.from(true),
             lang = LanguageCode.en,
             systemAdmin = SystemAdmin.from(false)
@@ -276,7 +276,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.from("Donald").fold(e => throw e.head, v => v))
+            givenName = Some(GivenName.unsafeFrom("Donald"))
           ),
           requestingUser = SharedTestDataADM.normalUser,
           apiRequestID = UUID.randomUUID
@@ -289,7 +289,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            familyName = Some(FamilyName.from("Duck").fold(e => throw e.head, v => v))
+            familyName = Some(FamilyName.unsafeFrom("Duck"))
           ),
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
@@ -302,8 +302,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.from(SharedTestDataADM.normalUser.givenName).fold(e => throw e.head, v => v)),
-            familyName = Some(FamilyName.from(SharedTestDataADM.normalUser.familyName).fold(e => throw e.head, v => v))
+            givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
+            familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
           ),
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
@@ -316,7 +316,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val duplicateUsername =
-          Some(Username.from(SharedTestDataADM.anythingUser1.username).fold(e => throw e.head, v => v))
+          Some(Username.unsafeFrom(SharedTestDataADM.anythingUser1.username))
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
@@ -335,7 +335,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
-        val duplicateEmail = Some(Email.from(SharedTestDataADM.anythingUser1.email).fold(e => throw e.head, v => v))
+        val duplicateEmail = Some(Email.unsafeFrom(SharedTestDataADM.anythingUser1.email))
         appActor ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
@@ -352,8 +352,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's password (by himself)" in {
-        val requesterPassword = Password.from("test").fold(e => throw e.head, v => v)
-        val newPassword       = Password.from("test123456").fold(e => throw e.head, v => v)
+        val requesterPassword = Password.unsafeFrom("test")
+        val newPassword       = Password.unsafeFrom("test123456")
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
@@ -380,8 +380,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's password (by a system admin)" in {
-        val requesterPassword = Password.from("test").fold(e => throw e.head, v => v)
-        val newPassword       = Password.from("test654321").fold(e => throw e.head, v => v)
+        val requesterPassword = Password.unsafeFrom("test")
+        val newPassword       = Password.unsafeFrom("test654321")
 
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
@@ -458,7 +458,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           userIri = SharedTestDataADM.superUser.id,
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             email = None,
-            givenName = Some(GivenName.from("Donald").fold(e => throw e.head, v => v)),
+            givenName = Some(GivenName.unsafeFrom("Donald")),
             familyName = None,
             lang = None
           ),
@@ -476,8 +476,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.superUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = Password.from("test").fold(e => throw e.head, v => v),
-            newPassword = Password.from("test123456").fold(e => throw e.head, v => v)
+            requesterPassword = Password.unsafeFrom("test"),
+            newPassword = Password.unsafeFrom("test123456")
           ),
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID

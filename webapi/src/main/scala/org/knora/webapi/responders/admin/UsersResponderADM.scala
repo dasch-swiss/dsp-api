@@ -492,10 +492,8 @@ final case class UsersResponderADMLive(
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        newHashedPassword = Password
-                              .from(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-                              .fold(e => throw e.head, value => value)
+        encoder           = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
+        newHashedPassword = Password.unsafeFrom(encoder.encode(userUpdatePasswordPayload.newPassword.value))
 
         // update the users password as SystemUser
         result <- updateUserPasswordADM(
@@ -1811,7 +1809,7 @@ final case class UsersResponderADMLive(
         } else {
           for {
             _ <- ZIO
-                   .fromEither(Email.from(email.value).toEither)
+                   .fromEither(Email.from(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
             userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
           } yield userExists

@@ -14,8 +14,6 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import scala.util.matching.Regex
 
-import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.isUserIri
 import dsp.valueobjects.Iri.validateAndEscapeUserIri
 import dsp.valueobjects.IriErrorMessages
@@ -178,21 +176,20 @@ final case class User(
 
 final case class UserIri private (value: String) extends AnyVal
 object UserIri {
-  def from(value: String): Validation[Throwable, UserIri] =
-    if (value.isEmpty) Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing))
+  def from(value: String): Either[String, UserIri] =
+    if (value.isEmpty) Left(UserErrorMessages.UserIriMissing)
     else {
       val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
 
       if (!isUserIri(value))
-        Validation.fail(BadRequestException(UserErrorMessages.UserIriInvalid(value)))
+        Left(UserErrorMessages.UserIriInvalid(value))
       else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-        Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+        Left(IriErrorMessages.UuidVersionInvalid)
       else
-        Validation
-          .fromOption(validateAndEscapeUserIri(value))
-          .mapError(_ => BadRequestException(UserErrorMessages.UserIriInvalid(value)))
-          .map(UserIri(_))
+        validateAndEscapeUserIri(value).toRight(UserErrorMessages.UserIriInvalid(value)).map(UserIri(_))
     }
+
+  def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }
 
 final case class Username private (value: String) extends AnyVal
@@ -208,73 +205,82 @@ object Username { self =>
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
-  def from(value: String): Validation[ValidationException, Username] =
+  def from(value: String): Either[String, Username] =
     if (value.isEmpty) {
-      // remove exception return just the error
-      Validation.fail(ValidationException(UserErrorMessages.UsernameMissing))
+      Left(UserErrorMessages.UsernameMissing)
     } else {
       UsernameRegex.findFirstIn(value) match {
-        case Some(value) => Validation.succeed(Username(value))
-        case None        => Validation.fail(ValidationException(UserErrorMessages.UsernameInvalid))
+        case Some(value) => Right(Username(value))
+        case None        => Left(UserErrorMessages.UsernameInvalid)
       }
     }
-  def unsafeFrom(value: String): Validation[ValidationException, Username] =
-    Username
-      .from(value)
-      .fold(
-        _ => Validation.succeed(Username(value)),
-        v => Validation.succeed(v)
-      )
+  def unsafeFrom(value: String): Username =
+    Username.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+  def validationFrom(value: String): Validation[String, Username] = Validation.fromEither(from(value))
 }
 
 final case class Email private (value: String) extends AnyVal
 object Email { self =>
   private val EmailRegex: Regex = """^.+@.+$""".r
 
-  def from(value: String): Validation[ValidationException, Email] =
+  def from(value: String): Either[String, Email] =
     if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.EmailMissing))
+      Left(UserErrorMessages.EmailMissing)
     } else {
       EmailRegex.findFirstIn(value) match {
-        case Some(value) => Validation.succeed(Email(value))
-        case None        => Validation.fail(ValidationException(UserErrorMessages.EmailInvalid))
+        case Some(value) => Right(Email(value))
+        case None        => Left(UserErrorMessages.EmailInvalid)
       }
     }
+
+  def unsafeFrom(value: String): Email =
+    Email.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+  def validationFrom(value: String): Validation[String, Email] = Validation.fromEither(from(value))
+
 }
 
 final case class GivenName private (value: String) extends AnyVal
 object GivenName { self =>
-  def from(value: String): Validation[ValidationException, GivenName] =
-    if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.GivenNameMissing))
-    } else {
-      Validation.succeed(GivenName(value))
-    }
+  def from(value: String): Either[String, GivenName] =
+    Option.when(value.nonEmpty)(GivenName(value)).toRight(UserErrorMessages.GivenNameMissing)
+
+  def unsafeFrom(value: String): GivenName =
+    GivenName.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+  def validationFrom(value: String): Validation[String, GivenName] = Validation.fromEither(from(value))
 }
 
 final case class FamilyName private (value: String) extends AnyVal
 object FamilyName { self =>
-  def from(value: String): Validation[ValidationException, FamilyName] =
-    if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.FamilyNameMissing))
-    } else {
-      Validation.succeed(FamilyName(value))
-    }
+  def from(value: String): Either[String, FamilyName] =
+    Option.when(value.nonEmpty)(FamilyName(value)).toRight(UserErrorMessages.FamilyNameMissing)
+
+  def unsafeFrom(value: String): FamilyName =
+    FamilyName.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+  def validationFrom(value: String): Validation[String, FamilyName] = Validation.fromEither(from(value))
 }
 
 final case class Password private (value: String) extends AnyVal
 object Password { self =>
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
-  def from(value: String): Validation[ValidationException, Password] =
+  def from(value: String): Either[String, Password] =
     if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
+      Left(UserErrorMessages.PasswordMissing)
     } else {
       PasswordRegex.findFirstIn(value) match {
-        case Some(value) => Validation.succeed(Password(value))
-        case None        => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
+        case Some(value) => Right(Password(value))
+        case None        => Left(UserErrorMessages.PasswordInvalid)
       }
     }
+
+  def unsafeFrom(value: String): Password =
+    Password.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+  def validationFrom(value: String): Validation[String, Password] = Validation.fromEither(from(value))
 }
 
 final case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
@@ -302,9 +308,9 @@ final case class PasswordHash private (value: String, passwordStrength: Password
 object PasswordHash {
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
-  def from(value: String, passwordStrength: PasswordStrength): Validation[ValidationException, PasswordHash] =
+  def from(value: String, passwordStrength: PasswordStrength): Either[String, PasswordHash] =
     if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.PasswordMissing))
+      Left((UserErrorMessages.PasswordMissing))
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) =>
@@ -314,20 +320,19 @@ object PasswordHash {
               new SecureRandom()
             )
           val hashedValue = encoder.encode(value)
-          Validation.succeed(PasswordHash(hashedValue, passwordStrength))
-        case None => Validation.fail(ValidationException(UserErrorMessages.PasswordInvalid))
+          Right(PasswordHash(hashedValue, passwordStrength))
+        case None => Left(UserErrorMessages.PasswordInvalid)
       }
     }
+
+  def unsafeFrom(value: String, passwordStrength: PasswordStrength): PasswordHash =
+    PasswordHash.from(value, passwordStrength).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
 final case class PasswordStrength private (value: Int) extends AnyVal
 object PasswordStrength {
-  def from(i: Int): Validation[ValidationException, PasswordStrength] =
-    if (i < 4 || i > 31) {
-      Validation.fail(ValidationException(UserErrorMessages.PasswordStrengthInvalid))
-    } else {
-      Validation.succeed(PasswordStrength(i))
-    }
+  def from(i: Int): Either[String, PasswordStrength] =
+    Option.unless(i < 4 || i > 31)(PasswordStrength(i)).toRight(UserErrorMessages.PasswordStrengthInvalid)
 
   def unsafeMake(value: Int): PasswordStrength = PasswordStrength(value)
 
@@ -336,6 +341,7 @@ object PasswordStrength {
 final case class UserStatus private (value: Boolean) extends AnyVal
 object UserStatus {
   def from(value: Boolean): UserStatus = UserStatus(value)
+
 }
 
 final case class SystemAdmin private (value: Boolean) extends AnyVal
