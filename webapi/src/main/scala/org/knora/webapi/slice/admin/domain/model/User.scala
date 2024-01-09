@@ -15,6 +15,7 @@ import zio.json.JsonDecoder
 import zio.json.JsonEncoder
 import zio.prelude.Validation
 
+import java.security.MessageDigest
 import java.security.SecureRandom
 import scala.util.matching.Regex
 
@@ -79,19 +80,16 @@ final case class User(
     this.password.exists { hashedPassword =>
       // check which type of hash we have
       if (hashedPassword.startsWith("$e0801$")) {
-        // SCrypt
-        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-        val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
-        encoder.matches(password, hashedPassword)
+        new SCryptPasswordEncoder(16384, 8, 1, 32, 64).matches(password, hashedPassword)
       } else if (hashedPassword.startsWith("$2a$")) {
-        // BCrypt
-        import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-        val encoder = new BCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword)
+        new BCryptPasswordEncoder().matches(password, hashedPassword)
       } else {
-        // SHA-1
-        val md = java.security.MessageDigest.getInstance("SHA-1")
-        md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
+        MessageDigest
+          .getInstance("SHA-1")
+          .digest(password.getBytes("UTF-8"))
+          .map("%02x".format(_))
+          .mkString
+          .equals(hashedPassword)
       }
     }
 
