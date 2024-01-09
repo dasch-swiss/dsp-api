@@ -10,7 +10,7 @@ import sttp.tapir.CodecFormat
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
@@ -20,15 +20,6 @@ object GroupIri {
 
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
-
-  private val builtInGroups = List(
-    KnoraAdminPrefixExpansion + "Creator",
-    KnoraAdminPrefixExpansion + "KnownUser",
-    KnoraAdminPrefixExpansion + "ProjectAdmin",
-    KnoraAdminPrefixExpansion + "ProjectMember",
-    KnoraAdminPrefixExpansion + "SystemAdmin",
-    KnoraAdminPrefixExpansion + "UnknownUser"
-  )
 
   /**
    * Creates a new group IRI based on a UUID.
@@ -46,7 +37,7 @@ object GroupIri {
       Left("Group IRI cannot be empty.")
     case value if !Iri.isIri(value) =>
       Left("Group IRI is invalid.")
-    case value if !(value.startsWith("http://rdfh.ch/groups/") || builtInGroups.contains(value)) =>
+    case value if !(value.startsWith("http://rdfh.ch/groups/") || BuiltInGroups.contains(value)) =>
       Left("Group IRI is invalid.")
     case value if UuidUtil.hasValidLength(value.split("/").last) && !UuidUtil.hasSupportedVersion(value) =>
       Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
