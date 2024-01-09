@@ -15,7 +15,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User.*
 import org.knora.webapi.*
@@ -30,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

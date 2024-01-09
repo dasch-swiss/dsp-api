@@ -6,8 +6,8 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -43,7 +43,7 @@ object IriSpec extends ZIOSpecDefault {
   val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
   val supportedUuid = fromIri(validUserIri)
 
-  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + uuidTest + roleIriTest + userIriTest
+  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + uuidTest + roleIriTest
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -174,33 +174,6 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(RoleIri.make(validRoleIri).toOption.get.value == validRoleIri)
-    }
-  )
-
-  private val userIriTest = suite("IriSpec - UserIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        UserIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid(invalidIri))
-        )
-      )
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        UserIri.make(userIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      val userIri = UserIri.make(validUserIri)
-
-      (for {
-        iri <- userIri
-      } yield assertTrue(iri.value == validUserIri)).toZIO
     }
   )
 }

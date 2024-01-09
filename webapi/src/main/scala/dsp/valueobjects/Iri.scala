@@ -8,8 +8,6 @@ package dsp.valueobjects
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
@@ -278,32 +276,6 @@ object Iri {
   }
 
   /**
-   * UserIri value object.
-   */
-  sealed abstract case class UserIri private (value: String) extends Iri
-  object UserIri {
-    implicit val decoder: JsonDecoder[UserIri] =
-      JsonDecoder[String].mapOrFail(value => UserIri.make(value).toEitherWith(e => e.head.getMessage))
-    implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
-
-    def make(value: String): Validation[Throwable, UserIri] =
-      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
-
-        if (!isUserIri(value))
-          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        else
-          Validation
-            .fromOption(validateAndEscapeUserIri(value))
-            .mapError(_ => BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-            .map(new UserIri(_) {})
-      }
-  }
-
-  /**
    * PropertyIri value object.
    */
   sealed abstract case class PropertyIri private (value: String) extends Iri
@@ -334,8 +306,6 @@ object IriErrorMessages {
   val ProjectIriInvalid  = "Project IRI is invalid."
   val RoleIriMissing     = "Role IRI cannot be empty."
   val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
-  val UserIriMissing     = "User IRI cannot be empty."
-  val UserIriInvalid     = (iri: String) => s"User IRI: $iri is invalid."
   val UuidMissing        = "UUID cannot be empty"
   val UuidInvalid        = (uuid: String) => s"'$uuid' is not a UUID"
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."

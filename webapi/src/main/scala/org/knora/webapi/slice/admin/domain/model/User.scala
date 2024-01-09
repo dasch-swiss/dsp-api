@@ -9,10 +9,15 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.string.MatchesRegex
 import spray.json.JsValue
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
+import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import org.knora.webapi.IRI
+import dsp.valueobjects.Iri.isUserIri
+import dsp.valueobjects.Iri.validateAndEscapeUserIri
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -173,11 +178,30 @@ object Email {
 
 }
 
-final case class UserIri private (iri: String) extends AnyVal
+final case class UserIri private (value: String) extends AnyVal
 object UserIri {
-  def from(iri: String): Either[String, UserIri] =
-    if (Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/"))
-      Iri.toSparqlEncodedString(iri).map(UserIri(_)).toRight(s"Invalid user IRI: $iri")
-    else Left(s"Invalid user IRI: $iri")
+  implicit val decoder: JsonDecoder[UserIri] =
+    JsonDecoder[String].mapOrFail(value => UserIri.make(value).toEitherWith(e => e.head.getMessage))
+  implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
 
+  def make(value: String): Validation[Throwable, UserIri] =
+    if (value.isEmpty) Validation.fail(BadRequestException(UserErrorMessages.UserIriMissing))
+    else {
+      val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
+
+      if (!isUserIri(value))
+        Validation.fail(BadRequestException(UserErrorMessages.UserIriInvalid(value)))
+      else if (isUuid && !UuidUtil.hasSupportedVersion(value))
+        Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+      else
+        Validation
+          .fromOption(validateAndEscapeUserIri(value))
+          .mapError(_ => BadRequestException(UserErrorMessages.UserIriInvalid(value)))
+          .map(UserIri(_))
+    }
+}
+
+object UserErrorMessages {
+  val UserIriMissing: String           = "User IRI cannot be empty."
+  val UserIriInvalid: String => String = (iri: String) => s"User IRI: $iri is invalid."
 }

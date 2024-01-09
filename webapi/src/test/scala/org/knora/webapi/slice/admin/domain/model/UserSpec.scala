@@ -5,8 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.prelude.Validation
 import zio.test.*
 
+import dsp.errors.BadRequestException
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.IriSpec.invalidIri
+import dsp.valueobjects.IriSpec.userIriWithUUIDVersion3
+import dsp.valueobjects.IriSpec.validUserIri
 import org.knora.webapi.slice.admin.domain.model.Username.Username
 
 object UserSpec extends ZIOSpecDefault {
@@ -62,9 +68,37 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  val spec: Spec[Any, Nothing] = suite("UserSpec")(
+  private val iriSuite = suite("UserIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
+    },
+    test("pass an invalid value and return an error") {
+      assertTrue(
+        UserIri.make(invalidIri) == Validation.fail(
+          BadRequestException(IriErrorMessages.UserIriInvalid(invalidIri))
+        )
+      )
+    },
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
+      assertTrue(
+        UserIri.make(userIriWithUUIDVersion3) == Validation.fail(
+          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+        )
+      )
+    },
+    test("pass a valid value and successfully create value object") {
+      val userIri = UserIri.make(validUserIri)
+
+      (for {
+        iri <- userIri
+      } yield assertTrue(iri.value == validUserIri)).toZIO
+    }
+  )
+
+  val spec: Spec[Any, Any] = suite("UserSpec")(
     userSuite,
     usernameSuite,
-    emailSuite
+    emailSuite,
+    iriSuite
   )
 }
