@@ -193,7 +193,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass an invalid password strength value and return an error") {
       assertTrue(
-        PasswordStrength.make(-1) == Validation.fail(ValidationException("-1 did not satisfy greaterThanOrEqualTo(4)"))
+        PasswordStrength.make(-1) == Validation.fail(ValidationException("PasswordStrength is invalid."))
       )
     },
     test("pass a valid password strength value and create value object") {
