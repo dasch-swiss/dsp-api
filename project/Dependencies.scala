@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoHttpVersion  = "1.0.0"
   val JenaVersion       = "4.10.0"
 
-  val ZioConfigVersion            = "3.0.7"
+  val ZioConfigVersion            = "4.0.0"
   val ZioLoggingVersion           = "2.1.16"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"

@@ -8,7 +8,6 @@ package dsp.valueobjects
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio.*
-import zio.config.magnolia.Descriptor
 import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
@@ -33,7 +32,7 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Username] =
       JsonCodec[String].transformOrFail(
-        value => Username.make(value).toEitherWith(e => e.head.getMessage()),
+        value => Username.make(value).toEitherWith(e => e.head.getMessage),
         username => username.value
       )
 
@@ -70,10 +69,7 @@ object User {
       Username
         .make(value)
         .fold(
-          e => {
-            ZIO.logError(e.head.getMessage())
-            Validation.succeed(new Username(value) {})
-          },
+          _ => { Validation.succeed(new Username(value) {}) },
           v => Validation.succeed(v)
         )
   }
@@ -86,7 +82,7 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[Email] =
       JsonCodec[String].transformOrFail(
-        value => Email.make(value).toEitherWith(e => e.head.getMessage()),
+        value => Email.make(value).toEitherWith(e => e.head.getMessage),
         email => email.value
       )
 
@@ -111,7 +107,7 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[GivenName] =
       JsonCodec[String].transformOrFail(
-        value => GivenName.make(value).toEitherWith(e => e.head.getMessage()),
+        value => GivenName.make(value).toEitherWith(e => e.head.getMessage),
         givenName => givenName.value
       )
 
@@ -131,7 +127,7 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[FamilyName] =
       JsonCodec[String].transformOrFail(
-        value => FamilyName.make(value).toEitherWith(e => e.head.getMessage()),
+        value => FamilyName.make(value).toEitherWith(e => e.head.getMessage),
         familyName => familyName.value
       )
 
@@ -184,7 +180,6 @@ object User {
         val encoder = new BCryptPasswordEncoder()
         encoder.matches(passwordString, self.value)
       } else {
-        ZIO.logError(UserErrorMessages.PasswordHashUnknown)
         false
       }
 
@@ -198,7 +193,7 @@ object User {
         val passwordStrength =
           PasswordStrength.make(passwordStrengthInt).fold(e => throw new ValidationException(e.head), v => v)
 
-        PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage())
+        PasswordHash.make(password, passwordStrength).toEitherWith(e => e.head.getMessage)
     }
     // the encoder defines how to encode the object into json
     implicit val encoder: JsonEncoder[PasswordHash] =
@@ -234,13 +229,6 @@ object User {
       JsonCodec[Int].transformOrFail(
         value => PasswordStrength.make(value).toEitherWith(e => e.head),
         passwordStrength => passwordStrength
-      )
-
-    // this is used for the configuration descriptor
-    implicit val descriptorForPasswordStrength: Descriptor[PasswordStrength] =
-      Descriptor[Int].transformOrFail(
-        int => PasswordStrength.make(int).toEitherWith(_.toString()),
-        r => Right(r.toInt)
       )
 
     override def assertion = assert {
@@ -288,16 +276,12 @@ object User {
 }
 
 object UserErrorMessages {
-  val UsernameMissing         = "Username cannot be empty."
-  val UsernameInvalid         = "Username is invalid."
-  val EmailMissing            = "Email cannot be empty."
-  val EmailInvalid            = "Email is invalid."
-  val PasswordMissing         = "Password cannot be empty."
-  val PasswordInvalid         = "Password is invalid."
-  val PasswordStrengthInvalid = "PasswordStrength is invalid."
-  val PasswordHashUnknown     = "The provided PasswordHash has an unknown format."
-  val GivenNameMissing        = "GivenName cannot be empty."
-  val GivenNameInvalid        = "GivenName is invalid."
-  val FamilyNameMissing       = "FamilyName cannot be empty."
-  val FamilyNameInvalid       = "FamilyName is invalid."
+  val UsernameMissing   = "Username cannot be empty."
+  val UsernameInvalid   = "Username is invalid."
+  val EmailMissing      = "Email cannot be empty."
+  val EmailInvalid      = "Email is invalid."
+  val PasswordMissing   = "Password cannot be empty."
+  val PasswordInvalid   = "Password is invalid."
+  val GivenNameMissing  = "GivenName cannot be empty."
+  val FamilyNameMissing = "FamilyName cannot be empty."
 }
