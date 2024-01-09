@@ -12,11 +12,11 @@ import zio.test.*
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.IriErrorMessages
-import dsp.valueobjects.IriSpec.invalidIri
-import dsp.valueobjects.IriSpec.userIriWithUUIDVersion3
-import dsp.valueobjects.IriSpec.validUserIri
 
 object UserSpec extends ZIOSpecDefault {
+  private val validUserIri                                = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
+  private val userIriWithUUIDVersion3                     = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
+  private val invalidIri                                  = "Invalid IRI"
   private val validUsername                               = "user008"
   private val tooShortUsername                            = "123"
   private val tooLongUsername                             = "01234567890123456789012345678901234567890123456789011"
@@ -34,16 +34,6 @@ object UserSpec extends ZIOSpecDefault {
   private val validFamilyName                             = "Rambo"
   private val pwStrength                                  = PasswordStrength.unsafeMake(12)
   private val validPasswordHash                           = PasswordHash.make("test", pwStrength).fold(e => throw e.head, v => v)
-
-  val oldTests = suite("ordTests")(
-    usernameTest,
-    emailTest,
-    givenNameTest,
-    familyNameTest,
-    passwordTest,
-    passwordHashTest,
-    systemAdminTest
-  )
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
@@ -299,6 +289,16 @@ object UserSpec extends ZIOSpecDefault {
         iri <- userIri
       } yield assertTrue(iri.value == validUserIri)).toZIO
     }
+  )
+
+  private val oldTests = suite("ordTests")(
+    usernameTest,
+    emailTest,
+    givenNameTest,
+    familyNameTest,
+    passwordTest,
+    passwordHashTest,
+    systemAdminTest
   )
 
   val spec: Spec[Any, Any] = suite("UserSpec")(

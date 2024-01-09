@@ -6,42 +6,29 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.*
 import zio.test.Assertion.*
+import zio.test.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.UuidUtil.*
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
  */
 object IriSpec extends ZIOSpecDefault {
-  val invalidIri               = "Invalid IRI"
-  val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
+  private val uuidVersion3  = "cCmdcpn2MO211YYOplR1hQ"
+  private val supportedUuid = "jDEEitJESRi3pDaDjjQ1WQ"
 
-  val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
+  private val invalidIri               = "Invalid IRI"
+  private val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  private val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
 
-  val invalidProjectIri          = "http://rdfh.ch/projects/0001"
-  val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
-  val beolProjectIri             = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
-  val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-  // built in projects
-  val systemProject                  = "http://www.knora.org/ontology/knora-admin#SystemProject"
-  val defaultSharedOntologiesProject = "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
+  private val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  private val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
 
-  val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
-  val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
-
-  val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
-  val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
-
-  val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
-  val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
-  val supportedUuid = fromIri(validUserIri)
+  private val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
+  private val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
 
   def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + uuidTest + roleIriTest
 
