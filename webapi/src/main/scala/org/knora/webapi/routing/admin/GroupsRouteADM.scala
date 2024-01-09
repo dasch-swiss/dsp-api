@@ -40,7 +40,7 @@ final case class GroupsRouteADM(
   private val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute: Route =
-      getGroup() ~
+    getGroup() ~
       getGroupMembers() ~
       createGroup() ~
       updateGroup() ~

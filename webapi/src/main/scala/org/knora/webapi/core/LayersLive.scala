@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.StringFormatter
@@ -27,13 +28,11 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.api.*
-import org.knora.webapi.slice.admin.api.service.{
-  GroupsRestServiceLive,
-  MaintenanceRestService,
-  ProjectADMRestService,
-  ProjectsADMRestServiceLive,
-  UsersADMRestServiceLive
-}
+import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.*
