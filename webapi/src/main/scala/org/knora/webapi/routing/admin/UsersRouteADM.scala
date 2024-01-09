@@ -57,13 +57,6 @@ final case class UsersRouteADM()(
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
 
-  /* return all users */
-  def getUsers(): Route = path(usersBasePath) {
-    get { ctx =>
-      runJsonRouteZ(Authenticator.getUserADM(ctx).map(user => UsersGetRequestADM(requestingUser = user)), ctx)
-    }
-  }
-
   /* create a new user */
   private def addUser(): Route = path(usersBasePath) {
     post {

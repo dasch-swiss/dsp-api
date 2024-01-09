@@ -38,20 +38,12 @@ final case class GroupsRouteADM(
   private val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute: Route =
-    getGroups() ~
-      getGroup() ~
+    getGroup() ~
       getGroupMembers() ~
       createGroup() ~
       updateGroup() ~
       changeGroupStatus() ~
       deleteGroup()
-
-  /**
-   * Returns all groups.
-   */
-  private def getGroups(): Route = path(groupsBasePath) {
-    get(runJsonRoute(GroupsGetRequestADM(), _))
-  }
 
   /**
    * Returns a single group identified by IRI.

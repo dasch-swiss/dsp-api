@@ -11,14 +11,16 @@ import zio.ZLayer
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
 final case class AdminApiRoutes(
+  groups: GroupsEndpointsHandler,
   maintenance: MaintenanceEndpointsHandlers,
+  permissions: PermissionsEndpointsHandlers,
   project: ProjectsEndpointsHandler,
   users: UsersEndpointsHandler,
-  permissions: PermissionsEndpointsHandlers,
   tapirToPekko: TapirToPekkoInterpreter
 ) {
 
-  private val handlers = maintenance.handlers ++ project.allHanders ++ users.allHanders ++ permissions.allHanders
+  private val handlers =
+    groups.handlers ++ maintenance.handlers ++ permissions.allHanders ++ project.allHanders ++ users.allHanders
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }

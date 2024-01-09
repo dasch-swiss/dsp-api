@@ -9,6 +9,7 @@ import sttp.tapir.AnyEndpoint
 import zio.ZLayer
 
 final case class AdminApiEndpoints(
+  groupsEndpoints: GroupsEndpoints,
   maintenanceEndpoints: MaintenanceEndpoints,
   permissionsEndpoints: PermissionsEndpoints,
   projectsEndpoints: ProjectsEndpoints,
@@ -16,7 +17,8 @@ final case class AdminApiEndpoints(
 ) {
 
   val endpoints: Seq[AnyEndpoint] =
-    maintenanceEndpoints.endpoints ++
+    groupsEndpoints.endpoints ++
+      maintenanceEndpoints.endpoints ++
       permissionsEndpoints.endpoints ++
       projectsEndpoints.endpoints ++
       usersEndpoints.endpoints
