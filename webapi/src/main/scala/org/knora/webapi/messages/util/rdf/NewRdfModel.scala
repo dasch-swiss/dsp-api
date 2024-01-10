@@ -13,6 +13,16 @@ final case class NewRdfResource(private val res: Resource, private val model: Mo
     res.getProperty(property).getLiteral.getString
   }.toOption
 
+  def getStringLiteralsByProperty(propertyIri: String): Seq[String] = {
+    val property = model.createProperty(propertyIri)
+    res.listProperties(property).toList.asScala.toList.map(_.getLiteral.getString)
+  }
+
+  def getBooleanLiteralByProperty(propertyIri: String): Option[Boolean] = Try {
+    val property = model.createProperty(propertyIri)
+    res.getProperty(property).getLiteral.getBoolean
+  }.toOption
+
   def getObjectIriByProperty(propertyIri: String): Option[String] = {
     val property = model.createProperty(propertyIri)
     Option.when(property != null && property.isURIResource)(res.getProperty(property).getResource.getURI)
