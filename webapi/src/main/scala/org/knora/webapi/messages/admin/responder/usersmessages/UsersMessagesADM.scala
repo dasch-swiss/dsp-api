@@ -157,27 +157,79 @@ case class UsersGetRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[User]].
+ * A message that requests a user's profile by IRI. A successful response will be a [[User]].
  *
- * @param identifier             the IRI, email, or username of the user to be queried.
+ * @param identifier             the IRI of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetADM(
-  identifier: UserIdentifierADM,
+case class UserGetByIdADM(
+  identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
 ) extends UsersResponderRequestADM {}
 
 /**
- * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[UserResponseADM]].
+ * A message that requests a user's profile by username. A successful response will be a [[User]].
  *
- * @param identifier             the IRI, email, or username of the user to be queried.
+ * @param username               the username of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetRequestADM(
-  identifier: UserIdentifierADM,
+case class UserGetByUsernameADM(
+  username: Username,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM {}
+
+/**
+ * A message that requests a user's profile by email. A successful response will be a [[User]].
+ *
+ * @param email                  the email of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByEmailADM(
+  email: Email,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM {}
+
+/**
+ * A message that requests a user's profile by IRI. A successful response will be a [[UserResponseADM]].
+ *
+ * @param identifier             the IRI of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByIriRequestADM(
+  identifier: UserIri,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM {}
+
+/**
+ * A message that requests a user's profile by email. A successful response will be a [[UserResponseADM]].
+ *
+ * @param email             the email of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByEmailRequestADM(
+  email: Email,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM {}
+
+/**
+ * A message that requests a user's profile by username. A successful response will be a [[UserResponseADM]].
+ *
+ * @param username             the username of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByUsernameRequestADM(
+  username: Username,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
 ) extends UsersResponderRequestADM {}

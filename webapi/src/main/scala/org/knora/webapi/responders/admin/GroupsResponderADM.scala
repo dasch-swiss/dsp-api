@@ -39,6 +39,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -311,8 +312,8 @@ final case class GroupsResponderADMLive(
         groupMemberIris.map { userIri =>
           messageRelay
             .ask[Option[User]](
-              UserGetADM(
-                UserIdentifierADM(maybeIri = Some(userIri)),
+              UserGetByIdADM(
+                UserIri.unsafeFrom(userIri),
                 UserInformationTypeADM.Restricted,
                 KnoraSystemInstances.Users.SystemUser
               )

@@ -24,8 +24,7 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIdADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
@@ -41,6 +40,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -311,8 +311,8 @@ final case class ProjectsResponderADMLive(
         userIris.map { userIri =>
           messageRelay
             .ask[Option[User]](
-              UserGetADM(
-                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+              UserGetByIdADM(
+                identifier = UserIri.unsafeFrom(userIri),
                 userInformationTypeADM = UserInformationTypeADM.Restricted,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
@@ -365,8 +365,8 @@ final case class ProjectsResponderADMLive(
       maybeUserTasks: Seq[Task[Option[User]]] = userIris.map { userIri =>
                                                   messageRelay
                                                     .ask[Option[User]](
-                                                      UserGetADM(
-                                                        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                                      UserGetByIdADM(
+                                                        identifier = UserIri.unsafeFrom(userIri),
                                                         userInformationTypeADM = UserInformationTypeADM.Restricted,
                                                         requestingUser = KnoraSystemInstances.Users.SystemUser
                                                       )

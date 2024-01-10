@@ -10,10 +10,10 @@ import zio.macros.accessible
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 /**
  * Cache Service Interface
@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 @accessible
 trait CacheService {
   def putUserADM(value: User): Task[Unit]
-  def getUserADM(identifier: UserIdentifierADM): Task[Option[User]]
+  def getUserByIriADM(iri: UserIri): Task[Option[User]]
   def putProjectADM(value: ProjectADM): Task[Unit]
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
   def invalidateProjectADM(identifier: KnoraProject.ProjectIri): UIO[Unit]

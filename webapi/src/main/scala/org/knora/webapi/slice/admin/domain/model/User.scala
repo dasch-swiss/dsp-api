@@ -22,7 +22,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
 
@@ -120,18 +119,6 @@ final case class User(
     }
 
   /**
-   * Given an identifier, returns true if it is the same user, and false if not.
-   */
-  def isSelf(identifier: UserIdentifierADM): Boolean = {
-
-    val iriEquals      = identifier.toIriOption.contains(id)
-    val emailEquals    = identifier.toEmailOption.contains(email)
-    val usernameEquals = identifier.toUsernameOption.contains(username)
-
-    iriEquals || emailEquals || usernameEquals
-  }
-
-  /**
    * Is the user a member of the SystemAdmin group
    */
   def isSystemAdmin: Boolean =
@@ -163,6 +150,9 @@ object UserIri {
       else
         validateAndEscapeUserIri(value).toRight(UserErrorMessages.UserIriInvalid(value)).map(UserIri(_))
     }
+
+  def unsafeFrom(value: String): UserIri =
+    UserIri.from(value).fold(e => throw new IllegalArgumentException(e), identity)
 
   def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }

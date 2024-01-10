@@ -15,6 +15,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 /**
  * Utility functions for working with users.
@@ -47,7 +48,7 @@ object UserUtilADM {
       } else {
         for {
           userResponse <- MessageRelay.ask[UserResponseADM](
-                            UserGetRequestADM(UserIdentifierADM(maybeIri = Some(requestedUserIri)), Full, SystemUser)
+                            UserGetByIriRequestADM(UserIri.unsafeFrom(requestedUserIri), Full, SystemUser)
                           )
         } yield userResponse.user
       }
