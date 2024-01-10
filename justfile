@@ -47,7 +47,7 @@ stack-destroy:
     docker rm $(docker ps -aq)
     @echo "\nPruning Network"
     docker network rm knora-net
-    @echo "\nPruning Volume"
+    @echo "\nPruning Volumes"
     docker volume rm dsp-api_db-home -f
     docker volume rm dsp-api_db-import -f
     @echo "Stack destroyed"
