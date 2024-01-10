@@ -14,10 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.cache.api.CacheService
 
 /**

@@ -9,16 +9,9 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].

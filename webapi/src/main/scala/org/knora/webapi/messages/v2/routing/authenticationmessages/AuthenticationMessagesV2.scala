@@ -12,9 +12,7 @@ import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
