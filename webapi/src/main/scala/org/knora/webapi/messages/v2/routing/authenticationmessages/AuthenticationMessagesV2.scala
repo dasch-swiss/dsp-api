@@ -57,6 +57,7 @@ object CredentialsIdentifier {
       case (Some(iri), _, _)      => UserIri.from(iri).toOption.map(IriIdentifier)
       case (_, Some(email), _)    => Email.from(email).toOption.map(EmailIdentifier)
       case (_, _, Some(username)) => Username.from(username).toOption.map(UsernameIdentifier)
+      case _                      => None
     }
 
   final case class IriIdentifier(userIri: UserIri)        extends CredentialsIdentifier
