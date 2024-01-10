@@ -22,7 +22,7 @@ stack-start:
     @echo "Stack started"
 
 # Start stack and pull latest images before starting
-stack-start-latest: &&stack-start
+stack-start-latest: && stack-start
     @echo "Pulling latest"
     docker compose pull
 
