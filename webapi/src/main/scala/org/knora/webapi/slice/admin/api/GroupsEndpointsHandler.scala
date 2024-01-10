@@ -19,7 +19,7 @@ case class GroupsEndpointsHandler(
   private val getGroupsHandler =
     EndpointAndZioHandler(
       endpoints.getGroups,
-      (_: Unit) => restService.getAllGroups
+      (_: Unit) => restService.getGroups
     )
 
   val handlers = List(getGroupsHandler).map(mapper.mapEndpointAndHandler(_))
