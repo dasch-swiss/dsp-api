@@ -9,8 +9,10 @@ import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
+
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
@@ -24,18 +26,20 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .tags(tags)
 
   val getGroup = baseEndpoints.publicEndpoint.get
-    .in(base)
+    .in(base / groupIri)
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Returns a single group identified by IRI.")
     .tags(tags)
 
-  val getGroupMembers = baseEndpoints.publicEndpoint.get
-    .in(base)
+  val getGroupMembers = baseEndpoints.securedEndpoint.get
+    .in(base / groupIri / "members")
     .out(sprayJsonBody[GroupMembersGetResponseADM])
     .description("Returns all members of a single group.")
     .tags(tags)
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getGroups, getGroup, getGroupMembers)
+  private val securedEndpoins = Seq(getGroupMembers).map(_.endpoint)
+
+  val endpoints: Seq[AnyEndpoint] = Seq(getGroups, getGroup) ++ securedEndpoins
 }
 
 object GroupsEndpoints {

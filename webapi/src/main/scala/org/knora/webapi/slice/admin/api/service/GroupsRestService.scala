@@ -5,18 +5,19 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import dsp.constants.SalsahGui.IRI
 import zio.*
 import zio.macros.accessible
+
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 @accessible
 trait GroupsRestService {
   def getGroups: Task[GroupsGetResponseADM]
-  def getGroup(iri: IRI): Task[GroupGetResponseADM]
-  def getGroupMembers(groupIri: IRI, user: User): Task[GroupMembersGetResponseADM]
+  def getGroup(iri: GroupIri): Task[GroupGetResponseADM]
+  def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
@@ -24,10 +25,10 @@ final case class GroupsRestServiceLive(
 ) extends GroupsRestService {
   override def getGroups: Task[GroupsGetResponseADM] = responder.groupsGetRequestADM
 
-  override def getGroup(iri: IRI): Task[GroupGetResponseADM] = responder.groupGetRequestADM(iri)
+  override def getGroup(iri: GroupIri): Task[GroupGetResponseADM] = responder.groupGetRequest(iri)
 
-  override def getGroupMembers(groupIri: IRI, user: User): Task[GroupMembersGetResponseADM] =
-    responder.groupMembersGetRequestADM(groupIri, user)
+  override def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+    responder.groupMembersGetRequest(iri, user)
 }
 
 object GroupsRestServiceLive {
