@@ -9,12 +9,12 @@ import org.apache.pekko
 
 import scala.collection.Map
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 

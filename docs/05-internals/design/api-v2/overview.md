@@ -110,7 +110,7 @@ following:
 
 ```scala
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 ```
 
 Ensure that an implicit instance of `StringFormatter` is in scope:

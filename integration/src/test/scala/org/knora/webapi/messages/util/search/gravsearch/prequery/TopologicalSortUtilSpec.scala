@@ -6,7 +6,7 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
 import scalax.collection.Graph
-import scalax.collection.GraphEdge._
+import scalax.collection.GraphEdge.*
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
@@ -17,10 +17,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSort
 class TopologicalSortUtilSpec extends CoreSpec {
   type NodeT = Graph[Int, DiHyperEdge]#NodeT
 
-  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] =
-    orders.map { order: Vector[NodeT] =>
-      order.map(_.value)
-    }
+  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] = orders.map(_.map(_.value))
 
   "TopologicalSortUtilSpec" should {
 

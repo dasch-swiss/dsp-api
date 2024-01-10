@@ -6,8 +6,8 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
-import spray.json._
-import zio._
+import spray.json.*
+import zio.*
 
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -22,31 +22,31 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
-import org.knora.webapi.models._
+import org.knora.webapi.models.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
-import org.knora.webapi.util._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.util.*
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
@@ -65,7 +65,7 @@ object OntologyV2R2RSpec {
  */
 class OntologyV2R2RSpec extends R2RSpec {
 
-  import OntologyV2R2RSpec._
+  import OntologyV2R2RSpec.*
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

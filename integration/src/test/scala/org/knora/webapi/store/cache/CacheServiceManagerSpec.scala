@@ -6,9 +6,9 @@
 package org.knora.webapi.store.cache
 
 import dsp.errors.BadRequestException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM

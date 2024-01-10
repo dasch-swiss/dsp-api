@@ -138,6 +138,28 @@ lazy val webApiCommonSettings = Seq(
 )
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+val customScalacOptions = Seq(
+  "-Xsource:3",
+  "-Wconf:msg=constructor modifiers are assumed:s",
+  "-feature",
+  "-unchecked",
+  "-deprecation",
+  "-Yresolve-term-conflict:package",
+  "-Ymacro-annotations",
+  "-Wunused:imports",
+  "-Wunused:privates",
+  "-Wunused:locals",
+  "-Wunused:explicits",
+  "-Wunused:implicits",
+  "-Wunused:params",
+  "-Wunused:patvars",
+  "-Wdead-code",
+  "-Wvalue-discard",
+  "-Xlint:doc-detached",
+  // silence twirl templates unused imports warnings
+  "-Wconf:src=target/.*:s"
+)
+
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
   .settings(
@@ -172,27 +194,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Compile / exportJars := true
   )
   .settings(
-    scalacOptions ++= Seq(
-      "-Xsource:3",
-      "-Wconf:msg=constructor modifiers are assumed:s",
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Wunused:imports",
-      "-Wunused:privates",
-      "-Wunused:locals",
-      "-Wunused:explicits",
-      "-Wunused:implicits",
-      "-Wunused:params",
-      "-Wunused:patvars",
-      "-Wdead-code",
-      "-Wvalue-discard",
-      "-Xlint:doc-detached",
-      // silence twirl templates unused imports warnings
-      "-Wconf:src=target/.*:s"
-    ),
+    scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver
   )
@@ -271,16 +273,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     inConfig(Test) {
       Defaults.testSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(Test)
     },
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      // "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Wunused:imports",
-      // silence twirl templates unused imports warnings
-      "-Wconf:src=target/.*:s"
-    ),
+    scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
     Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),

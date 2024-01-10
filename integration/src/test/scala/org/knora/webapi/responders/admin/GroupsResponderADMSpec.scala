@@ -12,10 +12,10 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.Group._
+import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
-import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.*
+import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
