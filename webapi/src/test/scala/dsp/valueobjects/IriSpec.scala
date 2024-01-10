@@ -12,38 +12,23 @@ import zio.test.*
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.UuidUtil.*
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
  */
 object IriSpec extends ZIOSpecDefault {
-  val invalidIri               = "Invalid IRI"
-  val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
+  private val uuidVersion3  = "cCmdcpn2MO211YYOplR1hQ"
+  private val supportedUuid = "jDEEitJESRi3pDaDjjQ1WQ"
 
-  val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
+  private val invalidIri = "Invalid IRI"
 
-  val invalidProjectIri          = "http://rdfh.ch/projects/0001"
-  val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
-  val beolProjectIri             = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
-  val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-  // built in projects
-  val systemProject                  = "http://www.knora.org/ontology/knora-admin#SystemProject"
-  val defaultSharedOntologiesProject = "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
+  private val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  private val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
 
-  val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
-  val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
+  private val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
+  private val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
 
-  val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
-  val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
-
-  val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
-  val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
-  val supportedUuid = fromIri(validUserIri)
-
-  def spec: Spec[Any, Throwable] = listIriTest + uuidTest + roleIriTest + userIriTest
+  def spec: Spec[Any, Throwable] = listIriTest + uuidTest + roleIriTest
 
   private val listIriTest = suite("IriSpec - ListIri")(
     test("pass an empty value and return an error") {
@@ -134,33 +119,6 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(RoleIri.make(validRoleIri).toOption.get.value == validRoleIri)
-    }
-  )
-
-  private val userIriTest = suite("IriSpec - UserIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        UserIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid(invalidIri))
-        )
-      )
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        UserIri.make(userIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      val userIri = UserIri.make(validUserIri)
-
-      (for {
-        iri <- userIri
-      } yield assertTrue(iri.value == validUserIri)).toZIO
     }
   )
 }

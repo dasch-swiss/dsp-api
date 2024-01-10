@@ -13,7 +13,6 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
@@ -26,6 +25,8 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserStatus
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
@@ -154,7 +155,7 @@ final case class UsersRouteADM()(
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
             newStatus <- ZIO
-                           .fromOption(apiRequest.status.map(UserStatus.make))
+                           .fromOption(apiRequest.status.map(UserStatus.from))
                            .orElseFail(BadRequestException("The status is missing."))
             checkedUserIri <- validateAndEscapeUserIri(userIri)
             r              <- getUserUuid(requestContext)
@@ -172,7 +173,7 @@ final case class UsersRouteADM()(
       val task = for {
         checkedUserIri <- validateAndEscapeUserIri(userIri)
         r              <- getUserUuid(requestContext)
-      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.make(false), r.user, r.uuid)
+      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.from(false), r.user, r.uuid)
       runJsonRouteZ(task, requestContext)
     }
   }
@@ -188,7 +189,7 @@ final case class UsersRouteADM()(
             checkedUserIri <- validateAndEscapeUserIri(userIri)
             r              <- getUserUuid(requestContext)
             newSystemAdmin <- ZIO
-                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.make))
+                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.from))
                                 .orElseFail(BadRequestException("The systemAdmin is missing."))
           } yield UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)

@@ -14,7 +14,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -42,7 +41,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -488,10 +487,8 @@ final case class UsersResponderADMLive(
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        newHashedPassword = Password
-                              .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-                              .fold(e => throw e.head, value => value)
+        encoder           = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
+        newHashedPassword = Password.unsafeFrom(encoder.encode(userUpdatePasswordPayload.newPassword.value))
 
         // update the users password as SystemUser
         result <- updateUserPasswordADM(
@@ -1807,7 +1804,7 @@ final case class UsersResponderADMLive(
         } else {
           for {
             _ <- ZIO
-                   .fromOption(stringFormatter.validateEmail(email.value))
+                   .fromEither(Email.from(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
             userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
           } yield userExists

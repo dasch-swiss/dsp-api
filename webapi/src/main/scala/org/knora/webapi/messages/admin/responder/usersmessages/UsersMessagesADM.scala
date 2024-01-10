@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.prelude.Validation
 
@@ -15,9 +15,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -28,9 +26,15 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonPro
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -454,7 +458,6 @@ object UserInformationTypeADM {
   case object Restricted extends UserInformationTypeADM
   case object Full       extends UserInformationTypeADM
 
-  // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
 }
 
 /**
@@ -570,10 +573,12 @@ object UserIdentifierADM {
       Iri.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
     )
 
-    val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
-    val username = maybeUsername.map(u =>
-      sf.validateUsername(u).getOrElse(throw BadRequestException(s"Invalid username $maybeUsername"))
-    )
+    val userEmail =
+      maybeEmail
+        .map(e => Email.from(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
+        .map(_.value)
+    val username =
+      maybeUsername.map(u => Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value)
 
     new UserIdentifierADM(
       maybeIri = userIri,
@@ -688,10 +693,10 @@ object UserUpdateBasicInformationPayloadADM {
 
   def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
     Validation.validateWith(
-      validateWithOptionOrNone(req.username, Username.make),
-      validateWithOptionOrNone(req.email, Email.make),
-      validateWithOptionOrNone(req.givenName, GivenName.make),
-      validateWithOptionOrNone(req.familyName, FamilyName.make),
+      validateWithOptionOrNone(req.username, Username.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.email, Email.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.givenName, GivenName.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.familyName, FamilyName.validationFrom).mapError(ValidationException(_)),
       validateWithOptionOrNone(req.lang, LanguageCode.make)
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
@@ -700,10 +705,10 @@ case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword
 object UserUpdatePasswordPayloadADM {
   def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
     val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The requester's password is missing."))
     val newPasswordValidation = apiRequest.newPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
@@ -725,15 +730,17 @@ object UserCreatePayloadADM {
   def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
     Validation
       .validateWith(
-        apiRequest.id.map(UserIri.make(_).map(Some(_))).getOrElse(Validation.succeed(None)),
-        Username.make(apiRequest.username),
-        Email.make(apiRequest.email),
-        GivenName.make(apiRequest.givenName),
-        FamilyName.make(apiRequest.familyName),
-        Password.make(apiRequest.password),
-        Validation.succeed(UserStatus.make(apiRequest.status)),
+        apiRequest.id
+          .map(UserIri.validationFrom(_).map(Some(_)).mapError(ValidationException(_)))
+          .getOrElse(Validation.succeed(None)),
+        Username.validationFrom(apiRequest.username).mapError(ValidationException(_)),
+        Email.validationFrom(apiRequest.email).mapError(ValidationException(_)),
+        GivenName.validationFrom(apiRequest.givenName).mapError(ValidationException(_)),
+        FamilyName.validationFrom(apiRequest.familyName).mapError(ValidationException(_)),
+        Password.validationFrom(apiRequest.password).mapError(ValidationException(_)),
+        Validation.succeed(UserStatus.from(apiRequest.status)),
         LanguageCode.make(apiRequest.lang),
-        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
+        Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
       .mapError(_.getMessage)
 }
