@@ -11,11 +11,8 @@ import sttp.client3.UriContext
 import sttp.client3.asStreamAlways
 import sttp.client3.basicRequest
 import sttp.client3.httpclient.zio.HttpClientZioBackend
-import zio.Clock
-import zio.Ref
 import zio.Scope
 import zio.Task
-import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 import zio.http.Body
@@ -34,11 +31,9 @@ import zio.nio.file.Path
 import zio.stream.ZSink
 
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.DurationInt
 
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -72,24 +67,15 @@ object AssetInfoResponse {
 final case class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
-  sttpBackend: SttpBackend[Task, ZioStreams],
-  tokenRef: Ref[Option[Jwt]]
+  sttpBackend: SttpBackend[Task, ZioStreams]
 ) extends DspIngestClient {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
 
-  private val getJwtString: UIO[String] = for {
-    // check the current token and create a new one if:
-    // * it is not present
-    // * it is expired or close to expiring within the next 10 seconds
-    threshold <- Clock.currentTime(TimeUnit.SECONDS).map(_ - 10)
-    token <- tokenRef.get.flatMap {
-               case Some(jwt) if jwt.expiration <= threshold => ZIO.succeed(jwt)
-               case _                                        => jwtService.createJwtForDspIngest().tap(jwt => tokenRef.set(Some(jwt)))
-             }
-  } yield token.jwtString
-
-  private val authenticatedRequest = getJwtString.map(basicRequest.auth.bearer(_))
+  private val authenticatedRequest = jwtService
+    .createJwtForDspIngest()
+    .map(_.jwtString)
+    .map(basicRequest.auth.bearer(_))
 
   override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
@@ -133,8 +119,5 @@ final case class DspIngestClientLive(
 }
 
 object DspIngestClientLive {
-  val layer =
-    HttpClientZioBackend.layer().orDie >+>
-      ZLayer.fromZIO(Ref.make[Option[Jwt]](None)) >>>
-      ZLayer.derive[DspIngestClientLive]
+  val layer = HttpClientZioBackend.layer().orDie >+> ZLayer.derive[DspIngestClientLive]
 }
