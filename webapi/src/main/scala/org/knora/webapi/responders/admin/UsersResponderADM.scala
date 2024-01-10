@@ -82,7 +82,7 @@ final case class UsersResponderADMLive(
     case UsersGetADM(_, requestingUser) => getAllUserADM(requestingUser)
     case UsersGetRequestADM(_, requestingUser) =>
       getAllUserADMRequest(requestingUser)
-    case UserGetByIdADM(identifier, userInformationTypeADM, requestingUser) =>
+    case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
     case UserGetByEmailADM(email, userInformationTypeADM, requestingUser) =>
       getSingleUserADM(email, userInformationTypeADM, requestingUser)

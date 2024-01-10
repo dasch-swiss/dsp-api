@@ -659,7 +659,7 @@ final case class AuthenticatorLive(
    */
   override def getUserByIri(iri: UserIri): Task[User] =
     messageRelay
-      .ask[Option[User]](UserGetByIdADM(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
+      .ask[Option[User]](UserGetByIriADM(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
       .flatMap(ZIO.fromOption(_))
       .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
 

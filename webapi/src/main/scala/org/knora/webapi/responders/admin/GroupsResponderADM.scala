@@ -312,7 +312,7 @@ final case class GroupsResponderADMLive(
         groupMemberIris.map { userIri =>
           messageRelay
             .ask[Option[User]](
-              UserGetByIdADM(
+              UserGetByIriADM(
                 UserIri.unsafeFrom(userIri),
                 UserInformationTypeADM.Restricted,
                 KnoraSystemInstances.Users.SystemUser

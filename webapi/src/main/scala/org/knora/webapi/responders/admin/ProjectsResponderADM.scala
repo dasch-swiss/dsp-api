@@ -24,7 +24,7 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIdADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIriADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
@@ -311,7 +311,7 @@ final case class ProjectsResponderADMLive(
         userIris.map { userIri =>
           messageRelay
             .ask[Option[User]](
-              UserGetByIdADM(
+              UserGetByIriADM(
                 identifier = UserIri.unsafeFrom(userIri),
                 userInformationTypeADM = UserInformationTypeADM.Restricted,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -365,7 +365,7 @@ final case class ProjectsResponderADMLive(
       maybeUserTasks: Seq[Task[Option[User]]] = userIris.map { userIri =>
                                                   messageRelay
                                                     .ask[Option[User]](
-                                                      UserGetByIdADM(
+                                                      UserGetByIriADM(
                                                         identifier = UserIri.unsafeFrom(userIri),
                                                         userInformationTypeADM = UserInformationTypeADM.Restricted,
                                                         requestingUser = KnoraSystemInstances.Users.SystemUser
