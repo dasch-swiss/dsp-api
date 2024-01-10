@@ -268,13 +268,8 @@ final case class UsersResponderADMLive(
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
     for {
       maybeUsersListToReturn <- getAllUserADM(requestingUser)
-
-      result = maybeUsersListToReturn match {
-                 case users: Seq[User] if users.nonEmpty =>
-                   UsersGetResponseADM(users = users)
-                 case _ =>
-                   throw NotFoundException(s"No users found")
-               }
+      result <- if (maybeUsersListToReturn.nonEmpty) ZIO.succeed(UsersGetResponseADM(maybeUsersListToReturn))
+                else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
   /**
