@@ -139,47 +139,6 @@ class UsersMessagesADMSpec extends CoreSpec {
     }
   }
 
-  "The UserIdentifierADM case class" should {
-
-    "return the identifier type" in {
-
-      val iriIdentifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/root"))
-      iriIdentifier.hasType should be(UserIdentifierType.Iri)
-
-      val emailIdentifier = UserIdentifierADM(maybeEmail = Some("root@example.com"))
-      emailIdentifier.hasType should be(UserIdentifierType.Email)
-
-      val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
-      usernameIdentifier.hasType should be(UserIdentifierType.Username)
-    }
-
-    "throw a BadRequestException for an empty identifier" in {
-      assertThrows[BadRequestException](
-        UserIdentifierADM()
-      )
-    }
-
-    "throw a BadRequestException for an invalid user IRI" in {
-      assertThrows[BadRequestException](
-        UserIdentifierADM(maybeIri = Some("http://example.org/not/our/user/iri/structure"))
-      )
-    }
-
-    "throw a BadRequestException for an invalid email" in {
-      assertThrows[BadRequestException](
-        UserIdentifierADM(maybeEmail = Some("invalidemail"))
-      )
-    }
-
-    "throw a BadRequestException for an invalid username" in {
-      assertThrows[BadRequestException](
-        // we allow max 50 characters in username
-        UserIdentifierADM(maybeEmail = Some("_username"))
-      )
-    }
-
-  }
-
   "The ChangeUserApiRequestADM case class" should {
 
     "throw a BadRequestException if number of parameters is wrong" in {

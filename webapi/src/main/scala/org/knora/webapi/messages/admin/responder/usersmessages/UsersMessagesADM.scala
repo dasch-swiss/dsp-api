@@ -12,14 +12,11 @@ import zio.prelude.Validation
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
@@ -510,134 +507,6 @@ object UserInformationTypeADM {
   case object Restricted extends UserInformationTypeADM
   case object Full       extends UserInformationTypeADM
 
-}
-
-/**
- * Represents the type of a user identifier.
- */
-sealed trait UserIdentifierType
-object UserIdentifierType {
-  case object Iri      extends UserIdentifierType
-  case object Email    extends UserIdentifierType
-  case object Username extends UserIdentifierType
-}
-
-/**
- * Represents the user's identifier. It can be an IRI, email, or username.
- *
- * @param maybeIri      the user's IRI.
- * @param maybeEmail    the user's email.
- * @param maybeUsername the user's username.
- */
-sealed abstract case class UserIdentifierADM private (
-  maybeIri: Option[IRI] = None,
-  maybeEmail: Option[String] = None,
-  maybeUsername: Option[String] = None
-) {
-
-  // squash and return value.
-  val value: String = List(
-    maybeIri,
-    maybeEmail,
-    maybeUsername
-  ).flatten.head
-
-  // validate and escape
-
-  def hasType: UserIdentifierType =
-    if (maybeIri.isDefined) {
-      UserIdentifierType.Iri
-    } else if (maybeEmail.isDefined) {
-      UserIdentifierType.Email
-    } else {
-      UserIdentifierType.Username
-    }
-
-  /**
-   * Tries to return the value as an IRI.
-   */
-  def toIri: IRI =
-    maybeIri.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toIriOption: Option[IRI] =
-    maybeIri
-
-  /**
-   * Tries to return the value as email.
-   */
-  def toEmail: String =
-    maybeEmail.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.EMAIL' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toEmailOption: Option[String] =
-    maybeEmail
-
-  /**
-   * Tries to return the value as username.
-   */
-  def toUsername: String =
-    maybeUsername.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.USERNAME' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toUsernameOption: Option[String] =
-    maybeUsername
-
-  /**
-   * Returns the string representation
-   */
-  override def toString: String =
-    s"UserIdentifierADM(${this.value})"
-
-}
-
-/**
- * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
- * validated and escaped.
- */
-object UserIdentifierADM {
-  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
-    implicit sf: StringFormatter
-  ): UserIdentifierADM = {
-
-    val parametersCount: Int = List(
-      maybeIri,
-      maybeEmail,
-      maybeUsername
-    ).flatten.size
-
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
-
-    val userIri = maybeIri.map(iri =>
-      Iri.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
-    )
-
-    val userEmail =
-      maybeEmail
-        .map(e => Email.from(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
-        .map(_.value)
-    val username =
-      maybeUsername.map(u => Username.from(u).getOrElse(throw BadRequestException(s"Invalid username $u")).value)
-
-    new UserIdentifierADM(
-      maybeIri = userIri,
-      maybeEmail = userEmail,
-      maybeUsername = username
-    ) {}
-  }
 }
 
 /**

@@ -7,13 +7,10 @@ package org.knora.webapi.routing
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
-import zio.ZIO
 
 import dsp.errors.BadCredentialsException
-import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
@@ -47,12 +44,6 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "fail with the wrong 'email' " in {
         val actual = UnsafeZioRun.run(Authenticator.getUserByEmail(Email.unsafeFrom("wronguser@example.com")))
         assertFailsWithA[BadCredentialsException](actual)
-      }
-
-      "fail when not providing anything " in {
-        val actual = UnsafeZioRun.run(ZIO.attempt(UserIdentifierADM()))
-
-        assertFailsWithA[BadRequestException](actual)
       }
     }
 
