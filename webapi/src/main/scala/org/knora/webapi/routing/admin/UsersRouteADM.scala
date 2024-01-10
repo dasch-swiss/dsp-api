@@ -80,11 +80,7 @@ final case class UsersRouteADM()(
       ctx => {
         val task = for {
           requestingUser <- Authenticator.getUserADM(ctx)
-          iri <- ZIO
-                   .fromEither(UserIri.from(userIri))
-                   .orElseFail(
-                     BadRequestException(s"Invalid user IRI: $userIri")
-                   )
+          iri            <- ZIO.fromEither(UserIri.from(userIri)).mapError(BadRequestException(_))
         } yield UserGetByIriRequestADM(iri, UserInformationTypeADM.Restricted, requestingUser)
         runJsonRouteZ(task, ctx)
       }
@@ -98,11 +94,7 @@ final case class UsersRouteADM()(
       ctx => {
         val task = for {
           requestingUser <- Authenticator.getUserADM(ctx)
-          email <- ZIO
-                     .fromEither(Email.from(emailStr))
-                     .orElseFail(
-                       BadRequestException(s"Invalid user email: $emailStr")
-                     )
+          email          <- ZIO.fromEither(Email.from(emailStr)).mapError(BadRequestException(_))
         } yield UserGetByEmailRequestADM(email, UserInformationTypeADM.Restricted, requestingUser)
         runJsonRouteZ(task, ctx)
       }
@@ -116,11 +108,7 @@ final case class UsersRouteADM()(
       ctx => {
         val task = for {
           requestingUser <- Authenticator.getUserADM(ctx)
-          username <- ZIO
-                        .fromEither(Username.from(usernameStr))
-                        .orElseFail(
-                          BadRequestException(s"Invalid user username: $usernameStr")
-                        )
+          username       <- ZIO.fromEither(Username.from(usernameStr)).mapError(BadRequestException(_))
         } yield UserGetByUsernameRequestADM(username, UserInformationTypeADM.Restricted, requestingUser)
         runJsonRouteZ(task, ctx)
       }
