@@ -11,6 +11,7 @@ import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
