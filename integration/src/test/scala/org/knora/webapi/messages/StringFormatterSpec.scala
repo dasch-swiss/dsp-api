@@ -9,8 +9,8 @@ import java.time.Instant
 
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 
 /**
  * Tests [[StringFormatter]].

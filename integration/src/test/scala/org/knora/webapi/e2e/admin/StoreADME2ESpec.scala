@@ -6,7 +6,7 @@
 package org.knora.webapi.e2e.admin
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 import zio.Duration
 
 import org.knora.webapi.E2ESpec

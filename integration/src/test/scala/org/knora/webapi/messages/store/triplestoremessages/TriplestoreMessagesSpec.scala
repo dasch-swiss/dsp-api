@@ -7,10 +7,10 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import spray.json._
+import spray.json.*
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 
 /**
  * This spec is used to test 'ListAdminMessages'.

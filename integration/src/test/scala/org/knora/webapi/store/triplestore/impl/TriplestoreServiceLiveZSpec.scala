@@ -5,8 +5,8 @@
 
 package org.knora.webapi.store.triplestore.impl
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfigForTestContainers

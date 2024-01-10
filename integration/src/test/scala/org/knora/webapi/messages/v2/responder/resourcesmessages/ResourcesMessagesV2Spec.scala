@@ -7,8 +7,8 @@ package org.knora.webapi.messages.v2.responder.resourcesmessages
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.sharedtestdata._
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.sharedtestdata.*
 
 /**
  * Tests [[ResourceMessagesV2]].

@@ -14,7 +14,7 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
 
 import pekko.actor.ActorSystem
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**

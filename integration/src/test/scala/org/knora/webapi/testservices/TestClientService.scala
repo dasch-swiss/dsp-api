@@ -20,8 +20,8 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import org.apache.pekko
 import spray.json.JsObject
-import spray.json._
-import zio._
+import spray.json.*
+import zio.*
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -35,9 +35,9 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
