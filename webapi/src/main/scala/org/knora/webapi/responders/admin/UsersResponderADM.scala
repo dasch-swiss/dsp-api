@@ -292,47 +292,35 @@ final case class UsersResponderADMLive(
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
     skipCache: Boolean = false
-  ): Task[Option[User]] = {
-
-    logger.debug(
-      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
-      identifier.value,
-      userInformationType,
-      requestingUser.username,
-      skipCache
-    )
-
+  ): Task[Option[User]] =
     for {
-      maybeUserADM <-
-        if (skipCache) {
-          // getting directly from triplestore
-          getUserFromTriplestoreByIri(identifier)
-        } else {
-          // getting from cache or triplestore
-          getUserFromCacheOrTriplestoreByIri(identifier)
-        }
-
-      // return the correct amount of information depending on either the request or user permission
-      finalResponse: Option[User] =
-        if (
-          requestingUser.permissions.isSystemAdmin || requestingUser.id == identifier.value || requestingUser.isSystemUser
-        ) {
-          // return everything or what was requested
-          maybeUserADM.map(user => user.ofType(userInformationType))
-        } else {
-          // return only public information
-          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.Public))
-        }
-
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${identifier.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
+      maybeUserADM <- if (skipCache) getUserFromTriplestoreByIri(identifier)
+                      else getUserFromCacheOrTriplestoreByIri(identifier)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
       _ =
         if (finalResponse.nonEmpty) {
           logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", identifier.value)
         } else {
           logger.debug("getSingleUserByIriADM - could not retrieve user: {}", identifier.value)
         }
-
     } yield finalResponse
-  }
+
+  /**
+   * If the requesting user is a system admin, or is requesting themselves, or is a system user,
+   * returns the user in the requestet format. Otherwise, returns only public information.
+   * @param user           the user to be returned
+   * @param requestingUser the user requesting the information
+   * @param infoType       the type of information requested
+   * @return
+   */
+  private def filterUserInformation(user: User, requestingUser: User, infoType: UserInformationTypeADM): User =
+    if (requestingUser.permissions.isSystemAdmin || requestingUser.id == user.id || requestingUser.isSystemUser)
+      user.ofType(infoType)
+    else user.ofType(UserInformationTypeADM.Public)
 
   /**
    * ~ CACHED ~
@@ -354,47 +342,22 @@ final case class UsersResponderADMLive(
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
     skipCache: Boolean = false
-  ): Task[Option[User]] = {
-
-    logger.debug(
-      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
-      email.value,
-      userInformationType,
-      requestingUser.username,
-      skipCache
-    )
-
+  ): Task[Option[User]] =
     for {
-      maybeUserADM <-
-        if (skipCache) {
-          // getting directly from triplestore
-          getUserFromTriplestoreByEmail(email)
-        } else {
-          // getting from cache or triplestore
-          getUserFromCacheOrTriplestoreByEmail(email)
-        }
-
-      // return the correct amount of information depending on either the request or user permission
-      finalResponse: Option[User] =
-        if (
-          requestingUser.permissions.isSystemAdmin || requestingUser.id == email.value || requestingUser.isSystemUser
-        ) {
-          // return everything or what was requested
-          maybeUserADM.map(user => user.ofType(userInformationType))
-        } else {
-          // return only public information
-          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.Public))
-        }
-
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${email.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
+      maybeUserADM <- if (skipCache) getUserFromTriplestoreByEmail(email)
+                      else getUserFromCacheOrTriplestoreByEmail(email)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
       _ =
         if (finalResponse.nonEmpty) {
           logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", email.value)
         } else {
           logger.debug("getSingleUserByIriADM - could not retrieve user: {}", email.value)
         }
-
     } yield finalResponse
-  }
 
   /**
    * ~ CACHED ~
@@ -416,17 +379,12 @@ final case class UsersResponderADMLive(
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
     skipCache: Boolean = false
-  ): Task[Option[User]] = {
-
-    logger.debug(
-      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
-      username.value,
-      userInformationType,
-      requestingUser.username,
-      skipCache
-    )
-
+  ): Task[Option[User]] =
     for {
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${username.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
       maybeUserADM <-
         if (skipCache) {
           // getting directly from triplestore
@@ -456,7 +414,6 @@ final case class UsersResponderADMLive(
         }
 
     } yield finalResponse
-  }
 
   /**
    * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
