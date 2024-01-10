@@ -301,12 +301,7 @@ final case class UsersResponderADMLive(
       maybeUserADM <- if (skipCache) getUserFromTriplestoreByIri(identifier)
                       else getUserFromCacheOrTriplestoreByIri(identifier)
       finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _ =
-        if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", identifier.value)
-        } else {
-          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", identifier.value)
-        }
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${identifier.value}': ${finalResponse.nonEmpty}")
     } yield finalResponse
 
   /**
@@ -351,12 +346,7 @@ final case class UsersResponderADMLive(
       maybeUserADM <- if (skipCache) getUserFromTriplestoreByEmail(email)
                       else getUserFromCacheOrTriplestoreByEmail(email)
       finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _ =
-        if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", email.value)
-        } else {
-          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", email.value)
-        }
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${email.value}': ${finalResponse.nonEmpty}")
     } yield finalResponse
 
   /**
@@ -386,33 +376,10 @@ final case class UsersResponderADMLive(
           s"getSingleUserByIriADM - id: ${username.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
         )
       maybeUserADM <-
-        if (skipCache) {
-          // getting directly from triplestore
-          getUserFromTriplestoreByUsername(username)
-        } else {
-          // getting from cache or triplestore
-          getUserFromCacheOrTriplestoreByUsername(username)
-        }
-
-      // return the correct amount of information depending on either the request or user permission
-      finalResponse: Option[User] =
-        if (
-          requestingUser.permissions.isSystemAdmin || requestingUser.id == username.value || requestingUser.isSystemUser
-        ) {
-          // return everything or what was requested
-          maybeUserADM.map(user => user.ofType(userInformationType))
-        } else {
-          // return only public information
-          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.Public))
-        }
-
-      _ =
-        if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", username.value)
-        } else {
-          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", username.value)
-        }
-
+        if (skipCache) getUserFromTriplestoreByUsername(username)
+        else getUserFromCacheOrTriplestoreByUsername(username)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${username.value}': ${finalResponse.nonEmpty}")
     } yield finalResponse
 
   /**
