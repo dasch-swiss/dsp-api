@@ -83,17 +83,17 @@ final case class UsersResponderADMLive(
     case UsersGetRequestADM(_, requestingUser) =>
       getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
+      getSingleUserByIriADM(identifier, userInformationTypeADM, requestingUser)
     case UserGetByEmailADM(email, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(email, userInformationTypeADM, requestingUser)
+      getSingleUserByEmailADM(email, userInformationTypeADM, requestingUser)
     case UserGetByUsernameADM(username, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(username, userInformationTypeADM, requestingUser)
+      getSingleUserByUsernameADM(username, userInformationTypeADM, requestingUser)
     case UserGetByIriRequestADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
+      getSingleUserByIriADMRequest(identifier, userInformationTypeADM, requestingUser)
     case UserGetByEmailRequestADM(email, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(email, userInformationTypeADM, requestingUser)
+      getSingleUserByEmailADMRequest(email, userInformationTypeADM, requestingUser)
     case UserGetByUsernameRequestADM(username, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(username, userInformationTypeADM, requestingUser)
+      getSingleUserByUsernameADMRequest(username, userInformationTypeADM, requestingUser)
     case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
       createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
@@ -292,7 +292,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserADM(
+  private def getSingleUserByIriADM(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -300,7 +300,7 @@ final case class UsersResponderADMLive(
   ): Task[Option[User]] = {
 
     logger.debug(
-      s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
+      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
       identifier.value,
       userInformationType,
       requestingUser.username,
@@ -331,9 +331,9 @@ final case class UsersResponderADMLive(
 
       _ =
         if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserADM - successfully retrieved user: {}", identifier.value)
+          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", identifier.value)
         } else {
-          logger.debug("getSingleUserADM - could not retrieve user: {}", identifier.value)
+          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", identifier.value)
         }
 
     } yield finalResponse
@@ -354,7 +354,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserADM(
+  private def getSingleUserByEmailADM(
     email: Email,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -362,7 +362,7 @@ final case class UsersResponderADMLive(
   ): Task[Option[User]] = {
 
     logger.debug(
-      s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
+      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
       email.value,
       userInformationType,
       requestingUser.username,
@@ -393,9 +393,9 @@ final case class UsersResponderADMLive(
 
       _ =
         if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserADM - successfully retrieved user: {}", email.value)
+          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", email.value)
         } else {
-          logger.debug("getSingleUserADM - could not retrieve user: {}", email.value)
+          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", email.value)
         }
 
     } yield finalResponse
@@ -416,7 +416,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserADM(
+  private def getSingleUserByUsernameADM(
     username: Username,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -424,7 +424,7 @@ final case class UsersResponderADMLive(
   ): Task[Option[User]] = {
 
     logger.debug(
-      s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
+      s"getSingleUserByIriADM - id: {}, type: {}, requester: {}, skipCache: {}",
       username.value,
       userInformationType,
       requestingUser.username,
@@ -455,9 +455,9 @@ final case class UsersResponderADMLive(
 
       _ =
         if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserADM - successfully retrieved user: {}", username.value)
+          logger.debug("getSingleUserByIriADM - successfully retrieved user: {}", username.value)
         } else {
-          logger.debug("getSingleUserADM - could not retrieve user: {}", username.value)
+          logger.debug("getSingleUserByIriADM - could not retrieve user: {}", username.value)
         }
 
     } yield finalResponse
@@ -471,13 +471,13 @@ final case class UsersResponderADMLive(
    * @param requestingUser      the user initiating the request.
    * @return a [[UserResponseADM]]
    */
-  private def getSingleUserADMRequest(
+  private def getSingleUserByIriADMRequest(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User
   ): Task[UserResponseADM] =
     for {
-      maybeUserADM <- getSingleUserADM(identifier, userInformationType, requestingUser)
+      maybeUserADM <- getSingleUserByIriADM(identifier, userInformationType, requestingUser)
       result <- ZIO
                   .fromOption(maybeUserADM)
                   .mapBoth(
@@ -494,13 +494,13 @@ final case class UsersResponderADMLive(
    * @param requestingUser      the user initiating the request.
    * @return a [[UserResponseADM]]
    */
-  private def getSingleUserADMRequest(
+  private def getSingleUserByEmailADMRequest(
     email: Email,
     userInformationType: UserInformationTypeADM,
     requestingUser: User
   ): Task[UserResponseADM] =
     for {
-      maybeUserADM <- getSingleUserADM(email, userInformationType, requestingUser)
+      maybeUserADM <- getSingleUserByEmailADM(email, userInformationType, requestingUser)
       result <- ZIO
                   .fromOption(maybeUserADM)
                   .mapBoth(
@@ -517,13 +517,13 @@ final case class UsersResponderADMLive(
    * @param requestingUser      the user initiating the request.
    * @return a [[UserResponseADM]]
    */
-  private def getSingleUserADMRequest(
+  private def getSingleUserByUsernameADMRequest(
     username: Username,
     userInformationType: UserInformationTypeADM,
     requestingUser: User
   ): Task[UserResponseADM] =
     for {
-      maybeUserADM <- getSingleUserADM(username, userInformationType, requestingUser)
+      maybeUserADM <- getSingleUserByUsernameADM(username, userInformationType, requestingUser)
       result <- ZIO
                   .fromOption(maybeUserADM)
                   .mapBoth(
@@ -573,7 +573,7 @@ final case class UsersResponderADMLive(
              )
 
         // get current user information
-        currentUserInformation <- getSingleUserADM(
+        currentUserInformation <- getSingleUserByIriADM(
                                     identifier = UserIri.unsafeFrom(userIri),
                                     userInformationType = UserInformationTypeADM.Full,
                                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -795,7 +795,7 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[ProjectADM]]
    */
   private def userProjectMembershipsGetADM(userIri: IRI) =
-    getSingleUserADM(
+    getSingleUserByIriADM(
       UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
@@ -1188,7 +1188,7 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[GroupADM]].
    */
   private def userGroupMembershipsGetADM(userIri: IRI) =
-    getSingleUserADM(
+    getSingleUserByIriADM(
       UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
@@ -1220,7 +1220,7 @@ final case class UsersResponderADMLive(
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
-        maybeUser <- getSingleUserADM(
+        maybeUser <- getSingleUserByIriADM(
                        UserIri.unsafeFrom(userIri),
                        UserInformationTypeADM.Full,
                        KnoraSystemInstances.Users.SystemUser,
@@ -1379,7 +1379,7 @@ final case class UsersResponderADMLive(
     for {
 
       // get current user
-      maybeCurrentUser <- getSingleUserADM(
+      maybeCurrentUser <- getSingleUserByIriADM(
                             identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
@@ -1470,7 +1470,7 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
-      maybeUpdatedUserADM <- getSingleUserADM(
+      maybeUpdatedUserADM <- getSingleUserByIriADM(
                                identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = KnoraSystemInstances.Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
@@ -1577,7 +1577,7 @@ final case class UsersResponderADMLive(
     }
 
     for {
-      maybeCurrentUser <- getSingleUserADM(
+      maybeCurrentUser <- getSingleUserByIriADM(
                             identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
@@ -1596,7 +1596,7 @@ final case class UsersResponderADMLive(
       _ <- triplestore.query(Update(updateUserSparql))
 
       /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- getSingleUserADM(
+      maybeUpdatedUserADM <- getSingleUserByIriADM(
                                identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = requestingUser,
                                userInformationType = UserInformationTypeADM.Full,
@@ -1709,7 +1709,7 @@ final case class UsersResponderADMLive(
         _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
-        maybeNewUserADM <- getSingleUserADM(
+        maybeNewUserADM <- getSingleUserByIriADM(
                              identifier = UserIri.unsafeFrom(userIri),
                              requestingUser = KnoraSystemInstances.Users.SystemUser,
                              userInformationType = UserInformationTypeADM.Full,

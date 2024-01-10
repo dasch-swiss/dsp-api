@@ -91,7 +91,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetByIdADM(
+        appActor ! UserGetByIriADM(
           identifier = UserIri.unsafeFrom(rootUser.id),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -100,7 +100,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetByIdADM(
+        appActor ! UserGetByIriADM(
           identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -109,7 +109,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetByIdADM(
+        appActor ! UserGetByIriADM(
           identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
