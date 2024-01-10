@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.rdf.NewRdfModel
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -33,6 +34,8 @@ final case class KnoraProjectRepoLive(
   private val mapper: PredicateObjectMapper,
   private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
+
+  private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
 
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] =
     findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
@@ -49,8 +52,33 @@ final case class KnoraProjectRepoLive(
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
-      model <- triplestore.queryRdf(Construct(query))
-    } yield None // TODO: implement
+      model   <- triplestore.queryRdf(Construct(query))
+      newModel = NewRdfModel(model)
+      x       <- ZIO.fromOption(findOneNew(newModel)).orElseFail(new Exception("not found"))
+    } yield None // TODO: this is of course not working!
+
+  private def findOneNew(model: NewRdfModel) =
+    for {
+      projectResource <- model.getResource("http://rdfh.ch/projects/0001")
+      shortcode       <- projectResource.getStringLiteralByProperty(ProjectShortcode)
+      shortname       <- projectResource.getStringLiteralByProperty(ProjectShortname)
+      longname        <- projectResource.getStringLiteralByProperty(ProjectLongname)
+      description      = projectResource.getStringLiteralsByProperty(ProjectDescription)
+      keywords         = projectResource.getStringLiteralsByProperty(ProjectKeyword)
+      logo             = projectResource.getStringLiteralByProperty(ProjectLogo)
+      status          <- projectResource.getBooleanLiteralByProperty(StatusProp)
+      selfjoin        <- projectResource.getBooleanLiteralByProperty(HasSelfJoinEnabled)
+      ontologies       = projectResource.getObjectIrisByProperty(belongsToOntology)
+      _                = println(s"shortcode: $shortcode")
+      _                = println(s"shortname: $shortname")
+      _                = println(s"longname: $longname")
+      _                = println(s"description: $description")
+      _                = println(s"keywords: $keywords")
+      _                = println(s"logo: $logo")
+      _                = println(s"status: $status")
+      _                = println(s"selfjoin: $selfjoin")
+      _                = println(s"ontos: $ontologies")
+    } yield ()
 
   override def findAll(): Task[List[KnoraProject]] = {
     val query = sparql.admin.txt.getProjects(None, None, None)
