@@ -100,7 +100,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetByIriADM(
+        appActor ! UserGetByIriRequestADM(
           identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
