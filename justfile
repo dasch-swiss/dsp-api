@@ -38,7 +38,7 @@ stack-stop:
 # Restart stack
 stack-restart: stack-stop && stack-start
 
-# Stops and removes all stack related container volumes and network
+# Stops and removes all containers and stack related volumes and network
 [confirm]
 stack-destroy:
     @echo "Destroying Stack"
