@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import com.typesafe.scalalogging.LazyLogging
 
 import dsp.errors.AssertionException
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit =

@@ -6,7 +6,7 @@
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.lifecycle.Startable
-import zio._
+import zio.*
 
 object ZioTestContainers {
 

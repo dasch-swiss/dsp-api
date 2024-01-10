@@ -8,8 +8,8 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.V2
-import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**

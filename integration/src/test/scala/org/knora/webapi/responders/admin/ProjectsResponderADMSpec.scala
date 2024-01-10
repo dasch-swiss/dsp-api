@@ -19,17 +19,17 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -195,18 +195,19 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val receivedApAdmin =
           UnsafeZioRun.runOrThrow(PermissionsResponderADM.getPermissionsApByProjectIri(received.project.id))
 
-        val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
-          ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
-          ap.hasPermissions.equals(
-            Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-          )
+        val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter {
+          (ap: AdministrativePermissionADM) =>
+            ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
+            ap.hasPermissions.equals(
+              Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+            )
         }
 
         hasAPForProjectAdmin.size shouldBe 1
 
         // Check Administrative Permission of ProjectMember
         val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
-          ap: AdministrativePermissionADM =>
+          (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
             ap.hasPermissions.equals(Set(PermissionADM.ProjectResourceCreateAllPermission))
         }
@@ -219,7 +220,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
-          doap: DefaultObjectAccessPermissionADM =>
+          (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
               OntologyConstants.KnoraAdmin.ProjectAdmin
             ) &&
@@ -234,7 +235,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // Check Default Object Access permission of ProjectMember
         val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
-          doap: DefaultObjectAccessPermissionADM =>
+          (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
               OntologyConstants.KnoraAdmin.ProjectMember
             ) &&

@@ -7,12 +7,12 @@ package org.knora.webapi.util
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.HttpResponse
@@ -33,8 +33,8 @@ object AkkaHttpUtils extends LazyLogging {
    */
   def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
 
-    import DefaultJsonProtocol._
-    import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+    import DefaultJsonProtocol.*
+    import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
 
     val jsonFuture: Future[JsObject] = response match {
       case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsObject]

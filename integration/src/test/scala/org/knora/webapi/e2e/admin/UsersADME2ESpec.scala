@@ -9,9 +9,9 @@ import org.apache.pekko
 
 import java.net.URLEncoder
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -29,8 +29,8 @@ import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.actor.ActorSystem
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers._
+import pekko.http.scaladsl.model.*
+import pekko.http.scaladsl.model.headers.*
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 

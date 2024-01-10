@@ -12,10 +12,10 @@ import scala.collection.mutable.ArrayBuffer
 import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
