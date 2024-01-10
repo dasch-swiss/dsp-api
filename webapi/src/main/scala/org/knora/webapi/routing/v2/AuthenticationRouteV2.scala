@@ -5,18 +5,17 @@
 
 package org.knora.webapi.routing.v2
 
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiRequestPayloadV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
-import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.Route
-
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.slice.admin.domain.model.Username
 
 /**

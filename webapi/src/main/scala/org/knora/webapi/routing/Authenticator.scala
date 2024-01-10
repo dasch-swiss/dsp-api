@@ -7,6 +7,12 @@ package org.knora.webapi.routing
 
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.codec.binary.Base32
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers
+import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
+import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.util.ByteString
 import org.slf4j.LoggerFactory
 import spray.json.*
 import zio.*
@@ -30,18 +36,11 @@ import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_INACTIVE
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_NOT_FOUND
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.util.cache.CacheUtil
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.model.headers
-import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
-import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
-import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.apache.pekko.util.ByteString
-
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]

@@ -5,14 +5,13 @@
 
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
