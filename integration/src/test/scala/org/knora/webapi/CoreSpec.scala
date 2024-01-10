@@ -12,7 +12,7 @@ import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import zio._
+import zio.*
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

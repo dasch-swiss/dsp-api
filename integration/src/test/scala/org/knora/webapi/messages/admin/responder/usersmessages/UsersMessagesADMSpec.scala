@@ -9,7 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import dsp.errors.BadRequestException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM

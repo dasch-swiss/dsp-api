@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 class UpgradePluginPR2094Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR2094" should {

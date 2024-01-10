@@ -17,7 +17,7 @@ import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 
 import pekko.actor.ActorSystem
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**

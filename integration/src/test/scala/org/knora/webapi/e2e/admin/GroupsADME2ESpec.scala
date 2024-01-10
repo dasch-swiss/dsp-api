@@ -8,7 +8,7 @@ package org.knora.webapi.e2e.admin
 import org.apache.pekko
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -22,8 +22,8 @@ import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.actor.ActorSystem
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers._
+import pekko.http.scaladsl.model.*
+import pekko.http.scaladsl.model.headers.*
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 

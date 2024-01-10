@@ -5,28 +5,28 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.models.filemodels._
+import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.v2.routing.authenticationmessages.*
+import org.knora.webapi.models.filemodels.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testservices.FileToUpload

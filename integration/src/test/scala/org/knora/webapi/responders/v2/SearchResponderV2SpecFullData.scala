@@ -10,13 +10,13 @@ import org.apache.pekko
 import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.PermissionUtilADM._
-import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.util.PermissionUtilADM.*
+import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import pekko.actor.ActorSystem

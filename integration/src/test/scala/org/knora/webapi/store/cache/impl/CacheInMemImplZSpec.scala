@@ -6,13 +6,13 @@
 package org.knora.webapi.store.cache.impl
 
 import zio.ZLayer
-import zio.test.Assertion._
-import zio.test._
+import zio.test.Assertion.*
+import zio.test.*
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
@@ -44,7 +44,8 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
    */
   val testLayers = ZLayer.make[CacheService](CacheServiceInMemImpl.layer)
 
-  def spec = (userTests + projectTests + otherTests).provideLayerShared(testLayers) @@ TestAspect.sequential
+  def spec: Spec[Any, Throwable] =
+    (userTests + projectTests + otherTests).provideLayerShared(testLayers) @@ TestAspect.sequential
 
   val userTests = suite("CacheInMemImplZSpec - user")(
     test("successfully store a user and retrieve by IRI") {

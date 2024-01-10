@@ -11,10 +11,10 @@ import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
