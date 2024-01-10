@@ -164,7 +164,7 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by username. A successful response will be a [[User]].
@@ -177,7 +177,7 @@ case class UserGetByUsernameADM(
   username: Username,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by email. A successful response will be a [[User]].
@@ -190,7 +190,7 @@ case class UserGetByEmailADM(
   email: Email,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by IRI. A successful response will be a [[UserResponseADM]].
@@ -203,7 +203,7 @@ case class UserGetByIriRequestADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by email. A successful response will be a [[UserResponseADM]].
@@ -216,7 +216,7 @@ case class UserGetByEmailRequestADM(
   email: Email,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by username. A successful response will be a [[UserResponseADM]].
@@ -229,7 +229,7 @@ case class UserGetByUsernameRequestADM(
   username: Username,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
  * Requests the creation of a new user.
