@@ -137,18 +137,6 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the password (2)" in {
       SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
     }
-
-    "return isSelf for IRI" in {
-      SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeIri = Some(SharedTestDataADM.rootUser.id)))
-    }
-
-    "return isSelf for email" in {
-      SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeEmail = Some(SharedTestDataADM.rootUser.email)))
-    }
-
-    "return isSelf for username" in {
-      SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeUsername = Some(SharedTestDataADM.rootUser.username)))
-    }
   }
 
   "The UserIdentifierADM case class" should {
@@ -163,27 +151,6 @@ class UsersMessagesADMSpec extends CoreSpec {
 
       val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
       usernameIdentifier.hasType should be(UserIdentifierType.Username)
-    }
-
-    "check whether a user identified by email is the same as a user identified by username" in {
-      val userEmail = "user@example.org"
-      val username  = "user"
-
-      val user = User(
-        id = "http://rdfh.ch/users/example",
-        username = username,
-        email = userEmail,
-        givenName = "Foo",
-        familyName = "Bar",
-        status = true,
-        lang = "en"
-      )
-
-      val emailID    = UserIdentifierADM(maybeEmail = Some(userEmail))
-      val usernameID = UserIdentifierADM(maybeUsername = Some(username))
-
-      assert(user.isSelf(emailID))
-      assert(user.isSelf(usernameID))
     }
 
     "throw a BadRequestException for an empty identifier" in {
