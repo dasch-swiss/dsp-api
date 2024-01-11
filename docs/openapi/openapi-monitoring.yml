@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: dsp-ingest-monitoring
-  version: v0.4.0-48-g798b45c-dirty
+  version: v0.5.0-23-gcbbe7a6-dirty
 servers:
 - url: http://localhost:3340
   description: Local development server
@@ -22,11 +22,11 @@ paths:
                 $ref: '#/components/schemas/InfoEndpointResponse'
               example:
                 name: dsp-ingest
-                version: v0.4.0-48-g798b45c-dirty
+                version: v0.5.0-23-gcbbe7a6-dirty
                 scalaVersion: 3.3.1
-                sbtVersion: 1.9.7
-                buildTime: 2023-12-15 11:15:55.044+0100
-                gitCommit: 798b45ccad3b5d49d906a327b9f45a379012362a
+                sbtVersion: 1.9.8
+                buildTime: 2024-01-10 19:39:26.411+0100
+                gitCommit: cbbe7a6a06ba9dc64a6939ceb7880015a4c3fa9b
         '400':
           description: ''
           content:

@@ -1,31 +1,42 @@
 openapi: 3.1.0
 info:
   title: dsp-ingest-maintenance
-  version: v0.4.0-48-g798b45c-dirty
+  version: v0.5.0-23-gcbbe7a6-dirty
 servers:
 - url: http://localhost:3340
   description: Local development server
 - url: https://ingest.dev.dasch.swiss
   description: Production server
 paths:
-  /maintenance/apply-top-left-correction/{shortcode}:
+  /maintenance/{name}:
     post:
       tags:
       - maintenance
-      operationId: postMaintenanceApply-top-left-correctionShortcode
+      operationId: postMaintenanceName
       parameters:
-      - name: shortcode
+      - name: name
         in: path
-        description: The shortcode of the project must be an exactly 4 characters
-          long hexadecimal string.
+        description: The name of the action to be performed
         required: true
         schema:
-          type: string
-          pattern: ^\p{XDigit}{4,4}$
-        example: '0001'
+          $ref: '#/components/schemas/ActionName'
+        example: UpdateAssetMetadata
+      - name: restrictToProjects
+        in: query
+        description: Restrict the action to a list of projects, if no project is given
+          apply the action to all projects.
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         '202':
           description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
         '400':
           description: ''
           content:
@@ -212,6 +223,11 @@ paths:
       - httpAuth: []
 components:
   schemas:
+    ActionName:
+      type: string
+      enum:
+      - ApplyTopLeftCorrection
+      - UpdateAssetMetadata
     Argument:
       required:
       - argument

@@ -7,10 +7,12 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
+import swiss.dasch.api.ActionName
 import swiss.dasch.domain
-import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
+import swiss.dasch.domain.DerivativeFile.{JpxDerivativeFile, MovingImageDerivativeFile, OtherDerivativeFile}
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
+import swiss.dasch.domain.SupportedFileType.MovingImage
 import zio.*
 import zio.json.interop.refined.*
 import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
@@ -21,50 +23,65 @@ import zio.stream.{ZSink, ZStream}
 import java.io.IOException
 
 trait MaintenanceActions {
-  def extractImageMetadataAndAddToInfoFile(): Task[Unit]
+  def updateAssetMetadata(projects: Iterable[ProjectPath]): Task[Unit]
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit]
   def createNeedsTopLeftCorrectionReport(): Task[Unit]
   def createWasTopLeftCorrectionAppliedReport(): Task[Unit]
-  def applyTopLeftCorrections(projectPath: Path): Task[Int]
-  def createOriginals(projectPath: Path, mapping: Map[String, String]): Task[Int]
+  def applyTopLeftCorrections(projectPath: ProjectPath): Task[Int]
+  final def applyTopLeftCorrections(projectPath: Iterable[ProjectPath]): Task[Int] =
+    ZIO
+      .foreach(projectPath)(applyTopLeftCorrections)
+      .map(_.sum)
+      .tap(sum => ZIO.logInfo(s"Finished ${ActionName.ApplyTopLeftCorrection} for $sum files"))
+  def createOriginals(projectPath: ProjectPath, mapping: Map[String, String]): Task[Int]
 }
 
 final case class MaintenanceActionsLive(
   assetInfoService: AssetInfoService,
   imageService: StillImageService,
+  mimeTypeGuesser: MimeTypeGuesser,
+  movingImageService: MovingImageService,
+  otherFilesService: OtherFilesService,
   projectService: ProjectService,
   sipiClient: SipiClient,
   storageService: StorageService
 ) extends MaintenanceActions {
 
-  override def extractImageMetadataAndAddToInfoFile(): Task[Unit] = {
-    def updateSingleFile(path: Path, shortcode: ProjectShortcode): Task[Unit] =
+  override def updateAssetMetadata(projects: Iterable[ProjectPath]): Task[Unit] = {
+    def updateSingleAsset(info: AssetInfo): Task[Unit] =
       for {
-        jpx <- ZIO
-                 .fromOption(JpxDerivativeFile.from(path))
-                 .orElseFail(new Exception(s"Is not a jpx file: $path"))
-        id <- ZIO
-                .fromOption(AssetId.fromPath(path))
-                .orElseFail(new Exception(s"Could not get asset id from path $path"))
-        ref         = AssetRef(id, shortcode)
-        info       <- assetInfoService.findByAssetRef(ref).someOrFail(new Exception(s"Could not find info file for $ref"))
-        dim        <- imageService.getDimensions(jpx)
-        oldMetadata = info.metadata
-        newMetadata = StillImageMetadata(dim, oldMetadata.internalMimeType, oldMetadata.originalMimeType)
-        _          <- assetInfoService.save(info.copy(metadata = newMetadata))
+        assetType <- ZIO
+                       .fromOption(SupportedFileType.fromPath(Path(info.originalFilename.value)))
+                       .orElseFail(new Exception(s"Could not get asset type from path ${info.originalFilename.value}"))
+        newMetadata <- getMetadata(info, assetType)
+        _           <- assetInfoService.save(info.copy(metadata = newMetadata))
       } yield ()
 
+    def getMetadata(info: AssetInfo, assetType: SupportedFileType): Task[AssetMetadata] = {
+      val original = Original(OriginalFile.unsafeFrom(info.original.file), info.originalFilename)
+      assetType match {
+        case SupportedFileType.StillImage =>
+          val derivative = JpxDerivativeFile.unsafeFrom(info.derivative.file)
+          imageService.extractMetadata(original, derivative)
+
+        case SupportedFileType.MovingImage =>
+          val derivative = MovingImageDerivativeFile.unsafeFrom(info.derivative.file)
+          movingImageService.extractMetadata(original, derivative)
+
+        case SupportedFileType.OtherFiles =>
+          val derivative = OtherDerivativeFile.unsafeFrom(info.derivative.file)
+          otherFilesService.extractMetadata(original, derivative)
+      }
+    }
+
     for {
-      projectShortcodes <- projectService.listAllProjects()
-      assetDir          <- storageService.getAssetDirectory()
-      _ <- ZIO.foreachDiscard(projectShortcodes) { shortcode =>
-             Files
-               .walk(assetDir / s"$shortcode")
-               .filterZIO(FileFilters.isJpeg2000)
-               .mapZIOPar(8)(updateSingleFile(_, shortcode).logError)
+      _ <- ZIO.foreachDiscard(projects) { projectPath =>
+             projectService
+               .findAssetInfosOfProject(projectPath.shortcode)
+               .mapZIOPar(8)(updateSingleAsset(_).logError.ignore)
                .runDrain
            }
-      _ <- ZIO.logInfo(s"Finished extract StillImage metadata")
+      _ <- ZIO.logInfo(s"Finished ${ActionName.UpdateAssetMetadata}")
     } yield ()
   }
 
@@ -204,17 +221,17 @@ final case class MaintenanceActionsLive(
     )
   }
 
-  override def applyTopLeftCorrections(projectPath: Path): Task[Int] =
-    ZIO.logInfo(s"Starting top left corrections in $projectPath") *>
+  override def applyTopLeftCorrections(projectPath: ProjectPath): Task[Int] =
+    ZIO.logInfo(s"Starting top left corrections in ${projectPath.path}") *>
       findJpeg2000Files(projectPath)
         .mapZIOPar(8)(imageService.applyTopLeftCorrection)
         .map(_.map(_ => 1).getOrElse(0))
         .run(ZSink.sum)
-        .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in $projectPath"))
+        .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in ${projectPath.path}"))
 
-  private def findJpeg2000Files(projectPath: Path) = StorageService.findInPath(projectPath, isJpeg2000)
+  private def findJpeg2000Files(projectPath: ProjectPath) = StorageService.findInPath(projectPath.path, isJpeg2000)
 
-  override def createOriginals(projectPath: Path, mapping: Map[String, String]): Task[Int] =
+  override def createOriginals(projectPath: ProjectPath, mapping: Map[String, String]): Task[Int] =
     findJpeg2000Files(projectPath)
       .flatMap(findAssetsWithoutOriginal(_, mapping))
       .mapZIOPar(8)(createOriginalAndUpdateInfoFile)

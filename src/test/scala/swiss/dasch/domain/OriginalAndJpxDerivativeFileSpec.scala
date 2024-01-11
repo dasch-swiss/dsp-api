@@ -5,10 +5,9 @@
 
 package swiss.dasch.domain
 
+import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 import zio.nio.file.Path
 import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
-
-import DerivativeFile.JpxDerivativeFile
 
 object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
 
@@ -22,21 +21,21 @@ object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
     },
     test("cannot be created if filename is not a valid AssetId") {
       val path: Path = Path("/tmp/Name of this file is not an AssetId.jpx")
-      assertTrue(JpxDerivativeFile.from(path).isEmpty)
+      assertTrue(JpxDerivativeFile.from(path).isLeft)
     },
     test("cannot be created from original file") {
       val path: Path = Path(s"/tmp/hello.orig")
-      assertTrue(JpxDerivativeFile.from(path).isEmpty)
+      assertTrue(JpxDerivativeFile.from(path).isLeft)
     },
     test("cannot be created from directory") {
       val path: Path = Path(s"/tmp/hello/")
-      assertTrue(JpxDerivativeFile.from(path).isEmpty)
+      assertTrue(JpxDerivativeFile.from(path).isLeft)
     },
     test("cannot be created from hidden file") {
       val hiddenFiles = Gen.fromIterable(List(".hello.txt", ".hello.jpx"))
       check(hiddenFiles) { filename =>
         val path: Path = Path(s"/tmp/$filename")
-        assertTrue(JpxDerivativeFile.from(path).isEmpty)
+        assertTrue(JpxDerivativeFile.from(path).isLeft)
       }
     }
   )

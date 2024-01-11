@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: dsp-ingest-projects
-  version: v0.4.0-48-g798b45c-dirty
+  version: v0.5.0-23-gcbbe7a6-dirty
 servers:
 - url: http://localhost:3340
   description: Local development server
@@ -621,6 +621,10 @@ components:
         fps:
           type: number
           format: double
+        internalMimeType:
+          type: string
+        originalMimeType:
+          type: string
     BadRequest:
       type: object
       properties:

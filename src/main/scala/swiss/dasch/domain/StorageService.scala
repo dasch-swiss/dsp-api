@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZoneOffset}
 
 trait StorageService {
-  def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path]
+  def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[ProjectPath]
   def getAssetDirectory(asset: AssetRef): UIO[Path]
   def getAssetDirectory(): UIO[Path]
   def getTempDirectory(): UIO[Path]
@@ -69,7 +69,7 @@ object StorageService {
   ): ZStream[Any, IOException, Path] =
     Files.walk(path, maxDepth).filterZIO(filter)
   def maxParallelism(): Int = 10
-  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path] =
+  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, ProjectPath] =
     ZIO.serviceWithZIO[StorageService](_.getProjectDirectory(projectShortcode))
   def getAssetDirectory(asset: AssetRef): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory(asset))
@@ -99,11 +99,11 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
   override def getAssetDirectory(): UIO[Path] =
     ZIO.succeed(config.assetPath)
 
-  override def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path] =
-    getAssetDirectory().map(_ / projectShortcode.toString)
+  override def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[ProjectPath] =
+    getAssetDirectory().map(_ / projectShortcode.toString).map(ProjectPath.unsafeFrom)
 
   override def getAssetDirectory(asset: AssetRef): UIO[Path] =
-    getProjectDirectory(asset.belongsToProject).map(_ / segments(asset.id))
+    getProjectDirectory(asset.belongsToProject).map(_.path).map(_ / segments(asset.id))
 
   private def segments(assetId: AssetId): Path = {
     val assetString = assetId.value

@@ -6,33 +6,37 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
+import swiss.dasch.api.ActionName.{ApplyTopLeftCorrection, UpdateAssetMetadata}
 import swiss.dasch.domain.*
-import zio.{ZIO, ZLayer}
+import zio.{Chunk, ZIO, ZLayer}
 
 final case class MaintenanceEndpointsHandler(
-  maintenanceEndpoints: MaintenanceEndpoints,
-  maintenanceActions: MaintenanceActions,
-  projectService: ProjectService,
   fileChecksumService: FileChecksumService,
-  sipiClient: SipiClient,
-  imageService: StillImageService
+  imageService: StillImageService,
+  maintenanceActions: MaintenanceActions,
+  maintenanceEndpoints: MaintenanceEndpoints,
+  projectService: ProjectService,
+  sipiClient: SipiClient
 ) extends HandlerFunctions {
 
-  val applyTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] =
-    maintenanceEndpoints.applyTopLeftCorrectionEndpoint.serverLogic { _ => shortcode =>
-      projectService
-        .findProject(shortcode)
-        .some
-        .flatMap(path =>
-          maintenanceActions
-            .applyTopLeftCorrections(path)
-            .tap(count => ZIO.logInfo(s"Created $count originals for $path"))
-            .logError
-            .forkDaemon
-        )
-        .mapError(projectNotFoundOrServerError(_, shortcode))
-        .unit
-    }
+  private val postMaintenanceEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.postMaintenanceActionEndpoint
+    .serverLogic(_ => { case (action, shortcodes) =>
+      for {
+        paths <-
+          ZIO
+            .ifZIO(ZIO.succeed(shortcodes.isEmpty))(
+              projectService.listAllProjects(),
+              ZIO.succeed(Chunk.fromIterable(shortcodes))
+            )
+            .flatMap(projectService.findProjects)
+            .mapError(ApiProblem.InternalServerError(_))
+        _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
+        _ <- action match {
+               case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
+               case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
+             }
+      } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
+    })
 
   val createOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.createOriginalsEndpoint
     .serverLogic(_ =>
@@ -40,10 +44,10 @@ final case class MaintenanceEndpointsHandler(
         projectService
           .findProject(shortcode)
           .some
-          .flatMap(path =>
+          .flatMap(projectPath =>
             maintenanceActions
-              .createOriginals(path, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
-              .tap(count => ZIO.logInfo(s"Created $count originals for $path"))
+              .createOriginals(projectPath, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
+              .tap(count => ZIO.logInfo(s"Created $count originals for ${projectPath.path}"))
               .logError
               .forkDaemon
           )
@@ -82,25 +86,13 @@ final case class MaintenanceEndpointsHandler(
             .as("work in progress")
       )
 
-  val extractImageMetadataAndAddToInfoFileEndpoint: ZServerEndpoint[Any, Any] =
-    maintenanceEndpoints.extractImageMetadataAndAddToInfoFileEndpoint
-      .serverLogic(_ =>
-        _ =>
-          maintenanceActions
-            .extractImageMetadataAndAddToInfoFile()
-            .forkDaemon
-            .logError
-            .as("work in progress")
-      )
-
   val endpoints: List[ZServerEndpoint[Any, Any]] =
     List(
-      applyTopLeftCorrectionEndpoint,
+      postMaintenanceEndpoint,
       createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
-      wasTopLeftCorrectionAppliedEndpoint,
-      extractImageMetadataAndAddToInfoFileEndpoint
+      wasTopLeftCorrectionAppliedEndpoint
     )
 }
 

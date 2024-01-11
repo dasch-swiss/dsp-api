@@ -50,8 +50,9 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
     },
     test("should return project directory") {
       for {
-        expected <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / existingProject.toString)
-        actual   <- StorageService.getProjectDirectory(existingProject)
+        expected <-
+          ZIO.serviceWith[StorageConfig](_.assetPath).map(p => ProjectPath.unsafeFrom(p / existingProject.toString))
+        actual <- StorageService.getProjectDirectory(existingProject)
       } yield assertTrue(expected == actual)
     },
     suite("create temp directory scoped")(

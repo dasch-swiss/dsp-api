@@ -42,18 +42,14 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
       _       <- executor.executeOrFail(cmd)
     } yield ()
 
-  def extractMetadata(
-    original: Original,
-    derivative: MovingImageDerivativeFile,
-    assetRef: AssetRef
-  ): Task[MovingImageMetadata] =
-    for {
-      _                          <- ZIO.logInfo(s"Extracting metadata for $derivative, $assetRef")
-      ffprobeInfo                <- extractWithFfprobe(derivative)
-      (dimensions, duration, fps) = ffprobeInfo
-      derivativeMimeType          = mimeTypeGuesser.guess(derivative.toPath)
-      originalMimeType            = mimeTypeGuesser.guess(Path(original.originalFilename.value))
-    } yield MovingImageMetadata(dimensions, duration, fps, derivativeMimeType, originalMimeType)
+  def extractMetadata(original: Original, derivative: MovingImageDerivativeFile): Task[MovingImageMetadata] = for {
+    _                          <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
+    _                          <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
+    ffprobeInfo                <- extractWithFfprobe(derivative)
+    (dimensions, duration, fps) = ffprobeInfo
+    derivativeMimeType          = mimeTypeGuesser.guess(derivative.toPath)
+    originalMimeType            = mimeTypeGuesser.guess(original.originalFilename)
+  } yield MovingImageMetadata(dimensions, duration, fps, derivativeMimeType, originalMimeType)
 
   private def extractWithFfprobe(derivative: MovingImageDerivativeFile) = for {
     absPath <- derivative.toPath.toAbsolutePath
@@ -116,7 +112,7 @@ object MovingImageService {
     file: MovingImageDerivativeFile,
     assetRef: AssetRef
   ): ZIO[MovingImageService, Throwable, MovingImageMetadata] =
-    ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(original, file, assetRef))
+    ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(original, file))
 
   val layer = ZLayer.derive[MovingImageService]
 }

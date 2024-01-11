@@ -9,7 +9,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto.autoUnwrap
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
-import swiss.dasch.domain.SupportedFileType.{MovingImage, Other, StillImage}
+import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles, StillImage}
 import zio.json.interop.refined.{decodeRefined, encodeRefined}
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
@@ -128,7 +128,7 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     infoFileDirectory: Path,
     asset: AssetRef
   ): AssetInfo = {
-    val typ              = SupportedFileType.fromPath(Path(raw.originalFilename.value)).getOrElse(Other)
+    val typ              = SupportedFileType.fromPath(Path(raw.originalFilename.value)).getOrElse(OtherFiles)
     val dim              = raw.width.flatMap(w => raw.height.flatMap(h => Dimensions.from(w, h).toOption))
     val internalMimeType = raw.internalMimeType.flatMap(it => MimeType.from(it.value).toOption)
     val originalMimeType = raw.originalMimeType.flatMap(it => MimeType.from(it.value).toOption)

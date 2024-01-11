@@ -91,7 +91,7 @@ final case class ImportServiceLive(
     storageService.getProjectDirectory(shortcode).flatMap { projectPath =>
       ZIO.logInfo(s"Importing project $shortcode") *>
         projectService.deleteProject(shortcode) *>
-        ZIO.attemptBlockingIO(FileUtils.moveDirectory(unzippedFolder.toFile, projectPath.toFile)) *>
+        ZIO.attemptBlockingIO(FileUtils.moveDirectory(unzippedFolder.toFile, projectPath.path.toFile)) *>
         ZIO.logInfo(s"Importing project $shortcode was successful")
     }
 }

@@ -22,7 +22,7 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
 
       val otherFileTypeExtensions = text ++ tables ++ audio ++ office ++ archive
       check(Gen.fromIterable(withUpperCase(otherFileTypeExtensions))) { ext =>
-        assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.Other))
+        assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.OtherFiles))
       }
     },
     test("All valid extensions for StillImage are supported") {

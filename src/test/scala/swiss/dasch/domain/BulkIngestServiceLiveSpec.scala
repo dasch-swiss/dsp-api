@@ -60,6 +60,7 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
     IngestService.layer,
     MimeTypeGuesser.layer,
     MovingImageService.layer,
+    OtherFilesService.layer,
     SipiClientMock.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,

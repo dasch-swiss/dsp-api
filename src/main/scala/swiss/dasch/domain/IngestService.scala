@@ -17,11 +17,12 @@ import zio.{IO, Task, ZIO, ZLayer}
 import java.io.IOException
 
 final case class IngestService(
-  storage: StorageService,
-  stillImageService: StillImageService,
-  movingImageService: MovingImageService,
   assetInfo: AssetInfoService,
-  mimeTypeGuesser: MimeTypeGuesser
+  mimeTypeGuesser: MimeTypeGuesser,
+  movingImageService: MovingImageService,
+  otherFilesService: OtherFilesService,
+  stillImageService: StillImageService,
+  storage: StorageService
 ) {
 
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
@@ -44,7 +45,7 @@ final case class IngestService(
                  .orElseFail(new IllegalArgumentException("Unsupported file type."))
                  .flatMap {
                    case SupportedFileType.StillImage  => handleImageFile(original, assetRef)
-                   case SupportedFileType.Other       => handleOtherFile(original, assetRef, assetDir)
+                   case SupportedFileType.OtherFiles  => handleOtherFile(original, assetRef, assetDir)
                    case SupportedFileType.MovingImage => handleMovingImageFile(original, assetRef)
                  }
       _ <- assetInfo.createAssetInfo(asset).tap(assetInfo.save).logError
@@ -77,10 +78,9 @@ final case class IngestService(
       val derivativePath = assetDir / s"${assetRef.id}.$fileExtension"
       val derivative     = OtherDerivativeFile.unsafeFrom(derivativePath)
       for {
-        _                 <- storage.copyFile(original.file.toPath, derivativePath)
-        originalMimeType   = mimeTypeGuesser.guess(Path(original.originalFilename.value))
-        derivativeMimeType = mimeTypeGuesser.guess(derivative.file)
-      } yield Asset.makeOther(assetRef, original, derivative, originalMimeType, derivativeMimeType)
+        _        <- storage.copyFile(original.file.toPath, derivativePath)
+        metadata <- otherFilesService.extractMetadata(original, derivative)
+      } yield Asset.makeOther(assetRef, original, derivative, metadata)
     }
 
   private def handleMovingImageFile(original: Original, assetRef: AssetRef): Task[MovingImageAsset] =
@@ -88,7 +88,7 @@ final case class IngestService(
       for {
         derivative <- movingImageService.createDerivative(original, assetRef)
         _          <- movingImageService.extractKeyFrames(derivative, assetRef)
-        meta       <- movingImageService.extractMetadata(original, derivative, assetRef)
+        meta       <- movingImageService.extractMetadata(original, derivative)
       } yield Asset.makeMovingImageAsset(assetRef, original, derivative, meta)
     }
 

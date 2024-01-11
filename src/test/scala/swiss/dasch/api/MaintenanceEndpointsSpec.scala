@@ -9,6 +9,7 @@ import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.SipiImageFormat.Jpg
+import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.{existingProject, nonExistentProject}
 import swiss.dasch.test.{SpecConfigurations, SpecConstants}
@@ -165,17 +166,20 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     .provide(
       AssetInfoServiceLive.layer,
       AuthServiceLive.layer,
-      FileChecksumServiceLive.layer,
-      StillImageService.layer,
       BaseEndpoints.layer,
+      CommandExecutorMock.layer,
+      FileChecksumServiceLive.layer,
       MaintenanceActionsLive.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandler.layer,
       MimeTypeGuesser.layer,
+      MovingImageService.layer,
+      OtherFilesService.layer,
       ProjectServiceLive.layer,
       SipiClientMock.layer,
-      SpecConfigurations.storageConfigLayer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
+      SpecConfigurations.storageConfigLayer,
+      StillImageService.layer,
       StorageServiceLive.layer
     )
 }

@@ -65,8 +65,10 @@ final case class StillImageService(
   }
 
   def extractMetadata(original: Original, derivative: JpxDerivativeFile): Task[StillImageMetadata] = for {
+    _                 <- ZIO.when(original.assetId != derivative.assetId)(ZIO.die(new Exception("Asset IDs do not match")))
+    _                 <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
     dim               <- getDimensions(derivative)
-    originalMimeType   = mimeTypeGuesser.guess(Path(original.originalFilename.value))
+    originalMimeType   = mimeTypeGuesser.guess(original.originalFilename)
     derivativeMimeType = mimeTypeGuesser.guess(derivative.file)
   } yield StillImageMetadata(dim, derivativeMimeType, originalMimeType)
 

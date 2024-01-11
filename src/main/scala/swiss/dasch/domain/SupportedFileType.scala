@@ -72,7 +72,7 @@ private val stillImages = Map(
 enum SupportedFileType(val mappings: Map[String, MimeType]) {
   case StillImage  extends SupportedFileType(stillImages)
   case MovingImage extends SupportedFileType(movingImages)
-  case Other       extends SupportedFileType(other)
+  case OtherFiles  extends SupportedFileType(other)
 
   val extensions: Seq[String]                      = mappings.keys.toSeq
   def acceptsExtension(extension: String): Boolean = extensions.exists(extension.equalsIgnoreCase)
