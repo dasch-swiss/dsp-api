@@ -9,7 +9,7 @@ import org.apache.pekko
 
 import org.knora.webapi.E2ESpec
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.

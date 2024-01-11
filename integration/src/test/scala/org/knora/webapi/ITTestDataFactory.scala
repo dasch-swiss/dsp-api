@@ -5,7 +5,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 
 /**
  * Helps in creating value objects for tests.
