@@ -81,7 +81,7 @@ trait GroupsResponderADM {
    * @return information about the group as a [[GroupGetResponseADM]].
    */
   def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM]
-  final def groupGetRequest(groupIri: GroupIri): Task[GroupGetResponseADM] = groupGetRequestADM(groupIri.value)
+  final def groupGetRequest(iri: GroupIri): Task[GroupGetResponseADM] = groupGetRequestADM(iri.value)
 
   /**
    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
@@ -100,7 +100,7 @@ trait GroupsResponderADM {
    * @return A [[GroupMembersGetResponseADM]]
    */
   def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM]
-  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+  final def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     groupMembersGetRequestADM(iri.value, user)
 
   /**
