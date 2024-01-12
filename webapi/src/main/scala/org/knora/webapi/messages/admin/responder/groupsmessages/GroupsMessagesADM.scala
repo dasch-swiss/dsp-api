@@ -4,8 +4,7 @@
  */
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
-
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
@@ -18,13 +17,12 @@ import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.User
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -188,21 +186,13 @@ case class GroupChangeStatusRequestADM(
   apiRequestID: UUID
 ) extends GroupsResponderRequestADM
 
-/**
- * Request updating the group's permissions.
- *
- * @param requestingUser the user initiating the request.
- * @param apiRequestID   the ID of the API request.
- */
-case class GroupPermissionUpdateRequestADM(requestingUser: User, apiRequestID: UUID) extends GroupsResponderRequestADM
-
 // Responses
 /**
  * Represents the Knora API v1 JSON response to a request for information about all groups.
  *
  * @param groups information about all existing groups.
  */
-case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
+case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
 }
 
@@ -211,17 +201,8 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
  *
  * @param group all information about the group.
  */
-case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
+case class GroupGetResponseADM(group: GroupADM) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
-}
-
-/**
- * Represents an answer to a group membership request.
- *
- * @param members the group's members.
- */
-case class GroupMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 
 /**
@@ -268,14 +249,10 @@ case class GroupADM(
  */
 trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
-  import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
-
   implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
     jsonFormat(GroupsGetResponseADM, "groups")
   implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
-  implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
-    jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] =
     jsonFormat(CreateGroupApiRequestADM, "id", "name", "descriptions", "project", "status", "selfjoin")
   implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] =

@@ -18,7 +18,6 @@ import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*

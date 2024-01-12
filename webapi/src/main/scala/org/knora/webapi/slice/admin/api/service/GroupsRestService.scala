@@ -8,18 +8,40 @@ package org.knora.webapi.slice.admin.api.service
 import zio.*
 import zio.macros.accessible
 
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 @accessible
 trait GroupsRestService {
-  def getAllGroups: Task[GroupsGetResponseADM]
+  def getGroups: Task[GroupsGetResponseADM]
+  def getGroup(iri: GroupIri): Task[GroupGetResponseADM]
+  def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
-  responder: GroupsResponderADM
+  responder: GroupsResponderADM,
+  format: KnoraResponseRenderer
 ) extends GroupsRestService {
-  override def getAllGroups: Task[GroupsGetResponseADM] = responder.groupsGetRequestADM
+  override def getGroups: Task[GroupsGetResponseADM] = for {
+    internal <- responder.groupsGetRequestADM
+    external <- format.toExternal(internal)
+  } yield external
+
+  override def getGroup(iri: GroupIri): Task[GroupGetResponseADM] =
+    for {
+      internal <- responder.groupGetRequest(iri)
+      external <- format.toExternal(internal)
+    } yield external
+
+  override def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+    for {
+      internal <- responder.groupMembersGetRequest(iri, user)
+      external <- format.toExternal(internal)
+    } yield external
 }
 
 object GroupsRestServiceLive {
