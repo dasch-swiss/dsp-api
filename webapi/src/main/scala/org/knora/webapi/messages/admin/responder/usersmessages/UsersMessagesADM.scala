@@ -17,21 +17,15 @@ import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.GivenName
-import org.knora.webapi.slice.admin.domain.model.Password
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -436,7 +430,7 @@ case class UserGroupMembershipRemoveRequestADM(
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends KnoraResponseADM {
+case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
@@ -635,6 +629,15 @@ object UserUpdatePasswordPayloadADM {
   }
 }
 
+/**
+ * Represents an answer to a group membership request.
+ *
+ * @param members the group's members.
+ */
+case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM {
+  def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
+}
+
 final case class UserCreatePayloadADM(
   id: Option[UserIri] = None,
   username: Username,
@@ -680,6 +683,8 @@ object UsersADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
   implicit val userADMFormat: JsonFormat[User] = jsonFormat12(User)
+  implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
+    jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",
