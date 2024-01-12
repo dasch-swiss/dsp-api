@@ -378,7 +378,7 @@ case class UserGroupMembershipRemoveRequestADM(
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends KnoraResponseADM {
+case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
