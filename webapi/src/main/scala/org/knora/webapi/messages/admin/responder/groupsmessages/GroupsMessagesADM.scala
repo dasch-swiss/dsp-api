@@ -11,12 +11,14 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.{AdminKnoraResponseADM, KnoraResponseADM}
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
