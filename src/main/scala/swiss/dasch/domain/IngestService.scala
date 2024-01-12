@@ -9,7 +9,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain.Asset.{MovingImageAsset, OtherAsset, StillImageAsset}
-import swiss.dasch.domain.DerivativeFile.OtherDerivativeFile
+import swiss.dasch.domain.AugmentedPath.{OrigFile, OtherDerivativeFile}
 import swiss.dasch.domain.PathOps.fileExtension
 import zio.nio.file.{Files, Path}
 import zio.{IO, Task, ZIO, ZLayer}
@@ -57,11 +57,9 @@ final case class IngestService(
 
   private def createOriginalFileInAssetDir(file: Path, assetRef: AssetRef, assetDir: Path): IO[IOException, Original] =
     ZIO.logInfo(s"Creating original for $file, $assetRef") *> {
-      val fileExtension    = s"${file.fileExtension}.orig"
-      val originalPath     = assetDir / s"${assetRef.id}.$fileExtension"
-      val originalFile     = OriginalFile.unsafeFrom(originalPath)
+      val orig             = OrigFile.unsafeFrom(assetDir / s"${assetRef.id}.${file.fileExtension}.orig")
       val originalFileName = NonEmptyString.unsafeFrom(file.filename.toString)
-      storage.copyFile(file, originalPath).as(Original(originalFile, originalFileName))
+      storage.copyFile(file, orig.path).as(Original(orig, originalFileName))
     }
 
   private def handleImageFile(original: Original, assetRef: AssetRef): Task[StillImageAsset] =
@@ -74,11 +72,10 @@ final case class IngestService(
 
   private def handleOtherFile(original: Original, assetRef: AssetRef, assetDir: Path): Task[OtherAsset] =
     ZIO.logInfo(s"Creating derivative for other $original, $assetRef") *> {
-      val fileExtension  = FilenameUtils.getExtension(original.originalFilename.toString)
-      val derivativePath = assetDir / s"${assetRef.id}.$fileExtension"
-      val derivative     = OtherDerivativeFile.unsafeFrom(derivativePath)
+      val fileExtension = FilenameUtils.getExtension(original.originalFilename.toString)
+      val derivative    = OtherDerivativeFile.unsafeFrom(assetDir / s"${assetRef.id}.$fileExtension")
       for {
-        _        <- storage.copyFile(original.file.toPath, derivativePath)
+        _        <- storage.copyFile(original.file.path, derivative.file)
         metadata <- otherFilesService.extractMetadata(original, derivative)
       } yield Asset.makeOther(assetRef, original, derivative, metadata)
     }

@@ -301,7 +301,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     MimeTypeGuesser.layer,
     MovingImageService.layer,
     OtherFilesService.layer,
-    ProjectServiceLive.layer,
+    ProjectService.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
     ReportServiceLive.layer,

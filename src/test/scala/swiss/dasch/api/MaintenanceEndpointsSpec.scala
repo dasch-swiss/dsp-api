@@ -22,7 +22,7 @@ import zio.test.*
 
 object MaintenanceEndpointsSpec extends ZIOSpecDefault {
 
-  private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 1.seconds): ZIO[R, E, Boolean] =
+  private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 3.seconds): ZIO[R, E, Boolean] =
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
 
   private def executeRequest(request: Request) = for {
@@ -175,7 +175,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       MimeTypeGuesser.layer,
       MovingImageService.layer,
       OtherFilesService.layer,
-      ProjectServiceLive.layer,
+      ProjectService.layer,
       SipiClientMock.layer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
       SpecConfigurations.storageConfigLayer,

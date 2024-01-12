@@ -7,6 +7,7 @@ package swiss.dasch.domain
 
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.existingProject
@@ -51,7 +52,9 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
     test("should return project directory") {
       for {
         expected <-
-          ZIO.serviceWith[StorageConfig](_.assetPath).map(p => ProjectPath.unsafeFrom(p / existingProject.toString))
+          ZIO
+            .serviceWith[StorageConfig](_.assetPath)
+            .map(p => ProjectFolder.unsafeFrom(p / existingProject.toString))
         actual <- StorageService.getProjectDirectory(existingProject)
       } yield assertTrue(expected == actual)
     },

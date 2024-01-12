@@ -37,7 +37,7 @@ final case class ProjectsEndpointsHandler(
           .mapBoth(
             InternalServerError(_),
             list =>
-              (list.map(ProjectResponse.make), ContentRange("items", Some(0, list.size), Some(list.size)).toString),
+              (list.map(ProjectResponse.from), ContentRange("items", Some(0, list.size), Some(list.size)).toString),
           )
     )
 
@@ -49,7 +49,7 @@ final case class ProjectsEndpointsHandler(
           .some
           .mapBoth(
             projectNotFoundOrServerError(_, shortcode),
-            _ => ProjectResponse.make(shortcode)
+            _ => ProjectResponse.from(shortcode)
           )
     )
 
@@ -61,7 +61,7 @@ final case class ProjectsEndpointsHandler(
           .some
           .mapBoth(
             projectNotFoundOrServerError(_, shortcode),
-            AssetCheckResultResponse.make
+            AssetCheckResultResponse.from
           )
     )
 
@@ -81,12 +81,12 @@ final case class ProjectsEndpointsHandler(
 
   private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
     .serverLogic(_ =>
-      code => bulkIngestService.startBulkIngest(code).logError.forkDaemon.as(ProjectResponse.make(code))
+      code => bulkIngestService.startBulkIngest(code).logError.forkDaemon.as(ProjectResponse.from(code))
     )
 
   private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
     .serverLogic(_ =>
-      code => bulkIngestService.finalizeBulkIngest(code).logError.forkDaemon.as(ProjectResponse.make(code))
+      code => bulkIngestService.finalizeBulkIngest(code).logError.forkDaemon.as(ProjectResponse.from(code))
     )
 
   private val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =

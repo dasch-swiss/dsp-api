@@ -6,7 +6,7 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FilenameUtils
-import swiss.dasch.domain.DerivativeFile.MovingImageDerivativeFile
+import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile
 import swiss.dasch.infrastructure.CommandExecutor
 import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
 import zio.nio.file.Path
@@ -18,9 +18,8 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
     for {
       fileExtension <- ensureSupportedFileType(original.originalFilename.toString)
       assetDir      <- storage.getAssetDirectory(assetRef)
-      derivativePath = assetDir / s"${assetRef.id}.$fileExtension"
-      derivative     = MovingImageDerivativeFile.unsafeFrom(derivativePath)
-      _             <- storage.copyFile(original.file.toPath, derivativePath)
+      derivative     = MovingImageDerivativeFile.unsafeFrom(assetDir / s"${assetRef.id}.$fileExtension")
+      _             <- storage.copyFile(original.file.path, derivative.path)
     } yield derivative
 
   private def ensureSupportedFileType(file: Path | String) = {
@@ -37,7 +36,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
   def extractKeyFrames(file: MovingImageDerivativeFile, assetRef: AssetRef): Task[Unit] =
     for {
       _       <- ZIO.logInfo(s"Extracting key frames for $file, $assetRef")
-      absPath <- file.toPath.toAbsolutePath
+      absPath <- file.path.toAbsolutePath
       cmd     <- executor.buildCommand("/sipi/scripts/export-moving-image-frames.sh", s"-i $absPath")
       _       <- executor.executeOrFail(cmd)
     } yield ()
@@ -47,12 +46,12 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
     _                          <- ZIO.logInfo(s"Extracting metadata for ${derivative.assetId}")
     ffprobeInfo                <- extractWithFfprobe(derivative)
     (dimensions, duration, fps) = ffprobeInfo
-    derivativeMimeType          = mimeTypeGuesser.guess(derivative.toPath)
+    derivativeMimeType          = mimeTypeGuesser.guess(derivative.path)
     originalMimeType            = mimeTypeGuesser.guess(original.originalFilename)
   } yield MovingImageMetadata(dimensions, duration, fps, derivativeMimeType, originalMimeType)
 
   private def extractWithFfprobe(derivative: MovingImageDerivativeFile) = for {
-    absPath <- derivative.toPath.toAbsolutePath
+    absPath <- derivative.path.toAbsolutePath
     cmd <-
       executor.buildCommand(
         "ffprobe",
@@ -109,8 +108,7 @@ object MovingImageService {
 
   def extractMetadata(
     original: Original,
-    file: MovingImageDerivativeFile,
-    assetRef: AssetRef
+    file: MovingImageDerivativeFile
   ): ZIO[MovingImageService, Throwable, MovingImageMetadata] =
     ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(original, file))
 

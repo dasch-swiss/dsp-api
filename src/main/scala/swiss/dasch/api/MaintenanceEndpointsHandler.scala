@@ -8,7 +8,7 @@ package swiss.dasch.api
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.api.ActionName.{ApplyTopLeftCorrection, UpdateAssetMetadata}
 import swiss.dasch.domain.*
-import zio.{Chunk, ZIO, ZLayer}
+import zio.{ZIO, ZLayer}
 
 final case class MaintenanceEndpointsHandler(
   fileChecksumService: FileChecksumService,
@@ -26,9 +26,8 @@ final case class MaintenanceEndpointsHandler(
           ZIO
             .ifZIO(ZIO.succeed(shortcodes.isEmpty))(
               projectService.listAllProjects(),
-              ZIO.succeed(Chunk.fromIterable(shortcodes))
+              projectService.findProjects(shortcodes)
             )
-            .flatMap(projectService.findProjects)
             .mapError(ApiProblem.InternalServerError(_))
         _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
         _ <- action match {

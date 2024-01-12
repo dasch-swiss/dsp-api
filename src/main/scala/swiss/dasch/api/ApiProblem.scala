@@ -6,8 +6,8 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiProblem.BadRequest.Argument
-import swiss.dasch.infrastructure.Status.DOWN
 import swiss.dasch.domain.ProjectShortcode
+import swiss.dasch.infrastructure.Status.DOWN
 import swiss.dasch.infrastructure.{HealthResponse, Status}
 import zio.http.Header.ContentType
 import zio.json.{DeriveJsonCodec, JsonCodec}

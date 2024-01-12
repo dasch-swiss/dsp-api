@@ -170,10 +170,10 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
   } yield ()
 
   override def createAssetInfo(asset: Asset): IO[FileNotFoundException, AssetInfo] = for {
-    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.toPath)
-    original            = FileAndChecksum(asset.original.file.toPath, checksumOriginal)
-    checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.toPath)
-    derivative          = FileAndChecksum(asset.derivative.toPath, checksumDerivative)
+    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.path)
+    original            = FileAndChecksum(asset.original.file.path, checksumOriginal)
+    checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.path)
+    derivative          = FileAndChecksum(asset.derivative.path, checksumDerivative)
   } yield AssetInfo(asset.ref, original, asset.original.originalFilename, derivative, asset.metadata)
 }
 

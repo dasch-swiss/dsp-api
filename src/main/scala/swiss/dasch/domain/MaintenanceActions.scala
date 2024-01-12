@@ -9,7 +9,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.api.ActionName
 import swiss.dasch.domain
-import swiss.dasch.domain.DerivativeFile.{JpxDerivativeFile, MovingImageDerivativeFile, OtherDerivativeFile}
+import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
 import swiss.dasch.domain.SupportedFileType.MovingImage
@@ -23,17 +23,17 @@ import zio.stream.{ZSink, ZStream}
 import java.io.IOException
 
 trait MaintenanceActions {
-  def updateAssetMetadata(projects: Iterable[ProjectPath]): Task[Unit]
+  def updateAssetMetadata(projects: Iterable[ProjectFolder]): Task[Unit]
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit]
   def createNeedsTopLeftCorrectionReport(): Task[Unit]
   def createWasTopLeftCorrectionAppliedReport(): Task[Unit]
-  def applyTopLeftCorrections(projectPath: ProjectPath): Task[Int]
-  final def applyTopLeftCorrections(projectPath: Iterable[ProjectPath]): Task[Int] =
+  def applyTopLeftCorrections(projectPath: ProjectFolder): Task[Int]
+  final def applyTopLeftCorrections(projectPath: Iterable[ProjectFolder]): Task[Int] =
     ZIO
       .foreach(projectPath)(applyTopLeftCorrections)
       .map(_.sum)
       .tap(sum => ZIO.logInfo(s"Finished ${ActionName.ApplyTopLeftCorrection} for $sum files"))
-  def createOriginals(projectPath: ProjectPath, mapping: Map[String, String]): Task[Int]
+  def createOriginals(projectPath: ProjectFolder, mapping: Map[String, String]): Task[Int]
 }
 
 final case class MaintenanceActionsLive(
@@ -47,7 +47,7 @@ final case class MaintenanceActionsLive(
   storageService: StorageService
 ) extends MaintenanceActions {
 
-  override def updateAssetMetadata(projects: Iterable[ProjectPath]): Task[Unit] = {
+  override def updateAssetMetadata(projects: Iterable[ProjectFolder]): Task[Unit] = {
     def updateSingleAsset(info: AssetInfo): Task[Unit] =
       for {
         assetType <- ZIO
@@ -58,19 +58,16 @@ final case class MaintenanceActionsLive(
       } yield ()
 
     def getMetadata(info: AssetInfo, assetType: SupportedFileType): Task[AssetMetadata] = {
-      val original = Original(OriginalFile.unsafeFrom(info.original.file), info.originalFilename)
+      val original = Original(OrigFile.unsafeFrom(info.original.file), info.originalFilename)
       assetType match {
         case SupportedFileType.StillImage =>
-          val derivative = JpxDerivativeFile.unsafeFrom(info.derivative.file)
-          imageService.extractMetadata(original, derivative)
+          imageService.extractMetadata(original, JpxDerivativeFile.unsafeFrom(info.derivative.file))
 
         case SupportedFileType.MovingImage =>
-          val derivative = MovingImageDerivativeFile.unsafeFrom(info.derivative.file)
-          movingImageService.extractMetadata(original, derivative)
+          movingImageService.extractMetadata(original, MovingImageDerivativeFile.unsafeFrom(info.derivative.file))
 
         case SupportedFileType.OtherFiles =>
-          val derivative = OtherDerivativeFile.unsafeFrom(info.derivative.file)
-          otherFilesService.extractMetadata(original, derivative)
+          otherFilesService.extractMetadata(original, OtherDerivativeFile.unsafeFrom(info.derivative.file))
       }
     }
 
@@ -88,17 +85,16 @@ final case class MaintenanceActionsLive(
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit] = {
     val reportName = if (imagesOnly) "needsOriginals_images_only" else "needsOriginals"
     for {
-      _                 <- ZIO.logInfo(s"Checking for originals")
-      assetDir          <- storageService.getAssetDirectory()
-      tmpDir            <- storageService.getTempDirectory()
-      projectShortcodes <- projectService.listAllProjects()
+      _        <- ZIO.logInfo(s"Checking for originals")
+      tmpDir   <- storageService.getTempDirectory()
+      projects <- projectService.listAllProjects()
       _ <- ZIO
-             .foreach(projectShortcodes)(shortcode =>
+             .foreach(projects)(prj =>
                Files
-                 .walk(assetDir / shortcode.toString)
+                 .walk(prj.path)
                  .mapZIOPar(8)(originalNotPresent(imagesOnly))
                  .filter(identity)
-                 .as(shortcode)
+                 .as(prj.shortcode)
                  .runHead
              )
              .map(_.flatten.map(_.toString))
@@ -138,19 +134,18 @@ final case class MaintenanceActionsLive(
 
   override def createNeedsTopLeftCorrectionReport(): Task[Unit] =
     for {
-      _                 <- ZIO.logInfo(s"Checking for top left correction")
-      assetDir          <- storageService.getAssetDirectory()
-      tmpDir            <- storageService.getTempDirectory()
-      projectShortcodes <- projectService.listAllProjects()
+      _        <- ZIO.logInfo(s"Checking for top left correction")
+      tmpDir   <- storageService.getTempDirectory()
+      projects <- projectService.listAllProjects()
       _ <-
         ZIO
-          .foreach(projectShortcodes)(shortcode =>
+          .foreach(projects)(prj =>
             Files
-              .walk(assetDir / shortcode.toString)
+              .walk(prj.path)
               .mapZIOPar(8)(imageService.needsTopLeftCorrection)
               .filter(identity)
               .runHead
-              .map(_.map(_ => shortcode))
+              .map(_.map(_ => prj.shortcode))
           )
           .map(_.flatten)
           .map(_.map(_.toString))
@@ -173,20 +168,19 @@ final case class MaintenanceActionsLive(
 
   override def createWasTopLeftCorrectionAppliedReport(): Task[Unit] =
     for {
-      _                 <- ZIO.logInfo(s"Checking where top left correction was applied")
-      assetDir          <- storageService.getAssetDirectory()
-      tmpDir            <- storageService.getTempDirectory()
-      projectShortcodes <- projectService.listAllProjects()
+      _        <- ZIO.logInfo(s"Checking where top left correction was applied")
+      tmpDir   <- storageService.getTempDirectory()
+      projects <- projectService.listAllProjects()
       assetsWithBak <-
         ZIO
-          .foreach(projectShortcodes) { shortcode =>
+          .foreach(projects) { prj =>
             Files
-              .walk(assetDir / shortcode.toString)
+              .walk(prj.path)
               .flatMapPar(8)(hasBeenTopLeftTransformed)
               .runCollect
               .map { assetIdDimensions =>
                 ProjectWithBakFiles(
-                  shortcode,
+                  prj.shortcode,
                   assetIdDimensions.map { case (id: AssetId, dim: Dimensions) => ReportAsset(id, dim) }
                 )
               }
@@ -205,11 +199,10 @@ final case class MaintenanceActionsLive(
       // must have a corresponding Jpeg2000 derivative
       bakFilename        = bakFile.filename.toString
       derivativeFilename = bakFilename.substring(0, bakFilename.length - ".bak".length)
-      derivativeFile     = path.parent.map(_ / derivativeFilename).orNull
-      _                 <- ZIO.fail(None).whenZIO(FileFilters.isJpeg2000(derivativeFile).negate.asSomeError)
-      jpxDerivative      = JpxDerivativeFile.unsafeFrom(derivativeFile)
+      derivative         = JpxDerivativeFile.unsafeFrom(path.parent.head / derivativeFilename)
+      _                 <- ZIO.fail(None).whenZIO(FileFilters.isJpeg2000(derivative.file).negate.asSomeError)
       // get the dimensions
-      dimensions <- imageService.getDimensions(jpxDerivative).asSomeError
+      dimensions <- imageService.getDimensions(derivative).asSomeError
     } yield (assetId, dimensions)
 
     ZStream.fromZIOOption(
@@ -221,7 +214,7 @@ final case class MaintenanceActionsLive(
     )
   }
 
-  override def applyTopLeftCorrections(projectPath: ProjectPath): Task[Int] =
+  override def applyTopLeftCorrections(projectPath: ProjectFolder): Task[Int] =
     ZIO.logInfo(s"Starting top left corrections in ${projectPath.path}") *>
       findJpeg2000Files(projectPath)
         .mapZIOPar(8)(imageService.applyTopLeftCorrection)
@@ -229,9 +222,9 @@ final case class MaintenanceActionsLive(
         .run(ZSink.sum)
         .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in ${projectPath.path}"))
 
-  private def findJpeg2000Files(projectPath: ProjectPath) = StorageService.findInPath(projectPath.path, isJpeg2000)
+  private def findJpeg2000Files(projectPath: ProjectFolder) = StorageService.findInPath(projectPath.path, isJpeg2000)
 
-  override def createOriginals(projectPath: ProjectPath, mapping: Map[String, String]): Task[Int] =
+  override def createOriginals(projectPath: ProjectFolder, mapping: Map[String, String]): Task[Int] =
     findJpeg2000Files(projectPath)
       .flatMap(findAssetsWithoutOriginal(_, mapping))
       .mapZIOPar(8)(createOriginalAndUpdateInfoFile)
@@ -307,7 +300,7 @@ final case class MaintenanceActionsLive(
         _    <- Files.deleteIfExists(infoFilePath) *> Files.createFile(infoFilePath)
         _    <- Files.writeBytes(infoFilePath, Chunk.fromArray(info.toJsonPretty.getBytes))
       } yield 1)
-      .someOrElseZIO(ZIO.logWarning(s"Sipi did not create an original for $c") *> ZIO.succeed(0))
+      .someOrElseZIO(ZIO.logWarning(s"Sipi did not create an original for $c").as(0))
   }
 
   private def createNewAssetInfoFileContent(c: CreateOriginalFor): IO[Throwable, AssetInfoFileContent] =

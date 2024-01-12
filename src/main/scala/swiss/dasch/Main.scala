@@ -47,7 +47,7 @@ object Main extends ZIOAppDefault {
         MonitoringEndpointsHandler.layer,
         MovingImageService.layer,
         OtherFilesService.layer,
-        ProjectServiceLive.layer,
+        ProjectService.layer,
         ProjectsEndpoints.layer,
         ProjectsEndpointsHandler.layer,
         ReportServiceLive.layer,

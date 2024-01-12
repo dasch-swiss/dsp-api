@@ -20,6 +20,7 @@ import swiss.dasch.api.ProjectsEndpointsResponses.{
   UploadResponse
 }
 import swiss.dasch.domain.*
+import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
 import zio.{Chunk, ZLayer}
@@ -28,7 +29,8 @@ object ProjectsEndpointsResponses {
   final case class ProjectResponse(id: String)
 
   object ProjectResponse {
-    def make(shortcode: ProjectShortcode): ProjectResponse = ProjectResponse(shortcode.value)
+    def from(shortcode: ProjectShortcode): ProjectResponse = ProjectResponse(shortcode.value)
+    def from(folder: ProjectFolder): ProjectResponse       = ProjectResponse(folder.shortcode.value)
 
     given schema: Schema[ProjectResponse]   = DeriveSchema.gen[ProjectResponse]
     given codec: JsonCodec[ProjectResponse] = DeriveJsonCodec.gen[ProjectResponse]
@@ -37,7 +39,7 @@ object ProjectsEndpointsResponses {
   final case class SingleFileCheckResultResponse(filename: String, checksumMatches: Boolean)
 
   private object SingleFileCheckResultResponse {
-    def make(result: ChecksumResult): SingleFileCheckResultResponse =
+    def from(result: ChecksumResult): SingleFileCheckResultResponse =
       SingleFileCheckResultResponse(result.file.filename.toString, result.checksumMatches)
 
     given codec: JsonCodec[SingleFileCheckResultResponse] = DeriveJsonCodec.gen[SingleFileCheckResultResponse]
@@ -53,11 +55,11 @@ object ProjectsEndpointsResponses {
 
   private object AssetCheckResultEntry {
 
-    def make(assetInfo: AssetInfo, results: Chunk[ChecksumResult]): AssetCheckResultEntry =
+    def from(assetInfo: AssetInfo, results: Chunk[ChecksumResult]): AssetCheckResultEntry =
       AssetCheckResultEntry(
         assetInfo.assetRef.id.value,
         assetInfo.originalFilename.toString,
-        results.map(SingleFileCheckResultResponse.make).toList
+        results.map(SingleFileCheckResultResponse.from).toList
       )
 
     given codec: JsonCodec[AssetCheckResultEntry] = DeriveJsonCodec.gen[AssetCheckResultEntry]
@@ -84,9 +86,9 @@ object ProjectsEndpointsResponses {
 
     given schema: Schema[AssetCheckResultResponse] = DeriveSchema.gen[AssetCheckResultResponse]
 
-    def make(report: Report): AssetCheckResultResponse = {
+    def from(report: Report): AssetCheckResultResponse = {
       val reportResults = report.results
-      val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.make(info, checksum) }.toList
+      val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.from(info, checksum) }.toList
       val summary = AssetCheckResultSummary(
         reportResults.keys.size,
         reportResults.values.map(_.size).sum,

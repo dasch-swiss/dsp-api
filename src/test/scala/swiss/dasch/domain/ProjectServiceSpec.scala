@@ -15,21 +15,20 @@ import zio.{Chunk, Scope, ZIO, ZLayer}
 
 object ProjectServiceSpec extends ZIOSpecDefault {
 
-  private val listAllProjectsSuite = suite("listAllProjects")(
-    test("should list all projects which contain assets in the asset directory") {
-      for {
-        projects <- ProjectService.listAllProjects()
-      } yield assertTrue(projects == Chunk(existingProject))
-    }
-  )
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ProjectService")(
-      listAllProjectsSuite,
+      suite("listAllProjects")(
+        test("should list all projects which contain assets in the asset directory") {
+          for {
+            projects <- ProjectService.listAllProjects()
+          } yield assertTrue(projects.map(_.shortcode) == Chunk(existingProject))
+        }
+      ),
       suite("findProject path")(
         test("should find existing projects which contain at least one non hidden regular file") {
           for {
             project <- ProjectService.findProject(existingProject)
-          } yield assertTrue(project.isDefined)
+          } yield assertTrue(project.map(_.shortcode).contains(existingProject))
         },
         test("should not find not existing projects") {
           for {
@@ -65,7 +64,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
-      ProjectServiceLive.layer,
+      ProjectService.layer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer
     )

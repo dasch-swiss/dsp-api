@@ -8,9 +8,15 @@ package swiss.dasch.domain
 import org.apache.commons.io.FilenameUtils
 import zio.nio.file.Path
 
+import java.nio.file.Files
+
 object PathOps {
   extension (path: Path) {
     def fileExtension: String =
       Option(FilenameUtils.getExtension(path.filename.toString)).getOrElse("")
+
+    def isDirectory: Boolean = Files.isDirectory(path.toFile.toPath)
+
+    def isHidden: Boolean = Files.isHidden(path.toFile.toPath)
   }
 }
