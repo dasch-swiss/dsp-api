@@ -41,8 +41,10 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[CacheServiceRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case CacheServicePutUserADM(value)      => cacheService.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
-    case CacheServiceGetUserADM(identifier) => cacheService.getUserADM(identifier)
+    case CacheServicePutUserADM(value)              => cacheService.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
+    case CacheServiceGetUserByIriADM(iri)           => cacheService.getUserByIriADM(iri)
+    case CacheServiceGetUserByEmailADM(email)       => cacheService.getUserByEmailADM(email)
+    case CacheServiceGetUserByUsernameADM(username) => cacheService.getUserByUsernameADM(username)
     case CacheServicePutProjectADM(value) =>
       cacheService.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
     case CacheServiceGetProjectADM(identifier) =>

@@ -9,12 +9,9 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.*
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].
@@ -34,17 +31,17 @@ class CacheServiceManagerSpec extends CoreSpec {
     }
 
     "successfully retrieve a user by IRI" in {
-      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+      appActor ! CacheServiceGetUserByIriADM(UserIri.unsafeFrom(user.id))
       expectMsg(Some(user))
     }
 
     "successfully retrieve a user by USERNAME" in {
-      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      appActor ! CacheServiceGetUserByUsernameADM(Username.unsafeFrom(user.username))
       expectMsg(Some(user))
     }
 
     "successfully retrieve a user by EMAIL" in {
-      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      appActor ! CacheServiceGetUserByEmailADM(Email.unsafeFrom(user.email))
       expectMsg(Some(user))
     }
 
