@@ -10,7 +10,6 @@ import spray.json.*
 import zio.prelude.Validation
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
@@ -20,7 +19,7 @@ import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.{AdminKnoraResponseADM, KnoraResponseADM}
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
@@ -711,7 +710,7 @@ object UserUpdatePasswordPayloadADM {
  *
  * @param members the group's members.
  */
-case class GroupMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM {
+case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM {
   def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
 }
 

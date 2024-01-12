@@ -11,13 +11,12 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.{AdminKnoraResponseADM, KnoraResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -191,7 +190,7 @@ case class GroupChangeStatusRequestADM(
  *
  * @param groups information about all existing groups.
  */
-case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
+case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupsGetResponseADMFormat.write(this)
 }
 
@@ -200,7 +199,7 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM 
  *
  * @param group all information about the group.
  */
-case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
+case class GroupGetResponseADM(group: GroupADM) extends AdminKnoraResponseADM with GroupsADMJsonProtocol {
   def toJsValue = groupResponseADMFormat.write(this)
 }
 
