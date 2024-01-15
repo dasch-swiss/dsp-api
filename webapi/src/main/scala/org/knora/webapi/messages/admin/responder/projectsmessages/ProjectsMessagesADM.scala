@@ -19,7 +19,6 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -30,7 +29,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
@@ -161,7 +160,7 @@ case class ProjectChangeRequestADM(
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 }
 
@@ -170,7 +169,7 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectGetResponseADM(project: ProjectADM) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectResponseADMFormat.write(this)
 }
 
@@ -179,7 +178,7 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
  *
  * @param members a list of members.
  */
-case class ProjectMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectMembersGetResponseADMFormat.write(this)
 }
@@ -189,7 +188,7 @@ case class ProjectMembersGetResponseADM(members: Seq[User]) extends KnoraRespons
  *
  * @param members a list of admin members.
  */
-case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 }
@@ -199,7 +198,7 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends KnoraRe
  *
  * @param keywords a list of keywords.
  */
-case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
 }
 
@@ -208,7 +207,7 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRe
  *
  * @param keywords a list of keywords.
  */
-case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 }
 
@@ -218,7 +217,7 @@ case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRes
  * @param settings the restricted view settings.
  */
 case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
-    extends KnoraResponseADM
+    extends AdminKnoraResponseADM
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
@@ -234,7 +233,7 @@ object ProjectRestrictedViewSizeResponseADM {
  *
  * @param project the new project info of the created/modified project.
  */
-case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectOperationResponseADM(project: ProjectADM) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 

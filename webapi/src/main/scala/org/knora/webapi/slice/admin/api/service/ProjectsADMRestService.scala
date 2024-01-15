@@ -181,11 +181,10 @@ final case class ProjectsADMRestServiceLive(
    */
   def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM] =
     for {
-      project  <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _        <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      internal <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
-      external <- format.toExternal(internal)
-    } yield ProjectDataGetResponseADM(external)
+      project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
+      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+    } yield ProjectDataGetResponseADM(result)
 
   /**
    * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
@@ -278,12 +277,11 @@ final case class ProjectsADMRestServiceLive(
     setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      size     <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
-      project  <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _        <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      _        <- projectRepo.setProjectRestrictedViewSize(project, size)
-      external <- format.toExternal(size)
-    } yield ProjectRestrictedViewSizeResponseADM(external)
+      size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
+      project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      _       <- projectRepo.setProjectRestrictedViewSize(project, size)
+    } yield ProjectRestrictedViewSizeResponseADM(size)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
@@ -310,14 +308,12 @@ final case class ProjectsADMRestServiceLive(
           case Some(export) => export.toAbsolutePath.map(_.toString)
           case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
         }
-    external <- format.toExternal(path)
-  } yield ProjectImportResponse(external)
+  } yield ProjectImportResponse(path)
 
   override def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
-    _        <- permissionService.ensureSystemAdmin(user)
-    exports  <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
-    external <- format.toExternal(exports)
-  } yield external
+    _       <- permissionService.ensureSystemAdmin(user)
+    exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
+  } yield exports
 }
 
 object ProjectsADMRestServiceLive {

@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import zio.*
 import zio.mock.*
 import zio.test.*
-
 import dsp.valueobjects.V2.*
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -27,6 +26,7 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
+import org.knora.webapi.slice.common.api.{AuthorizationRestServiceLive, KnoraResponseRenderer}
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -63,15 +63,17 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   private def projectServiceLayer(exp: Expectation[ProjectsResponderADM]): ULayer[ProjectADMRestService] =
     ZLayer.make[ProjectADMRestService](
-      ProjectsADMRestServiceLive.layer,
-      exp.toLayer,
-      org.knora.webapi.slice.common.api.AuthorizationRestServiceLive.layer,
-      ProjectExportServiceStub.layer,
-      KnoraProjectRepoInMemory.layer,
-      ProjectImportServiceLive.layer,
-      ProjectExportStorageServiceLive.layer,
       AppConfig.layer,
-      DspIngestClientMock.layer
+      AuthorizationRestServiceLive.layer,
+      DspIngestClientMock.layer,
+      KnoraProjectRepoInMemory.layer,
+      KnoraResponseRenderer.layer,
+      ProjectExportServiceStub.layer,
+      ProjectExportStorageServiceLive.layer,
+      ProjectImportServiceLive.layer,
+      ProjectsADMRestServiceLive.layer,
+      StringFormatter.live,
+      exp.toLayer
     )
 
   val getAllProjectsSpec: Spec[Any, Throwable] = test("get all projects") {
