@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.RestrictedViewSize
@@ -27,7 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.{AuthorizationRestService, KnoraResponseRenderer}
 
 @accessible
 trait ProjectADMRestService {
@@ -76,6 +75,7 @@ trait ProjectADMRestService {
 }
 
 final case class ProjectsADMRestServiceLive(
+  format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
   projectExportService: ProjectExportService,
@@ -91,8 +91,10 @@ final case class ProjectsADMRestServiceLive(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllProjects(): Task[ProjectsGetResponseADM] =
-    responder.projectsGetRequestADM(withSystemProjects = false)
+  def listAllProjects(): Task[ProjectsGetResponseADM] = for {
+    internal <- responder.projectsGetRequestADM(withSystemProjects = false)
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
@@ -103,7 +105,10 @@ final case class ProjectsADMRestServiceLive(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    */
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = responder.getSingleProjectADMRequest(id)
+  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
+    internal <- responder.getSingleProjectADMRequest(id)
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Creates a project from the given payload.
@@ -117,8 +122,10 @@ final case class ProjectsADMRestServiceLive(
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] =
-    ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
+  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
+    internal <- ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Deletes the project by its [[ProjectIri]].
@@ -135,8 +142,9 @@ final case class ProjectsADMRestServiceLive(
     val updatePayload = ProjectUpdateRequest(status = Some(Status.Inactive))
     for {
       apiId    <- Random.nextUUID
-      response <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
-    } yield response
+      internal <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
+      external <- format.toExternal(internal)
+    } yield external
   }
 
   /**
@@ -155,8 +163,10 @@ final case class ProjectsADMRestServiceLive(
     id: IriIdentifier,
     updateReq: ProjectUpdateRequest,
     user: User
-  ): Task[ProjectOperationResponseADM] =
-    Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
+  ): Task[ProjectOperationResponseADM] = for {
+    internal <- Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].
@@ -171,10 +181,11 @@ final case class ProjectsADMRestServiceLive(
    */
   def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM] =
     for {
-      project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
-    } yield ProjectDataGetResponseADM(result)
+      project  <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
+      _        <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      internal <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+      external <- format.toExternal(internal)
+    } yield ProjectDataGetResponseADM(external)
 
   /**
    * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
@@ -187,8 +198,10 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] =
-    responder.projectMembersGetRequestADM(id, user)
+  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] = for {
+    internal <- responder.projectMembersGetRequestADM(id, user)
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Returns all project admins of a specific project, identified by its [[ProjectIdentifierADM]].
@@ -204,8 +217,10 @@ final case class ProjectsADMRestServiceLive(
   def getProjectAdminMembers(
     user: User,
     id: ProjectIdentifierADM
-  ): Task[ProjectAdminMembersGetResponseADM] =
-    responder.projectAdminMembersGetRequestADM(id, user)
+  ): Task[ProjectAdminMembersGetResponseADM] = for {
+    internal <- responder.projectAdminMembersGetRequestADM(id, user)
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Returns all keywords of all projects.
@@ -215,7 +230,10 @@ final case class ProjectsADMRestServiceLive(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] = responder.projectsKeywordsGetRequestADM()
+  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] = for {
+    internal <- responder.projectsKeywordsGetRequestADM()
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Returns all keywords of a specific project, identified by its [[ProjectIri]].
@@ -226,8 +244,10 @@ final case class ProjectsADMRestServiceLive(
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM] =
-    responder.projectKeywordsGetRequestADM(iri)
+  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM] = for {
+    internal <- responder.projectKeywordsGetRequestADM(iri)
+    external <- format.toExternal(internal)
+  } yield external
 
   /**
    * Returns the restricted view settings of a specific project, identified by its [[ProjectIri]].
@@ -239,7 +259,10 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    responder.projectRestrictedViewSettingsGetRequestADM(id)
+    for {
+      internal <- responder.projectRestrictedViewSettingsGetRequestADM(id)
+      external <- format.toExternal(internal)
+    } yield external
 
   /**
    * Sets project's restricted view settings.
@@ -255,11 +278,12 @@ final case class ProjectsADMRestServiceLive(
     setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
-      project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      _       <- projectRepo.setProjectRestrictedViewSize(project, size)
-    } yield ProjectRestrictedViewSizeResponseADM(size)
+      size     <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
+      project  <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _        <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      _        <- projectRepo.setProjectRestrictedViewSize(project, size)
+      external <- format.toExternal(size)
+    } yield ProjectRestrictedViewSizeResponseADM(external)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
@@ -286,17 +310,19 @@ final case class ProjectsADMRestServiceLive(
           case Some(export) => export.toAbsolutePath.map(_.toString)
           case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
         }
-  } yield ProjectImportResponse(path)
+    external <- format.toExternal(path)
+  } yield ProjectImportResponse(external)
 
   override def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
-    _       <- permissionService.ensureSystemAdmin(user)
-    exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
-  } yield exports
+    _        <- permissionService.ensureSystemAdmin(user)
+    exports  <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
+    external <- format.toExternal(exports)
+  } yield external
 }
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & AuthorizationRestService,
+    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & AuthorizationRestService,
     ProjectsADMRestServiceLive
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }
