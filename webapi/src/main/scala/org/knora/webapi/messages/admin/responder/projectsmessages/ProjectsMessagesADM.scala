@@ -19,6 +19,7 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -160,7 +161,9 @@ case class ProjectChangeRequestADM(
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
+    extends AdminKnoraResponseADM
+    with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsResponseADMFormat.write(this)
 }
 
@@ -188,7 +191,9 @@ case class ProjectMembersGetResponseADM(members: Seq[User]) extends AdminKnoraRe
  *
  * @param members a list of admin members.
  */
-case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectAdminMembersGetResponseADM(members: Seq[User])
+    extends AdminKnoraResponseADM
+    with ProjectsADMJsonProtocol {
 
   def toJsValue: JsValue = projectAdminMembersGetResponseADMFormat.write(this)
 }
@@ -198,7 +203,9 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[User]) extends AdminKn
  *
  * @param keywords a list of keywords.
  */
-case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectsKeywordsGetResponseADM(keywords: Seq[String])
+    extends AdminKnoraResponseADM
+    with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
 }
 
@@ -207,7 +214,9 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends AdminKn
  *
  * @param keywords a list of keywords.
  */
-case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectKeywordsGetResponseADM(keywords: Seq[String])
+    extends AdminKnoraResponseADM
+    with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 }
 

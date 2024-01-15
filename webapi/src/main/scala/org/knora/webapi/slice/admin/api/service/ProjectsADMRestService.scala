@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.macros.accessible
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.RestrictedViewSize
@@ -26,7 +27,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.common.api.{AuthorizationRestService, KnoraResponseRenderer}
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 @accessible
 trait ProjectADMRestService {

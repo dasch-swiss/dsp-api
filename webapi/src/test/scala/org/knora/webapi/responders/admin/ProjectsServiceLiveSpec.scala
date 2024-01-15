@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import zio.*
 import zio.mock.*
 import zio.test.*
+
 import dsp.valueobjects.V2.*
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -26,7 +27,8 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
-import org.knora.webapi.slice.common.api.{AuthorizationRestServiceLive, KnoraResponseRenderer}
+import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
