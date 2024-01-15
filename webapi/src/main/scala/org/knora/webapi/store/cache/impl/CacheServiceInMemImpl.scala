@@ -11,13 +11,14 @@ import zio.stm.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
@@ -57,20 +58,11 @@ case class CacheServiceInMemImpl(
       _ <- lut.put(value.email, value.id)
     } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored UserADM to Cache: ${value.id}"))
 
-  /**
-   * Retrieves the user stored under the identifier (either iri, username, or email).
-   *
-   * The data is stored under the IRI key.
-   * Additionally, the USERNAME and EMAIL keys point to the IRI key
-   *
-   * @param identifier the user identifier.
-   */
-  def getUserADM(identifier: UserIdentifierADM): Task[Option[User]] =
-    (identifier.hasType match {
-      case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
-      case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
-      case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toEmail)
-    }).tap(_ => ZIO.logDebug(s"Retrieved UserADM from Cache: ${identifier}"))
+  override def getUserByIriADM(iri: UserIri): Task[Option[User]] = getUserByIri(iri.value)
+
+  override def getUserByUsernameADM(username: Username): Task[Option[User]] = getUserByUsernameOrEmail(username.value)
+
+  override def getUserByEmailADM(email: Email): Task[Option[User]] = getUserByUsernameOrEmail(email.value)
 
   /**
    * Retrieves the user stored under the IRI.

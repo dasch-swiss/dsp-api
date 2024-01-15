@@ -21,7 +21,6 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
@@ -30,7 +29,10 @@ import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
 import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 
@@ -43,7 +45,9 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse]                      = ???
   override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]                    = ???
   override def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[Boolean]         = ???
-  override def getUserByIdentifier(identifier: UserIdentifierADM): Task[User]                            = ???
+  override def getUserByIri(identifier: UserIri): Task[User]                                             = ???
+  override def getUserByEmail(identifier: Email): Task[User]                                             = ???
+  override def getUserByUsername(identifier: Username): Task[User]                                       = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())

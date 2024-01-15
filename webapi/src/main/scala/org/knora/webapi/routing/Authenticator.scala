@@ -7,7 +7,12 @@ package org.knora.webapi.routing
 
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.codec.binary.Base32
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers
+import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
+import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.util.ByteString
 import org.slf4j.LoggerFactory
 import spray.json.*
 import zio.*
@@ -31,15 +36,11 @@ import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_INACTIVE
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_NOT_FOUND
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.util.cache.CacheUtil
-
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.model.headers
-import pekko.http.scaladsl.model.headers.HttpCookie
-import pekko.http.scaladsl.model.headers.HttpCookiePair
-import pekko.http.scaladsl.server.RequestContext
-import pekko.util.ByteString
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -142,7 +143,9 @@ trait Authenticator {
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  def getUserByIdentifier(identifier: UserIdentifierADM): Task[User]
+  def getUserByIri(identifier: UserIri): Task[User]
+  def getUserByEmail(identifier: Email): Task[User]
+  def getUserByUsername(identifier: Username): Task[User]
 }
 
 object Authenticator {
@@ -173,8 +176,12 @@ final case class AuthenticatorLive(
    */
   override def doLoginV2(credentials: KnoraPasswordCredentialsV2): Task[HttpResponse] =
     for {
-      _           <- authenticateCredentialsV2(credentials = Some(credentials))
-      userADM     <- getUserByIdentifier(credentials.identifier)
+      _ <- authenticateCredentialsV2(credentials = Some(credentials))
+      userADM <- credentials.identifier match {
+                   case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
+                   case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
+                   case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
+                 }
       cookieDomain = Some(appConfig.cookieDomain)
       jwtString   <- jwtService.createJwt(userADM).map(_.jwtString)
 
@@ -393,7 +400,11 @@ final case class AuthenticatorLive(
       result <- credentials match {
                   case Some(passCreds: KnoraPasswordCredentialsV2) =>
                     for {
-                      user <- getUserByIdentifier(passCreds.identifier)
+                      user <- passCreds.identifier match {
+                                case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
+                                case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
+                                case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
+                              }
 
                       /* check if the user is active, if not, then no need to check the password */
                       _ <- ZIO.fail(BadCredentialsException(BAD_CRED_USER_INACTIVE)).when(!user.isActive)
@@ -467,20 +478,12 @@ final case class AuthenticatorLive(
 
     val maybePassword: Option[String] = params.get("password").map(_.head)
 
-    val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
-      Some(
-        KnoraPasswordCredentialsV2(
-          UserIdentifierADM(
-            maybeIri = maybeIriIdentifier,
-            maybeEmail = maybeEmailIdentifier,
-            maybeUsername = maybeUsernameIdentifier
-          ),
-          maybePassword.get
-        )
-      )
-    } else {
-      None
-    }
+    val maybePassCreds: Option[KnoraPasswordCredentialsV2] =
+      if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty)
+        CredentialsIdentifier
+          .fromOptions(iri = maybeIriIdentifier, email = maybeEmailIdentifier, username = maybeUsernameIdentifier)
+          .map(KnoraPasswordCredentialsV2(_, maybePassword.get))
+      else None
 
     val maybeToken: Option[String] = params get "token" map (_.head)
 
@@ -547,11 +550,16 @@ final case class AuthenticatorLive(
             (None, None)
         }
 
-        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-          Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = maybeEmail), maybePassword.get))
-        } else {
-          None
-        }
+        val maybePassCreds: Option[KnoraPasswordCredentialsV2] =
+          (maybeEmail, maybePassword) match {
+            case (Some(email), Some(password)) =>
+              Email
+                .from(email)
+                .toOption
+                .map(CredentialsIdentifier.EmailIdentifier)
+                .map(KnoraPasswordCredentialsV2(_, password))
+            case _ => None
+          }
 
         // and the bearer scheme
         val maybeToken = credsArr.find(_.contains("Bearer")) match {
@@ -599,7 +607,11 @@ final case class AuthenticatorLive(
 
       user <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) =>
-                  getUserByIdentifier(passCreds.identifier)
+                  passCreds.identifier match {
+                    case CredentialsIdentifier.IriIdentifier(userIri)       => getUserByIri(userIri)
+                    case CredentialsIdentifier.EmailIdentifier(email)       => getUserByEmail(email)
+                    case CredentialsIdentifier.UsernameIdentifier(username) => getUserByUsername(username)
+                  }
                 case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                   for {
                     userIri <-
@@ -609,7 +621,10 @@ final case class AuthenticatorLive(
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         )
-                    user <- getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
+                    iri <- ZIO
+                             .fromEither(UserIri.from(userIri))
+                             .orElseFail(AuthenticationException("Empty user identifier is not allowed."))
+                    user <- getUserByIri(iri)
                   } yield user
                 case Some(KnoraSessionCredentialsV2(sessionToken)) =>
                   for {
@@ -620,7 +635,10 @@ final case class AuthenticatorLive(
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         )
-                    user <- getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
+                    iri <- ZIO
+                             .fromEither(UserIri.from(userIri))
+                             .orElseFail(AuthenticationException("Empty user identifier is not allowed."))
+                    user <- getUserByIri(iri)
                   } yield user
                 case None =>
                   ZIO.fail(BadCredentialsException(BAD_CRED_NONE_SUPPLIED))
@@ -634,14 +652,46 @@ final case class AuthenticatorLive(
   /**
    * Tries to get a [[User]].
    *
-   * @param identifier           the IRI, email, or username of the user to be queried
+   * @param iri           the IRI of the user to be queried
    * @return a [[User]]
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  override def getUserByIdentifier(identifier: UserIdentifierADM): Task[User] =
+  override def getUserByIri(iri: UserIri): Task[User] =
     messageRelay
-      .ask[Option[User]](UserGetADM(identifier, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
+      .ask[Option[User]](UserGetByIriADM(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
+      .flatMap(ZIO.fromOption(_))
+      .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
+
+  /**
+   * Tries to get a [[User]].
+   *
+   * @param email           the IRI, email, or username of the user to be queried
+   * @return a [[User]]
+   *
+   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
+   */
+  override def getUserByEmail(email: Email): Task[User] =
+    messageRelay
+      .ask[Option[User]](
+        UserGetByEmailADM(email, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      )
+      .flatMap(ZIO.fromOption(_))
+      .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
+
+  /**
+   * Tries to get a [[User]].
+   *
+   * @param username           the IRI, email, or username of the user to be queried
+   * @return a [[User]]
+   *
+   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
+   */
+  override def getUserByUsername(username: Username): Task[User] =
+    messageRelay
+      .ask[Option[User]](
+        UserGetByUsernameADM(username, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      )
       .flatMap(ZIO.fromOption(_))
       .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
 

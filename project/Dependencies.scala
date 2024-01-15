@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.20"
+  val ZioVersion                  = "2.0.21"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -66,7 +66,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.10" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.11" // the logging interface
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"

@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembers
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
@@ -89,26 +90,17 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeIri = Some(rootUser.id)),
+        appActor ! UserGetByIriADM(
+          identifier = UserIri.unsafeFrom(rootUser.id),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
-      "return a profile if the user (incunabula user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeIri = Some(incunabulaProjectAdminUser.id)),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
-      }
-
       "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
+        appActor ! UserGetByIriRequestADM(
+          identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -116,8 +108,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
+        appActor ! UserGetByIriADM(
+          identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -127,26 +119,17 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about an user identified by 'email'" should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeEmail = Some(rootUser.email)),
+        appActor ! UserGetByEmailADM(
+          email = Email.unsafeFrom(rootUser.email),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
-      "return a profile if the user (incunabula user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeEmail = Some(incunabulaProjectAdminUser.email)),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
-      }
-
       "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
+        appActor ! UserGetByEmailRequestADM(
+          email = Email.unsafeFrom("userwrong@example.com"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -154,8 +137,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
+        appActor ! UserGetByEmailADM(
+          email = Email.unsafeFrom("userwrong@example.com"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -165,26 +148,17 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about an user identified by 'username'" should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeUsername = Some(rootUser.username)),
+        appActor ! UserGetByUsernameADM(
+          username = Username.unsafeFrom(rootUser.username),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
-      "return a profile if the user (incunabula user) is known" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeUsername = Some(incunabulaProjectAdminUser.username)),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Some(incunabulaProjectAdminUser.ofType(UserInformationTypeADM.Full)))
-      }
-
       "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
+        appActor ! UserGetByUsernameRequestADM(
+          username = Username.unsafeFrom("userwrong"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -192,8 +166,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetADM(
-          identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
+        appActor ! UserGetByUsernameADM(
+          username = Username.unsafeFrom("userwrong"),
           userInformationTypeADM = UserInformationTypeADM.Full,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -360,14 +334,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
-        val resF = UnsafeZioRun.runToFuture(
-          Authenticator.authenticateCredentialsV2(
-            credentials = Some(
-              KnoraCredentialsV2
-                .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")
-            )
-          )
-        )
+        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
+        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test123456")
+        val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
 
         resF map { res => assert(res) }
       }
@@ -389,14 +358,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
-        val resF = UnsafeZioRun.runToFuture(
-          Authenticator.authenticateCredentialsV2(
-            credentials = Some(
-              KnoraCredentialsV2
-                .KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")
-            )
-          )
-        )
+        val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
+        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test654321")
+        val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
 
         resF map { res => assert(res) }
       }

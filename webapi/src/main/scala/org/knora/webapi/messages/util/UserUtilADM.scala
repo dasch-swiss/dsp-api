@@ -10,11 +10,11 @@ import zio.*
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 /**
  * Utility functions for working with users.
@@ -36,20 +36,19 @@ object UserUtilADM {
     requestingUser: User,
     requestedUserIri: IRI,
     projectIri: IRI
-  ): ZIO[StringFormatter & MessageRelay, Throwable, User] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      if (requestingUser.id == requestedUserIri) {
-        ZIO.succeed(requestingUser)
-      } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
-        val forbiddenMsg =
-          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"
-        ZIO.fail(ForbiddenException(forbiddenMsg))
-      } else {
-        for {
-          userResponse <- MessageRelay.ask[UserResponseADM](
-                            UserGetRequestADM(UserIdentifierADM(maybeIri = Some(requestedUserIri)), Full, SystemUser)
-                          )
-        } yield userResponse.user
-      }
+  ): ZIO[MessageRelay, Throwable, User] =
+    if (requestingUser.id == requestedUserIri) {
+      ZIO.succeed(requestingUser)
+    } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
+      val forbiddenMsg =
+        s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"
+      ZIO.fail(ForbiddenException(forbiddenMsg))
+    } else {
+      for {
+        userResponse <-
+          MessageRelay.ask[UserResponseADM](
+            UserGetByIriRequestADM(UserIri.unsafeFrom(requestedUserIri), Full, SystemUser)
+          )
+      } yield userResponse.user
     }
 }

@@ -13,9 +13,8 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.cache.api.CacheService
 
 /**
@@ -51,25 +50,25 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
     test("successfully store a user and retrieve by IRI") {
       for {
         _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+        retrievedUser <- CacheService.getUserByIriADM(UserIri.unsafeFrom(user.id))
       } yield assertTrue(retrievedUser == Some(user))
     },
     test("successfully store a user and retrieve by USERNAME")(
       for {
         _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+        retrievedUser <- CacheService.getUserByUsernameADM(Username.unsafeFrom(user.username))
       } yield assert(retrievedUser)(equalTo(Some(user)))
     ),
     test("successfully store a user and retrieve by EMAIL")(
       for {
         _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+        retrievedUser <- CacheService.getUserByEmailADM(Email.unsafeFrom(user.email))
       } yield assert(retrievedUser)(equalTo(Some(user)))
     ),
     test("successfully store and retrieve a user with special characters in his name")(
       for {
         _             <- CacheService.putUserADM(userWithApostrophe)
-        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id)))
+        retrievedUser <- CacheService.getUserByIriADM(UserIri.unsafeFrom(userWithApostrophe.id))
       } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
     )
   )

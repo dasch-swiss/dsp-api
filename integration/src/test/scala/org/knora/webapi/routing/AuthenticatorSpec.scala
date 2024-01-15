@@ -5,24 +5,21 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko
+import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
-import zio.ZIO
 
 import dsp.errors.BadCredentialsException
-import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
-
-import pekko.testkit.ImplicitSender
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser
@@ -39,50 +36,35 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {
       "succeed with the correct 'email' " in {
-        val user = UnsafeZioRun.runOrThrow(
-          Authenticator.getUserByIdentifier(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)))
-        )
+        val user =
+          UnsafeZioRun.runOrThrow(Authenticator.getUserByEmail(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail)))
         assert(user == AuthenticatorSpec.rootUser)
       }
 
       "fail with the wrong 'email' " in {
-        val actual = UnsafeZioRun.run(
-          Authenticator.getUserByIdentifier(UserIdentifierADM(maybeEmail = Some("wronguser@example.com")))
-        )
+        val actual = UnsafeZioRun.run(Authenticator.getUserByEmail(Email.unsafeFrom("wronguser@example.com")))
         assertFailsWithA[BadCredentialsException](actual)
-      }
-
-      "fail when not providing anything " in {
-        val actual = UnsafeZioRun.run(ZIO.attempt(UserIdentifierADM()))
-
-        assertFailsWithA[BadRequestException](actual)
       }
     }
 
     "called, the 'authenticateCredentialsV2' method" should {
       "succeed with correct email/password" in {
-        val correctPasswordCreds =
-          KnoraPasswordCredentialsV2(
-            UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
-            AuthenticatorSpec.rootUserPassword
-          )
+        val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
+        val correctPasswordCreds = KnoraPasswordCredentialsV2(credId, AuthenticatorSpec.rootUserPassword)
         val isAuthenticated =
           UnsafeZioRun.runOrThrow(Authenticator.authenticateCredentialsV2(Some(correctPasswordCreds)))
         assert(isAuthenticated)
       }
       "fail with unknown email" in {
-        val invalidEmailCreds =
-          KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
-        val resF = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidEmailCreds)))
+        val invalidCredId     = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom("wrongemail@example.com"))
+        val invalidEmailCreds = KnoraPasswordCredentialsV2(invalidCredId, "wrongpassword")
+        val resF              = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidEmailCreds)))
         assertFailsWithA[BadCredentialsException](resF)
       }
       "fail with wrong password" in {
-        val invalidPasswordCreds =
-          KnoraPasswordCredentialsV2(
-            UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
-            "wrongpassword"
-          )
-        val actual = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidPasswordCreds)))
+        val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
+        val invalidPasswordCreds = KnoraPasswordCredentialsV2(credId, "wrongpassword")
+        val actual               = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidPasswordCreds)))
         assertFailsWithA[BadCredentialsException](actual)
       }
       "succeed with correct token" in {

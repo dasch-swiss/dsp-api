@@ -5,16 +5,14 @@
 
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -50,6 +48,21 @@ case class LoginApiRequestPayloadV2(
   if (password.isEmpty) throw BadRequestException("Password needs to be supplied.")
 }
 
+sealed trait CredentialsIdentifier
+object CredentialsIdentifier {
+  def fromOptions(iri: Option[IRI], email: Option[IRI], username: Option[IRI]): Option[CredentialsIdentifier] =
+    (iri, email, username) match {
+      case (Some(iri), _, _)      => UserIri.from(iri).toOption.map(IriIdentifier)
+      case (_, Some(email), _)    => Email.from(email).toOption.map(EmailIdentifier)
+      case (_, _, Some(username)) => Username.from(username).toOption.map(UsernameIdentifier)
+      case _                      => None
+    }
+
+  final case class IriIdentifier(userIri: UserIri)        extends CredentialsIdentifier
+  final case class EmailIdentifier(email: Email)          extends CredentialsIdentifier
+  final case class UsernameIdentifier(username: Username) extends CredentialsIdentifier
+}
+
 /**
  * Sum type representing the different credential types
  */
@@ -63,7 +76,7 @@ object KnoraCredentialsV2 {
    * @param identifier the supplied id.
    * @param password   the supplied password.
    */
-  final case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String)
+  final case class KnoraPasswordCredentialsV2(identifier: CredentialsIdentifier, password: String)
       extends KnoraCredentialsV2
 
   /**
