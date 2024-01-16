@@ -8,8 +8,6 @@ package org.knora.webapi.messages.util.rdf
 import org.apache.jena
 import org.apache.pekko.http.scaladsl.model.MediaType
 import sttp.model
-import zio.Task
-import zio.ZIO
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -214,13 +212,6 @@ object RdfFormatUtil {
         // Use an implementation-specific function to parse other formats.
         parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD)
     }
-
-  def parseTtlToJenaModel(ttl: String): Task[jena.rdf.model.Model] = ZIO.attempt {
-    val model: jena.rdf.model.Model = jena.rdf.model.ModelFactory.createDefaultModel()
-    val reader: java.io.Reader      = new java.io.StringReader(ttl)
-    model.read(reader, null, "TURTLE")
-    model
-  }
 
   /**
    * Converts an [[RdfModel]] to a string.
