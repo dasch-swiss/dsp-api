@@ -71,6 +71,8 @@ object KnoraProject {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
+    implicit val factory: String => Either[String, Shortcode] = from(_).toEitherWith(_.head.getMessage)
+
     def unsafeFrom(str: String): Shortcode = from(str).fold(e => throw e.head, identity)
 
     def from(value: String): Validation[ValidationException, Shortcode] =

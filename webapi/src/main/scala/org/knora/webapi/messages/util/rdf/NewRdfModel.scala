@@ -1,11 +1,20 @@
 package org.knora.webapi.messages.util.rdf
 
-import scala.jdk.CollectionConverters.*
-import org.apache.jena.rdf.model.Resource
-import org.apache.jena.rdf.model.Model
+import dsp.valueobjects.V2
+import org.apache.jena.rdf.model.{Model, Resource}
+import org.knora.webapi.messages.util.rdf.Errors.{ConversionError, LiteralNotPresent, NotALiteral, RdfError}
 import zio.*
 
-import dsp.valueobjects.V2
+import scala.jdk.CollectionConverters.*
+
+object Errors {
+  sealed trait RdfError
+
+  case class LiteralNotPresent(key: String) extends RdfError
+  case class NotALiteral(key: String)       extends RdfError
+  case class ConversionError(msg: String)   extends RdfError
+
+}
 
 final case class NewRdfResource(private val res: Resource, private val model: Model) {
 
@@ -13,6 +22,29 @@ final case class NewRdfResource(private val res: Resource, private val model: Mo
     val property = model.createProperty(propertyIri)
     res.getProperty(property).getLiteral.getString
   }
+
+  private def getStringLiteralByPropertyTypeSafe(key: String): IO[Option[NotALiteral], String] =
+    ZIO
+      .succeed(model.createProperty(key))
+      .map(p => Option(res.getProperty(p)))
+      .flatMap(p => ZIO.attempt(p.map(_.getLiteral)).orElseFail(NotALiteral(key)))
+      .map(_.map(_.getString))
+      .some
+
+  def getStringLiteralByPropertyTypeSafeWithMapper[A](
+    key: String
+  )(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
+    getStringLiteralByPropertyTypeSafe(key)
+      .flatMap(lit => ZIO.fromEither(mapper(lit)).mapError(msg => Some(ConversionError(msg))))
+      .unsome
+
+  def getStringLiteralByPropertyTypeSafeWithMapperOrFail[A](
+    key: String
+  )(implicit mapper: String => Either[String, A]): IO[RdfError, A] =
+    getStringLiteralByPropertyTypeSafeWithMapper[A](key).flatMap {
+      case None        => ZIO.fail(LiteralNotPresent(key))
+      case Some(value) => ZIO.succeed(value)
+    }
 
   def getStringLiteralsByProperty(propertyIri: String): Task[List[String]] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
