@@ -7,10 +7,12 @@ package org.knora.webapi.messages.util.rdf
 
 import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.Resource
 import zio.*
 
+import java.io.StringReader
 import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.messages.util.rdf.Errors.ConversionError
@@ -197,10 +199,18 @@ final case class NewRdfResource(private val res: Resource) {
 
 }
 
-final case class NewRdfModel(private val model: Model) {
+final case class NewRdfModel private (private val model: Model) {
   def getResource(subjectIri: String): IO[RdfError, NewRdfResource] = ZIO.attempt {
     val resource = model.createResource(subjectIri)
     NewRdfResource(resource)
     // TODO: this will probably not fail even if the resource is not present (should check if it is empty)
   }.orElseFail(ResourceNotPresent(subjectIri))
+
+}
+object NewRdfModel {
+  def fromTurtle(turtle: String): Task[NewRdfModel] = ZIO.attempt {
+    val model = ModelFactory.createDefaultModel()
+    model.read(new StringReader(turtle), null, "TURTLE")
+    NewRdfModel(model)
+  }
 }
