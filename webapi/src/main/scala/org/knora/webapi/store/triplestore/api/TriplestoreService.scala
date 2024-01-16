@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.triplestore.api
 
-import org.apache.jena.rdf.model.Model
 import play.twirl.api.TxtFormat
 import zio.*
 import zio.macros.accessible
@@ -41,7 +40,7 @@ trait TriplestoreService {
    */
   def query(sparql: Construct): Task[SparqlConstructResponse]
 
-  def queryRdf(sparql: Construct): Task[Model]
+  def queryRdf(sparql: Construct): Task[String]
 
   /**
    * Performs a SPARQL SELECT query.

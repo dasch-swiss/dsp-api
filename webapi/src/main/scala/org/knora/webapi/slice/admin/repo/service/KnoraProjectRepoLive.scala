@@ -54,9 +54,9 @@ final case class KnoraProjectRepoLive(
 
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
-      model   <- triplestore.queryRdf(Construct(sparql.admin.txt.getProjects(Some(iri.value), None, None)))
-      newModel = NewRdfModel(model)
-      project <- toKnoraProjectNew(newModel, iri).option
+      ttl      <- triplestore.queryRdf(Construct(sparql.admin.txt.getProjects(Some(iri.value), None, None)))
+      newModel <- NewRdfModel.fromTurtle(ttl)
+      project  <- toKnoraProjectNew(newModel, iri).option
     } yield project
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =

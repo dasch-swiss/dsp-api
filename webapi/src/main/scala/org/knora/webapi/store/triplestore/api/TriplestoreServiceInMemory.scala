@@ -236,7 +236,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def setDataset(ds: Dataset): UIO[Unit] =
     datasetRef.set(ds)
 
-  override def queryRdf(sparql: Construct): Task[Model] = ???
+  override def queryRdf(sparql: Construct): Task[String] = ???
 }
 
 object TriplestoreServiceInMemory {

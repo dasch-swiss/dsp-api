@@ -29,7 +29,6 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.jena.rdf.model.Model
 import spray.json.*
 import zio.*
 import zio.metrics.Metric
@@ -122,11 +121,7 @@ case class TriplestoreServiceLive(
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
-  override def queryRdf(sparql: Construct): Task[Model] =
-    for {
-      turtleStr <- executeSparqlQuery(sparql, mimeTypeTextTurtle)
-      rdfModel  <- RdfFormatUtil.parseTtlToJenaModel(turtleStr)
-    } yield rdfModel
+  override def queryRdf(sparql: Construct): Task[String] = executeSparqlQuery(sparql, mimeTypeTextTurtle)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
