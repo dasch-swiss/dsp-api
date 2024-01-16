@@ -37,7 +37,7 @@ object Errors {
 
 final case class LangString(value: String, lang: Option[String])
 
-final case class NewRdfResource(private val res: Resource) {
+final case class ImprovedRdfResource(private val res: Resource) {
 
   private val model = res.getModel
 
@@ -201,18 +201,18 @@ final case class NewRdfResource(private val res: Resource) {
 
 }
 
-final case class NewRdfModel private (private val model: Model) {
-  def getResource(subjectIri: String): IO[RdfError, NewRdfResource] = ZIO.attempt {
+final case class ImprovedRdfModel private (private val model: Model) {
+  def getResource(subjectIri: String): IO[RdfError, ImprovedRdfResource] = ZIO.attempt {
     val resource = model.createResource(subjectIri)
-    NewRdfResource(resource)
+    ImprovedRdfResource(resource)
     // TODO: this will probably not fail even if the resource is not present (should check if it is empty)
   }.orElseFail(ResourceNotPresent(subjectIri))
 
 }
-object NewRdfModel {
-  def fromTurtle(turtle: String): Task[NewRdfModel] = ZIO.attempt {
+object ImprovedRdfModel {
+  def fromTurtle(turtle: String): Task[ImprovedRdfModel] = ZIO.attempt {
     val model = ModelFactory.createDefaultModel()
     model.read(new StringReader(turtle), null, "TURTLE")
-    NewRdfModel(model)
+    ImprovedRdfModel(model)
   }
 }
