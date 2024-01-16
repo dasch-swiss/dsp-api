@@ -83,7 +83,7 @@ final case class KnoraProjectRepoLive(
       selfjoin           = SelfJoin.from(selfjoinLiteral)
       ontologies         = ontologiesLiteral.map(InternalIri)
     } yield KnoraProject(
-      id = ProjectIri("http://rdfh.ch/projects/0001"),
+      id = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
       shortcode = shortcode,
       shortname = shortname,
       longname = longname,
