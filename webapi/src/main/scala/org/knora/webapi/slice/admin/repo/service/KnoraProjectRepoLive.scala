@@ -38,29 +38,36 @@ final case class KnoraProjectRepoLive(
 
   private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
 
-  override def findById(id: ProjectIri): Task[Option[KnoraProject]] =
-    findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
+  override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
-    val maybeIri       = id.asIriIdentifierOption
-    val maybeShortname = id.asShortnameIdentifierOption
-    val maybeShortcode = id.asShortcodeIdentifierOption
-    findOneByQuery(
-      sparql.admin.txt
-        .getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
-    )
-  }
+  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
+    id.asIriIdentifierOption match {
+      case Some(iri) => findOneByIri(ProjectIri.unsafeFrom(iri))
+      case None =>
+        val maybeShortname = id.asShortnameIdentifierOption
+        val maybeShortcode = id.asShortcodeIdentifierOption
+        findOneByQuery(
+          sparql.admin.txt
+            .getProjects(None, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
+        )
+    }
+
+  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
+    for {
+      model   <- triplestore.queryRdf(Construct(sparql.admin.txt.getProjects(Some(iri.value), None, None)))
+      newModel = NewRdfModel(model)
+      project <- toKnoraProjectNew(newModel, iri).option
+    } yield project
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
-      model   <- triplestore.queryRdf(Construct(query))
-      newModel = NewRdfModel(model)
-      project <- findOneNew(newModel).orElseFail(new Exception("not found")).option
+      construct <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.headOption)
+      project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
 
-  private def findOneNew(model: NewRdfModel): IO[RdfError, KnoraProject] =
+  private def toKnoraProjectNew(model: NewRdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
     for {
-      projectResource <- model.getResource("http://rdfh.ch/projects/0001")
+      projectResource <- model.getResource(iri.value)
       shortcode       <- projectResource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
       shortname       <- projectResource.getStringLiteralOrFail[Shortname](ProjectShortname)
       longname        <- projectResource.getStringLiteral[Longname](ProjectLongname)
@@ -71,7 +78,7 @@ final case class KnoraProjectRepoLive(
       selfjoin        <- projectResource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
       ontologies      <- projectResource.getObjectIris(belongsToOntology)
     } yield KnoraProject(
-      id = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+      id = iri,
       shortcode = shortcode,
       shortname = shortname,
       longname = longname,
