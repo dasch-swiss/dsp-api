@@ -129,7 +129,7 @@ final case class ImprovedRdfResource(private val res: Resource) {
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, Option[A]] =
     literalAsDomainObject(
       propertyIri,
-      stmt => LangString(stmt.getString, Option(stmt.getLanguage)),
+      stmt => LangString(stmt.getString, Option.when(stmt.getLanguage.nonEmpty)(stmt.getLanguage)),
       mapper
     ).unsome
 
@@ -143,7 +143,7 @@ final case class ImprovedRdfResource(private val res: Resource) {
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, Chunk[A]] =
     literalsAsDomainObjects(
       propertyIri,
-      stmt => LangString(stmt.getString, Option(stmt.getLanguage)),
+      stmt => LangString(stmt.getString, Option.when(stmt.getLanguage.nonEmpty)(stmt.getLanguage)),
       mapper
     )
 
