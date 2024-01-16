@@ -5,32 +5,26 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.prelude.Validation
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.User
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -153,30 +147,82 @@ case class UsersGetRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[User]].
+ * A message that requests a user's profile by IRI. A successful response will be a [[User]].
  *
- * @param identifier             the IRI, email, or username of the user to be queried.
+ * @param identifier             the IRI of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetADM(
-  identifier: UserIdentifierADM,
+case class UserGetByIriADM(
+  identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
 
 /**
- * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[UserResponseADM]].
+ * A message that requests a user's profile by username. A successful response will be a [[User]].
  *
- * @param identifier             the IRI, email, or username of the user to be queried.
+ * @param username               the username of the user to be queried.
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetRequestADM(
-  identifier: UserIdentifierADM,
+case class UserGetByUsernameADM(
+  username: Username,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM {}
+) extends UsersResponderRequestADM
+
+/**
+ * A message that requests a user's profile by email. A successful response will be a [[User]].
+ *
+ * @param email                  the email of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByEmailADM(
+  email: Email,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM
+
+/**
+ * A message that requests a user's profile by IRI. A successful response will be a [[UserResponseADM]].
+ *
+ * @param identifier             the IRI of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByIriRequestADM(
+  identifier: UserIri,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM
+
+/**
+ * A message that requests a user's profile by email. A successful response will be a [[UserResponseADM]].
+ *
+ * @param email             the email of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByEmailRequestADM(
+  email: Email,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM
+
+/**
+ * A message that requests a user's profile by username. A successful response will be a [[UserResponseADM]].
+ *
+ * @param username             the username of the user to be queried.
+ * @param userInformationTypeADM the extent of the information returned.
+ * @param requestingUser         the user initiating the request.
+ */
+case class UserGetByUsernameRequestADM(
+  username: Username,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  requestingUser: User
+) extends UsersResponderRequestADM
 
 /**
  * Requests the creation of a new user.
@@ -383,7 +429,7 @@ case class UserGroupMembershipRemoveRequestADM(
  *
  * @param users a sequence of user profiles of the requested type.
  */
-case class UsersGetResponseADM(users: Seq[User]) extends KnoraResponseADM {
+case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
@@ -454,133 +500,6 @@ object UserInformationTypeADM {
   case object Restricted extends UserInformationTypeADM
   case object Full       extends UserInformationTypeADM
 
-  // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
-}
-
-/**
- * Represents the type of a user identifier.
- */
-sealed trait UserIdentifierType
-object UserIdentifierType {
-  case object Iri      extends UserIdentifierType
-  case object Email    extends UserIdentifierType
-  case object Username extends UserIdentifierType
-}
-
-/**
- * Represents the user's identifier. It can be an IRI, email, or username.
- *
- * @param maybeIri      the user's IRI.
- * @param maybeEmail    the user's email.
- * @param maybeUsername the user's username.
- */
-sealed abstract case class UserIdentifierADM private (
-  maybeIri: Option[IRI] = None,
-  maybeEmail: Option[String] = None,
-  maybeUsername: Option[String] = None
-) {
-
-  // squash and return value.
-  val value: String = List(
-    maybeIri,
-    maybeEmail,
-    maybeUsername
-  ).flatten.head
-
-  // validate and escape
-
-  def hasType: UserIdentifierType =
-    if (maybeIri.isDefined) {
-      UserIdentifierType.Iri
-    } else if (maybeEmail.isDefined) {
-      UserIdentifierType.Email
-    } else {
-      UserIdentifierType.Username
-    }
-
-  /**
-   * Tries to return the value as an IRI.
-   */
-  def toIri: IRI =
-    maybeIri.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toIriOption: Option[IRI] =
-    maybeIri
-
-  /**
-   * Tries to return the value as email.
-   */
-  def toEmail: String =
-    maybeEmail.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.EMAIL' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toEmailOption: Option[String] =
-    maybeEmail
-
-  /**
-   * Tries to return the value as username.
-   */
-  def toUsername: String =
-    maybeUsername.getOrElse(
-      throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.USERNAME' type.")
-    )
-
-  /**
-   * Returns an optional value of the identifier.
-   */
-  def toUsernameOption: Option[String] =
-    maybeUsername
-
-  /**
-   * Returns the string representation
-   */
-  override def toString: String =
-    s"UserIdentifierADM(${this.value})"
-
-}
-
-/**
- * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
- * validated and escaped.
- */
-object UserIdentifierADM {
-  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
-    implicit sf: StringFormatter
-  ): UserIdentifierADM = {
-
-    val parametersCount: Int = List(
-      maybeIri,
-      maybeEmail,
-      maybeUsername
-    ).flatten.size
-
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
-
-    val userIri = maybeIri.map(iri =>
-      Iri.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
-    )
-
-    val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))
-    val username = maybeUsername.map(u =>
-      sf.validateUsername(u).getOrElse(throw BadRequestException(s"Invalid username $maybeUsername"))
-    )
-
-    new UserIdentifierADM(
-      maybeIri = userIri,
-      maybeEmail = userEmail,
-      maybeUsername = username
-    ) {}
-  }
 }
 
 /**
@@ -688,10 +607,10 @@ object UserUpdateBasicInformationPayloadADM {
 
   def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
     Validation.validateWith(
-      validateWithOptionOrNone(req.username, Username.make),
-      validateWithOptionOrNone(req.email, Email.make),
-      validateWithOptionOrNone(req.givenName, GivenName.make),
-      validateWithOptionOrNone(req.familyName, FamilyName.make),
+      validateWithOptionOrNone(req.username, Username.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.email, Email.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.givenName, GivenName.validationFrom).mapError(ValidationException(_)),
+      validateWithOptionOrNone(req.familyName, FamilyName.validationFrom).mapError(ValidationException(_)),
       validateWithOptionOrNone(req.lang, LanguageCode.make)
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
@@ -700,13 +619,22 @@ case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword
 object UserUpdatePasswordPayloadADM {
   def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
     val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The requester's password is missing."))
     val newPasswordValidation = apiRequest.newPassword
-      .map(Password.make(_).mapError(_.getMessage))
+      .map(Password.validationFrom)
       .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
+}
+
+/**
+ * Represents an answer to a group membership request.
+ *
+ * @param members the group's members.
+ */
+case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResponseADM {
+  def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
 }
 
 final case class UserCreatePayloadADM(
@@ -725,15 +653,17 @@ object UserCreatePayloadADM {
   def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
     Validation
       .validateWith(
-        apiRequest.id.map(UserIri.make(_).map(Some(_))).getOrElse(Validation.succeed(None)),
-        Username.make(apiRequest.username),
-        Email.make(apiRequest.email),
-        GivenName.make(apiRequest.givenName),
-        FamilyName.make(apiRequest.familyName),
-        Password.make(apiRequest.password),
-        Validation.succeed(UserStatus.make(apiRequest.status)),
+        apiRequest.id
+          .map(UserIri.validationFrom(_).map(Some(_)).mapError(ValidationException(_)))
+          .getOrElse(Validation.succeed(None)),
+        Username.validationFrom(apiRequest.username).mapError(ValidationException(_)),
+        Email.validationFrom(apiRequest.email).mapError(ValidationException(_)),
+        GivenName.validationFrom(apiRequest.givenName).mapError(ValidationException(_)),
+        FamilyName.validationFrom(apiRequest.familyName).mapError(ValidationException(_)),
+        Password.validationFrom(apiRequest.password).mapError(ValidationException(_)),
+        Validation.succeed(UserStatus.from(apiRequest.status)),
         LanguageCode.make(apiRequest.lang),
-        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
+        Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
       .mapError(_.getMessage)
 }
@@ -752,6 +682,8 @@ object UsersADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
   implicit val userADMFormat: JsonFormat[User] = jsonFormat12(User)
+  implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
+    jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",

@@ -7,13 +7,11 @@ package org.knora.webapi.routing.admin
 
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
-import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
@@ -26,6 +24,11 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
@@ -38,9 +41,9 @@ final case class UsersRouteADM()(
 
   def makeRoute: Route =
     addUser() ~
-      getUserByIri() ~
-      getUserByEmail() ~
-      getUserByUsername() ~
+      getUserByIri ~
+      getUserByEmail ~
+      getUserByUsername ~
       changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
@@ -72,40 +75,44 @@ final case class UsersRouteADM()(
   /**
    * return a single user identified by iri
    */
-  private def getUserByIri(): Route =
-    path(usersBasePath / "iri" / Segment)(userIri => get(getUser(makeUserIdFromIri(userIri), _)))
-
-  private def makeUserIdFromIri(iri: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-    ZIO.attempt(UserIdentifierADM(maybeIri = Some(iri)))
-  }
-
-  private def makeUserIdFromEmail(email: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-    ZIO.attempt(UserIdentifierADM(maybeEmail = Some(email)))
-  }
-
-  private def makeUserIdFromUsername(username: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
-    ZIO.attempt(UserIdentifierADM(maybeUsername = Some(username)))
-  }
-
-  private def getUser(id: ZIO[StringFormatter, Throwable, UserIdentifierADM], ctx: RequestContext) = {
-    val task = for {
-      userId         <- id
-      requestingUser <- Authenticator.getUserADM(ctx)
-    } yield UserGetRequestADM(userId, UserInformationTypeADM.Restricted, requestingUser)
-    runJsonRouteZ(task, ctx)
-  }
+  private def getUserByIri: Route =
+    path(usersBasePath / "iri" / Segment)(userIri =>
+      ctx => {
+        val task = for {
+          requestingUser <- Authenticator.getUserADM(ctx)
+          iri            <- ZIO.fromEither(UserIri.from(userIri)).mapError(BadRequestException(_))
+        } yield UserGetByIriRequestADM(iri, UserInformationTypeADM.Restricted, requestingUser)
+        runJsonRouteZ(task, ctx)
+      }
+    )
 
   /**
    * return a single user identified by email
    */
-  private def getUserByEmail(): Route =
-    path(usersBasePath / "email" / Segment)(email => get(getUser(makeUserIdFromEmail(email), _)))
+  private def getUserByEmail: Route =
+    path(usersBasePath / "email" / Segment)(emailStr =>
+      ctx => {
+        val task = for {
+          requestingUser <- Authenticator.getUserADM(ctx)
+          email          <- ZIO.fromEither(Email.from(emailStr)).mapError(BadRequestException(_))
+        } yield UserGetByEmailRequestADM(email, UserInformationTypeADM.Restricted, requestingUser)
+        runJsonRouteZ(task, ctx)
+      }
+    )
 
   /**
    * return a single user identified by username
    */
-  private def getUserByUsername(): Route =
-    path(usersBasePath / "username" / Segment)(username => get(getUser(makeUserIdFromUsername(username), _)))
+  private def getUserByUsername: Route =
+    path(usersBasePath / "username" / Segment)(usernameStr =>
+      ctx => {
+        val task = for {
+          requestingUser <- Authenticator.getUserADM(ctx)
+          username       <- ZIO.fromEither(Username.from(usernameStr)).mapError(BadRequestException(_))
+        } yield UserGetByUsernameRequestADM(username, UserInformationTypeADM.Restricted, requestingUser)
+        runJsonRouteZ(task, ctx)
+      }
+    )
 
   /**
    * Change existing user's basic information.
@@ -154,7 +161,7 @@ final case class UsersRouteADM()(
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
             newStatus <- ZIO
-                           .fromOption(apiRequest.status.map(UserStatus.make))
+                           .fromOption(apiRequest.status.map(UserStatus.from))
                            .orElseFail(BadRequestException("The status is missing."))
             checkedUserIri <- validateAndEscapeUserIri(userIri)
             r              <- getUserUuid(requestContext)
@@ -172,7 +179,7 @@ final case class UsersRouteADM()(
       val task = for {
         checkedUserIri <- validateAndEscapeUserIri(userIri)
         r              <- getUserUuid(requestContext)
-      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.make(false), r.user, r.uuid)
+      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.from(false), r.user, r.uuid)
       runJsonRouteZ(task, requestContext)
     }
   }
@@ -188,7 +195,7 @@ final case class UsersRouteADM()(
             checkedUserIri <- validateAndEscapeUserIri(userIri)
             r              <- getUserUuid(requestContext)
             newSystemAdmin <- ZIO
-                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.make))
+                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.from))
                                 .orElseFail(BadRequestException("The systemAdmin is missing."))
           } yield UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)

@@ -32,25 +32,25 @@ import scala.concurrent.duration.SECONDS
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
 import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
+import org.knora.webapi.util.*
 
 /**
  * Tests the API v2 resources route.

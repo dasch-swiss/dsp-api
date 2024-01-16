@@ -53,8 +53,7 @@ trait TestTripleStore extends TriplestoreService {
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
-    extends TriplestoreService
-    with TestTripleStore {
+    extends TestTripleStore {
 
   override def query(query: Select): Task[SparqlSelectResult] = {
     require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
@@ -252,6 +251,6 @@ object TriplestoreServiceInMemory {
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
-  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore & TriplestoreService] =
+  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 }

@@ -11,7 +11,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import dsp.errors.ApplicationLockException
 import org.knora.webapi.IRI

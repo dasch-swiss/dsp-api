@@ -7,24 +7,24 @@ package org.knora.sipi
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
 import zio.json.DecoderOps
 import zio.json.ast.Json
-import zio.test._
+import zio.test.*
 
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import org.knora.sipi.MockDspApiServer.verify._
+import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages._
+import org.knora.webapi.messages.admin.responder.sipimessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
@@ -34,8 +34,6 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 object SipiIT extends ZIOSpecDefault {
 
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
-  private val infoTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.info"
-  private val origTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.jp2.orig"
   private val prefix        = "0001"
 
   private def getWithoutAuthorization(path: Path) =
@@ -269,7 +267,7 @@ object SipiIT extends ZIOSpecDefault {
       )
     )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
       cookiesSuite,
       knoraJsonEndpointSuite,
@@ -282,10 +280,10 @@ object SipiIT extends ZIOSpecDefault {
         } yield assertTrue(response.status.isSuccess, verifyNoInteractionWith(server))
       }
     )
-      .provideSomeLayerShared[Scope with Client with WireMockServer](
+      .provideSomeLayerShared[Scope & Client & WireMockServer](
         SharedVolumes.Images.layer >+> SipiTestContainer.layer
       )
-      .provideSomeLayerShared[Scope with Client](MockDspApiServer.layer)
+      .provideSomeLayerShared[Scope & Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential
 }
 

@@ -8,18 +8,18 @@ package org.knora.webapi.e2e.admin
 import org.apache.pekko
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**

@@ -14,7 +14,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User.*
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -32,7 +31,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.store.triplestoremessages.*
@@ -42,7 +43,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -81,10 +82,18 @@ final case class UsersResponderADMLive(
     case UsersGetADM(_, requestingUser) => getAllUserADM(requestingUser)
     case UsersGetRequestADM(_, requestingUser) =>
       getAllUserADMRequest(requestingUser)
-    case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
-    case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
+    case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
+      getSingleUserByIriADM(identifier, userInformationTypeADM, requestingUser)
+    case UserGetByEmailADM(email, userInformationTypeADM, requestingUser) =>
+      getSingleUserByEmailADM(email, userInformationTypeADM, requestingUser)
+    case UserGetByUsernameADM(username, userInformationTypeADM, requestingUser) =>
+      getSingleUserByUsernameADM(username, userInformationTypeADM, requestingUser)
+    case UserGetByIriRequestADM(identifier, userInformationTypeADM, requestingUser) =>
+      getSingleUserByIriADMRequest(identifier, userInformationTypeADM, requestingUser)
+    case UserGetByEmailRequestADM(email, userInformationTypeADM, requestingUser) =>
+      getSingleUserByEmailADMRequest(email, userInformationTypeADM, requestingUser)
+    case UserGetByUsernameRequestADM(username, userInformationTypeADM, requestingUser) =>
+      getSingleUserByUsernameADMRequest(username, userInformationTypeADM, requestingUser)
     case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
       createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
@@ -259,13 +268,8 @@ final case class UsersResponderADMLive(
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
     for {
       maybeUsersListToReturn <- getAllUserADM(requestingUser)
-
-      result = maybeUsersListToReturn match {
-                 case users: Seq[User] if users.nonEmpty =>
-                   UsersGetResponseADM(users = users)
-                 case _ =>
-                   throw NotFoundException(s"No users found")
-               }
+      result <- if (maybeUsersListToReturn.nonEmpty) ZIO.succeed(UsersGetResponseADM(maybeUsersListToReturn))
+                else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
   /**
@@ -275,7 +279,7 @@ final case class UsersResponderADMLive(
    * it from the triplestore, and then writes it to the cache. Writes to the
    * cache are always `UserInformationTypeADM.FULL`.
    *
-   * @param identifier           the IRI, email, or username of the user.
+   * @param identifier           the IRI of the user.
    * @param userInformationType  the type of the requested profile (restricted
    *                             of full).
    * @param requestingUser       the user initiating the request.
@@ -283,78 +287,168 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserADM(
-    identifier: UserIdentifierADM,
+  private def getSingleUserByIriADM(
+    identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
     skipCache: Boolean = false
-  ): Task[Option[User]] = {
-
-    logger.debug(
-      s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
-      identifier.value,
-      userInformationType,
-      requestingUser.username,
-      skipCache
-    )
-
+  ): Task[Option[User]] =
     for {
-      maybeUserADM <-
-        if (skipCache) {
-          // getting directly from triplestore
-          getUserFromTriplestore(identifier = identifier)
-        } else {
-          // getting from cache or triplestore
-          getUserFromCacheOrTriplestore(identifier)
-        }
-
-      // return the correct amount of information depending on either the request or user permission
-      finalResponse: Option[User] =
-        if (
-          requestingUser.permissions.isSystemAdmin || requestingUser
-            .isSelf(identifier) || requestingUser.isSystemUser
-        ) {
-          // return everything or what was requested
-          maybeUserADM.map(user => user.ofType(userInformationType))
-        } else {
-          // return only public information
-          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.Public))
-        }
-
-      _ =
-        if (finalResponse.nonEmpty) {
-          logger.debug("getSingleUserADM - successfully retrieved user: {}", identifier.value)
-        } else {
-          logger.debug("getSingleUserADM - could not retrieve user: {}", identifier.value)
-        }
-
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${identifier.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
+      maybeUserADM <- if (skipCache) getUserFromTriplestoreByIri(identifier)
+                      else getUserFromCacheOrTriplestoreByIri(identifier)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${identifier.value}': ${finalResponse.nonEmpty}")
     } yield finalResponse
-  }
+
+  /**
+   * If the requesting user is a system admin, or is requesting themselves, or is a system user,
+   * returns the user in the requestet format. Otherwise, returns only public information.
+   * @param user           the user to be returned
+   * @param requestingUser the user requesting the information
+   * @param infoType       the type of information requested
+   * @return
+   */
+  private def filterUserInformation(user: User, requestingUser: User, infoType: UserInformationTypeADM): User =
+    if (requestingUser.permissions.isSystemAdmin || requestingUser.id == user.id || requestingUser.isSystemUser)
+      user.ofType(infoType)
+    else user.ofType(UserInformationTypeADM.Public)
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param email                the email of the user.
+   * @param userInformationType  the type of the requested profile (restricted
+   *                             of full).
+   * @param requestingUser       the user initiating the request.
+   * @param skipCache            the flag denotes to skip the cache and instead
+   *                             get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  private def getSingleUserByEmailADM(
+    email: Email,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): Task[Option[User]] =
+    for {
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${email.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
+      maybeUserADM <- if (skipCache) getUserFromTriplestoreByEmail(email)
+                      else getUserFromCacheOrTriplestoreByEmail(email)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${email.value}': ${finalResponse.nonEmpty}")
+    } yield finalResponse
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param username             the username of the user.
+   * @param userInformationType  the type of the requested profile (restricted
+   *                             of full).
+   * @param requestingUser       the user initiating the request.
+   * @param skipCache            the flag denotes to skip the cache and instead
+   *                             get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  private def getSingleUserByUsernameADM(
+    username: Username,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): Task[Option[User]] =
+    for {
+      _ <-
+        ZIO.logDebug(
+          s"getSingleUserByIriADM - id: ${username.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
+        )
+      maybeUserADM <-
+        if (skipCache) getUserFromTriplestoreByUsername(username)
+        else getUserFromCacheOrTriplestoreByUsername(username)
+      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${username.value}': ${finalResponse.nonEmpty}")
+    } yield finalResponse
 
   /**
    * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
    *
-   * @param identifier          the IRI, username, or email of the user.
+   * @param identifier          the IRI of the user.
    * @param userInformationType the type of the requested profile (restricted of full).
    * @param requestingUser      the user initiating the request.
    * @return a [[UserResponseADM]]
    */
-  private def getSingleUserADMRequest(
-    identifier: UserIdentifierADM,
+  private def getSingleUserByIriADMRequest(
+    identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User
   ): Task[UserResponseADM] =
     for {
-      maybeUserADM <- getSingleUserADM(
-                        identifier = identifier,
-                        userInformationType = userInformationType,
-                        requestingUser = requestingUser
-                      )
+      maybeUserADM <- getSingleUserByIriADM(identifier, userInformationType, requestingUser)
+      result <- ZIO
+                  .fromOption(maybeUserADM)
+                  .mapBoth(
+                    _ => NotFoundException(s"User '${identifier.value}' not found"),
+                    user => UserResponseADM(user = user)
+                  )
+    } yield result
 
-      result = maybeUserADM match {
-                 case Some(user) => UserResponseADM(user = user)
-                 case None       => throw NotFoundException(s"User '${identifier.value}' not found")
-               }
+  /**
+   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
+   *
+   * @param email          the IRI of the user.
+   * @param userInformationType the type of the requested profile (restricted of full).
+   * @param requestingUser      the user initiating the request.
+   * @return a [[UserResponseADM]]
+   */
+  private def getSingleUserByEmailADMRequest(
+    email: Email,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User
+  ): Task[UserResponseADM] =
+    for {
+      maybeUserADM <- getSingleUserByEmailADM(email, userInformationType, requestingUser)
+      result <- ZIO
+                  .fromOption(maybeUserADM)
+                  .mapBoth(
+                    _ => NotFoundException(s"User '${email.value}' not found"),
+                    user => UserResponseADM(user = user)
+                  )
+    } yield result
+
+  /**
+   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
+   *
+   * @param username          the IRI of the user.
+   * @param userInformationType the type of the requested profile (restricted of full).
+   * @param requestingUser      the user initiating the request.
+   * @return a [[UserResponseADM]]
+   */
+  private def getSingleUserByUsernameADMRequest(
+    username: Username,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User
+  ): Task[UserResponseADM] =
+    for {
+      maybeUserADM <- getSingleUserByUsernameADM(username, userInformationType, requestingUser)
+      result <- ZIO
+                  .fromOption(maybeUserADM)
+                  .mapBoth(
+                    _ => NotFoundException(s"User '${username.value}' not found"),
+                    user => UserResponseADM(user = user)
+                  )
     } yield result
 
   /**
@@ -398,8 +492,8 @@ final case class UsersResponderADMLive(
              )
 
         // get current user information
-        currentUserInformation <- getSingleUserADM(
-                                    identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        currentUserInformation <- getSingleUserByIriADM(
+                                    identifier = UserIri.unsafeFrom(userIri),
                                     userInformationType = UserInformationTypeADM.Full,
                                     requestingUser = KnoraSystemInstances.Users.SystemUser
                                   )
@@ -488,10 +582,8 @@ final case class UsersResponderADMLive(
             }
 
         // hash the new password
-        encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        newHashedPassword = Password
-                              .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-                              .fold(e => throw e.head, value => value)
+        encoder           = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
+        newHashedPassword = Password.unsafeFrom(encoder.encode(userUpdatePasswordPayload.newPassword.value))
 
         // update the users password as SystemUser
         result <- updateUserPasswordADM(
@@ -622,8 +714,8 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[ProjectADM]]
    */
   private def userProjectMembershipsGetADM(userIri: IRI) =
-    getSingleUserADM(
-      UserIdentifierADM(maybeIri = Some(userIri)),
+    getSingleUserByIriADM(
+      UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
     ).map(_.map(_.projects).getOrElse(Seq.empty))
@@ -1015,8 +1107,8 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[GroupADM]].
    */
   private def userGroupMembershipsGetADM(userIri: IRI) =
-    getSingleUserADM(
-      UserIdentifierADM(maybeIri = Some(userIri)),
+    getSingleUserByIriADM(
+      UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
     ).map(_.map(_.groups).getOrElse(Seq.empty))
@@ -1047,8 +1139,8 @@ final case class UsersResponderADMLive(
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
-        maybeUser <- getSingleUserADM(
-                       UserIdentifierADM(maybeIri = Some(userIri)),
+        maybeUser <- getSingleUserByIriADM(
+                       UserIri.unsafeFrom(userIri),
                        UserInformationTypeADM.Full,
                        KnoraSystemInstances.Users.SystemUser,
                        skipCache = true
@@ -1206,8 +1298,8 @@ final case class UsersResponderADMLive(
     for {
 
       // get current user
-      maybeCurrentUser <- getSingleUserADM(
-                            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+      maybeCurrentUser <- getSingleUserByIriADM(
+                            identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
                             skipCache = true
@@ -1297,8 +1389,8 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
-      maybeUpdatedUserADM <- getSingleUserADM(
-                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+      maybeUpdatedUserADM <- getSingleUserByIriADM(
+                               identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = KnoraSystemInstances.Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
                                skipCache = true
@@ -1404,8 +1496,8 @@ final case class UsersResponderADMLive(
     }
 
     for {
-      maybeCurrentUser <- getSingleUserADM(
-                            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+      maybeCurrentUser <- getSingleUserByIriADM(
+                            identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
                             skipCache = true
@@ -1423,8 +1515,8 @@ final case class UsersResponderADMLive(
       _ <- triplestore.query(Update(updateUserSparql))
 
       /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- getSingleUserADM(
-                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+      maybeUpdatedUserADM <- getSingleUserByIriADM(
+                               identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = requestingUser,
                                userInformationType = UserInformationTypeADM.Full,
                                skipCache = true
@@ -1536,8 +1628,8 @@ final case class UsersResponderADMLive(
         _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
-        maybeNewUserADM <- getSingleUserADM(
-                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        maybeNewUserADM <- getSingleUserByIriADM(
+                             identifier = UserIri.unsafeFrom(userIri),
                              requestingUser = KnoraSystemInstances.Users.SystemUser,
                              userInformationType = UserInformationTypeADM.Full,
                              skipCache = true
@@ -1568,55 +1660,148 @@ final case class UsersResponderADMLive(
   /**
    * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
    * If user is not found in cache but in triplestore, then user is written to cache.
-   *
-   * @param identifier The identifier of the user (can be IRI, e-mail or username)
-   * @return a [[Option[UserADM]]]
    */
-  private def getUserFromCacheOrTriplestore(
-    identifier: UserIdentifierADM
+  private def getUserFromCacheOrTriplestoreByIri(
+    userIri: UserIri
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCache(identifier).flatMap {
+      getUserFromCacheByIri(userIri).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestore(identifier = identifier).flatMap {
+          getUserFromTriplestoreByIri(userIri).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.succeed(None)
+              ZIO.none
             case Some(user) =>
               // found a user in the triplestore. need to write to cache.
               logger.debug(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user) *> ZIO.succeed(Some(user))
+              writeUserADMToCache(user).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
-          ZIO.succeed(Some(user))
+          ZIO.some(user)
       }
     } else {
       // caching disabled
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestore(identifier = identifier)
+      getUserFromTriplestoreByIri(userIri)
     }
 
   /**
-   * Tries to retrieve a [[User]] from the triplestore.
-   *
-   * @param identifier The identifier of the user (can be IRI, e-mail or username)
-   * @return a [[Option[UserADM]]]
+   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
+   * If user is not found in cache but in triplestore, then user is written to cache.
    */
-  private def getUserFromTriplestore(
-    identifier: UserIdentifierADM
+  private def getUserFromCacheOrTriplestoreByUsername(
+    username: Username
+  ): Task[Option[User]] =
+    if (appConfig.cacheService.enabled) {
+      // caching enabled
+      getUserFromCacheByUsername(username).flatMap {
+        case None =>
+          // none found in cache. getting from triplestore.
+          getUserFromTriplestoreByUsername(username).flatMap {
+            case None =>
+              // also none found in triplestore. finally returning none.
+              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
+              ZIO.none
+            case Some(user) =>
+              // found a user in the triplestore. need to write to cache.
+              logger.debug(
+                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
+              )
+              // writing user to cache and afterwards returning the user found in the triplestore
+              writeUserADMToCache(user).as(Some(user))
+          }
+        case Some(user) =>
+          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
+          ZIO.some(user)
+      }
+    } else {
+      // caching disabled
+      logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
+      getUserFromTriplestoreByUsername(username)
+    }
+
+  /**
+   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
+   * If user is not found in cache but in triplestore, then user is written to cache.
+   */
+  private def getUserFromCacheOrTriplestoreByEmail(
+    email: Email
+  ): Task[Option[User]] =
+    if (appConfig.cacheService.enabled) {
+      // caching enabled
+      getUserFromCacheByEmail(email).flatMap {
+        case None =>
+          // none found in cache. getting from triplestore.
+          getUserFromTriplestoreByEmail(email).flatMap {
+            case None =>
+              // also none found in triplestore. finally returning none.
+              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
+              ZIO.none
+            case Some(user) =>
+              // found a user in the triplestore. need to write to cache.
+              logger.debug(
+                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
+              )
+              // writing user to cache and afterwards returning the user found in the triplestore
+              writeUserADMToCache(user).as(Some(user))
+          }
+        case Some(user) =>
+          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
+          ZIO.some(user)
+      }
+    } else {
+      // caching disabled
+      logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
+      getUserFromTriplestoreByEmail(email)
+    }
+
+  private def getUserFromTriplestoreByIri(
+    identifier: UserIri
   ): Task[Option[User]] = {
     val query = Construct(
       sparql.admin.txt.getUsers(
-        maybeIri = identifier.toIriOption,
-        maybeUsername = identifier.toUsernameOption,
-        maybeEmail = identifier.toEmailOption
+        maybeIri = Some(identifier.value),
+        maybeUsername = None,
+        maybeEmail = None
+      )
+    )
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(_.statements.headOption)
+      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
+  }
+  private def getUserFromTriplestoreByUsername(
+    identifier: Username
+  ): Task[Option[User]] = {
+    val query = Construct(
+      sparql.admin.txt.getUsers(
+        maybeIri = None,
+        maybeUsername = Some(identifier.value),
+        maybeEmail = None
+      )
+    )
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(_.statements.headOption)
+      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
+  }
+  private def getUserFromTriplestoreByEmail(
+    identifier: Email
+  ): Task[Option[User]] = {
+    val query = Construct(
+      sparql.admin.txt.getUsers(
+        maybeIri = None,
+        maybeUsername = None,
+        maybeEmail = Some(identifier.value)
       )
     )
     triplestore
@@ -1759,7 +1944,7 @@ final case class UsersResponderADMLive(
       } yield result
 
     } else {
-      ZIO.succeed(None)
+      ZIO.none
     }
   }
 
@@ -1807,7 +1992,7 @@ final case class UsersResponderADMLive(
         } else {
           for {
             _ <- ZIO
-                   .fromOption(stringFormatter.validateEmail(email.value))
+                   .fromEither(Email.from(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
             userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
           } yield userExists
@@ -1837,17 +2022,53 @@ final case class UsersResponderADMLive(
   /**
    * Tries to retrieve a [[User]] from the cache.
    *
-   * @param identifier the user's identifier (could be IRI, e-mail or username)
+   * @param identifier the user's identifier
    * @return a [[Option[UserADM]]]
    */
-  private def getUserFromCache(identifier: UserIdentifierADM): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserADM(identifier))
+  private def getUserFromCacheByIri(identifier: UserIri): Task[Option[User]] = {
+    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(identifier))
     result.map {
       case Some(user) =>
         logger.debug("getUserFromCache - cache hit for: {}", identifier)
         Some(user)
       case None =>
         logger.debug("getUserFromCache - no cache hit for: {}", identifier)
+        None
+    }
+  }
+
+  /**
+   * Tries to retrieve a [[User]] from the cache.
+   *
+   * @param email the user's email
+   * @return a [[Option[UserADM]]]
+   */
+  private def getUserFromCacheByEmail(email: Email): Task[Option[User]] = {
+    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email))
+    result.map {
+      case Some(user) =>
+        logger.debug("getUserFromCache - cache hit for: {}", email)
+        Some(user)
+      case None =>
+        logger.debug("getUserFromCache - no cache hit for: {}", email)
+        None
+    }
+  }
+
+  /**
+   * Tries to retrieve a [[User]] from the cache.
+   *
+   * @param username the user's identifier
+   * @return a [[Option[UserADM]]]
+   */
+  private def getUserFromCacheByUsername(username: Username): Task[Option[User]] = {
+    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username))
+    result.map {
+      case Some(user) =>
+        logger.debug("getUserFromCache - cache hit for: {}", username)
+        Some(user)
+      case None =>
+        logger.debug("getUserFromCache - no cache hit for: {}", username)
         None
     }
   }
@@ -1879,11 +2100,11 @@ final case class UsersResponderADMLive(
         }
       } else {
         // since there was nothing to remove, we can immediately return
-        ZIO.succeed(())
+        ZIO.unit
       }
     } else {
       // caching is turned off, so nothing to do.
-      ZIO.succeed(())
+      ZIO.unit
     }
 }
 

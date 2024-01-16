@@ -5,13 +5,13 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit._
+import org.apache.pekko.testkit.*
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.messages.admin.responder.sipimessages._
+import org.knora.webapi.messages.admin.responder.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode

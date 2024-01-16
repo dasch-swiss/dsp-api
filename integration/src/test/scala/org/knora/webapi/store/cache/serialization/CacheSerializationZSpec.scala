@@ -5,9 +5,8 @@
 
 package org.knora.webapi.store.cache.serialization
 
-import zio.test.Assertion._
 import zio.test.TestAspect.ignore
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -18,21 +17,21 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 object CacheSerializationZSpec extends ZIOSpecDefault {
 
-  val user    = SharedTestDataADM.imagesUser01
-  val project = SharedTestDataADM.imagesProject
+  private val user    = SharedTestDataADM.imagesUser01
+  private val project = SharedTestDataADM.imagesProject
 
-  def spec = suite("CacheSerializationSpec")(
+  def spec: Spec[Any, Throwable] = suite("CacheSerializationSpec")(
     test("successfully serialize and deserialize a user") {
       for {
         serialized   <- CacheSerialization.serialize(user)
         deserialized <- CacheSerialization.deserialize[User](serialized)
-      } yield assert(deserialized)(equalTo(Some(user)))
+      } yield assertTrue(deserialized.contains(user))
     } @@ ignore +
       test("successfully serialize and deserialize a project") {
         for {
           serialized   <- CacheSerialization.serialize(project)
           deserialized <- CacheSerialization.deserialize[ProjectADM](serialized)
-        } yield assert(deserialized)(equalTo(Some(project)))
+        } yield assertTrue(deserialized.contains(project))
       }
   )
 }

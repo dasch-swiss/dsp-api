@@ -11,6 +11,7 @@ import zio.macros.accessible
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 @accessible
 trait UsersADMRestService {
@@ -19,11 +20,14 @@ trait UsersADMRestService {
 }
 
 final case class UsersADMRestServiceLive(
-  responder: UsersResponderADM
+  responder: UsersResponderADM,
+  format: KnoraResponseRenderer
 ) extends UsersADMRestService {
 
-  override def listAllUsers(user: User): Task[UsersGetResponseADM] =
-    responder.getAllUserADMRequest(user)
+  override def listAllUsers(user: User): Task[UsersGetResponseADM] = for {
+    internal <- responder.getAllUserADMRequest(user)
+    external <- format.toExternal(internal)
+  } yield external
 }
 
 object UsersADMRestServiceLive {

@@ -5,13 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import spray.json._
+import spray.json.*
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.List._
+import dsp.valueobjects.Iri.*
+import dsp.valueobjects.List.*
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec

@@ -6,8 +6,8 @@
 package org.knora.webapi.responders.v2
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 
 object ResourcesResponseCheckerV2 {
 

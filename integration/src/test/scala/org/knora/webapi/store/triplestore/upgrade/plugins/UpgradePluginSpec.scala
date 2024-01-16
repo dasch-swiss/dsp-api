@@ -17,13 +17,13 @@ import scala.util.Success
 import scala.util.Using
 
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 /**
  * Provides helper methods for specs that test upgrade plugins.
  */
 abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
-  val log: Logger = Logger(this.getClass())
+  val log: Logger = Logger(this.getClass)
 
   /**
    * Parses a TriG file and returns it as an [[RdfModel]].
@@ -61,9 +61,7 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
       VariableResultsRow(
         new ErrorHandlingMap[String, String](
           mapToWrap,
-          { key: String =>
-            s"No value found for SPARQL query variable '$key' in query result row"
-          }
+          (key: String) => s"No value found for SPARQL query variable '$key' in query result row"
         )
       )
     }

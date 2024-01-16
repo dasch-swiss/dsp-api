@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.actor.Status.Failure
-import org.apache.pekko.testkit._
+import org.apache.pekko.testkit.*
 
 import java.util.UUID
 
@@ -14,18 +14,18 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.List._
+import dsp.valueobjects.Iri.*
+import dsp.valueobjects.List.*
 import dsp.valueobjects.V2
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 

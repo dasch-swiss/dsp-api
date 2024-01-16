@@ -24,12 +24,12 @@ import zio.ZLayer
 import scala.concurrent.Future
 
 import dsp.errors.*
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
+import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
@@ -88,13 +88,12 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
 
   private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
-      ZIO
-        .attempt(UserIdentifierADM(maybeEmail = Some(basic.username))(StringFormatter.getGeneralInstance))
-        .map(id => Some(KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))))
-        .flatMap(authenticator.getUserADMThroughCredentialsV2)
-        .orElseFail(BadCredentialsException("Invalid credentials."))
-        .refineOrDie { case e: RequestRejectedException => e }
-        .either
+      for {
+        email <- ZIO.fromEither(Email.from(basic.username)).orElseFail(BadCredentialsException("Invalid credentials."))
+        id     = CredentialsIdentifier.EmailIdentifier(email)
+        creds  = KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))
+        user  <- authenticator.getUserADMThroughCredentialsV2(Some(creds)).asRight
+      } yield user
     )
 }
 
