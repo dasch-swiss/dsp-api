@@ -3,6 +3,7 @@ site_name: Dsp-Ingest
 nav:
   - Overview:
       - Introduction: index.md
+      - Ingesting Assets: ingest.md
       - API documentation:
           - Projects Endpoints: api-endpoints-projects.md
           - Monitoring Endpoints: api-endpoints-monitoring.md
