@@ -27,7 +27,7 @@ object IngestServiceSpec extends ZIOSpecDefault {
         asset <- IngestService.ingestFile(fileToIngest, shortcode)
         // then
         info              <- AssetInfoService.findByAssetRef(asset.ref).map(_.head)
-        assetDir          <- StorageService.getAssetDirectory(asset.ref)
+        assetDir          <- StorageService.getAssetFolder(asset.ref)
         originalFilename   = s"${asset.id}.csv.orig"
         derivativeFilename = s"${asset.id}.csv"
         originalExists    <- Files.exists(assetDir / originalFilename)

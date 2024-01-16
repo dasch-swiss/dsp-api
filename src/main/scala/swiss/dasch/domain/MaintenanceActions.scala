@@ -4,12 +4,12 @@
  */
 
 package swiss.dasch.domain
-
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.api.ActionName
 import swiss.dasch.domain
 import swiss.dasch.domain.AugmentedPath.*
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
 import swiss.dasch.domain.SupportedFileType.MovingImage
@@ -86,7 +86,7 @@ final case class MaintenanceActionsLive(
     val reportName = if (imagesOnly) "needsOriginals_images_only" else "needsOriginals"
     for {
       _        <- ZIO.logInfo(s"Checking for originals")
-      tmpDir   <- storageService.getTempDirectory()
+      tmpDir   <- storageService.getTempFolder()
       projects <- projectService.listAllProjects()
       _ <- ZIO
              .foreach(projects)(prj =>
@@ -135,7 +135,7 @@ final case class MaintenanceActionsLive(
   override def createNeedsTopLeftCorrectionReport(): Task[Unit] =
     for {
       _        <- ZIO.logInfo(s"Checking for top left correction")
-      tmpDir   <- storageService.getTempDirectory()
+      tmpDir   <- storageService.getTempFolder()
       projects <- projectService.listAllProjects()
       _ <-
         ZIO
@@ -169,7 +169,7 @@ final case class MaintenanceActionsLive(
   override def createWasTopLeftCorrectionAppliedReport(): Task[Unit] =
     for {
       _        <- ZIO.logInfo(s"Checking where top left correction was applied")
-      tmpDir   <- storageService.getTempDirectory()
+      tmpDir   <- storageService.getTempFolder()
       projects <- projectService.listAllProjects()
       assetsWithBak <-
         ZIO

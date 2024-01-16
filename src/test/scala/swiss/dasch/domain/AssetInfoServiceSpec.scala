@@ -9,7 +9,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.AssetInfoFileTestHelper.*
 import swiss.dasch.test.SpecConfigurations
 import zio.Scope
-import zio.nio.file.Path
 import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 
 object AssetInfoServiceSpec extends ZIOSpecDefault {
@@ -18,17 +17,16 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
       test("parsing a simple file info works") {
         // given
         for {
-          refAndDir           <- createInfoFile(originalFileExt = "pdf", derivativeFileExt = "pdf")
-          (assetRef, assetDir) = refAndDir
+          assetDir <- createInfoFile(originalFileExt = "pdf", derivativeFileExt = "pdf")
           // when
-          actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
+          actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
           // then
         } yield assertTrue(
-          actual.assetRef == assetRef,
+          actual.assetRef == assetDir.assetRef,
           actual.originalFilename == NonEmptyString.unsafeFrom("test.pdf"),
-          actual.original.file == assetDir / s"${assetRef.id}.pdf.orig",
+          actual.original.file == assetDir / s"${assetDir.assetId}.pdf.orig",
           actual.original.checksum == testChecksumOriginal,
-          actual.derivative.file == assetDir / s"${assetRef.id}.pdf",
+          actual.derivative.file == assetDir / s"${assetDir.assetId}.pdf",
           actual.derivative.checksum == testChecksumDerivative,
           actual.metadata == OtherMetadata(None, None)
         )
@@ -36,28 +34,27 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
       test("parsing an info file for a moving image with complete metadata info works") {
         // given
         for {
-          refAndDir <- createInfoFile(
-                         originalFileExt = "mp4",
-                         derivativeFileExt = "mp4",
-                         customJsonProps = Some("""
-                                                  |"width": 640,
-                                                  |"height": 480,
-                                                  |"fps": 60,
-                                                  |"duration": 3.14,
-                                                  |"internalMimeType": "video/mp4",
-                                                  |"originalMimeType": "video/mp4"
-                                                  |""".stripMargin)
-                       )
-          (assetRef, assetDir) = refAndDir
+          assetDir <- createInfoFile(
+                        originalFileExt = "mp4",
+                        derivativeFileExt = "mp4",
+                        customJsonProps = Some("""
+                                                 |"width": 640,
+                                                 |"height": 480,
+                                                 |"fps": 60,
+                                                 |"duration": 3.14,
+                                                 |"internalMimeType": "video/mp4",
+                                                 |"originalMimeType": "video/mp4"
+                                                 |""".stripMargin)
+                      )
           // when
-          actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
+          actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
           // then
         } yield assertTrue(
-          actual.assetRef == assetRef,
+          actual.assetRef == assetDir.assetRef,
           actual.originalFilename == NonEmptyString.unsafeFrom("test.mp4"),
-          actual.original.file == assetDir / s"${assetRef.id}.mp4.orig",
+          actual.original.file == assetDir / s"${assetDir.assetId}.mp4.orig",
           actual.original.checksum == testChecksumOriginal,
-          actual.derivative.file == assetDir / s"${assetRef.id}.mp4",
+          actual.derivative.file == assetDir / s"${assetDir.assetId}.mp4",
           actual.derivative.checksum == testChecksumDerivative,
           actual.metadata ==
             MovingImageMetadata(
@@ -72,26 +69,25 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
       test("parsing an info file for a still image with complete metadata info works") {
         // given
         for {
-          refAndDir <- createInfoFile(
-                         originalFileExt = "png",
-                         derivativeFileExt = "jpx",
-                         customJsonProps = Some("""
-                                                  |"width": 640,
-                                                  |"height": 480,
-                                                  |"internalMimeType": "image/jpx",
-                                                  |"originalMimeType": "image/png"
-                                                  |""".stripMargin)
-                       )
-          (assetRef, assetDir) = refAndDir
+          assetDir <- createInfoFile(
+                        originalFileExt = "png",
+                        derivativeFileExt = "jpx",
+                        customJsonProps = Some("""
+                                                 |"width": 640,
+                                                 |"height": 480,
+                                                 |"internalMimeType": "image/jpx",
+                                                 |"originalMimeType": "image/png"
+                                                 |""".stripMargin)
+                      )
           // when
-          actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
+          actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
           // then
         } yield assertTrue(
-          actual.assetRef == assetRef,
+          actual.assetRef == assetDir.assetRef,
           actual.originalFilename == NonEmptyString.unsafeFrom("test.png"),
-          actual.original.file == assetDir / s"${assetRef.id}.png.orig",
+          actual.original.file == assetDir / s"${assetDir.assetId}.png.orig",
           actual.original.checksum == testChecksumOriginal,
-          actual.derivative.file == assetDir / s"${assetRef.id}.jpx",
+          actual.derivative.file == assetDir / s"${assetDir.assetId}.jpx",
           actual.derivative.checksum == testChecksumDerivative,
           actual.metadata ==
             StillImageMetadata(
@@ -104,24 +100,23 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
       test("parsing an info file for a other file type with complete metadata info works") {
         // given
         for {
-          refAndDir <- createInfoFile(
-                         originalFileExt = "pdf",
-                         derivativeFileExt = "pdf",
-                         customJsonProps = Some("""
-                                                  |"internalMimeType": "application/pdf",
-                                                  |"originalMimeType": "application/pdf"
-                                                  |""".stripMargin)
-                       )
-          (assetRef, assetDir) = refAndDir
+          assetDir <- createInfoFile(
+                        originalFileExt = "pdf",
+                        derivativeFileExt = "pdf",
+                        customJsonProps = Some("""
+                                                 |"internalMimeType": "application/pdf",
+                                                 |"originalMimeType": "application/pdf"
+                                                 |""".stripMargin)
+                      )
           // when
-          actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
+          actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
           // then
         } yield assertTrue(
-          actual.assetRef == assetRef,
+          actual.assetRef == assetDir.assetRef,
           actual.originalFilename == NonEmptyString.unsafeFrom("test.pdf"),
-          actual.original.file == assetDir / s"${assetRef.id}.pdf.orig",
+          actual.original.file == assetDir / s"${assetDir.assetId}.pdf.orig",
           actual.original.checksum == testChecksumOriginal,
-          actual.derivative.file == assetDir / s"${assetRef.id}.pdf",
+          actual.derivative.file == assetDir / s"${assetDir.assetId}.pdf",
           actual.derivative.checksum == testChecksumDerivative,
           actual.metadata ==
             OtherMetadata(

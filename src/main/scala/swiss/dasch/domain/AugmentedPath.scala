@@ -6,11 +6,14 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
+import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.PathOps.{fileExtension, isHidden}
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles}
+import zio.IO
 import zio.nio.file.Path
 
+import java.io.{File, IOError}
 import scala.util.Left
 
 trait AugmentedPathBuilder[A <: AugmentedPath] {
@@ -22,7 +25,14 @@ trait AugmentedPathBuilder[A <: AugmentedPath] {
 
 trait AugmentedPath {
   def path: Path
+  final def /(other: Path): Path              = path / other
+  final def /(other: String): Path            = path / other
+  final def toAbsolutePath: IO[IOError, Path] = path.toAbsolutePath
+  final def parent: Option[Path]              = path.parent
+  final def toFile: java.io.File              = path.toFile
 }
+
+trait AugmentedFolder extends AugmentedPath
 
 trait AugmentedFile extends AugmentedPath {
   inline def file: Path        = path
@@ -37,6 +47,11 @@ trait DerivativeFile extends AssetFile
 
 object AugmentedPath {
   import ErrorMessages.*
+
+  object Conversions {
+    given Conversion[AugmentedPath, Path] = _.path
+    given Conversion[AugmentedPath, File] = _.toFile
+  }
 
   private[AugmentedPath] object ErrorMessages {
     val hiddenFile: String          = "Hidden file."
@@ -56,7 +71,37 @@ object AugmentedPath {
       builder.from(str)
   }
 
-  final case class ProjectFolder(path: Path, shortcode: ProjectShortcode) extends AugmentedPath
+  final case class AssetsBaseFolder private (path: Path) extends AugmentedFolder
+  object AssetsBaseFolder {
+    def from(config: StorageConfig): AssetsBaseFolder = AssetsBaseFolder(config.assetPath)
+  }
+
+  final case class TempFolder private (path: Path) extends AugmentedFolder
+
+  object TempFolder {
+    def from(config: StorageConfig): TempFolder = TempFolder(config.tempPath)
+  }
+
+  final case class AssetFolder private (path: Path, assetId: AssetId, projectFolder: ProjectFolder)
+      extends AugmentedFolder {
+    lazy val shortcode: ProjectShortcode = projectFolder.shortcode
+    lazy val assetRef: AssetRef          = AssetRef(assetId, shortcode)
+  }
+
+  object AssetFolder {
+    def from(assetId: AssetId, projectFolder: ProjectFolder): AssetFolder = {
+      val assetIdStr  = assetId.value
+      val segment1    = assetIdStr.substring(0, 2).toLowerCase()
+      val segment2    = assetIdStr.substring(2, 4).toLowerCase()
+      val assetFolder = projectFolder / segment1 / segment2
+      AssetFolder(assetFolder, assetId, projectFolder)
+    }
+  }
+
+  final case class ProjectFolder(path: Path, shortcode: ProjectShortcode) extends AugmentedFolder {
+    def assetFolder(assetId: AssetId): AssetFolder = AssetFolder.from(assetId, this)
+  }
+
   object ProjectFolder extends WithSmartConstructors[ProjectFolder] {
     given AugmentedPathBuilder[ProjectFolder] with {
       def from(path: Path): Either[String, ProjectFolder] =

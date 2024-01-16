@@ -67,13 +67,13 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         )
       },
       test("should return 204 for a project shortcode and create originals for jp2 and jpx assets") {
-        def doesOrigExist(asset: AssetRef, format: SipiImageFormat) = StorageService.getAssetDirectory(asset).flatMap {
+        def doesOrigExist(asset: AssetRef, format: SipiImageFormat) = StorageService.getAssetFolder(asset).flatMap {
           // Since the create original maintenance action is forked into the background
           // we need to wait (i.e. `awaitTrue') for the file to be created.
           assetDir => awaitTrue(Files.exists(assetDir / s"${asset.id}.${format.extension}.orig"))
         }
 
-        def loadAssetInfo(asset: AssetRef) = StorageService.getAssetDirectory(asset).flatMap {
+        def loadAssetInfo(asset: AssetRef) = StorageService.getAssetFolder(asset).flatMap {
           // Since the create original maintenance action is forked into the background
           // we need to wait (i.e. `awaitTrue') for the file to be created.
           assetDir =>
@@ -140,7 +140,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     ) @@ TestAspect.withLiveClock
 
   private def loadReport(name: String) =
-    StorageService.getTempDirectory().flatMap { tmpDir =>
+    StorageService.getTempFolder().flatMap { tmpDir =>
       val report = tmpDir / "reports" / name
       awaitTrue(Files.exists(report)) *> StorageService.loadJsonFile[Chunk[String]](report)
     }

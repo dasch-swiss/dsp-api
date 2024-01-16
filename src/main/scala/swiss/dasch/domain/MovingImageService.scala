@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import org.apache.commons.io.FilenameUtils
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile
 import swiss.dasch.infrastructure.CommandExecutor
 import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
@@ -17,9 +18,9 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
   def createDerivative(original: Original, assetRef: AssetRef): Task[MovingImageDerivativeFile] =
     for {
       fileExtension <- ensureSupportedFileType(original.originalFilename.toString)
-      assetDir      <- storage.getAssetDirectory(assetRef)
+      assetDir      <- storage.getAssetFolder(assetRef)
       derivative     = MovingImageDerivativeFile.unsafeFrom(assetDir / s"${assetRef.id}.$fileExtension")
-      _             <- storage.copyFile(original.file.path, derivative.path)
+      _             <- storage.copyFile(original.file, derivative)
     } yield derivative
 
   private def ensureSupportedFileType(file: Path | String) = {
@@ -36,7 +37,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
   def extractKeyFrames(file: MovingImageDerivativeFile, assetRef: AssetRef): Task[Unit] =
     for {
       _       <- ZIO.logInfo(s"Extracting key frames for $file, $assetRef")
-      absPath <- file.path.toAbsolutePath
+      absPath <- file.toAbsolutePath
       cmd     <- executor.buildCommand("/sipi/scripts/export-moving-image-frames.sh", s"-i $absPath")
       _       <- executor.executeOrFail(cmd)
     } yield ()

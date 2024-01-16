@@ -19,7 +19,7 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
       val devLayer = ZLayer.succeed(SipiConfig(useLocalDev = true)) >>> CommandExecutorLive.layer
       for {
         cmd      <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](devLayer)
-        assetDir <- StorageService.getAssetDirectory().flatMap(_.toAbsolutePath)
+        assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
         expected =
           s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} customParams"
       } yield assertTrue(cmd.cmd == expected)

@@ -9,6 +9,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto.autoUnwrap
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
+import swiss.dasch.domain.AugmentedPath.Conversions.given
 import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles, StillImage}
 import zio.json.interop.refined.{decodeRefined, encodeRefined}
 import zio.json.{DeriveJsonCodec, JsonCodec}
@@ -115,7 +116,7 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     getInfoFilePath(assetInfo.assetRef).flatMap(storage.saveJsonFile(_, AssetInfoFileContent.from(assetInfo)))
 
   def getInfoFilePath(asset: AssetRef): UIO[Path] =
-    storage.getAssetDirectory(asset).map(_ / infoFilename(asset))
+    storage.getAssetFolder(asset).map(_ / infoFilename(asset))
 
   private def infoFilename(asset: AssetRef): String = infoFilename(asset.id)
   private def infoFilename(id: AssetId): String     = s"$id.info"
@@ -170,10 +171,10 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
   } yield ()
 
   override def createAssetInfo(asset: Asset): IO[FileNotFoundException, AssetInfo] = for {
-    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.path)
-    original            = FileAndChecksum(asset.original.file.path, checksumOriginal)
-    checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.path)
-    derivative          = FileAndChecksum(asset.derivative.path, checksumDerivative)
+    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file)
+    original            = FileAndChecksum(asset.original.file, checksumOriginal)
+    checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative)
+    derivative          = FileAndChecksum(asset.derivative, checksumDerivative)
   } yield AssetInfo(asset.ref, original, asset.original.originalFilename, derivative, asset.metadata)
 }
 

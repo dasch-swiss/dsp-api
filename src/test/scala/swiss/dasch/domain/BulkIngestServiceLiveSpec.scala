@@ -18,7 +18,7 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
     for {
       // given
       importDir <- StorageService
-                     .getTempDirectory()
+                     .getTempFolder()
                      .map(_ / "import" / shortcode.value)
                      .tap(Files.createDirectories(_))
       _             <- Files.createFile(importDir / "0001.tif")
@@ -37,7 +37,7 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
     for {
       // given
       importDir <- StorageService
-                     .getTempDirectory()
+                     .getTempFolder()
                      .map(_ / "import" / shortcode.value)
                      .tap(Files.createDirectories(_))
       mappingCsvFile = importDir.parent.head / s"mapping-$shortcode.csv"

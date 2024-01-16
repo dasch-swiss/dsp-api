@@ -62,7 +62,7 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
   override def buildCommand(command: String, params: String): UIO[Command] =
     if (sipiConfig.useLocalDev) {
       for {
-        assetDir <- storageService.getAssetDirectory().flatMap(_.toAbsolutePath).orDie
+        assetDir <- storageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath).orDie
       } yield Command(
         s"docker run --entrypoint $command -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} $params"
       )

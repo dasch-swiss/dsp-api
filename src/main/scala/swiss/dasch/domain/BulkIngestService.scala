@@ -73,7 +73,7 @@ final case class BulkIngestServiceLive(
     } yield sum
 
   private def getImportFolder(shortcode: ProjectShortcode): UIO[Path] =
-    storage.getTempDirectory().map(_ / "import" / shortcode.toString)
+    storage.getTempFolder().map(_ / "import" / shortcode.toString)
 
   private def createMappingFile(project: ProjectShortcode, importDir: Path): IO[IOException, Path] = {
     val mappingFile = getMappingCsvFile(importDir, project)

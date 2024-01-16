@@ -4,9 +4,9 @@
  */
 
 package swiss.dasch.domain
-
 import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.string.MatchesRegex
+import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.*
 import zio.json.JsonCodec
@@ -34,16 +34,16 @@ final case class ProjectService(
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =
     ZStream
-      .fromZIO(storage.getAssetDirectory())
+      .fromZIO(storage.getAssetsBaseFolder())
       .flatMap(newDirectoryStream(_))
       .flatMap(dir => ZStream.fromZIOOption(ZIO.fromOption(ProjectFolder.from(dir).toOption)))
       .flatMapPar(StorageService.maxParallelism())(ZStream.succeed(_).filterZIO(projectIsNotEmpty))
       .runCollect
 
-  private def projectIsNotEmpty(prj: ProjectFolder) =
-    Files.isDirectory(prj.path) &&
+  private def projectIsNotEmpty(projectDir: ProjectFolder) =
+    Files.isDirectory(projectDir) &&
       Files
-        .walk(prj.path, maxDepth = 3)
+        .walk(projectDir, maxDepth = 3)
         .filterZIO(FileFilters.isNonHiddenRegularFile)
         .runHead
         .map(_.isDefined)
@@ -53,12 +53,12 @@ final case class ProjectService(
 
   def findProject(shortcode: ProjectShortcode): IO[IOException, Option[ProjectFolder]] =
     storage
-      .getProjectDirectory(shortcode)
-      .flatMap(path => ZIO.whenZIO(Files.isDirectory(path.path))(ZIO.succeed(path)))
+      .getProjectFolder(shortcode)
+      .flatMap(path => ZIO.whenZIO(Files.isDirectory(path))(ZIO.succeed(path)))
 
   def findAssetInfosOfProject(shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo] =
     ZStream
-      .fromIterableZIO(findProject(shortcode).map(_.map(_.path).toList))
+      .fromZIOOption(findProject(shortcode).some)
       .flatMap(assetInfos.findAllInPath(_, shortcode))
 
   def zipProject(shortcode: ProjectShortcode): Task[Option[Path]] =
@@ -68,12 +68,12 @@ final case class ProjectService(
 
   private def zipProjectPath(projectPath: ProjectFolder) =
     storage
-      .getTempDirectory()
+      .getTempFolder()
       .map(_ / "zipped")
-      .flatMap(targetFolder => ZipUtility.zipFolder(projectPath.path, targetFolder).map(Some(_)))
+      .flatMap(targetFolder => ZipUtility.zipFolder(projectPath, targetFolder).map(Some(_)))
 
   def deleteProject(shortcode: ProjectShortcode): IO[IOException, Unit] =
-    findProject(shortcode).tapSome { case Some(prj) => Files.deleteRecursive(prj.path) }.unit
+    findProject(shortcode).tapSome { case Some(prj) => Files.deleteRecursive(prj) }.unit
 }
 
 object ProjectService {
