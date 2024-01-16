@@ -5,24 +5,18 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-import sttp.tapir.Schema
+import dsp.errors.ValidationException
+import dsp.valueobjects.Iri.{isProjectIri, validateAndEscapeProjectIri}
+import dsp.valueobjects.{Iri, IriErrorMessages, UuidUtil, V2}
+import org.apache.jena.rdf.model.Literal
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import sttp.tapir.{Codec, CodecFormat, Schema}
 import zio.NonEmptyChunk
 import zio.json.*
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
-import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.isProjectIri
-import dsp.valueobjects.Iri.validateAndEscapeProjectIri
-import dsp.valueobjects.IriErrorMessages
-import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
   id: ProjectIri,
@@ -71,7 +65,11 @@ object KnoraProject {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
-    implicit val factory: String => Either[String, Shortcode] = from(_).toEitherWith(_.head.getMessage)
+    implicit val factory: Literal => Either[String, Shortcode] = {
+      case literal: Literal if literal.getDatatypeURI == "http://www.w3.org/2001/XMLSchema#string" =>
+        Shortcode.from(literal.getString).toEitherWith(_.head.getMessage)
+      case literal: Literal => Left(s"Literal ${literal.toString} is not a string literal.")
+    }
 
     def unsafeFrom(str: String): Shortcode = from(str).fold(e => throw e.head, identity)
 

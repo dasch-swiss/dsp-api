@@ -1,7 +1,7 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.valueobjects.V2
-import org.apache.jena.rdf.model.{Model, Resource}
+import org.apache.jena.rdf.model.{Literal, Model, Resource}
 import org.knora.webapi.messages.util.rdf.Errors.{ConversionError, LiteralNotPresent, NotALiteral, RdfError}
 import zio.*
 
@@ -13,7 +13,6 @@ object Errors {
   case class LiteralNotPresent(key: String) extends RdfError
   case class NotALiteral(key: String)       extends RdfError
   case class ConversionError(msg: String)   extends RdfError
-
 }
 
 final case class NewRdfResource(private val res: Resource, private val model: Model) {
@@ -23,28 +22,46 @@ final case class NewRdfResource(private val res: Resource, private val model: Mo
     res.getProperty(property).getLiteral.getString
   }
 
-  private def getStringLiteralByPropertyTypeSafe(key: String): IO[Option[NotALiteral], String] =
+  private def getLiteral(propertyIri: String): IO[Option[NotALiteral], Literal] =
     ZIO
-      .succeed(model.createProperty(key))
-      .map(p => Option(res.getProperty(p)))
-      .flatMap(p => ZIO.attempt(p.map(_.getLiteral)).orElseFail(NotALiteral(key)))
-      .map(_.map(_.getString))
-      .some
+      .succeed(model.createProperty(propertyIri))
+      .flatMap(prop => ZIO.fromOption(Option(res.getProperty(prop))))
+      .flatMap(stmt => ZIO.attempt(stmt.getLiteral).orElseFail(NotALiteral(s"$propertyIri")).mapError(Some(_)))
 
-  def getStringLiteralByPropertyTypeSafeWithMapper[A](
-    key: String
-  )(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
-    getStringLiteralByPropertyTypeSafe(key)
-      .flatMap(lit => ZIO.fromEither(mapper(lit)).mapError(msg => Some(ConversionError(msg))))
+  private def getTypedLiteral[A](literal: Literal, f: Literal => A)(implicit
+    tag: Tag[A]
+  ): IO[ConversionError, A] =
+    ZIO
+      .attempt(f(literal))
+      .orElseFail(ConversionError(s"$literal is not an ${tag.getClass.getSimpleName}"))
+
+  private def getTypedLiteral[A, B](
+    propertyIri: String,
+    f: Literal => A,
+    mapper: A => Either[String, B]
+  )(implicit tag: Tag[A]): IO[RdfError, Option[B]] =
+    getLiteral(propertyIri)
+      .flatMap(lit => getTypedLiteral(lit, f).mapError(Some(_)))
+      .flatMap(a => ZIO.fromEither(mapper(a)).mapError(ConversionError.apply).mapError(Some(_)))
       .unsome
 
-  def getStringLiteralByPropertyTypeSafeWithMapperOrFail[A](
-    key: String
-  )(implicit mapper: String => Either[String, A]): IO[RdfError, A] =
-    getStringLiteralByPropertyTypeSafeWithMapper[A](key).flatMap {
-      case None        => ZIO.fail(LiteralNotPresent(key))
-      case Some(value) => ZIO.succeed(value)
-    }
+  def getStringLiteralPropertySingleOption[A](
+    propertyIri: String
+  )(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
+    getTypedLiteral(propertyIri, _.getString, mapper)
+
+  def getStringLiteralPropertyOrFail[A](propertyIri: String)(implicit
+    mapper: String => Either[String, A]
+  ): IO[RdfError, A] = getStringLiteralPropertySingleOption(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
+
+  def getBooleanLiteralPropertySingleOption[A](propertyIri: String)(implicit
+    mapper: Boolean => Either[String, A]
+  ): IO[RdfError, Option[A]] =
+    getTypedLiteral(propertyIri, _.getBoolean, mapper)
+
+  def getBooleanLiteralPropertyOrFail[A](propertyIri: String)(implicit
+    mapper: Boolean => Either[String, A]
+  ): IO[RdfError, A] = getBooleanLiteralPropertySingleOption(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
 
   def getStringLiteralsByProperty(propertyIri: String): Task[List[String]] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
