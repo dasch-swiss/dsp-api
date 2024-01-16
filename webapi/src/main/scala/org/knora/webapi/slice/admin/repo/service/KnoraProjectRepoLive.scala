@@ -54,31 +54,46 @@ final case class KnoraProjectRepoLive(
     for {
       model   <- triplestore.queryRdf(Construct(query))
       newModel = NewRdfModel(model)
-      x       <- ZIO.fromOption(findOneNew(newModel)).orElseFail(new Exception("not found"))
-    } yield None // TODO: this is of course not working!
+      project <- findOneNew(newModel).orElseFail(new Exception("not found")).option
+    } yield project
 
-  private def findOneNew(model: NewRdfModel) =
+  private def findOneNew(model: NewRdfModel): Task[KnoraProject] =
     for {
-      projectResource <- model.getResource("http://rdfh.ch/projects/0001")
-      shortcode       <- projectResource.getStringLiteralByProperty(ProjectShortcode)
-      shortname       <- projectResource.getStringLiteralByProperty(ProjectShortname)
-      longname        <- projectResource.getStringLiteralByProperty(ProjectLongname)
-      description      = projectResource.getStringLiteralsByProperty(ProjectDescription)
-      keywords         = projectResource.getStringLiteralsByProperty(ProjectKeyword)
-      logo             = projectResource.getStringLiteralByProperty(ProjectLogo)
-      status          <- projectResource.getBooleanLiteralByProperty(StatusProp)
-      selfjoin        <- projectResource.getBooleanLiteralByProperty(HasSelfJoinEnabled)
-      ontologies       = projectResource.getObjectIrisByProperty(belongsToOntology)
-      _                = println(s"shortcode: $shortcode")
-      _                = println(s"shortname: $shortname")
-      _                = println(s"longname: $longname")
-      _                = println(s"description: $description")
-      _                = println(s"keywords: $keywords")
-      _                = println(s"logo: $logo")
-      _                = println(s"status: $status")
-      _                = println(s"selfjoin: $selfjoin")
-      _                = println(s"ontos: $ontologies")
-    } yield ()
+      projectResource  <- model.getResource("http://rdfh.ch/projects/0001")
+      shortcodeLiteral <- projectResource.getStringLiteralByProperty(ProjectShortcode)
+      shortnameLiteral <- projectResource.getStringLiteralByProperty(ProjectShortname)
+      longnameLiteral  <- projectResource.getStringLiteralByProperty(ProjectLongname).option
+      descriptionLiterals <-
+        projectResource
+          .getLangStringLiteralsByProperty(ProjectDescription)
+          .map(NonEmptyChunk.fromIterableOption(_))
+          .someOrFail(new Exception("not found"))
+      keywordsLiteral   <- projectResource.getStringLiteralsByProperty(ProjectKeyword)
+      logoLiteral       <- projectResource.getStringLiteralByProperty(ProjectLogo)
+      statusLiteral     <- projectResource.getBooleanLiteralByProperty(StatusProp)
+      selfjoinLiteral   <- projectResource.getBooleanLiteralByProperty(HasSelfJoinEnabled)
+      ontologiesLiteral <- projectResource.getObjectIrisByProperty(belongsToOntology)
+      shortcode         <- Shortcode.from(shortcodeLiteral).toZIO
+      shortname         <- Shortname.from(shortnameLiteral).toZIO
+      longname          <- ZIO.foreach(longnameLiteral)(Longname.from(_).toZIO)
+      description       <- ZIO.foreach(descriptionLiterals)(Description.from(_).toZIO)
+      keywords          <- ZIO.foreach(keywordsLiteral)(Keyword.from(_).toZIO)
+      logo              <- Logo.from(logoLiteral).toZIO.option
+      status             = Status.from(statusLiteral)
+      selfjoin           = SelfJoin.from(selfjoinLiteral)
+      ontologies         = ontologiesLiteral.map(InternalIri)
+    } yield KnoraProject(
+      id = ProjectIri("http://rdfh.ch/projects/0001"),
+      shortcode = shortcode,
+      shortname = shortname,
+      longname = longname,
+      description = description,
+      keywords = keywords,
+      logo = logo,
+      status = status,
+      selfjoin = selfjoin,
+      ontologies = ontologies
+    )
 
   override def findAll(): Task[List[KnoraProject]] = {
     val query = sparql.admin.txt.getProjects(None, None, None)

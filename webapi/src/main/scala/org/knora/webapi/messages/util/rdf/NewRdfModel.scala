@@ -3,32 +3,43 @@ package org.knora.webapi.messages.util.rdf
 import scala.jdk.CollectionConverters.*
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.rdf.model.Model
+import zio.*
 
-import scala.util.Try
+import dsp.valueobjects.V2
 
 final case class NewRdfResource(private val res: Resource, private val model: Model) {
 
-  def getStringLiteralByProperty(propertyIri: String): Option[String] = Try {
+  def getStringLiteralByProperty(propertyIri: String): Task[String] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
     res.getProperty(property).getLiteral.getString
-  }.toOption
+  }
 
-  def getStringLiteralsByProperty(propertyIri: String): Seq[String] = {
+  def getStringLiteralsByProperty(propertyIri: String): Task[List[String]] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
     res.listProperties(property).toList.asScala.toList.map(_.getLiteral.getString)
   }
 
-  def getBooleanLiteralByProperty(propertyIri: String): Option[Boolean] = Try {
+  def getLangStringLiteralsByProperty(propertyIri: String): Task[List[V2.StringLiteralV2]] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
-    res.getProperty(property).getLiteral.getBoolean
-  }.toOption
-
-  def getObjectIriByProperty(propertyIri: String): Option[String] = {
-    val property = model.createProperty(propertyIri)
-    Option.when(property != null && property.isURIResource)(res.getProperty(property).getResource.getURI)
+    res.listProperties(property).toList.asScala.toList.map { stmt =>
+      val lang       = stmt.getLiteral.getLanguage
+      val langOption = Option.when(lang.nonEmpty)(lang)
+      val value      = stmt.getLiteral.getString
+      V2.StringLiteralV2(value, langOption)
+    }
   }
 
-  def getObjectIrisByProperty(propertyIri: String): Seq[String] = {
+  def getBooleanLiteralByProperty(propertyIri: String): Task[Boolean] = ZIO.attempt {
+    val property = model.createProperty(propertyIri)
+    res.getProperty(property).getLiteral.getBoolean
+  }
+
+  def getObjectIriByProperty(propertyIri: String): Task[String] = ZIO.attempt {
+    val property = model.createProperty(propertyIri)
+    res.getProperty(property).getResource.getURI
+  }
+
+  def getObjectIrisByProperty(propertyIri: String): Task[List[String]] = ZIO.attempt {
     val property = model.createProperty(propertyIri)
     res.listProperties(property).toList.asScala.toList.map(_.getResource.getURI)
   }
@@ -36,13 +47,8 @@ final case class NewRdfResource(private val res: Resource, private val model: Mo
 }
 
 final case class NewRdfModel(private val model: Model) {
-  def getResource(subjectIri: String): Option[NewRdfResource] = {
+  def getResource(subjectIri: String): Task[NewRdfResource] = ZIO.attempt {
     val resource = model.getResource(subjectIri)
-    Option.when(NewRdfModel.resourceNonEmpty(resource))(NewRdfResource(resource, model))
+    NewRdfResource(resource, model)
   }
-}
-
-object NewRdfModel {
-  def resourceNonEmpty(r: Resource): Boolean =
-    r.listProperties().hasNext
 }
