@@ -111,12 +111,14 @@ final case class NewRdfResource(private val res: Resource) {
   def getStringLiteralOrFail[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, A] =
     getStringLiteral(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
 
-  def getStringLiterals[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
-    literalsAsDomainObjects(propertyIri, _.getString, mapper)
+  def getStringLiterals[A](
+    propertyIri: String
+  )(implicit mapper: String => Either[String, A], ordering: Ordering[A]): IO[RdfError, Chunk[A]] =
+    literalsAsDomainObjects(propertyIri, _.getString, mapper).map(_.sorted)
 
   def getStringLiteralsOrFail[A](
     propertyIri: String
-  )(implicit mapper: String => Either[String, A]): IO[RdfError, NonEmptyChunk[A]] =
+  )(implicit mapper: String => Either[String, A], ordering: Ordering[A]): IO[RdfError, NonEmptyChunk[A]] =
     for {
       chunk         <- getStringLiterals(propertyIri)
       nonEmptyChunk <- ZIO.fromOption(NonEmptyChunk.fromChunk(chunk)).orElseFail(LiteralNotPresent(propertyIri))
