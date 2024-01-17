@@ -136,19 +136,19 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     test("pass an object containing too short Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2("Ab", Some("en"))) ==
-          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
+          Left("Description must be 3 to 40960 characters long.")
       )
     },
     test("pass an object containing too long Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2(new Random().nextString(40961), Some("en"))) ==
-          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
+          Left("Description must be 3 to 40960 characters long.")
       )
     },
     test("pass a valid object and successfully create value object") {
       assertTrue(
         Description.from(V2.StringLiteralV2(value = "Valid project description", language = Some("en"))).map(_.value) ==
-          Validation.succeed(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
+          Right(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
       )
     }
   )

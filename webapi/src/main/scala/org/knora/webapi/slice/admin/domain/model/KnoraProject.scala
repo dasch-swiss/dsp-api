@@ -24,6 +24,7 @@ import org.knora.webapi.slice.common.StringBasedValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
@@ -101,16 +102,11 @@ object KnoraProject {
       extends AnyVal
       with Value[V2.StringLiteralV2]
 
-  object Description {
+  object Description extends WithFrom[V2.StringLiteralV2, Description] {
 
-    def unsafeFrom(str: V2.StringLiteralV2): Description = from(str).fold(e => throw e.head, identity)
-
-    def from(literal: V2.StringLiteralV2): Validation[ValidationException, Description] =
-      if (literal.value.length >= 3 && literal.value.length <= 40960) Validation.succeed(Description(literal))
-      else Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
-
-    implicit val codec: JsonCodec[Description] =
-      JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from(_).toEitherWith(_.head.getMessage), _.value)
+    def from(literal: V2.StringLiteralV2): Either[String, Description] =
+      if (literal.value.length >= 3 && literal.value.length <= 40960) Right(Description(literal))
+      else Left("Description must be 3 to 40960 characters long.")
   }
 
   final case class Keyword private (override val value: String) extends AnyVal with StringValue

@@ -78,10 +78,11 @@ final case class KnoraProjectRepoLive(
           .flatMap(optLit =>
             ZIO.foreach(optLit)(l => ZIO.fromEither(Longname.from(l.value)).mapError(ValidationException.apply))
           )
-      description <- mapper
-                       .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
-                       .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
-                       .flatMap(ZIO.foreach(_)(Description.from(_).toZIO))
+      description <-
+        mapper
+          .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
+          .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
+          .flatMap(ZIO.foreach(_)(it => ZIO.fromEither(Description.from(it)).mapError(ValidationException.apply)))
       keywords <- mapper
                     .getList[StringLiteralV2](ProjectKeyword, propertiesMap)
                     .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(Keyword.from(_).toZIO))

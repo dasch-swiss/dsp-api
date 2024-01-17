@@ -9,11 +9,9 @@ import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
 
+import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
@@ -41,6 +39,9 @@ object Codecs {
       stringCodec(from, _.value)
     private def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
       JsonCodec[String].transformOrFail(from, to)
+
+    implicit val description: StringCodec[Description] =
+      JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from, _.value)
 
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
