@@ -435,9 +435,10 @@ object ProjectIdentifierADM {
  * @param watermark the watermark file.
  */
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
+    extends ProjectsADMJsonProtocol
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formating
+// JSON formatting
 
 /**
  * A spray-json protocol for generating Knora API v1 JSON providing data about projects.

@@ -95,6 +95,8 @@ object LayersTest {
       with ConstructResponseUtilV2
       with ConstructTransformer
       with DspIngestClient
+      with FilesEndpoints
+      with FilesEndpointsHandler
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -156,6 +158,8 @@ object LayersTest {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
+      FilesEndpoints.layer,
+      FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsEndpoints.layer,
       GroupsEndpointsHandler.layer,
@@ -205,7 +209,7 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      SipiResponderADMLive.layer,
+      SipiResponderADM.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

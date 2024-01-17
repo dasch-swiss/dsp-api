@@ -7,12 +7,11 @@ package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.*
 
-import scala.concurrent.duration.*
-
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
@@ -28,35 +27,33 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
     )
   )
 
-  // The default timeout for receiving reply messages from actors.
-  override implicit val timeout: FiniteDuration = 20.seconds
-
   "The Sipi responder" should {
     "return details of a full quality file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
-      appActor ! SipiFileInfoGetRequestADM(
-        projectID = Shortcode.unsafeFrom("0803"),
-        filename = "incunabula_0000003328.jp2",
-        requestingUser = SharedTestDataADM.incunabulaMemberUser
+      val actual = UnsafeZioRun.runOrThrow(
+        SipiResponderADM.getFileInfoForSipiADM(
+          Shortcode.unsafeFrom("0803"),
+          "incunabula_0000003328.jp2",
+          SharedTestDataADM.incunabulaMemberUser
+        )
       )
 
-      expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 6, None))
+      actual shouldEqual SipiFileInfoGetResponseADM(permissionCode = 6, None)
     }
 
     "return details of a restricted view file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
-      appActor ! SipiFileInfoGetRequestADM(
-        projectID = Shortcode.unsafeFrom("0803"),
-        filename = "incunabula_0000003328.jp2",
-        requestingUser = SharedTestDataADM.anonymousUser
+      val actual = UnsafeZioRun.runOrThrow(
+        SipiResponderADM.getFileInfoForSipiADM(
+          Shortcode.unsafeFrom("0803"),
+          "incunabula_0000003328.jp2",
+          SharedTestDataADM.anonymousUser
+        )
       )
 
-      expectMsg(
-        timeout,
-        SipiFileInfoGetResponseADM(
-          permissionCode = 1,
-          Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))
-        )
+      actual shouldEqual SipiFileInfoGetResponseADM(
+        permissionCode = 1,
+        Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))
       )
     }
   }
