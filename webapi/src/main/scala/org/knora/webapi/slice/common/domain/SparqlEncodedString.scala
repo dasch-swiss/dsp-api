@@ -1,9 +1,16 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.common.domain
+
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.common.WithFrom.WithFromString
-import sttp.tapir.{Codec, CodecFormat}
-import zio.json.JsonCodec
 
 final case class SparqlEncodedString private (value: String) extends AnyVal
 

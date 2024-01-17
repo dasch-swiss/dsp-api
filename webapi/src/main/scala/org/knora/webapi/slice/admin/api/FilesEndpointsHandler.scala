@@ -16,9 +16,9 @@ import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 final case class FilesEndpointsHandler(
-                                        filesEndpoints: FilesEndpoints,
-                                        sipiResponder: AssetPermissionResponder,
-                                        mapper: HandlerMapper
+  filesEndpoints: FilesEndpoints,
+  sipiResponder: AssetPermissionResponder,
+  mapper: HandlerMapper
 ) {
 
   private val getAdminFilesShortcodeFileIri =
