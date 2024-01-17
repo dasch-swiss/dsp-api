@@ -27,7 +27,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM2
  * This spec tests the 'admin/files'.
  */
 class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
-  import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 
   private val anythingAdminEmail = SharedTestDataADM2.anythingAdminUser.userData.email.get
   private val normalUserEmail    = SharedTestDataADM2.normalUser.userData.email.get

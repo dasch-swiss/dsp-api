@@ -14,6 +14,7 @@ import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.FilesPathVar.filename
 import org.knora.webapi.slice.admin.api.Foo.SparqlEncodedString
@@ -47,8 +48,6 @@ object Foo {
 }
 
 final case class FilesEndpoints(base: BaseEndpoints) {
-  import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
-
   val getAdminFilesShortcodeFileIri = base.withUserEndpoint.get
     .in("admin" / "files" / projectShortcode / filename)
     .out(jsonBody[SipiFileInfoGetResponseADM])
