@@ -19,12 +19,12 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.rdf.Errors.RdfError
-import org.knora.webapi.messages.util.rdf.ImprovedRdfModel
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
+import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
+import org.knora.webapi.slice.common.repo.rdf.ImprovedRdfModel
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService

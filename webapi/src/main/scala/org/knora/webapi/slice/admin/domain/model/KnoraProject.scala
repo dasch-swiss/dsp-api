@@ -21,8 +21,8 @@ import dsp.valueobjects.Iri.validateAndEscapeProjectIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
-import org.knora.webapi.messages.util.rdf.LangString
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.repo.rdf.LangString
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.util.rdf
+package org.knora.webapi.slice.common.repo.rdf
 
 import org.apache.jena.rdf.model.*
 import zio.*
@@ -11,7 +11,7 @@ import zio.*
 import java.io.StringReader
 import scala.jdk.CollectionConverters.*
 
-import org.knora.webapi.messages.util.rdf.Errors.*
+import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
