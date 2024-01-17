@@ -9,15 +9,15 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.slice.admin.api.Foo.SparqlEncodedString
+import org.knora.webapi.responders.admin.SipiResponder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 final case class FilesEndpointsHandler(
   filesEndpoints: FilesEndpoints,
-  sipiResponder: SipiResponderADM,
+  sipiResponder: SipiResponder,
   mapper: HandlerMapper
 ) {
 

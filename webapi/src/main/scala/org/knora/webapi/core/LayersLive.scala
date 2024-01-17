@@ -80,7 +80,7 @@ object LayersLive {
       PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
-      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
+      SearchApiRoutes & SearchResponderV2 & SipiResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
       State & StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
@@ -157,7 +157,7 @@ object LayersLive {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      SipiResponderADM.layer,
+      SipiResponder.layer,
       SipiServiceLive.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,

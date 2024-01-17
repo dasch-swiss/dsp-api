@@ -10,41 +10,16 @@ import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody
 import zio.ZLayer
-import zio.json.JsonCodec
 
-import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.FilesPathVar.filename
-import org.knora.webapi.slice.admin.api.Foo.SparqlEncodedString
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 object FilesPathVar {
-
   val filename: PathCapture[SparqlEncodedString] = path[SparqlEncodedString]("filename")
-}
-
-object Foo {
-
-  final case class SparqlEncodedString private (value: String) extends AnyVal
-  object SparqlEncodedString {
-
-    implicit val codec: JsonCodec[SparqlEncodedString] =
-      JsonCodec[String].transformOrFail(SparqlEncodedString.from, _.value)
-
-    implicit val tapirCodec: Codec[String, SparqlEncodedString, CodecFormat.TextPlain] =
-      Codec.string.mapEither(SparqlEncodedString.from)(_.value)
-
-    def unsafeFrom(str: String): SparqlEncodedString =
-      from(str).fold(e => throw new IllegalArgumentException(e), identity)
-
-    def from(str: String): Either[String, SparqlEncodedString] =
-      Iri
-        .toSparqlEncodedString(str)
-        .map(SparqlEncodedString.apply)
-        .toRight(s"May not be empty or contain a line break: '$str'")
-  }
 }
 
 final case class FilesEndpoints(base: BaseEndpoints) {

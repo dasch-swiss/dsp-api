@@ -26,7 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-final case class SipiResponderADM(
+final case class SipiResponder(
   private val projectsResponder: ProjectsResponderADM,
   private val triplestoreService: TriplestoreService,
   private implicit val sf: StringFormatter
@@ -92,9 +92,9 @@ final case class SipiResponderADM(
     }
 }
 
-object SipiResponderADM {
+object SipiResponder {
   def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
-    ZIO.serviceWithZIO[SipiResponderADM](_.getFileInfoForSipiADM(shortcode, filename, user))
+    ZIO.serviceWithZIO[SipiResponder](_.getFileInfoForSipiADM(shortcode, filename, user))
 
-  val layer = ZLayer.derive[SipiResponderADM]
+  val layer = ZLayer.derive[SipiResponder]
 }
