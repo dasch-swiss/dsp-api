@@ -26,7 +26,7 @@ final case class FilesEndpoints(base: BaseEndpoints) {
   val getAdminFilesShortcodeFileIri = base.withUserEndpoint.get
     .in("admin" / "files" / projectShortcode / filename)
     .out(jsonBody[SipiFileInfoGetResponseADM])
-    .description("Returns the file IRI for a given shortcode and filename.")
+    .description("Returns the permission code and restricted view settings for a given shortcode and filename.")
 
   val endpoints: Seq[AnyEndpoint] = Seq(getAdminFilesShortcodeFileIri.endpoint)
 }
