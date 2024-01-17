@@ -16,6 +16,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
  * TODO:
+ *  - move factory logic to its own place
  *  - add scaladoc
  *  - write tests
  *    - for rdf model
@@ -115,7 +116,7 @@ final case class RdfResource(private val res: Resource) {
   )(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
     for {
       literals      <- getLiterals(propertyIri)
-      strings        = literals.map(_.getString).sorted
+      strings        = literals.map(_.getString)
       domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
     } yield Chunk.fromIterable(domainObjects)
 
