@@ -5,22 +5,15 @@
 
 package org.knora.webapi.slice.common.domain
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-import zio.json.JsonCodec
-
 import dsp.valueobjects.Iri
-import org.knora.webapi.slice.common.WithFrom.WithFromString
+import org.knora.webapi.slice.common.{Value, WithFrom, WithJsonCodec, WithTapirCodec}
 
-final case class SparqlEncodedString private (value: String) extends AnyVal
+final case class SparqlEncodedString private (value: String) extends Value[String]
 
-object SparqlEncodedString extends WithFromString[SparqlEncodedString] {
-
-  implicit val codec: JsonCodec[SparqlEncodedString] =
-    JsonCodec[String].transformOrFail(SparqlEncodedString.from, _.value)
-
-  implicit val tapirCodec: Codec[String, SparqlEncodedString, CodecFormat.TextPlain] =
-    Codec.string.mapEither(SparqlEncodedString.from)(_.value)
+object SparqlEncodedString
+    extends WithFrom[String, SparqlEncodedString]
+    with WithJsonCodec[SparqlEncodedString]
+    with WithTapirCodec[SparqlEncodedString] {
 
   def from(str: String): Either[String, SparqlEncodedString] =
     Iri

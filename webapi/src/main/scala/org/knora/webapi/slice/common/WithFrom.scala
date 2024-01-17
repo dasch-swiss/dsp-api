@@ -5,15 +5,27 @@
 
 package org.knora.webapi.slice.common
 
-trait WithFrom[I, A] {
+import sttp.tapir.{Codec, CodecFormat}
+import zio.json.JsonCodec
+
+trait Value[A] {
+  def value: A
+}
+
+trait WithFrom[-I, +A] {
 
   def from(in: I): Either[String, A]
 
   final def unsafeFrom(in: I): A =
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
-
 }
 
-object WithFrom {
-  type WithFromString[A] = WithFrom[String, A]
+trait WithJsonCodec[StringValue <: Value[String]] { self: WithFrom[String, StringValue] =>
+  implicit val zioJsonCodec: JsonCodec[StringValue] =
+    JsonCodec.string.transformOrFail(self.from, _.value)
+}
+
+trait WithTapirCodec[StringValue <: Value[String]] { self: WithFrom[String, StringValue] =>
+  implicit val tapirCodec: Codec[String, StringValue, CodecFormat.TextPlain] =
+    Codec.string.mapEither(self.from)(_.value)
 }
