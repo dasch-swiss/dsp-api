@@ -6,9 +6,8 @@
 package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko.http.scaladsl.server.Route
-import zio.ZLayer
-
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import zio.ZLayer
 
 final case class AdminApiRoutes(
   groups: GroupsEndpointsHandler,
@@ -21,8 +20,12 @@ final case class AdminApiRoutes(
 ) {
 
   private val handlers =
-    groups.handlers ++ maintenance.handlers ++ permissions.allHanders ++ project.allHanders ++ users.allHanders ++
-      filesEndpoints.allHandlers
+    filesEndpoints.allHandlers ++
+      groups.handlers ++
+      maintenance.handlers ++
+      permissions.allHanders ++
+      project.allHanders ++
+      users.allHanders
 
   val routes: Seq[Route] = handlers.map(tapirToPekko.toRoute(_))
 }
