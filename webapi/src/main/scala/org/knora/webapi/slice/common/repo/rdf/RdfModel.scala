@@ -16,7 +16,6 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
  * TODO:
- *  - move factory logic to its own place
  *  - add scaladoc
  *  - write tests
  *    - for rdf model
