@@ -16,12 +16,11 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
  * TODO:
- *  - verify that `getResource()` fails if the resource is not present
- *  - write tests
- *  - figure out what exactly needs to be sorted (and by what)
- *  - add scaladoc
  *  - move to somewhere in `org.knora.webapi.slice.common.repo`
  *  - adjust naming (remove "new", "improved", etc.)
+ *  - add scaladoc
+ *  - write tests
+ *  - verify that `getResource()` fails if the resource is not present
  */
 
 object Errors {
@@ -183,19 +182,13 @@ final case class ImprovedRdfResource(private val res: Resource) {
     } yield nonEmptyChunk
 
   def getObjectIri(propertyIri: String): IO[RdfError, Option[InternalIri]] =
-    for {
-      prop <- property(propertyIri)
-      iri  <- getObjectUri(propertyIri).map(InternalIri).unsome
-    } yield iri
+    getObjectUri(propertyIri).map(InternalIri).unsome
 
   def getObjectIriOrFail(propertyIri: String): IO[RdfError, InternalIri] =
     getObjectIri(propertyIri).someOrFail(ObjectNotPresent(propertyIri))
 
   def getObjectIris(propertyIri: String): IO[RdfError, Chunk[InternalIri]] =
-    for {
-      prop <- property(propertyIri)
-      iris <- getObjectUris(propertyIri).map(_.map(InternalIri))
-    } yield iris
+    getObjectUris(propertyIri).map(_.map(InternalIri))
 
   def getObjectIrisOrFail(propertyIri: String): IO[RdfError, NonEmptyChunk[InternalIri]] =
     for {
