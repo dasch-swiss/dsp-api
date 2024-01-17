@@ -5,7 +5,8 @@
 
 package org.knora.webapi.slice.admin.api.model
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
@@ -14,8 +15,8 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.interop.refined.*
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object MaintenanceRequests {
 
