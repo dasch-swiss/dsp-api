@@ -24,6 +24,14 @@ import org.knora.webapi.messages.util.rdf.Errors.RdfError
 import org.knora.webapi.messages.util.rdf.Errors.ResourceNotPresent
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
+/*
+ * TODO:
+ *  - verify that `getResource()` fails if the resource is not present
+ *  - write tests
+ *  - figure out what exactly needs to be sorted (and by what)
+ *  - add scaladoc
+ */
+
 object Errors {
   sealed trait RdfError
 
@@ -113,12 +121,16 @@ final case class ImprovedRdfResource(private val res: Resource) {
 
   def getStringLiterals[A](
     propertyIri: String
-  )(implicit mapper: String => Either[String, A], ordering: Ordering[A]): IO[RdfError, Chunk[A]] =
-    literalsAsDomainObjects(propertyIri, _.getString, mapper).map(_.sorted)
+  )(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
+    for {
+      literals      <- getLiterals(propertyIri)
+      strings        = literals.map(_.getString).sorted
+      domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
+    } yield Chunk.fromIterable(domainObjects)
 
   def getStringLiteralsOrFail[A](
     propertyIri: String
-  )(implicit mapper: String => Either[String, A], ordering: Ordering[A]): IO[RdfError, NonEmptyChunk[A]] =
+  )(implicit mapper: String => Either[String, A]): IO[RdfError, NonEmptyChunk[A]] =
     for {
       chunk         <- getStringLiterals(propertyIri)
       nonEmptyChunk <- ZIO.fromOption(NonEmptyChunk.fromChunk(chunk)).orElseFail(LiteralNotPresent(propertyIri))
@@ -205,7 +217,6 @@ final case class ImprovedRdfModel private (private val model: Model) {
   def getResource(subjectIri: String): IO[RdfError, ImprovedRdfResource] = ZIO.attempt {
     val resource = model.createResource(subjectIri)
     ImprovedRdfResource(resource)
-    // TODO: this will probably not fail even if the resource is not present (should check if it is empty)
   }.orElseFail(ResourceNotPresent(subjectIri))
 
 }

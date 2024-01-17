@@ -147,10 +147,7 @@ object KnoraProject {
       JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Keyword private (value: String) extends AnyVal with Ordered[Keyword] {
-
-    override def compare(that: Keyword): Int = value.compareTo(that.value)
-  }
+  final case class Keyword private (value: String) extends AnyVal
 
   object Keyword {
 
