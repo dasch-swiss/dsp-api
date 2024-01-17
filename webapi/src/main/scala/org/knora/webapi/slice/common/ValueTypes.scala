@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.common
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-import zio.json.JsonCodec
-
 import org.knora.webapi.slice.common.Value.StringValue
 
 trait Value[A] extends Any {
@@ -28,17 +24,4 @@ trait WithFrom[-I, +A] {
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
-trait WithJsonCodec[S <: StringValue] { self: WithFrom[String, S] =>
-  implicit val zioJsonCodec: JsonCodec[S] =
-    JsonCodec.string.transformOrFail(self.from, _.value)
-}
-
-trait WithTapirCodec[S <: StringValue] { self: WithFrom[String, S] =>
-  implicit val tapirCodec: Codec[String, S, CodecFormat.TextPlain] =
-    Codec.string.mapEither(self.from)(_.value)
-}
-
-trait StringBasedValueCompanionWithCodecs[A <: StringValue]
-    extends WithFrom[String, A]
-    with WithJsonCodec[A]
-    with WithTapirCodec[A]
+trait StringBasedValueCompanion[A <: StringValue] extends WithFrom[String, A]

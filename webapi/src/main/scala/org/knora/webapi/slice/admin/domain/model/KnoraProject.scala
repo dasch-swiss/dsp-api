@@ -20,7 +20,7 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.common.StringBasedValueCompanionWithCodecs
+import org.knora.webapi.slice.common.StringBasedValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -43,7 +43,7 @@ object KnoraProject {
 
   final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
 
-  object ProjectIri extends StringBasedValueCompanionWithCodecs[ProjectIri] {
+  object ProjectIri extends StringBasedValueCompanion[ProjectIri] {
 
     def from(str: String): Either[String, ProjectIri] = str match {
       case str if str.isEmpty        => Left(IriErrorMessages.ProjectIriMissing)
@@ -56,7 +56,7 @@ object KnoraProject {
 
   final case class Shortcode private (override val value: String) extends AnyVal with StringValue
 
-  object Shortcode extends StringBasedValueCompanionWithCodecs[Shortcode] {
+  object Shortcode extends StringBasedValueCompanion[Shortcode] {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
@@ -68,7 +68,7 @@ object KnoraProject {
 
   final case class Shortname private (override val value: String) extends AnyVal with StringValue
 
-  object Shortname extends StringBasedValueCompanionWithCodecs[Shortname]{
+  object Shortname extends StringBasedValueCompanion[Shortname] {
 
     private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
@@ -79,7 +79,8 @@ object KnoraProject {
           case "DefaultSharedOntologiesProject" => Some(value)
           case _                                => shortnameRegex.findFirstIn(value)
         }
-        maybeShortname.flatMap(Iri.toSparqlEncodedString)
+        maybeShortname
+          .flatMap(Iri.toSparqlEncodedString)
           .toRight(s"Shortname is invalid: $value")
           .map(Shortname.apply)
       }

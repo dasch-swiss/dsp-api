@@ -19,6 +19,7 @@ import zio.ZLayer
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ApiV2

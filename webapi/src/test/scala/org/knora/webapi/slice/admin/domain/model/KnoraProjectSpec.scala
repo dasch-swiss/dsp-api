@@ -5,14 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import dsp.errors.ValidationException
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import zio.Scope
 import zio.prelude.Validation
 import zio.test.*
 
 import scala.util.Random
+
+import dsp.errors.ValidationException
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 /**
  * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.

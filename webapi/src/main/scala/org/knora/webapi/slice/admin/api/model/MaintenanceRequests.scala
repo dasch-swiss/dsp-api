@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.admin.api.model
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.api.RefinedTypeOps
+import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
@@ -16,13 +15,12 @@ import zio.json.JsonCodec
 import zio.json.interop.refined.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 
 object MaintenanceRequests {
 
   type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
-  object AssetId extends RefinedTypeOps[AssetId, String] {
-    implicit val codec: JsonCodec[AssetId] = JsonCodec[String].transformOrFail(AssetId.from, _.toString)
-  }
+  object AssetId extends RefinedTypeOps[AssetId, String]
 
   final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive)
 
