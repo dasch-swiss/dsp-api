@@ -5,20 +5,12 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import play.twirl.api.TxtFormat
-import zio.*
-
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.valueobjects.RestrictedViewSize
-import dsp.valueobjects.V2
+import dsp.valueobjects.{RestrictedViewSize, V2}
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.{BooleanLiteralV2, IriLiteralV2, StringLiteralV2, SubjectV2}
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -26,8 +18,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Update}
+import play.twirl.api.TxtFormat
+import zio.*
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -64,31 +57,27 @@ final case class KnoraProjectRepoLive(
 
   private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
     val (subject, propertiesMap) = subjectPropsTuple
-
-    def eitherToZIO[A](either: Either[String, A]): Task[A] =
-      ZIO.fromEither(either).mapError(new InconsistentRepositoryDataException(_))
-
     for {
-      projectIri <- eitherToZIO(ProjectIri.from(subject.value))
+      projectIri <- mapper.eitherOrDie(ProjectIri.from(subject.value))
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propertiesMap)
-                     .flatMap(l => eitherToZIO(Shortname.from(l.value)))
+                     .flatMap(l => mapper.eitherOrDie(Shortname.from(l.value)))
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
-                     .flatMap(l => eitherToZIO(Shortcode.from(l.value)))
+                     .flatMap(l => mapper.eitherOrDie(Shortcode.from(l.value)))
       longname <- mapper
                     .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
-                    .flatMap(ZIO.foreach(_)(it => eitherToZIO(Longname.from(it.value))))
+                    .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Longname.from(it.value))))
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
                        .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
-                       .flatMap(ZIO.foreach(_)(it => eitherToZIO(Description.from(it))))
+                       .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Description.from(it))))
       keywords <- mapper
                     .getList[StringLiteralV2](ProjectKeyword, propertiesMap)
-                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(it => eitherToZIO(Keyword.from(it))))
+                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(it => mapper.eitherOrDie(Keyword.from(it))))
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propertiesMap)
-                .flatMap(ZIO.foreach(_)(it => eitherToZIO(Logo.from(it.value))))
+                .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Logo.from(it.value))))
       status <- mapper
                   .getSingleOrFail[BooleanLiteralV2](StatusProp, propertiesMap)
                   .map(l => Status.from(l.value))
