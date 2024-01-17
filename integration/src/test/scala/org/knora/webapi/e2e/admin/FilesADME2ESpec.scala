@@ -5,22 +5,18 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko
-
-import scala.concurrent.Await
-import scala.concurrent.duration.*
-
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.unmarshalling.Unmarshal
+import scala.concurrent.Await
+import scala.concurrent.duration.*
 
 /**
  * End-to-End (E2E) test specification for Sipi access.
@@ -29,11 +25,9 @@ import pekko.http.scaladsl.unmarshalling.Unmarshal
  */
 class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
-  private val anythingAdminEmail    = SharedTestDataADM2.anythingAdminUser.userData.email.get
-  private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
-  private val normalUserEmail       = SharedTestDataADM2.normalUser.userData.email.get
-  private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
-  private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
+  private val anythingAdminEmail = SharedTestDataADM2.anythingAdminUser.userData.email.get
+  private val normalUserEmail    = SharedTestDataADM2.normalUser.userData.email.get
+  private val testPass           = "test"
 
   val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
 
@@ -48,9 +42,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
     "return CR (8) permission code" in {
       /* anything image */
-      val request = Get(
-        baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass"
-      )
+      val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~>
+        addCredentials(BasicHttpCredentials(anythingAdminEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       // println(response.toString)
@@ -66,7 +59,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
     "return RV (1) permission code" in {
       /* anything image */
       val request =
-        Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
+        Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~>
+          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       // println(response.toString)
@@ -81,7 +75,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
     "return 404 Not Found if a file value is in a deleted resource" in {
       val request =
-        Get(baseApiUrl + s"/admin/files/0001/9hxmmrWh0a7-CnRCq0650ro.jpx?email=$normalUserEmailEnc&password=$testPass")
+        Get(baseApiUrl + s"/admin/files/0001/9hxmmrWh0a7-CnRCq0650ro.jpx") ~>
+          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.NotFound)
@@ -89,7 +84,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
     "return permissions for a previous version of a file value" in {
       val request =
-        Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2?email=$normalUserEmailEnc&password=$testPass")
+        Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2") ~>
+          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.OK)
