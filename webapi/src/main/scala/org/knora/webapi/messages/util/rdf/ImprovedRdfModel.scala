@@ -20,6 +20,8 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
  *  - write tests
  *  - figure out what exactly needs to be sorted (and by what)
  *  - add scaladoc
+ *  - move to somewhere in `org.knora.webapi.slice.common.repo`
+ *  - adjust naming (remove "new", "improved", etc.)
  */
 
 object Errors {

@@ -52,12 +52,29 @@ final case class KnoraProjectRepoLive(
         )
     }
 
-  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
+  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] = {
+    val query =
+      s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |CONSTRUCT {
+          |  ?project ?p ?o .
+          |  ?project knora-admin:belongsToOntology ?ontology .
+          |} WHERE {
+          |  BIND(IRI("${iri.value}") as ?project)
+          |  ?project a knora-admin:knoraProject .
+          |  OPTIONAL {
+          |      ?ontology a owl:Ontology .
+          |      ?ontology knora-base:attachedToProject ?project .
+          |  }
+          |  ?project ?p ?o .
+          |}""".stripMargin
     for {
-      ttl      <- triplestore.queryRdf(Construct(sparql.admin.txt.getProjects(Some(iri.value), None, None)))
+      ttl      <- triplestore.queryRdf(Construct(query))
       newModel <- ImprovedRdfModel.fromTurtle(ttl)
       project  <- toKnoraProjectNew(newModel, iri).option
     } yield project
+  }
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
