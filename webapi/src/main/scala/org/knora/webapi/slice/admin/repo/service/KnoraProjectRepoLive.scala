@@ -24,7 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
-import org.knora.webapi.slice.common.repo.rdf.ImprovedRdfModel
+import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -77,7 +77,7 @@ final case class KnoraProjectRepoLive(
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
       ttl      <- triplestore.queryRdf(getProjectByIri(iri))
-      newModel <- ImprovedRdfModel.fromTurtle(ttl)
+      newModel <- RdfModel.fromTurtle(ttl)
       project  <- toKnoraProjectNew(newModel, iri).option
     } yield project
 
@@ -87,7 +87,7 @@ final case class KnoraProjectRepoLive(
       project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
 
-  private def toKnoraProjectNew(model: ImprovedRdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
+  private def toKnoraProjectNew(model: RdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
     for {
       projectResource <- model.getResource(iri.value)
       shortcode       <- projectResource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
