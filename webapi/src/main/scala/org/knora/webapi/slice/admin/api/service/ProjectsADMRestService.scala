@@ -295,7 +295,7 @@ final case class ProjectsADMRestServiceLive(
   } yield ()
 
   private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
-    Shortcode.from(shortcodeStr).toZIO.mapBoth(err => BadRequestException(err.msg), ShortcodeIdentifier.from)
+    ZIO.fromEither(Shortcode.from(shortcodeStr)).mapBoth(msg => BadRequestException(msg), ShortcodeIdentifier.from)
 
   override def importProject(
     shortcodeStr: String,

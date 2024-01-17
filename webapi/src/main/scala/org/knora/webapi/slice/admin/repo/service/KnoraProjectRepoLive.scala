@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.repo.service
 import play.twirl.api.TxtFormat
 import zio.*
 
+import dsp.errors.ValidationException
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
@@ -70,7 +71,7 @@ final case class KnoraProjectRepoLive(
                      .flatMap(l => Shortname.from(l.value).toZIO)
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
-                     .flatMap(l => Shortcode.from(l.value).toZIO)
+                     .flatMap(l => ZIO.fromEither(Shortcode.from(l.value)).mapError(ValidationException(_)))
       longname <- mapper
                     .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
                     .flatMap(optLit => ZIO.foreach(optLit)(l => Longname.from(l.value).toZIO))

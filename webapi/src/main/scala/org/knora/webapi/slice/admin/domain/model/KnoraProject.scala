@@ -22,6 +22,10 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.StringBasedValueCompanionWithCodecs
+import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
@@ -38,7 +42,7 @@ case class KnoraProject(
 )
 
 object KnoraProject {
-  final case class ProjectIri private (value: String) extends AnyVal
+  final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
 
   object ProjectIri {
 
@@ -65,24 +69,19 @@ object KnoraProject {
     }
   }
 
-  final case class Shortcode private (value: String) extends AnyVal
+  final case class Shortcode private (override val value: String) extends AnyVal with StringValue
 
-  object Shortcode {
+  object Shortcode extends StringBasedValueCompanionWithCodecs[Shortcode] {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
-    def unsafeFrom(str: String): Shortcode = from(str).fold(e => throw e.head, identity)
-
-    def from(value: String): Validation[ValidationException, Shortcode] =
-      if (value.isEmpty) Validation.fail(ValidationException("Shortcode cannot be empty."))
-      else if (shortcodeRegex.matches(value.toUpperCase)) Validation.succeed(Shortcode(value.toUpperCase))
-      else Validation.fail(ValidationException(s"Shortcode is invalid: $value"))
-
-    implicit val codec: JsonCodec[Shortcode] =
-      JsonCodec[String].transformOrFail(Shortcode.from(_).toEitherWith(_.head.getMessage), _.value)
+    def from(value: String): Either[String, Shortcode] =
+      if (shortcodeRegex.matches(value.toUpperCase)) Right(Shortcode(value.toUpperCase))
+      else if (value.isEmpty) Left("Shortcode cannot be empty.")
+      else Left(s"Shortcode is invalid: $value")
   }
 
-  final case class Shortname private (value: String) extends AnyVal
+  final case class Shortname private (override val value: String) extends AnyVal with StringValue
 
   object Shortname {
 
@@ -107,7 +106,7 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Shortname.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Longname private (value: String) extends AnyVal
+  final case class Longname private (override val value: String) extends AnyVal with StringValue
 
   object Longname {
 
@@ -123,7 +122,9 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Longname.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Description private (value: V2.StringLiteralV2)
+  final case class Description private (override val value: V2.StringLiteralV2)
+      extends AnyVal
+      with Value[V2.StringLiteralV2]
 
   object Description {
 
@@ -137,7 +138,7 @@ object KnoraProject {
       JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Keyword private (value: String) extends AnyVal
+  final case class Keyword private (override val value: String) extends AnyVal with StringValue
 
   object Keyword {
 
@@ -153,7 +154,7 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Keyword.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Logo private (value: String) extends AnyVal
+  final case class Logo private (override val value: String) extends AnyVal with StringValue
 
   object Logo {
 
@@ -167,7 +168,7 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Logo.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  sealed trait Status { def value: Boolean }
+  sealed trait Status extends BooleanValue
 
   object Status {
 
@@ -181,7 +182,7 @@ object KnoraProject {
     implicit val schema: Schema[Status] = Schema.schemaForBoolean.map(b => Some(Status.from(b)))(_.value)
   }
 
-  sealed trait SelfJoin { def value: Boolean }
+  sealed trait SelfJoin extends BooleanValue
 
   object SelfJoin {
 
