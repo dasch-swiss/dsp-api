@@ -9,12 +9,9 @@ import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
@@ -30,7 +27,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
  * ADM format.
  */
 final case class SipiResponderADM(
-  private val messageRelay: MessageRelay,
+  private val projectsResponder: ProjectsResponderADM,
   private val triplestoreService: TriplestoreService,
   private implicit val sf: StringFormatter
 ) {
@@ -86,8 +83,8 @@ final case class SipiResponderADM(
   private def buildResponse(shortcode: ShortcodeIdentifier, permissionCode: Int): Task[SipiFileInfoGetResponseADM] =
     permissionCode match {
       case 1 =>
-        messageRelay
-          .ask[Option[ProjectRestrictedViewSettingsADM]](ProjectRestrictedViewSettingsGetADM(shortcode))
+        projectsResponder
+          .projectRestrictedViewSettingsGetADM(shortcode)
           .map(SipiFileInfoGetResponseADM(permissionCode, _))
 
       case _ =>

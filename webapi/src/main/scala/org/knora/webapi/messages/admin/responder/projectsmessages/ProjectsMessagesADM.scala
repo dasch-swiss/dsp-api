@@ -109,15 +109,6 @@ case class ProjectKeywordsGetRequestADM(
 ) extends ProjectsResponderRequestADM
 
 /**
- * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
- *
- * @param identifier           the identifier of the project.
- */
-case class ProjectRestrictedViewSettingsGetADM(
-  identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
-
-/**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *
  * @param identifier           the identifier of the project.
