@@ -16,10 +16,10 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
  * TODO:
- *  - move to somewhere in `org.knora.webapi.slice.common.repo`
- *  - adjust naming (remove "new", "improved", etc.)
  *  - add scaladoc
  *  - write tests
+ *    - for rdf model
+ *    - for repository
  *  - verify that `getResource()` fails if the resource is not present
  */
 

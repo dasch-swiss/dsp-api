@@ -89,16 +89,16 @@ final case class KnoraProjectRepoLive(
 
   private def toKnoraProjectNew(model: RdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
     for {
-      projectResource <- model.getResource(iri.value)
-      shortcode       <- projectResource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
-      shortname       <- projectResource.getStringLiteralOrFail[Shortname](ProjectShortname)
-      longname        <- projectResource.getStringLiteral[Longname](ProjectLongname)
-      description     <- projectResource.getLangStringLiteralsOrFail[Description](ProjectDescription)
-      keywords        <- projectResource.getStringLiterals[Keyword](ProjectKeyword)
-      logo            <- projectResource.getStringLiteral[Logo](ProjectLogo)
-      status          <- projectResource.getBooleanLiteralOrFail[Status](StatusProp)
-      selfjoin        <- projectResource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-      ontologies      <- projectResource.getObjectIris(belongsToOntology)
+      resource    <- model.getResource(iri.value)
+      shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+      shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+      longname    <- resource.getStringLiteral[Longname](ProjectLongname)
+      description <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+      keywords    <- resource.getStringLiterals[Keyword](ProjectKeyword)
+      logo        <- resource.getStringLiteral[Logo](ProjectLogo)
+      status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+      selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+      ontologies  <- resource.getObjectIris(belongsToOntology)
     } yield KnoraProject(
       id = iri,
       shortcode = shortcode,
