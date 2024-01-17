@@ -5,22 +5,17 @@
 
 package org.knora.webapi.responders.admin
 
-import zio.*
-
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.NotFoundException
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import dsp.errors.{InconsistentRepositoryDataException, NotFoundException}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructResponse}
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import zio.*
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -32,11 +27,6 @@ final case class SipiResponder(
   private implicit val sf: StringFormatter
 ) {
 
-  /**
-   * Returns a [[SipiFileInfoGetResponseADM]] containing the permissions and path for a file.
-   *
-   * @return a [[SipiFileInfoGetResponseADM]].
-   */
   def getFileInfoForSipiADM(
     shortcode: ShortcodeIdentifier,
     filename: String,
