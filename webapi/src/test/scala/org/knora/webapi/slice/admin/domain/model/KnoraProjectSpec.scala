@@ -158,9 +158,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       val invalidKeywords =
         Gen.fromIterable(Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "12", "1"))
       check(invalidKeywords) { keyword =>
-        assertTrue(
-          Keyword.from(keyword) == Validation.fail(ValidationException("Keyword must be 3 to 64 characters long."))
-        )
+        assertTrue(Keyword.from(keyword) == Left("Keyword must be 3 to 64 characters long."))
       }
     },
     test("pass a valid object and successfully create value object") {

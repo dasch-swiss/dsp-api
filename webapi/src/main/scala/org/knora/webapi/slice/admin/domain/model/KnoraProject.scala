@@ -111,18 +111,12 @@ object KnoraProject {
 
   final case class Keyword private (override val value: String) extends AnyVal with StringValue
 
-  object Keyword {
+  object Keyword extends StringBasedValueCompanion[Keyword] {
 
     private val keywordRegex: Regex = "^.{3,64}$".r
-
-    def unsafeFrom(str: String): Keyword = from(str).fold(e => throw e.head, identity)
-
-    def from(value: String): Validation[ValidationException, Keyword] =
-      if (keywordRegex.matches(value)) Validation.succeed(Keyword(value))
-      else Validation.fail(ValidationException("Keyword must be 3 to 64 characters long."))
-
-    implicit val codec: JsonCodec[Keyword] =
-      JsonCodec[String].transformOrFail(Keyword.from(_).toEitherWith(_.head.getMessage), _.value)
+    def from(value: String): Either[String, Keyword] =
+      if (keywordRegex.matches(value)) Right(Keyword(value))
+      else Left("Keyword must be 3 to 64 characters long.")
   }
 
   final case class Logo private (override val value: String) extends AnyVal with StringValue
