@@ -394,6 +394,7 @@ object ProjectIdentifierADM {
    */
   final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
   object ShortcodeIdentifier {
+    def unsafeFrom(value: String): ShortcodeIdentifier  = fromString(value).fold(err => throw err.head, identity)
     def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
       Shortcode.from(value).map {

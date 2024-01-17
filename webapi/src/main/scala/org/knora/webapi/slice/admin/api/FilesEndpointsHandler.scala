@@ -25,7 +25,7 @@ final case class FilesEndpointsHandler(
     SecuredEndpointAndZioHandler[(ShortcodeIdentifier, SparqlEncodedString), SipiFileInfoGetResponseADM](
       filesEndpoints.getAdminFilesShortcodeFileIri,
       (user: User) => { case (shortcode: ShortcodeIdentifier, filename: SparqlEncodedString) =>
-        sipiResponder.getFileInfoForSipiADM(shortcode.value, filename.value, user)
+        sipiResponder.getFileInfoForSipiADM(shortcode, filename.value, user)
       }
     )
 

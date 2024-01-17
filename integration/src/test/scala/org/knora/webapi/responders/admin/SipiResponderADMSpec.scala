@@ -8,12 +8,12 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.testkit.*
 
 import org.knora.webapi.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.sipimessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * Tests [[SipiResponderADM]].
@@ -32,7 +32,7 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
         SipiResponderADM.getFileInfoForSipiADM(
-          Shortcode.unsafeFrom("0803"),
+          ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.incunabulaMemberUser
         )
@@ -45,7 +45,7 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
         SipiResponderADM.getFileInfoForSipiADM(
-          Shortcode.unsafeFrom("0803"),
+          ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.anonymousUser
         )
