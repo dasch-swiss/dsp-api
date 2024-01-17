@@ -5,23 +5,13 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.apache.jena.rdf.model.Literal
-import org.apache.jena.rdf.model.Model
-import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.rdf.model.Property
-import org.apache.jena.rdf.model.Resource
+import org.apache.jena.rdf.model.*
 import zio.*
 
 import java.io.StringReader
 import scala.jdk.CollectionConverters.*
 
-import org.knora.webapi.messages.util.rdf.Errors.ConversionError
-import org.knora.webapi.messages.util.rdf.Errors.LiteralNotPresent
-import org.knora.webapi.messages.util.rdf.Errors.NotALiteral
-import org.knora.webapi.messages.util.rdf.Errors.ObjectNotAResource
-import org.knora.webapi.messages.util.rdf.Errors.ObjectNotPresent
-import org.knora.webapi.messages.util.rdf.Errors.RdfError
-import org.knora.webapi.messages.util.rdf.Errors.ResourceNotPresent
+import org.knora.webapi.messages.util.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /*
