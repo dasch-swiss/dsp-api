@@ -88,18 +88,13 @@ object KnoraProject {
 
   final case class Longname private (override val value: String) extends AnyVal with StringValue
 
-  object Longname {
+  object Longname extends StringBasedValueCompanion[Longname] {
 
     private val longnameRegex: Regex = "^.{3,256}$".r
 
-    def unsafeFrom(str: String): Longname = from(str).fold(e => throw e.head, identity)
-
-    def from(value: String): Validation[ValidationException, Longname] =
-      if (longnameRegex.matches(value)) Validation.succeed(Longname(value))
-      else Validation.fail(ValidationException("Longname must be 3 to 256 characters long."))
-
-    implicit val codec: JsonCodec[Longname] =
-      JsonCodec[String].transformOrFail(Longname.from(_).toEitherWith(_.head.getMessage), _.value)
+    def from(value: String): Either[String, Longname] =
+      if (longnameRegex.matches(value)) Right(Longname(value))
+      else Left("Longname must be 3 to 256 characters long.")
   }
 
   final case class Description private (override val value: V2.StringLiteralV2)

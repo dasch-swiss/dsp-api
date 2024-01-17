@@ -121,9 +121,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       val invalidNames =
         Gen.stringBounded(0, 2)(Gen.printableChar) ++ Gen.stringBounded(257, 300)(Gen.printableChar)
       check(invalidNames) { name =>
-        assertTrue(
-          Longname.from(name) == Validation.fail(ValidationException("Longname must be 3 to 256 characters long."))
-        )
+        assertTrue(Longname.from(name) == Left("Longname must be 3 to 256 characters long."))
       }
     },
     test("pass a valid value and successfully create value object") {

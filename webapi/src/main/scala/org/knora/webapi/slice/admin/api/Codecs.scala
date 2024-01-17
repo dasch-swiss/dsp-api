@@ -10,6 +10,7 @@ import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
@@ -26,9 +27,10 @@ object Codecs {
       Codec.string.mapEither(from)(to)
 
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
+    implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
+    implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
-    implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
   }
 
@@ -41,9 +43,10 @@ object Codecs {
       JsonCodec[String].transformOrFail(from, to)
 
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
+    implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
+    implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
-    implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
   }
 }

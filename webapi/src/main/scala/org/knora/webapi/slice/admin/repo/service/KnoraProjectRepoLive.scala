@@ -72,9 +72,12 @@ final case class KnoraProjectRepoLive(
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
                      .flatMap(l => ZIO.fromEither(Shortcode.from(l.value)).mapError(ValidationException.apply))
-      longname <- mapper
-                    .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
-                    .flatMap(optLit => ZIO.foreach(optLit)(l => Longname.from(l.value).toZIO))
+      longname <-
+        mapper
+          .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
+          .flatMap(optLit =>
+            ZIO.foreach(optLit)(l => ZIO.fromEither(Longname.from(l.value)).mapError(ValidationException.apply))
+          )
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
                        .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
