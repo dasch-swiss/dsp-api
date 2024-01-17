@@ -24,11 +24,33 @@ import org.knora.webapi.messages.util.rdf.ImprovedRdfModel
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+
+object KnoraProjectQueries {
+  private[service] def getProjectByIri(iri: ProjectIri): Construct =
+    Construct(
+      s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |CONSTRUCT {
+          |  ?project ?p ?o .
+          |  ?project knora-admin:belongsToOntology ?ontology .
+          |} WHERE {
+          |  BIND(IRI("${iri.value}") as ?project)
+          |  ?project a knora-admin:knoraProject .
+          |  OPTIONAL {
+          |      ?ontology a owl:Ontology .
+          |      ?ontology knora-base:attachedToProject ?project .
+          |  }
+          |  ?project ?p ?o .
+          |}""".stripMargin
+    )
+}
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -52,29 +74,12 @@ final case class KnoraProjectRepoLive(
         )
     }
 
-  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] = {
-    val query =
-      s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |CONSTRUCT {
-          |  ?project ?p ?o .
-          |  ?project knora-admin:belongsToOntology ?ontology .
-          |} WHERE {
-          |  BIND(IRI("${iri.value}") as ?project)
-          |  ?project a knora-admin:knoraProject .
-          |  OPTIONAL {
-          |      ?ontology a owl:Ontology .
-          |      ?ontology knora-base:attachedToProject ?project .
-          |  }
-          |  ?project ?p ?o .
-          |}""".stripMargin
+  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
-      ttl      <- triplestore.queryRdf(Construct(query))
+      ttl      <- triplestore.queryRdf(getProjectByIri(iri))
       newModel <- ImprovedRdfModel.fromTurtle(ttl)
       project  <- toKnoraProjectNew(newModel, iri).option
     } yield project
-  }
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
