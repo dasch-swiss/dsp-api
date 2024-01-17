@@ -22,7 +22,6 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.common.repo.rdf.LangString
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
@@ -72,8 +71,6 @@ object KnoraProject {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
-    implicit val factory: String => Either[String, Shortcode] = from(_).toEitherWith(_.head.getMessage)
-
     def unsafeFrom(str: String): Shortcode = from(str).fold(e => throw e.head, identity)
 
     def from(value: String): Validation[ValidationException, Shortcode] =
@@ -90,8 +87,6 @@ object KnoraProject {
   object Shortname {
 
     private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
-
-    implicit val factory: String => Either[String, Shortname] = from(_).toEitherWith(_.head.getMessage)
 
     def unsafeFrom(str: String): Shortname = from(str).fold(e => throw e.head, identity)
 
@@ -118,8 +113,6 @@ object KnoraProject {
 
     private val longnameRegex: Regex = "^.{3,256}$".r
 
-    implicit val factory: String => Either[String, Longname] = from(_).toEitherWith(_.head.getMessage)
-
     def unsafeFrom(str: String): Longname = from(str).fold(e => throw e.head, identity)
 
     def from(value: String): Validation[ValidationException, Longname] =
@@ -133,9 +126,6 @@ object KnoraProject {
   final case class Description private (value: V2.StringLiteralV2)
 
   object Description {
-
-    implicit val factory: LangString => Either[String, Description] =
-      langString => from(V2.StringLiteralV2(langString.value, langString.lang)).toEitherWith(_.head.getMessage)
 
     def unsafeFrom(str: V2.StringLiteralV2): Description = from(str).fold(e => throw e.head, identity)
 
@@ -153,8 +143,6 @@ object KnoraProject {
 
     private val keywordRegex: Regex = "^.{3,64}$".r
 
-    implicit val factory: String => Either[String, Keyword] = from(_).toEitherWith(_.head.getMessage)
-
     def unsafeFrom(str: String): Keyword = from(str).fold(e => throw e.head, identity)
 
     def from(value: String): Validation[ValidationException, Keyword] =
@@ -168,8 +156,6 @@ object KnoraProject {
   final case class Logo private (value: String) extends AnyVal
 
   object Logo {
-
-    implicit val factory: String => Either[String, Logo] = from(_).toEitherWith(_.head.getMessage)
 
     def unsafeFrom(str: String): Logo = from(str).fold(e => throw e.head, identity)
 
@@ -193,8 +179,6 @@ object KnoraProject {
     implicit val codec: JsonCodec[Status] = JsonCodec[Boolean].transformOrFail(b => Right(Status.from(b)), _.value)
 
     implicit val schema: Schema[Status] = Schema.schemaForBoolean.map(b => Some(Status.from(b)))(_.value)
-
-    implicit val factory: Boolean => Either[String, Status] = value => Right(from(value))
   }
 
   sealed trait SelfJoin { def value: Boolean }
@@ -209,7 +193,5 @@ object KnoraProject {
     implicit val codec: JsonCodec[SelfJoin] = JsonCodec[Boolean].transformOrFail(b => Right(SelfJoin.from(b)), _.value)
 
     implicit val schema: Schema[SelfJoin] = Schema.schemaForBoolean.map(b => Some(SelfJoin.from(b)))(_.value)
-
-    implicit val factory: Boolean => Either[String, SelfJoin] = value => Right(from(value))
   }
 }
