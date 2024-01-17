@@ -40,6 +40,7 @@ case class KnoraProject(
 )
 
 object KnoraProject {
+
   final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
 
   object ProjectIri extends StringBasedValueCompanionWithCodecs[ProjectIri] {
@@ -67,27 +68,21 @@ object KnoraProject {
 
   final case class Shortname private (override val value: String) extends AnyVal with StringValue
 
-  object Shortname {
+  object Shortname extends StringBasedValueCompanionWithCodecs[Shortname]{
 
     private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
-    def unsafeFrom(str: String): Shortname = from(str).fold(e => throw e.head, identity)
-
-    def from(value: String): Validation[ValidationException, Shortname] =
-      if (value.isEmpty) Validation.fail(ValidationException("Shortname cannot be empty."))
+    def from(value: String): Either[String, Shortname] =
+      if (value.isEmpty) Left("Shortname cannot be empty.")
       else {
         val maybeShortname = value match {
           case "DefaultSharedOntologiesProject" => Some(value)
           case _                                => shortnameRegex.findFirstIn(value)
         }
-        Validation
-          .fromOption(maybeShortname.flatMap(Iri.toSparqlEncodedString))
-          .mapError(_ => ValidationException(s"Shortname is invalid: $value"))
-          .map(Shortname(_))
+        maybeShortname.flatMap(Iri.toSparqlEncodedString)
+          .toRight(s"Shortname is invalid: $value")
+          .map(Shortname.apply)
       }
-
-    implicit val codec: JsonCodec[Shortname] =
-      JsonCodec[String].transformOrFail(Shortname.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
   final case class Longname private (override val value: String) extends AnyVal with StringValue

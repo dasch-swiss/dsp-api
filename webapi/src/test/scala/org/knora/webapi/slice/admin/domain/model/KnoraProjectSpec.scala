@@ -5,15 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import dsp.errors.ValidationException
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import zio.Scope
 import zio.prelude.Validation
 import zio.test.*
 
 import scala.util.Random
-
-import dsp.errors.ValidationException
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 /**
  * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.
@@ -77,9 +76,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val shortnameTest = suite("Shortname")(
     test("pass an empty value and return validation error") {
-      assertTrue(
-        Shortname.from("") == Validation.fail(ValidationException("Shortname cannot be empty."))
-      )
+      assertTrue(Shortname.from("") == Left("Shortname cannot be empty."))
     },
     test("pass invalid values and return validation error") {
       val gen = Gen.fromIterable(
@@ -99,9 +96,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
         )
       )
       check(gen) { param =>
-        assertTrue(
-          Shortname.from(param) == Validation.fail(ValidationException(s"Shortname is invalid: $param"))
-        )
+        assertTrue(Shortname.from(param) == Left(s"Shortname is invalid: $param"))
       }
     },
     test("pass valid values and successfully create value objects") {
@@ -116,7 +111,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
           "a20charLongShortname"
         )
       )
-      check(gen)(param => assertTrue(Shortname.from(param).map(_.value) == Validation.succeed(param)))
+      check(gen)(param => assertTrue(Shortname.from(param).map(_.value).contains(param)))
     }
   )
 
