@@ -13,7 +13,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.*
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -26,7 +26,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM2
  *
  * This spec tests the 'admin/files'.
  */
-class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
+class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   private val anythingAdminEmail = SharedTestDataADM2.anythingAdminUser.userData.email.get
   private val normalUserEmail    = SharedTestDataADM2.normalUser.userData.email.get
@@ -53,8 +53,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
+      val fr: PermissionCodeAndProjectRestrictedViewSettings =
+        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
 
       fr.permissionCode shouldEqual 8
     }
@@ -70,8 +70,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
+      val fr: PermissionCodeAndProjectRestrictedViewSettings =
+        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
 
       (fr.permissionCode === 1) should be(true)
     }
@@ -93,8 +93,8 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
+      val fr: PermissionCodeAndProjectRestrictedViewSettings =
+        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
 
       (fr.permissionCode === 1) should be(true)
 

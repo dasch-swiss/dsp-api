@@ -16,9 +16,9 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
- * Tests [[SipiResponder]].
+ * Tests [[AssetPermissionResponder]].
  */
-class SipiResponderSpec extends CoreSpec with ImplicitSender {
+class AssetPermissionResponderSpec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -31,27 +31,27 @@ class SipiResponderSpec extends CoreSpec with ImplicitSender {
     "return details of a full quality file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
-        SipiResponder.getFileInfoForSipiADM(
+        AssetPermissionResponder.getFileInfoForSipiADM(
           ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.incunabulaMemberUser
         )
       )
 
-      actual shouldEqual SipiFileInfoGetResponseADM(permissionCode = 6, None)
+      actual shouldEqual PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None)
     }
 
     "return details of a restricted view file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       val actual = UnsafeZioRun.runOrThrow(
-        SipiResponder.getFileInfoForSipiADM(
+        AssetPermissionResponder.getFileInfoForSipiADM(
           ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
           SharedTestDataADM.anonymousUser
         )
       )
 
-      actual shouldEqual SipiFileInfoGetResponseADM(
+      actual shouldEqual PermissionCodeAndProjectRestrictedViewSettings(
         permissionCode = 1,
         Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))
       )

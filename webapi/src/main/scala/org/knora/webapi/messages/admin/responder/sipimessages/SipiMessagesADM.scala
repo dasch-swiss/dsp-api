@@ -21,7 +21,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
  * @param permissionCode         a code representing the user's maximum permission on the file.
  * @param restrictedViewSettings the project's restricted view settings.
  */
-case class SipiFileInfoGetResponseADM(
+case class PermissionCodeAndProjectRestrictedViewSettings(
   permissionCode: Int,
   restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM]
 ) extends AdminKnoraResponseADM {
@@ -37,6 +37,6 @@ object SipiResponderResponseADMJsonProtocol
     with NullOptions
     with ProjectsADMJsonProtocol {
 
-  implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[SipiFileInfoGetResponseADM] =
-    jsonFormat2(SipiFileInfoGetResponseADM)
+  implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[PermissionCodeAndProjectRestrictedViewSettings] =
+    jsonFormat2(PermissionCodeAndProjectRestrictedViewSettings)
 }

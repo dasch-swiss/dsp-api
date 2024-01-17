@@ -11,7 +11,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.FilesPathVar.filename
@@ -25,8 +25,10 @@ object FilesPathVar {
 final case class FilesEndpoints(base: BaseEndpoints) {
   val getAdminFilesShortcodeFileIri = base.withUserEndpoint.get
     .in("admin" / "files" / projectShortcode / filename)
-    .out(jsonBody[SipiFileInfoGetResponseADM])
-    .description("Returns the permission code and restricted view settings for a given shortcode and filename.")
+    .out(jsonBody[PermissionCodeAndProjectRestrictedViewSettings])
+    .description(
+      "Returns the permission code and the project's restricted view settings for a given shortcode and filename."
+    )
 
   val endpoints: Seq[AnyEndpoint] = Seq(getAdminFilesShortcodeFileIri.endpoint)
 }

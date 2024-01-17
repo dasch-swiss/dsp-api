@@ -6,8 +6,9 @@
 package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko.http.scaladsl.server.Route
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import zio.ZLayer
+
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 
 final case class AdminApiRoutes(
   groups: GroupsEndpointsHandler,

@@ -8,24 +8,27 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.responders.admin.SipiResponder
+import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.responders.admin.AssetPermissionResponder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 final case class FilesEndpointsHandler(
-  filesEndpoints: FilesEndpoints,
-  sipiResponder: SipiResponder,
-  mapper: HandlerMapper
+                                        filesEndpoints: FilesEndpoints,
+                                        sipiResponder: AssetPermissionResponder,
+                                        mapper: HandlerMapper
 ) {
 
   private val getAdminFilesShortcodeFileIri =
-    SecuredEndpointAndZioHandler[(ShortcodeIdentifier, SparqlEncodedString), SipiFileInfoGetResponseADM](
+    SecuredEndpointAndZioHandler[
+      (ShortcodeIdentifier, SparqlEncodedString),
+      PermissionCodeAndProjectRestrictedViewSettings
+    ](
       filesEndpoints.getAdminFilesShortcodeFileIri,
       (user: User) => { case (shortcode: ShortcodeIdentifier, filename: SparqlEncodedString) =>
-        sipiResponder.getFileInfoForSipiADM(shortcode, filename.value, user)
+        sipiResponder.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename.value, user)
       }
     )
 

@@ -5,33 +5,38 @@
 
 package org.knora.webapi.responders.admin
 
-import dsp.errors.{InconsistentRepositoryDataException, NotFoundException}
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import zio.*
+
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotFoundException
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructResponse}
+import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import zio.*
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-final case class SipiResponder(
+final case class AssetPermissionResponder(
   private val projectsResponder: ProjectsResponderADM,
   private val triplestoreService: TriplestoreService,
   private implicit val sf: StringFormatter
 ) {
 
-  def getFileInfoForSipiADM(
+  def getPermissionCodeAndProjectRestrictedViewSettings(
     shortcode: ShortcodeIdentifier,
     filename: String,
     requestingUser: User
-  ): Task[SipiFileInfoGetResponseADM] =
+  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
       queryResponse  <- queryForFileValue(filename)
       permissionCode <- getPermissionCode(queryResponse, filename, requestingUser)
@@ -70,21 +75,26 @@ final case class SipiResponder(
         .getOrElse(0)
     }
 
-  private def buildResponse(shortcode: ShortcodeIdentifier, permissionCode: Int): Task[SipiFileInfoGetResponseADM] =
+  private def buildResponse(
+    shortcode: ShortcodeIdentifier,
+    permissionCode: Int
+  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     permissionCode match {
       case 1 =>
         projectsResponder
           .projectRestrictedViewSettingsGetADM(shortcode)
-          .map(SipiFileInfoGetResponseADM(permissionCode, _))
+          .map(PermissionCodeAndProjectRestrictedViewSettings(permissionCode, _))
 
       case _ =>
-        ZIO.succeed(SipiFileInfoGetResponseADM(permissionCode, restrictedViewSettings = None))
+        ZIO.succeed(PermissionCodeAndProjectRestrictedViewSettings(permissionCode, restrictedViewSettings = None))
     }
 }
 
-object SipiResponder {
+object AssetPermissionResponder {
   def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
-    ZIO.serviceWithZIO[SipiResponder](_.getFileInfoForSipiADM(shortcode, filename, user))
+    ZIO.serviceWithZIO[AssetPermissionResponder](
+      _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user)
+    )
 
-  val layer = ZLayer.derive[SipiResponder]
+  val layer = ZLayer.derive[AssetPermissionResponder]
 }
