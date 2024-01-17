@@ -13,6 +13,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
 import dsp.valueobjects.List.*
 import dsp.valueobjects.ListErrorMessages
@@ -54,8 +55,9 @@ final case class CreateListItemsRouteADM(
   private def createListRootNode(): Route = path(listsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.from(apiRequest.projectIri)
+        val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri] =
+          Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
@@ -87,7 +89,7 @@ final case class CreateListItemsRouteADM(
                  .when(iri != apiRequest.parentNodeIri)
           parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
           id            = ListIri.make(apiRequest.id)
-          projectIri    = ProjectIri.from(apiRequest.projectIri)
+          projectIri    = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
           name          = ListName.make(apiRequest.name)
           position      = Position.make(apiRequest.position)
           labels        = Labels.make(apiRequest.labels)

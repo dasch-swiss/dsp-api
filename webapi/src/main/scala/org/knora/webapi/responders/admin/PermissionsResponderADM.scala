@@ -686,7 +686,7 @@ final case class PermissionsResponderADMLive(
   private def validate(req: CreateAdministrativePermissionAPIRequestADM): Task[Unit] = ZIO.attempt {
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
-    ProjectIri.from(req.forProject).fold(msg => throw BadRequestException(msg.head.getMessage), _ => ())
+    ProjectIri.from(req.forProject).fold(msg => throw BadRequestException(msg), _ => ())
 
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
@@ -1512,8 +1512,7 @@ final case class PermissionsResponderADMLive(
       for {
         _ <- validate(createRequest)
         projectIri <- ZIO
-                        .fromEither(ProjectIri.from(createRequest.forProject).toEither)
-                        .mapError(_.map(_.getMessage).mkString(","))
+                        .fromEither(ProjectIri.from(createRequest.forProject))
                         .mapError(BadRequestException.apply)
         project <- projectRepo
                      .findById(projectIri)

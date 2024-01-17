@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.common
 
-import org.knora.webapi.slice.common.Value.StringValue
-import sttp.tapir.{Codec, CodecFormat}
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
+
+import org.knora.webapi.slice.common.Value.StringValue
 
 trait Value[A] extends Any {
   def value: A

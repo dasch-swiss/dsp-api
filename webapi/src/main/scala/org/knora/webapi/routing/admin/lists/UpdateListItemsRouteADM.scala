@@ -13,6 +13,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import dsp.valueobjects.List.*
@@ -136,7 +137,7 @@ final case class UpdateListItemsRouteADM(
         val validatedPayload = for {
           _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
           listIri     = ListIri.make(apiRequest.listIri)
-          projectIri  = ProjectIri.from(apiRequest.projectIri)
+          projectIri  = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
           hasRootNode = ListIri.make(apiRequest.hasRootNode)
           position    = Position.make(apiRequest.position)
           name        = ListName.make(apiRequest.name)

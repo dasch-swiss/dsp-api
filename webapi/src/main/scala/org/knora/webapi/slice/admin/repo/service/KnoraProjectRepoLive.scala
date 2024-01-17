@@ -65,7 +65,7 @@ final case class KnoraProjectRepoLive(
   private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
     val (subject, propertiesMap) = subjectPropsTuple
     for {
-      projectIri <- ProjectIri.from(subject.value).toZIO
+      projectIri <- ZIO.fromEither(ProjectIri.from(subject.value)).mapError(ValidationException.apply)
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propertiesMap)
                      .flatMap(l => Shortname.from(l.value).toZIO)

@@ -35,7 +35,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -512,8 +512,10 @@ final case class OntologyResponderV2Live(
             ReadOntologyV2(ontologyMetadata = unescapedNewMetadata)
           )
 
-        projectIri <- KnoraProject.ProjectIri.from(createOntologyRequest.projectIri.toString).toZIO
-        _          <- cacheService.invalidateProjectADM(projectIri)
+        projectIri <- ZIO
+                        .fromEither(ProjectIri.from(createOntologyRequest.projectIri.toString))
+                        .mapError(BadRequestException.apply)
+        _ <- cacheService.invalidateProjectADM(projectIri)
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -1867,8 +1869,10 @@ final case class OntologyResponderV2Live(
         projectIri <-
           ZIO
             .fromOption(ontology.ontologyMetadata.projectIri)
-            .flatMap(iri => KnoraProject.ProjectIri.from(iri.toString).toZIO)
-            .orElseFail(InconsistentRepositoryDataException(s"Project IRI not found for ontology $internalOntologyIri"))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Project IRI not found for ontology $internalOntologyIri"),
+              iri => ProjectIri.unsafeFrom(iri.toString)
+            )
         _ <- cacheService.invalidateProjectADM(projectIri)
 
         // Check that the ontology has been deleted.

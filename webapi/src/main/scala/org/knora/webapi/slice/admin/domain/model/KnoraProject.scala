@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
 import sttp.tapir.Schema
 import zio.NonEmptyChunk
 import zio.json.*
@@ -44,28 +42,14 @@ case class KnoraProject(
 object KnoraProject {
   final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
 
-  object ProjectIri {
+  object ProjectIri extends StringBasedValueCompanionWithCodecs[ProjectIri] {
 
-    implicit val codec: JsonCodec[ProjectIri] =
-      JsonCodec[String].transformOrFail(ProjectIri.from(_).toEitherWith(e => e.head.getMessage), _.value)
-
-    implicit val tapirCodec: Codec[String, ProjectIri, CodecFormat.TextPlain] =
-      Codec.string.mapEither(str => ProjectIri.from(str).toEitherWith(e => e.head.getMessage))(_.value)
-
-    def unsafeFrom(str: String): ProjectIri = from(str).fold(e => throw e.head, identity)
-
-    def from(str: String): Validation[ValidationException, ProjectIri] = str match {
-      case str if str.isEmpty =>
-        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      case str if !isProjectIri(str) =>
-        Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
+    def from(str: String): Either[String, ProjectIri] = str match {
+      case str if str.isEmpty        => Left(IriErrorMessages.ProjectIriMissing)
+      case str if !isProjectIri(str) => Left(IriErrorMessages.ProjectIriInvalid)
       case str if UuidUtil.hasValidLength(str.split("/").last) && !UuidUtil.hasSupportedVersion(str) =>
-        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
-      case _ =>
-        Validation
-          .fromOption(validateAndEscapeProjectIri(str))
-          .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
-          .map(ProjectIri(_))
+        Left(IriErrorMessages.UuidVersionInvalid)
+      case _ => validateAndEscapeProjectIri(str).toRight(IriErrorMessages.ProjectIriInvalid).map(ProjectIri.apply)
     }
   }
 

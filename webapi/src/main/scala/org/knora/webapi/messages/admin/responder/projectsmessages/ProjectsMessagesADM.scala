@@ -368,7 +368,9 @@ object ProjectIdentifierADM {
       fromString(projectIri).fold(err => throw err.head, identity)
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      ProjectIri.from(value).map(IriIdentifier(_))
+      Validation
+        .fromEither(ProjectIri.from(value).map(IriIdentifier.apply))
+        .mapError(ValidationException.apply)
 
     implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
       Codec.string.mapDecode(str =>
