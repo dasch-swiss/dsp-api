@@ -12,6 +12,7 @@ import zio.json.JsonCodec
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
@@ -42,6 +43,11 @@ object Codecs {
     private def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
       JsonCodec[String].transformOrFail(from, to)
 
+    private def booleanCodec[A <: BooleanValue](from: Boolean => A): JsonCodec[A] =
+      booleanCodec(from, _.value)
+    private def booleanCodec[A](from: Boolean => A, to: A => Boolean): JsonCodec[A] =
+      JsonCodec[Boolean].transform(from, to)
+
     implicit val description: StringCodec[Description] =
       JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from, _.value)
 
@@ -50,8 +56,10 @@ object Codecs {
     implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
+    implicit val selfJoin: JsonCodec[SelfJoin]                         = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
+    implicit val status: JsonCodec[Status]                             = booleanCodec(Status.from)
   }
 }

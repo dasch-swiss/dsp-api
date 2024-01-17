@@ -5,9 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import sttp.tapir.Schema
 import zio.NonEmptyChunk
-import zio.json.*
 
 import scala.util.matching.Regex
 
@@ -134,10 +132,6 @@ object KnoraProject {
     case object Inactive extends Status { val value = false }
 
     def from(value: Boolean): Status = if (value) Active else Inactive
-
-    implicit val codec: JsonCodec[Status] = JsonCodec[Boolean].transformOrFail(b => Right(Status.from(b)), _.value)
-
-    implicit val schema: Schema[Status] = Schema.schemaForBoolean.map(b => Some(Status.from(b)))(_.value)
   }
 
   sealed trait SelfJoin extends BooleanValue
@@ -148,9 +142,5 @@ object KnoraProject {
     case object CannotJoin extends SelfJoin { val value = false }
 
     def from(value: Boolean): SelfJoin = if (value) CanJoin else CannotJoin
-
-    implicit val codec: JsonCodec[SelfJoin] = JsonCodec[Boolean].transformOrFail(b => Right(SelfJoin.from(b)), _.value)
-
-    implicit val schema: Schema[SelfJoin] = Schema.schemaForBoolean.map(b => Some(SelfJoin.from(b)))(_.value)
   }
 }
