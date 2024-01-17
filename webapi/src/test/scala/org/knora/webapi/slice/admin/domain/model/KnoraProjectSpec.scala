@@ -6,12 +6,10 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import zio.Scope
-import zio.prelude.Validation
 import zio.test.*
 
 import scala.util.Random
 
-import dsp.errors.ValidationException
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
@@ -168,7 +166,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val logoTest = suite("Logo")(
     test("pass an empty object and return an error") {
-      assertTrue(Logo.from("") == Validation.fail(ValidationException("Logo cannot be empty.")))
+      assertTrue(Logo.from("") == Left("Logo cannot be empty."))
     },
     test("pass a valid object and successfully create value object") {
       val validLogo = "/foo/bar/baz.jpg"

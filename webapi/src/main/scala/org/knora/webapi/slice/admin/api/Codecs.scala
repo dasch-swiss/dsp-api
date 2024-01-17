@@ -26,6 +26,7 @@ object Codecs {
 
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
     implicit val keyword: StringCodec[Keyword]                         = stringCodec(Keyword.from)
+    implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
@@ -46,6 +47,7 @@ object Codecs {
 
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
     implicit val keyword: StringCodec[Keyword]                         = stringCodec(Keyword.from)
+    implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)

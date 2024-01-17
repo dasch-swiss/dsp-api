@@ -8,11 +8,9 @@ package org.knora.webapi.slice.admin.domain.model
 import sttp.tapir.Schema
 import zio.NonEmptyChunk
 import zio.json.*
-import zio.prelude.Validation
 
 import scala.util.matching.Regex
 
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isProjectIri
 import dsp.valueobjects.Iri.validateAndEscapeProjectIri
@@ -114,23 +112,18 @@ object KnoraProject {
   object Keyword extends StringBasedValueCompanion[Keyword] {
 
     private val keywordRegex: Regex = "^.{3,64}$".r
-    def from(value: String): Either[String, Keyword] =
-      if (keywordRegex.matches(value)) Right(Keyword(value))
+    def from(str: String): Either[String, Keyword] =
+      if (keywordRegex.matches(str)) Right(Keyword(str))
       else Left("Keyword must be 3 to 64 characters long.")
   }
 
   final case class Logo private (override val value: String) extends AnyVal with StringValue
 
-  object Logo {
+  object Logo extends StringBasedValueCompanion[Logo] {
 
-    def unsafeFrom(str: String): Logo = from(str).fold(e => throw e.head, identity)
-
-    def from(value: String): Validation[ValidationException, Logo] =
-      if (value.isEmpty) Validation.fail(ValidationException("Logo cannot be empty."))
-      else Validation.succeed(Logo(value))
-
-    implicit val codec: JsonCodec[Logo] =
-      JsonCodec[String].transformOrFail(Logo.from(_).toEitherWith(_.head.getMessage), _.value)
+    def from(str: String): Either[String, Logo] =
+      if (str.isEmpty) Left("Logo cannot be empty.")
+      else Right(Logo(str))
   }
 
   sealed trait Status extends BooleanValue

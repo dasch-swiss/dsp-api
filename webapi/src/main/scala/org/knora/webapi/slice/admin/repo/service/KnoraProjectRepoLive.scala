@@ -92,7 +92,9 @@ final case class KnoraProjectRepoLive(
                     )
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propertiesMap)
-                .flatMap(optLit => ZIO.foreach(optLit)(l => Logo.from(l.value).toZIO))
+                .flatMap(optLit =>
+                  ZIO.foreach(optLit)(l => ZIO.fromEither(Logo.from(l.value)).mapError(ValidationException.apply))
+                )
       status <- mapper
                   .getSingleOrFail[BooleanLiteralV2](StatusProp, propertiesMap)
                   .map(l => Status.from(l.value))
