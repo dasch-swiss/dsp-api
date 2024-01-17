@@ -1,11 +1,20 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.admin.api
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+import zio.json.JsonCodec
+
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.{ProjectIri, Shortcode, Shortname}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
-import sttp.tapir.{Codec, CodecFormat}
-import zio.json.JsonCodec
 
 object Codecs {
   object TapirCodec {
