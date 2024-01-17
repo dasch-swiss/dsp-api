@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.repo.service
 import play.twirl.api.TxtFormat
 import zio.*
 
-import dsp.errors.ValidationException
+import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
@@ -64,37 +64,31 @@ final case class KnoraProjectRepoLive(
 
   private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
     val (subject, propertiesMap) = subjectPropsTuple
+
+    def eitherToZIO[A](either: Either[String, A]): Task[A] =
+      ZIO.fromEither(either).mapError(new InconsistentRepositoryDataException(_))
+
     for {
-      projectIri <- ZIO.fromEither(ProjectIri.from(subject.value)).mapError(ValidationException.apply)
+      projectIri <- eitherToZIO(ProjectIri.from(subject.value))
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propertiesMap)
-                     .flatMap(l => ZIO.fromEither(Shortname.from(l.value)).mapError(ValidationException.apply))
+                     .flatMap(l => eitherToZIO(Shortname.from(l.value)))
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
-                     .flatMap(l => ZIO.fromEither(Shortcode.from(l.value)).mapError(ValidationException.apply))
-      longname <-
-        mapper
-          .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
-          .flatMap(optLit =>
-            ZIO.foreach(optLit)(l => ZIO.fromEither(Longname.from(l.value)).mapError(ValidationException.apply))
-          )
-      description <-
-        mapper
-          .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
-          .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
-          .flatMap(ZIO.foreach(_)(it => ZIO.fromEither(Description.from(it)).mapError(ValidationException.apply)))
+                     .flatMap(l => eitherToZIO(Shortcode.from(l.value)))
+      longname <- mapper
+                    .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
+                    .flatMap(ZIO.foreach(_)(it => eitherToZIO(Longname.from(it.value))))
+      description <- mapper
+                       .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
+                       .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
+                       .flatMap(ZIO.foreach(_)(it => eitherToZIO(Description.from(it))))
       keywords <- mapper
                     .getList[StringLiteralV2](ProjectKeyword, propertiesMap)
-                    .flatMap(l =>
-                      ZIO.foreach(l.map(_.value).sorted)(it =>
-                        ZIO.fromEither(Keyword.from(it)).mapError(ValidationException.apply)
-                      )
-                    )
+                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(it => eitherToZIO(Keyword.from(it))))
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propertiesMap)
-                .flatMap(optLit =>
-                  ZIO.foreach(optLit)(l => ZIO.fromEither(Logo.from(l.value)).mapError(ValidationException.apply))
-                )
+                .flatMap(ZIO.foreach(_)(it => eitherToZIO(Logo.from(it.value))))
       status <- mapper
                   .getSingleOrFail[BooleanLiteralV2](StatusProp, propertiesMap)
                   .map(l => Status.from(l.value))

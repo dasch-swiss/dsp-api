@@ -25,14 +25,21 @@ object Codecs {
     private def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
       Codec.string.mapEither(from)(to)
 
+    private def booleanCodec[A <: BooleanValue](from: Boolean => A): StringCodec[A] =
+      booleanCodec(from, _.value)
+    private def booleanCodec[A](from: Boolean => A, to: A => Boolean): StringCodec[A] =
+      Codec.boolean.map(from)(to)
+
     implicit val assetId: StringCodec[AssetId]                         = stringCodec(AssetId.from, _.value)
     implicit val keyword: StringCodec[Keyword]                         = stringCodec(Keyword.from)
     implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
+    implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
+    implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
   }
 
   object ZioJsonCodec {
@@ -43,9 +50,9 @@ object Codecs {
     private def stringCodec[A](from: String => Either[String, A], to: A => String): StringCodec[A] =
       JsonCodec[String].transformOrFail(from, to)
 
-    private def booleanCodec[A <: BooleanValue](from: Boolean => A): JsonCodec[A] =
+    private def booleanCodec[A <: BooleanValue](from: Boolean => A): StringCodec[A] =
       booleanCodec(from, _.value)
-    private def booleanCodec[A](from: Boolean => A, to: A => Boolean): JsonCodec[A] =
+    private def booleanCodec[A](from: Boolean => A, to: A => Boolean): StringCodec[A] =
       JsonCodec[Boolean].transform(from, to)
 
     implicit val description: StringCodec[Description] =
@@ -56,10 +63,10 @@ object Codecs {
     implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
-    implicit val selfJoin: JsonCodec[SelfJoin]                         = booleanCodec(SelfJoin.from)
+    implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
-    implicit val status: JsonCodec[Status]                             = booleanCodec(Status.from)
+    implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
   }
 }
