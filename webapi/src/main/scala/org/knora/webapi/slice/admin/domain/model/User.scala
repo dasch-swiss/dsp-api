@@ -142,7 +142,7 @@ final case class UserIri private (value: String) extends AnyVal with StringValue
 object UserIri extends StringValueCompanion[UserIri] {
 
   implicit class UserIriOps(val userIri: UserIri) {
-    def isBuiltInUser: Boolean = builtInIris.contains(Iri.fromSparqlEncodedString(userIri.value))
+    def isBuiltInUser: Boolean = builtInIris.contains(userIri.value)
     def isRegularUser: Boolean = !isBuiltInUser
   }
 
@@ -174,7 +174,7 @@ object UserIri extends StringValueCompanion[UserIri] {
 
   def from(value: String): Either[String, UserIri] = value match {
     case _ if value.isEmpty  => Left("User IRI cannot be empty.")
-    case _ if isValid(value) => Iri.toSparqlEncodedString(value).map(UserIri.apply).toRight(isInvalid)
+    case _ if isValid(value) => Right(UserIri(value))
     case _                   => Left(isInvalid)
   }
   def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
