@@ -162,7 +162,8 @@ object SipiIT extends ZIOSpecDefault {
               "when getting the file, " +
               "then Sipi responds with Ok"
           ) {
-            val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+            val dspApiResponse =
+              PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 2, restrictedViewSettings = None)
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -177,7 +178,8 @@ object SipiIT extends ZIOSpecDefault {
               "when getting the file, " +
               "then Sipi responds with Unauthorized"
           ) {
-            val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
+            val dspApiResponse =
+              PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 0, restrictedViewSettings = None)
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -225,7 +227,8 @@ object SipiIT extends ZIOSpecDefault {
             "when getting the file, " +
             "Sipi responds with Ok"
         ) {
-          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+          val dspApiResponse =
+            PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 2, restrictedViewSettings = None)
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -240,7 +243,8 @@ object SipiIT extends ZIOSpecDefault {
             "when getting the file, " +
             "Sipi responds with Unauthorized"
         ) {
-          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
+          val dspApiResponse =
+            PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 0, restrictedViewSettings = None)
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -321,7 +325,7 @@ object MockDspApiServer {
     identifier: String,
     permissionCode: Int
   ): URIO[WireMockServer, WireMockServer] = {
-    val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode, restrictedViewSettings = None)
+    val dspApiResponse       = PermissionCodeAndProjectRestrictedViewSettings(permissionCode, restrictedViewSettings = None)
     val dspApiPermissionPath = s"/admin/files/$prefix/$identifier"
     MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
   }

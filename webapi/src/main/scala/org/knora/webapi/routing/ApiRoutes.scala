@@ -100,7 +100,6 @@ private final case class ApiRoutesImpl(
             DSPApiDirectives.handleErrors(appConfig) {
               (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes).reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
-                FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 HealthRoute().makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~

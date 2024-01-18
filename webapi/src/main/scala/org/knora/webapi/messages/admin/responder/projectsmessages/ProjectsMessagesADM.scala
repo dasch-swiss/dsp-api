@@ -109,15 +109,6 @@ case class ProjectKeywordsGetRequestADM(
 ) extends ProjectsResponderRequestADM
 
 /**
- * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
- *
- * @param identifier           the identifier of the project.
- */
-case class ProjectRestrictedViewSettingsGetADM(
-  identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
-
-/**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *
  * @param identifier           the identifier of the project.
@@ -394,6 +385,7 @@ object ProjectIdentifierADM {
    */
   final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
   object ShortcodeIdentifier {
+    def unsafeFrom(value: String): ShortcodeIdentifier  = fromString(value).fold(err => throw err.head, identity)
     def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
       Shortcode.from(value).map {
@@ -435,9 +427,10 @@ object ProjectIdentifierADM {
  * @param watermark the watermark file.
  */
 case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
+    extends ProjectsADMJsonProtocol
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formating
+// JSON formatting
 
 /**
  * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
