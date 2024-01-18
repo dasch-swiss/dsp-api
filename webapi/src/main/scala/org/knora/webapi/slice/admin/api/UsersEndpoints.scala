@@ -10,10 +10,17 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
 
+import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.userIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
+object PathVars {
+  val userIriPathVar: EndpointInput.PathCapture[UserIri] =
+    path[UserIri].description("The user IRI. Must be URL-encoded.")
+}
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "admin" / "users"
   private val tags = List("Users", "Admin API")
@@ -24,7 +31,13 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Returns all users.")
     .tags(tags)
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getUsers).map(_.endpoint)
+  val deleteUser = baseEndpoints.securedEndpoint.delete
+    .in(base / "iri" / PathVars.userIriPathVar)
+    .out(sprayJsonBody[UserOperationResponseADM])
+    .description("Delete a user identified by iri (change status to false).")
+    .tags(tags)
+
+  val endpoints: Seq[AnyEndpoint] = Seq(getUsers, deleteUser).map(_.endpoint)
 }
 
 object UsersEndpoints {

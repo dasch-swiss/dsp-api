@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
 import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 
 /**
@@ -325,10 +326,14 @@ object PasswordStrength {
 
 }
 
-final case class UserStatus private (value: Boolean) extends AnyVal
-object UserStatus {
-  def from(value: Boolean): UserStatus = UserStatus(value)
+final case class UserStatus private (value: Boolean) extends AnyVal with BooleanValue
 
+object UserStatus {
+
+  val Active: UserStatus   = UserStatus(true)
+  val Inactive: UserStatus = UserStatus(false)
+
+  def from(value: Boolean): UserStatus = if (value) Active else Inactive
 }
 
 final case class SystemAdmin private (value: Boolean) extends AnyVal

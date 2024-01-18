@@ -41,7 +41,6 @@ final case class UsersRouteADM()(
       changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
-      deleteUser() ~
       changeUserSystemAdminMembership() ~
       getUsersProjectMemberships() ~
       addUserToProjectMembership() ~
@@ -164,19 +163,6 @@ final case class UsersRouteADM()(
         }
       }
     }
-
-  /**
-   * delete a user identified by iri (change status to false).
-   */
-  private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
-    delete { requestContext =>
-      val task = for {
-        checkedUserIri <- validateAndEscapeUserIri(userIri)
-        r              <- getUserUuid(requestContext)
-      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.from(false), r.user, r.uuid)
-      runJsonRouteZ(task, requestContext)
-    }
-  }
 
   /**
    * Change user's SystemAdmin membership.

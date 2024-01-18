@@ -12,6 +12,7 @@ import zio.json.JsonCodec
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
@@ -40,6 +41,7 @@ object Codecs {
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
+    implicit val userIri: StringCodec[UserIri]                         = stringCodec(UserIri.from)
   }
 
   object ZioJsonCodec {
