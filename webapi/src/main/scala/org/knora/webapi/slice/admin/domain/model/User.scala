@@ -165,14 +165,16 @@ object UserIri extends StringValueCompanion[UserIri] {
     OntologyConstants.KnoraAdmin.AnonymousUser,
     OntologyConstants.KnoraAdmin.SystemAdmin
   )
+
   private def isValid(iri: String) =
     builtInIris.contains(iri) || (Iri.isIri(iri) && userIriRegEx.matches(iri))
 
   private val isInvalid = "User IRI is invalid."
+
   def from(value: String): Either[String, UserIri] = value match {
-    case _ if value.isEmpty    => Left("User IRI cannot be empty.")
+    case _ if value.isEmpty  => Left("User IRI cannot be empty.")
     case _ if isValid(value) => Iri.toSparqlEncodedString(value).map(UserIri.apply).toRight(isInvalid)
-    case _                     => Left(isInvalid)
+    case _                   => Left(isInvalid)
   }
   def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }
