@@ -16,7 +16,7 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.common.StringBasedValueCompanion
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -40,7 +40,7 @@ object KnoraProject {
 
   final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
 
-  object ProjectIri extends StringBasedValueCompanion[ProjectIri] {
+  object ProjectIri extends StringValueCompanion[ProjectIri] {
 
     def from(str: String): Either[String, ProjectIri] = str match {
       case str if str.isEmpty        => Left(IriErrorMessages.ProjectIriMissing)
@@ -53,7 +53,7 @@ object KnoraProject {
 
   final case class Shortcode private (override val value: String) extends AnyVal with StringValue
 
-  object Shortcode extends StringBasedValueCompanion[Shortcode] {
+  object Shortcode extends StringValueCompanion[Shortcode] {
 
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
@@ -65,7 +65,7 @@ object KnoraProject {
 
   final case class Shortname private (override val value: String) extends AnyVal with StringValue
 
-  object Shortname extends StringBasedValueCompanion[Shortname] {
+  object Shortname extends StringValueCompanion[Shortname] {
 
     private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
@@ -85,7 +85,7 @@ object KnoraProject {
 
   final case class Longname private (override val value: String) extends AnyVal with StringValue
 
-  object Longname extends StringBasedValueCompanion[Longname] {
+  object Longname extends StringValueCompanion[Longname] {
 
     private val longnameRegex: Regex = "^.{3,256}$".r
 
@@ -107,7 +107,7 @@ object KnoraProject {
 
   final case class Keyword private (override val value: String) extends AnyVal with StringValue
 
-  object Keyword extends StringBasedValueCompanion[Keyword] {
+  object Keyword extends StringValueCompanion[Keyword] {
 
     private val keywordRegex: Regex = "^.{3,64}$".r
     def from(str: String): Either[String, Keyword] =
@@ -117,7 +117,7 @@ object KnoraProject {
 
   final case class Logo private (override val value: String) extends AnyVal with StringValue
 
-  object Logo extends StringBasedValueCompanion[Logo] {
+  object Logo extends StringValueCompanion[Logo] {
 
     def from(str: String): Either[String, Logo] =
       if (str.isEmpty) Left("Logo cannot be empty.")

@@ -6,12 +6,12 @@
 package org.knora.webapi.slice.common.domain
 
 import dsp.valueobjects.Iri
-import org.knora.webapi.slice.common.StringBasedValueCompanion
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
 final case class SparqlEncodedString private (value: String) extends AnyVal with StringValue
 
-object SparqlEncodedString extends StringBasedValueCompanion[SparqlEncodedString] {
+object SparqlEncodedString extends StringValueCompanion[SparqlEncodedString] {
   def from(str: String): Either[String, SparqlEncodedString] =
     Iri
       .toSparqlEncodedString(str)

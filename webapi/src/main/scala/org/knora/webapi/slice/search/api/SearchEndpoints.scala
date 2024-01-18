@@ -22,7 +22,7 @@ import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.StringBasedValueCompanion
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -41,7 +41,7 @@ object SearchEndpointsInputs {
 
   final case class InputIri private (value: String) extends AnyVal with StringValue
 
-  object InputIri extends StringBasedValueCompanion[InputIri] {
+  object InputIri extends StringValueCompanion[InputIri] {
 
     implicit val tapirCodec: Codec[String, InputIri, CodecFormat.TextPlain] =
       Codec.string.mapEither(InputIri.from)(_.value)

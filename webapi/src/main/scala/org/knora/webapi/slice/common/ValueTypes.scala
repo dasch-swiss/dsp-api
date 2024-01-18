@@ -24,4 +24,4 @@ trait WithFrom[-I, +A] {
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
-trait StringBasedValueCompanion[A <: StringValue] extends WithFrom[String, A]
+trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A]
