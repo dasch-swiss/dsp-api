@@ -26,7 +26,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
  * ADM format.
  */
-final case class AssetPermissionResponder(
+final case class AssetPermissionsResponder(
   private val projectsResponder: ProjectsResponderADM,
   private val triplestoreService: TriplestoreService,
   private implicit val sf: StringFormatter
@@ -90,11 +90,11 @@ final case class AssetPermissionResponder(
     }
 }
 
-object AssetPermissionResponder {
+object AssetPermissionsResponder {
   def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
-    ZIO.serviceWithZIO[AssetPermissionResponder](
+    ZIO.serviceWithZIO[AssetPermissionsResponder](
       _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user)
     )
 
-  val layer = ZLayer.derive[AssetPermissionResponder]
+  val layer = ZLayer.derive[AssetPermissionsResponder]
 }
