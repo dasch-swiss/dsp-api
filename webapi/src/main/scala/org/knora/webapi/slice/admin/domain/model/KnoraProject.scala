@@ -50,9 +50,9 @@ object KnoraProject {
     private val shortcodeRegex: Regex = "^\\p{XDigit}{4}$".r
 
     def from(value: String): Either[String, Shortcode] = value match {
-      case _ if shortcodeRegex.matches(value) => Right(Shortcode(value))
-      case _ if value.isEmpty                 => Left("Shortcode cannot be empty.")
-      case _                                  => Left(s"Shortcode is invalid: $value")
+      case value if shortcodeRegex.matches(value.toUpperCase) => Right(Shortcode(value.toUpperCase()))
+      case _ if value.isEmpty                                 => Left("Shortcode cannot be empty.")
+      case _                                                  => Left(s"Shortcode is invalid: $value")
     }
   }
 
