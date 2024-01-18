@@ -9,14 +9,14 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.slice.admin.api.service.UsersADMRestService
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
 case class UsersEndpointsHandler(
   usersEndpoints: UsersEndpoints,
-  restService: UsersADMRestService,
+  restService: UsersRestService,
   mapper: HandlerMapper
 ) {
 

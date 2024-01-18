@@ -474,7 +474,7 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
  *
  * @param user the new user profile of the created/modified user.
  */
-case class UserOperationResponseADM(user: User) extends KnoraResponseADM {
+case class UserOperationResponseADM(user: User) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 }
 

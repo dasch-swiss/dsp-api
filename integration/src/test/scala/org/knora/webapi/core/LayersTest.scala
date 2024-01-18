@@ -33,7 +33,7 @@ import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.*
@@ -217,7 +217,7 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      UsersADMRestServiceLive.layer,
+      UsersRestService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
       UsersResponderADMLive.layer,
