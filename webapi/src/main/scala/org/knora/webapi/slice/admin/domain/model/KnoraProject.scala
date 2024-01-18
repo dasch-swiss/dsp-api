@@ -5,15 +5,23 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import dsp.valueobjects.Iri.{isProjectIri, validateAndEscapeProjectIri}
-import dsp.valueobjects.{Iri, IriErrorMessages, UuidUtil, V2}
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.common.Value.{BooleanValue, StringValue}
-import org.knora.webapi.slice.common.{StringValueCompanion, Value, WithFrom}
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import zio.NonEmptyChunk
 
 import scala.util.matching.Regex
+
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Iri.isProjectIri
+import dsp.valueobjects.Iri.validateAndEscapeProjectIri
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
   id: ProjectIri,
@@ -43,6 +51,12 @@ object KnoraProject {
     }
   }
 
+  /**
+   * A [[Shortcode]] is a human readable identifier for a project.
+   * Its value must be is a 4-digit hexadecimal number with letters in upper case.
+   *
+   * @param value the valid shortcode.
+   */
   final case class Shortcode private (override val value: String) extends AnyVal with StringValue
 
   object Shortcode extends StringValueCompanion[Shortcode] {
