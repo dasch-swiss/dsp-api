@@ -16,19 +16,13 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM
 import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
@@ -224,24 +218,18 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         val task = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
-          r              <- getIriUserUuid(projectIri, requestContext)
-        } yield UserProjectMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
+          userIri <- validateAndEscapeUserIri(userIri)
+          r       <- getIriUserUuid(projectIri, requestContext)
+        } yield UserProjectMembershipAddRequestADM(userIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
 
-  private def validateAndEscapeUserIri(userIri: String): ZIO[StringFormatter, BadRequestException, String] =
-    for {
-      nonEmptyIri <- ZIO.succeed(userIri).filterOrFail(_.nonEmpty)(BadRequestException("User IRI cannot be empty"))
-      checkedUserIri <-
-        ZIO
-          .fromOption(Iri.validateAndEscapeUserIri(nonEmptyIri))
-          .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
-          .filterOrFail(isNotBuildInUser)(BadRequestException("Changes to built-in users are not allowed."))
-    } yield checkedUserIri
-
-  private def isNotBuildInUser(it: String) = !it.equals(SystemUser.id) && !it.equals(AnonymousUser.id)
+  private def validateAndEscapeUserIri(userIri: String) =
+    ZIO
+      .fromEither(UserIri.from(userIri))
+      .filterOrFail(_.isRegularUser)("Changes to built-in users are not allowed.")
+      .mapBoth(BadRequestException.apply, _.value)
 
   private def validateAndEscapeGroupIri(groupIri: String) =
     Iri
