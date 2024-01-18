@@ -9,7 +9,6 @@ import zio.NonEmptyChunk
 
 import scala.util.matching.Regex
 
-import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isProjectIri
 import dsp.valueobjects.Iri.validateAndEscapeProjectIri
 import dsp.valueobjects.IriErrorMessages
@@ -76,18 +75,11 @@ object KnoraProject {
 
     private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
-    def from(value: String): Either[String, Shortname] =
-      if (value.isEmpty) Left("Shortname cannot be empty.")
-      else {
-        val maybeShortname = value match {
-          case "DefaultSharedOntologiesProject" => Some(value)
-          case _                                => shortnameRegex.findFirstIn(value)
-        }
-        maybeShortname
-          .flatMap(Iri.toSparqlEncodedString)
-          .toRight(s"Shortname is invalid: $value")
-          .map(Shortname.apply)
-      }
+    def from(value: String): Either[String, Shortname] = value match {
+      case _ if value.isEmpty                             => Left("Shortname cannot be empty.")
+      case _ if value == "DefaultSharedOntologiesProject" => Right(Shortname(value))
+      case _                                              => shortnameRegex.findFirstIn(value).toRight(s"Shortname is invalid: $value").map(Shortname.apply)
+    }
   }
 
   final case class Longname private (override val value: String) extends AnyVal with StringValue
