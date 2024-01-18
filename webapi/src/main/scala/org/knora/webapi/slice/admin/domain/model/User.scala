@@ -154,7 +154,7 @@ object UserIri extends StringValueCompanion[UserIri] {
    *
    * `http://rdfh\.ch/users/`: Matches the specified prefix.
    *
-   * `[a-zA-Z0-9_-]{4,36}`: Matches any alphanumeric character, hyphen, or underscore between 1 and 36 times.
+   * `[a-zA-Z0-9_-]{4,36}`: Matches any alphanumeric character, hyphen, or underscore between 4 and 36 times.
    *
    * `$`: Asserts the end of the string.
    */
