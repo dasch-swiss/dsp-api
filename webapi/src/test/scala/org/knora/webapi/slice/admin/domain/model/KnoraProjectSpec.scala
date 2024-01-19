@@ -6,12 +6,10 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import zio.Scope
-import zio.prelude.Validation
 import zio.test.*
 
 import scala.util.Random
 
-import dsp.errors.ValidationException
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
@@ -34,21 +32,16 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val projectIriSuite = suite("ProjectIri")(
     test("pass an empty value and return an error") {
-      assertTrue(
-        ProjectIri.from("") == Validation.fail(ValidationException("Project IRI cannot be empty."))
-      )
+      assertTrue(ProjectIri.from("") == Left("Project IRI cannot be empty."))
     },
     test("pass an invalid value and return an error") {
-      assertTrue(
-        ProjectIri.from("not an iri") == Validation.fail(ValidationException("Project IRI is invalid."))
-      )
+      assertTrue(ProjectIri.from("not an iri") == Left("Project IRI is invalid."))
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
       val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
       assertTrue(
-        ProjectIri.from(projectIriWithUUIDVersion3) == Validation.fail(
-          ValidationException("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
-        )
+        ProjectIri.from(projectIriWithUUIDVersion3) ==
+          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
       )
     },
     test("pass a valid project IRI and successfully create value object") {
@@ -67,16 +60,12 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val shortcodeTest = suite("Shortcode")(
     test("pass an empty value and return an error") {
-      assertTrue(
-        Shortcode.from("") == Validation.fail(ValidationException("Shortcode cannot be empty."))
-      )
+      assertTrue(Shortcode.from("") == Left("Shortcode cannot be empty."))
     },
     test("pass an invalid value and return an error") {
       val invalidShortcodes = Gen.fromIterable(Seq("123", "000G", "12345"))
       check(invalidShortcodes) { shortcode =>
-        assertTrue(
-          Shortcode.from(shortcode) == Validation.fail(ValidationException(s"Shortcode is invalid: $shortcode"))
-        )
+        assertTrue(Shortcode.from(shortcode) == Left(s"Shortcode is invalid: $shortcode"))
       }
     },
     test("pass a valid value and successfully create value object") {
@@ -86,9 +75,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val shortnameTest = suite("Shortname")(
     test("pass an empty value and return validation error") {
-      assertTrue(
-        Shortname.from("") == Validation.fail(ValidationException("Shortname cannot be empty."))
-      )
+      assertTrue(Shortname.from("") == Left("Shortname cannot be empty."))
     },
     test("pass invalid values and return validation error") {
       val gen = Gen.fromIterable(
@@ -108,9 +95,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
         )
       )
       check(gen) { param =>
-        assertTrue(
-          Shortname.from(param) == Validation.fail(ValidationException(s"Shortname is invalid: $param"))
-        )
+        assertTrue(Shortname.from(param) == Left(s"Shortname is invalid: $param"))
       }
     },
     test("pass valid values and successfully create value objects") {
@@ -125,7 +110,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
           "a20charLongShortname"
         )
       )
-      check(gen)(param => assertTrue(Shortname.from(param).map(_.value) == Validation.succeed(param)))
+      check(gen)(param => assertTrue(Shortname.from(param).map(_.value).contains(param)))
     }
   )
 
@@ -134,9 +119,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       val invalidNames =
         Gen.stringBounded(0, 2)(Gen.printableChar) ++ Gen.stringBounded(257, 300)(Gen.printableChar)
       check(invalidNames) { name =>
-        assertTrue(
-          Longname.from(name) == Validation.fail(ValidationException("Longname must be 3 to 256 characters long."))
-        )
+        assertTrue(Longname.from(name) == Left("Longname must be 3 to 256 characters long."))
       }
     },
     test("pass a valid value and successfully create value object") {
@@ -151,19 +134,19 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     test("pass an object containing too short Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2("Ab", Some("en"))) ==
-          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
+          Left("Description must be 3 to 40960 characters long.")
       )
     },
     test("pass an object containing too long Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2(new Random().nextString(40961), Some("en"))) ==
-          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
+          Left("Description must be 3 to 40960 characters long.")
       )
     },
     test("pass a valid object and successfully create value object") {
       assertTrue(
         Description.from(V2.StringLiteralV2(value = "Valid project description", language = Some("en"))).map(_.value) ==
-          Validation.succeed(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
+          Right(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
       )
     }
   )
@@ -173,9 +156,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       val invalidKeywords =
         Gen.fromIterable(Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "12", "1"))
       check(invalidKeywords) { keyword =>
-        assertTrue(
-          Keyword.from(keyword) == Validation.fail(ValidationException("Keyword must be 3 to 64 characters long."))
-        )
+        assertTrue(Keyword.from(keyword) == Left("Keyword must be 3 to 64 characters long."))
       }
     },
     test("pass a valid object and successfully create value object") {
@@ -185,7 +166,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val logoTest = suite("Logo")(
     test("pass an empty object and return an error") {
-      assertTrue(Logo.from("") == Validation.fail(ValidationException("Logo cannot be empty.")))
+      assertTrue(Logo.from("") == Left("Logo cannot be empty."))
     },
     test("pass a valid object and successfully create value object") {
       val validLogo = "/foo/bar/baz.jpg"

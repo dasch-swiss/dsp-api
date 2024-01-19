@@ -56,7 +56,7 @@ final case class PermissionsRestService(
 
   private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] =
     for {
-      projectIri <- KnoraProject.ProjectIri.from(projectIri).toZIO.mapError(e => BadRequestException(e.getMessage))
+      projectIri <- ZIO.fromEither(ProjectIri.from(projectIri)).mapError(BadRequestException.apply)
       project    <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
     } yield project
 

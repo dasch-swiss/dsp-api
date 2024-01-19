@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api.model
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 object ProjectsEndpointsRequests {

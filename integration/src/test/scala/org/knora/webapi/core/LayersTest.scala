@@ -131,7 +131,7 @@ object LayersTest {
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
-      with AssetPermissionResponder
+      with AssetPermissionsResponder
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -209,7 +209,7 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      AssetPermissionResponder.layer,
+      AssetPermissionsResponder.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

@@ -15,14 +15,13 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.interop.refined.*
 
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object MaintenanceRequests {
 
   type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
-  object AssetId extends RefinedTypeOps[AssetId, String] {
-    implicit val codec: JsonCodec[AssetId] = JsonCodec[String].transformOrFail(AssetId.from, _.toString)
-  }
+  object AssetId extends RefinedTypeOps[AssetId, String]
 
   final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive)
 

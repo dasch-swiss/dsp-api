@@ -5,15 +5,23 @@
 
 package org.knora.webapi.slice.common
 
-trait WithFrom[I, A] {
+import org.knora.webapi.slice.common.Value.StringValue
+
+trait Value[A] extends Any {
+  def value: A
+}
+
+object Value {
+  type StringValue  = Value[String]
+  type BooleanValue = Value[Boolean]
+}
+
+trait WithFrom[-I, +A] {
 
   def from(in: I): Either[String, A]
 
   final def unsafeFrom(in: I): A =
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
-
 }
 
-object WithFrom {
-  type WithFromString[A] = WithFrom[String, A]
-}
+trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A]

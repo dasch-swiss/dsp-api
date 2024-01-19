@@ -64,26 +64,26 @@ final case class KnoraProjectRepoLive(
   private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
     val (subject, propertiesMap) = subjectPropsTuple
     for {
-      projectIri <- ProjectIri.from(subject.value).toZIO
+      projectIri <- mapper.eitherOrDie(ProjectIri.from(subject.value))
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propertiesMap)
-                     .flatMap(l => Shortname.from(l.value).toZIO)
+                     .flatMap(l => mapper.eitherOrDie(Shortname.from(l.value)))
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
-                     .flatMap(l => Shortcode.from(l.value).toZIO)
+                     .flatMap(l => mapper.eitherOrDie(Shortcode.from(l.value)))
       longname <- mapper
                     .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
-                    .flatMap(optLit => ZIO.foreach(optLit)(l => Longname.from(l.value).toZIO))
+                    .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Longname.from(it.value))))
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
                        .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
-                       .flatMap(ZIO.foreach(_)(Description.from(_).toZIO))
+                       .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Description.from(it))))
       keywords <- mapper
                     .getList[StringLiteralV2](ProjectKeyword, propertiesMap)
-                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(Keyword.from(_).toZIO))
+                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(it => mapper.eitherOrDie(Keyword.from(it))))
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propertiesMap)
-                .flatMap(optLit => ZIO.foreach(optLit)(l => Logo.from(l.value).toZIO))
+                .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Logo.from(it.value))))
       status <- mapper
                   .getSingleOrFail[BooleanLiteralV2](StatusProp, propertiesMap)
                   .map(l => Status.from(l.value))

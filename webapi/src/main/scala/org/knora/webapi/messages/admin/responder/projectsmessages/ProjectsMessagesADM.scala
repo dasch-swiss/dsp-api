@@ -368,7 +368,9 @@ object ProjectIdentifierADM {
       fromString(projectIri).fold(err => throw err.head, identity)
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      ProjectIri.from(value).map(IriIdentifier(_))
+      Validation
+        .fromEither(ProjectIri.from(value).map(IriIdentifier.apply))
+        .mapError(ValidationException.apply)
 
     implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
       Codec.string.mapDecode(str =>
@@ -388,9 +390,7 @@ object ProjectIdentifierADM {
     def unsafeFrom(value: String): ShortcodeIdentifier  = fromString(value).fold(err => throw err.head, identity)
     def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
-      Shortcode.from(value).map {
-        ShortcodeIdentifier(_)
-      }
+      Validation.fromEither(Shortcode.from(value).map(ShortcodeIdentifier.from)).mapError(ValidationException(_))
   }
 
   /**
@@ -398,12 +398,13 @@ object ProjectIdentifierADM {
    *
    * @param value that constructs the identifier in the type of [[Shortname]] value object.
    */
-  final case class ShortnameIdentifier(value: Shortname) extends ProjectIdentifierADM
+  final case class ShortnameIdentifier private (value: Shortname) extends ProjectIdentifierADM
   object ShortnameIdentifier {
+    def from(shortname: Shortname): ShortnameIdentifier = ShortnameIdentifier(shortname)
     def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
-      Shortname.from(value).map {
-        ShortnameIdentifier(_)
-      }
+      Validation
+        .fromEither(Shortname.from(value).map(ShortnameIdentifier.from))
+        .mapError(ValidationException.apply)
   }
 
   /**

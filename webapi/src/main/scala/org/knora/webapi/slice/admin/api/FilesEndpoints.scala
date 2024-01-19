@@ -14,6 +14,7 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.sparqlEncodedString
 import org.knora.webapi.slice.admin.api.FilesPathVar.filename
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
