@@ -34,7 +34,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
-    .description("Delete a user identified by iri (change status to false).")
+    .description("Delete a user identified by IRI (change status to false).")
     .tags(tags)
 
   val endpoints: Seq[AnyEndpoint] = Seq(getUsers, deleteUser).map(_.endpoint)
