@@ -14,9 +14,7 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import scala.util.matching.Regex
 
-import dsp.valueobjects.Iri.isUserIri
-import dsp.valueobjects.Iri.validateAndEscapeUserIri
-import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -24,6 +22,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
 
 /**
  * Represents a user's profile.
@@ -136,24 +137,46 @@ final case class User(
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
 
-final case class UserIri private (value: String) extends AnyVal
-object UserIri {
-  def from(value: String): Either[String, UserIri] =
-    if (value.isEmpty) Left(UserErrorMessages.UserIriMissing)
-    else {
-      val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
+final case class UserIri private (value: String) extends AnyVal with StringValue
 
-      if (!isUserIri(value))
-        Left(UserErrorMessages.UserIriInvalid(value))
-      else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-        Left(IriErrorMessages.UuidVersionInvalid)
-      else
-        validateAndEscapeUserIri(value).toRight(UserErrorMessages.UserIriInvalid(value)).map(UserIri(_))
-    }
+object UserIri extends StringValueCompanion[UserIri] {
 
-  def unsafeFrom(value: String): UserIri =
-    UserIri.from(value).fold(e => throw new IllegalArgumentException(e), identity)
+  implicit class UserIriOps(val userIri: UserIri) {
+    def isBuiltInUser: Boolean = builtInIris.contains(userIri.value)
+    def isRegularUser: Boolean = !isBuiltInUser
+  }
 
+  def makeNew: UserIri = UserIri.unsafeFrom(s"http://rdfh.ch/users/${UuidUtil.makeRandomBase64EncodedUuid}")
+
+  /**
+   * Explanation of the user IRI regex:
+   *
+   * `^` Asserts the start of the string.
+   *
+   * `http://rdfh\.ch/users/`: Matches the specified prefix.
+   *
+   * `[a-zA-Z0-9_-]{4,36}`: Matches any alphanumeric character, hyphen, or underscore between 4 and 36 times.
+   *
+   * `$`: Asserts the end of the string.
+   */
+  private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,36}$""".r
+
+  private val builtInIris = Seq(
+    OntologyConstants.KnoraAdmin.SystemUser,
+    OntologyConstants.KnoraAdmin.AnonymousUser,
+    OntologyConstants.KnoraAdmin.SystemAdmin
+  )
+
+  private def isValid(iri: String) =
+    builtInIris.contains(iri) || (Iri.isIri(iri) && userIriRegEx.matches(iri))
+
+  private val isInvalid = "User IRI is invalid."
+
+  def from(value: String): Either[String, UserIri] = value match {
+    case _ if value.isEmpty  => Left("User IRI cannot be empty.")
+    case _ if isValid(value) => Right(UserIri(value))
+    case _                   => Left(isInvalid)
+  }
   def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }
 
@@ -303,10 +326,14 @@ object PasswordStrength {
 
 }
 
-final case class UserStatus private (value: Boolean) extends AnyVal
-object UserStatus {
-  def from(value: Boolean): UserStatus = UserStatus(value)
+final case class UserStatus private (value: Boolean) extends AnyVal with BooleanValue
 
+object UserStatus {
+
+  val Active: UserStatus   = UserStatus(true)
+  val Inactive: UserStatus = UserStatus(false)
+
+  def from(value: Boolean): UserStatus = if (value) Active else Inactive
 }
 
 final case class SystemAdmin private (value: Boolean) extends AnyVal
@@ -315,15 +342,13 @@ object SystemAdmin {
 }
 
 object UserErrorMessages {
-  val UserIriMissing: String           = "User IRI cannot be empty."
-  val UserIriInvalid: String => String = (iri: String) => s"User IRI: $iri is invalid."
-  val UsernameMissing                  = "Username cannot be empty."
-  val UsernameInvalid                  = "Username is invalid."
-  val EmailMissing                     = "Email cannot be empty."
-  val EmailInvalid                     = "Email is invalid."
-  val PasswordMissing                  = "Password cannot be empty."
-  val PasswordInvalid                  = "Password is invalid."
-  val PasswordStrengthInvalid          = "PasswordStrength is invalid."
-  val GivenNameMissing                 = "GivenName cannot be empty."
-  val FamilyNameMissing                = "FamilyName cannot be empty."
+  val UsernameMissing         = "Username cannot be empty."
+  val UsernameInvalid         = "Username is invalid."
+  val EmailMissing            = "Email cannot be empty."
+  val EmailInvalid            = "Email is invalid."
+  val PasswordMissing         = "Password cannot be empty."
+  val PasswordInvalid         = "Password is invalid."
+  val PasswordStrengthInvalid = "PasswordStrength is invalid."
+  val GivenNameMissing        = "GivenName cannot be empty."
+  val FamilyNameMissing       = "FamilyName cannot be empty."
 }

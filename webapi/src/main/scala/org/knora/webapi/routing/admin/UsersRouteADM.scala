@@ -16,19 +16,13 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM
 import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
@@ -47,7 +41,6 @@ final case class UsersRouteADM()(
       changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
-      deleteUser() ~
       changeUserSystemAdminMembership() ~
       getUsersProjectMemberships() ~
       addUserToProjectMembership() ~
@@ -122,7 +115,7 @@ final case class UsersRouteADM()(
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
             r              <- getUserUuid(requestContext)
             payload <- UserUpdateBasicInformationPayloadADM
                          .make(apiRequest)
@@ -143,7 +136,7 @@ final case class UsersRouteADM()(
       put {
         entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
             payload        <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
             r              <- getUserUuid(requestContext)
           } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
@@ -163,26 +156,13 @@ final case class UsersRouteADM()(
             newStatus <- ZIO
                            .fromOption(apiRequest.status.map(UserStatus.from))
                            .orElseFail(BadRequestException("The status is missing."))
-            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
             r              <- getUserUuid(requestContext)
           } yield UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }
     }
-
-  /**
-   * delete a user identified by iri (change status to false).
-   */
-  private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
-    delete { requestContext =>
-      val task = for {
-        checkedUserIri <- validateAndEscapeUserIri(userIri)
-        r              <- getUserUuid(requestContext)
-      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.from(false), r.user, r.uuid)
-      runJsonRouteZ(task, requestContext)
-    }
-  }
 
   /**
    * Change user's SystemAdmin membership.
@@ -192,7 +172,7 @@ final case class UsersRouteADM()(
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
             r              <- getUserUuid(requestContext)
             newSystemAdmin <- ZIO
                                 .fromOption(apiRequest.systemAdmin.map(SystemAdmin.from))
@@ -210,7 +190,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
         val requestTask = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
           requestingUser <- Authenticator.getUserADM(requestContext)
         } yield UserProjectMembershipsGetRequestADM(checkedUserIri, requestingUser)
         runJsonRouteZ(requestTask, requestContext)
@@ -224,24 +204,18 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         val task = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
-          r              <- getIriUserUuid(projectIri, requestContext)
-        } yield UserProjectMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
+          userIri <- validateUserIriAndEnsureRegularUser(userIri)
+          r       <- getIriUserUuid(projectIri, requestContext)
+        } yield UserProjectMembershipAddRequestADM(userIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
 
-  private def validateAndEscapeUserIri(userIri: String): ZIO[StringFormatter, BadRequestException, String] =
-    for {
-      nonEmptyIri <- ZIO.succeed(userIri).filterOrFail(_.nonEmpty)(BadRequestException("User IRI cannot be empty"))
-      checkedUserIri <-
-        ZIO
-          .fromOption(Iri.validateAndEscapeUserIri(nonEmptyIri))
-          .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
-          .filterOrFail(isNotBuildInUser)(BadRequestException("Changes to built-in users are not allowed."))
-    } yield checkedUserIri
-
-  private def isNotBuildInUser(it: String) = !it.equals(SystemUser.id) && !it.equals(AnonymousUser.id)
+  private def validateUserIriAndEnsureRegularUser(userIri: String) =
+    ZIO
+      .fromEither(UserIri.from(userIri))
+      .filterOrFail(_.isRegularUser)("Changes to built-in users are not allowed.")
+      .mapBoth(BadRequestException.apply, _.value)
 
   private def validateAndEscapeGroupIri(groupIri: String) =
     Iri
@@ -256,7 +230,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         val task = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
           r              <- getIriUserUuid(projectIri, requestContext)
         } yield UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
@@ -284,7 +258,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { ctx =>
         val task = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
           r              <- getIriUserUuid(projectIri, ctx)
         } yield UserProjectAdminMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, ctx)
@@ -298,7 +272,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         val task = for {
-          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
           r              <- getIriUserUuid(projectIri, requestContext)
         } yield UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
@@ -326,7 +300,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
         val task = for {
-          checkedUserIri  <- validateAndEscapeUserIri(userIri)
+          checkedUserIri  <- validateUserIriAndEnsureRegularUser(userIri)
           checkedGroupIri <- validateAndEscapeGroupIri(groupIri)
           r               <- getIriUserUuid(groupIri, requestContext)
         } yield UserGroupMembershipAddRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
@@ -341,7 +315,7 @@ final case class UsersRouteADM()(
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>
         val task = for {
-          checkedUserIri  <- validateAndEscapeUserIri(userIri)
+          checkedUserIri  <- validateUserIriAndEnsureRegularUser(userIri)
           checkedGroupIri <- validateAndEscapeGroupIri(groupIri)
           r               <- getIriUserUuid(groupIri, requestContext)
         } yield UserGroupMembershipRemoveRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
