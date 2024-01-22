@@ -36,6 +36,11 @@ object Errors {
 
 final case class LangString(value: String, lang: Option[String])
 
+/**
+ * A wrapper around Jena's [[Resource]].
+ * Exposes access to the resource's properties.
+ * Should be created via [[RdfModel.getResource]].
+ */
 final case class RdfResource(private val res: Resource) {
 
   private val model = res.getModel
@@ -198,6 +203,10 @@ final case class RdfResource(private val res: Resource) {
 
 }
 
+/**
+ * Wrapper around Jena's [[Model]].
+ * Exposes access to resources of the model's graph.
+ */
 final case class RdfModel private (private val model: Model) {
   def getResource(subjectIri: String): IO[RdfError, RdfResource] = ZIO.attempt {
     val resource = model.createResource(subjectIri)
@@ -206,6 +215,12 @@ final case class RdfModel private (private val model: Model) {
 
 }
 object RdfModel {
+
+  /**
+   * Creates an [[RdfModel]] from a turtle string.
+   * @param turtle the turtle string.
+   * @return the [[RdfModel]] or a throwable, if parsing the underlying Jena model failed.
+   */
   def fromTurtle(turtle: String): Task[RdfModel] = ZIO.attempt {
     val model = ModelFactory.createDefaultModel()
     model.read(new StringReader(turtle), null, "TURTLE")
