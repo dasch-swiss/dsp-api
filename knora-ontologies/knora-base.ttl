@@ -1769,7 +1769,7 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger ],
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasComment ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger ] ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     :resourceIcon      "region.gif"^^xsd:string ;
     :canBeInstantiated true ;
     rdfs:comment       "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
