@@ -13,7 +13,8 @@ final case class AdminApiEndpoints(
   maintenanceEndpoints: MaintenanceEndpoints,
   permissionsEndpoints: PermissionsEndpoints,
   projectsEndpoints: ProjectsEndpoints,
-  usersEndpoints: UsersEndpoints
+  usersEndpoints: UsersEndpoints,
+  filesEndpoints: FilesEndpoints
 ) {
 
   val endpoints: Seq[AnyEndpoint] =
@@ -21,7 +22,8 @@ final case class AdminApiEndpoints(
       maintenanceEndpoints.endpoints ++
       permissionsEndpoints.endpoints ++
       projectsEndpoints.endpoints ++
-      usersEndpoints.endpoints
+      usersEndpoints.endpoints ++
+      filesEndpoints.endpoints
 }
 
 object AdminApiEndpoints {

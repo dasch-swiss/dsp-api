@@ -1897,7 +1897,7 @@ final case class ListsResponderADMLive(
                          case _ =>
                            throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
                        }
-      projectIri <- ProjectIri.from(projectIriStr).toZIO.mapError(e => BadRequestException(e.getMessage))
+      projectIri <- ZIO.fromEither(ProjectIri.from(projectIriStr)).mapError(BadRequestException.apply)
     } yield projectIri
 
   /**

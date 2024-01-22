@@ -113,6 +113,9 @@ final case class PredicateObjectMapper(private val iriConverter: IriConverter) {
     getSingleOption[A](key, propertiesMap)
       .flatMap(ZIO.fromOption(_))
       .orElseFail(InconsistentRepositoryDataException(s"PropertiesMap has no value for $key defined."))
+
+  def eitherOrDie[A](either: Either[String, A]): UIO[A] =
+    ZIO.fromEither(either).mapError(new InconsistentRepositoryDataException(_)).orDie
 }
 
 object PredicateObjectMapper {

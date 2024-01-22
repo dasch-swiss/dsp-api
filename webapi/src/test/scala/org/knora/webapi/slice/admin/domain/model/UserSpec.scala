@@ -8,13 +8,10 @@ package org.knora.webapi.slice.admin.domain.model
 import zio.test.*
 
 object UserSpec extends ZIOSpecDefault {
-  private val validUserIri            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
-  private val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
-  private val invalidIri              = "Invalid IRI"
-  private val validPassword           = "pass-word"
-  private val validGivenName          = "John"
-  private val validFamilyName         = "Rambo"
-  private val pwStrength              = PasswordStrength.unsafeMake(12)
+  private val validPassword   = "pass-word"
+  private val validGivenName  = "John"
+  private val validFamilyName = "Rambo"
+  private val pwStrength      = PasswordStrength.unsafeMake(12)
 
   private val userSuite = suite("User")()
 
@@ -75,18 +72,61 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(UserIri.from("") == Left("User IRI cannot be empty."))
     },
-    test("pass an invalid value and return an error") {
-      assertTrue(UserIri.from(invalidIri) == Left(s"User IRI: $invalidIri is invalid."))
+    test("make new should create a valid user iri") {
+      assertTrue(UserIri.makeNew.value.startsWith("http://rdfh.ch/users/"))
     },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        UserIri.from(userIriWithUUIDVersion3) == Left(
-          "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
+    test("built in users should be builtIn") {
+      val builtInIris = Gen.fromIterable(
+        Seq(
+          "http://www.knora.org/ontology/knora-admin#AnonymousUser",
+          "http://www.knora.org/ontology/knora-admin#SystemUser",
+          "http://www.knora.org/ontology/knora-admin#AnonymousUser"
         )
       )
+      check(builtInIris) { i =>
+        val userIri = UserIri.unsafeFrom(i)
+        assertTrue(!userIri.isRegularUser, userIri.isBuiltInUser)
+      }
     },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(UserIri.from(validUserIri).isRight)
+    test("regular user iris should not be builtIn") {
+      val builtInIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE"
+        )
+      )
+      check(builtInIris) { i =>
+        val userIri = UserIri.unsafeFrom(i)
+        assertTrue(userIri.isRegularUser, !userIri.isBuiltInUser)
+      }
+    },
+    test("valid iris should be a valid iri") {
+      val validIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
+          "http://www.knora.org/ontology/knora-admin#AnonymousUser",
+          "http://www.knora.org/ontology/knora-admin#SystemUser",
+          "http://www.knora.org/ontology/knora-admin#AnonymousUser",
+          "http://rdfh.ch/users/mls-0807-import-user",
+          "http://rdfh.ch/users/root",
+          "http://rdfh.ch/users/images-reviewer-user",
+          "http://rdfh.ch/users/AnythingAdminUser",
+          "http://rdfh.ch/users/subotic",
+          "http://rdfh.ch/users/_fH9FS-VRMiPPiIMRpjevA"
+        )
+      )
+      check(validIris)(i => assertTrue(UserIri.from(i).isRight))
+    },
+    test("pass an invalid value and return an error") {
+      val invalidIris = Gen.fromIterable(
+        Seq(
+          "Invalid IRI",
+          "http://rdfh.ch/user/AnythingAdminUser",
+          "http://rdfh.ch/users/AnythingAdminUser/"
+        )
+      )
+      check(invalidIris)(i => assertTrue(UserIri.from(i) == Left(s"User IRI is invalid.")))
     }
   )
 

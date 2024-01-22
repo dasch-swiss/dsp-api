@@ -33,7 +33,7 @@ import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.*
@@ -95,6 +95,8 @@ object LayersTest {
       with ConstructResponseUtilV2
       with ConstructTransformer
       with DspIngestClient
+      with FilesEndpoints
+      with FilesEndpointsHandler
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -129,7 +131,7 @@ object LayersTest {
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
-      with SipiResponderADM
+      with AssetPermissionsResponder
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -156,6 +158,8 @@ object LayersTest {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
+      FilesEndpoints.layer,
+      FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsEndpoints.layer,
       GroupsEndpointsHandler.layer,
@@ -205,7 +209,7 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      SipiResponderADMLive.layer,
+      AssetPermissionsResponder.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
@@ -213,7 +217,7 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      UsersADMRestServiceLive.layer,
+      UsersRestService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
       UsersResponderADMLive.layer,

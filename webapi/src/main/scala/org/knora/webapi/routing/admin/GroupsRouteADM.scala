@@ -12,6 +12,7 @@ import zio.*
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
@@ -54,9 +55,11 @@ final case class GroupsRouteADM(
           .getOrElse(Validation.succeed(None))
         val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
-        val project: Validation[Throwable, ProjectIri]             = ProjectIri.from(apiRequest.project)
-        val status: Validation[Throwable, GroupStatus]             = Validation.succeed(GroupStatus.make(apiRequest.status))
-        val selfjoin: Validation[Throwable, GroupSelfJoin]         = GroupSelfJoin.make(apiRequest.selfjoin)
+        val project: Validation[Throwable, ProjectIri] = Validation
+          .fromEither(ProjectIri.from(apiRequest.project))
+          .mapError(ValidationException.apply)
+        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.make(apiRequest.status))
+        val selfjoin: Validation[Throwable, GroupSelfJoin] = GroupSelfJoin.make(apiRequest.selfjoin)
         val payloadValidation: Validation[Throwable, GroupCreatePayloadADM] =
           Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
 

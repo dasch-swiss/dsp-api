@@ -57,6 +57,24 @@ import org.knora.webapi.util.ZioHelper
 @accessible
 trait UsersResponderADM {
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM]
+
+  /**
+   * Change the user's status (active / inactive).
+   *
+   * @param userIri        the IRI of the existing user that we want to update.
+   * @param status         the new status.
+   * @param requestingUser the requesting user.
+   * @param apiRequestID   the unique api request ID.
+   * @return a task containing a [[UserOperationResponseADM]].
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
+   */
+  def changeUserStatusADM(
+    userIri: IRI,
+    status: UserStatus,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): Task[UserOperationResponseADM]
 }
 
 final case class UsersResponderADMLive(
@@ -601,19 +619,7 @@ final case class UsersResponderADMLive(
     )
   }
 
-  /**
-   * Change the user's status (active / inactive).
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param status               the new status.
-   *
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
-   */
-  private def changeUserStatusADM(
+  override def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
     requestingUser: User,

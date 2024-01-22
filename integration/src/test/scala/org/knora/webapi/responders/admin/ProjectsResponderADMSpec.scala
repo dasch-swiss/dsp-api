@@ -31,13 +31,12 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
 class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
-
-  private val rootUser = SharedTestDataADM.rootUser
 
   private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
 
@@ -105,59 +104,68 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
 
       "return restricted view settings using project IRI" in {
-        appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = IriIdentifier
-            .fromString(SharedTestDataADM.imagesProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val actual = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
+            IriIdentifier
+              .fromString(SharedTestDataADM.imagesProject.id)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
-        expectMsg(Some(expectedResult))
+        actual shouldEqual Some(expectedResult)
       }
 
       "return restricted view settings using project SHORTNAME" in {
-        appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = ShortnameIdentifier
-            .fromString(SharedTestDataADM.imagesProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val actual = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
+            ShortnameIdentifier
+              .fromString(SharedTestDataADM.imagesProject.shortname)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
-        expectMsg(Some(expectedResult))
+        actual shouldEqual Some(expectedResult)
       }
 
       "return restricted view settings using project SHORTCODE" in {
-        appActor ! ProjectRestrictedViewSettingsGetADM(
-          identifier = ShortcodeIdentifier
-            .fromString(SharedTestDataADM.imagesProject.shortcode)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val actual = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
+            ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode)
+          )
         )
-        expectMsg(Some(expectedResult))
+        actual shouldEqual Some(expectedResult)
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = IriIdentifier
-            .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
+            IriIdentifier
+              .fromString(notExistingProjectButValidProjectIri)
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
-        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ShortcodeIdentifier
-            .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
+            ShortcodeIdentifier
+              .fromString("9999")
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
+        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
 
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
-        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
-          identifier = ShortnameIdentifier
-            .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
+            ShortnameIdentifier
+              .fromString("wrongshortname")
+              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
+        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
-
     }
 
     "used to modify project information" should {

@@ -207,8 +207,6 @@ final case class ProjectsResponderADMLive(
     case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
     case ProjectKeywordsGetRequestADM(projectIri) =>
       projectKeywordsGetRequestADM(projectIri)
-    case ProjectRestrictedViewSettingsGetADM(identifier) =>
-      projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>

@@ -19,16 +19,14 @@ import zio.ZLayer
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.ApiV2
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
@@ -41,8 +39,9 @@ object SearchEndpointsInputs {
     val default: Offset = unsafeFrom(0)
   }
 
-  final case class InputIri private (value: String) extends AnyVal
-  object InputIri {
+  final case class InputIri private (value: String) extends AnyVal with StringValue
+
+  object InputIri extends StringValueCompanion[InputIri] {
 
     implicit val tapirCodec: Codec[String, InputIri, CodecFormat.TextPlain] =
       Codec.string.mapEither(InputIri.from)(_.value)
@@ -50,8 +49,6 @@ object SearchEndpointsInputs {
     def from(value: String): Either[String, InputIri] =
       if (Iri.isIri(value)) { Right(InputIri(value)) }
       else { Left(s"Invalid IRI: $value") }
-
-    def unsafeFrom(value: String): InputIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
   }
 
   val offset: EndpointInput.Query[Offset] =
