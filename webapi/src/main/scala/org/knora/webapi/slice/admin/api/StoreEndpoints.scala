@@ -30,12 +30,12 @@ final case class StoreEndpoints(baseEndpoints: BaseEndpoints) {
       .in("admin" / "store" / "ResetTriplestoreContent")
       .in(
         jsonBody[Option[List[RdfDataObject]]]
-          .description("RDF data objects to load into the triplestore, uses defaults if not present")
+          .description("RDF data objects to load into the triplestore, uses defaults if not present.")
       )
-      .in(query[Boolean]("prependDefaults").default(true).description("Prepend defaults to the data objects"))
+      .in(query[Boolean]("prependDefaults").default(true).description("Prepend defaults to the data objects."))
       .out(jsonBody[MessageResponse])
       .description(
-        "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`"
+        "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`."
       )
       .tags(List("admin"))
 
