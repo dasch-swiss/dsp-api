@@ -14,10 +14,10 @@ import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapper
 
 final case class StoreEndpointsHandler(
-                                        endpoints: StoreEndpoints,
-                                        appConfig: AppConfig,
-                                        storesResponder: StoreRestService,
-                                        mapper: HandlerMapper
+  endpoints: StoreEndpoints,
+  appConfig: AppConfig,
+  storesResponder: StoreRestService,
+  mapper: HandlerMapper
 ) {
 
   private val postStoreResetTriplestoreContentHandler =

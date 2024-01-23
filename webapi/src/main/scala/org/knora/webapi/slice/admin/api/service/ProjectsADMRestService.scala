@@ -5,29 +5,18 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import dsp.errors.{BadRequestException, NotFoundException}
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.slice.admin.api.model.{ProjectDataGetResponseADM, ProjectExportInfoResponse, ProjectImportResponse}
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectSetRestrictedViewSizeRequest, ProjectUpdateRequest}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.{ProjectIri, Shortcode, Status}
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.{KnoraProjectRepo, ProjectExportService, ProjectImportService}
+import org.knora.webapi.slice.common.api.{AuthorizationRestService, KnoraResponseRenderer}
 import zio.*
 import zio.macros.accessible
-
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.common.api.AuthorizationRestService
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 @accessible
 trait ProjectADMRestService {
@@ -267,9 +256,9 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Sets project's restricted view settings.
    *
-   * @param id the project's id represented by iri, shortcode or shortname,
-   * @param user requesting user,
-   * @param setSizeReq value to be set,
+   * @param id   The project's id represented by iri, shortcode or shortname.
+   * @param user Requesting user.
+   * @param req  Contains the values to be set.
    * @return [[ProjectRestrictedViewSizeResponseADM]].
    */
   override def updateProjectRestrictedViewSettings(
