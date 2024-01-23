@@ -12,6 +12,7 @@ import zio.json.JsonCodec
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -65,6 +66,7 @@ object Codecs {
     implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
+    implicit val restrictedViewSize: JsonCodec[RestrictedViewSize]     = stringCodec(RestrictedViewSize.from)
     implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
