@@ -15,6 +15,7 @@ final case class AdminApiRoutes(
   maintenance: MaintenanceEndpointsHandlers,
   permissions: PermissionsEndpointsHandlers,
   project: ProjectsEndpointsHandler,
+  storeEndpoints: StoreEndpointsHandler,
   filesEndpoints: FilesEndpointsHandler,
   users: UsersEndpointsHandler,
   tapirToPekko: TapirToPekkoInterpreter
@@ -25,6 +26,7 @@ final case class AdminApiRoutes(
       groups.handlers ++
       maintenance.handlers ++
       permissions.allHanders ++
+      storeEndpoints.allHandlers ++
       project.allHanders ++
       users.allHanders
 
