@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.*
-import sttp.tapir.generic.auto.*
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.query
