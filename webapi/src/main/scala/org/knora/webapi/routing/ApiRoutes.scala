@@ -108,7 +108,6 @@ private final case class ApiRoutesImpl(
                 RejectingRoute(appConfig, runtime).makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
-                StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
                 ValuesRouteV2().makeRoute ~
                 VersionRoute().makeRoute

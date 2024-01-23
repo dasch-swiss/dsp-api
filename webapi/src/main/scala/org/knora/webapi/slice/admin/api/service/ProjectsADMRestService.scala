@@ -267,9 +267,9 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Sets project's restricted view settings.
    *
-   * @param id the project's id represented by iri, shortcode or shortname,
-   * @param user requesting user,
-   * @param setSizeReq value to be set,
+   * @param id   The project's id represented by iri, shortcode or shortname.
+   * @param user Requesting user.
+   * @param req  Contains the values to be set.
    * @return [[ProjectRestrictedViewSizeResponseADM]].
    */
   override def updateProjectRestrictedViewSettings(
