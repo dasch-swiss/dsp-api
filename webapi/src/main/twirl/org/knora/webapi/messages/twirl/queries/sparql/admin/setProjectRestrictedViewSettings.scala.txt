@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import dsp.valueobjects.RestrictedViewSize
+@import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 
 @*
  * Sets project restricted view settings.

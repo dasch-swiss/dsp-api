@@ -6,11 +6,11 @@
 package org.knora.webapi.slice.admin.domain.service
 import zio.Task
 
-import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraProjectRepo extends Repository[KnoraProject, ProjectIri] {
