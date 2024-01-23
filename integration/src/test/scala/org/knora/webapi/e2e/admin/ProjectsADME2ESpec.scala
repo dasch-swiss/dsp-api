@@ -133,7 +133,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -158,7 +158,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
       }
 
       "return the project's restricted view settings using its shortcode" in {
@@ -172,7 +172,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
       }
     }
 
