@@ -223,6 +223,7 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 }
 
 case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
+
 object ProjectRestrictedViewSizeResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSizeResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSizeResponseADM]
@@ -427,7 +428,7 @@ object ProjectIdentifierADM {
  * @param size      the restricted view size.
  * @param watermark the watermark file.
  */
-case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
+case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Boolean)
     extends ProjectsADMJsonProtocol
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -101,7 +101,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "used to query project's restricted view settings" should {
-      val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
+      val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = true)
 
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(

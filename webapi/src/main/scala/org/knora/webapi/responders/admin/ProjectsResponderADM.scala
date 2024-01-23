@@ -427,7 +427,8 @@ final case class ProjectsResponderADMLive(
             .map(_.head.asInstanceOf[StringLiteralV2].value)
           val watermark = propsMap
             .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
+            .map(_.nonEmpty)
+            .isDefined
 
           Some(ProjectRestrictedViewSettingsADM(size, watermark))
         } else {

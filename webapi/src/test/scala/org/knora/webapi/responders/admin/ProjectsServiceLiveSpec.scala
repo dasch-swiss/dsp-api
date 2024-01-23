@@ -305,7 +305,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get settings by project IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
-      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), watermark = true)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
@@ -319,7 +319,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get settings by project shortname") {
       val shortname  = "someProject"
       val identifier = TestDataFactory.projectShortnameIdentifier(shortname)
-      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), watermark = true)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
@@ -333,7 +333,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     test("get settings by project shortcode") {
       val shortcode  = "0001"
       val identifier = TestDataFactory.projectShortcodeIdentifier(shortcode)
-      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
+      val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), watermark = true)
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
         result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
