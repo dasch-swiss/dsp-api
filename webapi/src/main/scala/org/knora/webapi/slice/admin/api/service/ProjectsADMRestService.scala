@@ -10,7 +10,6 @@ import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.responders.admin.ProjectsResponderADM
@@ -276,14 +275,13 @@ final case class ProjectsADMRestServiceLive(
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
-    setSizeReq: ProjectSetRestrictedViewSizeRequest
+    req: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      _       <- projectRepo.setProjectRestrictedViewSize(project, size)
-    } yield ProjectRestrictedViewSizeResponseADM(size)
+      _       <- projectRepo.setProjectRestrictedViewSize(project, req.size)
+    } yield ProjectRestrictedViewSizeResponseADM(req.size)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
