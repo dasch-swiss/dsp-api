@@ -34,7 +34,7 @@ import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.StoresRestService
+import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
@@ -82,7 +82,7 @@ object LayersLive {
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoresRestService & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
+      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -165,7 +165,7 @@ object LayersLive {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoresRestService.layer,
+      StoreRestService.layer,
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,

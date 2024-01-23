@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -15,8 +13,9 @@ import org.knora.webapi.slice.admin.api.MessageResponse
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import zio.*
 
-final case class StoresRestService(
+final case class StoreRestService(
   appConfig: AppConfig,
   cacheService: CacheService,
   triplestoreService: TriplestoreService,
@@ -27,6 +26,7 @@ final case class StoresRestService(
    * Resets the triplestore with provided data, adding defaults optionally.
    *
    * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
+   * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set.
    * @return a [[MessageResponse]].
    */
   def resetTriplestoreContent(
@@ -46,6 +46,6 @@ final case class StoresRestService(
     } yield MessageResponse("success")
 }
 
-object StoresRestService {
-  val layer = ZLayer.derive[StoresRestService]
+object StoreRestService {
+  val layer = ZLayer.derive[StoreRestService]
 }

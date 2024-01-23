@@ -33,7 +33,7 @@ import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.StoresRestService
+import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
@@ -136,7 +136,7 @@ object LayersTest {
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
-      with StoresRestService
+      with StoreRestService
       with TestClientService
       with TriplestoreService
       with UsersResponderADM
@@ -216,7 +216,7 @@ object LayersTest {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoresRestService.layer,
+      StoreRestService.layer,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
