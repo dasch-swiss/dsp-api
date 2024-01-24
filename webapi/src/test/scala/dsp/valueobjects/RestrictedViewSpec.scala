@@ -5,9 +5,10 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import zio.Scope
 import zio.test.*
+
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 
 /**
  * This spec is used to test the [[RestrictedViewSize]] value object creation.
