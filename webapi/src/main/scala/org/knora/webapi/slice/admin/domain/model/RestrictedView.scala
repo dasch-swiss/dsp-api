@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import scala.util.matching.Regex
+
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
-
-import scala.util.matching.Regex
 
 final case class RestrictedView(size: RestrictedViewSize, watermark: Boolean)
 
