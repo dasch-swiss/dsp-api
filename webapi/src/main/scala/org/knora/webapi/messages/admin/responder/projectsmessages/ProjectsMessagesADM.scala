@@ -222,7 +222,7 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
 
-case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
+case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize, watermark: Boolean)
 
 object ProjectRestrictedViewSizeResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSizeResponseADM] =

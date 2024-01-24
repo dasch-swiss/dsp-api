@@ -82,21 +82,21 @@ final case class ProjectsEndpointsHandler(
     )
 
   // secured endpoints
-  val setAdminProjectsByProjectIriRestrictedViewSettingsHandler =
+  val postAdminProjectsByProjectIriRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
       (IriIdentifier, ProjectSetRestrictedViewSizeRequest),
       ProjectRestrictedViewSizeResponseADM
     ](
-      projectsEndpoints.Secured.setAdminProjectsByProjectIriRestrictedViewSettings,
+      projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
       user => { case (id, payload) => restService.updateProjectRestrictedViewSettings(id, user, payload) }
     )
 
-  val setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
+  val postAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
       (ShortcodeIdentifier, ProjectSetRestrictedViewSizeRequest),
       ProjectRestrictedViewSizeResponseADM
     ](
-      projectsEndpoints.Secured.setAdminProjectsByProjectShortcodeRestrictedViewSettings,
+      projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
       user => { case (id, payload) =>
         restService.updateProjectRestrictedViewSettings(id, user, payload)
       }
@@ -213,8 +213,8 @@ final case class ProjectsEndpointsHandler(
     ).map(mapper.mapEndpointAndHandler(_))
 
   private val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
-    setAdminProjectsByProjectIriRestrictedViewSettingsHandler,
-    setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler,
+    postAdminProjectsByProjectIriRestrictedViewSettingsHandler,
+    postAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler,
     getAdminProjectsByProjectIriMembersHandler,
     getAdminProjectsByProjectShortcodeMembersHandler,
     getAdminProjectsByProjectShortnameMembersHandler,

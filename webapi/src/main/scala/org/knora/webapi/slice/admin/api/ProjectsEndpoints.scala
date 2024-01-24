@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
@@ -101,16 +102,22 @@ final case class ProjectsEndpoints(
   }
 
   object Secured {
-    val setAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+    val postAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByIri / restrictedViewSettings)
-      .in(zioJsonBody[ProjectSetRestrictedViewSizeRequest])
+      .in(
+        zioJsonBody[ProjectSetRestrictedViewSizeRequest]
+          .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
+      )
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the IRI.")
       .tags(tags)
 
-    val setAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+    val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / restrictedViewSettings)
-      .in(zioJsonBody[ProjectSetRestrictedViewSizeRequest])
+      .in(
+        zioJsonBody[ProjectSetRestrictedViewSizeRequest]
+          .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
+      )
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the shortcode.")
       .tags(tags)
@@ -221,8 +228,8 @@ final case class ProjectsEndpoints(
       Secured.postAdminProjectsByShortcodeExport,
       Secured.postAdminProjectsByShortcodeImport,
       Secured.putAdminProjectsByIri,
-      Secured.setAdminProjectsByProjectIriRestrictedViewSettings,
-      Secured.setAdminProjectsByProjectShortcodeRestrictedViewSettings
+      Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
+      Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings
     ).map(_.endpoint)
 }
 

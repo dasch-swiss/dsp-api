@@ -22,8 +22,10 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectU
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -79,6 +81,7 @@ final case class ProjectsADMRestServiceLive(
   format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
+  projectService: ProjectADMService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   permissionService: AuthorizationRestService
@@ -280,8 +283,9 @@ final case class ProjectsADMRestServiceLive(
     for {
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      _       <- projectRepo.setProjectRestrictedViewSize(project, req.size)
-    } yield ProjectRestrictedViewSizeResponseADM(req.size)
+      watermarkBool = req.watermark.getOrElse(false)
+      _       <- projectService.setProjectRestrictedView(project, RestrictedView(req.size, watermarkBool))
+    } yield ProjectRestrictedViewSizeResponseADM(req.size, watermarkBool)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
@@ -314,11 +318,12 @@ final case class ProjectsADMRestServiceLive(
     _       <- permissionService.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
+
 }
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & AuthorizationRestService,
+    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectADMService & ProjectImportService & AuthorizationRestService,
     ProjectsADMRestServiceLive
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

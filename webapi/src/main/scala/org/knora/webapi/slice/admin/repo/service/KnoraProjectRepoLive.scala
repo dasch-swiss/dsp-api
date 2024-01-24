@@ -20,6 +20,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -108,13 +109,38 @@ final case class KnoraProjectRepoLive(
     )
   }
 
-  override def setProjectRestrictedViewSize(
+  override def setProjectRestrictedView(
     project: KnoraProject,
-    size: RestrictedViewSize
-  ): Task[Unit] = {
-    val query = sparql.admin.txt
-      .setProjectRestrictedViewSettings(project.id.value, size.value)
-    triplestore.query(Update(query.toString))
+    settings: RestrictedView
+  ): Task[Unit] =
+    triplestore.query(Update(Queries.setRestrictedView(project.id, settings.size, settings.watermark)))
+
+  object Queries {
+    def setRestrictedView(projectIri: ProjectIri, size: RestrictedViewSize, watermark: Boolean): String =
+      s"""
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |
+         |WITH <http://www.knora.org/data/admin>
+         |DELETE {
+         |	<${projectIri.value}> knora-admin:projectRestrictedViewSize ?prevSize .
+         |	<${projectIri.value}> knora-admin:projectRestrictedViewWatermark ?prevWatermark.
+         |}
+         |INSERT {
+         |	<${projectIri.value}> knora-admin:projectRestrictedViewSize "${size.value}"^^xsd:string .
+         |	<${projectIri.value}> knora-admin:projectRestrictedViewWatermark "$watermark"^^xsd:boolean.
+         |}
+         |WHERE {
+         |    <${projectIri.value}> a knora-admin:knoraProject .
+         |    OPTIONAL {
+         |        <${projectIri.value}> knora-admin:projectRestrictedViewSize ?prevSize .
+         |    }
+         |    OPTIONAL {
+         |        <${projectIri.value}> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
+         |    }
+         |}
+         |""".stripMargin
   }
 }
 

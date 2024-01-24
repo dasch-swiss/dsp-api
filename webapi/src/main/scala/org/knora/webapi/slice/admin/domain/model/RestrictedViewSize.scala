@@ -10,6 +10,8 @@ import scala.util.matching.Regex
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
+final case class RestrictedView(size: RestrictedViewSize, watermark: Boolean)
+
 /**
  * RestrictedViewSize value object.
  */

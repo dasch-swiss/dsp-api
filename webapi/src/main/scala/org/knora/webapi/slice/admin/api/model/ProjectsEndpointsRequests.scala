@@ -42,7 +42,7 @@ object ProjectsEndpointsRequests {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
   }
 
-  final case class ProjectSetRestrictedViewSizeRequest(size: RestrictedViewSize)
+  final case class ProjectSetRestrictedViewSizeRequest(size: RestrictedViewSize, watermark: Option[Boolean])
   object ProjectSetRestrictedViewSizeRequest {
     implicit val codec: JsonCodec[ProjectSetRestrictedViewSizeRequest] =
       DeriveJsonCodec.gen[ProjectSetRestrictedViewSizeRequest]
