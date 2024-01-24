@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
@@ -32,7 +33,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests [[ListsResponderADM]].
  */
-class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
+class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -56,39 +57,18 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
   "The Lists Responder" when {
     "used to query information about lists" should {
       "return all lists" in {
-        appActor ! ListsGetRequestADM(
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
-
-        val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-        received.lists.size should be(9)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(None))
+        actual.lists.size should be(9)
       }
 
       "return all lists belonging to the images project" in {
-        appActor ! ListsGetRequestADM(
-          projectIri = Some(imagesProjectIri),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
-
-        val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-        // log.debug("received: " + received)
-
-        received.lists.size should be(4)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(imagesProjectIri))))
+        actual.lists.size should be(4)
       }
 
       "return all lists belonging to the anything project" in {
-        appActor ! ListsGetRequestADM(
-          projectIri = Some(anythingProjectIri),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
-
-        val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
-
-        // log.debug("received: " + received)
-
-        received.lists.size should be(4)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.getLists(Some(ProjectIri.unsafeFrom(anythingProjectIri))))
+        actual.lists.size should be(4)
       }
 
       "return basic list information (anything list)" in {

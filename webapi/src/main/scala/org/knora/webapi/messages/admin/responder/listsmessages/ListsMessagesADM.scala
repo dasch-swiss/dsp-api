@@ -150,20 +150,9 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
 // Messages
 
 /**
- * An abstract trait for messages that can be sent to `HierarchicalListsResponderV2`.
+ * A trait for messages that can be sent to `HierarchicalListsResponderV2`.
  */
 sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
- *
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user making the request.
- */
-case class ListsGetRequestADM(
-  projectIri: Option[IRI] = None,
-  requestingUser: User
-) extends ListsResponderRequestADM
 
 /**
  * Requests a node (root or child). A successful response will be a [[ListItemGetResponseADM]]
@@ -480,12 +469,11 @@ case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeAD
  * @param labels   the labels of the node in all available languages.
  * @param comments the comments attached to the node in all available languages.
  */
-abstract class ListNodeInfoADM(
-  id: IRI,
-  name: Option[String],
-  labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2
-) {
+sealed trait ListNodeInfoADM {
+  def id: IRI
+  def name: Option[String]
+  def labels: StringLiteralSequenceV2
+  def comments: StringLiteralSequenceV2
 
   /**
    * Sorts the whole hierarchy.
@@ -493,10 +481,6 @@ abstract class ListNodeInfoADM(
    * @return a sorted [[ListNodeInfoADM]].
    */
   def sorted: ListNodeInfoADM
-
-  def getName: Option[String] = name
-
-  def getComments: StringLiteralSequenceV2 = comments
 
   /**
    * Gets the label in the user's preferred language.
@@ -515,7 +499,6 @@ abstract class ListNodeInfoADM(
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
-
 }
 
 case class ListRootNodeInfoADM(
@@ -524,7 +507,7 @@ case class ListRootNodeInfoADM(
   name: Option[String] = None,
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2
-) extends ListNodeInfoADM(id, name, labels, comments) {
+) extends ListNodeInfoADM {
 
   /**
    * Sorts the whole hierarchy.
@@ -587,7 +570,7 @@ case class ListChildNodeInfoADM(
   comments: StringLiteralSequenceV2,
   position: Int,
   hasRootNode: IRI
-) extends ListNodeInfoADM(id, name, labels, comments) {
+) extends ListNodeInfoADM {
 
   /**
    * Sorts the whole hierarchy.

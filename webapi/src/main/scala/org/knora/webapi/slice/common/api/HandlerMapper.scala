@@ -24,12 +24,12 @@ object InputType {
   type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])
 }
 
-case class EndpointAndZioHandler[SECURITY_INPUT, INPUT, OUTPUT](
-  endpoint: Endpoint[SECURITY_INPUT, INPUT, RequestRejectedException, OUTPUT, Any],
+case class PublicEndpointHandler[INPUT, OUTPUT](
+  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, Any],
   handler: INPUT => Task[OUTPUT]
 )
 
-case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
+case class SecuredEndpointHandler[INPUT, OUTPUT](
   endpoint: PartialServerEndpoint[
     SecurityIn,
     User,
@@ -44,13 +44,13 @@ case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
 
 final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
-  def mapEndpointAndHandler[INPUT, OUTPUT](
-    handlerAndEndpoint: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
+  def mapSecuredEndpointHandler[INPUT, OUTPUT](
+    handlerAndEndpoint: SecuredEndpointHandler[INPUT, OUTPUT]
   ): Full[SecurityIn, User, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     handlerAndEndpoint.endpoint.serverLogic(user => in => { runToFuture(handlerAndEndpoint.handler(user)(in)) })
 
-  def mapEndpointAndHandler[INPUT, OUTPUT](
-    handlerAndEndpoint: EndpointAndZioHandler[Unit, INPUT, OUTPUT]
+  def mapPublicEndpointHandler[INPUT, OUTPUT](
+    handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT]
   ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     handlerAndEndpoint.endpoint.serverLogic[Future](in => runToFuture(handlerAndEndpoint.handler(in)))
 

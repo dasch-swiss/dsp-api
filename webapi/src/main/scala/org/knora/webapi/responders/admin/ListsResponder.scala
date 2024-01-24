@@ -23,7 +23,8 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -33,14 +34,17 @@ import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -48,18 +52,14 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
-/**
- * A responder that returns information about lists.
- */
-trait ListsResponderADM {}
-final case class ListsResponderADMLive(
+final case class ListsResponder(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
+  mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
-) extends ListsResponderADM
-    with MessageHandler
+) extends MessageHandler
     with LazyLogging {
 
   // The IRI used to lock user creation and update
@@ -72,7 +72,6 @@ final case class ListsResponderADMLive(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListsGetRequestADM(projectIri, _)          => listsGetRequestADM(projectIri)
     case ListGetRequestADM(listIri, _)              => listGetRequestADM(listIri)
     case ListNodeInfoGetRequestADM(listIri, _)      => listNodeInfoGetRequestADM(listIri)
     case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
@@ -113,57 +112,28 @@ final case class ListsResponderADMLive(
   }
 
   /**
-   * Gets all lists and returns them as a [[ListsGetResponseADM]]. For performance reasons
+   * Gets all lists or list belonging to a project and returns them as a [[ListsGetResponseADM]]. For performance reasons
    * (as lists can be very large), we only return the head of the list, i.e. the root node without
    * any children.
    *
-   * @param projectIri           the IRI of the project the list belongs to.
+   * @param projectIri [[Some(ProjectIri)]] if the project for which lists are to be queried.
+   *                   [[None]] if all lists are to be queried.
    * @return a [[ListsGetResponseADM]].
    */
-  private def listsGetRequestADM(projectIri: Option[IRI]) =
+  def getLists(projectIri: Option[ProjectIri]): Task[ListsGetResponseADM] =
     for {
-      statements <- triplestore
-                      .query(Construct(sparql.admin.txt.getLists(projectIri)))
-                      .flatMap(_.asExtended)
-                      .map(_.statements.toList)
-
-      lists: Seq[ListNodeInfoADM] =
-        statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-          val name: Option[String] = propsMap
-            .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val labels: Seq[StringLiteralV2] = propsMap
-            .getOrElse(
-              OntologyConstants.Rdfs.Label.toSmartIri,
-              Seq.empty[StringLiteralV2]
-            )
-            .map(_.asInstanceOf[StringLiteralV2])
-          val comments: Seq[StringLiteralV2] = propsMap
-            .getOrElse(
-              OntologyConstants.Rdfs.Comment.toSmartIri,
-              Seq.empty[StringLiteralV2]
-            )
-            .map(_.asInstanceOf[StringLiteralV2])
-
-          ListRootNodeInfoADM(
-            id = listIri.toString,
-            projectIri = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  "The required property 'attachedToProject' not found."
-                )
-              )
-              .head
-              .asInstanceOf[IriLiteralV2]
-              .value,
-            name = name,
-            labels = StringLiteralSequenceV2(labels.toVector),
-            comments = StringLiteralSequenceV2(comments.toVector)
-          ).unescape
+      statements <-
+        triplestore.query(Construct(Queries.getListsQuery(projectIri))).flatMap(_.asExtended).map(_.statements)
+      lists <-
+        ZIO.foreach(statements.toList) { case (listIri: SubjectV2, objs: ConstructPredicateObjects) =>
+          for {
+            name       <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, objs).map(_.map(_.value))
+            labels     <- mapper.getList[StringLiteralV2](Rdfs.Label, objs).map(_.toVector).map(StringLiteralSequenceV2)
+            comments   <- mapper.getList[StringLiteralV2](Rdfs.Comment, objs).map(_.toVector).map(StringLiteralSequenceV2)
+            projectIri <- mapper.getSingleOrFail[IriLiteralV2](KnoraBase.AttachedToProject, objs).map(_.value)
+          } yield ListRootNodeInfoADM(listIri.toString, projectIri, name, labels, comments).unescape
         }
-
-    } yield ListsGetResponseADM(lists = lists)
+    } yield ListsGetResponseADM(lists)
 
   /**
    * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
@@ -287,14 +257,14 @@ final case class ListsResponderADMLive(
           val nodeInfo: ListNodeInfoADM = statements.head match {
             case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
               val labels: Seq[StringLiteralV2] = propsMap
-                .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
+                .getOrElse(Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
                 .map(_.asInstanceOf[StringLiteralV2])
               val comments: Seq[StringLiteralV2] = propsMap
-                .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
+                .getOrElse(Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
                 .map(_.asInstanceOf[StringLiteralV2])
 
               val attachedToProjectOption: Option[IRI] =
-                propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
+                propsMap.get(KnoraBase.AttachedToProject.toSmartIri) match {
                   case Some(iris: Seq[LiteralV2]) =>
                     iris.headOption match {
                       case Some(iri: IriLiteralV2) => Some(iri.value)
@@ -308,7 +278,7 @@ final case class ListsResponderADMLive(
                 }
 
               val hasRootNodeOption: Option[IRI] =
-                propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
+                propsMap.get(KnoraBase.HasRootNode.toSmartIri) match {
                   case Some(iris: Seq[LiteralV2]) =>
                     iris.headOption match {
                       case Some(iri: IriLiteralV2) => Some(iri.value)
@@ -321,7 +291,7 @@ final case class ListsResponderADMLive(
                   case None => None
                 }
 
-              val isRootNode: Boolean = propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
+              val isRootNode: Boolean = propsMap.get(KnoraBase.IsRootNode.toSmartIri) match {
                 case Some(values: Seq[LiteralV2]) =>
                   values.headOption match {
                     case Some(value: BooleanLiteralV2) => value.value
@@ -336,7 +306,7 @@ final case class ListsResponderADMLive(
               }
 
               val positionOption: Option[Int] = propsMap
-                .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
+                .get(KnoraBase.ListNodePosition.toSmartIri)
                 .map(_.head.asInstanceOf[IntLiteralV2].value)
 
               if (isRootNode) {
@@ -348,7 +318,7 @@ final case class ListsResponderADMLive(
                     )
                   ),
                   name = propsMap
-                    .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                    .get(KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector),
                   comments = StringLiteralSequenceV2(comments.toVector)
@@ -357,7 +327,7 @@ final case class ListsResponderADMLive(
                 ListChildNodeInfoADM(
                   id = nodeIri.toString,
                   name = propsMap
-                    .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                    .get(KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector),
                   comments = StringLiteralSequenceV2(comments.toVector),
@@ -426,14 +396,14 @@ final case class ListsResponderADMLive(
             node: ListNodeADM = statements.head match {
                                   case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
                                     val labels: Seq[StringLiteralV2] = propsMap
-                                      .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .getOrElse(Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
                                       .map(_.asInstanceOf[StringLiteralV2])
                                     val comments: Seq[StringLiteralV2] = propsMap
-                                      .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .getOrElse(Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
                                       .map(_.asInstanceOf[StringLiteralV2])
 
                                     val attachedToProjectOption: Option[IRI] =
-                                      propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
+                                      propsMap.get(KnoraBase.AttachedToProject.toSmartIri) match {
                                         case Some(iris: Seq[LiteralV2]) =>
                                           iris.headOption match {
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
@@ -447,7 +417,7 @@ final case class ListsResponderADMLive(
                                       }
 
                                     val hasRootNodeOption: Option[IRI] =
-                                      propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
+                                      propsMap.get(KnoraBase.HasRootNode.toSmartIri) match {
                                         case Some(iris: Seq[LiteralV2]) =>
                                           iris.headOption match {
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
@@ -461,7 +431,7 @@ final case class ListsResponderADMLive(
                                       }
 
                                     val isRootNode: Boolean =
-                                      propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
+                                      propsMap.get(KnoraBase.IsRootNode.toSmartIri) match {
                                         case Some(values: Seq[LiteralV2]) =>
                                           values.headOption match {
                                             case Some(value: BooleanLiteralV2) => value.value
@@ -476,7 +446,7 @@ final case class ListsResponderADMLive(
                                       }
 
                                     val positionOption: Option[Int] = propsMap
-                                      .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
+                                      .get(KnoraBase.ListNodePosition.toSmartIri)
                                       .map(_.head.asInstanceOf[IntLiteralV2].value)
 
                                     if (isRootNode) {
@@ -488,7 +458,7 @@ final case class ListsResponderADMLive(
                                           )
                                         ),
                                         name = propsMap
-                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .get(KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
                                         labels = StringLiteralSequenceV2(labels.toVector),
                                         comments = StringLiteralSequenceV2(comments.toVector),
@@ -498,7 +468,7 @@ final case class ListsResponderADMLive(
                                       ListChildNodeADM(
                                         id = nodeIri.toString,
                                         name = propsMap
-                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .get(KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
                                         labels = StringLiteralSequenceV2(labels.toVector),
                                         comments = Some(StringLiteralSequenceV2(comments.toVector)),
@@ -548,31 +518,31 @@ final case class ListsResponderADMLive(
 
       val hasRootNode: IRI = propsMap
         .getOrElse(
-          OntologyConstants.KnoraBase.HasRootNode.toSmartIri,
+          KnoraBase.HasRootNode.toSmartIri,
           throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri.")
         )
         .head
         .toString
 
       val nameOption = propsMap
-        .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+        .get(KnoraBase.ListNodeName.toSmartIri)
         .map(_.head.asInstanceOf[StringLiteralV2].value)
 
       val labels: Seq[StringLiteralV2] = propsMap
-        .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
+        .getOrElse(Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
         .map(_.asInstanceOf[StringLiteralV2])
       val comments: Seq[StringLiteralV2] = propsMap
-        .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
+        .getOrElse(Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
         .map(_.asInstanceOf[StringLiteralV2])
 
       val positionOption: Option[Int] = propsMap
-        .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
+        .get(KnoraBase.ListNodePosition.toSmartIri)
         .map(_.head.asInstanceOf[IntLiteralV2].value)
       val position = positionOption.getOrElse(
         throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri.")
       )
 
-      val children: Seq[ListChildNodeADM] = propsMap.get(OntologyConstants.KnoraBase.HasSubListNode.toSmartIri) match {
+      val children: Seq[ListChildNodeADM] = propsMap.get(KnoraBase.HasSubListNode.toSmartIri) match {
         case Some(iris: Seq[LiteralV2]) =>
           if (!shallow) {
             // if not shallow then get the children of this node
@@ -606,7 +576,7 @@ final case class ListsResponderADMLive(
 
       startNodePropsMap = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
 
-      children = startNodePropsMap.get(OntologyConstants.KnoraBase.HasSubListNode.toSmartIri) match {
+      children = startNodePropsMap.get(KnoraBase.HasSubListNode.toSmartIri) match {
                    case Some(iris: Seq[LiteralV2]) =>
                      iris.map { iri =>
                        createChildNode(iri.toString, statements)
@@ -719,7 +689,7 @@ final case class ListsResponderADMLive(
   private def createNode(
     createNodeRequest: ListNodeCreatePayloadADM
   ): Task[IRI] = {
-//    TODO-mpro: it's quickfix, refactor
+    //    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
@@ -855,7 +825,7 @@ final case class ListsResponderADMLive(
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
-                                          listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                          listClassIri = KnoraBase.ListNode,
                                           projectIri = projectIri.value,
                                           nodeIri = newListNodeIri,
                                           parentNodeIri = None,
@@ -877,7 +847,7 @@ final case class ListsResponderADMLive(
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
-                                          listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                          listClassIri = KnoraBase.ListNode,
                                           projectIri = projectIri.value,
                                           nodeIri = newListNodeIri,
                                           parentNodeIri = Some(parentNodeIri.value),
@@ -904,8 +874,6 @@ final case class ListsResponderADMLive(
     createRootRequest: ListRootNodeCreatePayloadADM,
     apiRequestID: UUID
   ): Task[ListGetResponseADM] = {
-
-//    println("XXXXX-listCreateRequestADM")
 
     /**
      * The actual task run with an IRI lock.
@@ -1548,7 +1516,7 @@ final case class ListsResponderADMLive(
     for {
       node <- listNodeInfoGetADM(nodeIri)
 
-      doesNodeHaveComments = node.get.getComments.stringLiterals.nonEmpty
+      doesNodeHaveComments = node.get.comments.stringLiterals.nonEmpty
 
       _ <- ZIO.when(!doesNodeHaveComments) {
              ZIO.fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
@@ -1862,7 +1830,7 @@ final case class ListsResponderADMLive(
                                                isRootNode = maybeNode.exists(_.isInstanceOf[ListRootNodeADM]),
                                                maybeName = changeNodeInfoRequest.name.map(_.value),
                                                projectIri = changeNodeInfoRequest.projectIri.value,
-                                               listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                               listClassIri = KnoraBase.ListNode,
                                                maybeLabels = changeNodeInfoRequest.labels.map(_.value),
                                                maybeComments = changeNodeInfoRequest.comments.map(_.value)
                                              )
@@ -2077,18 +2045,40 @@ final case class ListsResponderADMLive(
   } yield ()
 }
 
-object ListsResponderADMLive {
+object ListsResponder {
+
+  private object Queries {
+    def getListsQuery(projectIri: Option[ProjectIri]): String =
+      s"""
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+         |
+         |CONSTRUCT { ?s ?p ?o . }
+         |WHERE {
+         |    ?s rdf:type knora-base:ListNode .
+         |    ?s knora-base:isRootNode "true"^^xsd:boolean .
+         |    ${projectIri.map(_.value).map(iri => s"?s knora-base:attachedToProject <$iri> .").getOrElse("")}
+         |    ?s ?p ?o .
+         |}""".stripMargin
+  }
+
+  def getLists(projectIri: Option[ProjectIri]): ZIO[ListsResponder, Throwable, ListsGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.getLists(projectIri))
+
   val layer: URLayer[
-    StringFormatter & TriplestoreService & MessageRelay & IriService & AppConfig,
-    ListsResponderADM
+    AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,
+    ListsResponder
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       mr      <- ZIO.service[MessageRelay]
+      pom     <- ZIO.service[PredicateObjectMapper]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ListsResponderADMLive(config, iriS, mr, ts, sf))
+      handler <- mr.subscribe(ListsResponder(config, iriS, mr, pom, ts, sf))
     } yield handler
   }
 }
