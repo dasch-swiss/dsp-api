@@ -107,6 +107,16 @@ final case class ProjectsEndpoints(
       .in(
         zioJsonBody[ProjectSetRestrictedViewSizeRequest]
           .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
+          .description(
+            "The restricted view settings to be set.\n" +
+              "The image restrictions support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
+              "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
+              "greater than d, while maintaining the aspect ratio.\n" +
+              "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
+              "of the extracted region. 1<= n <= 100.\n\n" +
+              "If the watermark is set to `true`, the returned image will be watermarked."
+          )
+          .example(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
       )
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the IRI.")
