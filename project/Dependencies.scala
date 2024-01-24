@@ -51,7 +51,6 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC12"
 
   // pekko
   val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
@@ -151,7 +150,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % Test)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock, wiremock).map(_ % Test)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = refined ++ Seq(
     pekkoActor,
