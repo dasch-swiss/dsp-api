@@ -5,24 +5,33 @@
 
 package org.knora.webapi.e2e.admin
 
-import dsp.valueobjects.V2
+import org.apache.pekko.http.scaladsl.model.ContentTypes
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.pekko.util.Timeout
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+
+import java.net.URLEncoder
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.*
+
+import dsp.valueobjects.V2
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.IRI
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI}
-
-import java.net.URLEncoder
-import scala.concurrent.duration.*
-import scala.concurrent.{Await, Future}
+import org.knora.webapi.util.AkkaHttpUtils
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.

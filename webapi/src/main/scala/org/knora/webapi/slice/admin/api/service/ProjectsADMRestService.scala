@@ -281,10 +281,10 @@ final case class ProjectsADMRestServiceLive(
     req: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      project      <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _            <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       watermarkBool = req.watermark.getOrElse(false)
-      _       <- projectService.setProjectRestrictedView(project, RestrictedView(req.size, watermarkBool))
+      _            <- projectService.setProjectRestrictedView(project, RestrictedView(req.size, watermarkBool))
     } yield ProjectRestrictedViewSizeResponseADM(req.size, watermarkBool)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
