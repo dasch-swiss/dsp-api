@@ -25,11 +25,10 @@ object RestrictedViewSize extends StringValueCompanion[RestrictedViewSize] {
   private val dimensionsPattern: Regex = "!(\\d+),(\\1)$".r
 
   def from(value: String): Either[String, RestrictedViewSize] = {
-    val trimmed = value.trim
-    trimmed match {
-      case _ if trimmed.isEmpty                    => Left("RestrictedViewSize cannot be empty.")
-      case _ if percentage.matches(trimmed)        => Right(RestrictedViewSize(trimmed))
-      case _ if dimensionsPattern.matches(trimmed) => Right(RestrictedViewSize(trimmed))
+    value match {
+      case _ if value.isEmpty                    => Left("RestrictedViewSize cannot be empty.")
+      case _ if percentage.matches(value)        => Right(RestrictedViewSize(value))
+      case _ if dimensionsPattern.matches(value) => Right(RestrictedViewSize(value))
       case _                                       => Left(s"Invalid RestrictedViewSize: $value")
     }
   }
