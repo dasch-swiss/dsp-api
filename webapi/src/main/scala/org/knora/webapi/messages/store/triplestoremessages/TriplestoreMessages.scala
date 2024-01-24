@@ -8,6 +8,8 @@ package org.knora.webapi.messages.store.triplestoremessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 import zio.*
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 import java.time.Instant
 import scala.collection.mutable
@@ -157,6 +159,9 @@ case class RepositoryUpdatedResponse(message: String)
  * @param name of the named graph the data will be load into.
  */
 case class RdfDataObject(path: String, name: String)
+object RdfDataObject {
+  implicit val jsonCodec: JsonCodec[RdfDataObject] = DeriveJsonCodec.gen[RdfDataObject]
+}
 
 /**
  * Represents the subject of a statement read from the triplestore.
@@ -589,5 +594,4 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     }
   }
 
-  implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
 }

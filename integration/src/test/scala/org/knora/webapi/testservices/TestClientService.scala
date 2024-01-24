@@ -38,7 +38,6 @@ import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -74,27 +73,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
   case class TestClientTimeoutException(msg: String) extends Exception
-
-  /**
-   * Loads test data.
-   */
-  def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Task[Unit] = {
-
-    val loadRequest = Post(
-      config.knoraApi.internalKnoraApiBaseUrl + "/admin/store/ResetTriplestoreContent",
-      pekko.http.scaladsl.model
-        .HttpEntity(
-          pekko.http.scaladsl.model.ContentTypes.`application/json`,
-          rdfDataObjects.toJson.compactPrint
-        )
-    )
-
-    for {
-      _ <- ZIO.logInfo("Loading test data started ...")
-      _ <- singleAwaitingRequest(loadRequest)
-      _ <- ZIO.logInfo("... loading test data done.")
-    } yield ()
-  }
 
   /**
    * Performs a http request.
