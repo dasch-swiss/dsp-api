@@ -15,9 +15,10 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.EndpointAndZioHandler
@@ -84,8 +85,8 @@ final case class ProjectsEndpointsHandler(
   // secured endpoints
   val postAdminProjectsByProjectIriRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
-      (IriIdentifier, ProjectSetRestrictedViewSizeRequest),
-      ProjectRestrictedViewSizeResponseADM
+      (IriIdentifier, SetRestrictedViewRequest),
+      RestrictedViewResponse
     ](
       projectsEndpoints.Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
       user => { case (id, payload) => restService.updateProjectRestrictedViewSettings(id, user, payload) }
@@ -93,8 +94,8 @@ final case class ProjectsEndpointsHandler(
 
   val postAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
-      (ShortcodeIdentifier, ProjectSetRestrictedViewSizeRequest),
-      ProjectRestrictedViewSizeResponseADM
+      (ShortcodeIdentifier, SetRestrictedViewRequest),
+      RestrictedViewResponse
     ](
       projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
       user => { case (id, payload) =>

@@ -16,9 +16,10 @@ import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
@@ -73,8 +74,8 @@ trait ProjectADMRestService {
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
-    setSizeReq: ProjectSetRestrictedViewSizeRequest
-  ): Task[ProjectRestrictedViewSizeResponseADM]
+    setSizeReq: SetRestrictedViewRequest
+  ): Task[RestrictedViewResponse]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -278,14 +279,14 @@ final case class ProjectsADMRestServiceLive(
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
-    req: ProjectSetRestrictedViewSizeRequest
-  ): Task[ProjectRestrictedViewSizeResponseADM] =
+    req: SetRestrictedViewRequest
+  ): Task[RestrictedViewResponse] =
     for {
       project      <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _            <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       watermarkBool = req.watermark.getOrElse(false)
       _            <- projectService.setProjectRestrictedView(project, RestrictedView(req.size, watermarkBool))
-    } yield ProjectRestrictedViewSizeResponseADM(req.size, watermarkBool)
+    } yield RestrictedViewResponse(req.size, watermarkBool)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
