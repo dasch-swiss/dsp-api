@@ -12,7 +12,7 @@ import org.knora.webapi.slice.common.Value.StringValue
 
 final case class RestrictedView(size: RestrictedViewSize, watermark: Boolean)
 
-case class RestrictedViewSize private (value: String) extends AnyVal with StringValue
+final case class RestrictedViewSize private (value: String) extends AnyVal with StringValue
 
 object RestrictedViewSize extends StringValueCompanion[RestrictedViewSize] {
 
