@@ -128,6 +128,7 @@ function pre_flight(prefix, identifier, cookie)
 
         local settings_for_sipi = {}
         settings_for_sipi['type'] = "restrict"
+        settings_for_sipi['size'] = config.thumb_size
 
         if settings_from_api ~= nil then
             log("pre_flight - restricted view settings - from api: " .. tableToString(settings_from_api), server.loglevel.LOG_DEBUG)
@@ -137,9 +138,6 @@ function pre_flight(prefix, identifier, cookie)
             if  settings_from_api.watermark then
                 settings_for_sipi['watermark'] = "/sipi/scripts/watermark.tif"
             end
-        else
-            log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
-            restrictedViewSize = config.thumb_size
         end
 
         log("pre_flight - restricted view settings - for sipi: " .. tableToString(settings_for_sipi), server.loglevel.LOG_DEBUG)
