@@ -16,7 +16,7 @@ case class RestrictedViewSize private (value: String) extends AnyVal with String
 
 object RestrictedViewSize extends StringValueCompanion[RestrictedViewSize] {
 
-  val default: RestrictedViewSize = new RestrictedViewSize("!512,512")
+  val default: RestrictedViewSize = RestrictedViewSize.unsafeFrom("!512,512")
 
   // matches strings "pct:n" with n between 1 and 100
   private val percentage: Regex = "pct:(?:100|[1-9][0-9]?)$".r
