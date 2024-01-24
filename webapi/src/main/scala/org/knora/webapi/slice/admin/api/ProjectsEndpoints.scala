@@ -5,26 +5,19 @@
 
 package org.knora.webapi.slice.admin.api
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.slice.admin.api.AdminPathVariables.{projectIri, projectShortcode, projectShortname}
+import org.knora.webapi.slice.admin.api.model.{ProjectExportInfoResponse, ProjectImportResponse}
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectSetRestrictedViewSizeRequest, ProjectUpdateRequest}
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
-import zio.Chunk
-import zio.ZLayer
-
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
-import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
-import org.knora.webapi.slice.common.api.BaseEndpoints
+import zio.{Chunk, ZLayer}
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
@@ -102,32 +95,30 @@ final case class ProjectsEndpoints(
   }
 
   object Secured {
+    private val bodyProjectSetRestrictedViewSizeRequest =
+      zioJsonBody[ProjectSetRestrictedViewSizeRequest]
+        .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
+        .description(
+          "The restricted view settings to be set.\n" +
+            "The image restrictions support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
+            "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
+            "greater than d, while maintaining the aspect ratio.\n" +
+            "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
+            "of the extracted region. 1<= n <= 100.\n\n" +
+            "If the watermark is set to `true`, the returned image will be watermarked."
+        )
+        .example(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
+
     val postAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByIri / restrictedViewSettings)
-      .in(
-        zioJsonBody[ProjectSetRestrictedViewSizeRequest]
-          .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
-          .description(
-            "The restricted view settings to be set.\n" +
-              "The image restrictions support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
-              "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
-              "greater than d, while maintaining the aspect ratio.\n" +
-              "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
-              "of the extracted region. 1<= n <= 100.\n\n" +
-              "If the watermark is set to `true`, the returned image will be watermarked."
-          )
-          .example(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
-      )
+      .in(bodyProjectSetRestrictedViewSizeRequest)
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the IRI.")
       .tags(tags)
 
-    val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+       val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / restrictedViewSettings)
-      .in(
-        zioJsonBody[ProjectSetRestrictedViewSizeRequest]
-          .default(ProjectSetRestrictedViewSizeRequest(RestrictedViewSize.default, watermark = Some(false)))
-      )
+      .in(bodyProjectSetRestrictedViewSizeRequest)
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the shortcode.")
       .tags(tags)
