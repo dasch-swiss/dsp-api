@@ -428,8 +428,7 @@ object ProjectIdentifierADM {
  * @param size      the restricted view size.
  * @param watermark the watermark file.
  */
-case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Boolean)
-    extends ProjectsADMJsonProtocol
+case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boolean) extends ProjectsADMJsonProtocol
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
