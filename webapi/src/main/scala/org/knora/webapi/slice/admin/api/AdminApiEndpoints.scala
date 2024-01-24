@@ -13,6 +13,7 @@ final case class AdminApiEndpoints(
   maintenanceEndpoints: MaintenanceEndpoints,
   permissionsEndpoints: PermissionsEndpoints,
   projectsEndpoints: ProjectsEndpoints,
+  storeEndpoints: StoreEndpoints,
   usersEndpoints: UsersEndpoints,
   filesEndpoints: FilesEndpoints
 ) {
@@ -22,6 +23,7 @@ final case class AdminApiEndpoints(
       maintenanceEndpoints.endpoints ++
       permissionsEndpoints.endpoints ++
       projectsEndpoints.endpoints ++
+      storeEndpoints.endpoints ++
       usersEndpoints.endpoints ++
       filesEndpoints.endpoints
 }

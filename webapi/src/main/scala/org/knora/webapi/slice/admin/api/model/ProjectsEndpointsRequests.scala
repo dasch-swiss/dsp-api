@@ -10,6 +10,7 @@ import zio.json.JsonCodec
 
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 
 object ProjectsEndpointsRequests {
 
@@ -41,7 +42,7 @@ object ProjectsEndpointsRequests {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
   }
 
-  final case class ProjectSetRestrictedViewSizeRequest(size: String)
+  final case class ProjectSetRestrictedViewSizeRequest(size: RestrictedViewSize)
   object ProjectSetRestrictedViewSizeRequest {
     implicit val codec: JsonCodec[ProjectSetRestrictedViewSizeRequest] =
       DeriveJsonCodec.gen[ProjectSetRestrictedViewSizeRequest]
