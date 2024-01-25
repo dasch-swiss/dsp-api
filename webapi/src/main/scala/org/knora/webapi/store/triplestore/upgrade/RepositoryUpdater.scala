@@ -214,7 +214,7 @@ object RepositoryUpdater {
                pluginsForNeededUpdates = pluginsForNeededUpdates
              )
 
-        // Drop the graphs that needs to be updated.
+        // Drop the graphs that need to be updated.
         _ <- graphs match {
                case MigrateAllGraphs => triplestoreService.dropDataGraphByGraph()
                case MigrateSpecificGraphs(graphIris) =>
