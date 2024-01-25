@@ -6,7 +6,9 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.store.triplestore.upgrade.{GraphsForMigration, MigrateSpecificGraphs, UpgradePlugin}
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
+import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
  * An update plugin that itself does no migration itself.

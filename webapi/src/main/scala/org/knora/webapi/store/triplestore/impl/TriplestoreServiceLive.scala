@@ -5,35 +5,30 @@
 
 package org.knora.webapi.store.triplestore.impl
 
-import dsp.errors.*
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.Consts
+import org.apache.http.HttpEntity
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.NameValuePair
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.config.SocketConfig
-import org.apache.http.entity.{ContentType, FileEntity, StringEntity}
-import org.apache.http.impl.client.{BasicCredentialsProvider, CloseableHttpClient, HttpClients}
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.FileEntity
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.*
-import org.knora.webapi.config.Triplestore
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.*
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
-import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
-import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.{Available, NotInitialized, Unavailable}
-import org.knora.webapi.store.triplestore.errors.*
-import org.knora.webapi.store.triplestore.upgrade.{MigrateAllGraphs, GraphsForMigration, MigrateSpecificGraphs}
-import org.knora.webapi.util.FileUtil
 import spray.json.*
 import zio.*
 import zio.metrics.Metric
@@ -41,17 +36,41 @@ import zio.metrics.Metric
 import java.io.BufferedInputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.time.temporal.ChronoUnit
 import java.util
 
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.config.Triplestore
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
+import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
+import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.NotInitialized
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Unavailable
+import org.knora.webapi.store.triplestore.errors.*
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
+import org.knora.webapi.store.triplestore.upgrade.MigrateAllGraphs
+import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
+import org.knora.webapi.util.FileUtil
+
 case class TriplestoreServiceLive(
-                                   triplestoreConfig: Triplestore,
-                                   queryHttpClient: CloseableHttpClient,
-                                   targetHost: HttpHost,
-                                   implicit val sf: StringFormatter
-                                 ) extends TriplestoreService
-  with FusekiTriplestore {
+  triplestoreConfig: Triplestore,
+  queryHttpClient: CloseableHttpClient,
+  targetHost: HttpHost,
+  implicit val sf: StringFormatter
+) extends TriplestoreService
+    with FusekiTriplestore {
 
   private val requestTimer =
     Metric.timer(
@@ -97,8 +116,8 @@ case class TriplestoreServiceLive(
     for {
       turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
       rdfModel <- ZIO
-        .attempt(RdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
-        .orElse(processError(query.sparql, turtleStr))
+                    .attempt(RdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
+                    .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
   /**
@@ -111,11 +130,11 @@ case class TriplestoreServiceLive(
    * @return a [[Unit]].
    */
   override def queryToFile(
-                            query: Construct,
-                            graphIri: InternalIri,
-                            outputFile: zio.nio.file.Path,
-                            outputFormat: QuadFormat
-                          ): Task[Unit] =
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat
+  ): Task[Unit] =
     executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
       .map(RdfStringSource)
       .mapAttempt(RdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
@@ -153,9 +172,9 @@ case class TriplestoreServiceLive(
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    */
   def resetTripleStoreContent(
-                               rdfDataObjects: List[RdfDataObject],
-                               prependDefaults: Boolean
-                             ): Task[Unit] =
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean
+  ): Task[Unit] =
     for {
       _ <- ZIO.logDebug("resetTripleStoreContent")
       _ <- dropDataGraphByGraph()
@@ -200,9 +219,9 @@ case class TriplestoreServiceLive(
    * @return [[Unit]]
    */
   override def insertDataIntoTriplestore(
-                                          rdfDataObjects: List[RdfDataObject],
-                                          prependDefaults: Boolean
-                                        ): Task[Unit] = {
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean
+  ): Task[Unit] = {
 
     val calculateCompleteRdfDataObjectList: Task[NonEmptyChunk[RdfDataObject]] =
       if (prependDefaults) { // prepend
@@ -357,19 +376,19 @@ case class TriplestoreServiceLive(
    * @return a string containing the contents of the graph in N-Quads format.
    */
   override def downloadGraph(
-                              graphIri: InternalIri,
-                              outputFile: zio.nio.file.Path,
-                              outputFormat: QuadFormat
-                            ): Task[Unit] = {
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat
+  ): Task[Unit] = {
     val request = new HttpGet(makeNamedGraphDownloadUri(graphIri.value))
     request.addHeader("Accept", mimeTypeTextTurtle)
     doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile.toFile.toPath, graphIri.value, outputFormat))
   }.unit
 
   private def executeSparqlQuery(
-                                  query: SparqlQuery,
-                                  acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
-                                ) = {
+    query: SparqlQuery,
+    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
+  ) = {
     // in case of a gravsearch query, a longer timeout is set
     val timeout =
       if (query.isGravsearch) triplestoreConfig.gravsearchTimeout.toSeconds.toInt.toString
@@ -390,18 +409,18 @@ case class TriplestoreServiceLive(
     val startTime         = java.lang.System.nanoTime()
     for {
       result <- reqTask @@ requestTimer
-        .tagged("type", query.getClass.getSimpleName)
-        .tagged("isGravsearch", query.isGravsearch.toString)
-        .trackDuration
+                  .tagged("type", query.getClass.getSimpleName)
+                  .tagged("isGravsearch", query.isGravsearch.toString)
+                  .trackDuration
       _ <- {
-        val endTime  = java.lang.System.nanoTime()
-        val duration = Duration.fromNanos(endTime - startTime)
-        ZIO.when(duration >= trackingThreshold) {
-          ZIO.logInfo(
-            s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}"
-          )
-        }
-      }.ignore
+             val endTime  = java.lang.System.nanoTime()
+             val duration = Duration.fromNanos(endTime - startTime)
+             ZIO.when(duration >= trackingThreshold) {
+               ZIO.logInfo(
+                 s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}"
+               )
+             }
+           }.ignore
     } yield result
   }
 
@@ -446,9 +465,9 @@ case class TriplestoreServiceLive(
    * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
-                                request: HttpRequest,
-                                processResponse: CloseableHttpResponse => Task[T]
-                              ): Task[T] = {
+    request: HttpRequest,
+    processResponse: CloseableHttpResponse => Task[T]
+  ): Task[T] = {
 
     def executeQuery(): Task[CloseableHttpResponse] = {
       ZIO
@@ -521,8 +540,8 @@ case class TriplestoreServiceLive(
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[Unit]].
    */
   private def returnInsertGraphDataResponse(
-                                             graphName: String
-                                           )(response: CloseableHttpResponse): Task[Unit] =
+    graphName: String
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case None    => ZIO.fail(TriplestoreResponseException(s"$graphName could not be inserted into Triplestore."))
       case Some(_) => ZIO.unit
@@ -536,8 +555,8 @@ case class TriplestoreServiceLive(
    * @return a [[Unit]].
    */
   private def writeResponseFileAsPlainContent(
-                                               outputFile: Path
-                                             )(response: CloseableHttpResponse): Task[Unit] =
+    outputFile: Path
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         // Stream the HTTP entity directly to the output file.
@@ -559,10 +578,10 @@ case class TriplestoreServiceLive(
    * @return a [[Unit]].
    */
   private def writeResponseFileAsTurtleContent(
-                                                outputFile: Path,
-                                                graphIri: IRI,
-                                                quadFormat: QuadFormat
-                                              )(response: CloseableHttpResponse): Task[Unit] =
+    outputFile: Path,
+    graphIri: IRI,
+    quadFormat: QuadFormat
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         ZIO.attemptBlocking {

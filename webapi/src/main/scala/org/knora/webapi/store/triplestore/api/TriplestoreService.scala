@@ -10,6 +10,7 @@ import zio.*
 import zio.macros.accessible
 
 import java.nio.file.Path
+
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -66,11 +67,11 @@ trait TriplestoreService {
    * @return [[Unit]].
    */
   def queryToFile(
-                   sparql: Construct,
-                   graphIri: InternalIri,
-                   outputFile: zio.nio.file.Path,
-                   outputFormat: QuadFormat
-                 ): Task[Unit]
+    sparql: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat
+  ): Task[Unit]
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -89,9 +90,9 @@ trait TriplestoreService {
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    */
   def resetTripleStoreContent(
-                               rdfDataObjects: List[RdfDataObject],
-                               prependDefaults: Boolean = true
-                             ): Task[Unit]
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean = true
+  ): Task[Unit]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
@@ -107,9 +108,9 @@ trait TriplestoreService {
    * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
-                                 rdfDataObjects: List[RdfDataObject],
-                                 prependDefaults: Boolean
-                               ): Task[Unit]
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean
+  ): Task[Unit]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not

@@ -6,6 +6,15 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
+import zio.*
+import zio.macros.accessible
+
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import scala.reflect.io.Directory
+
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.*
@@ -13,13 +22,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
-import org.slf4j.LoggerFactory
-import zio.*
-import zio.macros.accessible
-
-import java.io.File
-import java.nio.file.{Files, Path}
-import scala.reflect.io.Directory
 
 @accessible
 trait RepositoryUpdater {
@@ -214,8 +216,9 @@ object RepositoryUpdater {
 
         // Drop the graphs that needs to be updated.
         _ <- graphs match {
-               case MigrateAllGraphs              => triplestoreService.dropDataGraphByGraph()
-               case MigrateSpecificGraphs(graphIris) => ZIO.foreach(graphIris)(iri => triplestoreService.dropGraph(iri.value))
+               case MigrateAllGraphs => triplestoreService.dropDataGraphByGraph()
+               case MigrateSpecificGraphs(graphIris) =>
+                 ZIO.foreach(graphIris)(iri => triplestoreService.dropGraph(iri.value))
              }
 
         // Upload the transformed repository.

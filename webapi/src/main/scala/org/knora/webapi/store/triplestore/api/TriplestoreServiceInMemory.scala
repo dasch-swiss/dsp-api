@@ -5,28 +5,48 @@
 
 package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.*
-import org.apache.jena.rdf.model.{Model, ModelFactory}
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb2.TDB2Factory
-import org.apache.jena.update.{UpdateExecutionFactory, UpdateFactory}
+import org.apache.jena.update.UpdateExecutionFactory
+import org.apache.jena.update.UpdateFactory
+import zio.Ref
+import zio.Scope
+import zio.Task
+import zio.UIO
+import zio.ULayer
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
+import zio.macros.accessible
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.Path
+import java.nio.file.Paths
+import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters.IteratorHasAsScala
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select, Update}
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
-import org.knora.webapi.store.triplestore.errors.{TriplestoreResponseException, TriplestoreTimeoutException, TriplestoreUnsupportedFeatureException}
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
-import org.knora.webapi.util.ZScopedJavaIoStreams.{byteArrayOutputStream, fileInputStream, fileOutputStream}
-import zio.macros.accessible
-import zio.{Ref, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
-
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Path, Paths}
-import scala.jdk.CollectionConverters.{CollectionHasAsScala, IteratorHasAsScala}
+import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
+import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
+import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 
 @accessible
 trait TestTripleStore extends TriplestoreService {
