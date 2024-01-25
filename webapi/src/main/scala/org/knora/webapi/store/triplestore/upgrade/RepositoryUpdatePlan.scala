@@ -6,7 +6,7 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
-
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.upgrade.plugins.*
 
 /**
@@ -67,26 +67,26 @@ object RepositoryUpdatePlan {
   /**
    * The built-in named graphs that are always updated when there is a new version of knora-base.
    */
-  val builtInNamedGraphs: Set[BuiltInNamedGraph] = Set(
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/knora-admin.ttl",
-      iri = "http://www.knora.org/ontology/knora-admin"
+  val builtInNamedGraphs: Set[RdfDataObject] = Set(
+    RdfDataObject(
+      path = "knora-ontologies/knora-admin.ttl",
+      name = "http://www.knora.org/ontology/knora-admin"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/knora-base.ttl",
-      iri = "http://www.knora.org/ontology/knora-base"
+    RdfDataObject(
+      path = "knora-ontologies/knora-base.ttl",
+      name = "http://www.knora.org/ontology/knora-base"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/salsah-gui.ttl",
-      iri = "http://www.knora.org/ontology/salsah-gui"
+    RdfDataObject(
+      path = "knora-ontologies/salsah-gui.ttl",
+      name = "http://www.knora.org/ontology/salsah-gui"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/standoff-onto.ttl",
-      iri = "http://www.knora.org/ontology/standoff"
+    RdfDataObject(
+      path = "knora-ontologies/standoff-onto.ttl",
+      name = "http://www.knora.org/ontology/standoff"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/standoff-data.ttl",
-      iri = "http://www.knora.org/data/standoff"
+    RdfDataObject(
+      path = "knora-ontologies/standoff-data.ttl",
+      name = "http://www.knora.org/data/standoff"
     )
   )
 
@@ -108,13 +108,4 @@ object RepositoryUpdatePlan {
         case None      => s"knora-base v$versionNumber"
       }
   }
-
-  /**
-   * Represents a Knora built-in named graph.
-   *
-   * @param filename the filename containing the named graph.
-   * @param iri      the IRI of the named graph.
-   */
-  case class BuiltInNamedGraph(filename: String, iri: String)
-
 }

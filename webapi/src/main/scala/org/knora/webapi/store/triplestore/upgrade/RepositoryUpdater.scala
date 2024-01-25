@@ -6,15 +6,6 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
-import zio.*
-import zio.macros.accessible
-
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import scala.reflect.io.Directory
-
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.*
@@ -22,6 +13,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
+import org.slf4j.LoggerFactory
+import zio.*
+import zio.macros.accessible
+
+import java.io.File
+import java.nio.file.{Files, Path}
+import scala.reflect.io.Directory
 
 @accessible
 trait RepositoryUpdater {
@@ -272,7 +270,7 @@ object RepositoryUpdater {
     private def addBuiltInNamedGraphsToModel(model: RdfModel): Unit =
       // Add each built-in named graph to the model.
       for (builtInNamedGraph <- RepositoryUpdatePlan.builtInNamedGraphs) {
-        val context: String = builtInNamedGraph.iri
+        val context: String = builtInNamedGraph.name
 
         // Remove the existing named graph from the model.
         model.remove(
@@ -283,7 +281,7 @@ object RepositoryUpdater {
         )
 
         // Read the current named graph from a file.
-        val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.filename, Turtle)
+        val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.path, Turtle)
 
         // Copy it into the model, adding the named graph IRI to each statement.
         for (statement: Statement <- namedGraphModel) {

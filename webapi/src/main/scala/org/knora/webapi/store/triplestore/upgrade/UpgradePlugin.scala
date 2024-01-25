@@ -51,7 +51,7 @@ final case class MigrateSpecificGraphs private (graphIris: Set[InternalIri]) ext
 
 object MigrateSpecificGraphs {
   val builtIn: MigrateSpecificGraphs = MigrateSpecificGraphs(
-    RepositoryUpdatePlan.builtInNamedGraphs.map(_.iri).map(InternalIri.apply)
+    RepositoryUpdatePlan.builtInNamedGraphs.map(_.name).map(InternalIri.apply)
   )
 
   def from(iri: InternalIri): MigrateSpecificGraphs = MigrateSpecificGraphs.from(Seq(iri))
