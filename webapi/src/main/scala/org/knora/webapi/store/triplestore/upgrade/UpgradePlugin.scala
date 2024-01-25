@@ -39,24 +39,24 @@ case object MigrateAllGraphs extends GraphsForMigration {
   def merge(other: GraphsForMigration): GraphsForMigration = MigrateAllGraphs
 }
 
-final case class MigrateSpecificGraphs private (graphIris: Seq[InternalIri]) extends GraphsForMigration {
-
+final case class MigrateSpecificGraphs private (graphIris: Set[InternalIri]) extends GraphsForMigration {
   def merge(other: GraphsForMigration): GraphsForMigration = other match {
-    case MigrateAllGraphs => MigrateAllGraphs
-    case MigrateSpecificGraphs(otherGraphIris) =>
-      val mergedGraphs = graphIris ++ otherGraphIris
-      MigrateSpecificGraphs(mergedGraphs.distinct)
+    case MigrateAllGraphs                => MigrateAllGraphs.merge(this)
+    case specific: MigrateSpecificGraphs => merge(specific)
   }
+
+  def merge(other: MigrateSpecificGraphs): MigrateSpecificGraphs =
+    MigrateSpecificGraphs(graphIris ++ other.graphIris)
 }
 
 object MigrateSpecificGraphs {
-  val builtIn: GraphsForMigration = MigrateSpecificGraphs(
-    RepositoryUpdatePlan.builtInNamedGraphs.map(_.iri).map(InternalIri.apply).toSeq
+  val builtIn: MigrateSpecificGraphs = MigrateSpecificGraphs(
+    RepositoryUpdatePlan.builtInNamedGraphs.map(_.iri).map(InternalIri.apply)
   )
-  val all: GraphsForMigration                    = MigrateAllGraphs
-  def from(iri: InternalIri): GraphsForMigration = MigrateSpecificGraphs.from(Seq(iri))
 
-  def from(iris: Seq[InternalIri]): GraphsForMigration =
+  def from(iri: InternalIri): MigrateSpecificGraphs = MigrateSpecificGraphs.from(Seq(iri))
+
+  def from(iris: Iterable[InternalIri]): MigrateSpecificGraphs =
     // We have to add the builtIn graphs to all [[MigrateSpecificGraphs]], because the [[RepositoryUpdater]] requires them for automatic upgrade of builtIn graphs, e.g. ontologies.
-    MigrateSpecificGraphs(iris) merge builtIn
+    MigrateSpecificGraphs(iris.toSet) merge builtIn
 }
