@@ -10,7 +10,6 @@ import zio.*
 import zio.macros.accessible
 
 import java.nio.file.Path
-
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -20,6 +19,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
 @accessible
 trait TriplestoreService {
@@ -33,7 +33,7 @@ trait TriplestoreService {
   def query(sparql: Ask): Task[Boolean]
 
   /**
-   *  Performs a SPARQL CONSTRUCT query.
+   * Performs a SPARQL CONSTRUCT query.
    *
    * @param sparql The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
@@ -43,7 +43,7 @@ trait TriplestoreService {
   /**
    * Performs a SPARQL SELECT query.
    *
-   * @param sparql          The SPARQL [[Select]] query.
+   * @param sparql The SPARQL [[Select]] query.
    * @return A [[SparqlSelectResult]].
    */
   def query(sparql: Select): Task[SparqlSelectResult]
@@ -63,21 +63,21 @@ trait TriplestoreService {
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
-   * @return  [[Unit]].
+   * @return [[Unit]].
    */
   def queryToFile(
-    sparql: Construct,
-    graphIri: InternalIri,
-    outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
-  ): Task[Unit]
+                   sparql: Construct,
+                   graphIri: InternalIri,
+                   outputFile: zio.nio.file.Path,
+                   outputFormat: QuadFormat
+                 ): Task[Unit]
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
    *
-   * @param graphIri             the IRI of the named graph.
-   * @param outputFile           the file to be written.
-   * @param outputFormat         the output file format.
+   * @param graphIri     the IRI of the named graph.
+   * @param outputFile   the file to be written.
+   * @param outputFormat the output file format.
    */
   def downloadGraph(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
 
@@ -85,13 +85,13 @@ trait TriplestoreService {
    * Resets the content of the triplestore with the data supplied with the request.
    * First performs `dropAllTriplestoreContent` and afterwards `insertDataIntoTriplestore`.
    *
-   * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
+   * @param rdfDataObjects  a sequence of paths and graph names referencing data that needs to be inserted.
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    */
   def resetTripleStoreContent(
-    rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean = true
-  ): Task[Unit]
+                               rdfDataObjects: List[RdfDataObject],
+                               prependDefaults: Boolean = true
+                             ): Task[Unit]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
@@ -107,9 +107,9 @@ trait TriplestoreService {
    * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
-    rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
-  ): Task[Unit]
+                                 rdfDataObjects: List[RdfDataObject],
+                                 prependDefaults: Boolean
+                               ): Task[Unit]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
@@ -120,9 +120,9 @@ trait TriplestoreService {
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.
    *
-   * @param outputFile           the output file.
+   * @param outputFile the output file.
    */
-  def downloadRepository(outputFile: Path): Task[Unit]
+  def downloadRepository(outputFile: Path, graphs: GraphsForMigration): Task[Unit]
 
   /**
    * Uploads repository content from an N-Quads file.
@@ -130,6 +130,8 @@ trait TriplestoreService {
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
   def uploadRepository(inputFile: Path): Task[Unit]
+
+  def dropGraph(graphName: String): Task[Unit]
 }
 
 object TriplestoreService {
