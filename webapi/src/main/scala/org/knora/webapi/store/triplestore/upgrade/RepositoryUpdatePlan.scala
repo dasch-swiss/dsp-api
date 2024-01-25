@@ -6,6 +6,7 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
+
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.upgrade.plugins.*
 
