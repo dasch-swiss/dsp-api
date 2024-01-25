@@ -123,32 +123,25 @@ function pre_flight(prefix, identifier, cookie)
         return 'deny'
     elseif permission_code == 1 then
         -- restricted view permission on file
-        -- either watermark or size (depends on project, should be returned by DSP-API)
-        -- currently, only size is used
+        -- watermark and/or size (set per project, managed by DSP-API)
+        local settings_from_api = permission_info.restrictedViewSettings
 
-        local restrictedViewSize
+        local settings_for_sipi = {}
+        settings_for_sipi['type'] = "restrict"
+        settings_for_sipi['size'] = config.thumb_size
 
-        if permission_info.restrictedViewSettings ~= nil then
-            log("pre_flight - restricted view settings - watermark: " ..
-                tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
-
-            if permission_info.restrictedViewSettings.size ~= nil then
-                restrictedViewSize = permission_info.restrictedViewSettings.size
-                log("pre_flight - restricted view settings - size: " .. tostring(restrictedViewSize),
-                    server.loglevel.LOG_DEBUG)
-            else
-                log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
-                restrictedViewSize = config.thumb_size
+        if settings_from_api ~= nil then
+            log("pre_flight - restricted view settings - from api: " .. tableToString(settings_from_api), server.loglevel.LOG_DEBUG)
+            if settings_from_api.size ~= nil then
+                settings_for_sipi['size'] = settings_from_api.size
             end
-        else
-            log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
-            restrictedViewSize = config.thumb_size
+            if  settings_from_api.watermark then
+                settings_for_sipi['watermark'] = "/sipi/scripts/watermark.tif"
+            end
         end
 
-        return {
-            type = 'restrict',
-            size = restrictedViewSize
-        }, filepath
+        log("pre_flight - restricted view settings - for sipi: " .. tableToString(settings_for_sipi), server.loglevel.LOG_DEBUG)
+        return settings_for_sipi, filepath
     elseif permission_code >= 2 then
         -- full view permissions on file
         return 'allow', filepath
@@ -194,14 +187,14 @@ function file_pre_flight(identifier, cookie)
     elseif #segments == 5 then
         -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
         log("file_pre_flight - found 5 segments, it's assumed to be the preview file for a video",
-            server.loglevel.LOG_ERR)
+                server.loglevel.LOG_ERR)
         file_name = segments[4] .. '.mp4'
         file_name_preview = segments[4] .. '/' .. segments[5]
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
         log("file_pre_flight - file name preview: " .. file_name_preview, server.loglevel.LOG_DEBUG)
     else
         log("file_pre_flight - wrong number of segments. Got: [" .. table.concat(segments, ",") .. "]",
-            server.loglevel.LOG_ERR)
+                server.loglevel.LOG_ERR)
         return "deny"
     end
 

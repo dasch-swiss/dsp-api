@@ -814,7 +814,7 @@ Example response:
 {
     "settings": {
         "size": "!512,512",
-        "watermark": "path_to_image"
+        "watermark": false
     }
 }
 ```
@@ -840,7 +840,10 @@ Description: Set the project's restricted view
 
 Required payload:
 
-- `size`
+- `size` string
+
+Optional payload:
+- `watermark` boolean
 
 Example request:
 
@@ -853,20 +856,21 @@ curl --request POST 'http://0.0.0.0:5555/admin/projects/iri/http%3A%2F%2Frdfh.ch
 ```bash
 curl --request POST 'http://0.0.0.0:5555/admin/projects/shortcode/0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
---data '{"size": "!512,512"}
+--data '{"size": "!512,512", watermark: true}'
 ```
 
 Example response:
 
 ```json
 {
-    "size": "!512,512"
+    "size": "!512,512",
+    "watermark": true
 }
 ```
 
 Operates on the following properties:
 
 - `knora-admin:projectRestrictedViewSize`: the IIIF size value
-- `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
+- `knora-admin:projectRestrictedViewWatermark`: whether images of a project should be protected with a watermark.
 
 Note: Restricted view settings only take effect, if a user has "Restricted View" permission on an image.

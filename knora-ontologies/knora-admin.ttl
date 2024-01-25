@@ -284,9 +284,9 @@
 :projectRestrictedViewWatermark
     rdf:type                            owl:DatatypeProperty ;
     rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The path to the restricted view watermark."@en ;
+    rdfs:comment                        "Whether the images of a Project should be restricted to view with a watermark."@en ;
     knora-base:subjectClassConstraint   :knoraProject ;
-    knora-base:objectDatatypeConstraint xsd:string .
+    knora-base:objectDatatypeConstraint xsd:boolean .
 
 
 ###  http://www.knora.org/ontology/knora-admin#projectShortname
