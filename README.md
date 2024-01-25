@@ -39,6 +39,7 @@ Each developer machine should have the following prerequisites installed:
 * [Homebrew](https://brew.sh) (macOS)
 * JDK [Temurin 17](https://adoptium.net/en-GB/temurin/)
 * [sbt](https://www.scala-sbt.org/)
+* [just](https://just.systems/man/en/)
 
 #### JDK Temurin 17
 
