@@ -14,6 +14,7 @@ import org.apache.http.NameValuePair
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -48,20 +49,20 @@ import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.NotInitialized
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Unavailable
 import org.knora.webapi.store.triplestore.errors.*
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateAllGraphs
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 import org.knora.webapi.util.FileUtil
-
-import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.{Available, NotInitialized, Unavailable}
 
 case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
