@@ -61,17 +61,6 @@ case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends Projec
 case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
- * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
- *
- * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectAdminMembersGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: User
-) extends ProjectsResponderRequestADM
-
-/**
  * Returns all unique keywords for all projects.
  */
 case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM

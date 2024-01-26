@@ -24,7 +24,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
@@ -104,9 +103,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
-            IriIdentifier
-              .fromString(SharedTestDataADM.imagesProject.id)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)
           )
         )
         actual shouldEqual Some(expectedResult)
@@ -115,9 +112,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
-            ShortnameIdentifier
-              .fromString(SharedTestDataADM.imagesProject.shortname)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname)
           )
         )
         actual shouldEqual Some(expectedResult)
@@ -135,9 +130,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
-            IriIdentifier
-              .fromString(notExistingProjectButValidProjectIri)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri)
           )
         )
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
@@ -145,11 +138,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
-            ShortcodeIdentifier
-              .fromString("9999")
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
+          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(ShortcodeIdentifier.unsafeFrom("9999"))
         )
         assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
@@ -157,9 +146,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
-            ShortnameIdentifier
-              .fromString("wrongshortname")
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            ShortnameIdentifier.unsafeFrom("wrongshortname")
           )
         )
         assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
@@ -508,87 +495,82 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return all project admin members of a project identified by IRI" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          IriIdentifier
-            .fromString(SharedTestDataADM.imagesProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          SharedTestDataADM.rootUser
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
+            SharedTestDataADM.rootUser
+          )
         )
-        val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members                                     = received.members
 
+        val members = received.members
         members.size should be(2)
-
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
-        ).map(_.id)
+          SharedTestDataADM.imagesUser01.id,
+          SharedTestDataADM.multiuserUser.id
+        )
       }
 
       "return all project admin members of a project identified by shortname" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          ShortnameIdentifier
-            .fromString(SharedTestDataADM.imagesProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
+            SharedTestDataADM.rootUser
+          )
         )
-        val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members                                     = received.members
 
+        val members = received.members
         members.size should be(2)
-
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
-        ).map(_.id)
+          SharedTestDataADM.imagesUser01.id,
+          SharedTestDataADM.multiuserUser.id
+        )
       }
 
       "return all project admin members of a project identified by shortcode" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          ShortcodeIdentifier
-            .fromString(SharedTestDataADM.imagesProject.shortcode)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
+            SharedTestDataADM.rootUser
+          )
         )
-        val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members                                     = received.members
 
+        val members = received.members
         members.size should be(2)
-
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
-        ).map(_.id)
+          SharedTestDataADM.imagesUser01.id,
+          SharedTestDataADM.multiuserUser.id
+        )
       }
 
       "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          IriIdentifier
-            .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          SharedTestDataADM.rootUser
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+            SharedTestDataADM.rootUser
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
+
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
 
       "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          ShortnameIdentifier
-            .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            ShortnameIdentifier.unsafeFrom("wrongshortname"),
+            SharedTestDataADM.rootUser
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
+        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
 
       "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
-        appActor ! ProjectAdminMembersGetRequestADM(
-          ShortcodeIdentifier
-            .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = SharedTestDataADM.rootUser
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(
+            ShortcodeIdentifier.unsafeFrom("9999"),
+            SharedTestDataADM.rootUser
+          )
         )
-        expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
+        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
     }
 

@@ -18,8 +18,6 @@ import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -751,14 +749,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         // get project admins for images project (should contain normal user)
-        appActor ! ProjectAdminMembersGetRequestADM(
-          IriIdentifier
-            .fromString(imagesProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = rootUser
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
         )
-        val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-
         received.members.map(_.id) should contain(normalUser.id)
       }
 
@@ -787,14 +780,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.projects should equal(Seq())
 
-        appActor ! ProjectAdminMembersGetRequestADM(
-          IriIdentifier
-            .fromString(imagesProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-          requestingUser = rootUser
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
         )
-        val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-
         received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
 
