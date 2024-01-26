@@ -43,9 +43,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
       "return information for every project excluding system projects" in {
-        appActor ! ProjectsGetRequestADM()
-
-        val received = expectMsgType[ProjectsGetResponseADM](timeout)
+        val received = UnsafeZioRun.runOrThrow(ProjectsResponderADM.getNonSystemProjects())
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
         assert(!received.projects.map(_.id).contains(SharedTestDataADM.systemProjectIri))
