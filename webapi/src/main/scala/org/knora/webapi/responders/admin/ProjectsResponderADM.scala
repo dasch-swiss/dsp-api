@@ -200,8 +200,6 @@ final case class ProjectsResponderADMLive(
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
-    case ProjectKeywordsGetRequestADM(projectIri) =>
-      projectKeywordsGetRequestADM(projectIri)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>

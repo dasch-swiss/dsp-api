@@ -60,16 +60,6 @@ case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends Projec
  */
 case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
-
-/**
- * Returns all keywords for a project identified through IRI.
- *
- * @param projectIri           the IRI of the project.
- */
-case class ProjectKeywordsGetRequestADM(
-  projectIri: ProjectIri
-) extends ProjectsResponderRequestADM
-
 /**
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *

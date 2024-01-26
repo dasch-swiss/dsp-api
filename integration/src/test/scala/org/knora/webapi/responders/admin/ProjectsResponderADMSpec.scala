@@ -581,25 +581,26 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return all keywords for a single project" in {
-        appActor ! ProjectKeywordsGetRequestADM(projectIri =
-          ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id)
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectKeywordsGetRequestADM(
+            ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id)
+          )
         )
-
-        val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
         received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
       }
 
       "return empty list for a project without keywords" in {
-        appActor ! ProjectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id))
-
-        val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id))
+        )
         received.keywords should be(Seq.empty[String])
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        appActor ! ProjectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri))
-
-        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
+        val exit = UnsafeZioRun.run(
+          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri))
+        )
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
     }
   }
