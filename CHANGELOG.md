@@ -1,5 +1,59 @@
 # Changelog
 
+## [30.7.0](https://github.com/dasch-swiss/dsp-api/compare/v30.6.0...v30.7.0) (2024-01-25)
+
+
+### Maintenance
+
+* Add just targets for simple stack handling ([#2985](https://github.com/dasch-swiss/dsp-api/issues/2985)) ([f5f135e](https://github.com/dasch-swiss/dsp-api/commit/f5f135ee85133035701c1854200b6c36c7aad57b))
+* **admin/projects:** Add missing internal to external response formatting ([#2993](https://github.com/dasch-swiss/dsp-api/issues/2993)) ([f0312dc](https://github.com/dasch-swiss/dsp-api/commit/f0312dc1112365bb53c44c61edfb6f5861f0e974))
+* Bump Sipi to 3.8.8 ([#2972](https://github.com/dasch-swiss/dsp-api/issues/2972)) ([9a00c3f](https://github.com/dasch-swiss/dsp-api/commit/9a00c3f61d205e1245e3e1c4fa3c6ce3e2ab9f10))
+* Dependency updates ([#2967](https://github.com/dasch-swiss/dsp-api/issues/2967)) ([95ad2f9](https://github.com/dasch-swiss/dsp-api/commit/95ad2f9c24996513aeea1767b679b8e6ee03a953))
+* Introduce `Value[A]` and extract tapir and zio-json codecs ([#2996](https://github.com/dasch-swiss/dsp-api/issues/2996)) ([9744f7b](https://github.com/dasch-swiss/dsp-api/commit/9744f7b2dc525bcae75c6562cec56acaf75a195c))
+* Major dependency updates ([#2977](https://github.com/dasch-swiss/dsp-api/issues/2977)) ([6ee0111](https://github.com/dasch-swiss/dsp-api/commit/6ee01112869506c69b925230d4e03cc627c8f654))
+* Migrate /admin/files to tapir (DEV-3189) ([#2995](https://github.com/dasch-swiss/dsp-api/issues/2995)) ([78ff954](https://github.com/dasch-swiss/dsp-api/commit/78ff9543c0e631512307fcb611f750de4e48ff47))
+* Migrate `admin/permissions` endpoints to tapir (DEV-1590) ([#2975](https://github.com/dasch-swiss/dsp-api/issues/2975)) ([cf2c6fb](https://github.com/dasch-swiss/dsp-api/commit/cf2c6fba86e1f9adbfcd3a3ee4bf936b147958f0))
+* Migrate get all users route to tapir (DEV-3142) ([#2971](https://github.com/dasch-swiss/dsp-api/issues/2971)) ([3684b91](https://github.com/dasch-swiss/dsp-api/commit/3684b9194d170d3085a0d920ca02e0362b437880))
+* Migrate getAllGroups route to tapir (DEV-1588) ([#2984](https://github.com/dasch-swiss/dsp-api/issues/2984)) ([e5285ea](https://github.com/dasch-swiss/dsp-api/commit/e5285eacabb00ec5b079d0e546cf3629199a0641))
+* Migrate getGroup and getGroupMembers to tapir (DEV-1588) ([#2987](https://github.com/dasch-swiss/dsp-api/issues/2987)) ([98820b0](https://github.com/dasch-swiss/dsp-api/commit/98820b05075d12f6c05af44cc07fe1d671394791))
+* Migrate to Java 21 and remove usage of Java 17 (DEV-3146) ([#2974](https://github.com/dasch-swiss/dsp-api/issues/2974)) ([779fddb](https://github.com/dasch-swiss/dsp-api/commit/779fddb1978949676e3d1a8cd7944afef109db54))
+* Minor dependency updates ([#2966](https://github.com/dasch-swiss/dsp-api/issues/2966)) ([0cc64d1](https://github.com/dasch-swiss/dsp-api/commit/0cc64d101b19057131ddd44645912819359d1fa1))
+* Move and rename UserADM ([#2978](https://github.com/dasch-swiss/dsp-api/issues/2978)) ([56c1feb](https://github.com/dasch-swiss/dsp-api/commit/56c1febfe6c50cdb97a91a0499f973abf2839688))
+* Patch dependency updates ([#2965](https://github.com/dasch-swiss/dsp-api/issues/2965)) ([d0d252d](https://github.com/dasch-swiss/dsp-api/commit/d0d252de45d987f1fb167718de832aaaef4091e2))
+* Patch dependency updates ([#2976](https://github.com/dasch-swiss/dsp-api/issues/2976)) ([b150911](https://github.com/dasch-swiss/dsp-api/commit/b1509113433fc6d70daab56a823aade9d100642d))
+* Patch dependency updates ([#2992](https://github.com/dasch-swiss/dsp-api/issues/2992)) ([9b57f16](https://github.com/dasch-swiss/dsp-api/commit/9b57f16cc5aefd241f13c4f66cc68e984b7c85fc))
+* Rename staging servers to stage in Makefile ([#2961](https://github.com/dasch-swiss/dsp-api/issues/2961)) ([bad8bbe](https://github.com/dasch-swiss/dsp-api/commit/bad8bbefcb49dbce0a8bddfc870f43be2a8c7af3))
+* Set Sipi max_post_size = '2G' in all configuration ([#2962](https://github.com/dasch-swiss/dsp-api/issues/2962)) ([9fc109c](https://github.com/dasch-swiss/dsp-api/commit/9fc109cc9ec91e7e8245ec4a438cdf775b32f48d))
+* Streamline user identifier objects (DEV-3155) ([#2991](https://github.com/dasch-swiss/dsp-api/issues/2991)) ([0d07b6f](https://github.com/dasch-swiss/dsp-api/commit/0d07b6f039a919472119029d06ce1602b141c8f2))
+* Unify user value objects and validation (DEV-3155) ([#2980](https://github.com/dasch-swiss/dsp-api/issues/2980)) ([83f777d](https://github.com/dasch-swiss/dsp-api/commit/83f777d5aa76f5693ea77b9f531e46cf03f34b6e))
+* Update license header to 2024 ([#2981](https://github.com/dasch-swiss/dsp-api/issues/2981)) ([560dec4](https://github.com/dasch-swiss/dsp-api/commit/560dec4bd10572f72777412660d0f92cf1439738))
+* Update years in the copyright header ([#2982](https://github.com/dasch-swiss/dsp-api/issues/2982)) ([700f3c5](https://github.com/dasch-swiss/dsp-api/commit/700f3c54cc729dc7e4e89afb8017bb2fe2b420a2))
+* Use RestrictedViewSize in ProjectSetRestrictedViewSizeRequest ([#3001](https://github.com/dasch-swiss/dsp-api/issues/3001)) ([239c4fc](https://github.com/dasch-swiss/dsp-api/commit/239c4fce0c95bab77afea02d1d9256b28355d055))
+* Use sttpbackend and reuse access token if not expired ([#2968](https://github.com/dasch-swiss/dsp-api/issues/2968)) ([eac470a](https://github.com/dasch-swiss/dsp-api/commit/eac470a4a95787002041c38b7f3f4418ff4b8525))
+* Use the same custom scalac option for webapi and integration ([#2990](https://github.com/dasch-swiss/dsp-api/issues/2990)) ([b8a45ad](https://github.com/dasch-swiss/dsp-api/commit/b8a45adc61eeaa152c1a73656813f8e6427f706c))
+
+
+### Documentation
+
+* Add documentation on creating FileValue resources together with ingest (DEV -3134) ([#2969](https://github.com/dasch-swiss/dsp-api/issues/2969)) ([eac5751](https://github.com/dasch-swiss/dsp-api/commit/eac5751a2c50e402f99aeb2b57e6526eb8f410fb))
+* Remove remaining API V1 documentation (DEV-3073) ([#2970](https://github.com/dasch-swiss/dsp-api/issues/2970)) ([2d3d4c4](https://github.com/dasch-swiss/dsp-api/commit/2d3d4c4272af636b43c8cd1a21cc5db8077fe358))
+
+
+### Enhancements
+
+* Add dsp ingest asset info resolution (DEV-3147) ([#2973](https://github.com/dasch-swiss/dsp-api/issues/2973)) ([c081ba8](https://github.com/dasch-swiss/dsp-api/commit/c081ba8442365903d1eb69b32a645f8b6c14c065))
+* Add generating OpenApi yamls for the admin api ([#2983](https://github.com/dasch-swiss/dsp-api/issues/2983)) ([503b742](https://github.com/dasch-swiss/dsp-api/commit/503b7422248ca2638df0eface3aa569f409612d4))
+* Add support to load knora-ontologies in the docker-compose stack ([#3002](https://github.com/dasch-swiss/dsp-api/issues/3002)) ([32bf7cc](https://github.com/dasch-swiss/dsp-api/commit/32bf7cc991880aa113385376c8385689f30183c5))
+* Add watermark support (DEV-2993) (DEV-2991) ([#3003](https://github.com/dasch-swiss/dsp-api/issues/3003)) ([7637cb3](https://github.com/dasch-swiss/dsp-api/commit/7637cb31aa61df4d1ccb3d58632430a983a47fec))
+* Make Sipi handling optional during FileValue creation (Dev-2945) ([#2960](https://github.com/dasch-swiss/dsp-api/issues/2960)) ([82ebce4](https://github.com/dasch-swiss/dsp-api/commit/82ebce45bd0679b799dece735b13588447e8d54c))
+
+
+### Bug Fixes
+
+* Allow all mime types in API that are returned by Ingest (DEV-3163) ([#2994](https://github.com/dasch-swiss/dsp-api/issues/2994)) ([1ea69a4](https://github.com/dasch-swiss/dsp-api/commit/1ea69a472db1a78c318a517f4c410c313e285632))
+* Fix UserIri and allow existing values (DEV-3194) ([#2997](https://github.com/dasch-swiss/dsp-api/issues/2997)) ([ecf9c0a](https://github.com/dasch-swiss/dsp-api/commit/ecf9c0af91cb06c72df1da0a93212eae8fe9f47b))
+* Let DspIngestClientLive get a fresh jwt for each request ([#2988](https://github.com/dasch-swiss/dsp-api/issues/2988)) ([31df947](https://github.com/dasch-swiss/dsp-api/commit/31df9473b385a0c2ed702ef28bfba348938d45fb))
+
 ## [30.6.0](https://github.com/dasch-swiss/dsp-api/compare/v30.5.2...v30.6.0) (2023-12-06)
 
 
