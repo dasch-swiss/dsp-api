@@ -60,12 +60,10 @@ trait ProjectsResponderADM {
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
-   * @param withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
-   *
-   *         NotFoundException if no projects are found.
+   *         [[NotFoundException]] if no projects are found.
    */
-  def getNonSystemProjects(): Task[ProjectsGetResponseADM]
+  def getNonSystemProjects: Task[ProjectsGetResponseADM]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -202,8 +200,6 @@ final case class ProjectsResponderADMLive(
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
-    case ProjectMembersGetRequestADM(identifier, requestingUser) =>
-      projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
       projectAdminMembersGetRequestADM(identifier, requestingUser)
     case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
@@ -235,7 +231,7 @@ final case class ProjectsResponderADMLive(
    * @return all non-system projects as a [[ProjectsGetResponseADM]].
    *         [[NotFoundException]] if no projects are found.
    */
-  override def getNonSystemProjects(): Task[ProjectsGetResponseADM] =
+  override def getNonSystemProjects: Task[ProjectsGetResponseADM] =
     projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
       case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
       case projects => ZIO.succeed(ProjectsGetResponseADM(projects))

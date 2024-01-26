@@ -61,17 +61,6 @@ case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends Projec
 case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
- * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
- *
- * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectMembersGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: User
-) extends ProjectsResponderRequestADM
-
-/**
  * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
  *
  * @param identifier           the IRI, email, or username of the project.
@@ -383,6 +372,7 @@ object ProjectIdentifierADM {
   final case class ShortnameIdentifier private (value: Shortname) extends ProjectIdentifierADM
   object ShortnameIdentifier {
     def from(shortname: Shortname): ShortnameIdentifier = ShortnameIdentifier(shortname)
+    def unsafeFrom(value: String): ShortnameIdentifier  = fromString(value).fold(err => throw err.head, identity)
     def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
       Validation
         .fromEither(Shortname.from(value).map(ShortnameIdentifier.from))
