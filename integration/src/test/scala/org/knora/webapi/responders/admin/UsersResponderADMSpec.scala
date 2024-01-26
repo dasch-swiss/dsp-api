@@ -5,23 +5,30 @@
 
 package org.knora.webapi.responders.admin
 
-import dsp.errors.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
-import dsp.valueobjects.LanguageCode
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
+
+import java.util.UUID
+
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{CredentialsIdentifier, KnoraCredentialsV2}
-import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
-
-import java.util.UUID
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
