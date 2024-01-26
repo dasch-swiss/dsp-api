@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.6.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.5.0...v0.6.0) (2024-01-16)
+
+
+### Enhancements
+
+* Add maintenance action to update all asset metadata incl. mimetypes (dev-3140) ([#155](https://github.com/dasch-swiss/dsp-ingest/issues/155)) ([45de659](https://github.com/dasch-swiss/dsp-ingest/commit/45de6590e92d413498190f61e91462ef852abee6))
+* Add maintenance action which extracts dimensions for all Stillmages (DEV-3125) ([#146](https://github.com/dasch-swiss/dsp-ingest/issues/146)) ([f8b4556](https://github.com/dasch-swiss/dsp-ingest/commit/f8b45561bbe477dfef4ea1769fbc7f77aef6bbba))
+* Add support for mime types (DEV-3139) ([#147](https://github.com/dasch-swiss/dsp-ingest/issues/147)) ([8c5838b](https://github.com/dasch-swiss/dsp-ingest/commit/8c5838bc27958723e2f8fb5f5bb357fff6d4945b))
+
+
+### Bug Fixes
+
+* Escape values in mapping CSV (DEV-3160) ([#154](https://github.com/dasch-swiss/dsp-ingest/issues/154)) ([4059991](https://github.com/dasch-swiss/dsp-ingest/commit/4059991bd820ebaf376a11b1be82f415f0b0c667))
+* Fix typo for Excel file extensions, enable ingest of *.xlsx ([#144](https://github.com/dasch-swiss/dsp-ingest/issues/144)) ([ae5e80c](https://github.com/dasch-swiss/dsp-ingest/commit/ae5e80c67437a53c8088683886cb7766aa2228ca))
+* Typo MIME type ([#148](https://github.com/dasch-swiss/dsp-ingest/issues/148)) ([06de145](https://github.com/dasch-swiss/dsp-ingest/commit/06de145901033c1c2241050c33439a42fe6a3e1e))
+* Use a stable version for Sipi base image ([#149](https://github.com/dasch-swiss/dsp-ingest/issues/149)) ([a97197a](https://github.com/dasch-swiss/dsp-ingest/commit/a97197a638b6b44cf1e4c5dc86b1b48e31272109))
+
+
+### Maintenance
+
+* Add AssetFolder as AugmentedPath ([#157](https://github.com/dasch-swiss/dsp-ingest/issues/157)) ([77e2736](https://github.com/dasch-swiss/dsp-ingest/commit/77e2736c78193e9197ae7cea95f05ee622f02a7a))
+* Introduce AugmentedPath and replace different implementations ([#156](https://github.com/dasch-swiss/dsp-ingest/issues/156)) ([d31b3e1](https://github.com/dasch-swiss/dsp-ingest/commit/d31b3e104ae9bb7e61eab27d26936d6338133a15))
+* Major dependency updates ([#152](https://github.com/dasch-swiss/dsp-ingest/issues/152)) ([fab4c7b](https://github.com/dasch-swiss/dsp-ingest/commit/fab4c7bfa7b6150f7915bfa93d879260fd21ebcf))
+* Patch dependency updates ([#151](https://github.com/dasch-swiss/dsp-ingest/issues/151)) ([8b825d7](https://github.com/dasch-swiss/dsp-ingest/commit/8b825d7ab8e0cfce12e9323ce143168edef0d98d))
+* Patch dependency updates ([#159](https://github.com/dasch-swiss/dsp-ingest/issues/159)) ([56ceadd](https://github.com/dasch-swiss/dsp-ingest/commit/56ceadd3746d0333e6f35c6b48c4110b30ce3a81))
+* Update license headers to 2024 ([#153](https://github.com/dasch-swiss/dsp-ingest/issues/153)) ([ca09571](https://github.com/dasch-swiss/dsp-ingest/commit/ca09571e4ec9082e4fdc602f613452c6f04127cd))
+* Update to Eclipse Temurin Java 21 (DEV-2770) ([#150](https://github.com/dasch-swiss/dsp-ingest/issues/150)) ([f688409](https://github.com/dasch-swiss/dsp-ingest/commit/f68840987a9e0523de1a826c0a2846a9187d0949))
+
+
+### Documentation
+
+* Add documentation for bulk-ingest (DEV-3133) ([#158](https://github.com/dasch-swiss/dsp-ingest/issues/158)) ([e377c0e](https://github.com/dasch-swiss/dsp-ingest/commit/e377c0edf178c7176b1f087a85993a10ac08d4fb))
+
 ## [0.5.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.4.0...v0.5.0) (2023-12-15)
 
 
