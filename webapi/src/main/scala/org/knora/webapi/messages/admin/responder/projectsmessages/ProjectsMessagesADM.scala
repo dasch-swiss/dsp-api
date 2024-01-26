@@ -61,15 +61,6 @@ case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends Projec
 case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
 
 /**
- * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
- *
- * @param identifier           the identifier of the project.
- */
-case class ProjectRestrictedViewSettingsGetRequestADM(
-  identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
-
-/**
  * Requests the creation of a new project.
  *
  * @param createRequest  the [[ProjectCreateRequest]] information for the creation of a new project.

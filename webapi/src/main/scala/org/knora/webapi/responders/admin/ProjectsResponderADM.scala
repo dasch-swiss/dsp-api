@@ -200,8 +200,6 @@ final case class ProjectsResponderADMLive(
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
-    case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
-      projectRestrictedViewSettingsGetRequestADM(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -438,11 +436,8 @@ final case class ProjectsResponderADMLive(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(
-        _ => NotFoundException(s"Project '${getId(id)}' not found."),
-        ProjectRestrictedViewSettingsGetResponseADM
-      )
+      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      .map(ProjectRestrictedViewSettingsGetResponseADM)
 
   /**
    * Update project's basic information.
