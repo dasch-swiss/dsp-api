@@ -576,9 +576,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "used to query keywords" should {
       "return all unique keywords for all projects" in {
-        appActor ! ProjectsKeywordsGetRequestADM()
-
-        val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
+        val received = UnsafeZioRun.runOrThrow(ProjectsResponderADM.projectsKeywordsGetRequestADM())
         received.keywords.size should be(21)
       }
 
