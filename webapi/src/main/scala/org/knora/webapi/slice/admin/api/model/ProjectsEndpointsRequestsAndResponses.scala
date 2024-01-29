@@ -12,7 +12,7 @@ import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 
-object ProjectsEndpointsRequests {
+object ProjectsEndpointsRequestsAndResponses {
 
   final case class ProjectCreateRequest(
     id: Option[ProjectIri] = None,
@@ -42,9 +42,13 @@ object ProjectsEndpointsRequests {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
   }
 
-  final case class ProjectSetRestrictedViewSizeRequest(size: RestrictedViewSize)
-  object ProjectSetRestrictedViewSizeRequest {
-    implicit val codec: JsonCodec[ProjectSetRestrictedViewSizeRequest] =
-      DeriveJsonCodec.gen[ProjectSetRestrictedViewSizeRequest]
+  final case class SetRestrictedViewRequest(size: RestrictedViewSize, watermark: Option[Boolean])
+  object SetRestrictedViewRequest {
+    implicit val codec: JsonCodec[SetRestrictedViewRequest] = DeriveJsonCodec.gen[SetRestrictedViewRequest]
+  }
+
+  final case class RestrictedViewResponse(size: RestrictedViewSize, watermark: Boolean)
+  object RestrictedViewResponse {
+    implicit val codec: JsonCodec[RestrictedViewResponse] = DeriveJsonCodec.gen[RestrictedViewResponse]
   }
 }

@@ -35,13 +35,15 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -176,12 +178,13 @@ trait ProjectsResponderADM {
 }
 
 final case class ProjectsResponderADMLive(
-  private val triplestore: TriplestoreService,
-  private val messageRelay: MessageRelay,
-  private val iriService: IriService,
-  private val projectService: ProjectADMService,
   private val cacheServiceSettings: CacheServiceSettings,
+  private val iriService: IriService,
+  private val messageRelay: MessageRelay,
   private val permissionsResponderADM: PermissionsResponderADM,
+  private val predicateObjectMapper: PredicateObjectMapper,
+  private val projectService: ProjectADMService,
+  private val triplestore: TriplestoreService,
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
@@ -417,23 +420,27 @@ final case class ProjectsResponderADMLive(
     )
     for {
       projectResponse <- triplestore.query(query).flatMap(_.asExtended)
-      restrictedViewSettings =
+      restrictedViewSettings <- {
         if (projectResponse.statements.nonEmpty) {
-
-          val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
-
-          val size = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val watermark = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-
-          Some(ProjectRestrictedViewSettingsADM(size, watermark))
+          val (_, propsMap) = projectResponse.statements.head
+          for {
+            size <- predicateObjectMapper
+                      .getSingleOption[StringLiteralV2](
+                        OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
+                        propsMap
+                      )
+                      .map(_.map(_.value))
+            watermark <- predicateObjectMapper
+                           .getSingleOption[BooleanLiteralV2](
+                             OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
+                             propsMap
+                           )
+                           .map(_.exists(_.value))
+          } yield Some(ProjectRestrictedViewSettingsADM(size, watermark))
         } else {
-          None
+          ZIO.none
         }
-
+      }
     } yield restrictedViewSettings
   }
 
@@ -800,7 +807,10 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- projectService.setProjectRestrictedViewSize(newProjectADM, RestrictedViewSize.default)
+        _ <- projectService.setProjectRestrictedView(
+               newProjectADM,
+               RestrictedView(RestrictedViewSize.default, watermark = false)
+             )
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
@@ -873,7 +883,7 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionsResponderADM & ProjectADMService & StringFormatter & TriplestoreService,
+    AppConfig & IriService & MessageRelay & PermissionsResponderADM & PredicateObjectMapper & ProjectADMService & StringFormatter & TriplestoreService,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
@@ -882,9 +892,10 @@ object ProjectsResponderADMLive {
       ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
+      po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, pr, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(c, iris, mr, pr, po, ps, ts, sf))
     } yield handler
   }
 }

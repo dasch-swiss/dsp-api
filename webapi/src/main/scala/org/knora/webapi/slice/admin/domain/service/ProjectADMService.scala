@@ -14,7 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeyword
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -26,7 +26,8 @@ trait ProjectADMService {
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]
-  def setProjectRestrictedViewSize(project: ProjectADM, size: RestrictedViewSize): Task[Unit]
+  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit]
+  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit]
 }
 
 object ProjectADMService {
@@ -118,8 +119,11 @@ final case class ProjectADMServiceLive(
       .map(_ :+ projectGraph)
   }
 
-  override def setProjectRestrictedViewSize(project: ProjectADM, size: RestrictedViewSize): Task[Unit] =
-    projectRepo.setProjectRestrictedViewSize(toKnoraProject(project), size)
+  override def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
+    projectRepo.setProjectRestrictedView(project, settings)
+
+  override def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit] =
+    setProjectRestrictedView(toKnoraProject(project), settings)
 }
 
 object ProjectADMServiceLive {

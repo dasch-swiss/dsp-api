@@ -5,7 +5,13 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.ContentTypes
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko.util.Timeout
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -26,14 +32,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.http.scaladsl.model.ContentTypes
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.HttpResponse
-import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
-import pekko.util.Timeout
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
@@ -133,7 +131,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -158,7 +156,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
       }
 
       "return the project's restricted view settings using its shortcode" in {
@@ -172,7 +170,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(Some("path_to_image"))
+        settings.watermark should be(true)
       }
     }
 
@@ -787,10 +785,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           ) ~> addCredentials(
             BasicHttpCredentials(rootEmail, testPass)
           )
-        val response: HttpResponse = singleAwaitingRequest(request)
-        val result: String         = responseToString(response)
+        val response = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        assert(payload === result)
+        assert(responseToString(response) === """{"size":"pct:1","watermark":false}""")
       }
 
       "return the `BadRequest` if the size value is invalid" in {
@@ -827,7 +824,11 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
     "used to set RestrictedViewSize by project Shortcode" should {
       "return requested value to be set with 200 Response Status" in {
         val shortcode = SharedTestDataADM.imagesProject.shortcode
-        val payload   = """{"size":"pct:1"}"""
+        val payload = """
+                        |{
+                        |   "size":"!512,512",
+                        |   "watermark":true
+                        |}""".stripMargin
         val request =
           Post(
             baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
@@ -836,9 +837,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             BasicHttpCredentials(rootEmail, testPass)
           )
         val response: HttpResponse = singleAwaitingRequest(request)
-        val result: String         = responseToString(response)
         assert(response.status === StatusCodes.OK)
-        assert(payload === result)
+        assert(responseToString(response) === """{"size":"!512,512","watermark":true}""")
       }
 
       "return the `BadRequest` if the size value is invalid" in {
