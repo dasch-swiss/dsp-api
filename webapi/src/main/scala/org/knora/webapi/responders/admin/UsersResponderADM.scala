@@ -310,21 +310,6 @@ final case class UsersResponderADMLive(
                 else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
-  /**
-   * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
-   *
-   * @param identifier           the IRI of the user.
-   * @param userInformationType  the type of the requested profile (restricted
-   *                             of full).
-   * @param requestingUser       the user initiating the request.
-   * @param skipCache            the flag denotes to skip the cache and instead
-   *                             get data from the triplestore
-   * @return a [[User]] describing the user.
-   */
   override def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
