@@ -13,7 +13,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseA
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class UsersEndpointsHandler(
   usersEndpoints: UsersEndpoints,
@@ -22,28 +22,25 @@ case class UsersEndpointsHandler(
 ) {
 
   private val getUsersHandler =
-    SecuredEndpointAndZioHandler[
-      Unit,
-      UsersGetResponseADM
-    ](
+    SecuredEndpointHandler[Unit, UsersGetResponseADM](
       usersEndpoints.getUsers,
       requestingUser => _ => restService.listAllUsers(requestingUser)
     )
 
   private val getUserByIriHandler =
-    SecuredEndpointAndZioHandler[UserIri, UserResponseADM](
+    SecuredEndpointHandler[UserIri, UserResponseADM](
       usersEndpoints.getUserByIri,
       requestingUser => { case (userIri: UserIri) => restService.getUserByIri(requestingUser, userIri) }
     )
 
   private val deleteUserByIriHandler =
-    SecuredEndpointAndZioHandler[UserIri, UserOperationResponseADM](
+    SecuredEndpointHandler[UserIri, UserOperationResponseADM](
       usersEndpoints.deleteUser,
       requestingUser => { case (userIri: UserIri) => restService.deleteUser(requestingUser, userIri) }
     )
 
   val allHanders =
-    List(getUsersHandler, getUserByIriHandler, deleteUserByIriHandler).map(mapper.mapEndpointAndHandler(_))
+    List(getUsersHandler, getUserByIriHandler, deleteUserByIriHandler).map(mapper.mapSecuredEndpointHandler(_))
 }
 
 object UsersEndpointsHandler {
