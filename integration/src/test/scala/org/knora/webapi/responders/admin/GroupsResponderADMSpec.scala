@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
@@ -28,9 +28,6 @@ import org.knora.webapi.util.MutableTestIri
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec {
-  private val imagesProject       = SharedTestDataADM.imagesProject
-  private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
@@ -78,11 +75,11 @@ class GroupsResponderADMSpec extends CoreSpec {
                 )
               )
               .fold(e => throw e.head, v => v),
-            project = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
+            project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -109,11 +106,11 @@ class GroupsResponderADMSpec extends CoreSpec {
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
-            project = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
+            project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -135,7 +132,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .fold(e => throw e.head, v => v)
             )
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -162,7 +159,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .fold(e => throw e.head, v => v)
             )
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -182,7 +179,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .fold(e => throw e.head, v => v)
             )
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -198,29 +195,29 @@ class GroupsResponderADMSpec extends CoreSpec {
 
     "used to query members" should {
       "return all members of a group identified by IRI" in {
-        val iri = (GroupIri.unsafeFrom(SharedTestDataADM.imagesReviewerGroup.id))
+        val iri = (GroupIri.unsafeFrom(imagesReviewerGroup.id))
         val received =
-          UnsafeZioRun.runOrThrow(GroupsResponderADM.groupMembersGetRequest(iri, SharedTestDataADM.rootUser))
+          UnsafeZioRun.runOrThrow(GroupsResponderADM.groupMembersGetRequest(iri, rootUser))
 
         received.members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Restricted),
-          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
+          multiuserUser.ofType(UserInformationTypeADM.Restricted),
+          imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
         ).map(_.id)
       }
 
       "remove all members when group is deactivated" in {
         appActor ! GroupMembersGetRequestADM(
-          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          requestingUser = SharedTestDataADM.rootUser
+          groupIri = imagesReviewerGroup.id,
+          requestingUser = rootUser
         )
 
         val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
         membersBeforeStatusChange.members.size shouldBe 2
 
         appActor ! GroupChangeStatusRequestADM(
-          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+          groupIri = imagesReviewerGroup.id,
           changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
@@ -228,8 +225,8 @@ class GroupsResponderADMSpec extends CoreSpec {
         statusChangeResponse.group.status shouldBe false
 
         appActor ! GroupMembersGetRequestADM(
-          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          requestingUser = SharedTestDataADM.rootUser
+          groupIri = imagesReviewerGroup.id,
+          requestingUser = rootUser
         )
 
         val noMembers: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
@@ -239,7 +236,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return 'NotFound' when the group IRI is unknown" in {
         appActor ! GroupMembersGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
-          requestingUser = SharedTestDataADM.rootUser
+          requestingUser = rootUser
         )
 
         expectMsgPF(timeout) { case msg: Failure =>
