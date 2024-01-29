@@ -42,7 +42,8 @@ case class UsersEndpointsHandler(
       requestingUser => { case (userIri: UserIri) => restService.deleteUser(requestingUser, userIri) }
     )
 
-  val allHanders = List(getUsersHandler, deleteUserByIriHandler).map(mapper.mapEndpointAndHandler(_))
+  val allHanders =
+    List(getUsersHandler, getUserByIriHandler, deleteUserByIriHandler).map(mapper.mapEndpointAndHandler(_))
 }
 
 object UsersEndpointsHandler {
