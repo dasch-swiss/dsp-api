@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -27,6 +28,12 @@ case class UsersEndpointsHandler(
     ](
       usersEndpoints.getUsers,
       requestingUser => _ => restService.listAllUsers(requestingUser)
+    )
+
+  private val getUserByIriHandler =
+    SecuredEndpointAndZioHandler[UserIri, UserResponseADM](
+      usersEndpoints.getUserByIri,
+      requestingUser => { case (userIri: UserIri) => restService.getUserByIri(requestingUser, userIri) }
     )
 
   private val deleteUserByIriHandler =

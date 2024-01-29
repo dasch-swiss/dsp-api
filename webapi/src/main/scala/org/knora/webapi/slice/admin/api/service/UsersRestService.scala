@@ -8,7 +8,10 @@ package org.knora.webapi.slice.admin.api.service
 import zio.*
 
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.slice.admin.domain.model.User
@@ -32,6 +35,14 @@ final case class UsersRestService(
            .when(deleteIri.isBuiltInUser)
     uuid     <- Random.nextUUID
     internal <- responder.changeUserStatusADM(deleteIri.value, UserStatus.Inactive, requestingUser, uuid)
+    external <- format.toExternal(internal)
+  } yield external
+
+  def getUserByIri(requestingUser: User, userIri: UserIri): Task[UserResponseADM] = for {
+    internal <- responder
+                  .findUserByIri(userIri, UserInformationTypeADM.Restricted, requestingUser)
+                  .someOrFail(NotFoundException(s"User '${userIri.value}' not found"))
+                  .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
 }

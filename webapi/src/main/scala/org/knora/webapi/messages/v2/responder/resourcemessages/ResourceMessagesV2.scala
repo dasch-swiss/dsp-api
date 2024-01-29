@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
@@ -683,7 +684,11 @@ object CreateResourceRequestV2 {
     apiRequestID: UUID,
     requestingUser: User,
     ingestState: AssetIngestState = AssetInTemp
-  ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
+  ): ZIO[
+    IriConverter & MessageRelay & SipiService & StringFormatter & UsersResponderADM,
+    Throwable,
+    CreateResourceRequestV2
+  ] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
