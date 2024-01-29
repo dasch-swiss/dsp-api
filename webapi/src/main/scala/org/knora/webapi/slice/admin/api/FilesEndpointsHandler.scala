@@ -12,7 +12,7 @@ import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndP
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
 final case class FilesEndpointsHandler(
@@ -22,7 +22,7 @@ final case class FilesEndpointsHandler(
 ) {
 
   private val getAdminFilesShortcodeFileIri =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (ShortcodeIdentifier, SparqlEncodedString),
       PermissionCodeAndProjectRestrictedViewSettings
     ](
@@ -32,7 +32,7 @@ final case class FilesEndpointsHandler(
       }
     )
 
-  val allHandlers = List(getAdminFilesShortcodeFileIri).map(mapper.mapEndpointAndHandler(_))
+  val allHandlers = List(getAdminFilesShortcodeFileIri).map(mapper.mapSecuredEndpointHandler(_))
 }
 
 object FilesEndpointsHandler {

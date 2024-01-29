@@ -75,7 +75,7 @@ object LayersLive {
       AuthorizationRestService & CacheService & CacheServiceRequestMessageHandler & CardinalityHandler &
       CardinalityService & ConstructResponseUtilV2 & ConstructTransformer & GravsearchTypeInspectionRunner &
       GroupsResponderADM & HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService &
-      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponderADM &
+      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
       OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
       PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
@@ -122,7 +122,9 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      ListsResponderADMLive.layer,
+      ListsEndpoints.layer,
+      ListsEndpointsHandlers.layer,
+      ListsResponder.layer,
       ListsResponderV2Live.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
