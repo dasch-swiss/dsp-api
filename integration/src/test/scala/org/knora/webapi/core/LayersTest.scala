@@ -106,7 +106,7 @@ object LayersTest {
       with IriConverter
       with IriService
       with KnoraProjectRepoLive
-      with ListsResponderADM
+      with ListsResponder
       with ListsResponderV2
       with MessageRelay
       with OntologyCache
@@ -174,7 +174,9 @@ object LayersTest {
       IriService.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      ListsResponderADMLive.layer,
+      ListsEndpoints.layer,
+      ListsEndpointsHandlers.layer,
+      ListsResponder.layer,
       ListsResponderV2Live.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,

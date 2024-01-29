@@ -75,6 +75,28 @@ trait UsersResponderADM {
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM]
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param identifier          the IRI of the user.
+   * @param userInformationType the type of the requested profile (restricted
+   *                            of full).
+   * @param requestingUser      the user initiating the request.
+   * @param skipCache           the flag denotes to skip the cache and instead
+   *                            get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  def findUserByIri(
+    identifier: UserIri,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): Task[Option[User]]
 }
 
 final case class UsersResponderADMLive(
@@ -101,13 +123,11 @@ final case class UsersResponderADMLive(
     case UsersGetRequestADM(_, requestingUser) =>
       getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserByIriADM(identifier, userInformationTypeADM, requestingUser)
+      findUserByIri(identifier, userInformationTypeADM, requestingUser)
     case UserGetByEmailADM(email, userInformationTypeADM, requestingUser) =>
       getSingleUserByEmailADM(email, userInformationTypeADM, requestingUser)
     case UserGetByUsernameADM(username, userInformationTypeADM, requestingUser) =>
       getSingleUserByUsernameADM(username, userInformationTypeADM, requestingUser)
-    case UserGetByIriRequestADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserByIriADMRequest(identifier, userInformationTypeADM, requestingUser)
     case UserGetByEmailRequestADM(email, userInformationTypeADM, requestingUser) =>
       getSingleUserByEmailADMRequest(email, userInformationTypeADM, requestingUser)
     case UserGetByUsernameRequestADM(username, userInformationTypeADM, requestingUser) =>
@@ -290,22 +310,7 @@ final case class UsersResponderADMLive(
                 else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
-  /**
-   * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
-   *
-   * @param identifier           the IRI of the user.
-   * @param userInformationType  the type of the requested profile (restricted
-   *                             of full).
-   * @param requestingUser       the user initiating the request.
-   * @param skipCache            the flag denotes to skip the cache and instead
-   *                             get data from the triplestore
-   * @return a [[User]] describing the user.
-   */
-  private def getSingleUserByIriADM(
+  override def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -403,29 +408,6 @@ final case class UsersResponderADMLive(
   /**
    * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
    *
-   * @param identifier          the IRI of the user.
-   * @param userInformationType the type of the requested profile (restricted of full).
-   * @param requestingUser      the user initiating the request.
-   * @return a [[UserResponseADM]]
-   */
-  private def getSingleUserByIriADMRequest(
-    identifier: UserIri,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): Task[UserResponseADM] =
-    for {
-      maybeUserADM <- getSingleUserByIriADM(identifier, userInformationType, requestingUser)
-      result <- ZIO
-                  .fromOption(maybeUserADM)
-                  .mapBoth(
-                    _ => NotFoundException(s"User '${identifier.value}' not found"),
-                    user => UserResponseADM(user = user)
-                  )
-    } yield result
-
-  /**
-   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
-   *
    * @param email          the IRI of the user.
    * @param userInformationType the type of the requested profile (restricted of full).
    * @param requestingUser      the user initiating the request.
@@ -510,7 +492,7 @@ final case class UsersResponderADMLive(
              )
 
         // get current user information
-        currentUserInformation <- getSingleUserByIriADM(
+        currentUserInformation <- findUserByIri(
                                     identifier = UserIri.unsafeFrom(userIri),
                                     userInformationType = UserInformationTypeADM.Full,
                                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -720,7 +702,7 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[ProjectADM]]
    */
   private def userProjectMembershipsGetADM(userIri: IRI) =
-    getSingleUserByIriADM(
+    findUserByIri(
       UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
@@ -1113,7 +1095,7 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[GroupADM]].
    */
   private def userGroupMembershipsGetADM(userIri: IRI) =
-    getSingleUserByIriADM(
+    findUserByIri(
       UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
       KnoraSystemInstances.Users.SystemUser
@@ -1145,7 +1127,7 @@ final case class UsersResponderADMLive(
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
-        maybeUser <- getSingleUserByIriADM(
+        maybeUser <- findUserByIri(
                        UserIri.unsafeFrom(userIri),
                        UserInformationTypeADM.Full,
                        KnoraSystemInstances.Users.SystemUser,
@@ -1304,7 +1286,7 @@ final case class UsersResponderADMLive(
     for {
 
       // get current user
-      maybeCurrentUser <- getSingleUserByIriADM(
+      maybeCurrentUser <- findUserByIri(
                             identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
@@ -1395,7 +1377,7 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
-      maybeUpdatedUserADM <- getSingleUserByIriADM(
+      maybeUpdatedUserADM <- findUserByIri(
                                identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = KnoraSystemInstances.Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
@@ -1502,7 +1484,7 @@ final case class UsersResponderADMLive(
     }
 
     for {
-      maybeCurrentUser <- getSingleUserByIriADM(
+      maybeCurrentUser <- findUserByIri(
                             identifier = UserIri.unsafeFrom(userIri),
                             requestingUser = requestingUser,
                             userInformationType = UserInformationTypeADM.Full,
@@ -1521,7 +1503,7 @@ final case class UsersResponderADMLive(
       _ <- triplestore.query(Update(updateUserSparql))
 
       /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- getSingleUserByIriADM(
+      maybeUpdatedUserADM <- findUserByIri(
                                identifier = UserIri.unsafeFrom(userIri),
                                requestingUser = requestingUser,
                                userInformationType = UserInformationTypeADM.Full,
@@ -1634,7 +1616,7 @@ final case class UsersResponderADMLive(
         _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
-        maybeNewUserADM <- getSingleUserByIriADM(
+        maybeNewUserADM <- findUserByIri(
                              identifier = UserIri.unsafeFrom(userIri),
                              requestingUser = KnoraSystemInstances.Users.SystemUser,
                              userInformationType = UserInformationTypeADM.Full,

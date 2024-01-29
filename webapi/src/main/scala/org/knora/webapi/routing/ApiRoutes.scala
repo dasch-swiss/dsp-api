@@ -21,6 +21,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
@@ -47,7 +48,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
+    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UsersResponderADM & ValuesResponderV2,
     ApiRoutes
   ] =
     ZLayer {
@@ -61,7 +62,7 @@ object ApiRoutes {
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
-            AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & SearchResponderV2 & SearchApiRoutes & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
+            AppConfig & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UsersResponderADM & ValuesResponderV2
           ]
       } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, appConfig, runtime)
     }
@@ -81,8 +82,7 @@ private final case class ApiRoutesImpl(
   searchApiRoutes: SearchApiRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
-    AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
-      RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
+    AppConfig & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UsersResponderADM & ValuesResponderV2
   ]
 ) extends ApiRoutes
     with AroundDirectives {

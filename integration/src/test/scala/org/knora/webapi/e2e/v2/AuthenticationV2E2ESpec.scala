@@ -373,21 +373,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       token.set(lr.token)
     }
 
-    "allow access using URL parameters with token from v2" in {
-      /* Correct token */
-      val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
-      val response = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.OK)
-    }
-
-    "fail with authentication using URL parameters with wrong token" in {
-      /* Wrong token */
-      val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=wrong")
-
-      val response = singleAwaitingRequest(request)
-      assert(response.status === StatusCodes.Unauthorized)
-    }
-
     "allow access using HTTP Bearer Auth header with token from v2" in {
       /* Correct token */
       val request =

@@ -10,8 +10,8 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.admin.api.service.StoreRestService
-import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.PublicEndpointHandler
 
 final case class StoreEndpointsHandler(
   endpoints: StoreEndpoints,
@@ -21,7 +21,7 @@ final case class StoreEndpointsHandler(
 ) {
 
   private val postStoreResetTriplestoreContentHandler =
-    EndpointAndZioHandler[Unit, (Option[List[RdfDataObject]], Boolean), MessageResponse](
+    PublicEndpointHandler[(Option[List[RdfDataObject]], Boolean), MessageResponse](
       endpoints.postStoreResetTriplestoreContent,
       { case (rdfObjs: Option[List[RdfDataObject]], prependDefaults: Boolean) =>
         storesResponder.resetTriplestoreContent(rdfObjs.getOrElse(List.empty), prependDefaults)
@@ -31,7 +31,7 @@ final case class StoreEndpointsHandler(
   val allHandlers = {
     val handlerIfConfigured =
       if (appConfig.allowReloadOverHttp) Seq(postStoreResetTriplestoreContentHandler) else Seq.empty
-    handlerIfConfigured.map(mapper.mapEndpointAndHandler(_))
+    handlerIfConfigured.map(mapper.mapPublicEndpointHandler(_))
   }
 }
 

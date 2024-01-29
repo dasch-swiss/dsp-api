@@ -10,6 +10,7 @@ import zio.ZLayer
 
 final case class AdminApiEndpoints(
   groupsEndpoints: GroupsEndpoints,
+  listsEndpoints: ListsEndpoints,
   maintenanceEndpoints: MaintenanceEndpoints,
   permissionsEndpoints: PermissionsEndpoints,
   projectsEndpoints: ProjectsEndpoints,
@@ -20,6 +21,7 @@ final case class AdminApiEndpoints(
 
   val endpoints: Seq[AnyEndpoint] =
     groupsEndpoints.endpoints ++
+      listsEndpoints.endpoints ++
       maintenanceEndpoints.endpoints ++
       permissionsEndpoints.endpoints ++
       projectsEndpoints.endpoints ++
