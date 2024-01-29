@@ -8,9 +8,6 @@ package org.knora.webapi.routing.admin.lists
 import org.apache.pekko
 import zio.*
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
@@ -37,31 +34,10 @@ final case class GetListItemsRouteADM(
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute: Route =
-    getLists ~
-      getListNode ~
+    getListNode ~
       getListOrNodeInfo("infos") ~
       getListOrNodeInfo("nodes") ~
       getListInfo
-
-  /**
-   * Returns all lists optionally filtered by project.
-   */
-  private def getLists: Route = path(listsBasePath) {
-    get {
-      parameters("projectIri".?) { (maybeProjectIri: Option[IRI]) => requestContext =>
-        val task = for {
-          iri <- ZIO.foreach(maybeProjectIri)(iri =>
-                   Iri
-                     .validateAndEscapeIri(iri)
-                     .toZIO
-                     .orElseFail(BadRequestException(s"Invalid param project IRI: $iri"))
-                 )
-          user <- Authenticator.getUserADM(requestContext)
-        } yield ListsGetRequestADM(iri, user)
-        runJsonRouteZ(task, requestContext)
-      }
-    }
-  }
 
   /**
    * Returns a list node, root or child, with children (if exist).
