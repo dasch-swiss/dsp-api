@@ -39,6 +39,7 @@ Each developer machine should have the following prerequisites installed:
 * [Homebrew](https://brew.sh) (macOS)
 * JDK [Temurin 21](https://adoptium.net/en-GB/temurin/)
 * [sbt](https://www.scala-sbt.org/)
+* [just](https://just.systems/man/en/)
 
 #### JDK Temurin 21
 
@@ -60,19 +61,13 @@ See [docs/Readme.md](docs/Readme.md).
 
 ### Run DSP-API
 
-Create a test repository and load some test data into the triplestore:
+Create a test repository, load some test data into the triplestore, and start DSP-API:
 
 ```shell
-make init-db-test
+just stack-init-test
 ```
 
-Start DSP-API after loading the data:
-
-```shell
-make stack-up
-```
-
-Open [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
+Open [http://localhost:4200/](http://localhost:4200) in a web browser.
 
 On first installation, errors similar to the following can come up:
 
@@ -89,7 +84,7 @@ docker-compose disable-v2
 Shut down DSP-API:
 
 ```shell
-make stack-down
+just stack-stop
 ```
 
 ### Run the automated tests

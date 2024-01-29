@@ -203,7 +203,8 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig & JwtConfig & DspIngestConfig & InstrumentationServerConfig & Triplestore
+  type AppConfigurations =
+    AppConfig & DspIngestConfig & InstrumentationServerConfig & JwtConfig & KnoraApi & Triplestore
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
 
@@ -217,6 +218,7 @@ object AppConfig {
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
     appConfigLayer ++
+      appConfigLayer.project(_.knoraApi) ++
       appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++

@@ -14,8 +14,6 @@ import spray.json.RootJsonFormat
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.DecodeResult
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -24,7 +22,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
@@ -33,8 +30,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.User
 
@@ -220,12 +217,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
     extends AdminKnoraResponseADM
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
-}
-
-case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
-object ProjectRestrictedViewSizeResponseADM {
-  implicit val codec: JsonCodec[ProjectRestrictedViewSizeResponseADM] =
-    DeriveJsonCodec.gen[ProjectRestrictedViewSizeResponseADM]
 }
 
 /**
@@ -427,8 +418,7 @@ object ProjectIdentifierADM {
  * @param size      the restricted view size.
  * @param watermark the watermark file.
  */
-case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
-    extends ProjectsADMJsonProtocol
+case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boolean) extends ProjectsADMJsonProtocol
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

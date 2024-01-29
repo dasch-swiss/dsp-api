@@ -13,7 +13,7 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.4" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.8" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.8.10" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.12"
 
@@ -51,7 +51,6 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC12"
 
   // pekko
   val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
@@ -151,7 +150,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % Test)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock, wiremock).map(_ % Test)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = refined ++ Seq(
     pekkoActor,
