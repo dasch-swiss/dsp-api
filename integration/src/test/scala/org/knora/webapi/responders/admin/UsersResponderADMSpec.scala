@@ -27,6 +27,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.util.ZioScalaTestUtil.*
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
@@ -92,15 +93,6 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
-      }
-
-      "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetByIriRequestADM(
-          identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
       }
 
       "return 'None' when the user is unknown" in {

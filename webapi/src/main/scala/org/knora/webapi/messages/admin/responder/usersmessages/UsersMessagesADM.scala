@@ -186,19 +186,6 @@ case class UserGetByEmailADM(
 ) extends UsersResponderRequestADM
 
 /**
- * A message that requests a user's profile by IRI. A successful response will be a [[UserResponseADM]].
- *
- * @param identifier             the IRI of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByIriRequestADM(
-  identifier: UserIri,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * A message that requests a user's profile by email. A successful response will be a [[UserResponseADM]].
  *
  * @param email             the email of the user to be queried.
@@ -438,7 +425,7 @@ case class UsersGetResponseADM(users: Seq[User]) extends AdminKnoraResponseADM {
  *
  * @param user the user's information of the requested type.
  */
-case class UserResponseADM(user: User) extends KnoraResponseADM {
+case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
 }
 
