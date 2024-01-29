@@ -35,7 +35,6 @@ final case class UsersRouteADM()(
 
   def makeRoute: Route =
     addUser() ~
-      getUserByIri ~
       getUserByEmail ~
       getUserByUsername ~
       changeUserBasicInformation() ~
@@ -64,20 +63,6 @@ final case class UsersRouteADM()(
       }
     }
   }
-
-  /**
-   * return a single user identified by iri
-   */
-  private def getUserByIri: Route =
-    path(usersBasePath / "iri" / Segment)(userIri =>
-      ctx => {
-        val task = for {
-          requestingUser <- Authenticator.getUserADM(ctx)
-          iri            <- ZIO.fromEither(UserIri.from(userIri)).mapError(BadRequestException(_))
-        } yield UserGetByIriRequestADM(iri, UserInformationTypeADM.Restricted, requestingUser)
-        runJsonRouteZ(task, ctx)
-      }
-    )
 
   /**
    * return a single user identified by email

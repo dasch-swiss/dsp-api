@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -20,22 +21,23 @@ case class UsersEndpointsHandler(
   mapper: HandlerMapper
 ) {
 
-  private val getUsersHandler =
-    SecuredEndpointHandler[
-      Unit,
-      UsersGetResponseADM
-    ](
-      usersEndpoints.getUsers,
-      requestingUser => _ => restService.listAllUsers(requestingUser)
-    )
+  private val getUsersHandler = SecuredEndpointHandler[Unit, UsersGetResponseADM](
+    usersEndpoints.getUsers,
+    requestingUser => _ => restService.listAllUsers(requestingUser)
+  )
 
-  private val deleteUserByIriHandler =
-    SecuredEndpointHandler[UserIri, UserOperationResponseADM](
-      usersEndpoints.deleteUser,
-      requestingUser => { case (userIri: UserIri) => restService.deleteUser(requestingUser, userIri) }
-    )
+  private val getUserByIriHandler = SecuredEndpointHandler[UserIri, UserResponseADM](
+    usersEndpoints.getUserByIri,
+    requestingUser => userIri => restService.getUserByIri(requestingUser, userIri)
+  )
 
-  val allHanders = List(getUsersHandler, deleteUserByIriHandler).map(mapper.mapSecuredEndpointHandler(_))
+  private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
+    usersEndpoints.deleteUser,
+    requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
+  )
+
+  val allHanders =
+    List(getUsersHandler, getUserByIriHandler, deleteUserByIriHandler).map(mapper.mapSecuredEndpointHandler(_))
 }
 
 object UsersEndpointsHandler {
