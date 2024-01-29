@@ -21,23 +21,20 @@ case class UsersEndpointsHandler(
   mapper: HandlerMapper
 ) {
 
-  private val getUsersHandler =
-    SecuredEndpointHandler[Unit, UsersGetResponseADM](
-      usersEndpoints.getUsers,
-      requestingUser => _ => restService.listAllUsers(requestingUser)
-    )
+  private val getUsersHandler = SecuredEndpointHandler[Unit, UsersGetResponseADM](
+    usersEndpoints.getUsers,
+    requestingUser => _ => restService.listAllUsers(requestingUser)
+  )
 
-  private val getUserByIriHandler =
-    SecuredEndpointHandler[UserIri, UserResponseADM](
-      usersEndpoints.getUserByIri,
-      requestingUser => { case (userIri: UserIri) => restService.getUserByIri(requestingUser, userIri) }
-    )
+  private val getUserByIriHandler = SecuredEndpointHandler[UserIri, UserResponseADM](
+    usersEndpoints.getUserByIri,
+    requestingUser => userIri => restService.getUserByIri(requestingUser, userIri)
+  )
 
-  private val deleteUserByIriHandler =
-    SecuredEndpointHandler[UserIri, UserOperationResponseADM](
-      usersEndpoints.deleteUser,
-      requestingUser => { case (userIri: UserIri) => restService.deleteUser(requestingUser, userIri) }
-    )
+  private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
+    usersEndpoints.deleteUser,
+    requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
+  )
 
   val allHanders =
     List(getUsersHandler, getUserByIriHandler, deleteUserByIriHandler).map(mapper.mapSecuredEndpointHandler(_))
