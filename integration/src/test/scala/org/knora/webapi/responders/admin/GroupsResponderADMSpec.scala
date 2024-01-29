@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -19,6 +18,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -34,11 +34,9 @@ class GroupsResponderADMSpec extends CoreSpec {
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        appActor ! GroupsGetRequestADM()
-
-        val response = expectMsgType[GroupsGetResponseADM](timeout)
-        response.groups.nonEmpty should be(true)
-        response.groups.size should be(2)
+        val groups = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupsGetADM)
+        groups.nonEmpty should be(true)
+        groups.size should be(2)
       }
     }
 
@@ -200,12 +198,9 @@ class GroupsResponderADMSpec extends CoreSpec {
 
     "used to query members" should {
       "return all members of a group identified by IRI" in {
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          requestingUser = SharedTestDataADM.rootUser
-        )
-
-        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+        val iri = (GroupIri.unsafeFrom(SharedTestDataADM.imagesReviewerGroup.id))
+        val received =
+          UnsafeZioRun.runOrThrow(GroupsResponderADM.groupMembersGetRequest(iri, SharedTestDataADM.rootUser))
 
         received.members.map(_.id) should contain allElementsOf Seq(
           SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Restricted),
