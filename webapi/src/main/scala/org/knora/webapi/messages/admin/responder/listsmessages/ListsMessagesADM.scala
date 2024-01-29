@@ -463,16 +463,27 @@ case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeAD
 
 /**
  * Represents basic information about a list node, the information which is found in the list's root or child node.
- *
- * @param id       the IRI of the list.
- * @param name     the name of the list node.
- * @param labels   the labels of the node in all available languages.
- * @param comments the comments attached to the node in all available languages.
  */
 sealed trait ListNodeInfoADM {
+
+  /**
+   * @return The IRI of the list node.
+   */
   def id: IRI
+
+  /**
+   * @return The name of the list node.
+   */
   def name: Option[String]
+
+  /**
+   * @return The labels of the node in all available languages.
+   */
   def labels: StringLiteralSequenceV2
+
+  /**
+   * @return  The comments attached to the node in all available languages.
+   */
   def comments: StringLiteralSequenceV2
 
   /**
