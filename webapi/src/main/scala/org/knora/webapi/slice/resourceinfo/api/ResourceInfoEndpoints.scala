@@ -27,7 +27,7 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ListResponseDto])
 
   val endpoints: Seq[AnyEndpoint] =
-    Seq(getResourcesInfo)
+    Seq(getResourcesInfo).map(_.tag("V2 Resources"))
 }
 
 object ResourceInfoEndpoints {

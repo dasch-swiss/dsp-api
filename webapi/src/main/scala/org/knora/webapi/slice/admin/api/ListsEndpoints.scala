@@ -5,16 +5,21 @@
 
 package org.knora.webapi.slice.admin.api
 
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListADMJsonProtocol, ListItemGetResponseADM, ListsGetResponseADM, NodeInfoGetResponseADM}
-import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.listsmessages.ListADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.listsmessages.ListItemGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
+import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
+
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
+
   private val base = "admin" / "lists"
 
   val getListsQueryByProjectIriOption = baseEndpoints.publicEndpoint.get
@@ -50,6 +55,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 
   val endpoints =
     List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
+      .map(_.tag("Admin Lists"))
 }
 
 object ListsEndpoints {

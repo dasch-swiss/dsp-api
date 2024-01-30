@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.query
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -36,9 +35,8 @@ final case class StoreEndpoints(baseEndpoints: BaseEndpoints) {
       .description(
         "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`."
       )
-      .tags(List("admin"))
 
-  val endpoints = Seq(postStoreResetTriplestoreContent)
+  val endpoints = Seq(postStoreResetTriplestoreContent).map(_.tag("Admin Store"))
 }
 
 object StoreEndpoints {
