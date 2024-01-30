@@ -347,7 +347,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("second")),
-            position = Some(Position.make(0).fold(e => throw e.head, v => v)),
+            position = Some(Position.unsafeFrom(0)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
@@ -449,7 +449,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
+        val givenPosition = Some(Position.unsafeFrom(20))
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),

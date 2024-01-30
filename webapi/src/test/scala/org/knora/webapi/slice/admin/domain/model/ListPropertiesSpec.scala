@@ -18,14 +18,13 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.*
  * This spec is used to test the [[List]] value objects creation.
  */
 object ListPropertiesSpec extends ZIOSpecDefault {
-  private val validName       = "Valid list name"
-  private val invalidName     = "Invalid list name\r"
-  private val validPosition   = 0
-  private val invalidPosition = -2
-  private val validLabel      = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
-  private val invalidLabel    = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
-  private val validComment    = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
-  private val invalidComment  = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
+  private val validName      = "Valid list name"
+  private val invalidName    = "Invalid list name\r"
+  private val validPosition  = 0
+  private val validLabel     = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
+  private val invalidLabel   = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
+  private val validComment   = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
+  private val invalidComment = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
 
   def spec: Spec[Any, Any] = listNameTest + positionTest + labelsTest + commentsTest
 
@@ -44,20 +43,13 @@ object ListPropertiesSpec extends ZIOSpecDefault {
   private val positionTest = suite("ListSpec - Position")(
     test("pass an invalid value and return an error") {
       assertTrue(
-        Position.make(invalidPosition) == Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition)),
-        Position.make(Some(invalidPosition)) == Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
+        Position.from(-2) == Left(
+          "Invalid position value is given. Position should be either a positive value, 0 or -1."
+        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(
-        Position.make(validPosition).toOption.get.value == validPosition,
-        Position.make(Option(validPosition)).getOrElse(null).get.value == validPosition
-      )
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Position.make(None) == Validation.succeed(None)
-      )
+      assertTrue(Position.from(validPosition).toOption.get.value == validPosition)
     }
   )
 

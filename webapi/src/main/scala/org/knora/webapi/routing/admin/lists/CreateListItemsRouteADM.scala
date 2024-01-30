@@ -15,7 +15,6 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -32,6 +31,8 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to create list items.
@@ -56,23 +57,18 @@ final case class CreateListItemsRouteADM(
   private def createListRootNode(): Route = path(listsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri] =
-          Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-        val maybeName: Validation[Throwable, Option[ListName]] =
-          apiRequest.name match {
-            case Some(name) =>
-              Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
-            case None => Validation.succeed(None)
-          }
-        val labels: Validation[Throwable, Labels]     = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Comments] = Comments.make(apiRequest.comments)
-        val validatedPayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
-          Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListRootNodeCreatePayloadADM)
+        val maybeId        = ListIri.make(apiRequest.id)
+        val projectIri     = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
+        val nameValidation = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+        val labels         = Labels.make(apiRequest.labels)
+        val comments       = Comments.make(apiRequest.comments)
 
         val requestMessage = for {
-          payload <- validatedPayload.toZIO
-          user    <- Authenticator.getUserADM(requestContext)
+          payload <-
+            Validation
+              .validateWith(maybeId, projectIri, nameValidation, labels, comments)(ListRootNodeCreatePayloadADM)
+              .toZIO
+          user <- Authenticator.getUserADM(requestContext)
           _ <-
             ZIO
               .fail(ForbiddenException(ListErrorMessages.ListCreatePermission))
@@ -95,15 +91,11 @@ final case class CreateListItemsRouteADM(
                  .when(iri != apiRequest.parentNodeIri)
           parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
           id            = ListIri.make(apiRequest.id)
-          projectIri    = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-          name = apiRequest.name match {
-                   case Some(name) =>
-                     Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
-                   case None => Validation.succeed(None)
-                 }
-          position = Position.make(apiRequest.position)
-          labels   = Labels.make(apiRequest.labels)
-          comments = Comments.make(apiRequest.comments)
+          projectIri    = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
+          name          = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+          position      = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
+          labels        = Labels.make(apiRequest.labels)
+          comments      = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
           ListChildNodeCreatePayloadADM
         )

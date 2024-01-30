@@ -15,7 +15,6 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.core.MessageRelay
@@ -31,6 +30,8 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to update list items.
@@ -138,16 +139,12 @@ final case class UpdateListItemsRouteADM(
         val validatedPayload = for {
           _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
           listIri     = ListIri.make(apiRequest.listIri)
-          projectIri  = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
+          projectIri  = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
           hasRootNode = ListIri.make(apiRequest.hasRootNode)
-          position    = Position.make(apiRequest.position)
-          name = apiRequest.name match {
-                   case Some(name) =>
-                     Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
-                   case None => Validation.succeed(None)
-                 }
-          labels   = Labels.make(apiRequest.labels)
-          comments = Comments.make(apiRequest.comments)
+          position    = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
+          name        = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+          labels      = Labels.make(apiRequest.labels)
+          comments    = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
           ListNodeChangePayloadADM
         )

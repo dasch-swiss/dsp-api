@@ -10,7 +10,9 @@ import zio.prelude.Validation
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 
 object ListProperties {
@@ -28,17 +30,12 @@ object ListProperties {
   /**
    * List Position value object.
    */
-  final case class Position private (value: Int)
-  object Position { self =>
-    def make(value: Int): Validation[BadRequestException, Position] =
-      if (value < -1) Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
-      else Validation.succeed(Position(value))
+  final case class Position private (value: Int) extends AnyVal with IntValue
 
-    def make(value: Option[Int]): Validation[BadRequestException, Option[Position]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  object Position extends IntValueCompanion[Position] {
+    def from(value: Int): Either[String, Position] =
+      if (value >= -1) { Right(Position(value)) }
+      else { Left("Invalid position value is given. Position should be either a positive value, 0 or -1.") }
   }
 
   /**
@@ -98,5 +95,4 @@ object ListErrorMessages {
   val ListCreatePermission     = "A list can only be created by the project or system administrator."
   val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
   val ListChangePermission     = "A list can only be changed by the project or system administrator."
-  val InvalidPosition          = "Invalid position value is given. Position should be either a positive value, 0 or -1."
 }
