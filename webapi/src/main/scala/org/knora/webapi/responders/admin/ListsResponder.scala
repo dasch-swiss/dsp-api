@@ -325,16 +325,12 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the list node to be queried.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  private def listNodeInfoGetRequestADM(nodeIri: IRI) =
-    for {
-      maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri = nodeIri)
-
-      result = maybeListNodeInfoADM match {
-                 case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
-                 case Some(rootInfo: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(rootInfo)
-                 case _                                     => throw NotFoundException(s"List node '$nodeIri' not found")
-               }
-    } yield result
+  def listNodeInfoGetRequestADM(nodeIri: IRI): Task[NodeInfoGetResponseADM] =
+    listNodeInfoGetADM(nodeIri = nodeIri).flatMap {
+      case Some(childInfo: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childInfo))
+      case Some(rootInfo: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootInfo))
+      case _                                     => ZIO.fail(NotFoundException(s"List node '$nodeIri' not found"))
+    }
 
   /**
    * Retrieves a complete node including children. The node can be the lists root node or child node.

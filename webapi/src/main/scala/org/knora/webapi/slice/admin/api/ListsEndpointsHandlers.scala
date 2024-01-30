@@ -24,14 +24,20 @@ final case class ListsEndpointsHandlers(
     (iri: Option[ProjectIri]) => listsResponder.getLists(iri)
   )
 
-  private val getListByIriHandler = PublicEndpointHandler(
-    listsEndpoints.getListByIri,
+  private val getListsByIriHandler = PublicEndpointHandler(
+    listsEndpoints.getListsByIri,
     (iri: InputIri) => listsResponder.listGetRequestADM(iri.value)
   )
 
+  private val getListsByIriInfoHandler = PublicEndpointHandler(
+    listsEndpoints.getListsByIriInfo,
+    (iri: InputIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+  )
+
   val allHandlers = List(
+    getListsByIriHandler,
     getListsQueryByProjectIriHandler,
-    getListByIriHandler
+    getListsByIriInfoHandler
   ).map(mapper.mapPublicEndpointHandler(_))
 }
 

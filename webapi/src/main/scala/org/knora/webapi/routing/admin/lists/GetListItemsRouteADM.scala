@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import org.knora.webapi.core.MessageRelay
@@ -15,10 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides routes to get list items.
@@ -35,26 +33,13 @@ final case class GetListItemsRouteADM(
 
   def makeRoute: Route =
     getListOrNodeInfo("infos") ~
-      getListOrNodeInfo("nodes") ~
-      getListInfo
+      getListOrNodeInfo("nodes")
 
   /**
    * Returns basic information about list node, root or child, w/o children (if exist).
    */
   private def getListOrNodeInfo(routeSwitch: String): Route =
     path(listsBasePath / routeSwitch / Segment) { iri =>
-      get { ctx =>
-        val task = getIriUser(iri, ctx).map(r => ListNodeInfoGetRequestADM(r.iri, r.user))
-        runJsonRouteZ(task, ctx)
-      }
-    }
-
-  /**
-   * Returns basic information about a node, root or child, w/o children.
-   */
-  private def getListInfo: Route =
-    //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
-    path(listsBasePath / Segment / "info") { iri =>
       get { ctx =>
         val task = getIriUser(iri, ctx).map(r => ListNodeInfoGetRequestADM(r.iri, r.user))
         runJsonRouteZ(task, ctx)
