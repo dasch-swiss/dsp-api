@@ -86,7 +86,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            labels <- Labels.make(apiRequest.labels).toZIO.mapError(e => BadRequestException(e.getMessage))
+            labels <- validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply).toZIO
             payload = NodeLabelsChangePayloadADM(labels)
             uuid   <- getUserUuid(requestContext)
           } yield NodeLabelsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -143,7 +143,7 @@ final case class UpdateListItemsRouteADM(
           hasRootNode = ListIri.make(apiRequest.hasRootNode)
           position    = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
           name        = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
-          labels      = Labels.make(apiRequest.labels)
+          labels      = validateOptionWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
           comments    = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
           ListNodeChangePayloadADM

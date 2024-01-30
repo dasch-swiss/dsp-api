@@ -124,9 +124,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("neuelistename")),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
-              .fold(e => throw e.head, v => v),
+            labels = Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
             comments = Comments
               .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e.head, v => v)
@@ -164,9 +162,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e.head, v => v),
+            labels =
+              Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de")))),
             comments = Comments
               .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v)
@@ -205,14 +202,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("updated name")),
             labels = Some(
-              Labels
-                .make(
-                  Seq(
-                    V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                    V2.StringLiteralV2(value = "Changed List", language = Some("en"))
-                  )
+              Labels.unsafeFrom(
+                Seq(
+                  V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                  V2.StringLiteralV2(value = "Changed List", language = Some("en"))
                 )
-                .fold(e => throw e.head, v => v)
+              )
             ),
             comments = Some(
               Comments
@@ -282,9 +277,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("first")),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
               Comments
                 .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
@@ -336,9 +331,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("second")),
             position = Some(Position.unsafeFrom(0)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
               Comments
                 .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
@@ -390,8 +385,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("third")),
             labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))),
             comments = Some(
               Comments
                 .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
@@ -444,9 +438,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("fourth")),
             position = givenPosition,
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
               Comments
                 .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))

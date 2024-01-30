@@ -20,8 +20,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.*
  * This spec is used to test the [[List]] value objects creation.
  */
 object ListPropertiesSpec extends ZIOSpecDefault {
-  private val validLabel     = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
-  private val invalidLabel   = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
   private val validComment   = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
   private val invalidComment = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
 
@@ -56,27 +54,15 @@ object ListPropertiesSpec extends ZIOSpecDefault {
 
   private val labelsTest = suite("Labels")(
     test("pass an empty object and return an error") {
-      assertTrue(
-        Labels.make(Seq.empty) == Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing)),
-        Labels.make(Some(Seq.empty)) == Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing))
-      )
+      assertTrue(Labels.from(Seq.empty) == Left("At least one label needs to be supplied."))
     },
     test("pass an invalid object and return an error") {
-      assertTrue(
-        Labels.make(invalidLabel) == Validation.fail(BadRequestException(ListErrorMessages.LabelsInvalid)),
-        Labels.make(Some(invalidLabel)) == Validation.fail(BadRequestException(ListErrorMessages.LabelsInvalid))
-      )
+      val invalid = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
+      assertTrue(Labels.from(invalid) == Left("Invalid label."))
     },
     test("pass a valid object and successfully create value object") {
-      assertTrue(
-        Labels.make(validLabel).toOption.get.value == validLabel,
-        Labels.make(Option(validLabel)).getOrElse(null).get.value == validLabel
-      )
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Labels.make(None) == Validation.succeed(None)
-      )
+      val valid = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
+      assertTrue(Labels.from(valid).map(_.value) == Right(valid))
     }
   )
 

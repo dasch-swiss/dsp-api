@@ -12,8 +12,10 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 
 object ListProperties {
 
@@ -41,24 +43,18 @@ object ListProperties {
   /**
    * List Labels value object.
    */
-  final case class Labels private (value: Seq[V2.StringLiteralV2])
-  object Labels { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, Labels] =
-      if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing))
+  final case class Labels private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
+  object Labels extends WithFrom[Seq[V2.StringLiteralV2], Labels] {
+    def from(value: Seq[V2.StringLiteralV2]): Either[String, Labels] =
+      if (value.isEmpty) Left("At least one label needs to be supplied.")
       else {
         val validatedLabels = value.map(l =>
           Validation
             .fromOption(Iri.toSparqlEncodedString(l.value))
-            .mapError(_ => BadRequestException(ListErrorMessages.LabelsInvalid))
-            .map(s => V2.StringLiteralV2(s, l.language))
+            .mapError(_ => "Invalid label.")
+            .map(V2.StringLiteralV2(_, l.language))
         )
-        Validation.validateAll(validatedLabels).map(Labels.apply)
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[Labels]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+        Validation.validateAll(validatedLabels).map(Labels.apply).toEitherWith(_.head)
       }
   }
 
@@ -88,8 +84,6 @@ object ListProperties {
 }
 
 object ListErrorMessages {
-  val LabelsMissing            = "At least one label needs to be supplied."
-  val LabelsInvalid            = "Invalid label."
   val CommentsMissing          = "At least one comment needs to be supplied."
   val CommentsInvalid          = "Invalid comment."
   val ListCreatePermission     = "A list can only be created by the project or system administrator."

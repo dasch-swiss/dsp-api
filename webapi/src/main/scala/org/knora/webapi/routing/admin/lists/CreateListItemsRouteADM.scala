@@ -60,7 +60,7 @@ final case class CreateListItemsRouteADM(
         val maybeId        = ListIri.make(apiRequest.id)
         val projectIri     = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
         val nameValidation = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
-        val labels         = Labels.make(apiRequest.labels)
+        val labels         = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
         val comments       = Comments.make(apiRequest.comments)
 
         val requestMessage = for {
@@ -94,7 +94,7 @@ final case class CreateListItemsRouteADM(
           projectIri    = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
           name          = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
           position      = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
-          labels        = Labels.make(apiRequest.labels)
+          labels        = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
           comments      = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
           ListChildNodeCreatePayloadADM
