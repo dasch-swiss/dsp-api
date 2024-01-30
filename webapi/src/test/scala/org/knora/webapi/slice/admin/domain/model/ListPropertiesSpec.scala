@@ -30,7 +30,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
 
   private val listNameTest = suite("ListSpec - ListName")(
     test("pass an empty value and return an error") {
-      assertTrue(ListName.from("") == Left("List name is invalid."))
+      assertTrue(ListName.from("") == Left("List name cannot be empty."))
     },
     test("pass an invalid value and return an error") {
       assertTrue(ListName.from(invalidName) == Left("List name is invalid."))
