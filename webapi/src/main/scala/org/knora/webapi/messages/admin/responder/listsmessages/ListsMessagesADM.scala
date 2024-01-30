@@ -178,21 +178,6 @@ case class ListRootNodeCreateRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Request updating basic information of an existing node.
- *
- * @param listIri              the IRI of the node to be updated (root or child ).
- * @param changeNodeRequest    the data which needs to be update.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class NodeInfoChangeRequestADM(
-  listIri: IRI,
-  changeNodeRequest: ListNodeChangePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
  * Request the creation of a new list node, root or child.
  *
  * @param createChildNodeRequest the new node information.
@@ -1276,6 +1261,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     "labels",
     "comments"
   )
+
   implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] =
     jsonFormat(NodePathGetResponseADM, "elements")
   implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")

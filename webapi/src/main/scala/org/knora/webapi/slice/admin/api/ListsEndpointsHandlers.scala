@@ -5,17 +5,49 @@
 
 package org.knora.webapi.slice.admin.api
 
+import zio.Random
+import zio.Task
+import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.slice.admin.api.Requests.ListPutRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
+
+final case class ListRestService(
+  auth: AuthorizationRestService,
+  listsResponder: ListsResponder,
+  projectRepo: KnoraProjectRepo
+) {
+  def listPutRequestADM(iri: ListIri, request: ListPutRequest, user: User): Task[NodeInfoGetResponseADM] =
+    for {
+      _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
+      project <- projectRepo
+                   .findById(request.projectIri)
+                   .someOrFail(BadRequestException("Project not found"))
+      _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+      uuid     <- Random.nextUUID
+      response <- listsResponder.nodeInfoChangeRequest(request, uuid)
+    } yield response
+}
+
+object ListRestService {
+  val layer = ZLayer.derive[ListRestService]
+}
 
 final case class ListsEndpointsHandlers(
   listsEndpoints: ListsEndpoints,
   listsResponder: ListsResponder,
+  listRestService: ListRestService,
   mapper: HandlerMapper
 ) {
 
@@ -26,31 +58,42 @@ final case class ListsEndpointsHandlers(
 
   private val getListsByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsByIri,
-    (iri: InputIri) => listsResponder.listGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listGetRequestADM(iri.value)
   )
 
   private val getListsByIriInfoHandler = PublicEndpointHandler(
     listsEndpoints.getListsByIriInfo,
-    (iri: InputIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
   )
 
   private val getListsInfosByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsInfosByIri,
-    (iri: InputIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
   )
 
   private val getListsNodesByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsNodesByIri,
-    (iri: InputIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
   )
 
-  val allHandlers = List(
+  private val putListsByIriHandler = SecuredEndpointHandler[(ListIri, ListPutRequest), NodeInfoGetResponseADM](
+    listsEndpoints.putListsByIri,
+    (user: User) => { case (iri: ListIri, request: ListPutRequest) =>
+      listRestService.listPutRequestADM(iri, request, user)
+    }
+  )
+
+  private val public = List(
     getListsByIriHandler,
     getListsQueryByProjectIriHandler,
     getListsByIriInfoHandler,
     getListsInfosByIriHandler,
     getListsNodesByIriHandler
   ).map(mapper.mapPublicEndpointHandler(_))
+
+  private val secured = List(putListsByIriHandler).map(mapper.mapSecuredEndpointHandler(_))
+
+  val allHandlers = public ++ secured
 }
 
 object ListsEndpointsHandlers {

@@ -25,9 +25,11 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.slice.admin.api.Requests.ListPutRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ListsResponder]].
@@ -191,38 +193,35 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "update basic list information" in {
-        val changeNodeInfoRequest = NodeInfoChangeRequestADM(
-          listIri = newListIri.get,
-          changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("updated name")),
-            labels = Some(
-              Labels.unsafeFrom(
-                Seq(
-                  V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                  V2.StringLiteralV2(value = "Changed List", language = Some("en"))
-                )
+        val theChange: ListPutRequest = ListPutRequest(
+          listIri = ListIri.unsafeFrom(newListIri.get),
+          projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
+          name = Some(ListName.unsafeFrom("updated name")),
+          labels = Some(
+            Labels.unsafeFrom(
+              Seq(
+                V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                V2.StringLiteralV2(value = "Changed List", language = Some("en"))
               )
-            ),
-            comments = Some(
-              Comments
-                .unsafeFrom(
-                  Seq(
-                    V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                    V2.StringLiteralV2(value = "New Comment", language = Some("en"))
-                  )
-                )
             )
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+          comments = Some(
+            Comments
+              .unsafeFrom(
+                Seq(
+                  V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                  V2.StringLiteralV2(value = "New Comment", language = Some("en"))
+                )
+              )
+          )
         )
-        appActor ! changeNodeInfoRequest
 
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
+        val received = UnsafeZioRun.runOrThrow(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
+        val listInfo = received match {
+          case RootNodeInfoGetResponseADM(info) => info
+          case _                                => fail("RootNodeInfoGetResponseADM expected")
+        }
 
-        val listInfo = received.listinfo
         listInfo.projectIri should be(imagesProjectIri)
         listInfo.name should be(Some("updated name"))
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
@@ -247,22 +246,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.unsafeFrom("sommer"))
         val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
-        appActor ! NodeInfoChangeRequestADM(
-          listIri = newListIri.get,
-          changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = projectIRI,
-            name = name
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val theChange = ListPutRequest(
+          listIri = ListIri.unsafeFrom(newListIri.get),
+          projectIri = projectIRI,
+          name = name
         )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
-            )
-          )
+        val exit = UnsafeZioRun.run(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
         )
       }
 

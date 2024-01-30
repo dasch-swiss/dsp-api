@@ -50,6 +50,9 @@ object Codecs {
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
     implicit val userIri: StringCodec[UserIri]                         = stringCodec(UserIri.from)
+
+    // list properties
+    implicit val listIri: StringCodec[ListIri] = stringCodec(ListIri.from)
   }
 
   object ZioJsonCodec {

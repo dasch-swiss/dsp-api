@@ -9,12 +9,8 @@ import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
-import zio.prelude.Validation
-
-import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -23,15 +19,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to update list items.
@@ -50,8 +41,7 @@ final case class UpdateListItemsRouteADM(
     updateNodeName() ~
       updateNodeLabels() ~
       updateNodeComments() ~
-      updateNodePosition() ~
-      updateList()
+      updateNodePosition()
 
   /**
    * Update name of an existing list node, either root or child.
@@ -129,35 +119,4 @@ final case class UpdateListItemsRouteADM(
         }
       }
     }
-
-  /**
-   * Updates existing list node, either root or child.
-   */
-  private def updateList(): Route = path(listsBasePath / Segment) { iri =>
-    put {
-      entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
-        val validatedPayload = for {
-          _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
-          listIri     = validateOneWithFrom(apiRequest.listIri, ListIri.from, BadRequestException.apply)
-          projectIri  = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
-          hasRootNode = validateOptionWithFrom(apiRequest.hasRootNode, ListIri.from, BadRequestException.apply)
-          position    = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
-          name        = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
-          labels      = validateOptionWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
-          comments    = validateOptionWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
-        } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
-          ListNodeChangePayloadADM
-        )
-
-        val requestMessage = for {
-          payload <- validatedPayload.flatMap(_.toZIO)
-          user    <- Authenticator.getUserADM(requestContext)
-          _ <- ZIO
-                 .fail(ForbiddenException(ListErrorMessages.ListNodeCreatePermission))
-                 .when(!user.permissions.isProjectAdmin(payload.projectIri.value) && !user.permissions.isSystemAdmin)
-        } yield NodeInfoChangeRequestADM(payload.listIri.value, payload, user, UUID.randomUUID())
-        runJsonRouteZ(requestMessage, requestContext)
-      }
-    }
-  }
 }

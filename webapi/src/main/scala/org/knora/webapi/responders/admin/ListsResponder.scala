@@ -39,6 +39,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
+import org.knora.webapi.slice.admin.api.Requests.ListPutRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -78,8 +79,6 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, _, apiRequestID) =>
-      nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
     case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) =>
       nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
     case NodeLabelsChangeRequestADM(
@@ -170,7 +169,7 @@ final case class ListsResponder(
             list = ListADM(listinfo = rootNodeInfo, children = children)
           } yield Some(list)
         } else {
-          ZIO.succeed(None)
+          ZIO.none
         }
 
     } yield maybeList
@@ -870,55 +869,35 @@ final case class ListsResponder(
   /**
    * Changes basic node information stored (root or child)
    *
-   * @param nodeIri              the list's IRI.
    * @param changeNodeRequest    the new node information.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   * @throws BadRequestException         in the case when the list IRI given in the path does not match with the one given in the payload.
-   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   * fails with a ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * fails with a UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
-  private def nodeInfoChangeRequest(
-    nodeIri: IRI,
-    changeNodeRequest: ListNodeChangePayloadADM,
+  def nodeInfoChangeRequest(
+    changeNodeRequest: ListPutRequest,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodeInfoChangeTask(nodeIri: IRI, changeNodeRequest: ListNodeChangePayloadADM): Task[NodeInfoGetResponseADM] =
+    val nodeIri = changeNodeRequest.listIri.value
+    val nodeInfoChangeTask =
       for {
-        // check if nodeIRI in path and payload match
-        _ <- ZIO.attempt(
-               if (!nodeIri.equals(changeNodeRequest.listIri.value))
-                 throw BadRequestException("IRI in path and payload don't match.")
-             )
-
-        changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
+        changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest.toListNodeChangePayloadADM)
         _                    <- triplestore.query(Update(changeNodeInfoSparql))
-
-        /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
-
-        response = maybeNodeADM match {
-                     case Some(rootNode: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(listinfo = rootNode)
-
-                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-
-                     case _ =>
-                       throw UpdateNotPerformedException(
-                         s"Node $nodeIri was not updated. Please report this as a possible bug."
-                       )
-                   }
-
-      } yield response
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri,
-      nodeInfoChangeTask(nodeIri, changeNodeRequest)
-    )
+        maybeNodeADM         <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
+        updated <-
+          maybeNodeADM match {
+            case Some(rootNode: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
+            case Some(childNode: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
+            case _ =>
+              ZIO.fail(
+                UpdateNotPerformedException(
+                  s"Node $nodeIri was not updated. Please report this as a possible bug."
+                )
+              )
+          }
+      } yield updated
+    IriLocker.runWithIriLock(apiRequestID, nodeIri, nodeInfoChangeTask)
   }
 
   /**
@@ -2039,6 +2018,12 @@ object ListsResponder {
 
   def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
+
+  def nodeInfoChangeRequest(
+    req: ListPutRequest,
+    apiRequestId: UUID
+  ): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.nodeInfoChangeRequest(req, apiRequestId))
 
   val layer: URLayer[
     AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

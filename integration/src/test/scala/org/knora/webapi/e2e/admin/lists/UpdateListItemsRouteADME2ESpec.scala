@@ -597,7 +597,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "update basic list information" in {
         val updateListInfo: String =
           s"""{
-             |    "listIri": "${newListIri}",
+             |    "listIri": "$newListIri",
              |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
@@ -648,7 +648,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "update basic list information with a new name" in {
         val updateListName =
           s"""{
-             |    "listIri": "${newListIri}",
+             |    "listIri": "$newListIri",
              |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "name": "a totally new name"
              |}""".stripMargin
@@ -754,7 +754,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val params =
           s"""
              |{
-             |    "listIri": "${newListIri}",
+             |    "listIri": "$newListIri",
              |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
@@ -796,7 +796,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val params02 =
           s"""
              |{
-             |    "listIri": "${newListIri}",
+             |    "listIri": "$newListIri",
              |    "projectIri": "",
              |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
@@ -814,7 +814,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val params03 =
           s"""
              |{
-             |    "listIri": "${newListIri}",
+             |    "listIri": "$newListIri",
              |    "projectIri": "${SharedTestDataADM.anythingProjectIri}",
              |    "labels": [],
              |    "comments": [{ "value": "XXXXX", "language": "en"}]
