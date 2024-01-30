@@ -75,10 +75,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val actual =
           UnsafeZioRun.runOrThrow(ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
         actual match {
-          case RootNodeInfoGetResponseADM(listInfo) =>
-            listInfo.sorted should be(treeListInfo.sorted)
-          case ChildNodeInfoGetResponseADM(_) =>
-            fail(s"expecting RootNodeInfoGetResponseADM but got ChildNodeInfoGetResponseADM instead.")
+          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(treeListInfo.sorted)
+          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
         }
       }
 
@@ -87,10 +85,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList")
         )
         actual match {
-          case RootNodeInfoGetResponseADM(listInfo) =>
-            listInfo.sorted should be(otherTreeListInfo.sorted)
-          case ChildNodeInfoGetResponseADM(_) =>
-            fail(s"expecting RootNodeInfoGetResponseADM but got ChildNodeInfoGetResponseADM instead.")
+          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(otherTreeListInfo.sorted)
+          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
         }
       }
 
@@ -99,10 +95,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04")
         )
         actual match {
-          case _: RootNodeInfoGetResponseADM =>
-            fail(s"expecting ChildNodeInfoGetResponseADM but got RootNodeInfoGetResponseADM instead.")
-          case ChildNodeInfoGetResponseADM(childInfo) =>
-            childInfo.sorted should be(summerNodeInfo.sorted)
+          case ChildNodeInfoGetResponseADM(childInfo) => childInfo.sorted should be(summerNodeInfo.sorted)
+          case _                                      => fail(s"Expecting ChildNodeInfoGetResponseADM.")
         }
       }
 
@@ -114,8 +108,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           case ListGetResponseADM(list) =>
             list.listinfo.sorted should be(treeListInfo.sorted)
             list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
-          case ListNodeGetResponseADM(_) =>
-            fail(s"expecting ListGetResponseADM but got ListNodeGetResponseADM instead.")
+          case _ => fail(s"Expecting ListGetResponseADM.")
         }
       }
     }
@@ -615,7 +608,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
         val receivedNode: ListNodeGetResponseADM = actual match {
           case it: ListNodeGetResponseADM => it
-          case _: ListGetResponseADM      => fail(s"expecting ListNodeGetResponseADM but got ListGetResponseADM instead.")
+          case _                          => fail(s"Expecting ListNodeGetResponseADM.")
         }
 
         // node must not be in children of old parent
@@ -665,7 +658,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
         val receivedNode: ListNodeGetResponseADM = actual match {
           case node: ListNodeGetResponseADM => node
-          case _: ListGetResponseADM        => fail(s"expecting ListNodeGetResponseADM but got ListGetResponseADM instead.")
+          case _                            => fail(s"Expecting ListNodeGetResponseADM.")
         }
 
         // node must not be in children of old parent

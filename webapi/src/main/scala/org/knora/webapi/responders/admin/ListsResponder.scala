@@ -174,6 +174,14 @@ final case class ListsResponder(
 
     } yield maybeList
 
+  /**
+   * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
+   * If an IRI of a root node is given, the response is a list with root node info and all children of the list.
+   * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
+   *
+   * @param nodeIri        the Iri if the required node.
+   * @return a [[ListItemGetResponseADM]].
+   */
   def listGetRequestADM(nodeIri: IRI): Task[ListItemGetResponseADM] = {
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
