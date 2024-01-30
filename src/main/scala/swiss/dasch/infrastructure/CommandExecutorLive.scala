@@ -88,7 +88,7 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
     for {
       _   <- ZIO.logInfo(s"Executing command: ${command.cmd}")
       out <- ZIO.attemptBlockingIO(command.cmd !< logger).map(logger.buildOutput)
-      _   <- ZIO.logWarning(s"Command '${command.cmd}' stderr output: '${out.stdout}''").when(out.stderr.nonEmpty)
+      _   <- ZIO.logWarning(s"Command '${command.cmd}' has err output: '$out'").when(out.stderr.nonEmpty)
     } yield out
   }
 }

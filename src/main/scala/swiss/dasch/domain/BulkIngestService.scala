@@ -48,12 +48,13 @@ final case class BulkIngestServiceLive(
 
   override def startBulkIngest(project: ProjectShortcode): Task[IngestResult] =
     for {
-      _           <- ZIO.logInfo(s"Starting bulk ingest for project $project")
+      _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
       importDir   <- getImportFolder(project)
       _           <- ZIO.fail(new IOException(s"Import directory '$importDir' does not exist")).unlessZIO(Files.exists(importDir))
       mappingFile <- createMappingFile(project, importDir)
       _           <- ZIO.logInfo(s"Import dir: $importDir, mapping file: $mappingFile")
       total       <- StorageService.findInPath(importDir, FileFilters.isNonHiddenRegularFile).runCount
+      _           <- ZIO.logInfo(s"Found $total ingest candidates.")
       sum <-
         StorageService
           .findInPath(importDir, FileFilters.isSupported)
