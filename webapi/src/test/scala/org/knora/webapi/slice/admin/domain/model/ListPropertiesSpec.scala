@@ -6,9 +6,11 @@
 package org.knora.webapi.slice.admin.domain.model
 
 import zio.prelude.Validation
+import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.test.check
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
@@ -18,42 +20,41 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.*
  * This spec is used to test the [[List]] value objects creation.
  */
 object ListPropertiesSpec extends ZIOSpecDefault {
-  private val validName      = "Valid list name"
-  private val invalidName    = "Invalid list name\r"
-  private val validPosition  = 0
   private val validLabel     = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
   private val invalidLabel   = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
   private val validComment   = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
   private val invalidComment = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
 
-  def spec: Spec[Any, Any] = listNameTest + positionTest + labelsTest + commentsTest
+  def spec: Spec[Any, Any] = suite("ListProperties")(listNameSuite, positionSuite, labelsTest, commentsTest)
 
-  private val listNameTest = suite("ListSpec - ListName")(
+  private val listNameSuite = suite("ListName")(
     test("pass an empty value and return an error") {
       assertTrue(ListName.from("") == Left("List name cannot be empty."))
     },
     test("pass an invalid value and return an error") {
-      assertTrue(ListName.from(invalidName) == Left("List name is invalid."))
+      assertTrue(ListName.from("Invalid list name\r") == Left("List name is invalid."))
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ListName.from(validName).map(_.value) == Right(validName))
+      assertTrue(ListName.from("Valid list name").map(_.value) == Right("Valid list name"))
     }
   )
 
-  private val positionTest = suite("ListSpec - Position")(
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        Position.from(-2) == Left(
-          "Invalid position value is given. Position should be either a positive value, 0 or -1."
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(Position.from(validPosition).toOption.get.value == validPosition)
+  private val positionSuite = suite("Position")(
+    test("should be greater than or equal -1") {
+      check(Gen.int(-10, 10)) { i =>
+        val actual = Position.from(i)
+        i match {
+          case i if i >= -1 => assertTrue(actual.map(_.value) == Right(i))
+          case _ =>
+            assertTrue(
+              actual == Left("Invalid position value is given. Position should be either a positive value, 0 or -1.")
+            )
+        }
+      }
     }
   )
 
-  private val labelsTest = suite("ListSpec - Labels")(
+  private val labelsTest = suite("Labels")(
     test("pass an empty object and return an error") {
       assertTrue(
         Labels.make(Seq.empty) == Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing)),
@@ -79,7 +80,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     }
   )
 
-  private val commentsTest = suite("ListSpec - Comments")(
+  private val commentsTest = suite("Comments")(
     test("pass an empty object and return an error") {
       assertTrue(
         Comments.make(Seq.empty) == Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing)),
