@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import dsp.valueobjects.V2
+import dsp.valueobjects.{IriErrorMessages, V2}
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
 
@@ -13,7 +13,26 @@ import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
  * This spec is used to test the [[List]] value objects creation.
  */
 object ListPropertiesSpec extends ZIOSpecDefault {
-  def spec: Spec[Any, Any] = suite("ListProperties")(listNameSuite, positionSuite, labelsTest, commentsTest)
+  def spec: Spec[Any, Any] =
+    suite("ListProperties")(listIriSuite, listNameSuite, positionSuite, labelsTest, commentsTest)
+
+  private val listIriSuite = suite("ListIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(ListIri.from("") == Left("List IRI cannot be empty."))
+    },
+    test("pass an invalid value and return an error") {
+      val invalid = "ftp://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+      assertTrue(ListIri.from(invalid) == Left("List IRI is invalid"))
+    },
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
+      val invalid = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
+      assertTrue(ListIri.from(invalid) == Left(IriErrorMessages.UuidVersionInvalid))
+    },
+    test("pass a valid value and successfully create value object") {
+      val valid = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+      assertTrue(ListIri.from(valid).map(_.value) == Right(valid))
+    }
+  )
 
   private val listNameSuite = suite("ListName")(
     test("pass an empty value and return an error") {

@@ -167,37 +167,6 @@ object Iri {
   }
 
   /**
-   * GroupIri value object.
-   */
-
-  /**
-   * ListIri value object.
-   */
-  sealed abstract case class ListIri private (value: String) extends Iri
-  object ListIri { self =>
-    def make(value: String): Validation[Throwable, ListIri] =
-      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
-
-        if (!isListIri(value))
-          Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        else
-          validateAndEscapeIri(value)
-            .mapError(_ => BadRequestException(IriErrorMessages.ListIriInvalid))
-            .map(new ListIri(_) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[ListIri]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-  }
-
-  /**
    * Base64Uuid value object.
    * This is base64 encoded UUID version without paddings.
    *
@@ -259,8 +228,6 @@ object Iri {
 }
 
 object IriErrorMessages {
-  val ListIriMissing     = "List IRI cannot be empty."
-  val ListIriInvalid     = "List IRI is invalid"
   val ProjectIriMissing  = "Project IRI cannot be empty."
   val ProjectIriInvalid  = "Project IRI is invalid."
   val RoleIriMissing     = "Role IRI cannot be empty."

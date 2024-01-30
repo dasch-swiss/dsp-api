@@ -14,7 +14,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
@@ -125,9 +124,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("neuelistename")),
             labels = Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
-            comments = Comments
-              .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
-              .fold(e => throw e.head, v => v)
+            comments = Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -165,8 +162,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             labels =
               Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de")))),
             comments = Comments
-              .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e.head, v => v)
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -198,7 +194,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("updated name")),
             labels = Some(
@@ -211,13 +207,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             ),
             comments = Some(
               Comments
-                .make(
+                .unsafeFrom(
                   Seq(
                     V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                     V2.StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
-                .fold(e => throw e.head, v => v)
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -255,7 +250,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = projectIRI,
             name = name
           ),
@@ -274,16 +269,16 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add child to list - to the root node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("first")),
             labels = Labels.unsafeFrom(
               Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
             ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -327,7 +322,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add second child to list in first position - to the root node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("second")),
             position = Some(Position.unsafeFrom(0)),
@@ -335,9 +330,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
             ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -381,15 +376,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add child to second child node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(secondChildIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("third")),
             labels = Labels
               .unsafeFrom(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -434,7 +429,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val givenPosition = Some(Position.unsafeFrom(20))
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.unsafeFrom("fourth")),
             position = givenPosition,
@@ -442,9 +437,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
             ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,

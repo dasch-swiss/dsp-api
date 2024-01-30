@@ -5,16 +5,43 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import dsp.valueobjects.{Iri, V2}
-import org.knora.webapi.slice.common.Value.{IntValue, StringValue}
-import org.knora.webapi.slice.common.{IntValueCompanion, StringValueCompanion, Value, WithFrom}
 import zio.prelude.Validation
+
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Iri.isListIri
+import dsp.valueobjects.Iri.validateAndEscapeIri
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.common.IntValueCompanion
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.IntValue
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 
 object ListProperties {
 
-  /**
-   * List ListName value object.
-   */
+  final case class ListIri private (value: String) extends AnyVal with StringValue
+
+  object ListIri extends StringValueCompanion[ListIri] {
+    def from(value: String): Either[String, ListIri] =
+      if (value.isEmpty) Left("List IRI cannot be empty.")
+      else {
+        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
+
+        if (!isListIri(value))
+          Left("List IRI is invalid")
+        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
+          Left(IriErrorMessages.UuidVersionInvalid)
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => "List IRI is invalid")
+            .map(ListIri.apply)
+            .toEitherWith(_.head)
+      }
+  }
+
   final case class ListName private (value: String) extends AnyVal with StringValue
   object ListName extends StringValueCompanion[ListName] {
     def from(value: String): Either[String, ListName] =
@@ -22,9 +49,6 @@ object ListProperties {
       else Iri.toSparqlEncodedString(value).toRight("List name is invalid.").map(ListName.apply)
   }
 
-  /**
-   * List Position value object.
-   */
   final case class Position private (value: Int) extends AnyVal with IntValue
 
   object Position extends IntValueCompanion[Position] {
@@ -33,9 +57,6 @@ object ListProperties {
       else { Left("Invalid position value is given. Position should be either a positive value, 0 or -1.") }
   }
 
-  /**
-   * List Labels value object.
-   */
   final case class Labels private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
 
   object Labels extends WithFrom[Seq[V2.StringLiteralV2], Labels] {
@@ -52,9 +73,6 @@ object ListProperties {
       }
   }
 
-  /**
-   * List Comments value object.
-   */
   final case class Comments private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
 
   object Comments extends WithFrom[Seq[V2.StringLiteralV2], Comments] {

@@ -41,6 +41,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
@@ -1003,7 +1004,7 @@ final case class ListsResponder(
         changeNodeNameSparql <-
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
-              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+              listIri = ListIri.unsafeFrom(nodeIri),
               projectIri = projectIri,
               name = Some(changeNodeNameRequest.name)
             )
@@ -1069,7 +1070,7 @@ final case class ListsResponder(
             }
         changeNodeLabelsSparql <- getUpdateNodeInfoSparqlStatement(
                                     changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                      listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                      listIri = ListIri.unsafeFrom(nodeIri),
                                       projectIri = projectIri,
                                       labels = Some(changeNodeLabelsRequest.labels)
                                     )
@@ -1135,7 +1136,7 @@ final case class ListsResponder(
 
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
                                       ListNodeChangePayloadADM(
-                                        listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                        listIri = ListIri.unsafeFrom(nodeIri),
                                         projectIri = projectIri,
                                         comments = Some(changeNodeCommentsRequest.comments)
                                       )

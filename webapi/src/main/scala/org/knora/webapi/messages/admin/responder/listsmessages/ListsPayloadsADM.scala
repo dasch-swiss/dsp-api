@@ -5,20 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import dsp.valueobjects.Iri.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
 /**
  * List root node and child node creation payloads
  */
 sealed trait ListNodeCreatePayloadADM
-//    TODO-mpro:
-//     1. lack of consistency between parentNodeIri and hasRootNode in change payload - should be renamed to parentNodeIri
-//     2. Rethink other field names if they are descriptive enough, e.g. id should be renamed to customIri or something similar
 object ListNodeCreatePayloadADM {
   final case class ListRootNodeCreatePayloadADM(
     id: Option[ListIri] = None,
@@ -42,7 +35,6 @@ object ListNodeCreatePayloadADM {
  * List node update payload
  */
 final case class ListNodeChangePayloadADM(
-//  TODO-mpro: listIri can be probably removed here or maybe from the route??
   listIri: ListIri,
   projectIri: ProjectIri,
   hasRootNode: Option[ListIri] = None,
@@ -55,20 +47,14 @@ final case class ListNodeChangePayloadADM(
 /**
  * Node Name update payload
  */
-final case class NodeNameChangePayloadADM(
-  name: ListName
-)
+final case class NodeNameChangePayloadADM(name: ListName)
 
 /**
  * Node Labels update payload
  */
-final case class NodeLabelsChangePayloadADM(
-  labels: Labels
-)
+final case class NodeLabelsChangePayloadADM(labels: Labels)
 
 /**
  * Node Comments update payload
  */
-final case class NodeCommentsChangePayloadADM(
-  comments: Comments
-)
+final case class NodeCommentsChangePayloadADM(comments: Comments)
