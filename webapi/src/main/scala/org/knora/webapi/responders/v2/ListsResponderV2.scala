@@ -5,25 +5,18 @@
 
 package org.knora.webapi.responders.v2
 
-import zio.*
-
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.{ChildNodeInfoGetResponseADM, ListGetResponseADM}
 import org.knora.webapi.messages.v2.responder.listsmessages.*
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.User
+import zio.*
 
-final case class ListsResponderV2(
-  appConfig: AppConfig,
-  listsResponder: ListsResponder,
-  messageRelay: MessageRelay
-) extends MessageHandler {
+final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsResponder) extends MessageHandler {
 
   def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ListsResponderRequestV2]
 
@@ -81,7 +74,7 @@ object ListsResponderV2 {
       ac      <- ZIO.service[AppConfig]
       lr      <- ZIO.service[ListsResponder]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ListsResponderV2(ac, lr, mr))
+      handler <- mr.subscribe(ListsResponderV2(ac, lr))
     } yield handler
   }
 }
