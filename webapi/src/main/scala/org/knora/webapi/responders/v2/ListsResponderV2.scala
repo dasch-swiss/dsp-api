@@ -5,20 +5,16 @@
 
 package org.knora.webapi.responders.v2
 
-import zio.*
-
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
+import org.knora.webapi.messages.admin.responder.listsmessages.{ChildNodeInfoGetResponseADM, ListGetResponseADM}
 import org.knora.webapi.messages.v2.responder.listsmessages.*
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.User
+import zio.*
 
 final case class ListsResponderV2(
   appConfig: AppConfig,
@@ -64,21 +60,13 @@ final case class ListsResponderV2(
     nodeIri: IRI,
     requestingUser: User
   ): Task[NodeGetResponseV2] =
-    for {
-      nodeResponse <-
-        messageRelay
-          .ask[ChildNodeInfoGetResponseADM](
-            ListNodeInfoGetRequestADM(
-              iri = nodeIri,
-              requestingUser = requestingUser
-            )
-          )
-
-    } yield NodeGetResponseV2(
-      node = nodeResponse.nodeinfo,
-      requestingUser.lang,
-      appConfig.fallbackLanguage
-    )
+    listsResponder
+      .listNodeInfoGetRequestADM(nodeIri)
+      .flatMap {
+        case ChildNodeInfoGetResponseADM(node) => ZIO.succeed(node)
+        case _                                 => ZIO.die(new IllegalStateException(s"No child node found $nodeIri"))
+      }
+      .map(NodeGetResponseV2(_, requestingUser.lang, appConfig.fallbackLanguage))
 }
 
 object ListsResponderV2 {

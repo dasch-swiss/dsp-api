@@ -156,14 +156,6 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
 sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
- *
- * @param iri                  the IRI of the list node.
- * @param requestingUser       the user making the request.
- */
-case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
-
-/**
  * Requests the path from the root node of a list to a particular node. A successful response will be
  * a [[NodePathGetResponseADM]].
  *

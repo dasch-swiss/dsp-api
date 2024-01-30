@@ -72,7 +72,6 @@ final case class ListsResponder(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListNodeInfoGetRequestADM(listIri, _)      => listNodeInfoGetRequestADM(listIri)
     case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
@@ -2030,6 +2029,9 @@ object ListsResponder {
 
   def listGetRequestADM(nodeIri: IRI): ZIO[ListsResponder, Throwable, ListItemGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listGetRequestADM(nodeIri))
+
+  def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
 
   val layer: URLayer[
     AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

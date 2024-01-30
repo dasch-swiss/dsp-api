@@ -5,30 +5,23 @@
 
 package org.knora.webapi.responders.admin
 
+import dsp.errors.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
+import dsp.valueobjects.Iri.*
+import dsp.valueobjects.{Iri, V2}
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.*
-
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.UpdateNotPerformedException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
-import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
+
+import java.util.UUID
 
 /**
  * Tests [[ListsResponder]].
@@ -72,49 +65,44 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return basic list information (anything list)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
-
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.listinfo.sorted should be(treeListInfo.sorted)
+        val actual =
+          UnsafeZioRun.runOrThrow(ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+        actual match {
+          case RootNodeInfoGetResponseADM(listInfo) =>
+            listInfo.sorted should be(treeListInfo.sorted)
+          case ChildNodeInfoGetResponseADM(_) =>
+            fail(s"expecting RootNodeInfoGetResponseADM but got ChildNodeInfoGetResponseADM instead.")
+        }
       }
 
       "return basic list information (anything other list)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/otherTreeList",
-          requestingUser = SharedTestDataADM.anythingUser1
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList")
         )
-
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.listinfo.sorted should be(otherTreeListInfo.sorted)
+        actual match {
+          case RootNodeInfoGetResponseADM(listInfo) =>
+            listInfo.sorted should be(otherTreeListInfo.sorted)
+          case ChildNodeInfoGetResponseADM(_) =>
+            fail(s"expecting RootNodeInfoGetResponseADM but got ChildNodeInfoGetResponseADM instead.")
+        }
       }
 
       "return basic node information (images list - sommer)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-          requestingUser = SharedTestDataADM.imagesUser01
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04")
         )
-
-        val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.nodeinfo.sorted should be(summerNodeInfo.sorted)
+        actual match {
+          case _: RootNodeInfoGetResponseADM =>
+            fail(s"expecting ChildNodeInfoGetResponseADM but got RootNodeInfoGetResponseADM instead.")
+          case ChildNodeInfoGetResponseADM(childInfo) =>
+            childInfo.sorted should be(summerNodeInfo.sorted)
+        }
       }
 
       "return a full list response" in {
         val actual = UnsafeZioRun.runOrThrow(
           ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList")
         )
-
         actual match {
           case ListGetResponseADM(list) =>
             list.listinfo.sorted should be(treeListInfo.sorted)
