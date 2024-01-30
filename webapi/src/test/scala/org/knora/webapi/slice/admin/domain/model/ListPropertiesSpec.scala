@@ -31,27 +31,13 @@ object ListPropertiesSpec extends ZIOSpecDefault {
 
   private val listNameTest = suite("ListSpec - ListName")(
     test("pass an empty value and return an error") {
-      assertTrue(
-        ListName.make("") == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing)),
-        ListName.make(Some("")) == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
-      )
+      assertTrue(ListName.from("") == Left("List name is invalid."))
     },
     test("pass an invalid value and return an error") {
-      assertTrue(
-        ListName.make(invalidName) == Validation.fail(BadRequestException(ListErrorMessages.ListNameInvalid)),
-        ListName.make(Some(invalidName)) == Validation.fail(BadRequestException(ListErrorMessages.ListNameInvalid))
-      )
+      assertTrue(ListName.from(invalidName) == Left("List name is invalid."))
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(
-        ListName.make(validName).toOption.get.value == validName,
-        ListName.make(Option(validName)).getOrElse(null).get.value == validName
-      )
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        ListName.make(None) == Validation.succeed(None)
-      )
+      assertTrue(ListName.from(validName).map(_.value) == Right(validName))
     }
   )
 

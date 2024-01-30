@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
 
@@ -30,10 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides routes to create list items.
@@ -61,9 +59,14 @@ final case class CreateListItemsRouteADM(
         val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
         val projectIri: Validation[Throwable, ProjectIri] =
           Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-        val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
-        val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
+        val maybeName: Validation[Throwable, Option[ListName]] =
+          apiRequest.name match {
+            case Some(name) =>
+              Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
+            case None => Validation.succeed(None)
+          }
+        val labels: Validation[Throwable, Labels]     = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Comments] = Comments.make(apiRequest.comments)
         val validatedPayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
           Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListRootNodeCreatePayloadADM)
 
@@ -93,10 +96,14 @@ final case class CreateListItemsRouteADM(
           parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
           id            = ListIri.make(apiRequest.id)
           projectIri    = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-          name          = ListName.make(apiRequest.name)
-          position      = Position.make(apiRequest.position)
-          labels        = Labels.make(apiRequest.labels)
-          comments      = Comments.make(apiRequest.comments)
+          name = apiRequest.name match {
+                   case Some(name) =>
+                     Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
+                   case None => Validation.succeed(None)
+                 }
+          position = Position.make(apiRequest.position)
+          labels   = Labels.make(apiRequest.labels)
+          comments = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
           ListChildNodeCreatePayloadADM
         )

@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
 
@@ -29,10 +31,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides routes to update list items.
@@ -66,7 +64,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            listName <- ListName.make(apiRequest.name).toZIO.mapError(e => BadRequestException(e.getMessage))
+            listName <- ZIO.fromEither(ListName.from(apiRequest.name)).mapError(BadRequestException.apply)
             payload   = NodeNameChangePayloadADM(listName)
             uuid     <- getUserUuid(requestContext)
           } yield NodeNameChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -143,9 +141,13 @@ final case class UpdateListItemsRouteADM(
           projectIri  = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
           hasRootNode = ListIri.make(apiRequest.hasRootNode)
           position    = Position.make(apiRequest.position)
-          name        = ListName.make(apiRequest.name)
-          labels      = Labels.make(apiRequest.labels)
-          comments    = Comments.make(apiRequest.comments)
+          name = apiRequest.name match {
+                   case Some(name) =>
+                     Validation.fromEither(ListName.from(name)).map(Some(_)).mapError(BadRequestException.apply)
+                   case None => Validation.succeed(None)
+                 }
+          labels   = Labels.make(apiRequest.labels)
+          comments = Comments.make(apiRequest.comments)
         } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
           ListNodeChangePayloadADM
         )

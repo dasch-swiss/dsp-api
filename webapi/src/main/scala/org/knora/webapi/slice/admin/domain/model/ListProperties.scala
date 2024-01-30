@@ -10,6 +10,7 @@ import zio.prelude.Validation
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
+import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 
 object ListProperties {
@@ -18,20 +19,10 @@ object ListProperties {
    * List ListName value object.
    */
   final case class ListName private (value: String) extends AnyVal with StringValue
-  object ListName { self =>
-    def make(value: String): Validation[BadRequestException, ListName] =
-      if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
-      else
-        Validation
-          .fromOption(Iri.toSparqlEncodedString(value))
-          .mapError(_ => BadRequestException(ListErrorMessages.ListNameInvalid))
-          .map(ListName.apply)
-
-    def make(value: Option[String]): Validation[BadRequestException, Option[ListName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  object ListName extends StringValueCompanion[ListName] {
+    def from(value: String): Either[String, ListName] =
+      if (value.isEmpty) Left("List name cannot be empty.")
+      else Iri.toSparqlEncodedString(value).toRight("List name is invalid.").map(ListName.apply)
   }
 
   /**
@@ -100,8 +91,6 @@ object ListProperties {
 }
 
 object ListErrorMessages {
-  val ListNameMissing          = "List name cannot be empty."
-  val ListNameInvalid          = "List name is invalid."
   val LabelsMissing            = "At least one label needs to be supplied."
   val LabelsInvalid            = "Invalid label."
   val CommentsMissing          = "At least one comment needs to be supplied."
