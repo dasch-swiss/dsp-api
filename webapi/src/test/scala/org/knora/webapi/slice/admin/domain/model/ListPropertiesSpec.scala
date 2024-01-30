@@ -5,9 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import dsp.valueobjects.{IriErrorMessages, V2}
+import zio.test.Gen
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
+
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
-import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
 
 /**
  * This spec is used to test the [[List]] value objects creation.

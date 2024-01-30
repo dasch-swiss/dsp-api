@@ -12,10 +12,15 @@ import zio.json.JsonCodec
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.SparqlEncodedString
 
@@ -60,11 +65,19 @@ object Codecs {
     private def booleanCodec[A](from: Boolean => A, to: A => Boolean): StringCodec[A] =
       JsonCodec[Boolean].transform(from, to)
 
+    private def intCodec[A <: IntValue](from: Int => Either[String, A]): StringCodec[A] =
+      JsonCodec.int.transformOrFail(from, _.value)
+
     // list properties
+    implicit val comments: StringCodec[Comments] =
+      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(Comments.from, _.value)
     implicit val description: StringCodec[Description] =
       JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from, _.value)
     implicit val labels: StringCodec[Labels] =
       JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(Labels.from, _.value)
+    implicit val listIri: StringCodec[ListIri]   = stringCodec(ListIri.from)
+    implicit val listName: StringCodec[ListName] = stringCodec(ListName.from)
+    implicit val position: StringCodec[Position] = intCodec(Position.from)
 
     // maintenance
     implicit val assetId: StringCodec[AssetId] = stringCodec(AssetId.from, _.value)
