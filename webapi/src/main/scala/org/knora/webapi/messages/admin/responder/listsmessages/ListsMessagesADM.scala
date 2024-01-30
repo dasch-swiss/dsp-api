@@ -5,21 +5,28 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.{Iri, V2}
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.*
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.{AdminKnoraResponseADM, KnoraResponseADM}
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
-import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2, TriplestoreJsonProtocol}
-import org.knora.webapi.slice.admin.domain.model.{ListProperties, User}
 import spray.json.*
 
 import java.util.UUID
 import scala.util.Try
+
+import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.V2
+import org.knora.webapi.*
+import org.knora.webapi.core.RelayedMessage
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.ListProperties
+import org.knora.webapi.slice.admin.domain.model.User
 
 /////////////// API requests
 

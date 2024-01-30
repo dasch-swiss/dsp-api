@@ -38,6 +38,16 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[NodeInfoGetResponseADM])
     .description("Returns basic information about a list node, root or child, w/o children (if exist).")
 
+  val getListsInfosByIri = baseEndpoints.publicEndpoint.get
+    .in(base / "infos" / listIriPathVar)
+    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .description("Returns basic information about a list node, root or child, w/o children (if exist).")
+
+  val getListsNodesByIri = baseEndpoints.publicEndpoint.get
+    .in(base / "nodes" / listIriPathVar)
+    .out(sprayJsonBody[NodeInfoGetResponseADM])
+    .description("Returns basic information about a list node, root or child, w/o children (if exist).")
+
   val endpoints =
     List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
 }
