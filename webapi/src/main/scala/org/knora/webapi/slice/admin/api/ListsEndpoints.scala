@@ -5,18 +5,14 @@
 
 package org.knora.webapi.slice.admin.api
 
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListADMJsonProtocol, ListItemGetResponseADM, ListsGetResponseADM, NodeInfoGetResponseADM}
+import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.ZLayer
-
-import org.knora.webapi.messages.admin.responder.listsmessages.ListADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.listsmessages.ListItemGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
-import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
   private val base = "admin" / "lists"
@@ -33,20 +29,24 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[ListItemGetResponseADM])
     .description("Returns a list node, root or child, with children (if exist).")
 
+  private val getListInfoDesc = "Returns basic information about a list node, root or child, w/o children (if exist)."
   val getListsByIriInfo = baseEndpoints.publicEndpoint.get
     .in(base / listIriPathVar / "info")
     .out(sprayJsonBody[NodeInfoGetResponseADM])
-    .description("Returns basic information about a list node, root or child, w/o children (if exist).")
+    .description(getListInfoDesc)
 
+  private val getListInfoDeprecation = "*Deprecated*. Use GET admin/lists/<listIri>/info instead. "
   val getListsInfosByIri = baseEndpoints.publicEndpoint.get
     .in(base / "infos" / listIriPathVar)
     .out(sprayJsonBody[NodeInfoGetResponseADM])
-    .description("Returns basic information about a list node, root or child, w/o children (if exist).")
+    .description(getListInfoDeprecation + getListInfoDesc)
+    .deprecated()
 
   val getListsNodesByIri = baseEndpoints.publicEndpoint.get
     .in(base / "nodes" / listIriPathVar)
     .out(sprayJsonBody[NodeInfoGetResponseADM])
-    .description("Returns basic information about a list node, root or child, w/o children (if exist).")
+    .description(getListInfoDeprecation + getListInfoDesc)
+    .deprecated()
 
   val endpoints =
     List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
