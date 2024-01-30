@@ -31,7 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * Tests [[ListsResponderADM]].
+ * Tests [[ListsResponder]].
  */
 class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
@@ -111,20 +111,20 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a full list response" in {
-        appActor ! ListGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
-          requestingUser = SharedTestDataADM.anythingUser1
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList")
         )
 
-        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
-
-        // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
-
-        received.list.listinfo.sorted should be(treeListInfo.sorted)
-
-        received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
+        actual match {
+          case ListGetResponseADM(list) =>
+            list.listinfo.sorted should be(treeListInfo.sorted)
+            list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
+          case ListNodeGetResponseADM(_) =>
+            fail(s"expecting ListGetResponseADM but got ListNodeGetResponseADM instead.")
+        }
       }
     }
+
     val newListIri     = new MutableTestIri
     val firstChildIri  = new MutableTestIri
     val secondChildIri = new MutableTestIri
@@ -617,11 +617,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         isShifted should be(true)
 
         /* check old parent node */
-        appActor ! ListGetRequestADM(
-          iri = oldParentIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
+        val receivedNode: ListNodeGetResponseADM = actual match {
+          case it: ListNodeGetResponseADM => it
+          case _: ListGetResponseADM      => fail(s"expecting ListNodeGetResponseADM but got ListGetResponseADM instead.")
+        }
+
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(4)
@@ -666,11 +667,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         isShifted should be(true)
 
         /* check old parent node */
-        appActor ! ListGetRequestADM(
-          iri = oldParentIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
+        val receivedNode: ListNodeGetResponseADM = actual match {
+          case node: ListNodeGetResponseADM => node
+          case _: ListGetResponseADM        => fail(s"expecting ListNodeGetResponseADM but got ListGetResponseADM instead.")
+        }
+
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(3)

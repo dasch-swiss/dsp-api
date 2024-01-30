@@ -34,20 +34,9 @@ final case class GetListItemsRouteADM(
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute: Route =
-    getListNode ~
-      getListOrNodeInfo("infos") ~
+    getListOrNodeInfo("infos") ~
       getListOrNodeInfo("nodes") ~
       getListInfo
-
-  /**
-   * Returns a list node, root or child, with children (if exist).
-   */
-  private def getListNode: Route = path(listsBasePath / Segment) { iri =>
-    get { ctx =>
-      val task = getIriUser(iri, ctx).map(r => ListGetRequestADM(r.iri, r.user))
-      runJsonRouteZ(task, ctx)
-    }
-  }
 
   /**
    * Returns basic information about list node, root or child, w/o children (if exist).

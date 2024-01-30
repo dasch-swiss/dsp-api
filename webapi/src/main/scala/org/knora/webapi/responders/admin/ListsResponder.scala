@@ -72,7 +72,6 @@ final case class ListsResponder(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListGetRequestADM(listIri, _)              => listGetRequestADM(listIri)
     case ListNodeInfoGetRequestADM(listIri, _)      => listNodeInfoGetRequestADM(listIri)
     case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
@@ -176,65 +175,31 @@ final case class ListsResponder(
 
     } yield maybeList
 
-  /**
-   * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
-   * If an IRI of a root node is given, the response is a list with root node info and all chilren of the list.
-   * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
-   *
-   * @param nodeIri        the Iri if the required node.
-   * @return a [[ListItemGetResponseADM]].
-   */
-  private def listGetRequestADM(nodeIri: IRI) = {
+  def listGetRequestADM(nodeIri: IRI): Task[ListItemGetResponseADM] = {
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(nodeIri = nodeIri)
+        nodeInfo <- maybeNodeInfo match {
+                      case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
+                      case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
+                    }
+      } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
-        nodeinfo = maybeNodeInfo match {
-                     case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
-                     case _                                         => throw NotFoundException(s"Information not found for node '$nodeIri'")
-                   }
+    ZIO.ifZIO(rootNodeByIriExists(nodeIri))(
+      listGetADM(nodeIri).someOrFail(NotFoundException(s"List '$nodeIri' not found")).map(ListGetResponseADM.apply),
+      for {
+        // No. Get the node and all its sublist children.
+        // First, get node itself and all children.
+        maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
-        // make a NodeADM instance
-        entirenode = ListNodeGetResponseADM(
-                       node = NodeADM(
-                         nodeinfo = nodeinfo,
-                         children = childNode.children
-                       )
-                     )
-      } yield entirenode
-
-    for {
-      exists <- rootNodeByIriExists(nodeIri)
-      // Is root node IRI given?
-      result <-
-        if (exists) {
-          for {
-            // Yes. Get the entire list
-            maybeList <- listGetADM(rootNodeIri = nodeIri)
-
-            entireList = maybeList match {
-                           case Some(list) => ListGetResponseADM(list = list)
-                           case None       => throw NotFoundException(s"List '$nodeIri' not found")
-                         }
-          } yield entireList
-        } else {
-          for {
-            // No. Get the node and all its sublist children.
-            // First, get node itself and all children.
-            maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
-
-            entireNode <- maybeNode match {
-                            // make sure that it is a child node
-                            case Some(childNode: ListChildNodeADM) =>
-                              // get the info of the child node
-                              getNodeADM(childNode)
-
-                            case _ => throw NotFoundException(s"Node '$nodeIri' not found")
-                          }
-          } yield entireNode
-        }
-    } yield result
+        entireNode <- maybeNode match {
+                        // make sure that it is a child node
+                        case Some(childNode: ListChildNodeADM) => getNodeADM(childNode)
+                        case _                                 => ZIO.fail(NotFoundException(s"Node '$nodeIri' not found"))
+                      }
+      } yield entireNode
+    )
   }
 
   /**
@@ -2066,6 +2031,9 @@ object ListsResponder {
 
   def getLists(projectIri: Option[ProjectIri]): ZIO[ListsResponder, Throwable, ListsGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.getLists(projectIri))
+
+  def listGetRequestADM(nodeIri: IRI): ZIO[ListsResponder, Throwable, ListItemGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listGetRequestADM(nodeIri))
 
   val layer: URLayer[
     AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

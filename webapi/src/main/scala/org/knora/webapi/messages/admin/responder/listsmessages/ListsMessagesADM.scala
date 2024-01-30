@@ -9,6 +9,7 @@ import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 
 import java.util.UUID
+import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -18,6 +19,7 @@ import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
@@ -153,14 +155,6 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
  * A trait for messages that can be sent to `HierarchicalListsResponderV2`.
  */
 sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Requests a node (root or child). A successful response will be a [[ListItemGetResponseADM]]
- *
- * @param iri                  the IRI of the node (root or child).
- * @param requestingUser       the user making the request.
- */
-case class ListGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
 
 /**
  * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
@@ -347,14 +341,14 @@ case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraRespons
   def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
 }
 
-abstract class ListItemGetResponseADM() extends KnoraResponseADM with ListADMJsonProtocol
+sealed trait ListItemGetResponseADM extends AdminKnoraResponseADM with ListADMJsonProtocol
 
 /**
- * Provides completes information about the list. The basic information (rood node) and all the child nodes.
+ * Provides completes information about the list. The basic information (root node) and all the child nodes.
  *
  * @param list the complete list.
  */
-case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM() {
+case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM {
 
   def toJsValue: JsValue = listGetResponseADMFormat.write(this)
 }
@@ -364,7 +358,7 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM() {
  *
  * @param node the node.
  */
-case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM() {
+case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM {
 
   def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 }
@@ -1294,9 +1288,21 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] =
     jsonFormat(NodePathGetResponseADM, "elements")
   implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
-  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM]   = jsonFormat(ListGetResponseADM, "list")
+
+  implicit val listItemGetResponseADMJsonFormat: RootJsonFormat[ListItemGetResponseADM] =
+    new RootJsonFormat[ListItemGetResponseADM] {
+      override def write(obj: ListItemGetResponseADM): JsValue = obj match {
+        case list: ListGetResponseADM     => list.toJsValue
+        case node: ListNodeGetResponseADM => node.toJsValue
+      }
+      override def read(json: JsValue): ListItemGetResponseADM =
+        Try(listGetResponseADMFormat.read(json))
+          .getOrElse(listNodeGetResponseADMFormat.read(json))
+    }
+  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
   implicit val listNodeGetResponseADMFormat: RootJsonFormat[ListNodeGetResponseADM] =
     jsonFormat(ListNodeGetResponseADM, "node")
+
   implicit val listInfoGetResponseADMFormat: RootJsonFormat[RootNodeInfoGetResponseADM] =
     jsonFormat(RootNodeInfoGetResponseADM, "listinfo")
   implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ChildNodeInfoGetResponseADM] =

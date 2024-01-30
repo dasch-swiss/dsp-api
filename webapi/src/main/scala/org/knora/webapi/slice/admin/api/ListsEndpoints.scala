@@ -11,9 +11,11 @@ import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.listsmessages.ListADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.listsmessages.ListItemGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
 import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
 
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
   private val base = "admin" / "lists"
@@ -24,7 +26,13 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
     .description("Get all lists or all lists belonging to a project.")
 
-  val endpoints = List(getListsQueryByProjectIriOption)
+  val getListByIri = baseEndpoints.publicEndpoint.get
+    .in(base)
+    .in(path[InputIri].description("The IRI of the list."))
+    .out(sprayJsonBody[ListItemGetResponseADM])
+    .description("Returns a list node, root or child, with children (if exist).")
+
+  val endpoints = List(getListsQueryByProjectIriOption, getListByIri)
 }
 
 object ListsEndpoints {
