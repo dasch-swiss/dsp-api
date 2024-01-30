@@ -13,7 +13,6 @@ import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
@@ -26,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
 import org.knora.webapi.slice.admin.domain.model.User
 
 /////////////// API requests

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.valueobjects
+package org.knora.webapi.slice.admin.domain.model
 
 import zio.prelude.Validation
 import zio.test.Spec
@@ -11,15 +11,13 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.List.Comments
-import dsp.valueobjects.List.Labels
-import dsp.valueobjects.List.ListName
-import dsp.valueobjects.List.Position
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
 /**
  * This spec is used to test the [[List]] value objects creation.
  */
-object ListSpec extends ZIOSpecDefault {
+object ListPropertiesSpec extends ZIOSpecDefault {
   private val validName       = "Valid list name"
   private val invalidName     = "Invalid list name\r"
   private val validPosition   = 0

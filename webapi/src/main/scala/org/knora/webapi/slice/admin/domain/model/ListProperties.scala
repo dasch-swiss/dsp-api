@@ -3,18 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.valueobjects
+package org.knora.webapi.slice.admin.domain.model
 
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.V2
+import org.knora.webapi.slice.common.Value.StringValue
 
-object List {
+object ListProperties {
 
   /**
    * List ListName value object.
    */
-  sealed abstract case class ListName private (value: String)
+  final case class ListName private (value: String) extends AnyVal with StringValue
   object ListName { self =>
     def make(value: String): Validation[BadRequestException, ListName] =
       if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
@@ -22,7 +25,7 @@ object List {
         Validation
           .fromOption(Iri.toSparqlEncodedString(value))
           .mapError(_ => BadRequestException(ListErrorMessages.ListNameInvalid))
-          .map(new ListName(_) {})
+          .map(ListName.apply)
 
     def make(value: Option[String]): Validation[BadRequestException, Option[ListName]] =
       value match {
@@ -34,11 +37,11 @@ object List {
   /**
    * List Position value object.
    */
-  sealed abstract case class Position private (value: Int)
+  final case class Position private (value: Int)
   object Position { self =>
     def make(value: Int): Validation[BadRequestException, Position] =
       if (value < -1) Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
-      else Validation.succeed(new Position(value) {})
+      else Validation.succeed(Position(value))
 
     def make(value: Option[Int]): Validation[BadRequestException, Option[Position]] =
       value match {
@@ -50,7 +53,7 @@ object List {
   /**
    * List Labels value object.
    */
-  sealed abstract case class Labels private (value: Seq[V2.StringLiteralV2])
+  final case class Labels private (value: Seq[V2.StringLiteralV2])
   object Labels { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, Labels] =
       if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing))
@@ -61,7 +64,7 @@ object List {
             .mapError(_ => BadRequestException(ListErrorMessages.LabelsInvalid))
             .map(s => V2.StringLiteralV2(s, l.language))
         )
-        Validation.validateAll(validatedLabels).map(new Labels(_) {})
+        Validation.validateAll(validatedLabels).map(Labels.apply)
       }
 
     def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[Labels]] =
@@ -74,7 +77,7 @@ object List {
   /**
    * List Comments value object.
    */
-  sealed abstract case class Comments private (value: Seq[V2.StringLiteralV2])
+  final case class Comments private (value: Seq[V2.StringLiteralV2])
   object Comments { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, Comments] =
       if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing))
@@ -85,7 +88,7 @@ object List {
             .mapError(_ => BadRequestException(ListErrorMessages.CommentsInvalid))
             .map(s => V2.StringLiteralV2(s, c.language))
         )
-        Validation.validateAll(validatedComments).map(new Comments(_) {})
+        Validation.validateAll(validatedComments).map(Comments.apply)
       }
 
     def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[Comments]] =
@@ -106,6 +109,5 @@ object ListErrorMessages {
   val ListCreatePermission     = "A list can only be created by the project or system administrator."
   val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
   val ListChangePermission     = "A list can only be changed by the project or system administrator."
-  val UpdateRequestEmptyLabel  = "List labels cannot be empty."
   val InvalidPosition          = "Invalid position value is given. Position should be either a positive value, 0 or -1."
 }

@@ -6,8 +6,11 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 
 /**
  * List root node and child node creation payloads

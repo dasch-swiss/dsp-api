@@ -15,8 +15,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
-import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
@@ -27,6 +25,11 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
