@@ -5,34 +5,24 @@
 
 package org.knora.webapi.routing.admin.lists
 
+import dsp.errors.{BadRequestException, ForbiddenException}
+import dsp.valueobjects.Iri.*
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.PathMatcher
-import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.{PathMatcher, Route}
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
+import org.knora.webapi.routing.RouteUtilADM.*
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.{Comments, Labels, ListName, Position}
+import org.knora.webapi.slice.common.ToValidation.{validateOneWithFrom, validateOptionWithFrom}
 import zio.*
 import zio.prelude.Validation
 
 import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
-import dsp.valueobjects.Iri.*
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to create list items.
@@ -61,7 +51,7 @@ final case class CreateListItemsRouteADM(
         val projectIri     = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
         val nameValidation = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
         val labels         = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
-        val comments       = Comments.make(apiRequest.comments)
+        val comments       = validateOneWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
 
         val requestMessage = for {
           payload <-
@@ -95,7 +85,7 @@ final case class CreateListItemsRouteADM(
           name          = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
           position      = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
           labels        = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
-          comments      = Comments.make(apiRequest.comments)
+          comments      = validateOptionWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
         } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
           ListChildNodeCreatePayloadADM
         )

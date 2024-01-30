@@ -5,33 +5,24 @@
 
 package org.knora.webapi.routing.admin.lists
 
+import dsp.errors.{BadRequestException, ForbiddenException}
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Iri.*
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.PathMatcher
-import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.{PathMatcher, Route}
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.routing.RouteUtilADM.*
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.{Comments, Labels, ListName, Position}
+import org.knora.webapi.slice.common.ToValidation.{validateOneWithFrom, validateOptionWithFrom}
 import zio.*
 import zio.prelude.Validation
 
 import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to update list items.
@@ -107,7 +98,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            comments <- Comments.make(apiRequest.comments).toZIO.mapError(e => BadRequestException(e.getMessage))
+            comments <- ZIO.fromEither(Comments.from(apiRequest.comments)).mapError(BadRequestException.apply)
             payload   = NodeCommentsChangePayloadADM(comments)
             uuid     <- getUserUuid(requestContext)
           } yield NodeCommentsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -144,7 +135,7 @@ final case class UpdateListItemsRouteADM(
           position    = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
           name        = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
           labels      = validateOptionWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
-          comments    = Comments.make(apiRequest.comments)
+          comments    = validateOptionWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
         } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
           ListNodeChangePayloadADM
         )

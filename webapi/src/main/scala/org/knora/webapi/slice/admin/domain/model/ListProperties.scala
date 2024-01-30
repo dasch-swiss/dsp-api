@@ -5,17 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import dsp.valueobjects.{Iri, V2}
+import org.knora.webapi.slice.common.Value.{IntValue, StringValue}
+import org.knora.webapi.slice.common.{IntValueCompanion, StringValueCompanion, Value, WithFrom}
 import zio.prelude.Validation
-
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.common.IntValueCompanion
-import org.knora.webapi.slice.common.StringValueCompanion
-import org.knora.webapi.slice.common.Value
-import org.knora.webapi.slice.common.Value.IntValue
-import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.WithFrom
 
 object ListProperties {
 
@@ -44,6 +37,7 @@ object ListProperties {
    * List Labels value object.
    */
   final case class Labels private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
+
   object Labels extends WithFrom[Seq[V2.StringLiteralV2], Labels] {
     def from(value: Seq[V2.StringLiteralV2]): Either[String, Labels] =
       if (value.isEmpty) Left("At least one label needs to be supplied.")
@@ -61,31 +55,24 @@ object ListProperties {
   /**
    * List Comments value object.
    */
-  final case class Comments private (value: Seq[V2.StringLiteralV2])
-  object Comments { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, Comments] =
-      if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing))
+  final case class Comments private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
+
+  object Comments extends WithFrom[Seq[V2.StringLiteralV2], Comments] {
+    def from(value: Seq[V2.StringLiteralV2]): Either[String, Comments] =
+      if (value.isEmpty) Left("At least one comment needs to be supplied.")
       else {
         val validatedComments = value.map(c =>
           Validation
             .fromOption(Iri.toSparqlEncodedString(c.value))
-            .mapError(_ => BadRequestException(ListErrorMessages.CommentsInvalid))
+            .mapError(_ => "Invalid comment.")
             .map(s => V2.StringLiteralV2(s, c.language))
         )
-        Validation.validateAll(validatedComments).map(Comments.apply)
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[Comments]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+        Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
       }
   }
 }
 
 object ListErrorMessages {
-  val CommentsMissing          = "At least one comment needs to be supplied."
-  val CommentsInvalid          = "Invalid comment."
   val ListCreatePermission     = "A list can only be created by the project or system administrator."
   val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
   val ListChangePermission     = "A list can only be changed by the project or system administrator."

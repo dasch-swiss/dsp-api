@@ -5,24 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.prelude.Validation
-import zio.test.Gen
-import zio.test.Spec
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
-import zio.test.check
-
-import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
 
 /**
  * This spec is used to test the [[List]] value objects creation.
  */
 object ListPropertiesSpec extends ZIOSpecDefault {
-  private val validComment   = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
-  private val invalidComment = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
-
   def spec: Spec[Any, Any] = suite("ListProperties")(listNameSuite, positionSuite, labelsTest, commentsTest)
 
   private val listNameSuite = suite("ListName")(
@@ -68,27 +58,15 @@ object ListPropertiesSpec extends ZIOSpecDefault {
 
   private val commentsTest = suite("Comments")(
     test("pass an empty object and return an error") {
-      assertTrue(
-        Comments.make(Seq.empty) == Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing)),
-        Comments.make(Some(Seq.empty)) == Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing))
-      )
+      assertTrue(Comments.from(Seq.empty) == Left("At least one comment needs to be supplied."))
     },
     test("pass an invalid object and return an error") {
-      assertTrue(
-        Comments.make(invalidComment) == Validation.fail(BadRequestException(ListErrorMessages.CommentsInvalid)),
-        Comments.make(Some(invalidComment)) == Validation.fail(BadRequestException(ListErrorMessages.CommentsInvalid))
-      )
+      val invalid = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
+      assertTrue(Comments.from(invalid) == Left("Invalid comment."))
     },
     test("pass a valid object and successfully create value object") {
-      assertTrue(
-        Comments.make(validComment).toOption.get.value == validComment,
-        Comments.make(Option(validComment)).getOrElse(null).get.value == validComment
-      )
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Comments.make(None) == Validation.succeed(None)
-      )
+      val valid = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
+      assertTrue(Comments.from(valid).map(_.value) == Right(valid))
     }
   )
 }
