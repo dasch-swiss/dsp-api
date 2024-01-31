@@ -14,7 +14,6 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
@@ -27,7 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
-  import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.*
+  import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.listIri
 
   private val base = "admin" / "lists"
 
@@ -89,7 +88,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[NodeInfoGetResponseADM])
 
   private val secured =
-    List( putListsByIriName, putListsByIriLabels, putListsByIriComments, putListsByIriPosistion, putListsByIri).map(
+    List(putListsByIriName, putListsByIriLabels, putListsByIriComments, putListsByIriPosistion, putListsByIri).map(
       _.endpoint
     )
   private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
@@ -98,8 +97,6 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 }
 
 object Requests {
-  import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
-  import sttp.tapir.generic.auto.*
 
   case class ListChangeRequest(
     listIri: ListIri,

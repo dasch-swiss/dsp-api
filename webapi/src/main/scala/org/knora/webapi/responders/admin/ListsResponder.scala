@@ -1042,7 +1042,7 @@ final case class ListsResponder(
         project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
-          ListChangeRequest(
+                                      ListChangeRequest(
                                         listIri = listIri,
                                         projectIri = project.id,
                                         comments = Some(changeNodeCommentsRequest.comments)
