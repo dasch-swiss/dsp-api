@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -62,12 +63,6 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .deprecated()
 
   // Updates
-
-  val putListsByIri = baseEndpoints.securedEndpoint.put
-    .in(base / listIriPathVar)
-    .in(zioJsonBody[ListChangeRequest])
-    .out(sprayJsonBody[NodeInfoGetResponseADM])
-
   val putListsByIriName = baseEndpoints.securedEndpoint.put
     .in(base / listIriPathVar / "name")
     .in(zioJsonBody[ListChangeNameRequest])
@@ -79,18 +74,33 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[NodeInfoGetResponseADM])
 
   val putListsByIriComments = baseEndpoints.securedEndpoint.put
-    .in(base / listIriPathVar / "labels")
+    .in(base / listIriPathVar / "comments")
     .in(zioJsonBody[ListChangeCommentsRequest])
     .out(sprayJsonBody[NodeInfoGetResponseADM])
 
+  val putListsByIriPosistion = baseEndpoints.securedEndpoint.put
+    .in(base / listIriPathVar / "position")
+    .in(zioJsonBody[ListChangePositionRequest])
+    .out(sprayJsonBody[NodePositionChangeResponseADM])
+
+  val putListsByIri = baseEndpoints.securedEndpoint.put
+    .in(base / listIriPathVar)
+    .in(zioJsonBody[ListChangeRequest])
+    .out(sprayJsonBody[NodeInfoGetResponseADM])
+
   private val secured =
-    List(putListsByIri, putListsByIriName, putListsByIriLabels, putListsByIriComments).map(_.endpoint)
+    List( putListsByIriName, putListsByIriLabels, putListsByIriComments, putListsByIriPosistion, putListsByIri).map(
+      _.endpoint
+    )
   private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
 
   val endpoints = (secured ++ public).map(_.tag("Admin Lists"))
 }
 
 object Requests {
+  import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+  import sttp.tapir.generic.auto.*
+
   case class ListChangeRequest(
     listIri: ListIri,
     projectIri: ProjectIri,
@@ -103,8 +113,8 @@ object Requests {
     def toListNodeChangePayloadADM: ListNodeChangePayloadADM =
       ListNodeChangePayloadADM(listIri, projectIri, hasRootNode, position, name, labels, comments)
   }
+
   object ListChangeRequest {
-    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 
     def from(l: ListNodeChangePayloadADM): ListChangeRequest =
       ListChangeRequest(l.listIri, l.projectIri, l.hasRootNode, l.position, l.name, l.labels, l.comments)
@@ -124,6 +134,11 @@ object Requests {
   final case class ListChangeCommentsRequest(comments: Comments)
   object ListChangeCommentsRequest {
     implicit val jsonCodec: JsonCodec[ListChangeCommentsRequest] = DeriveJsonCodec.gen[ListChangeCommentsRequest]
+  }
+
+  final case class ListChangePositionRequest(position: Position, parentNodeIri: ListIri)
+  object ListChangePositionRequest {
+    implicit val jsonCodec: JsonCodec[ListChangePositionRequest] = DeriveJsonCodec.gen[ListChangePositionRequest]
   }
 }
 

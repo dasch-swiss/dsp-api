@@ -28,10 +28,8 @@ final case class ListsRouteADM(
 
   private val createNodeRoute: CreateListItemsRouteADM = CreateListItemsRouteADM(routeData, runtime)
   private val deleteNodeRoute: DeleteListItemsRouteADM = DeleteListItemsRouteADM(routeData, runtime)
-  private val updateNodeRoute: UpdateListItemsRouteADM = UpdateListItemsRouteADM(routeData, runtime)
 
   override def makeRoute: Route =
     createNodeRoute.makeRoute ~
-      deleteNodeRoute.makeRoute ~
-      updateNodeRoute.makeRoute
+      deleteNodeRoute.makeRoute
 }

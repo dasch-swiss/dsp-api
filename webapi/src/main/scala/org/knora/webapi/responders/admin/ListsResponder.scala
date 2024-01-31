@@ -42,6 +42,7 @@ import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -87,13 +88,6 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case NodePositionChangeRequestADM(
-          nodeIri,
-          changeNodePositionRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
     case ListItemDeleteRequestADM(nodeIri, requestingUser, apiRequestID) =>
       deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
     case CanDeleteListRequestADM(iri, _)          => canDeleteListRequestADM(iri)
@@ -117,9 +111,11 @@ final case class ListsResponder(
       lists <-
         ZIO.foreach(statements.toList) { case (listIri: SubjectV2, objs: ConstructPredicateObjects) =>
           for {
-            name       <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, objs).map(_.map(_.value))
-            labels     <- mapper.getList[StringLiteralV2](Rdfs.Label, objs).map(_.toVector).map(StringLiteralSequenceV2)
-            comments   <- mapper.getList[StringLiteralV2](Rdfs.Comment, objs).map(_.toVector).map(StringLiteralSequenceV2)
+            name <- mapper.getSingleOption[StringLiteralV2](KnoraBase.ListNodeName, objs).map(_.map(_.value))
+            labels <-
+              mapper.getList[StringLiteralV2](Rdfs.Label, objs).map(_.toVector).map(StringLiteralSequenceV2.apply)
+            comments <-
+              mapper.getList[StringLiteralV2](Rdfs.Comment, objs).map(_.toVector).map(StringLiteralSequenceV2.apply)
             projectIri <- mapper.getSingleOrFail[IriLiteralV2](KnoraBase.AttachedToProject, objs).map(_.value)
           } yield ListRootNodeInfoADM(listIri.toString, projectIri, name, labels, comments).unescape
         }
@@ -429,7 +425,7 @@ final case class ListsResponder(
                                           .get(KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
                                         labels = StringLiteralSequenceV2(labels.toVector),
-                                        comments = Some(StringLiteralSequenceV2(comments.toVector)),
+                                        comments = StringLiteralSequenceV2(comments.toVector),
                                         position = positionOption.getOrElse(
                                           throw InconsistentRepositoryDataException(
                                             s"Required position property missing for list node $nodeIri."
@@ -447,7 +443,7 @@ final case class ListsResponder(
 
           } yield Some(node)
         } else {
-          ZIO.succeed(None)
+          ZIO.none
         }
 
     } yield maybeListNode
@@ -519,7 +515,7 @@ final case class ListsResponder(
         id = nodeIri,
         name = nameOption,
         labels = StringLiteralSequenceV2(labels.toVector),
-        comments = Some(StringLiteralSequenceV2(comments.toVector)),
+        comments = StringLiteralSequenceV2(comments.toVector),
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode
@@ -582,9 +578,9 @@ final case class ListsResponder(
         labels = if (nodeData.contains("label")) {
           StringLiteralSequenceV2(Vector(StringLiteralV2(nodeData("label"))))
         } else {
-          StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+          StringLiteralSequenceV2.empty
         },
-        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+        comments = StringLiteralSequenceV2.empty
       )
 
       // Add it to the path.
@@ -1068,12 +1064,12 @@ final case class ListsResponder(
    * @param requestingUser            the requesting user.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodePositionChangeResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   *           fails with a [[UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   *         Fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *         Fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
-  private def nodePositionChangeRequest(
-    nodeIri: IRI,
-    changeNodePositionRequest: ChangeNodePositionApiRequestADM,
+  def nodePositionChangeRequest(
+    nodeIri: ListIri,
+    changeNodePositionRequest: ListChangePositionRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[NodePositionChangeResponseADM] = {
@@ -1085,11 +1081,12 @@ final case class ListsResponder(
      *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
-     *           fails with a [[BadRequestException if given position is out of range.
+     * @return [[Unit]]
+     *         fails with a [[BadRequestException]] if given position is out of range.
      */
     def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
-      val numberOfChildren = parentNode.getChildren.size
-      // If the node must be added to a new parent, highest valid position is numberOfChildre.
+      val numberOfChildren = parentNode.children.size
+      // If the node must be added to a new parent, highest valid position is numberOfChildren.
       // For example, if the new parent already has 3 children, the highest occupied position is 2, node can be
       // placed in position 3. That means the furthest a node can be positioned is being appended to the end of
       // children of the new parent.
@@ -1121,14 +1118,14 @@ final case class ListsResponder(
      */
     def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
       for {
-        maybeParentNode                 <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri, shallow = false)
+        maybeParentNode                 <- listNodeGetADM(changeNodePositionRequest.parentNodeIri.value, shallow = false)
         updatedParent                    = maybeParentNode.get
-        updatedChildren                  = updatedParent.getChildren
+        updatedChildren                  = updatedParent.children
         (siblingsPositionedBefore, rest) = updatedChildren.partition(_.position < newPosition)
 
         // verify that node is among children of specified parent in correct position
         updatedNode = rest.head
-        _ = if (updatedNode.id != nodeIri || updatedNode.position != newPosition) {
+        _ = if (updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
               throw UpdateNotPerformedException(
                 s"Node is not repositioned correctly in specified parent node. Please report this as a bug."
               )
@@ -1173,7 +1170,7 @@ final case class ListsResponder(
             throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug.")
           )
         _              = isNewPositionValid(parentNode, isNewParent = false)
-        parentChildren = parentNode.getChildren
+        parentChildren = parentNode.children
         currPosition   = node.position
 
         // if givenPosition is -1, append the child to the end of the list of children
@@ -1240,12 +1237,12 @@ final case class ListsResponder(
       for {
         // get current parent node with its immediate children
         maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri, shallow = true)
-        currentSiblings         = maybeCurrentParentNode.get.getChildren
+        currentSiblings         = maybeCurrentParentNode.get.children
         // get new parent node with its immediate children
         maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
         newParent           = maybeNewParentNode.get
         _                   = isNewPositionValid(newParent, isNewParent = true)
-        newSiblings         = newParent.getChildren
+        newSiblings         = newParent.children
 
         currentNodePosition = node.position
 
@@ -1300,30 +1297,14 @@ final case class ListsResponder(
 
       } yield newPosition
 
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodePositionChangeTask(
-      nodeIri: IRI,
-      changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-      requestingUser: User
-    ): Task[NodePositionChangeResponseADM] =
+    val updateTask =
       for {
-        projectIri <- getProjectIriFromNode(nodeIri)
+        project <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
 
         // get data names graph of the project
-        dataNamedGraph <- getDataNamedGraph(projectIri)
-
-        // check if the requesting user is allowed to perform operation
-        _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListChangePermission)
-            }
-
+        dataNamedGraph <- getDataNamedGraph(project.id)
         // get node in its current position
-        maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
+        maybeNode <- listNodeGetADM(nodeIri.value, shallow = true)
         node = maybeNode match {
                  case Some(node: ListChildNodeADM) => node
                  case _ =>
@@ -1331,21 +1312,21 @@ final case class ListsResponder(
                }
 
         // get node's current parent
-        currentParentNodeIri <- getParentNodeIRI(nodeIri)
+        currentParentNodeIri <- getParentNodeIRI(nodeIri.value)
         newPosition <-
-          if (currentParentNodeIri == changeNodePositionRequest.parentIri) {
+          if (currentParentNodeIri == changeNodePositionRequest.parentNodeIri.value) {
             updatePositionWithinSameParent(
               node = node,
               parentIri = currentParentNodeIri,
-              givenPosition = changeNodePositionRequest.position,
+              givenPosition = changeNodePositionRequest.position.value,
               dataNamedGraph = dataNamedGraph
             )
           } else {
             updateParentAndPosition(
               node = node,
-              newParentIri = changeNodePositionRequest.parentIri,
+              newParentIri = changeNodePositionRequest.parentNodeIri.value,
               currParentIri = currentParentNodeIri,
-              givenPosition = changeNodePositionRequest.position,
+              givenPosition = changeNodePositionRequest.position.value,
               dataNamedGraph = dataNamedGraph
             )
           }
@@ -1353,11 +1334,7 @@ final case class ListsResponder(
         parentNode <- verifyParentChildrenUpdate(newPosition)
       } yield NodePositionChangeResponseADM(node = parentNode)
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri,
-      nodePositionChangeTask(nodeIri, changeNodePositionRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, nodeIri.value, updateTask)
   }
 
   /**
@@ -1502,7 +1479,7 @@ final case class ListsResponder(
             throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug.")
           )
 
-        remainingChildren = parentNode.getChildren
+        remainingChildren = parentNode.children
 
         _ = if (remainingChildren.exists(child => child.id == deletedNodeIri)) {
               throw UpdateNotPerformedException(s"Node $deletedNodeIri is not deleted properly, report this as a bug.")
@@ -1692,7 +1669,7 @@ final case class ListsResponder(
                                              .updateListInfo(
                                                dataNamedGraph = dataNamedGraph,
                                                nodeIri = changeNodeInfoRequest.listIri.value,
-                                               hasOldName = node.getName.nonEmpty,
+                                               hasOldName = node.name.nonEmpty,
                                                isRootNode = maybeNode.exists(_.isInstanceOf[ListRootNodeADM]),
                                                maybeName = changeNodeInfoRequest.name.map(_.value),
                                                projectIri = changeNodeInfoRequest.projectIri.value,
@@ -1895,7 +1872,7 @@ final case class ListsResponder(
     /* verify that parents were updated */
     // get old parent node with its immediate children
     maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
-    childrenOfOldParent = maybeOldParent.get.getChildren
+    childrenOfOldParent = maybeOldParent.get.children
     _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
           throw UpdateNotPerformedException(
             s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug."
@@ -1903,7 +1880,7 @@ final case class ListsResponder(
         }
     // get new parent node with its immediate children
     maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
-    childrenOfNewParent = maybeNewParentNode.get.getChildren
+    childrenOfNewParent = maybeNewParentNode.get.children
     _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
           throw UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. ")
         }
@@ -1938,6 +1915,16 @@ object ListsResponder {
 
   def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
+
+  def nodePositionChangeRequestADM(
+    nodeIri: ListIri,
+    changeNodePositionRequest: ListChangePositionRequest,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[ListsResponder, Throwable, NodePositionChangeResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](
+      _.nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
+    )
 
   def nodeInfoChangeRequest(
     req: ListChangeRequest,

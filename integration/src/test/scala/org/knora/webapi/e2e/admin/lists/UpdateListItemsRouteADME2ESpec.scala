@@ -440,7 +440,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.OK)
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        receivedNode.getNodeId should be(parentIri)
+        receivedNode.id should be(parentIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -486,7 +486,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.OK)
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        receivedNode.getNodeId should be(parentIri)
+        receivedNode.id should be(parentIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -532,7 +532,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.OK)
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        receivedNode.getNodeId should be(parentIri)
+        receivedNode.id should be(parentIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -578,7 +578,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.OK)
 
         val receivedNode: ListNodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        receivedNode.getNodeId should be(parentIri)
+        receivedNode.id should be(parentIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

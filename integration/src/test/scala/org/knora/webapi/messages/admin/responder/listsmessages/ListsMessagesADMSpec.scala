@@ -53,7 +53,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+        comments = StringLiteralSequenceV2.empty,
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
       )
@@ -72,7 +72,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-        comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+        comments = StringLiteralSequenceV2.empty,
         children = Seq.empty[ListChildNodeADM],
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"

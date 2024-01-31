@@ -12,10 +12,12 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -59,6 +61,16 @@ final case class ListRestService(
       uuid     <- Random.nextUUID
       response <- listsResponder.nodeCommentsChangeRequest(iri, request, user, uuid)
     } yield response
+
+  def nodePositionChangeRequest(
+    iri: ListIri,
+    request: ListChangePositionRequest,
+    user: User
+  ): Task[NodePositionChangeResponseADM] = for {
+    // authorization is currently done in the responder
+    uuid     <- Random.nextUUID
+    response <- listsResponder.nodePositionChangeRequest(iri, request, user, uuid)
+  } yield response
 }
 
 object ListRestService {
@@ -98,13 +110,6 @@ final case class ListsEndpointsHandlers(
   )
 
   // Updates
-  private val putListsByIriHandler = SecuredEndpointHandler[(ListIri, ListChangeRequest), NodeInfoGetResponseADM](
-    listsEndpoints.putListsByIri,
-    (user: User) => { case (iri: ListIri, request: ListChangeRequest) =>
-      listRestService.listChange(iri, request, user)
-    }
-  )
-
   private val putListsByIriNameHandler =
     SecuredEndpointHandler[(ListIri, ListChangeNameRequest), NodeInfoGetResponseADM](
       listsEndpoints.putListsByIriName,
@@ -129,6 +134,21 @@ final case class ListsEndpointsHandlers(
       }
     )
 
+  private val putListsByIriPositionHandler =
+    SecuredEndpointHandler[(ListIri, ListChangePositionRequest), NodePositionChangeResponseADM](
+      listsEndpoints.putListsByIriPosistion,
+      (user: User) => { case (iri: ListIri, request: ListChangePositionRequest) =>
+        listRestService.nodePositionChangeRequest(iri, request, user)
+      }
+    )
+
+  private val putListsByIriHandler = SecuredEndpointHandler[(ListIri, ListChangeRequest), NodeInfoGetResponseADM](
+    listsEndpoints.putListsByIri,
+    (user: User) => { case (iri: ListIri, request: ListChangeRequest) =>
+      listRestService.listChange(iri, request, user)
+    }
+  )
+
   private val public = List(
     getListsByIriHandler,
     getListsQueryByProjectIriHandler,
@@ -138,10 +158,11 @@ final case class ListsEndpointsHandlers(
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(
-    putListsByIriHandler,
     putListsByIriNameHandler,
     putListsByIriLabelsHandler,
-    putListsByIriCommentsHandler
+    putListsByIriCommentsHandler,
+    putListsByIriPositionHandler,
+    putListsByIriHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = public ++ secured

@@ -16,8 +16,8 @@ trait Value[A] extends Any {
 
 object Value {
   type BooleanValue = Value[Boolean]
-  type IntValue     = Value[Int]
   type StringValue  = Value[String]
+  type IntValue     = Value[Int]
 }
 
 trait WithFrom[-I, +A] {

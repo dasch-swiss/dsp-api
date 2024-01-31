@@ -191,21 +191,6 @@ case class ListChildNodeCreateRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Request updating the position of an existing node.
- *
- * @param nodeIri                   the IRI of the node whose position should be updated.
- * @param changeNodePositionRequest the payload containing the new comments.
- * @param requestingUser            the user initiating the request.
- * @param apiRequestID              the ID of the API request.
- */
-case class NodePositionChangeRequestADM(
-  nodeIri: IRI,
-  changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
  * Requests deletion of a node (root or child). A successful response will be a [[ListDeleteResponseADM]]
  *
  * @param nodeIri              the IRI of the node (root or child).
@@ -357,7 +342,7 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
  *
  * @param node the updated parent node.
  */
-case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class NodePositionChangeResponseADM(node: ListNodeADM) extends AdminKnoraResponseADM with ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodePositionApiResponseADMFormat.write(this)
 }
@@ -564,20 +549,33 @@ case class ListChildNodeInfoADM(
 
 /**
  * Represents a hierarchical list node.
- *
- * @param id       the IRI of the list node.
- * @param name     the name of the list node.
- * @param labels   the label(s) of the list node.
- * @param comments the comment(s) attached to the list in a specific language (if language tags are used) .
- * @param children the list node's child nodes.
  */
-abstract class ListNodeADM(
-  id: IRI,
-  name: Option[String],
-  labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2,
-  children: Seq[ListChildNodeADM]
-) {
+sealed trait ListNodeADM {
+
+  /**
+   * The IRI of the list node.
+   */
+  def id: IRI
+
+  /**
+   * The name of the list node.
+   */
+  def name: Option[String]
+
+  /**
+   * The label(s) of the list node.
+   */
+  def labels: StringLiteralSequenceV2
+
+  /**
+   * The comment(s) attached to the list in a specific language (if language tags are used).
+   */
+  def comments: StringLiteralSequenceV2
+
+  /**
+   * The list node's child nodes.
+   */
+  def children: Seq[ListChildNodeADM]
 
   /**
    * Sorts the whole hierarchy.
@@ -585,14 +583,6 @@ abstract class ListNodeADM(
    * @return a sorted [[ListNodeADM]].
    */
   def sorted: ListNodeADM
-
-  def getName: Option[String] = name
-
-  def getComments: StringLiteralSequenceV2 = comments
-
-  def getChildren: Seq[ListChildNodeADM] = children
-
-  def getNodeId: IRI = id
 
   /**
    * Gets the label in the user's preferred language.
@@ -630,18 +620,15 @@ case class ListRootNodeADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2,
   children: Seq[ListChildNodeADM]
-) extends ListNodeADM(id, name, labels, comments, children) {
+) extends ListNodeADM {
 
   /**
    * Sorts the whole hierarchy.
    *
    * @return a sorted [[ListNodeADM]].
    */
-  def sorted: ListRootNodeADM =
-    ListRootNodeADM(
-      id = id,
-      projectIri = projectIri,
-      name = name,
+  override def sorted: ListRootNodeADM =
+    this.copy(
       labels = labels.sortByLanguage,
       comments = comments.sortByLanguage,
       children = children.sortBy(_.position).map(_.sorted)
@@ -671,7 +658,7 @@ case class ListRootNodeADM(
    * @param fallbackLang language to use if label is not available in user's preferred language.
    * @return the label in the preferred language.
    */
-  def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
+  override def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
     labels.getPreferredLanguage(userLang, fallbackLang)
 
   /**
@@ -681,7 +668,7 @@ case class ListRootNodeADM(
    * @param fallbackLang language to use if comment is not available in user's preferred language.
    * @return the comment in the preferred language.
    */
-  def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
+  override def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
     comments.getPreferredLanguage(userLang, fallbackLang)
 }
 
@@ -700,36 +687,19 @@ case class ListChildNodeADM(
   id: IRI,
   name: Option[String],
   labels: StringLiteralSequenceV2,
-  comments: Option[StringLiteralSequenceV2],
+  comments: StringLiteralSequenceV2,
   position: Int,
   hasRootNode: IRI,
   children: Seq[ListChildNodeADM]
-) extends ListNodeADM(
-      id,
-      name,
-      labels,
-      comments = comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
-      children
-    ) {
+) extends ListNodeADM {
 
   /**
    * Sorts the whole hierarchy.
    *
    * @return a sorted [[ListNodeADM]].
    */
-  def sorted: ListChildNodeADM =
-    ListChildNodeADM(
-      id = id,
-      name = name,
-      labels = labels.sortByLanguage,
-      comments = comments match {
-        case None    => None
-        case Some(c) => Some(c.sortByLanguage)
-      },
-      position = position,
-      hasRootNode = hasRootNode,
-      children = children.sortBy(_.position).map(_.sorted)
-    )
+  override def sorted: ListChildNodeADM =
+    this.copy(labels = labels.sortByLanguage, children = children.sortBy(_.position).map(_.sorted))
 
   /**
    * unescapes the special characters in labels, comments, and name for comparison in tests.
@@ -737,11 +707,8 @@ case class ListChildNodeADM(
   def unescape: ListChildNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = comments match {
-      case Some(value) => Some(stringFormatter.unescapeStringLiteralSeq(value))
-      case None        => None
-    }
+    val unescapedLabels   = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
 
     val unescapedName: Option[String] = name match {
       case Some(value) => Some(Iri.fromSparqlEncodedString(value))
@@ -768,11 +735,8 @@ case class ListChildNodeADM(
    * @param fallbackLang language to use if comment is not available in user's preferred language.
    * @return the comment in the preferred language.
    */
-  def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
-    comments match {
-      case Some(value) => value.getPreferredLanguage(userLang, fallbackLang)
-      case None        => None
-    }
+  override def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
+    comments.getPreferredLanguage(userLang, fallbackLang)
 }
 
 /**
@@ -929,26 +893,15 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   }
 
   implicit object ListRootNodeFormat extends JsonFormat[ListRootNodeADM] {
-
-    def write(node: ListRootNodeADM): JsValue =
-      ListNodeFormat.write(node)
-
-    def read(value: JsValue): ListRootNodeADM =
-      ListNodeFormat.read(value).asInstanceOf[ListRootNodeADM]
-
+    def write(node: ListRootNodeADM): JsValue = listNodeADMFormat.write(node)
+    def read(value: JsValue): ListRootNodeADM = listNodeADMFormat.read(value).asInstanceOf[ListRootNodeADM]
   }
-
   implicit object ListChildNodeFormat extends JsonFormat[ListChildNodeADM] {
-
-    def write(node: ListChildNodeADM): JsValue =
-      ListNodeFormat.write(node)
-
-    def read(value: JsValue): ListChildNodeADM =
-      ListNodeFormat.read(value).asInstanceOf[ListChildNodeADM]
-
+    def write(node: ListChildNodeADM): JsValue = listNodeADMFormat.write(node)
+    def read(value: JsValue): ListChildNodeADM = listNodeADMFormat.read(value).asInstanceOf[ListChildNodeADM]
   }
 
-  implicit object ListNodeFormat extends JsonFormat[ListNodeADM] {
+  implicit val listNodeADMFormat: JsonFormat[ListNodeADM] = new RootJsonFormat[ListNodeADM] {
 
     /**
      * Converts a [[ListNodeADM]] to a [[JsValue]].
@@ -956,7 +909,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
      * @param node a [[ListNodeADM]].
      * @return a [[JsValue]].
      */
-    def write(node: ListNodeADM): JsValue =
+    override def write(node: ListNodeADM): JsValue =
       node match {
         case root: ListRootNodeADM =>
           JsObject(
@@ -971,15 +924,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
         case child: ListChildNodeADM =>
           JsObject(
-            "id"     -> child.id.toJson,
-            "name"   -> child.name.toJson,
-            "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(
-              child.comments
-                .getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2]))
-                .stringLiterals
-                .map(_.toJson)
-            ),
+            "id"          -> child.id.toJson,
+            "name"        -> child.name.toJson,
+            "labels"      -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+            "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
             "position"    -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
             "children"    -> JsArray(child.children.map(write).toVector)
@@ -992,7 +940,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
      * @param value a [[JsValue]].
      * @return a [[ListNodeADM]].
      */
-    def read(value: JsValue): ListNodeADM = {
+    override def read(value: JsValue): ListNodeADM = {
 
       val fields = value.asJsObject.fields
 
@@ -1044,7 +992,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           id = id,
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
-          comments = Some(StringLiteralSequenceV2(comments.toVector)),
+          comments = StringLiteralSequenceV2(comments.toVector),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
           hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
           children = children
@@ -1132,7 +1080,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         .getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing."))
         .convertTo[ListRootNodeInfoADM]
       val children: Seq[ListChildNodeADM] = fields.get("children") match {
-        case Some(JsArray(values)) => values.map(_.convertTo[ListNodeADM].asInstanceOf[ListChildNodeADM])
+        case Some(JsArray(values)) => values.map(it => ListChildNodeFormat.read(it))
         case None                  => Seq.empty[ListChildNodeADM]
         case _                     => throw DeserializationException("The expected field 'children' is in the wrong format.")
       }
@@ -1172,7 +1120,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         .getOrElse("nodeinfo", throw DeserializationException("The expected field 'nodeinfo' is missing."))
         .convertTo[ListChildNodeInfoADM]
       val children: Seq[ListChildNodeADM] = fields.get("children") match {
-        case Some(JsArray(values)) => values.map(_.convertTo[ListNodeADM].asInstanceOf[ListChildNodeADM])
+        case Some(JsArray(values)) => values.map(ListChildNodeFormat.read(_))
         case None                  => Seq.empty[ListChildNodeADM]
         case _                     => throw DeserializationException("The expected field 'children' is in the wrong format.")
       }

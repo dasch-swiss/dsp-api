@@ -386,6 +386,10 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
   }
 }
 
+object StringLiteralSequenceV2 {
+  val empty: StringLiteralSequenceV2 = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+}
+
 /**
  * Represents a boolean value.
  *
