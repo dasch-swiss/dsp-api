@@ -109,18 +109,11 @@ object Requests {
     name: Option[ListName] = None,
     labels: Option[Labels] = None,
     comments: Option[Comments] = None
-  ) {
-    def toListNodeChangePayloadADM: ListNodeChangePayloadADM =
-      ListNodeChangePayloadADM(listIri, projectIri, hasRootNode, position, name, labels, comments)
-  }
-
+  )
   object ListChangeRequest {
-
-    def from(l: ListNodeChangePayloadADM): ListChangeRequest =
-      ListChangeRequest(l.listIri, l.projectIri, l.hasRootNode, l.position, l.name, l.labels, l.comments)
-
     implicit val jsonCodec: JsonCodec[ListChangeRequest] = DeriveJsonCodec.gen[ListChangeRequest]
   }
+
   final case class ListChangeNameRequest(name: ListName)
   object ListChangeNameRequest {
     implicit val jsonCodec: JsonCodec[ListChangeNameRequest] = DeriveJsonCodec.gen[ListChangeNameRequest]

@@ -32,19 +32,6 @@ object ListNodeCreatePayloadADM {
 }
 
 /**
- * List node update payload
- */
-final case class ListNodeChangePayloadADM(
-  listIri: ListIri,
-  projectIri: ProjectIri,
-  hasRootNode: Option[ListIri] = None,
-  position: Option[Position] = None,
-  name: Option[ListName] = None,
-  labels: Option[Labels] = None,
-  comments: Option[Comments] = None
-)
-
-/**
  * Node Name update payload
  */
 final case class NodeNameChangePayloadADM(name: ListName)

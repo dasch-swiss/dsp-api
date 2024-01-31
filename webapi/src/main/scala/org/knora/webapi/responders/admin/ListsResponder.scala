@@ -870,7 +870,7 @@ final case class ListsResponder(
     val nodeIri = changeNodeRequest.listIri.value
     val nodeInfoChangeTask =
       for {
-        changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest.toListNodeChangePayloadADM)
+        changeNodeInfoSparql <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
         _                    <- triplestore.query(Update(changeNodeInfoSparql))
         maybeNodeADM         <- listNodeInfoGetADM(changeNodeRequest.listIri.value)
         updated <-
@@ -959,7 +959,7 @@ final case class ListsResponder(
 
         updateQuery <-
           getUpdateNodeInfoSparqlStatement(
-            changeNodeInfoRequest = ListNodeChangePayloadADM(
+            changeNodeInfoRequest = ListChangeRequest(
               listIri = listIri,
               projectIri = project.id,
               name = Some(changeNameReq.name)
@@ -1007,7 +1007,7 @@ final case class ListsResponder(
         project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
         updateQuery <- getUpdateNodeInfoSparqlStatement(
-                         changeNodeInfoRequest = ListNodeChangePayloadADM(
+                         changeNodeInfoRequest = ListChangeRequest(
                            listIri = listIri,
                            projectIri = project.id,
                            labels = Some(changeNodeLabelsRequest.labels)
@@ -1042,7 +1042,7 @@ final case class ListsResponder(
         project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
-                                      ListNodeChangePayloadADM(
+          ListChangeRequest(
                                         listIri = listIri,
                                         projectIri = project.id,
                                         comments = Some(changeNodeCommentsRequest.comments)
@@ -1640,7 +1640,7 @@ final case class ListsResponder(
    * @return a [[String]].
    */
   private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: ListNodeChangePayloadADM
+    changeNodeInfoRequest: ListChangeRequest
   ): Task[String] =
     for {
       // get the data graph of the project.
