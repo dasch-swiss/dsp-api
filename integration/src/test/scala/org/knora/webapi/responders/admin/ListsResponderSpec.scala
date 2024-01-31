@@ -25,7 +25,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
-import org.knora.webapi.slice.admin.api.Requests.ListPutRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
@@ -193,7 +193,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "update basic list information" in {
-        val theChange: ListPutRequest = ListPutRequest(
+        val theChange: ListChangeRequest = ListChangeRequest(
           listIri = ListIri.unsafeFrom(newListIri.get),
           projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
           name = Some(ListName.unsafeFrom("updated name")),
@@ -246,7 +246,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.unsafeFrom("sommer"))
         val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
-        val theChange = ListPutRequest(
+        val theChange = ListChangeRequest(
           listIri = ListIri.unsafeFrom(newListIri.get),
           projectIri = projectIRI,
           name = name

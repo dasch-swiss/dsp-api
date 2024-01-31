@@ -191,51 +191,6 @@ case class ListChildNodeCreateRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Request updating the name of an existing node.
- *
- * @param nodeIri               the IRI of the node whose name should be updated.
- * @param changeNodeNameRequest the payload containing the new name.
- * @param requestingUser        the user initiating the request.
- * @param apiRequestID          the ID of the API request.
- */
-case class NodeNameChangeRequestADM(
-  nodeIri: IRI,
-  changeNodeNameRequest: NodeNameChangePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
- * Request updating the labels of an existing node.
- *
- * @param nodeIri                 the IRI of the node whose name should be updated.
- * @param changeNodeLabelsRequest the payload containing the new labels.
- * @param requestingUser          the user initiating the request.
- * @param apiRequestID            the ID of the API request.
- */
-case class NodeLabelsChangeRequestADM(
-  nodeIri: IRI,
-  changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
- * Request updating the comments of an existing node.
- *
- * @param nodeIri                   the IRI of the node whose name should be updated.
- * @param changeNodeCommentsRequest the payload containing the new comments.
- * @param requestingUser            the user initiating the request.
- * @param apiRequestID              the ID of the API request.
- */
-case class NodeCommentsChangeRequestADM(
-  nodeIri: IRI,
-  changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
  * Request updating the position of an existing node.
  *
  * @param nodeIri                   the IRI of the node whose position should be updated.

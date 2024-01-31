@@ -39,13 +39,19 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
-import org.knora.webapi.slice.admin.api.Requests.ListPutRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -56,7 +62,9 @@ import org.knora.webapi.util.ZioHelper
 
 final case class ListsResponder(
   appConfig: AppConfig,
+  auth: AuthorizationRestService,
   iriService: IriService,
+  projectRepo: KnoraProjectRepo,
   messageRelay: MessageRelay,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
@@ -79,22 +87,6 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) =>
-      nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
-    case NodeLabelsChangeRequestADM(
-          nodeIri,
-          changeNodeLabelsRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
-    case NodeCommentsChangeRequestADM(
-          nodeIri,
-          changeNodeCommentsRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
     case NodePositionChangeRequestADM(
           nodeIri,
           changeNodePositionRequest,
@@ -876,7 +868,7 @@ final case class ListsResponder(
    * fails with a UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
   def nodeInfoChangeRequest(
-    changeNodeRequest: ListPutRequest,
+    changeNodeRequest: ListChangeRequest,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
     val nodeIri = changeNodeRequest.listIri.value
@@ -943,201 +935,129 @@ final case class ListsResponder(
     )
   }
 
+  private def ensureUserIsAdminOrProjectOwner(listIri: ListIri, user: User): Task[KnoraProject] =
+    getProjectIriFromNode(listIri.value)
+      .flatMap(projectRepo.findById)
+      .someOrFail(BadRequestException(s"Project not found for node $listIri"))
+      .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+
   /**
    * Changes name of the node (root or child)
    *
-   * @param nodeIri               the node's IRI.
-   * @param changeNodeNameRequest the new node name.
+   * @param listIri               the node's IRI.
+   * @param changeNameReq         the new node name.
    * @param apiRequestID          the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   *        Fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *        Fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
-  private def nodeNameChangeRequest(
-    nodeIri: IRI,
-    changeNodeNameRequest: NodeNameChangePayloadADM,
+  def nodeNameChangeRequest(
+    listIri: ListIri,
+    changeNameReq: ListChangeNameRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodeNameChangeTask(
-      nodeIri: IRI,
-      changeNodeNameRequest: NodeNameChangePayloadADM,
-      requestingUser: User
-    ): Task[NodeInfoGetResponseADM] =
+    val updateTask =
       for {
-        projectIri <- getProjectIriFromNode(nodeIri)
-        // check if the requesting user is allowed to perform operation
-        _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListChangePermission)
-            }
+        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
-        changeNodeNameSparql <-
+        updateQuery <-
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
-              listIri = ListIri.unsafeFrom(nodeIri),
-              projectIri = projectIri,
-              name = Some(changeNodeNameRequest.name)
+              listIri = listIri,
+              projectIri = project.id,
+              name = Some(changeNameReq.name)
             )
           )
+        _       <- triplestore.query(Update(updateQuery))
+        updated <- loadUpdatedListFromTriplestore(listIri)
+      } yield updated
 
-        _ <- triplestore.query(Update(changeNodeNameSparql))
-
-        /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
-
-        response = maybeNodeADM match {
-                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-                     case _ =>
-                       throw UpdateNotPerformedException(
-                         s"Node $nodeIri was not updated. Please report this as a possible bug."
-                       )
-                   }
-      } yield response
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri,
-      nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
   }
+
+  private def loadUpdatedListFromTriplestore(listIri: ListIri) =
+    listNodeInfoGetADM(listIri.value).flatMap {
+      case Some(rootNode: ListRootNodeInfoADM) =>
+        ZIO.succeed(RootNodeInfoGetResponseADM(rootNode))
+      case Some(childNode: ListChildNodeInfoADM) =>
+        ZIO.succeed(ChildNodeInfoGetResponseADM(childNode))
+      case _ =>
+        ZIO.fail {
+          val msg = s"Node ${listIri.value} was not updated. Please report this as a possible bug."
+          UpdateNotPerformedException(msg)
+        }
+    }
 
   /**
    * Changes labels of the node (root or child)
    *
-   * @param nodeIri                 the node's IRI.
+   * @param listIri                 the node's IRI.
    * @param changeNodeLabelsRequest the new node labels.
    * @param requestingUser          the requesting user.
    * @param apiRequestID            the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   *         fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *         fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
-  private def nodeLabelsChangeRequest(
-    nodeIri: IRI,
-    changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
+  def nodeLabelsChangeRequest(
+    listIri: ListIri,
+    changeNodeLabelsRequest: ListChangeLabelsRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodeLabelsChangeTask(
-      nodeIri: IRI,
-      changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-      requestingUser: User
-    ): Task[NodeInfoGetResponseADM] =
+    val updateTask =
       for {
-        projectIri <- getProjectIriFromNode(nodeIri)
+        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
-        // check if the requesting user is allowed to perform operation
-        _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListChangePermission)
-            }
-        changeNodeLabelsSparql <- getUpdateNodeInfoSparqlStatement(
-                                    changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                      listIri = ListIri.unsafeFrom(nodeIri),
-                                      projectIri = projectIri,
-                                      labels = Some(changeNodeLabelsRequest.labels)
-                                    )
-                                  )
-        _ <- triplestore.query(Update(changeNodeLabelsSparql))
-
-        /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
-
-        response = maybeNodeADM match {
-                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-                     case _ =>
-                       throw UpdateNotPerformedException(
-                         s"Node $nodeIri was not updated. Please report this as a possible bug."
+        updateQuery <- getUpdateNodeInfoSparqlStatement(
+                         changeNodeInfoRequest = ListNodeChangePayloadADM(
+                           listIri = listIri,
+                           projectIri = project.id,
+                           labels = Some(changeNodeLabelsRequest.labels)
+                         )
                        )
-                   }
-      } yield response
+        _ <- triplestore.query(Update(updateQuery))
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri,
-      nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser)
-    )
+        updated <- loadUpdatedListFromTriplestore(listIri)
+      } yield updated
+    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
   }
 
   /**
    * Changes comments of the node (root or child)
    *
-   * @param nodeIri                   the node's IRI.
+   * @param listIri                   the node's IRI.
    * @param changeNodeCommentsRequest the new node comments.
    * @param requestingUser            the requesting user.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   *           fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *           fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
-  private def nodeCommentsChangeRequest(
-    nodeIri: IRI,
-    changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
+  def nodeCommentsChangeRequest(
+    listIri: ListIri,
+    changeNodeCommentsRequest: ListChangeCommentsRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[NodeInfoGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodeCommentsChangeTask(
-      nodeIri: IRI,
-      changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-      requestingUser: User
-    ): Task[NodeInfoGetResponseADM] =
+    val updateTask =
       for {
-        projectIri <- getProjectIriFromNode(nodeIri)
-
-        // check if the requesting user is allowed to perform operation
-        _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListChangePermission)
-            }
+        project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
 
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
                                       ListNodeChangePayloadADM(
-                                        listIri = ListIri.unsafeFrom(nodeIri),
-                                        projectIri = projectIri,
+                                        listIri = listIri,
+                                        projectIri = project.id,
                                         comments = Some(changeNodeCommentsRequest.comments)
                                       )
                                     )
         _ <- triplestore.query(Update(changeNodeCommentsSparql))
 
-        /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
+        updated <- loadUpdatedListFromTriplestore(listIri)
+      } yield updated
 
-        response = maybeNodeADM match {
-                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-                     case _ =>
-                       throw UpdateNotPerformedException(
-                         s"Node $nodeIri was not updated. Please report this as a possible bug."
-                       )
-                   }
-      } yield response
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri,
-      nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, listIri.value, updateTask)
   }
 
   /**
@@ -1149,7 +1069,7 @@ final case class ListsResponder(
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodePositionChangeResponseADM]]
    * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
-   * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+   *           fails with a [[UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
   private def nodePositionChangeRequest(
     nodeIri: IRI,
@@ -1165,7 +1085,7 @@ final case class ListsResponder(
      *
      * @param parentNode  the parent to which the node should belong.
      * @param isNewParent identifier that node is added to another parent or not.
-     * @throws BadRequestException if given position is out of range.
+     *           fails with a [[BadRequestException if given position is out of range.
      */
     def isNewPositionValid(parentNode: ListNodeADM, isNewParent: Boolean): Unit = {
       val numberOfChildren = parentNode.getChildren.size
@@ -2020,23 +1940,25 @@ object ListsResponder {
     ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
 
   def nodeInfoChangeRequest(
-    req: ListPutRequest,
+    req: ListChangeRequest,
     apiRequestId: UUID
   ): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.nodeInfoChangeRequest(req, apiRequestId))
 
   val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,
     ListsResponder
   ] = ZLayer.fromZIO {
     for {
-      config  <- ZIO.service[AppConfig]
-      iriS    <- ZIO.service[IriService]
-      mr      <- ZIO.service[MessageRelay]
-      pom     <- ZIO.service[PredicateObjectMapper]
-      ts      <- ZIO.service[TriplestoreService]
-      sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ListsResponder(config, iriS, mr, pom, ts, sf))
+      config   <- ZIO.service[AppConfig]
+      auth     <- ZIO.service[AuthorizationRestService]
+      iriS     <- ZIO.service[IriService]
+      projects <- ZIO.service[KnoraProjectRepo]
+      mr       <- ZIO.service[MessageRelay]
+      pom      <- ZIO.service[PredicateObjectMapper]
+      ts       <- ZIO.service[TriplestoreService]
+      sf       <- ZIO.service[StringFormatter]
+      handler  <- mr.subscribe(ListsResponder(config, auth, iriS, projects, mr, pom, ts, sf))
     } yield handler
   }
 }
