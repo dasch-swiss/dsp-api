@@ -197,8 +197,6 @@ final case class ListsResponder(
     ZIO.ifZIO(rootNodeByIriExists(nodeIri))(
       listGetADM(nodeIri).someOrFail(NotFoundException(s"List '$nodeIri' not found")).map(ListGetResponseADM.apply),
       for {
-        // No. Get the node and all its sublist children.
-        // First, get node itself and all children.
         maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
         entireNode <- maybeNode match {
