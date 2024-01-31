@@ -24,10 +24,10 @@ case class GroupsEndpointsHandler(
       (_: Unit) => restService.getGroups
     )
 
-  private val getGroupHandler =
+  private val getGroupByIriHandler =
     PublicEndpointHandler(
       endpoints.getGroupByIri,
-      (iri: GroupIri) => restService.getGroup(iri)
+      (iri: GroupIri) => restService.getGroupByIri(iri)
     )
 
   private val getGroupMembersHandler =
@@ -38,7 +38,7 @@ case class GroupsEndpointsHandler(
 
   private val securedHandlers = List(getGroupMembersHandler).map(mapper.mapSecuredEndpointHandler(_))
 
-  val allHandlers = List(getGroupsHandler, getGroupHandler).map(mapper.mapPublicEndpointHandler(_))
+  val allHandlers = List(getGroupsHandler, getGroupByIriHandler).map(mapper.mapPublicEndpointHandler(_))
     ++ securedHandlers
 }
 

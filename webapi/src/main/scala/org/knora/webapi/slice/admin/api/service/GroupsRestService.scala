@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import dsp.errors.NotFoundException
 import zio.*
 import zio.macros.accessible
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
@@ -18,7 +18,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 @accessible
 trait GroupsRestService {
   def getGroups: Task[GroupsGetResponseADM]
-  def getGroup(iri: GroupIri): Task[GroupGetResponseADM]
+  def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM]
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
 }
 
@@ -31,9 +31,12 @@ final case class GroupsRestServiceLive(
     external <- format.toExternal(internal)
   } yield external
 
-  override def getGroup(iri: GroupIri): Task[GroupGetResponseADM] =
+  override def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
     for {
-      internal <- responder.groupGetRequest(iri)
+      internal <- responder
+                    .groupGetADM(iri.value)
+                    .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
+                    .map(GroupGetResponseADM.apply)
       external <- format.toExternal(internal)
     } yield external
 

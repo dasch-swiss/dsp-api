@@ -76,15 +76,6 @@ trait GroupsResponderADM {
   def groupGetADM(groupIri: IRI): Task[Option[GroupADM]]
 
   /**
-   * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
-   *
-   * @param groupIri the IRI of the group requested.
-   * @return information about the group as a [[GroupGetResponseADM]].
-   */
-  def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM]
-  final def groupGetRequest(iri: GroupIri): Task[GroupGetResponseADM] = groupGetRequestADM(iri.value)
-
-  /**
    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
    *
    * @param groupIris the IRIs of the groups being requested
@@ -174,7 +165,6 @@ final case class GroupsResponderADMLive(
     case _: GroupsGetRequestADM         => groupsGetRequestADM
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
-    case r: GroupGetRequestADM          => groupGetRequestADM(r.groupIri)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
     case r: GroupCreateRequestADM       => createGroupADM(r.createRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeRequestADM =>
@@ -257,24 +247,17 @@ final case class GroupsResponderADMLive(
   }
 
   /**
-   * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
-   *
-   * @param groupIri             the IRI of the group requested.
-   * @return information about the group as a [[GroupGetResponseADM]].
-   */
-  override def groupGetRequestADM(groupIri: IRI): Task[GroupGetResponseADM] =
-    groupGetADM(groupIri)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(_ => NotFoundException(s"Group <$groupIri> not found."), GroupGetResponseADM)
-
-  /**
    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
    *
    * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
   override def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
-    ZioHelper.sequence(groupIris.map(groupGetRequestADM))
+    ZioHelper.sequence(groupIris.map { iri =>
+      groupGetADM(iri)
+        .flatMap(ZIO.fromOption(_))
+        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM)
+    })
 
   /**
    * Gets the members with the given group IRI and returns the information as a sequence of [[User]].
