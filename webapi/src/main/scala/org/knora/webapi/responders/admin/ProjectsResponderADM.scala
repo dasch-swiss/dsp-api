@@ -60,12 +60,10 @@ trait ProjectsResponderADM {
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
-   * @param withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
-   *
-   *         NotFoundException if no projects are found.
+   *         [[NotFoundException]] if no projects are found.
    */
-  def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM]
+  def getNonSystemProjects: Task[ProjectsGetResponseADM]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -200,18 +198,8 @@ final case class ProjectsResponderADMLive(
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectsGetRequestADM(withSystemProjects) => projectsGetRequestADM(withSystemProjects)
-    case ProjectGetADM(identifier)                 => getProjectFromCacheOrTriplestore(identifier)
-    case ProjectGetRequestADM(identifier)          => getSingleProjectADMRequest(identifier)
-    case ProjectMembersGetRequestADM(identifier, requestingUser) =>
-      projectMembersGetRequestADM(identifier, requestingUser)
-    case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
-      projectAdminMembersGetRequestADM(identifier, requestingUser)
-    case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
-    case ProjectKeywordsGetRequestADM(projectIri) =>
-      projectKeywordsGetRequestADM(projectIri)
-    case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
-      projectRestrictedViewSettingsGetRequestADM(identifier)
+    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
+    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -230,24 +218,17 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects but not system projects and returns them as a [[ProjectADM]].
+   * Gets all the projects but not system projects.
+   * Filters out system projects in response.
    *
-   * @param  withSystemProjects includes system projcets in response.
-   * @return all the projects as a [[ProjectADM]].
-   *
+   * @return all non-system projects as a [[ProjectsGetResponseADM]].
    *         [[NotFoundException]] if no projects are found.
    */
-  override def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM] =
-    projectService.findAll
-      .flatMap(projects =>
-        (projects, withSystemProjects) match {
-          case (Nil, _)  => ZIO.fail(NotFoundException(s"No projects found"))
-          case (_, true) => ZIO.succeed(ProjectsGetResponseADM(projects))
-          case _ =>
-            val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
-            ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
-        }
-      )
+  override def getNonSystemProjects: Task[ProjectsGetResponseADM] =
+    projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
+      case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
+      case projects => ZIO.succeed(ProjectsGetResponseADM(projects))
+    }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -455,11 +436,8 @@ final case class ProjectsResponderADMLive(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(
-        _ => NotFoundException(s"Project '${getId(id)}' not found."),
-        ProjectRestrictedViewSettingsGetResponseADM
-      )
+      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      .map(ProjectRestrictedViewSettingsGetResponseADM)
 
   /**
    * Update project's basic information.
