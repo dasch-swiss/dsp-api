@@ -93,6 +93,7 @@ services:
       - "3339:3339"
     volumes:
       - /tmp:/tmp
+      # Needed for local development when resetting the triplestore
       - ./knora-ontologies:/opt/knora-ontologies
       - ./test_data:/opt/test_data
     networks:
