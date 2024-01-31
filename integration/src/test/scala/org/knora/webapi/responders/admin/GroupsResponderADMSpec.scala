@@ -42,17 +42,13 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return group info if the group is known " in {
         val group = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupGetADM(imagesReviewerGroup.id))
         assert(group.nonEmpty)
-        assert(group.get.id === imagesReviewerGroup.id)
+        assert(group.get.id == imagesReviewerGroup.id)
       }
 
-      "return 'NotFoundException' when the group is unknown " in {
-        appActor ! GroupGetRequestADM(
-          groupIri = "http://rdfh.ch/groups/notexisting"
-        )
-
-        expectMsgPF(timeout) { case msg: Failure =>
-          msg.cause.isInstanceOf[NotFoundException] should ===(true)
-        }
+      "return 'None' when the group is unknown " in {
+        val iri      = "http://rdfh.ch/groups/notexisting"
+        val response = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupGetADM(iri))
+        assert(response.isEmpty)
       }
     }
 

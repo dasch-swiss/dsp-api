@@ -5,9 +5,10 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import dsp.errors.NotFoundException
 import zio.*
 import zio.macros.accessible
+
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
