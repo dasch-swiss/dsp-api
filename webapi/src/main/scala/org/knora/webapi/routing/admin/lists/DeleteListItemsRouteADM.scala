@@ -34,20 +34,8 @@ final case class DeleteListItemsRouteADM(
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute: Route =
-    deleteListItem() ~
-      canDeleteList() ~
+    canDeleteList() ~
       deleteListNodeComments()
-
-  /* delete list (i.e. root node) or a child node which should also delete its children */
-  private def deleteListItem(): Route = path(listsBasePath / Segment) { iri =>
-    delete {
-      /* delete a list item root node or child if unused */
-      requestContext =>
-        val requestTask =
-          RouteUtilADM.getIriUserUuid(iri, requestContext).map(r => ListItemDeleteRequestADM(r.iri, r.user, r.uuid))
-        RouteUtilADM.runJsonRouteZ(requestTask, requestContext)
-    }
-  }
 
   /**
    * Checks if a list can be deleted (none of its nodes is used in data).

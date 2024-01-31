@@ -11,14 +11,11 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.ListItemDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
+import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -70,6 +67,12 @@ final case class ListRestService(
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
     response <- listsResponder.nodePositionChangeRequest(iri, request, user, uuid)
+  } yield response
+
+  def deleteListItemRequestADM(iri: ListIri, user: User): Task[ListItemDeleteResponseADM] = for {
+    // authorization is currently done in the responder
+    uuid     <- Random.nextUUID
+    response <- listsResponder.deleteListItemRequestADM(iri, user, uuid)
   } yield response
 }
 
@@ -149,6 +152,12 @@ final case class ListsEndpointsHandlers(
     }
   )
 
+  // Deletes
+  private val deleteListsByIriHandler = SecuredEndpointHandler[ListIri, ListItemDeleteResponseADM](
+    listsEndpoints.deleteListsByIri,
+    user => listIri => listRestService.deleteListItemRequestADM(listIri, user)
+  )
+
   private val public = List(
     getListsByIriHandler,
     getListsQueryByProjectIriHandler,
@@ -162,7 +171,8 @@ final case class ListsEndpointsHandlers(
     putListsByIriLabelsHandler,
     putListsByIriCommentsHandler,
     putListsByIriPositionHandler,
-    putListsByIriHandler
+    putListsByIriHandler,
+    deleteListsByIriHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = public ++ secured

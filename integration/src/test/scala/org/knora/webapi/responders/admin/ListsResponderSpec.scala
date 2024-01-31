@@ -798,53 +798,67 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
     "used to delete list items" should {
       "not delete a node that is in use" in {
-        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeInUseIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeInUseIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(BadRequestException(s"Node $nodeInUseIri cannot be deleted, because it is in use.")))
-
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeInUseIri.value} cannot be deleted, because it is in use."
+        )
       }
 
       "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
-        expectMsg(
-          Failure(BadRequestException(s"Node $nodeIri cannot be deleted, because its child $usedChild is in use."))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use."
         )
-
       }
 
       "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeInUseInOntologyIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeInUseInOntologyIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(
-          Failure(BadRequestException(s"Node $nodeInUseInOntologyIri cannot be deleted, because it is in use."))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use."
         )
-
       }
 
       "delete a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode                           = received.node
-        val remainingChildren                    = parentNode.children
+
+        val parentNode = received match {
+          case ChildNodeDeleteResponseADM(node) => node
+          case _                                => fail("expecting ChildNodeDeleteResponseADM")
+        }
+
+        val remainingChildren = parentNode.children
         remainingChildren.size should be(4)
         // Tailing children should be shifted to left
         remainingChildren.last.position should be(3)
@@ -856,15 +870,20 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "delete a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode                           = received.node
-        val remainingChildren                    = parentNode.children
+        val parentNode = received match {
+          case ChildNodeDeleteResponseADM(node) => node
+          case _                                => fail("expecting ChildNodeDeleteResponseADM")
+        }
+
+        val remainingChildren = parentNode.children
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
         firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
@@ -872,14 +891,20 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = listIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            listIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ListDeleteResponseADM = expectMsgType[ListDeleteResponseADM](timeout)
-        received.iri should be(listIri)
+
+        val received = actual match {
+          case resp: ListDeleteResponseADM => resp
+          case _                           => fail("expecting ListDeleteResponseADM")
+        }
+        received.iri should be(listIri.value)
         received.deleted should be(true)
       }
     }

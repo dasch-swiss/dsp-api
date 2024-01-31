@@ -191,18 +191,6 @@ case class ListChildNodeCreateRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Requests deletion of a node (root or child). A successful response will be a [[ListDeleteResponseADM]]
- *
- * @param nodeIri              the IRI of the node (root or child).
- * @param requestingUser       the user making the request.
- */
-case class ListItemDeleteRequestADM(
-  nodeIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
  * Requests checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
@@ -314,7 +302,7 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
   def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
 }
 
-abstract class ListItemDeleteResponseADM extends KnoraResponseADM with ListADMJsonProtocol
+sealed trait ListItemDeleteResponseADM extends AdminKnoraResponseADM with ListADMJsonProtocol
 
 /**
  * Responds to deletion of a list by returning a success message.
@@ -1208,10 +1196,22 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(ChangeNodePositionApiRequestADM, "position", "parentNodeIri")
   implicit val changeNodePositionApiResponseADMFormat: RootJsonFormat[NodePositionChangeResponseADM] =
     jsonFormat(NodePositionChangeResponseADM, "node")
+
+  implicit val listItemDeleteResponseADMFormat: RootJsonFormat[ListItemDeleteResponseADM] =
+    new RootJsonFormat[ListItemDeleteResponseADM] {
+      override def write(obj: ListItemDeleteResponseADM): JsValue = obj match {
+        case list: ListDeleteResponseADM      => list.toJsValue
+        case node: ChildNodeDeleteResponseADM => node.toJsValue
+      }
+      override def read(json: JsValue): ListItemDeleteResponseADM =
+        Try(listDeleteResponseADMFormat.read(json))
+          .getOrElse(listNodeDeleteResponseADMFormat.read(json))
+    }
   implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] =
     jsonFormat(ChildNodeDeleteResponseADM, "node")
   implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] =
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
+
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
     jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
   implicit val ListNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListNodeCommentsDeleteResponseADM] =

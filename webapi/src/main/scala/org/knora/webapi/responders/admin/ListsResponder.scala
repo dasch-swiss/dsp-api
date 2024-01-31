@@ -39,11 +39,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
-import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
-import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
+import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
@@ -88,8 +84,6 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case ListItemDeleteRequestADM(nodeIri, requestingUser, apiRequestID) =>
-      deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
     case CanDeleteListRequestADM(iri, _)          => canDeleteListRequestADM(iri)
     case ListNodeCommentsDeleteRequestADM(iri, _) => deleteListNodeCommentsADM(iri)
     case other                                    => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -1389,8 +1383,8 @@ final case class ListsResponder(
    * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
    * @throws UpdateNotPerformedException in the case the node is in use and cannot be deleted.
    */
-  private def deleteListItemRequestADM(
-    nodeIri: IRI,
+  def deleteListItemRequestADM(
+    nodeIri: ListIri,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[ListItemDeleteResponseADM] = {
@@ -1590,8 +1584,8 @@ final case class ListsResponder(
 
     IriLocker.runWithIriLock(
       apiRequestID,
-      nodeIri,
-      nodeDeleteTask(nodeIri, requestingUser)
+      nodeIri.value,
+      nodeDeleteTask(nodeIri.value, requestingUser)
     )
   }
 
@@ -1931,6 +1925,13 @@ object ListsResponder {
     apiRequestId: UUID
   ): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.nodeInfoChangeRequest(req, apiRequestId))
+
+  def deleteListItemRequestADM(
+    iri: ListIri,
+    user: User,
+    uuid: UUID
+  ): ZIO[ListsResponder, Throwable, ListItemDeleteResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
 
   val layer: URLayer[
     AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

@@ -87,8 +87,20 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .in(zioJsonBody[ListChangeRequest])
     .out(sprayJsonBody[NodeInfoGetResponseADM])
 
+  // Deletes
+  val deleteListsByIri = baseEndpoints.securedEndpoint.delete
+    .in(base / listIriPathVar)
+    .out(sprayJsonBody[ListItemDeleteResponseADM])
+
   private val secured =
-    List(putListsByIriName, putListsByIriLabels, putListsByIriComments, putListsByIriPosistion, putListsByIri).map(
+    List(
+      putListsByIriName,
+      putListsByIriLabels,
+      putListsByIriComments,
+      putListsByIriPosistion,
+      putListsByIri,
+      deleteListsByIri
+    ).map(
       _.endpoint
     )
   private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
