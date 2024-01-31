@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -25,7 +26,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
+ * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec {
   "The GroupsResponder " when {
@@ -39,11 +40,9 @@ class GroupsResponderADMSpec extends CoreSpec {
 
     "asked about a group identified by 'iri' " should {
       "return group info if the group is known " in {
-        appActor ! GroupGetRequestADM(
-          groupIri = imagesReviewerGroup.id
-        )
-
-        expectMsg(GroupGetResponseADM(imagesReviewerGroup))
+        val group = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupGetADM(imagesReviewerGroup.id))
+        assert(group.nonEmpty)
+        assert(group.get.id === imagesReviewerGroup.id)
       }
 
       "return 'NotFoundException' when the group is unknown " in {

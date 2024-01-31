@@ -26,7 +26,7 @@ case class GroupsEndpointsHandler(
 
   private val getGroupHandler =
     PublicEndpointHandler(
-      endpoints.getGroup,
+      endpoints.getGroupByIri,
       (iri: GroupIri) => restService.getGroup(iri)
     )
 
