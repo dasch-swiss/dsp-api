@@ -911,68 +911,44 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
     "used to query if list can be deleted" should {
       "return FALSE for a node that is in use" in {
-        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeInUseIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeInUseIri)
+        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val response     = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseIri))
+        response.listIri should be(nodeInUseIri.value)
         response.canDeleteList should be(false)
       }
 
       "return FALSE for a node that is unused but has a child which is used" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(false)
       }
 
       "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeInUseInOntologyIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeInUseInOntologyIri)
+        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val response               = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseInOntologyIri))
+        response.listIri should be(nodeInUseInOntologyIri.value)
         response.canDeleteList should be(false)
       }
 
       "return TRUE for a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(true)
       }
 
-      "retrun TRUE for a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+      "return TRUE for a child node that is not in use" in {
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(true)
       }
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        appActor ! CanDeleteListRequestADM(
-          iri = listIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(listIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(listIri))
+        response.listIri should be(listIri.value)
         response.canDeleteList should be(true)
       }
     }

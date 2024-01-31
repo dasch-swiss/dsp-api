@@ -84,7 +84,6 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case CanDeleteListRequestADM(iri, _)          => canDeleteListRequestADM(iri)
     case ListNodeCommentsDeleteRequestADM(iri, _) => deleteListNodeCommentsADM(iri)
     case other                                    => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
@@ -1334,17 +1333,11 @@ final case class ListsResponder(
   /**
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
-  private def canDeleteListRequestADM(
-    iri: IRI
-  ): Task[CanDeleteListResponseADM] =
-    for {
-      canDelete <- triplestore
-                     .query(Select(sparql.admin.txt.canDeleteList(iri)))
-                     .map(response =>
-                       if (response.results.bindings.isEmpty) true
-                       else false
-                     )
-    } yield CanDeleteListResponseADM(iri, canDelete)
+  def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
+    triplestore
+      .query(Select(sparql.admin.txt.canDeleteList(iri.value)))
+      .map(_.results.bindings.isEmpty)
+      .map(CanDeleteListResponseADM(iri.value, _))
 
   /**
    * Deletes all comments from requested list node (only child).
@@ -1932,6 +1925,9 @@ object ListsResponder {
     uuid: UUID
   ): ZIO[ListsResponder, Throwable, ListItemDeleteResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
+
+  def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))
 
   val layer: URLayer[
     AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

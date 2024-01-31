@@ -11,6 +11,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListItemDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
@@ -158,12 +159,18 @@ final case class ListsEndpointsHandlers(
     user => listIri => listRestService.deleteListItemRequestADM(listIri, user)
   )
 
+  private val getListsCanDeleteByIriHandler = PublicEndpointHandler[ListIri, CanDeleteListResponseADM](
+    listsEndpoints.getListsCanDeleteByIri,
+    listsResponder.canDeleteListRequestADM
+  )
+
   private val public = List(
     getListsByIriHandler,
     getListsQueryByProjectIriHandler,
     getListsByIriInfoHandler,
     getListsInfosByIriHandler,
-    getListsNodesByIriHandler
+    getListsNodesByIriHandler,
+    getListsCanDeleteByIriHandler
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(

@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.*
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
@@ -92,6 +94,11 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .in(base / listIriPathVar)
     .out(sprayJsonBody[ListItemDeleteResponseADM])
 
+  val getListsCanDeleteByIri = baseEndpoints.publicEndpoint.get
+    .in(base / "candelete" / listIriPathVar)
+    .out(sprayJsonBody[CanDeleteListResponseADM])
+    .description("Checks if a list can be deleted (none of its nodes is used in data).")
+
   private val secured =
     List(
       putListsByIriName,
@@ -103,7 +110,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     ).map(
       _.endpoint
     )
-  private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo)
+  private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo, getListsCanDeleteByIri)
 
   val endpoints = (secured ++ public).map(_.tag("Admin Lists"))
 }

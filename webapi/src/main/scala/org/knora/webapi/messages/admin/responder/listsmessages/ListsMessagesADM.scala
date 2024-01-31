@@ -191,14 +191,6 @@ case class ListChildNodeCreateRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Requests checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
- *
- * @param iri                  the IRI of the list node (root or child).
- * @param requestingUser       the user making the request.
- */
-case class CanDeleteListRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
-
-/**
  * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteResponseADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
