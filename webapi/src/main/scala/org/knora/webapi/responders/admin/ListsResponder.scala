@@ -6,14 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-
-import java.util.UUID
-import scala.annotation.tailrec
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
@@ -26,14 +18,14 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -55,6 +47,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+
+import java.util.UUID
+import scala.annotation.tailrec
 
 final case class ListsResponder(
   appConfig: AppConfig,
@@ -83,8 +82,7 @@ final case class ListsResponder(
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case ListNodeCommentsDeleteRequestADM(iri, _) => deleteListNodeCommentsADM(iri)
-    case other                                    => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -1341,28 +1339,19 @@ final case class ListsResponder(
   /**
    * Deletes all comments from requested list node (only child).
    */
-  private def deleteListNodeCommentsADM(nodeIri: IRI): Task[ListNodeCommentsDeleteResponseADM] =
+  def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeInfoGetADM(nodeIri)
-
-      doesNodeHaveComments = node.get.comments.stringLiterals.nonEmpty
-
-      _ <- ZIO.when(!doesNodeHaveComments) {
-             ZIO.fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
-           }
-
-      _ <-
-        node match {
-          case Some(_: ListRootNodeInfoADM)  => ZIO.fail(BadRequestException("Root node comments cannot be deleted."))
-          case Some(_: ListChildNodeInfoADM) => ZIO.succeed(false)
-          case _                             => ZIO.fail(InconsistentRepositoryDataException("Bad data. List node expected."))
-        }
-
-      projectIri <- getProjectIriFromNode(nodeIri)
+      node <- listNodeInfoGetADM(nodeIri.value).someOrFail(NotFoundException(s"Node ${nodeIri.value} not found."))
+      _ <- ZIO
+             .fail(BadRequestException("Root node comments cannot be deleted."))
+             .when(!node.isInstanceOf[ListChildNodeInfoADM])
+      _ <- ZIO
+             .fail(BadRequestException(s"Nothing to delete. Node ${nodeIri.value} does not have comments."))
+             .when(!node.hasComments)
+      projectIri <- getProjectIriFromNode(nodeIri.value)
       namedGraph <- getDataNamedGraph(projectIri)
-      _          <- triplestore.query(Update(sparql.admin.txt.deleteListNodeComments(namedGraph, nodeIri)))
-
-    } yield ListNodeCommentsDeleteResponseADM(nodeIri, commentsDeleted = true)
+      _          <- triplestore.query(Update(sparql.admin.txt.deleteListNodeComments(namedGraph, nodeIri.value)))
+    } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true)
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
@@ -1888,6 +1877,9 @@ object ListsResponder {
     uuid: UUID
   ): ZIO[ListsResponder, Throwable, ListItemDeleteResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
+
+  def deleteListNodeCommentsADM(iri: ListIri): ZIO[ListsResponder, Throwable, ListNodeCommentsDeleteResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.deleteListNodeCommentsADM(iri))
 
   def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))

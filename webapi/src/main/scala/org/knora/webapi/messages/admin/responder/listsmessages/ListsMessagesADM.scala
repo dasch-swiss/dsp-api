@@ -190,17 +190,6 @@ case class ListChildNodeCreateRequestADM(
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
-/**
- * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteResponseADM]]
- *
- * @param iri                  the IRI of the list node (root or child).
- * @param requestingUser       the user making the request.
- */
-case class ListNodeCommentsDeleteRequestADM(
-  iri: IRI,
-  requestingUser: User
-) extends ListsResponderRequestADM
-
 ///////////////////////// Responses
 
 /**
@@ -400,6 +389,8 @@ sealed trait ListNodeInfoADM {
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
+
+  final def hasComments: Boolean = comments.nonEmpty
 }
 
 case class ListRootNodeInfoADM(

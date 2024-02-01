@@ -99,6 +99,10 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[CanDeleteListResponseADM])
     .description("Checks if a list can be deleted (none of its nodes is used in data).")
 
+  val deleteListsComment = baseEndpoints.securedEndpoint.delete
+    .in(base / "comments" / listIriPathVar)
+    .out(sprayJsonBody[ListNodeCommentsDeleteResponseADM])
+
   private val secured =
     List(
       putListsByIriName,
@@ -106,10 +110,10 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
       putListsByIriComments,
       putListsByIriPosistion,
       putListsByIri,
-      deleteListsByIri
-    ).map(
-      _.endpoint
-    )
+      deleteListsByIri,
+      deleteListsComment
+    ).map(_.endpoint)
+
   private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo, getListsCanDeleteByIri)
 
   val endpoints = (secured ++ public).map(_.tag("Admin Lists"))

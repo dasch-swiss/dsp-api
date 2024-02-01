@@ -9,10 +9,10 @@ import zio.Random
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListItemDeleteResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCommentsDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
@@ -75,6 +75,7 @@ final case class ListRestService(
     uuid     <- Random.nextUUID
     response <- listsResponder.deleteListItemRequestADM(iri, user, uuid)
   } yield response
+
 }
 
 object ListRestService {
@@ -164,6 +165,11 @@ final case class ListsEndpointsHandlers(
     listsResponder.canDeleteListRequestADM
   )
 
+  private val deleteListsCommentHandler = SecuredEndpointHandler[ListIri, ListNodeCommentsDeleteResponseADM](
+    listsEndpoints.deleteListsComment,
+    _ => listIri => listsResponder.deleteListNodeCommentsADM(listIri)
+  )
+
   private val public = List(
     getListsByIriHandler,
     getListsQueryByProjectIriHandler,
@@ -179,7 +185,8 @@ final case class ListsEndpointsHandlers(
     putListsByIriCommentsHandler,
     putListsByIriPositionHandler,
     putListsByIriHandler,
-    deleteListsByIriHandler
+    deleteListsByIriHandler,
+    deleteListsCommentHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = public ++ secured

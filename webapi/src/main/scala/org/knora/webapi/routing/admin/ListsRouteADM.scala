@@ -25,11 +25,5 @@ final case class ListsRouteADM(
   private val routeData: KnoraRouteData,
   override protected implicit val runtime: Runtime[routing.Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
-
-  private val createNodeRoute: CreateListItemsRouteADM = CreateListItemsRouteADM(routeData, runtime)
-  private val deleteNodeRoute: DeleteListItemsRouteADM = DeleteListItemsRouteADM(routeData, runtime)
-
-  override def makeRoute: Route =
-    createNodeRoute.makeRoute ~
-      deleteNodeRoute.makeRoute
+  override def makeRoute: Route = CreateListItemsRouteADM(routeData, runtime).makeRoute
 }

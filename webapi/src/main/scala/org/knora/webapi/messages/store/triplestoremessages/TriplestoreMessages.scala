@@ -384,6 +384,9 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
         }
     }
   }
+
+  final def isEmpty: Boolean  = stringLiterals.isEmpty
+  final def nonEmpty: Boolean = stringLiterals.nonEmpty
 }
 
 object StringLiteralSequenceV2 {

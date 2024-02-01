@@ -955,48 +955,34 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
     "used to delete list node comments" should {
       "do not delete a comment of root list node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        expectMsg(
-          Failure(BadRequestException("Root node comments cannot be deleted."))
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
+        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Root node comments cannot be deleted."
         )
       }
 
       "delete all comments of child node that contains just one comment" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList01"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: ListNodeCommentsDeleteResponseADM =
-          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
-        response.nodeIri should be(nodeIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
+        response.nodeIri should be(listIri.value)
         response.commentsDeleted should be(true)
       }
 
       "delete all comments of child node that contains more than one comment" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList02"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: ListNodeCommentsDeleteResponseADM =
-          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
-        response.nodeIri should be(nodeIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
+        response.nodeIri should be(listIri.value)
         response.commentsDeleted should be(true)
       }
 
-      "if reqested list does not have comments, inform there is no comments to delete" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList03"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        expectMsg(
-          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
+      "if requested list does not have comments, inform there is no comments to delete" in {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
+        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Nothing to delete. Node ${listIri.value} does not have comments."
         )
       }
     }
