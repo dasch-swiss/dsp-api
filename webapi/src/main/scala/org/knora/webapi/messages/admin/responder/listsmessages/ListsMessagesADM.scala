@@ -8,7 +8,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 
-import java.util.UUID
 import scala.util.Try
 
 import dsp.errors.BadRequestException
@@ -20,8 +19,6 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -29,26 +26,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties
 import org.knora.webapi.slice.admin.domain.model.User
 
 /////////////// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new list root node.
- * At least one label and comment need to be supplied.
- *
- * @param id            the optional custom IRI of the list node.
- * @param projectIri    the IRI of the project.
- * @param name          the optional name of the list node.
- * @param labels        labels of the list node.
- * @param comments      comments of the list node.
- */
-case class ListRootNodeCreateApiRequestADM(
-  id: Option[IRI] = None,
-  projectIri: IRI,
-  name: Option[String] = None,
-  labels: Seq[V2.StringLiteralV2],
-  comments: Seq[V2.StringLiteralV2]
-) extends ListADMJsonProtocol {
-  def toJsValue: JsValue = createListRootNodeApiRequestADMFormat.write(this)
-}
 
 /**
  * Represents an API request payload that asks the Knora API server to create a new list child node.
@@ -163,32 +140,6 @@ sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessag
  * @param requestingUser       the user making the request.
  */
 case class NodePathGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
-
-/**
- * Requests the creation of a new list.
- *
- * @param createRootNode       the [[ListRootNodeCreatePayloadADM]] information used for creating the root node of the list.
- * @param requestingUser       the user creating the new list.
- * @param apiRequestID         the ID of the API request.
- */
-case class ListRootNodeCreateRequestADM(
-  createRootNode: ListRootNodeCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
- * Request the creation of a new list node, root or child.
- *
- * @param createChildNodeRequest the new node information.
- * @param requestingUser         the user making the request.
- * @param apiRequestID           the ID of the API request.
- */
-case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: ListChildNodeCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
 
 ///////////////////////// Responses
 
@@ -1103,17 +1054,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListRootNodeApiRequestADMFormat: RootJsonFormat[ListRootNodeCreateApiRequestADM] =
-    jsonFormat(
-      ListRootNodeCreateApiRequestADM,
-      "id",
-//      "parentNodeIri",
-      "projectIri",
-      "name",
-//      "position",
-      "labels",
-      "comments"
-    )
   implicit val createListChildNodeApiRequestADMFormat: RootJsonFormat[ListChildNodeCreateApiRequestADM] =
     jsonFormat(
       ListChildNodeCreateApiRequestADM,

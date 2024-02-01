@@ -26,8 +26,6 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
@@ -79,11 +77,7 @@ final case class ListsResponder(
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
-    case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
-      listCreateRequestADM(createRootNode, apiRequestID)
-    case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
-      listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other                                      => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -632,19 +626,16 @@ final case class ListsResponder(
    * @return a [newListNodeIri]
    */
   private def createNode(
-    createNodeRequest: ListNodeCreatePayloadADM
+    createNodeRequest: ListCreateRequest
   ): Task[IRI] = {
-    //    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIri] = createNodeRequest match {
-      case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
-      case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
+      case _: ListCreateRootNodeRequest      => None
+      case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
     }
 
     val (id, projectIri, name, position) = createNodeRequest match {
-      case root: ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM =>
-        (root.id, root.projectIri, root.name, None)
-      case child: ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM =>
-        (child.id, child.projectIri, child.name, child.position)
+      case root: ListCreateRootNodeRequest   => (root.id, root.projectIri, root.name, None)
+      case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
@@ -760,47 +751,33 @@ final case class ListsResponder(
 
       // Create the new list node depending on type
       createNewListSparqlString = createNodeRequest match {
-                                    case ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM(
-                                          _,
-                                          projectIri,
-                                          name,
-                                          labels,
-                                          comments
-                                        ) =>
+                                    case r: ListCreateRootNodeRequest =>
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
                                           listClassIri = KnoraBase.ListNode,
-                                          projectIri = projectIri.value,
+                                          projectIri = r.projectIri.value,
                                           nodeIri = newListNodeIri,
                                           parentNodeIri = None,
                                           rootNodeIri = rootNodeIri,
                                           position = None,
-                                          maybeName = name.map(_.value),
-                                          maybeLabels = labels.value,
-                                          maybeComments = Some(comments.value)
+                                          maybeName = r.name.map(_.value),
+                                          maybeLabels = r.labels.value,
+                                          maybeComments = Some(r.comments.value)
                                         )
-                                    case ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM(
-                                          _,
-                                          parentNodeIri,
-                                          projectIri,
-                                          name,
-                                          _,
-                                          labels,
-                                          comments
-                                        ) =>
+                                    case c: ListCreateChildNodeRequest =>
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
                                           listClassIri = KnoraBase.ListNode,
-                                          projectIri = projectIri.value,
+                                          projectIri = c.projectIri.value,
                                           nodeIri = newListNodeIri,
-                                          parentNodeIri = Some(parentNodeIri.value),
+                                          parentNodeIri = Some(c.parentNodeIri.value),
                                           rootNodeIri = rootNodeIri,
                                           position = newPosition,
-                                          maybeName = name.map(_.value),
-                                          maybeLabels = labels.value,
-                                          maybeComments = comments.map(_.value)
+                                          maybeName = c.name.map(_.value),
+                                          maybeLabels = c.labels.value,
+                                          maybeComments = c.comments.map(_.value)
                                         )
                                   }
 
@@ -811,38 +788,18 @@ final case class ListsResponder(
   /**
    * Creates a list.
    *
-   * @param createRootRequest    the new list's information.
+   * @param req    the new list's information.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[RootNodeInfoGetResponseADM]]
+   * @return a [[ListGetResponseADM]]
    */
-  private def listCreateRequestADM(
-    createRootRequest: ListRootNodeCreatePayloadADM,
-    apiRequestID: UUID
-  ): Task[ListGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def listCreateTask(createRootRequest: ListRootNodeCreatePayloadADM): Task[ListGetResponseADM] =
-      for {
-        listRootIri <- createNode(createRootRequest)
-
-        // Verify that the list was created.
-        maybeNewListADM <- listGetADM(rootNodeIri = listRootIri)
-
-        newListADM = maybeNewListADM.getOrElse(
-                       throw UpdateNotPerformedException(
-                         s"List $listRootIri was not created. Please report this as a possible bug."
-                       )
-                     )
-
-      } yield ListGetResponseADM(newListADM)
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
-      listCreateTask(createRootRequest)
-    )
+  def listCreateRootNode(req: ListCreateRootNodeRequest, apiRequestID: UUID): Task[ListGetResponseADM] = {
+    val createTask = createNode(req).flatMap { createdIri =>
+      val errMsg = s"List $createdIri was not created. Please report this as a possible bug."
+      listGetADM(createdIri)
+        .someOrFail(UpdateNotPerformedException(errMsg))
+        .map(ListGetResponseADM.apply)
+    }
+    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI, createTask)
   }
 
   /**
@@ -882,12 +839,12 @@ final case class ListsResponder(
   /**
    * Creates a new child node and appends it to an existing list node.
    *
-   * @param createChildNodeRequest the new list node's information.
+   * @param req the new list node's information.
    * @param apiRequestID           the unique api request ID.
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
-  private def listChildNodeCreateRequestADM(
-    createChildNodeRequest: ListChildNodeCreatePayloadADM,
+  def listCreateChildNode(
+    req: ListCreateChildNodeRequest,
     apiRequestID: UUID
   ): Task[ChildNodeInfoGetResponseADM] = {
 
@@ -895,7 +852,7 @@ final case class ListsResponder(
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ListChildNodeCreatePayloadADM
+      createChildNodeRequest: ListCreateChildNodeRequest
     ): Task[ChildNodeInfoGetResponseADM] =
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
@@ -918,7 +875,7 @@ final case class ListsResponder(
     IriLocker.runWithIriLock(
       apiRequestID,
       LISTS_GLOBAL_LOCK_IRI,
-      listChildNodeCreateTask(createChildNodeRequest)
+      listChildNodeCreateTask(req)
     )
   }
 
@@ -1855,6 +1812,18 @@ object ListsResponder {
 
   def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
+
+  def listCreateRootNode(
+    req: ListCreateRootNodeRequest,
+    apiRequestID: UUID
+  ): ZIO[ListsResponder, Throwable, ListGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listCreateRootNode(req, apiRequestID))
+
+  def listCreateChildNode(
+    req: ListCreateChildNodeRequest,
+    apiRequestID: UUID
+  ): ZIO[ListsResponder, Throwable, ChildNodeInfoGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listCreateChildNode(req, apiRequestID))
 
   def nodePositionChangeRequestADM(
     nodeIri: ListIri,
