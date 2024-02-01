@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
 
@@ -13,11 +15,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
-import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
@@ -26,10 +24,14 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
+import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to update list items.
@@ -63,7 +65,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            listName <- ListName.make(apiRequest.name).toZIO.mapError(e => BadRequestException(e.getMessage))
+            listName <- ZIO.fromEither(ListName.from(apiRequest.name)).mapError(BadRequestException.apply)
             payload   = NodeNameChangePayloadADM(listName)
             uuid     <- getUserUuid(requestContext)
           } yield NodeNameChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -84,7 +86,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            labels <- Labels.make(apiRequest.labels).toZIO.mapError(e => BadRequestException(e.getMessage))
+            labels <- validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply).toZIO
             payload = NodeLabelsChangePayloadADM(labels)
             uuid   <- getUserUuid(requestContext)
           } yield NodeLabelsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -105,7 +107,7 @@ final case class UpdateListItemsRouteADM(
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
-            comments <- Comments.make(apiRequest.comments).toZIO.mapError(e => BadRequestException(e.getMessage))
+            comments <- ZIO.fromEither(Comments.from(apiRequest.comments)).mapError(BadRequestException.apply)
             payload   = NodeCommentsChangePayloadADM(comments)
             uuid     <- getUserUuid(requestContext)
           } yield NodeCommentsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
@@ -136,13 +138,13 @@ final case class UpdateListItemsRouteADM(
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         val validatedPayload = for {
           _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
-          listIri     = ListIri.make(apiRequest.listIri)
-          projectIri  = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-          hasRootNode = ListIri.make(apiRequest.hasRootNode)
-          position    = Position.make(apiRequest.position)
-          name        = ListName.make(apiRequest.name)
-          labels      = Labels.make(apiRequest.labels)
-          comments    = Comments.make(apiRequest.comments)
+          listIri     = validateOneWithFrom(apiRequest.listIri, ListIri.from, BadRequestException.apply)
+          projectIri  = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
+          hasRootNode = validateOptionWithFrom(apiRequest.hasRootNode, ListIri.from, BadRequestException.apply)
+          position    = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
+          name        = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+          labels      = validateOptionWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
+          comments    = validateOptionWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
         } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
           ListNodeChangePayloadADM
         )

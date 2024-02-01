@@ -177,7 +177,7 @@ object LayersTest {
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
       ListsResponder.layer,
-      ListsResponderV2Live.layer,
+      ListsResponderV2.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,

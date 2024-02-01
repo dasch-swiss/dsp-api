@@ -35,7 +35,7 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .out(statusCode(StatusCode.Accepted))
 
-  val endpoints: Seq[AnyEndpoint] = Seq(postMaintenance).map(_.endpoint)
+  val endpoints: Seq[AnyEndpoint] = Seq(postMaintenance).map(_.endpoint.tag("Admin Maintenance"))
 }
 
 object MaintenanceEndpoints {

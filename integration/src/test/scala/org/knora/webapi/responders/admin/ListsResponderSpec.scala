@@ -14,8 +14,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
@@ -28,10 +26,11 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
 
 /**
- * Tests [[ListsResponderADM]].
+ * Tests [[ListsResponder]].
  */
 class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
@@ -72,59 +71,47 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return basic list information (anything list)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
-
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.listinfo.sorted should be(treeListInfo.sorted)
+        val actual =
+          UnsafeZioRun.runOrThrow(ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/treeList"))
+        actual match {
+          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(treeListInfo.sorted)
+          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
+        }
       }
 
       "return basic list information (anything other list)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/otherTreeList",
-          requestingUser = SharedTestDataADM.anythingUser1
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList")
         )
-
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.listinfo.sorted should be(otherTreeListInfo.sorted)
+        actual match {
+          case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(otherTreeListInfo.sorted)
+          case _                                    => fail(s"Expecting RootNodeInfoGetResponseADM.")
+        }
       }
 
       "return basic node information (images list - sommer)" in {
-        appActor ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-          requestingUser = SharedTestDataADM.imagesUser01
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04")
         )
-
-        val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-
-        // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
-
-        received.nodeinfo.sorted should be(summerNodeInfo.sorted)
+        actual match {
+          case ChildNodeInfoGetResponseADM(childInfo) => childInfo.sorted should be(summerNodeInfo.sorted)
+          case _                                      => fail(s"Expecting ChildNodeInfoGetResponseADM.")
+        }
       }
 
       "return a full list response" in {
-        appActor ! ListGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
-          requestingUser = SharedTestDataADM.anythingUser1
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList")
         )
-
-        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
-
-        // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
-
-        received.list.listinfo.sorted should be(treeListInfo.sorted)
-
-        received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
+        actual match {
+          case ListGetResponseADM(list) =>
+            list.listinfo.sorted should be(treeListInfo.sorted)
+            list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
+          case _ => fail(s"Expecting ListGetResponseADM.")
+        }
       }
     }
+
     val newListIri     = new MutableTestIri
     val firstChildIri  = new MutableTestIri
     val secondChildIri = new MutableTestIri
@@ -135,13 +122,9 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
-              .fold(e => throw e.head, v => v),
-            comments = Comments
-              .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
-              .fold(e => throw e.head, v => v)
+            name = Some(ListName.unsafeFrom("neuelistename")),
+            labels = Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+            comments = Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -175,13 +158,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e.head, v => v),
+            name = Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
+            labels =
+              Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de")))),
             comments = Comments
-              .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e.head, v => v)
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -213,28 +194,25 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
+            name = Some(ListName.unsafeFrom("updated name")),
             labels = Some(
-              Labels
-                .make(
-                  Seq(
-                    V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                    V2.StringLiteralV2(value = "Changed List", language = Some("en"))
-                  )
+              Labels.unsafeFrom(
+                Seq(
+                  V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                  V2.StringLiteralV2(value = "Changed List", language = Some("en"))
                 )
-                .fold(e => throw e.head, v => v)
+              )
             ),
             comments = Some(
               Comments
-                .make(
+                .unsafeFrom(
                   Seq(
                     V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                     V2.StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
-                .fold(e => throw e.head, v => v)
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -267,12 +245,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update basic list information if name is duplicate" in {
-        val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
+        val name       = Some(ListName.unsafeFrom("sommer"))
         val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = projectIRI,
             name = name
           ),
@@ -291,16 +269,16 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add child to list - to the root node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            name = Some(ListName.unsafeFrom("first")),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -344,17 +322,17 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add second child to list in first position - to the root node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
-            position = Some(Position.make(0).fold(e => throw e.head, v => v)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            name = Some(ListName.unsafeFrom("second")),
+            position = Some(Position.unsafeFrom(0)),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -398,16 +376,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "add child to second child node" in {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(secondChildIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
+            name = Some(ListName.unsafeFrom("third")),
             labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -449,20 +426,20 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
+        val givenPosition = Some(Position.unsafeFrom(20))
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
             projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
+            name = Some(ListName.unsafeFrom("fourth")),
             position = givenPosition,
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+            labels = Labels.unsafeFrom(
+              Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
+            ),
             comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+              Comments.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+              )
             )
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -617,11 +594,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         isShifted should be(true)
 
         /* check old parent node */
-        appActor ! ListGetRequestADM(
-          iri = oldParentIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
+        val receivedNode: ListNodeGetResponseADM = actual match {
+          case it: ListNodeGetResponseADM => it
+          case _                          => fail(s"Expecting ListNodeGetResponseADM.")
+        }
+
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(4)
@@ -666,11 +644,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         isShifted should be(true)
 
         /* check old parent node */
-        appActor ! ListGetRequestADM(
-          iri = oldParentIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
+        val actual = UnsafeZioRun.runOrThrow(ListsResponder.listGetRequestADM(oldParentIri))
+        val receivedNode: ListNodeGetResponseADM = actual match {
+          case node: ListNodeGetResponseADM => node
+          case _                            => fail(s"Expecting ListNodeGetResponseADM.")
+        }
+
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(3)

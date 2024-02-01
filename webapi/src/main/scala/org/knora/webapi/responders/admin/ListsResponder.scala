@@ -17,8 +17,6 @@ import scala.annotation.tailrec
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.ListName
-import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -42,6 +40,9 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -72,8 +73,6 @@ final case class ListsResponder(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListGetRequestADM(listIri, _)              => listGetRequestADM(listIri)
-    case ListNodeInfoGetRequestADM(listIri, _)      => listNodeInfoGetRequestADM(listIri)
     case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
@@ -178,63 +177,35 @@ final case class ListsResponder(
 
   /**
    * Retrieves a complete node (root or child) with all children from the triplestore and returns it as a [[ListItemGetResponseADM]].
-   * If an IRI of a root node is given, the response is a list with root node info and all chilren of the list.
+   * If an IRI of a root node is given, the response is a list with root node info and all children of the list.
    * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
    *
    * @param nodeIri        the Iri if the required node.
    * @return a [[ListItemGetResponseADM]].
    */
-  private def listGetRequestADM(nodeIri: IRI) = {
+  def listGetRequestADM(nodeIri: IRI): Task[ListItemGetResponseADM] = {
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(nodeIri = nodeIri)
+        nodeInfo <- maybeNodeInfo match {
+                      case Some(childNodeInfo: ListChildNodeInfoADM) => ZIO.succeed(childNodeInfo)
+                      case _                                         => ZIO.fail(NotFoundException(s"Information not found for node '$nodeIri'"))
+                    }
+      } yield ListNodeGetResponseADM(NodeADM(nodeInfo, childNode.children))
 
-        nodeinfo = maybeNodeInfo match {
-                     case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
-                     case _                                         => throw NotFoundException(s"Information not found for node '$nodeIri'")
-                   }
+    ZIO.ifZIO(rootNodeByIriExists(nodeIri))(
+      listGetADM(nodeIri).someOrFail(NotFoundException(s"List '$nodeIri' not found")).map(ListGetResponseADM.apply),
+      for {
+        maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
-        // make a NodeADM instance
-        entirenode = ListNodeGetResponseADM(
-                       node = NodeADM(
-                         nodeinfo = nodeinfo,
-                         children = childNode.children
-                       )
-                     )
-      } yield entirenode
-
-    for {
-      exists <- rootNodeByIriExists(nodeIri)
-      // Is root node IRI given?
-      result <-
-        if (exists) {
-          for {
-            // Yes. Get the entire list
-            maybeList <- listGetADM(rootNodeIri = nodeIri)
-
-            entireList = maybeList match {
-                           case Some(list) => ListGetResponseADM(list = list)
-                           case None       => throw NotFoundException(s"List '$nodeIri' not found")
-                         }
-          } yield entireList
-        } else {
-          for {
-            // No. Get the node and all its sublist children.
-            // First, get node itself and all children.
-            maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
-
-            entireNode <- maybeNode match {
-                            // make sure that it is a child node
-                            case Some(childNode: ListChildNodeADM) =>
-                              // get the info of the child node
-                              getNodeADM(childNode)
-
-                            case _ => throw NotFoundException(s"Node '$nodeIri' not found")
-                          }
-          } yield entireNode
-        }
-    } yield result
+        entireNode <- maybeNode match {
+                        // make sure that it is a child node
+                        case Some(childNode: ListChildNodeADM) => getNodeADM(childNode)
+                        case _                                 => ZIO.fail(NotFoundException(s"Node '$nodeIri' not found"))
+                      }
+      } yield entireNode
+    )
   }
 
   /**
@@ -360,16 +331,12 @@ final case class ListsResponder(
    * @param nodeIri              the IRI of the list node to be queried.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  private def listNodeInfoGetRequestADM(nodeIri: IRI) =
-    for {
-      maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri = nodeIri)
-
-      result = maybeListNodeInfoADM match {
-                 case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
-                 case Some(rootInfo: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(rootInfo)
-                 case _                                     => throw NotFoundException(s"List node '$nodeIri' not found")
-               }
-    } yield result
+  def listNodeInfoGetRequestADM(nodeIri: IRI): Task[NodeInfoGetResponseADM] =
+    listNodeInfoGetADM(nodeIri = nodeIri).flatMap {
+      case Some(childInfo: ListChildNodeInfoADM) => ZIO.succeed(ChildNodeInfoGetResponseADM(childInfo))
+      case Some(rootInfo: ListRootNodeInfoADM)   => ZIO.succeed(RootNodeInfoGetResponseADM(rootInfo))
+      case _                                     => ZIO.fail(NotFoundException(s"List node '$nodeIri' not found"))
+    }
 
   /**
    * Retrieves a complete node including children. The node can be the lists root node or child node.
@@ -1035,7 +1002,7 @@ final case class ListsResponder(
         changeNodeNameSparql <-
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
-              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+              listIri = ListIri.unsafeFrom(nodeIri),
               projectIri = projectIri,
               name = Some(changeNodeNameRequest.name)
             )
@@ -1101,7 +1068,7 @@ final case class ListsResponder(
             }
         changeNodeLabelsSparql <- getUpdateNodeInfoSparqlStatement(
                                     changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                      listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                      listIri = ListIri.unsafeFrom(nodeIri),
                                       projectIri = projectIri,
                                       labels = Some(changeNodeLabelsRequest.labels)
                                     )
@@ -1167,7 +1134,7 @@ final case class ListsResponder(
 
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
                                       ListNodeChangePayloadADM(
-                                        listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                        listIri = ListIri.unsafeFrom(nodeIri),
                                         projectIri = projectIri,
                                         comments = Some(changeNodeCommentsRequest.comments)
                                       )
@@ -2066,6 +2033,12 @@ object ListsResponder {
 
   def getLists(projectIri: Option[ProjectIri]): ZIO[ListsResponder, Throwable, ListsGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.getLists(projectIri))
+
+  def listGetRequestADM(nodeIri: IRI): ZIO[ListsResponder, Throwable, ListItemGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listGetRequestADM(nodeIri))
+
+  def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
 
   val layer: URLayer[
     AppConfig & IriService & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,

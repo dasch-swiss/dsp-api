@@ -69,7 +69,6 @@ object SearchEndpointsInputs {
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
-  private val tags = List("v2", "search")
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
 
@@ -79,7 +78,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources using a Gravsearch query.")
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
@@ -87,7 +85,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources using a Gravsearch query.")
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
@@ -96,7 +93,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Count resources using a Gravsearch query.")
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
@@ -104,7 +100,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Count resources using a Gravsearch query.")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
@@ -115,7 +110,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
@@ -125,7 +119,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getFullTextSearch = baseEndpoints.withUserEndpoint.get
@@ -138,7 +131,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.returnFiles)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get
@@ -149,7 +141,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToStandoffClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val endpoints: Seq[AnyEndpoint] =
@@ -162,7 +153,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getSearchByLabelCount,
       getFullTextSearch,
       getFullTextSearchCount
-    ).map(_.endpoint)
+    ).map(_.endpoint.tag("V2 Search"))
 }
 
 object SearchEndpoints {
