@@ -42,7 +42,6 @@ import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
@@ -1513,73 +1512,37 @@ final case class ListsResponder(
                             }
       } yield updatedParentNode
 
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def nodeDeleteTask(nodeIri: IRI, requestingUser: User) =
-      for {
-        projectIri <- getProjectIriFromNode(nodeIri)
+    val nodeDeleteTask = for {
+      project   <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
+      projectIri = project.id
+      maybeNode <- listNodeGetADM(nodeIri.value, shallow = false)
 
-        // check if the requesting user is allowed to perform operation
-        _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListChangePermission)
-            }
+      response <- maybeNode match {
+                    case Some(rootNode: ListRootNodeADM) =>
+                      for {
+                        _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
+                        _ <- deleteListItem(rootNode.id, projectIri, rootNode.children, isRootNode = true)
+                      } yield ListDeleteResponseADM(rootNode.id, deleted = true)
 
-        maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
+                    case Some(childNode: ListChildNodeADM) =>
+                      for {
+                        _             <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                        parentNodeIri <- getParentNodeIRI(nodeIri.value)
+                        dataNamedGraph <-
+                          deleteListItem(childNode.id, projectIri, childNode.children, isRootNode = false)
+                        updatedParentNode <-
+                          updateParentNode(nodeIri.value, childNode.position, parentNodeIri, dataNamedGraph)
+                      } yield ChildNodeDeleteResponseADM(updatedParentNode)
 
-        response <- maybeNode match {
-                      case Some(rootNode: ListRootNodeADM) =>
-                        for {
-                          _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
+                    case _ =>
+                      ZIO.fail {
+                        val msg = s"Node ${nodeIri.value} was not found. Please verify the given IRI."
+                        BadRequestException(msg)
+                      }
+                  }
+    } yield response
 
-                          _ <- deleteListItem(
-                                 nodeIri = rootNode.id,
-                                 projectIri = projectIri,
-                                 children = rootNode.children,
-                                 isRootNode = true
-                               )
-                        } yield ListDeleteResponseADM(rootNode.id, deleted = true)
-
-                      case Some(childNode: ListChildNodeADM) =>
-                        for {
-                          _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
-
-                          // get parent node IRI before deleting the node
-                          parentNodeIri <- getParentNodeIRI(nodeIri)
-
-                          // delete the node
-                          dataNamedGraph <- deleteListItem(
-                                              nodeIri = childNode.id,
-                                              projectIri = projectIri,
-                                              children = childNode.children,
-                                              isRootNode = false
-                                            )
-
-                          // update the parent node
-                          updatedParentNode <- updateParentNode(
-                                                 deletedNodeIri = nodeIri,
-                                                 positionOfDeletedNode = childNode.position,
-                                                 parentNodeIri = parentNodeIri,
-                                                 dataNamedGraph = dataNamedGraph
-                                               )
-
-                        } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
-
-                      case _ =>
-                        throw BadRequestException(
-                          s"Node $nodeIri was not found. Please verify the given IRI."
-                        )
-                    }
-      } yield response
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      nodeIri.value,
-      nodeDeleteTask(nodeIri.value, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, nodeIri.value, nodeDeleteTask)
   }
 
   ////////////////////
