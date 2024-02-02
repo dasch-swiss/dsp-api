@@ -61,13 +61,6 @@ trait GroupsResponderADM {
   def groupsGetADM: Task[Seq[GroupADM]]
 
   /**
-   * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
-   *
-   * @return all the groups as a [[GroupsGetResponseADM]].
-   */
-  def groupsGetRequestADM: Task[GroupsGetResponseADM]
-
-  /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
    *
    * @param groupIri the IRI of the group requested.
@@ -162,7 +155,6 @@ final case class GroupsResponderADMLive(
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
     case _: GroupsGetADM                => groupsGetADM
-    case _: GroupsGetRequestADM         => groupsGetRequestADM
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
@@ -224,13 +216,6 @@ final case class GroupsResponderADMLive(
 
   private def findProjectById(id: ProjectIdentifierADM) =
     messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id))
-
-  /**
-   * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
-   *
-   * @return all the groups as a [[GroupsGetResponseADM]].
-   */
-  override def groupsGetRequestADM: Task[GroupsGetResponseADM] = groupsGetADM.map(GroupsGetResponseADM)
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
