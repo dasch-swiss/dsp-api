@@ -29,10 +29,10 @@ object ListProperties {
   object ListIri extends StringValueCompanion[ListIri] {
 
     /**
-     * Creates a new listIri.
+     * Creates a new [[ListIri]] within a [[KnoraProject]] generating a new base 64 encoded uuid.
      *
      * @param shortcode the required project shortcode.
-     * @return a new list IRI.
+     * @return a new [[ListIri]].
      */
     def makeNew(shortcode: Shortcode): ListIri = {
       val uuid = UuidUtil.makeRandomBase64EncodedUuid
