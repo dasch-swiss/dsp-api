@@ -5,25 +5,20 @@
 
 package org.knora.webapi.responders.admin
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
 import java.util.UUID
-import scala.annotation.tailrec
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
@@ -35,7 +30,6 @@ import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -63,22 +57,10 @@ final case class ListsResponder(
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
-) extends MessageHandler
-    with LazyLogging {
+) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[ListsResponderRequestADM]
-
-  /**
-   * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
-   */
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
-    case other                                      => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
 
   /**
    * Gets all lists or list belonging to a project and returns them as a [[ListsGetResponseADM]]. For performance reasons
@@ -527,96 +509,6 @@ final case class ListsResponder(
       sortedChildren = children.sortBy(_.position) map (_.sorted)
 
     } yield sortedChildren
-  }
-
-  /**
-   * Provides the path to a particular hierarchical list node.
-   *
-   * @param queryNodeIri   the IRI of the node whose path is to be queried.
-   * @param requestingUser the user making the request.
-   */
-  private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: User): Task[NodePathGetResponseADM] = {
-
-    /**
-     * Recursively constructs the path to a node.
-     *
-     * @param node      the IRI of the node whose path is to be constructed.
-     * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
-     * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
-     * @param path      the path constructed so far.
-     * @return the complete path to `node`.
-     */
-    @tailrec
-    def makePath(
-      node: IRI,
-      nodeMap: Map[IRI, Map[String, String]],
-      parentMap: Map[IRI, IRI],
-      path: Seq[NodePathElementADM]
-    ): Seq[NodePathElementADM] = {
-      // Get the details of the node.
-      val nodeData = nodeMap(node)
-
-      // Construct a NodePathElementV2 containing those details.
-      val pathElement = NodePathElementADM(
-        id = nodeData("node"),
-        name = nodeData.get("nodeName"),
-        labels = if (nodeData.contains("label")) {
-          StringLiteralSequenceV2(Vector(StringLiteralV2(nodeData("label"))))
-        } else {
-          StringLiteralSequenceV2.empty
-        },
-        comments = StringLiteralSequenceV2.empty
-      )
-
-      // Add it to the path.
-      val newPath = pathElement +: path
-
-      // Does this node have a parent?
-      parentMap.get(pathElement.id) match {
-        case Some(parentIri) =>
-          // Yes: recurse.
-          makePath(parentIri, nodeMap, parentMap, newPath)
-
-        case None =>
-          // No: the path is complete.
-          newPath
-      }
-    }
-
-    // TODO: Rewrite using a construct sparql query
-    for {
-      nodePathResponse <-
-        triplestore.query(
-          Select(sparql.admin.txt.getNodePath(queryNodeIri, requestingUser.lang, appConfig.fallbackLanguage))
-        )
-
-      /*
-
-            If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
-
-            node                                        nodeName     label                     child
-            <http://rdfh.ch/lists/c7f07a3fc1>    1            Heidi Film
-            <http://rdfh.ch/lists/2ebd2706c1>    7            FILM UND FOTO             <http://rdfh.ch/lists/c7f07a3fc1>
-            <http://rdfh.ch/lists/691eee1cbe>    4KUN         ART                       <http://rdfh.ch/lists/2ebd2706c1>
-
-            The order of the rows is arbitrary. Now we need to reconstruct the path based on the parent-child relationships between
-            nodes.
-
-       */
-
-      // A Map of node IRIs to query result rows.
-      nodeMap: Map[IRI, Map[String, String]] = nodePathResponse.results.bindings.map { row =>
-                                                 row.rowMap("node") -> row.rowMap
-                                               }.toMap
-
-      // A Map of child node IRIs to parent node IRIs.
-      parentMap: Map[IRI, IRI] = nodePathResponse.results.bindings.foldLeft(Map.empty[IRI, IRI]) { case (acc, row) =>
-                                   row.rowMap.get("child") match {
-                                     case Some(child) => acc + (child -> row.rowMap("node"))
-                                     case None        => acc
-                                   }
-                                 }
-    } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
   }
 
   /**
@@ -1854,20 +1746,5 @@ object ListsResponder {
   def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))
 
-  val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,
-    ListsResponder
-  ] = ZLayer.fromZIO {
-    for {
-      config   <- ZIO.service[AppConfig]
-      auth     <- ZIO.service[AuthorizationRestService]
-      iriS     <- ZIO.service[IriService]
-      projects <- ZIO.service[KnoraProjectRepo]
-      mr       <- ZIO.service[MessageRelay]
-      pom      <- ZIO.service[PredicateObjectMapper]
-      ts       <- ZIO.service[TriplestoreService]
-      sf       <- ZIO.service[StringFormatter]
-      handler  <- mr.subscribe(ListsResponder(config, auth, iriS, projects, mr, pom, ts, sf))
-    } yield handler
-  }
+  val layer = ZLayer.derive[ListsResponder]
 }

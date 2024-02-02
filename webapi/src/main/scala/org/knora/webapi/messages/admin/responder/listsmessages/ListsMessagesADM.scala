@@ -12,34 +12,15 @@ import scala.util.Try
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
-
-/**
- * A trait for messages that can be sent to `HierarchicalListsResponderV2`.
- */
-sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Requests the path from the root node of a list to a particular node. A successful response will be
- * a [[NodePathGetResponseADM]].
- *
- * @param iri                  the IRI of the node.
- * @param requestingUser       the user making the request.
- */
-case class NodePathGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
-
-///////////////////////// Responses
 
 /**
  * Responds to deletion of list node's comments by returning a success message.
