@@ -103,16 +103,6 @@ case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends N
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 }
 
-/**
- * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
- *
- * @param elements a list of the nodes composing the path from the list's root node up to and including the specified node.
- */
-case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
-
-  def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
-}
-
 sealed trait ListItemDeleteResponseADM extends AdminKnoraResponseADM with ListADMJsonProtocol
 
 /**
@@ -933,8 +923,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] =
-    jsonFormat(NodePathGetResponseADM, "elements")
   implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
 
   implicit val listItemGetResponseADMJsonFormat: RootJsonFormat[ListItemGetResponseADM] =
