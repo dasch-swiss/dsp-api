@@ -49,7 +49,11 @@ object ListProperties {
       else Iri.toSparqlEncodedString(value).toRight("List name is invalid.").map(ListName.apply)
   }
 
-  final case class Position private (value: Int) extends AnyVal with IntValue
+  final case class Position private (value: Int) extends AnyVal with IntValue {
+    def >(other: Int): Boolean = value > other
+
+    def <(other: Int): Boolean = value < other
+  }
 
   object Position extends IntValueCompanion[Position] {
     def from(value: Int): Either[String, Position] =

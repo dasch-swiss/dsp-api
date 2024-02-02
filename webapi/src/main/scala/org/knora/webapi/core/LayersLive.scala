@@ -122,6 +122,7 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
+      ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
       ListsResponder.layer,

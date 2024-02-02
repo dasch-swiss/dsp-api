@@ -25,9 +25,12 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
+import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ListsResponder]].
@@ -191,38 +194,35 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "update basic list information" in {
-        val changeNodeInfoRequest = NodeInfoChangeRequestADM(
-          listIri = newListIri.get,
-          changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("updated name")),
-            labels = Some(
-              Labels.unsafeFrom(
-                Seq(
-                  V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                  V2.StringLiteralV2(value = "Changed List", language = Some("en"))
-                )
+        val theChange: ListChangeRequest = ListChangeRequest(
+          listIri = ListIri.unsafeFrom(newListIri.get),
+          projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
+          name = Some(ListName.unsafeFrom("updated name")),
+          labels = Some(
+            Labels.unsafeFrom(
+              Seq(
+                V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                V2.StringLiteralV2(value = "Changed List", language = Some("en"))
               )
-            ),
-            comments = Some(
-              Comments
-                .unsafeFrom(
-                  Seq(
-                    V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                    V2.StringLiteralV2(value = "New Comment", language = Some("en"))
-                  )
-                )
             )
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+          comments = Some(
+            Comments
+              .unsafeFrom(
+                Seq(
+                  V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                  V2.StringLiteralV2(value = "New Comment", language = Some("en"))
+                )
+              )
+          )
         )
-        appActor ! changeNodeInfoRequest
 
-        val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
+        val received = UnsafeZioRun.runOrThrow(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
+        val listInfo = received match {
+          case RootNodeInfoGetResponseADM(info) => info
+          case _                                => fail("RootNodeInfoGetResponseADM expected")
+        }
 
-        val listInfo = received.listinfo
         listInfo.projectIri should be(imagesProjectIri)
         listInfo.name should be(Some("updated name"))
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
@@ -247,22 +247,15 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.unsafeFrom("sommer"))
         val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
-        appActor ! NodeInfoChangeRequestADM(
-          listIri = newListIri.get,
-          changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = projectIRI,
-            name = name
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val theChange = ListChangeRequest(
+          listIri = ListIri.unsafeFrom(newListIri.get),
+          projectIri = projectIRI,
+          name = name
         )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
-            )
-          )
+        val exit = UnsafeZioRun.run(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
         )
       }
 
@@ -457,66 +450,80 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
     "used to reposition nodes" should {
       "not reposition a node if new position is the same as old one" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 3,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition = Position.unsafeFrom(3)
+        val exit = UnsafeZioRun.run(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, parentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(UpdateNotPerformedException(s"The given position is the same as node's current position.")))
+        assertFailsWithA[UpdateNotPerformedException](
+          exit,
+          s"The given position is the same as node's current position."
+        )
       }
 
       "not reposition a node if new position is out of range" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 30,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition = Position.unsafeFrom(30)
+
+        val exit = UnsafeZioRun.run(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, parentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed position is = 4.")))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Invalid position given, maximum allowed position is = 4."
+        )
       }
 
       "not reposition a node to another parent node if new position is out of range" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 30,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList"
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val newPosition = Position.unsafeFrom(30)
+
+        val exit = UnsafeZioRun.run(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, parentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed position is = 3.")))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Invalid position given, maximum allowed position is = 3."
+        )
       }
 
       "reposition node List014 from position 3 to 1 (shift to right)" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 1,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition = Position.unsafeFrom(1)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, parentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
 
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(parentIri)
+        val parentNode = received.node
+        parentNode.id should be(parentIri.value)
 
-        val children      = parentNode.getChildren
-        val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 1)
+        val children      = parentNode.children
+        val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 1)
         isNodeUpdated should be(true)
 
         // node in position 4 must not have changed
@@ -531,24 +538,25 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "reposition node List011 from position 0 to end (shift to left)" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = -1,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList011")
+        val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition = Position.unsafeFrom(-1)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, parentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
+
+        val parentNode = received.node
 
         /* check parent node */
-        parentNode.getNodeId should be(parentIri)
-        val children      = parentNode.getChildren
-        val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 4)
+        parentNode.id should be(parentIri.value)
+        val children      = parentNode.children
+        val isNodeUpdated = children.exists(child => child.id == nodeIri.value && child.position == 4)
         isNodeUpdated should be(true)
 
         // node that was in position 1 must be in 0 now
@@ -563,28 +571,29 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "reposition node List013 in position 2 of another parent" in {
-        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 2,
-            parentIri = newParentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList013")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val newPosition  = Position.unsafeFrom(2)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(newParentIri)
+
+        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val parentNode   = received.node
+        parentNode.id should be(newParentIri.value)
 
         /* check children of new parent node */
-        val childrenOfNewParent = parentNode.getChildren
+        val childrenOfNewParent = parentNode.children
 
         // node must be in children of new parent
         childrenOfNewParent.size should be(4)
-        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
+        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 2)
         isNodeAdd should be(true)
 
         // last node of new parent must be shifted one place to right
@@ -603,7 +612,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(4)
-        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri)
+        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri.value)
         isNodeUpdated should be(false)
 
         // nodes of old siblings must be shifted to the left.
@@ -613,28 +622,29 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "reposition node List015 to the end of another parent's children" in {
-        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = -1,
-            parentIri = newParentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val newPosition  = Position.unsafeFrom(-1)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(newParentIri)
+
+        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val parentNode   = received.node
+        parentNode.id should be(newParentIri.value)
 
         /* check children of new parent node */
-        val childrenOfNewParent = parentNode.getChildren
+        val childrenOfNewParent = parentNode.children
 
         // node must be in children of new parent
         childrenOfNewParent.size should be(5)
-        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 4)
+        val isNodeAdd = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 4)
         isNodeAdd should be(true)
 
         // last node of new parent must have remained in its current position
@@ -653,184 +663,202 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         // node must not be in children of old parent
         val oldParentChildren = receivedNode.node.children
         oldParentChildren.size should be(3)
-        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri)
+        val isNodeUpdated = oldParentChildren.exists(child => child.id == nodeIri.value)
         isNodeUpdated should be(false)
       }
 
       "put List015 back in end of its original parent node" in {
-        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = -1,
-            parentIri = newParentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition  = Position.unsafeFrom(-1)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(newParentIri)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
 
         /* check children of new parent node */
-        val childrenOfNewParent = parentNode.getChildren
+        val childrenOfNewParent = parentNode.children
         childrenOfNewParent.size should be(4)
-        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 3)
+        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 3)
         isNodeUpdated should be(true)
-
       }
 
       "put List013 back in position 2 of its original parent node" in {
-        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 2,
-            parentIri = newParentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList013")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition  = Position.unsafeFrom(2)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(newParentIri)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
 
         /* check children of new parent node */
-        val childrenOfNewParent = parentNode.getChildren
+        val childrenOfNewParent = parentNode.children
         childrenOfNewParent.size should be(5)
-        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri && child.position == 2)
+        val isNodeUpdated = childrenOfNewParent.exists(child => child.id == nodeIri.value && child.position == 2)
         isNodeUpdated should be(true)
-
       }
 
       "put List011 back in its original place" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 0,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList011")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition  = Position.unsafeFrom(0)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(parentIri)
-        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
+        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 0)
         isNodeUpdated should be(true)
       }
 
       "put List014 back in its original position" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 3,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition  = Position.unsafeFrom(3)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(parentIri)
-        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 3)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
+        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 3)
         isNodeUpdated should be(true)
       }
 
       "reposition node in a position equal to length of new parents children" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList03"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 5,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList03")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
+        val newPosition  = Position.unsafeFrom(5)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(parentIri)
-        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 5)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
+        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 5)
         isNodeUpdated should be(true)
       }
 
       "reposition List014 in position 0 of its sibling which does not have a child" in {
-        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
-        appActor ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = 0,
-            parentIri = parentIri
-          ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
+        val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
+        val newPosition  = Position.unsafeFrom(0)
+
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.nodePositionChangeRequestADM(
+            nodeIri,
+            ListChangePositionRequest(newPosition, newParentIri),
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode                              = received.node
-        parentNode.getNodeId should be(parentIri)
-        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
+
+        val parentNode = received.node
+        parentNode.id should be(newParentIri.value)
+        val isNodeUpdated = parentNode.children.exists(child => child.id == nodeIri.value && child.position == 0)
         isNodeUpdated should be(true)
       }
     }
 
     "used to delete list items" should {
       "not delete a node that is in use" in {
-        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeInUseIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeInUseIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(BadRequestException(s"Node $nodeInUseIri cannot be deleted, because it is in use.")))
-
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeInUseIri.value} cannot be deleted, because it is in use."
+        )
       }
 
       "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
-        expectMsg(
-          Failure(BadRequestException(s"Node $nodeIri cannot be deleted, because its child $usedChild is in use."))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use."
         )
-
       }
 
       "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeInUseInOntologyIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
+        val exit = UnsafeZioRun.run(
+          ListsResponder.deleteListItemRequestADM(
+            nodeInUseInOntologyIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        expectMsg(
-          Failure(BadRequestException(s"Node $nodeInUseInOntologyIri cannot be deleted, because it is in use."))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use."
         )
-
       }
 
       "delete a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode                           = received.node
-        val remainingChildren                    = parentNode.getChildren
+
+        val parentNode = received match {
+          case ChildNodeDeleteResponseADM(node) => node
+          case _                                => fail("expecting ChildNodeDeleteResponseADM")
+        }
+
+        val remainingChildren = parentNode.children
         remainingChildren.size should be(4)
         // Tailing children should be shifted to left
         remainingChildren.last.position should be(3)
@@ -842,15 +870,20 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "delete a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            nodeIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode                           = received.node
-        val remainingChildren                    = parentNode.getChildren
+        val parentNode = received match {
+          case ChildNodeDeleteResponseADM(node) => node
+          case _                                => fail("expecting ChildNodeDeleteResponseADM")
+        }
+
+        val remainingChildren = parentNode.children
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
         firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
@@ -858,130 +891,98 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        appActor ! ListItemDeleteRequestADM(
-          nodeIri = listIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val actual = UnsafeZioRun.runOrThrow(
+          ListsResponder.deleteListItemRequestADM(
+            listIri,
+            SharedTestDataADM.anythingAdminUser,
+            UUID.randomUUID
+          )
         )
-        val received: ListDeleteResponseADM = expectMsgType[ListDeleteResponseADM](timeout)
-        received.iri should be(listIri)
+
+        val received = actual match {
+          case resp: ListDeleteResponseADM => resp
+          case _                           => fail("expecting ListDeleteResponseADM")
+        }
+        received.iri should be(listIri.value)
         received.deleted should be(true)
       }
     }
 
     "used to query if list can be deleted" should {
       "return FALSE for a node that is in use" in {
-        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeInUseIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeInUseIri)
+        val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val response     = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseIri))
+        response.listIri should be(nodeInUseIri.value)
         response.canDeleteList should be(false)
       }
 
       "return FALSE for a node that is unused but has a child which is used" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(false)
       }
 
       "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeInUseInOntologyIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeInUseInOntologyIri)
+        val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
+        val response               = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeInUseInOntologyIri))
+        response.listIri should be(nodeInUseInOntologyIri.value)
         response.canDeleteList should be(false)
       }
 
       "return TRUE for a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(true)
       }
 
-      "retrun TRUE for a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        appActor ! CanDeleteListRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(nodeIri)
+      "return TRUE for a child node that is not in use" in {
+        val nodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(nodeIri))
+        response.listIri should be(nodeIri.value)
         response.canDeleteList should be(true)
       }
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        appActor ! CanDeleteListRequestADM(
-          iri = listIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
-        response.listIri should be(listIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.canDeleteListRequestADM(listIri))
+        response.listIri should be(listIri.value)
         response.canDeleteList should be(true)
       }
     }
 
     "used to delete list node comments" should {
       "do not delete a comment of root list node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        expectMsg(
-          Failure(BadRequestException("Root node comments cannot be deleted."))
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
+        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Root node comments cannot be deleted."
         )
       }
 
       "delete all comments of child node that contains just one comment" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList01"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: ListNodeCommentsDeleteResponseADM =
-          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
-        response.nodeIri should be(nodeIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
+        response.nodeIri should be(listIri.value)
         response.commentsDeleted should be(true)
       }
 
       "delete all comments of child node that contains more than one comment" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList02"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        val response: ListNodeCommentsDeleteResponseADM =
-          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
-        response.nodeIri should be(nodeIri)
+        val listIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
+        val response = UnsafeZioRun.runOrThrow(ListsResponder.deleteListNodeCommentsADM(listIri))
+        response.nodeIri should be(listIri.value)
         response.commentsDeleted should be(true)
       }
 
-      "if reqested list does not have comments, inform there is no comments to delete" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/testList03"
-        appActor ! ListNodeCommentsDeleteRequestADM(
-          iri = nodeIri,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
-        expectMsg(
-          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
+      "if requested list does not have comments, inform there is no comments to delete" in {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
+        val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Nothing to delete. Node ${listIri.value} does not have comments."
         )
       }
     }
