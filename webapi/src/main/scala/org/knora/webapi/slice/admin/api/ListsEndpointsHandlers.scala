@@ -138,14 +138,19 @@ final case class ListsEndpointsHandlers(
   // Creates
   private val postListsCreateRootNodeHandler =
     SecuredEndpointHandler[ListCreateRootNodeRequest, ListGetResponseADM](
-      listsEndpoints.postListsCreateRootNode,
+      listsEndpoints.postLists,
       user => req => listRestService.listCreateRootNode(req, user)
     )
 
   private val postListsCreateChildNodeHandler =
-    SecuredEndpointHandler[ListCreateChildNodeRequest, ChildNodeInfoGetResponseADM](
-      listsEndpoints.postListsCreateChildNode,
-      user => req => listRestService.listCreateChildNode(req, user)
+    SecuredEndpointHandler[(ListIri, ListCreateChildNodeRequest), ChildNodeInfoGetResponseADM](
+      listsEndpoints.postListsChild,
+      user => { case (iri: ListIri, req: ListCreateChildNodeRequest) =>
+        ZIO
+          .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
+          .when(iri != req.parentNodeIri) *>
+          listRestService.listCreateChildNode(req, user)
+      }
     )
 
   // Updates

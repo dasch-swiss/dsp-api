@@ -14,7 +14,6 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
@@ -26,6 +25,9 @@ import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
+
+import Codecs.TapirCodec.*
+import Codecs.ZioJsonCodec.*
 
 case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProtocol {
   import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.listIri
@@ -64,15 +66,20 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .deprecated()
 
   // Creates
-  val postListsCreateRootNode = baseEndpoints.securedEndpoint.post
+  val postLists = baseEndpoints.securedEndpoint.post
     .in(base)
     .in(zioJsonBody[ListCreateRootNodeRequest])
     .out(sprayJsonBody[ListGetResponseADM])
 
-  val postListsCreateChildNode = baseEndpoints.securedEndpoint.post
-    .in(base)
+  val postListsChild = baseEndpoints.securedEndpoint.post
+    .in(base / listIriPathVar)
     .in(zioJsonBody[ListCreateChildNodeRequest])
     .out(sprayJsonBody[ChildNodeInfoGetResponseADM])
+//      oneOf(
+//        oneOfVariant(StatusCode.Ok, sprayJsonBody[ListGetResponseADM]),
+//        oneOfVariant(StatusCode.Ok, sprayJsonBody[ChildNodeInfoGetResponseADM])
+//      )
+//    )
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
@@ -116,8 +123,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 
   private val secured =
     List(
-      postListsCreateRootNode,
-      postListsCreateChildNode,
+      postLists,
       putListsByIriName,
       putListsByIriLabels,
       putListsByIriComments,
@@ -133,8 +139,10 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 }
 
 object Requests {
+  import Codecs.ZioJsonCodec.*
 
   sealed trait ListCreateRequest
+
   case class ListCreateRootNodeRequest(
     id: Option[ListIri],
     comments: Comments,
