@@ -14,7 +14,6 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
@@ -92,7 +91,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
       val comment: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(
           OntologyConstants.Rdfs.Comment,
-          node.comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+          node.comments,
           userLang,
           fallbackLang
         )
