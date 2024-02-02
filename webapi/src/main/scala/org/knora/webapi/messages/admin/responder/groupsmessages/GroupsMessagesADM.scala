@@ -18,7 +18,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -105,25 +104,12 @@ sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessa
 case class GroupsGetADM() extends GroupsResponderRequestADM
 
 /**
- * Get all information about all groups.
- */
-case class GroupsGetRequestADM() extends GroupsResponderRequestADM
-
-/**
  * Get everything about a single group identified through its IRI. A successful response will be
  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
  *
  * @param groupIri             IRI of the group.
  */
 case class GroupGetADM(groupIri: IRI) extends GroupsResponderRequestADM
-
-/**
- * Get everything about a single group identified through its IRI. The response will be a
- * [[GroupGetResponseADM]], or an error if the group was not found.
- *
- * @param groupIri             IRI of the group.
- */
-case class GroupGetRequestADM(groupIri: IRI) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a multiple groups identified by their IRIs. The response will be a
@@ -205,15 +191,6 @@ case class GroupGetResponseADM(group: GroupADM) extends AdminKnoraResponseADM wi
   def toJsValue = groupResponseADMFormat.write(this)
 }
 
-/**
- * Represents an answer to a group creating/modifying operation.
- *
- * @param group the new group information of the created/modified group.
- */
-case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
-  def toJsValue = groupOperationResponseADMFormat.write(this)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -257,6 +234,4 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     jsonFormat(CreateGroupApiRequestADM, "id", "name", "descriptions", "project", "status", "selfjoin")
   implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] =
     jsonFormat(ChangeGroupApiRequestADM, "name", "descriptions", "status", "selfjoin")
-  implicit val groupOperationResponseADMFormat: RootJsonFormat[GroupOperationResponseADM] =
-    jsonFormat(GroupOperationResponseADM, "group")
 }

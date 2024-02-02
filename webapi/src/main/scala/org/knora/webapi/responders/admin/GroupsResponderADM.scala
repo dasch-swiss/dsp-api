@@ -41,10 +41,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -94,13 +91,13 @@ trait GroupsResponderADM {
    * @param createRequest  the create request information.
    * @param requestingUser the user making the request.
    * @param apiRequestID   the unique request ID.
-   * @return a [[GroupOperationResponseADM]]
+   * @return a [[GroupGetResponseADM]]
    */
   def createGroupADM(
     createRequest: GroupCreatePayloadADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM]
+  ): Task[GroupGetResponseADM]
 
   /**
    * Change group's basic information.
@@ -109,14 +106,14 @@ trait GroupsResponderADM {
    * @param changeGroupRequest the change request.
    * @param requestingUser     the user making the request.
    * @param apiRequestID       the unique request ID.
-   * @return a [[GroupOperationResponseADM]].
+   * @return a [[GroupGetResponseADM]].
    */
   def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM]
+  ): Task[GroupGetResponseADM]
 
   /**
    * Change group's basic information.
@@ -125,14 +122,14 @@ trait GroupsResponderADM {
    * @param changeGroupRequest the change request.
    * @param requestingUser     the user making the request.
    * @param apiRequestID       the unique request ID.
-   * @return a [[GroupOperationResponseADM]].
+   * @return a [[GroupGetResponseADM]].
    */
   def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM]
+  ): Task[GroupGetResponseADM]
 }
 
 final case class GroupsResponderADMLive(
@@ -310,17 +307,17 @@ final case class GroupsResponderADMLive(
    * @param createRequest        the create request information.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
-   * @return a [[GroupOperationResponseADM]]
+   * @return a [[GroupGetResponseADM]]
    */
   override def createGroupADM(
     createRequest: GroupCreatePayloadADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM] = {
+  ): Task[GroupGetResponseADM] = {
     def createGroupTask(
       createRequest: GroupCreatePayloadADM,
       requestingUser: User
-    ): Task[GroupOperationResponseADM] =
+    ): Task[GroupGetResponseADM] =
       for {
         /* check if the requesting user is allowed to create group */
         _ <- ZIO
@@ -376,7 +373,7 @@ final case class GroupsResponderADMLive(
             .flatMap(ZIO.fromOption(_))
             .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
 
-      } yield GroupOperationResponseADM(createdGroup)
+      } yield GroupGetResponseADM(createdGroup)
 
     val task = createGroupTask(createRequest, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, GROUPS_GLOBAL_LOCK_IRI, task)
@@ -389,14 +386,14 @@ final case class GroupsResponderADMLive(
    * @param changeGroupRequest   the change request.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
-   * @return a [[GroupOperationResponseADM]].
+   * @return a [[GroupGetResponseADM]].
    */
   override def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM] = {
+  ): Task[GroupGetResponseADM] = {
 
     /**
      * The actual change group task run with an IRI lock.
@@ -405,7 +402,7 @@ final case class GroupsResponderADMLive(
       groupIri: IRI,
       changeGroupRequest: GroupUpdatePayloadADM,
       requestingUser: User
-    ): Task[GroupOperationResponseADM] =
+    ): Task[GroupGetResponseADM] =
       for {
         // check if necessary information is present
         _ <- ZIO
@@ -447,14 +444,14 @@ final case class GroupsResponderADMLive(
    * @param changeGroupRequest   the change request.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
-   * @return a [[GroupOperationResponseADM]].
+   * @return a [[GroupGetResponseADM]].
    */
   override def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM] = {
+  ): Task[GroupGetResponseADM] = {
 
     /**
      * The actual change group task run with an IRI lock.
@@ -463,7 +460,7 @@ final case class GroupsResponderADMLive(
       groupIri: IRI,
       changeGroupRequest: ChangeGroupApiRequestADM,
       requestingUser: User
-    ): Task[GroupOperationResponseADM] =
+    ): Task[GroupGetResponseADM] =
       for {
 
         // check if necessary information is present
@@ -511,7 +508,7 @@ final case class GroupsResponderADMLive(
    *
    * @param groupIri             the IRI of the group we are updating.
    * @param groupUpdatePayload   the payload holding the information which we want to update.
-   * @return a [[GroupOperationResponseADM]]
+   * @return a [[GroupGetResponseADM]]
    */
   private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM) =
     for {
@@ -563,7 +560,7 @@ final case class GroupsResponderADMLive(
         groupGetADM(groupIri)
           .flatMap(ZIO.fromOption(_))
           .orElseFail(UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
-    } yield GroupOperationResponseADM(updatedGroup)
+    } yield GroupGetResponseADM(updatedGroup)
 
   ////////////////////
   // Helper Methods //
@@ -585,16 +582,16 @@ final case class GroupsResponderADMLive(
    *
    * @param changedGroup         the group with the new status.
    * @param apiRequestID         the unique request ID.
-   * @return a [[GroupOperationResponseADM]]
+   * @return a [[GroupGetResponseADM]]
    */
   private def removeGroupMembersIfNecessary(
     changedGroup: GroupADM,
     apiRequestID: UUID
-  ): Task[GroupOperationResponseADM] =
+  ): Task[GroupGetResponseADM] =
     if (changedGroup.status) {
       // group active. no need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
-      ZIO.succeed(GroupOperationResponseADM(changedGroup))
+      ZIO.succeed(GroupGetResponseADM(changedGroup))
     } else {
       // group deactivated. need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
@@ -620,7 +617,7 @@ final case class GroupsResponderADMLive(
 
         _ <- ZioHelper.sequence(seqOfFutures)
 
-      } yield GroupOperationResponseADM(group = changedGroup)
+      } yield GroupGetResponseADM(group = changedGroup)
     }
 }
 

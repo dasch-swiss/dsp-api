@@ -9,15 +9,12 @@ import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.NotFoundException
+import dsp.errors.*
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -78,8 +75,8 @@ class GroupsResponderADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID
         )
 
-        val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-        val newGroupInfo                        = received.group
+        val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
+        val newGroupInfo                  = received.group
 
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
@@ -131,8 +128,8 @@ class GroupsResponderADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID
         )
 
-        val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-        val updatedGroupInfo                    = received.group
+        val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
+        val updatedGroupInfo              = received.group
 
         updatedGroupInfo.name should equal("UpdatedGroupName")
         updatedGroupInfo.descriptions should equal(
@@ -216,7 +213,7 @@ class GroupsResponderADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID
         )
 
-        val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
+        val statusChangeResponse = expectMsgType[GroupGetResponseADM](timeout)
         statusChangeResponse.group.status shouldBe false
 
         appActor ! GroupMembersGetRequestADM(
