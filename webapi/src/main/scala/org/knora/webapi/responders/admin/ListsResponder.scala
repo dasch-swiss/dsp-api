@@ -5,28 +5,18 @@
 
 package org.knora.webapi.responders.admin
 
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-
-import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -47,13 +37,17 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
+import java.util.UUID
 
 final case class ListsResponder(
   appConfig: AppConfig,
   auth: AuthorizationRestService,
   iriService: IriService,
   projectRepo: KnoraProjectRepo,
-  messageRelay: MessageRelay,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
@@ -594,17 +588,9 @@ final case class ListsResponder(
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      maybeProject <-
-        messageRelay.ask[Option[ProjectADM]](
-          ProjectGetADM(
-            IriIdentifier.fromString(projectIri.value).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
-        )
-
-      project: ProjectADM = maybeProject match {
-                              case Some(project: ProjectADM) => project
-                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
-                            }
+      project <- projectRepo
+                   .findById(projectIri)
+                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
@@ -636,10 +622,9 @@ final case class ListsResponder(
       rootNodeIri: Option[IRI] = positionAndNode._2
 
       // check the custom IRI; if not given, create an unused IRI
-      customListIri          = id.map(_.value).map(_.toSmartIri)
-      maybeShortcode: String = project.shortcode
-      newListNodeIri <-
-        iriService.checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      customListIri   = id.map(_.value).map(_.toSmartIri)
+      shortcode       = project.shortcode
+      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(shortcode).value)
 
       // Create the new list node depending on type
       createNewListSparqlString = createNodeRequest match {
@@ -1520,11 +1505,10 @@ final case class ListsResponder(
    * @return an [[IRI]].
    */
   private def getDataNamedGraph(projectIri: ProjectIri): Task[IRI] =
-    for {
-      project <- messageRelay
-                   .ask[Option[ProjectADM]](ProjectGetADM(IriIdentifier.from(projectIri)))
-                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-    } yield ProjectADMService.projectDataNamedGraphV2(project).value
+    projectRepo
+      .findById(projectIri)
+      .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
+      .map(ProjectADMService.projectDataNamedGraphV2(_).value)
 
   /**
    * Helper method to get parent of a node.

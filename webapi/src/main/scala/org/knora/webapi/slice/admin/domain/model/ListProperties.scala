@@ -5,26 +5,39 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.prelude.Validation
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isListIri
 import dsp.valueobjects.Iri.validateAndEscapeIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
+import org.knora.webapi.messages.StringFormatter.IriDomain
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
+import zio.prelude.Validation
 
 object ListProperties {
 
   final case class ListIri private (value: String) extends AnyVal with StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
+
+    /**
+     * Creates a new listIri.
+     *
+     * @param shortcode the required project shortcode.
+     * @return a new list IRI.
+     */
+    def makeNew(shortcode: Shortcode): ListIri = {
+      val uuid = UuidUtil.makeRandomBase64EncodedUuid
+      unsafeFrom(s"http://$IriDomain/lists/${shortcode.value}/$uuid")
+    }
+
     def from(value: String): Either[String, ListIri] =
       if (value.isEmpty) Left("List IRI cannot be empty.")
       else {
