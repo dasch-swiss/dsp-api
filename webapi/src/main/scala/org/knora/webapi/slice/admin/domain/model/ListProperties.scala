@@ -106,9 +106,3 @@ object ListProperties {
       }
   }
 }
-
-object ListErrorMessages {
-  val ListCreatePermission     = "A list can only be created by the project or system administrator."
-  val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
-  val ListChangePermission     = "A list can only be changed by the project or system administrator."
-}
