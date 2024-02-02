@@ -16,7 +16,6 @@ import java.nio.file.Path
 import scala.reflect.io.Directory
 
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -198,26 +197,33 @@ object RepositoryUpdater {
         _           <- ZIO.logInfo(s"Repository update using download directory $downloadDir")
 
         // The file to save the repository in.
-        downloadedRepositoryFile  <- ZIO.attempt(downloadDir.resolve("downloaded-repository.nq"))
-        transformedRepositoryFile <- ZIO.attempt(downloadDir.resolve("transformed-repository.nq"))
+        graphsBeforeMigrationFile       <- ZIO.attempt(downloadDir.resolve("downloaded-repository.nq"))
+        graphsWithAppliedMigrationsFile <- ZIO.attempt(downloadDir.resolve("transformed-repository.nq"))
 
         // Ask the store actor to download the repository to the file.
+        graphs = pluginsForNeededUpdates
+                   .map(_.plugin.graphsForMigration)
+                   .reduce(_ merge _)
         _ <- ZIO.logInfo("Downloading repository file...")
-        _ <- triplestoreService.downloadRepository(downloadedRepositoryFile)
+        _ <- triplestoreService.downloadRepository(graphsBeforeMigrationFile, graphs)
 
         // Run the transformations to produce an output file.
         _ <- doTransformations(
-               downloadedRepositoryFile = downloadedRepositoryFile,
-               transformedRepositoryFile = transformedRepositoryFile,
+               downloadedRepositoryFile = graphsBeforeMigrationFile,
+               transformedRepositoryFile = graphsWithAppliedMigrationsFile,
                pluginsForNeededUpdates = pluginsForNeededUpdates
              )
 
-        // Empty the repository.
-        _ <- triplestoreService.dropDataGraphByGraph()
+        // Drop the graphs that need to be updated.
+        _ <- graphs match {
+               case MigrateAllGraphs => triplestoreService.dropDataGraphByGraph()
+               case MigrateSpecificGraphs(graphIris) =>
+                 ZIO.foreach(graphIris)(iri => triplestoreService.dropGraph(iri.value))
+             }
 
         // Upload the transformed repository.
         _ <- ZIO.logInfo("Uploading transformed repository data...")
-        _ <- triplestoreService.uploadRepository(transformedRepositoryFile)
+        _ <- triplestoreService.uploadRepository(graphsWithAppliedMigrationsFile)
       } yield RepositoryUpdatedResponse(
         message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
       )).orDie
@@ -266,7 +272,7 @@ object RepositoryUpdater {
     private def addBuiltInNamedGraphsToModel(model: RdfModel): Unit =
       // Add each built-in named graph to the model.
       for (builtInNamedGraph <- RepositoryUpdatePlan.builtInNamedGraphs) {
-        val context: IRI = builtInNamedGraph.iri
+        val context: String = builtInNamedGraph.name
 
         // Remove the existing named graph from the model.
         model.remove(
@@ -277,7 +283,7 @@ object RepositoryUpdater {
         )
 
         // Read the current named graph from a file.
-        val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.filename, Turtle)
+        val namedGraphModel: RdfModel = readResourceIntoModel(builtInNamedGraph.path, Turtle)
 
         // Copy it into the model, adding the named graph IRI to each statement.
         for (statement: Statement <- namedGraphModel) {

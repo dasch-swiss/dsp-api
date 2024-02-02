@@ -14,11 +14,12 @@ import scala.reflect.ClassTag
 
 object ZioScalaTestUtil {
 
-  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
+  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, ?]) = actual match {
     case Exit.Failure(err) => err.squash shouldBe a[T]
     case _                 => Assertions.fail(s"Expected Exit.Failure with specific T.")
   }
-  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _], expectedError: String) = actual match {
+
+  def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, ?], expectedError: String) = actual match {
     case Exit.Failure(err) => {
       err.squash shouldBe a[T]
       err.squash.getMessage shouldEqual (expectedError)

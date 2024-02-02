@@ -23,28 +23,25 @@ object PathVars {
     path[UserIri].description("The user IRI. Must be URL-encoded.")
 }
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
+
   private val base = "admin" / "users"
-  private val tags = List("Users", "Admin API")
 
   val getUsers = baseEndpoints.securedEndpoint.get
     .in(base)
     .out(sprayJsonBody[UsersGetResponseADM])
     .description("Returns all users.")
-    .tags(tags)
 
   val getUserByIri = baseEndpoints.withUserEndpoint.get
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserResponseADM])
     .description("Returns a user identified by IRI.")
-    .tags(tags)
 
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
     .description("Delete a user identified by IRI (change status to false).")
-    .tags(tags)
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getUsers, getUserByIri, deleteUser).map(_.endpoint)
+  val endpoints: Seq[AnyEndpoint] = Seq(getUsers, getUserByIri, deleteUser).map(_.endpoint.tag("Admin Users"))
 }
 
 object UsersEndpoints {

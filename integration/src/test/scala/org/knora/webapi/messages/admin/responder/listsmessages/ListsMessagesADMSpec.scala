@@ -7,20 +7,13 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import spray.json.*
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
-import dsp.valueobjects.ListErrorMessages
-import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
 /**
  * This spec is used to test 'ListAdminMessages'.
@@ -60,7 +53,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+        comments = StringLiteralSequenceV2.empty,
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
       )
@@ -79,7 +72,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-        comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+        comments = StringLiteralSequenceV2.empty,
         children = Seq.empty[ListChildNodeADM],
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
@@ -122,29 +115,6 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
       converted.children should be(children)
     }
 
-    "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
-      val caught = intercept[BadRequestException](
-        ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.make(exampleListIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
-            position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
-            labels = Labels
-              .make(Seq(V2.StringLiteralV2(value = "New child node", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
-            comments = Some(
-              Comments
-                .make(Seq(V2.StringLiteralV2(value = "New child comment", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
-            )
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === ListErrorMessages.InvalidPosition)
-    }
-
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
       val payload =
         s"""
@@ -185,7 +155,9 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
-      thrown.getMessage should equal(ListErrorMessages.InvalidPosition)
+      thrown.getMessage should equal(
+        "Invalid position value is given. Position should be either a positive value, 0 or -1."
+      )
     }
   }
 }

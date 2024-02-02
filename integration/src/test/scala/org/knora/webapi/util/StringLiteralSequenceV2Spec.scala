@@ -31,7 +31,7 @@ class StringLiteralSequenceV2Spec extends CoreSpec {
     )
   )
 
-  private val emptySeq = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+  private val emptySeq = StringLiteralSequenceV2.empty
 
   "The StringLiteralSequenceV2 case class" should {
 

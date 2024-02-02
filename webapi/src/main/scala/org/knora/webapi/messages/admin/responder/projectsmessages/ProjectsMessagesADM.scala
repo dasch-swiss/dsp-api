@@ -44,15 +44,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Requests
-
-/**
- * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
- * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
- *
- * @param withSystemProjects includes system projcets in response.
- */
-case class ProjectsGetRequestADM(withSystemProjects: Boolean = false) extends ProjectsResponderRequestADM
-
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectGetResponseADM]]. External use.
@@ -68,51 +59,6 @@ case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends Projec
  * @param identifier           the IRI, email, or username of the project.
  */
 case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
- * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
- *
- * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectMembersGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: User
-) extends ProjectsResponderRequestADM
-
-/**
- * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
- *
- * @param identifier           the IRI, email, or username of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectAdminMembersGetRequestADM(
-  identifier: ProjectIdentifierADM,
-  requestingUser: User
-) extends ProjectsResponderRequestADM
-
-/**
- * Returns all unique keywords for all projects.
- */
-case class ProjectsKeywordsGetRequestADM() extends ProjectsResponderRequestADM
-
-/**
- * Returns all keywords for a project identified through IRI.
- *
- * @param projectIri           the IRI of the project.
- */
-case class ProjectKeywordsGetRequestADM(
-  projectIri: ProjectIri
-) extends ProjectsResponderRequestADM
-
-/**
- * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
- *
- * @param identifier           the identifier of the project.
- */
-case class ProjectRestrictedViewSettingsGetRequestADM(
-  identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
 
 /**
  * Requests the creation of a new project.
@@ -392,6 +338,7 @@ object ProjectIdentifierADM {
   final case class ShortnameIdentifier private (value: Shortname) extends ProjectIdentifierADM
   object ShortnameIdentifier {
     def from(shortname: Shortname): ShortnameIdentifier = ShortnameIdentifier(shortname)
+    def unsafeFrom(value: String): ShortnameIdentifier  = fromString(value).fold(err => throw err.head, identity)
     def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
       Validation
         .fromEither(Shortname.from(value).map(ShortnameIdentifier.from))

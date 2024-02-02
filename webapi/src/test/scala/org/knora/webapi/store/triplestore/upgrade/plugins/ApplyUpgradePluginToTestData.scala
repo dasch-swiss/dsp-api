@@ -34,7 +34,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  */
 object ApplyUpgradePluginToTestData extends ZIOAppDefault {
 
-  val upgradePlugin = new NoopPlugin()
+  val upgradePlugin = new MigrateOnlyBuiltInGraphs()
   val testDataPath  = "/test_data/project_data"
 
   def discoverFiles(dirPath: String): Array[Path] =
