@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.infrastructure
 
 import sttp.apispec.openapi
+import sttp.apispec.openapi.Contact
+import sttp.apispec.openapi.Info
 import sttp.apispec.openapi.OpenAPI
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
@@ -69,8 +71,16 @@ object DocsServer {
       apiV2       <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
       admin       <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       allEndpoints = (apiV2 ++ admin).toList
+      info = Info(
+               title = "DSP-API",
+               version = BuildInfo.version,
+               summary = Some(
+                 "DSP-API is part of the the DaSCH Service Platform, a repository for the long-term preservation and reuse of data in the humanities."
+               ),
+               contact = Some(Contact(name = Some("DaSCH"), url = Some("https://www.dasch.swiss/")))
+             )
     } yield SwaggerInterpreter(customiseDocsModel = addServer(config))
-      .fromEndpoints[Task](allEndpoints, BuildInfo.name, BuildInfo.version)
+      .fromEndpoints[Task](allEndpoints, info)
 
   private def addServer(config: KnoraApi) = (openApi: OpenAPI) => {
     openApi.copy(servers =

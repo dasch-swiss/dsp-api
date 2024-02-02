@@ -17,30 +17,28 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
+
   private val base = "admin" / "groups"
-  private val tags = List("Groups", "Admin API")
 
   val getGroups = baseEndpoints.publicEndpoint.get
     .in(base)
     .out(sprayJsonBody[GroupsGetResponseADM])
     .description("Returns all groups.")
-    .tags(tags)
 
   val getGroup = baseEndpoints.publicEndpoint.get
     .in(base / groupIri)
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Returns a single group identified by IRI.")
-    .tags(tags)
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIri / "members")
     .out(sprayJsonBody[GroupMembersGetResponseADM])
     .description("Returns all members of a single group.")
-    .tags(tags)
 
   private val securedEndpoins = Seq(getGroupMembers).map(_.endpoint)
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getGroups, getGroup) ++ securedEndpoins
+  val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroup) ++ securedEndpoins)
+    .map(_.tag("Admin Groups"))
 }
 
 object GroupsEndpoints {

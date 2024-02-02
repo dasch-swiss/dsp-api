@@ -10,21 +10,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionPropertyApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
@@ -107,7 +93,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     putPerrmissionsHasPermissions,
     putPermisssionsResourceClass,
     putPermissionsProperty
-  ).map(_.endpoint)
+  ).map(_.endpoint.tag("Admin Permissions"))
 }
 
 object PermissionsEndpoints {
