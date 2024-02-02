@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.prelude.Validation
+
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.isListIri
 import dsp.valueobjects.Iri.validateAndEscapeIri
@@ -19,7 +21,6 @@ import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
-import zio.prelude.Validation
 
 object ListProperties {
 
