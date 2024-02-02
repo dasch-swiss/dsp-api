@@ -75,11 +75,6 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .in(base / listIriPathVar)
     .in(zioJsonBody[ListCreateChildNodeRequest])
     .out(sprayJsonBody[ChildNodeInfoGetResponseADM])
-//      oneOf(
-//        oneOfVariant(StatusCode.Ok, sprayJsonBody[ListGetResponseADM]),
-//        oneOfVariant(StatusCode.Ok, sprayJsonBody[ChildNodeInfoGetResponseADM])
-//      )
-//    )
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
