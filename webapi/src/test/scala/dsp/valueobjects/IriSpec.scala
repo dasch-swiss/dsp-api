@@ -6,7 +6,6 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.Assertion.*
 import zio.test.*
 
 import dsp.errors.BadRequestException
@@ -22,61 +21,10 @@ object IriSpec extends ZIOSpecDefault {
 
   private val invalidIri = "Invalid IRI"
 
-  private val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  private val listIriWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
-
   private val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
   private val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
 
-  def spec: Spec[Any, Throwable] = listIriTest + uuidTest + roleIriTest
-
-  private val listIriTest = suite("IriSpec - ListIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(ListIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))) &&
-      assertTrue(
-        ListIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
-      )
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        ListIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.ListIriInvalid)
-        )
-      ) &&
-      assertTrue(
-        ListIri.make(Some(invalidIri)) == Validation.fail(
-          BadRequestException(IriErrorMessages.ListIriInvalid)
-        )
-      )
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        ListIri.make(listIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      ) &&
-      assertTrue(
-        ListIri.make(Some(listIriWithUUIDVersion3)) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      val listIri      = ListIri.make(validListIri)
-      val maybeListIri = ListIri.make(Some(validListIri))
-
-      (for {
-        iri      <- listIri
-        maybeIri <- maybeListIri
-      } yield assertTrue(iri.value == validListIri) &&
-        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        ListIri.make(None) == Validation.succeed(None)
-      )
-    }
-  )
+  def spec: Spec[Any, Throwable] = uuidTest + roleIriTest
 
   private val uuidTest = suite("IriSpec - Base64Uuid")(
     test("pass an empty value and return an error") {

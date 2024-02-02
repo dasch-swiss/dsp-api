@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
 
@@ -13,10 +15,6 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.errors.ValidationException
-import dsp.valueobjects.Iri.*
-import dsp.valueobjects.List.*
-import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
@@ -27,10 +25,10 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
+import org.knora.webapi.slice.admin.domain.model.ListErrorMessages
+import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides routes to create list items.
@@ -55,18 +53,18 @@ final case class CreateListItemsRouteADM(
   private def createListRootNode(): Route = path(listsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri] =
-          Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-        val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
-        val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
-        val validatedPayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
-          Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListRootNodeCreatePayloadADM)
+        val maybeId        = validateOptionWithFrom(apiRequest.id, ListIri.from, BadRequestException.apply)
+        val projectIri     = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
+        val nameValidation = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+        val labels         = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
+        val comments       = validateOneWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
 
         val requestMessage = for {
-          payload <- validatedPayload.toZIO
-          user    <- Authenticator.getUserADM(requestContext)
+          payload <-
+            Validation
+              .validateWith(maybeId, projectIri, nameValidation, labels, comments)(ListRootNodeCreatePayloadADM)
+              .toZIO
+          user <- Authenticator.getUserADM(requestContext)
           _ <-
             ZIO
               .fail(ForbiddenException(ListErrorMessages.ListCreatePermission))
@@ -87,13 +85,13 @@ final case class CreateListItemsRouteADM(
           _ <- ZIO
                  .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
                  .when(iri != apiRequest.parentNodeIri)
-          parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
-          id            = ListIri.make(apiRequest.id)
-          projectIri    = Validation.fromEither(ProjectIri.from(apiRequest.projectIri)).mapError(ValidationException.apply)
-          name          = ListName.make(apiRequest.name)
-          position      = Position.make(apiRequest.position)
-          labels        = Labels.make(apiRequest.labels)
-          comments      = Comments.make(apiRequest.comments)
+          parentNodeIri = validateOneWithFrom(apiRequest.parentNodeIri, ListIri.from, BadRequestException.apply)
+          id            = validateOptionWithFrom(apiRequest.id, ListIri.from, BadRequestException.apply)
+          projectIri    = validateOneWithFrom(apiRequest.projectIri, ProjectIri.from, BadRequestException.apply)
+          name          = validateOptionWithFrom(apiRequest.name, ListName.from, BadRequestException.apply)
+          position      = validateOptionWithFrom(apiRequest.position, Position.from, BadRequestException.apply)
+          labels        = validateOneWithFrom(apiRequest.labels, Labels.from, BadRequestException.apply)
+          comments      = validateOptionWithFrom(apiRequest.comments, Comments.from, BadRequestException.apply)
         } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
           ListChildNodeCreatePayloadADM
         )
