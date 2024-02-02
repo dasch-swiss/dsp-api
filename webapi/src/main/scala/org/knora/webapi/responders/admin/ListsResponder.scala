@@ -624,8 +624,7 @@ final case class ListsResponder(
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri   = id.map(_.value).map(_.toSmartIri)
-      shortcode       = project.shortcode
-      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(shortcode).value)
+      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
 
       // Create the new list node depending on type
       createNewListSparqlString = createNodeRequest match {

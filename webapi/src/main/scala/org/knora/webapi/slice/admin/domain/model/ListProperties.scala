@@ -31,12 +31,12 @@ object ListProperties {
     /**
      * Creates a new [[ListIri]] within a [[KnoraProject]] generating a new base 64 encoded uuid.
      *
-     * @param shortcode the required project shortcode.
+     * @param project The reference to the [[KnoraProject]].
      * @return a new [[ListIri]].
      */
-    def makeNew(shortcode: Shortcode): ListIri = {
+    def makeNew(project: KnoraProject): ListIri = {
       val uuid = UuidUtil.makeRandomBase64EncodedUuid
-      unsafeFrom(s"http://$IriDomain/lists/${shortcode.value}/$uuid")
+      unsafeFrom(s"http://$IriDomain/lists/${project.shortcode.value}/$uuid")
     }
 
     def from(value: String): Either[String, ListIri] =
