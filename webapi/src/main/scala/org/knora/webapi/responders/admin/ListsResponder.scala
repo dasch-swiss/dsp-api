@@ -529,7 +529,7 @@ final case class ListsResponder(
       if (position.exists(_.value > children.size)) {
         val givenPosition = position.map(_.value)
         throw BadRequestException(
-          s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}."
+          s"Invalid position given ${givenPosition.get}, maximum allowed position is = ${children.size}."
         )
       }
 
