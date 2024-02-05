@@ -15,6 +15,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsId
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
@@ -43,7 +44,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
 
       "fail with the wrong 'email' " in {
         val actual = UnsafeZioRun.run(Authenticator.getUserByEmail(Email.unsafeFrom("wronguser@example.com")))
-        assertFailsWithA[BadCredentialsException](actual)
+        assertFailsWithA[BadCredentialsException](actual, BAD_CRED_NOT_VALID)
       }
     }
 
