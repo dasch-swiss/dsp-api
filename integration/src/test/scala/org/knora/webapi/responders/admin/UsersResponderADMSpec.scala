@@ -777,9 +777,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked to update the user's group membership" should {
       "ADD user to group" in {
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-        membershipsBeforeUpdate.groups should equal(Seq())
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+        membershipsBeforeUpdate should equal(Seq())
 
         appActor ! UserGroupMembershipAddRequestADM(
           normalUser.id,
@@ -789,9 +789,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-        membershipsAfterUpdate.groups.map(_.id) should equal(Seq(imagesReviewerGroup.id))
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+        membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,
@@ -803,9 +803,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "DELETE user from group" in {
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-        membershipsBeforeUpdate.groups.map(_.id) should equal(Seq(imagesReviewerGroup.id))
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+        membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! UserGroupMembershipRemoveRequestADM(
           normalUser.id,
@@ -815,9 +815,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-        membershipsAfterUpdate.groups should equal(Seq())
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+        membershipsAfterUpdate should equal(Seq())
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,

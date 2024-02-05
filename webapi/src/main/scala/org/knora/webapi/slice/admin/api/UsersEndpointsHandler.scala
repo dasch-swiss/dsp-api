@@ -54,14 +54,22 @@ case class UsersEndpointsHandler(
     restService.getProjectAdminMemberShipsByIri
   )
 
+  private val getUsersByIriGroupMembershipsHandler = PublicEndpointHandler(
+    usersEndpoints.getUsersByIriGroupMemberships,
+    restService.getGroupMemberShipsByIri
+  )
+
   // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
     usersEndpoints.deleteUser,
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
-  private val public = List(getUsersByIriProjectMemberShipsHandler, getUsersByIriProjectAdminMemberShipsHandler)
-    .map(mapper.mapPublicEndpointHandler(_))
+  private val public = List(
+    getUsersByIriProjectMemberShipsHandler,
+    getUsersByIriProjectAdminMemberShipsHandler,
+    getUsersByIriGroupMembershipsHandler
+  ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(
     getUsersHandler,

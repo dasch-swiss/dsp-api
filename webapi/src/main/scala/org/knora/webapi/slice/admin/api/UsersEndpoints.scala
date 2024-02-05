@@ -10,6 +10,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
 
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
@@ -69,13 +70,19 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[UserProjectAdminMembershipsGetResponseADM])
     .description("Returns the user's project admin memberships for a user identified by their IRI.")
 
+  val getUsersByIriGroupMemberships = baseEndpoints.publicEndpoint.get
+    .in(base / "iri" / userIriPathVar / "group-memberships")
+    .out(sprayJsonBody[UserGroupMembershipsGetResponseADM])
+    .description("Returns the user's group memberships for a user identified by their IRI.")
+
   // Deletes
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
     .description("Delete a user identified by IRI (change status to false).")
 
-  private val public = Seq(getUsersByIriProjectMemberShips, getUsersByIriProjectAdminMemberShips)
+  private val public =
+    Seq(getUsersByIriProjectMemberShips, getUsersByIriProjectAdminMemberShips, getUsersByIriGroupMemberships)
   private val secured =
     Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, deleteUser).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))

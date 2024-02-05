@@ -18,7 +18,6 @@ import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
@@ -295,17 +294,6 @@ case class UserProjectAdminMembershipRemoveRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests user's group memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- */
-case class UserGroupMembershipsGetRequestADM(
-  userIri: IRI,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * Requests adding the user to a group.
  *
  * @param userIri              the IRI of the user to be updated.
@@ -378,7 +366,7 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
  *
  * @param groups a sequence of groups the user is member of.
  */
-case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
+case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
 }
 

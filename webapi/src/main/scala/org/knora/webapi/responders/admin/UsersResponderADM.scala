@@ -158,6 +158,14 @@ trait UsersResponderADM {
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
   def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM]
+
+  /**
+   * Returns the user's group memberships as a sequence of [[GroupADM]]
+   *
+   * @param userIri the IRI of the user.
+   * @return a sequence of [[GroupADM]].
+   */
+  def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]]
 }
 
 final case class UsersResponderADMLive(
@@ -248,8 +256,6 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserGroupMembershipsGetRequestADM(userIri, _) =>
-      userGroupMembershipsGetADM(userIri).map(UserGroupMembershipsGetResponseADM)
     case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
@@ -1095,12 +1101,9 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the user.
    * @return a sequence of [[GroupADM]].
    */
-  private def userGroupMembershipsGetADM(userIri: IRI) =
-    findUserByIri(
-      UserIri.unsafeFrom(userIri),
-      UserInformationTypeADM.Full,
-      KnoraSystemInstances.Users.SystemUser
-    ).map(_.map(_.groups).getOrElse(Seq.empty))
+  override def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
+    findUserByIri(userIri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      .map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
    * Adds a user to a group.
@@ -1236,7 +1239,7 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project membership list
-        currentGroupMembershipIris <- userGroupMembershipsGetADM(userIri).map(_.map(_.id))
+        currentGroupMembershipIris <- findGroupMembershipsByIri(UserIri.unsafeFrom(userIri)).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedGroupMembershipIris =

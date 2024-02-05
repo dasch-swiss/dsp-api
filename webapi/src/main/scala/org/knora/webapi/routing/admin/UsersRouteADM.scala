@@ -18,7 +18,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM
-import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
@@ -44,7 +43,6 @@ final case class UsersRouteADM()(
       removeUserFromProjectMembership() ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
-      getUsersGroupMemberships ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
 
@@ -203,20 +201,6 @@ final case class UsersRouteADM()(
           r              <- getIriUserUuid(projectIri, requestContext)
         } yield UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
-      }
-    }
-
-  /**
-   * get user's group memberships
-   */
-  private def getUsersGroupMemberships: Route =
-    path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
-      get { ctx =>
-        val requestTask = for {
-          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
-          r <- getIriUser(userIri, ctx)
-        } yield UserGroupMembershipsGetRequestADM(r.iri, r.user)
-        runJsonRouteZ(requestTask, ctx)
       }
     }
 
