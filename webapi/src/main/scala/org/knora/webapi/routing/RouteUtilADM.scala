@@ -75,7 +75,6 @@ object RouteUtilADM {
         case GroupGetResponseADM(group)   => GroupGetResponseADM(groupAsExternalRepresentation(group))
         case GroupMembersGetResponseADM(members) =>
           GroupMembersGetResponseADM(members.map(userAsExternalRepresentation))
-//        case GroupOperationResponseADM(group) => GroupOperationResponseADM(groupAsExternalRepresentation(group))
 
         case UsersGetResponseADM(users) => UsersGetResponseADM(users.map(userAsExternalRepresentation))
         case UserResponseADM(user)      => UserResponseADM(userAsExternalRepresentation(user))
