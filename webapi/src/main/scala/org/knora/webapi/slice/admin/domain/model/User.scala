@@ -22,8 +22,10 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
+import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 
 /**
@@ -181,7 +183,8 @@ object UserIri extends StringValueCompanion[UserIri] {
 }
 
 final case class Username private (value: String) extends AnyVal with StringValue
-object Username                                   extends StringValueCompanion[Username] {
+
+object Username extends StringValueCompanion[Username] {
 
   /**
    * A regex that matches a valid username
@@ -202,11 +205,10 @@ object Username                                   extends StringValueCompanion[U
         case None        => Left(UserErrorMessages.UsernameInvalid)
       }
     }
-
-  def validationFrom(value: String): Validation[String, Username] = Validation.fromEither(from(value))
 }
 
 final case class Email private (value: String) extends AnyVal with StringValue
+
 object Email extends StringValueCompanion[Email] {
   private val EmailRegex: Regex = """^.+@.+$""".r
 
@@ -219,34 +221,26 @@ object Email extends StringValueCompanion[Email] {
         case None        => Left(UserErrorMessages.EmailInvalid)
       }
     }
-
-  def validationFrom(value: String): Validation[String, Email] = Validation.fromEither(from(value))
 }
 
-final case class GivenName private (value: String) extends AnyVal
-object GivenName { self =>
+final case class GivenName private (value: String) extends AnyVal with StringValue
+
+object GivenName extends StringValueCompanion[GivenName] {
   def from(value: String): Either[String, GivenName] =
     Option.when(value.nonEmpty)(GivenName(value)).toRight(UserErrorMessages.GivenNameMissing)
-
-  def unsafeFrom(value: String): GivenName =
-    GivenName.from(value).fold(e => throw new IllegalArgumentException(e), identity)
-
-  def validationFrom(value: String): Validation[String, GivenName] = Validation.fromEither(from(value))
 }
 
-final case class FamilyName private (value: String) extends AnyVal
-object FamilyName { self =>
+final case class FamilyName private (value: String) extends AnyVal with StringValue
+
+object FamilyName extends StringValueCompanion[FamilyName] {
   def from(value: String): Either[String, FamilyName] =
     Option.when(value.nonEmpty)(FamilyName(value)).toRight(UserErrorMessages.FamilyNameMissing)
-
-  def unsafeFrom(value: String): FamilyName =
-    FamilyName.from(value).fold(e => throw new IllegalArgumentException(e), identity)
-
-  def validationFrom(value: String): Validation[String, FamilyName] = Validation.fromEither(from(value))
 }
 
-final case class Password private (value: String) extends AnyVal
-object Password { self =>
+final case class Password private (value: String) extends AnyVal with StringValue
+
+object Password extends StringValueCompanion[Password] {
+
   private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
   def from(value: String): Either[String, Password] =
@@ -258,11 +252,6 @@ object Password { self =>
         case None        => Left(UserErrorMessages.PasswordInvalid)
       }
     }
-
-  def unsafeFrom(value: String): Password =
-    Password.from(value).fold(e => throw new IllegalArgumentException(e), identity)
-
-  def validationFrom(value: String): Validation[String, Password] = Validation.fromEither(from(value))
 }
 
 final case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
@@ -311,13 +300,11 @@ object PasswordHash {
     PasswordHash.from(value, passwordStrength).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
-final case class PasswordStrength private (value: Int) extends AnyVal
-object PasswordStrength {
+final case class PasswordStrength private (value: Int) extends AnyVal with IntValue
+
+object PasswordStrength extends IntValueCompanion[PasswordStrength] {
   def from(i: Int): Either[String, PasswordStrength] =
     Option.unless(i < 4 || i > 31)(PasswordStrength(i)).toRight(UserErrorMessages.PasswordStrengthInvalid)
-
-  def unsafeMake(value: Int): PasswordStrength = PasswordStrength(value)
-
 }
 
 final case class UserStatus private (value: Boolean) extends AnyVal with BooleanValue
@@ -330,7 +317,8 @@ object UserStatus {
   def from(value: Boolean): UserStatus = if (value) Active else Inactive
 }
 
-final case class SystemAdmin private (value: Boolean) extends AnyVal
+final case class SystemAdmin private (value: Boolean) extends AnyVal with BooleanValue
+
 object SystemAdmin {
   def from(value: Boolean): SystemAdmin = SystemAdmin(value)
 }

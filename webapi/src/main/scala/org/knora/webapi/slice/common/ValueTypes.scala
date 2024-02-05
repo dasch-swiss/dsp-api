@@ -32,7 +32,7 @@ trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A]
 trait IntValueCompanion[A <: IntValue]       extends WithFrom[Int, A]
 
 object ToValidation {
-  def validateOneWithFrom[A, B <: Value[?], E <: Throwable](
+  def validateOneWithFrom[A, B <: Value[?], E](
     a: A,
     validator: A => Either[String, B],
     err: String => E

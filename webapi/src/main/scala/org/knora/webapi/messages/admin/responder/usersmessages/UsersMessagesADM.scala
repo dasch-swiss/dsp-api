@@ -25,6 +25,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -542,10 +544,10 @@ object UserUpdateBasicInformationPayloadADM {
 
   def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
     Validation.validateWith(
-      validateWithOptionOrNone(req.username, Username.validationFrom).mapError(ValidationException(_)),
-      validateWithOptionOrNone(req.email, Email.validationFrom).mapError(ValidationException(_)),
-      validateWithOptionOrNone(req.givenName, GivenName.validationFrom).mapError(ValidationException(_)),
-      validateWithOptionOrNone(req.familyName, FamilyName.validationFrom).mapError(ValidationException(_)),
+      validateOptionWithFrom(req.username, Username.from, ValidationException.apply),
+      validateOptionWithFrom(req.email, Email.from, ValidationException.apply),
+      validateOptionWithFrom(req.givenName, GivenName.from, ValidationException.apply),
+      validateOptionWithFrom(req.familyName, FamilyName.from, ValidationException.apply),
       validateWithOptionOrNone(req.lang, LanguageCode.make)
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
@@ -554,11 +556,12 @@ case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword
 object UserUpdatePasswordPayloadADM {
   def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
     val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(Password.validationFrom)
+      .map(validateOneWithFrom(_, Password.from, a => a))
       .getOrElse(Validation.fail("The requester's password is missing."))
-    val newPasswordValidation = apiRequest.newPassword
-      .map(Password.validationFrom)
-      .getOrElse(Validation.fail("The new password is missing."))
+    val newPasswordValidation =
+      apiRequest.newPassword
+        .map(validateOneWithFrom(_, Password.from, a => a))
+        .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
 }
@@ -588,19 +591,16 @@ object UserCreatePayloadADM {
   def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
     Validation
       .validateWith(
-        apiRequest.id
-          .map(UserIri.validationFrom(_).map(Some(_)).mapError(ValidationException(_)))
-          .getOrElse(Validation.succeed(None)),
-        Username.validationFrom(apiRequest.username).mapError(ValidationException(_)),
-        Email.validationFrom(apiRequest.email).mapError(ValidationException(_)),
-        GivenName.validationFrom(apiRequest.givenName).mapError(ValidationException(_)),
-        FamilyName.validationFrom(apiRequest.familyName).mapError(ValidationException(_)),
-        Password.validationFrom(apiRequest.password).mapError(ValidationException(_)),
+        validateOptionWithFrom(apiRequest.id, UserIri.from, a => a),
+        validateOneWithFrom(apiRequest.username, Username.from, a => a),
+        validateOneWithFrom(apiRequest.email, Email.from, a => a),
+        validateOneWithFrom(apiRequest.givenName, GivenName.from, a => a),
+        validateOneWithFrom(apiRequest.familyName, FamilyName.from, a => a),
+        validateOneWithFrom(apiRequest.password, Password.from, a => a),
         Validation.succeed(UserStatus.from(apiRequest.status)),
-        LanguageCode.make(apiRequest.lang),
+        LanguageCode.make(apiRequest.lang).mapError(_.getMessage),
         Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
-      .mapError(_.getMessage)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
