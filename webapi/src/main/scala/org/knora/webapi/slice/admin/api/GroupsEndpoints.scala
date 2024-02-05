@@ -25,7 +25,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupsGetResponseADM])
     .description("Returns all groups.")
 
-  val getGroup = baseEndpoints.publicEndpoint.get
+  val getGroupByIri = baseEndpoints.publicEndpoint.get
     .in(base / groupIri)
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Returns a single group identified by IRI.")
@@ -37,7 +37,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val securedEndpoins = Seq(getGroupMembers).map(_.endpoint)
 
-  val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroup) ++ securedEndpoins)
+  val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
     .map(_.tag("Admin Groups"))
 }
 
