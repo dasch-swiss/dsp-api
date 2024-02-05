@@ -9,6 +9,8 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
@@ -47,8 +49,11 @@ final case class UsersRestService(
     external <- format.toExternal(internal)
   } yield external
 
-   def getProjectMemberShipsByIri(userIri: UserIri) =
+  def getProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     responder.findProjectMemberShipsByIri(userIri).flatMap(format.toExternal)
+
+  def getProjectAdminMemberShipsByIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
+    responder.findUserProjectAdminMemberships(userIri).flatMap(format.toExternal)
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
     internal <- responder

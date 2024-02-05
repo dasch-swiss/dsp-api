@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.service.UsersRestService
@@ -49,14 +48,19 @@ case class UsersEndpointsHandler(
     restService.getProjectMemberShipsByIri
   )
 
+  private val getUsersByIriProjectAdminMemberShipsHandler = PublicEndpointHandler(
+    usersEndpoints.getUsersByIriProjectAdminMemberShips,
+    restService.getProjectAdminMemberShipsByIri
+  )
+
   // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
     usersEndpoints.deleteUser,
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
-  private val public = List(getUsersByIriProjectMemberShipsHandler)
-    .map(mapper.mapPublicEndpointHandler)
+  private val public = List(getUsersByIriProjectMemberShipsHandler, getUsersByIriProjectAdminMemberShipsHandler)
+    .map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(
     getUsersHandler,

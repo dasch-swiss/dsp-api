@@ -265,19 +265,6 @@ case class UserProjectMembershipRemoveRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests user's project admin memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectAdminMembershipsGetRequestADM(
-  userIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
  * Requests adding the user to a project as project admin.
  *
  * @param userIri              the IRI of the user to be updated.
@@ -382,7 +369,7 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
 }
 

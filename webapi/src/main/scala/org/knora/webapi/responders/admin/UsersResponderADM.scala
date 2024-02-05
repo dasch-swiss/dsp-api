@@ -6,12 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.*
-import zio.macros.accessible
-
-import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -50,6 +44,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.*
+import zio.macros.accessible
+
+import java.util.UUID
 
 /**
  * Provides information about Knora users to other responders.
@@ -149,6 +148,15 @@ trait UsersResponderADM {
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
   def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM]
+
+  /**
+   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
+   * is a member of the project admin group.
+   *
+   * @param userIri the user's IRI.
+   * @return a [[UserProjectAdminMembershipsGetResponseADM]].
+   */
+  def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM]
 }
 
 final case class UsersResponderADMLive(
@@ -220,8 +228,6 @@ final case class UsersResponderADMLive(
           apiRequestID
         ) =>
       userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, _, _) =>
-      userProjectAdminMembershipsGetRequestADM(userIri)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
@@ -886,8 +892,6 @@ final case class UsersResponderADMLive(
    * @return a list of [[ProjectADM]].
    */
   private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
-    // ToDo: only allow system user
-    // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
       userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
 
@@ -923,13 +927,10 @@ final case class UsersResponderADMLive(
    * @param userIri              the user's IRI.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
-  private def userProjectAdminMembershipsGetRequestADM(userIri: IRI) =
-    // ToDo: which user is allowed to do this operation?
-    // ToDo: check permissions
-    for {
-      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
-      projects <- userProjectAdminMembershipsGetADM(userIri)
-    } yield UserProjectAdminMembershipsGetResponseADM(projects)
+  override def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
+    ZIO.whenZIO(userExists(userIri.value).negate)(
+      ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
+    ) *> userProjectAdminMembershipsGetADM(userIri.value).map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.

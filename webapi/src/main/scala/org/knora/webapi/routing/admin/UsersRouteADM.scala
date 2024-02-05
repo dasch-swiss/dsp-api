@@ -42,7 +42,6 @@ final case class UsersRouteADM()(
       changeUserSystemAdminMembership() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
-      getUsersProjectAdminMemberships ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       getUsersGroupMemberships ~
@@ -175,20 +174,6 @@ final case class UsersRouteADM()(
           checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
           r              <- getIriUserUuid(projectIri, requestContext)
         } yield UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        runJsonRouteZ(task, requestContext)
-      }
-    }
-
-  /**
-   * get user's project admin memberships
-   */
-  private def getUsersProjectAdminMemberships: Route =
-    path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
-      get { requestContext =>
-        val task = for {
-          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
-          r <- getIriUserUuid(userIri, requestContext)
-        } yield UserProjectAdminMembershipsGetRequestADM(r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
