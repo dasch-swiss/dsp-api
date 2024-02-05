@@ -12,7 +12,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -36,12 +35,15 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -58,12 +60,10 @@ trait ProjectsResponderADM {
   /**
    * Gets all the projects and returns them as a [[ProjectADM]].
    *
-   * @param withSystemProjects includes system projcets in response.
    * @return all the projects as a [[ProjectADM]].
-   *
-   *         NotFoundException if no projects are found.
+   *         [[NotFoundException]] if no projects are found.
    */
-  def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM]
+  def getNonSystemProjects: Task[ProjectsGetResponseADM]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -176,12 +176,13 @@ trait ProjectsResponderADM {
 }
 
 final case class ProjectsResponderADMLive(
-  private val triplestore: TriplestoreService,
-  private val messageRelay: MessageRelay,
-  private val iriService: IriService,
-  private val projectService: ProjectADMService,
   private val cacheServiceSettings: CacheServiceSettings,
+  private val iriService: IriService,
+  private val messageRelay: MessageRelay,
   private val permissionsResponderADM: PermissionsResponderADM,
+  private val predicateObjectMapper: PredicateObjectMapper,
+  private val projectService: ProjectADMService,
+  private val triplestore: TriplestoreService,
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
@@ -197,18 +198,8 @@ final case class ProjectsResponderADMLive(
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectsGetRequestADM(withSystemProjects) => projectsGetRequestADM(withSystemProjects)
-    case ProjectGetADM(identifier)                 => getProjectFromCacheOrTriplestore(identifier)
-    case ProjectGetRequestADM(identifier)          => getSingleProjectADMRequest(identifier)
-    case ProjectMembersGetRequestADM(identifier, requestingUser) =>
-      projectMembersGetRequestADM(identifier, requestingUser)
-    case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
-      projectAdminMembersGetRequestADM(identifier, requestingUser)
-    case ProjectsKeywordsGetRequestADM() => projectsKeywordsGetRequestADM()
-    case ProjectKeywordsGetRequestADM(projectIri) =>
-      projectKeywordsGetRequestADM(projectIri)
-    case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
-      projectRestrictedViewSettingsGetRequestADM(identifier)
+    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
+    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -227,24 +218,17 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects but not system projects and returns them as a [[ProjectADM]].
+   * Gets all the projects but not system projects.
+   * Filters out system projects in response.
    *
-   * @param  withSystemProjects includes system projcets in response.
-   * @return all the projects as a [[ProjectADM]].
-   *
+   * @return all non-system projects as a [[ProjectsGetResponseADM]].
    *         [[NotFoundException]] if no projects are found.
    */
-  override def projectsGetRequestADM(withSystemProjects: Boolean): Task[ProjectsGetResponseADM] =
-    projectService.findAll
-      .flatMap(projects =>
-        (projects, withSystemProjects) match {
-          case (Nil, _)  => ZIO.fail(NotFoundException(s"No projects found"))
-          case (_, true) => ZIO.succeed(ProjectsGetResponseADM(projects))
-          case _ =>
-            val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
-            ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
-        }
-      )
+  override def getNonSystemProjects: Task[ProjectsGetResponseADM] =
+    projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
+      case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
+      case projects => ZIO.succeed(ProjectsGetResponseADM(projects))
+    }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
@@ -417,23 +401,27 @@ final case class ProjectsResponderADMLive(
     )
     for {
       projectResponse <- triplestore.query(query).flatMap(_.asExtended)
-      restrictedViewSettings =
+      restrictedViewSettings <- {
         if (projectResponse.statements.nonEmpty) {
-
-          val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
-
-          val size = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val watermark = propsMap
-            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-
-          Some(ProjectRestrictedViewSettingsADM(size, watermark))
+          val (_, propsMap) = projectResponse.statements.head
+          for {
+            size <- predicateObjectMapper
+                      .getSingleOption[StringLiteralV2](
+                        OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
+                        propsMap
+                      )
+                      .map(_.map(_.value))
+            watermark <- predicateObjectMapper
+                           .getSingleOption[BooleanLiteralV2](
+                             OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
+                             propsMap
+                           )
+                           .map(_.exists(_.value))
+          } yield Some(ProjectRestrictedViewSettingsADM(size, watermark))
         } else {
-          None
+          ZIO.none
         }
-
+      }
     } yield restrictedViewSettings
   }
 
@@ -448,11 +436,8 @@ final case class ProjectsResponderADMLive(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(
-        _ => NotFoundException(s"Project '${getId(id)}' not found."),
-        ProjectRestrictedViewSettingsGetResponseADM
-      )
+      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      .map(ProjectRestrictedViewSettingsGetResponseADM)
 
   /**
    * Update project's basic information.
@@ -800,7 +785,10 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- projectService.setProjectRestrictedViewSize(newProjectADM, RestrictedViewSize.default)
+        _ <- projectService.setProjectRestrictedView(
+               newProjectADM,
+               RestrictedView(RestrictedViewSize.default, watermark = false)
+             )
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
@@ -873,7 +861,7 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionsResponderADM & ProjectADMService & StringFormatter & TriplestoreService,
+    AppConfig & IriService & MessageRelay & PermissionsResponderADM & PredicateObjectMapper & ProjectADMService & StringFormatter & TriplestoreService,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
@@ -882,9 +870,10 @@ object ProjectsResponderADMLive {
       ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
+      po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, pr, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(c, iris, mr, pr, po, ps, ts, sf))
     } yield handler
   }
 }

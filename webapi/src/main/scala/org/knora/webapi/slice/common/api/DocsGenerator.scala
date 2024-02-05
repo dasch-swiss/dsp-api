@@ -26,9 +26,11 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.slice.admin.api.AdminApiEndpoints
 import org.knora.webapi.slice.admin.api.FilesEndpoints
 import org.knora.webapi.slice.admin.api.GroupsEndpoints
+import org.knora.webapi.slice.admin.api.ListsEndpoints
 import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
 import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
+import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
@@ -74,11 +76,13 @@ object DocsGenerator extends ZIOAppDefault {
     DocsNoopAuthenticator.layer,
     GroupsEndpoints.layer,
     FilesEndpoints.layer,
+    ListsEndpoints.layer,
     MaintenanceEndpoints.layer,
     PermissionsEndpoints.layer,
     ProjectsEndpoints.layer,
     ResourceInfoEndpoints.layer,
     SearchEndpoints.layer,
+    StoreEndpoints.layer,
     UsersEndpoints.layer
   )
 

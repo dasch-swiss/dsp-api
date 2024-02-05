@@ -7,6 +7,7 @@ package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
 
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.upgrade.plugins.*
 
 /**
@@ -41,24 +42,25 @@ object RepositoryUpdatePlan {
       ),
       PluginForKnoraBaseVersion(
         versionNumber = 5,
-        plugin = new NoopPlugin,
+        plugin = new MigrateOnlyBuiltInGraphs,
         prBasedVersionString = Some("PR 1440")
       ),
-      PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
-      PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
+      PluginForKnoraBaseVersion(versionNumber = 6, plugin = new MigrateOnlyBuiltInGraphs), // PR 1206
+      PluginForKnoraBaseVersion(versionNumber = 7, plugin = new MigrateOnlyBuiltInGraphs), // PR 1403
       PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615()),
       PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746(log)),
-      PluginForKnoraBaseVersion(versionNumber = 10, plugin = new NoopPlugin), // PR 1808
-      PluginForKnoraBaseVersion(versionNumber = 11, plugin = new NoopPlugin), // PR 1813
-      PluginForKnoraBaseVersion(versionNumber = 12, plugin = new NoopPlugin), // PR 1891
+      PluginForKnoraBaseVersion(versionNumber = 10, plugin = new MigrateOnlyBuiltInGraphs), // PR 1808
+      PluginForKnoraBaseVersion(versionNumber = 11, plugin = new MigrateOnlyBuiltInGraphs), // PR 1813
+      PluginForKnoraBaseVersion(versionNumber = 12, plugin = new MigrateOnlyBuiltInGraphs), // PR 1891
       PluginForKnoraBaseVersion(versionNumber = 13, plugin = new UpgradePluginPR1921(log)),
-      PluginForKnoraBaseVersion(versionNumber = 14, plugin = new NoopPlugin), // PR 1992
+      PluginForKnoraBaseVersion(versionNumber = 14, plugin = new MigrateOnlyBuiltInGraphs), // PR 1992
       PluginForKnoraBaseVersion(versionNumber = 20, plugin = new UpgradePluginPR2018(log)),
       PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(log)),
       PluginForKnoraBaseVersion(versionNumber = 22, plugin = new UpgradePluginPR2081(log)),
       PluginForKnoraBaseVersion(versionNumber = 23, plugin = new UpgradePluginPR2094(log)),
-      PluginForKnoraBaseVersion(versionNumber = 24, plugin = new NoopPlugin), // PR 2076
-      PluginForKnoraBaseVersion(versionNumber = 25, plugin = new NoopPlugin)  // PR 2268
+      PluginForKnoraBaseVersion(versionNumber = 24, plugin = new MigrateOnlyBuiltInGraphs), // PR 2076
+      PluginForKnoraBaseVersion(versionNumber = 25, plugin = new MigrateOnlyBuiltInGraphs), // PR 2268
+      PluginForKnoraBaseVersion(versionNumber = 26, plugin = new MigrateOnlyBuiltInGraphs)  // PR 3003
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )
@@ -66,26 +68,26 @@ object RepositoryUpdatePlan {
   /**
    * The built-in named graphs that are always updated when there is a new version of knora-base.
    */
-  val builtInNamedGraphs: Set[BuiltInNamedGraph] = Set(
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/knora-admin.ttl",
-      iri = "http://www.knora.org/ontology/knora-admin"
+  val builtInNamedGraphs: Set[RdfDataObject] = Set(
+    RdfDataObject(
+      path = "knora-ontologies/knora-admin.ttl",
+      name = "http://www.knora.org/ontology/knora-admin"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/knora-base.ttl",
-      iri = "http://www.knora.org/ontology/knora-base"
+    RdfDataObject(
+      path = "knora-ontologies/knora-base.ttl",
+      name = "http://www.knora.org/ontology/knora-base"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/salsah-gui.ttl",
-      iri = "http://www.knora.org/ontology/salsah-gui"
+    RdfDataObject(
+      path = "knora-ontologies/salsah-gui.ttl",
+      name = "http://www.knora.org/ontology/salsah-gui"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/standoff-onto.ttl",
-      iri = "http://www.knora.org/ontology/standoff"
+    RdfDataObject(
+      path = "knora-ontologies/standoff-onto.ttl",
+      name = "http://www.knora.org/ontology/standoff"
     ),
-    BuiltInNamedGraph(
-      filename = "knora-ontologies/standoff-data.ttl",
-      iri = "http://www.knora.org/data/standoff"
+    RdfDataObject(
+      path = "knora-ontologies/standoff-data.ttl",
+      name = "http://www.knora.org/data/standoff"
     )
   )
 
@@ -107,13 +109,4 @@ object RepositoryUpdatePlan {
         case None      => s"knora-base v$versionNumber"
       }
   }
-
-  /**
-   * Represents a Knora built-in named graph.
-   *
-   * @param filename the filename containing the named graph.
-   * @param iri      the IRI of the named graph.
-   */
-  case class BuiltInNamedGraph(filename: String, iri: String)
-
 }

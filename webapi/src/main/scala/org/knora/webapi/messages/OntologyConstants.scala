@@ -7,6 +7,8 @@ package org.knora.webapi
 package messages
 
 import dsp.constants.SalsahGui
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.
@@ -1106,6 +1108,8 @@ object OntologyConstants {
    */
   object NamedGraphs {
     val DataNamedGraphStart: IRI = "http://www.knora.org/data"
+
+    val KnoraAdminOntology: InternalIri = InternalIri(KnoraAdminOntologyIri)
   }
 
   object Fuseki {

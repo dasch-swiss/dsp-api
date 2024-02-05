@@ -69,7 +69,6 @@ object SearchEndpointsInputs {
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
-  private val tags = List("v2", "search")
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
 
@@ -79,7 +78,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources using a Gravsearch query.")
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
@@ -87,7 +85,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources using a Gravsearch query.")
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
@@ -96,7 +93,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Count resources using a Gravsearch query.")
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
@@ -104,7 +100,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Count resources using a Gravsearch query.")
 
   val getSearchByLabel = baseEndpoints.withUserEndpoint.get
@@ -115,7 +110,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
@@ -125,7 +119,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToResourceClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getFullTextSearch = baseEndpoints.withUserEndpoint.get
@@ -138,7 +131,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.returnFiles)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get
@@ -149,7 +141,6 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToStandoffClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
-    .tags(tags)
     .description("Search for resources by label.")
 
   val endpoints: Seq[AnyEndpoint] =
@@ -162,7 +153,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getSearchByLabelCount,
       getFullTextSearch,
       getFullTextSearchCount
-    ).map(_.endpoint)
+    ).map(_.endpoint.tag("V2 Search"))
 }
 
 object SearchEndpoints {
@@ -179,31 +170,31 @@ final case class SearchApiRoutes(
   private type GravsearchQuery = String
 
   private val postGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
       user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
     )
 
   private val getGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
       user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
     )
 
   private val postGravsearchCount =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
       user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
     )
 
   private val getGravsearchCount =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
+    SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
       user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
     )
 
   private val getSearchByLabel =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri]),
       (RenderedResponse, MediaType)
     ](
@@ -214,7 +205,7 @@ final case class SearchApiRoutes(
     )
 
   private val getSearchByLabelCount =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (String, FormatOptions, Option[ProjectIri], Option[InputIri]),
       (RenderedResponse, MediaType)
     ](
@@ -225,7 +216,7 @@ final case class SearchApiRoutes(
     )
 
   private val getFullTextSearch =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri], Option[InputIri], Boolean),
       (RenderedResponse, MediaType)
     ](
@@ -236,7 +227,7 @@ final case class SearchApiRoutes(
     )
 
   private val getFullTextSearchCount =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (String, FormatOptions, Option[ProjectIri], Option[InputIri], Option[InputIri]),
       (RenderedResponse, MediaType)
     ](
@@ -257,7 +248,7 @@ final case class SearchApiRoutes(
       postGravsearchCount,
       getGravsearchCount
     )
-      .map(it => mapper.mapEndpointAndHandler(it))
+      .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
 }
 

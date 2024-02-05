@@ -13,7 +13,7 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.4" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.8" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.8.11" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.12"
 
@@ -21,11 +21,11 @@ object Dependencies {
   val PekkoHttpVersion  = "1.0.0"
   val JenaVersion       = "4.10.0"
 
-  val ZioConfigVersion            = "4.0.0"
-  val ZioLoggingVersion           = "2.1.16"
+  val ZioConfigVersion            = "4.0.1"
+  val ZioLoggingVersion           = "2.1.17"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC21"
+  val ZioPreludeVersion           = "1.0.0-RC22"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.21"
 
@@ -40,18 +40,17 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.1"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.2"
 
   // refined
   val refined = Seq(
-    "eu.timepit" %% "refined"                  % "0.11.0",
+    "eu.timepit" %% "refined"                  % "0.11.1",
     "dev.zio"    %% "zio-json-interop-refined" % "0.6.2"
   )
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC12"
 
   // pekko
   val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
@@ -96,8 +95,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.8"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.8"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.9"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.9"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "5.0.1"  // Scala 3 compatible
@@ -115,13 +114,13 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.3"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.4"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.6"
+  val tapirVersion = "1.9.8"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -129,7 +128,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.6"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.8"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
@@ -151,7 +150,7 @@ object Dependencies {
     zioTestSbt
   ).map(_ % Test)
 
-  val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock, wiremock).map(_ % Test)
+  val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
   val webapiDependencies = refined ++ Seq(
     pekkoActor,

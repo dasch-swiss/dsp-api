@@ -183,11 +183,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     // add needed files to production jar
     Compile / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl")                         -> "knora-ontologies/knora-admin.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl")                          -> "knora-ontologies/knora-base.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl")                          -> "knora-ontologies/salsah-gui.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl")                       -> "knora-ontologies/standoff-data.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl")                       -> "knora-ontologies/standoff-onto.ttl",
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
@@ -208,8 +203,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Universal / mappings ++= {
       // copy the scripts folder
       directory("webapi/scripts") ++
-        // add knora-ontologies
-        directory("knora-ontologies") ++
         // copy configuration files to config directory
         contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
     },

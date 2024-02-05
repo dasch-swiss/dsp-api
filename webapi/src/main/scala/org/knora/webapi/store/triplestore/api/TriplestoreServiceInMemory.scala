@@ -43,6 +43,7 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
@@ -227,16 +228,21 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def checkTriplestore(): Task[TriplestoreStatus] = ZIO.succeed(Available)
 
-  override def downloadRepository(outputFile: Path): Task[Unit] =
-    ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
+  override def setDataset(ds: Dataset): UIO[Unit] = datasetRef.set(ds)
+
+  private val notImplemented = ZIO.die(new UnsupportedOperationException("Not implemented yet."))
+
+  override def downloadRepository(outputFile: Path, graphs: GraphsForMigration): Task[Unit] =
+    notImplemented
 
   override def uploadRepository(inputFile: Path): Task[Unit] =
-    ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
+    notImplemented
 
-  override def setDataset(ds: Dataset): UIO[Unit] =
-    datasetRef.set(ds)
+  override def dropGraph(graphName: IRI): Task[Unit] =
+    notImplemented
 
-  override def queryRdf(sparql: Construct): Task[String] = ???
+  override def queryRdf(sparql: Construct): Task[String] = 
+    notImplemented
 }
 
 object TriplestoreServiceInMemory {

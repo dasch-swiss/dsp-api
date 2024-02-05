@@ -52,17 +52,16 @@ import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlQuery
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.NotInitialized
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Unavailable
 import org.knora.webapi.store.triplestore.errors.*
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
+import org.knora.webapi.store.triplestore.upgrade.MigrateAllGraphs
+import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 import org.knora.webapi.util.FileUtil
 
 case class TriplestoreServiceLive(
@@ -196,7 +195,7 @@ case class TriplestoreServiceLive(
       _      <- ZIO.logInfo("==>> Drop All Data End")
     } yield ()
 
-  private def dropGraph(graphName: String): Task[Unit] =
+  override def dropGraph(graphName: String): Task[Unit] =
     ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
       query(Update(s"DROP GRAPH <$graphName>")) *>
       ZIO.logDebug("Graph dropped")
@@ -270,7 +269,7 @@ case class TriplestoreServiceLive(
                 // to the parent folder where the files can be found
                 val inputFile = Paths.get("..", elem.path)
                 if (!Files.exists(inputFile)) {
-                  throw BadRequestException(s"File $inputFile does not exist")
+                  throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
                 }
                 val fileEntity =
                   new FileEntity(inputFile.toFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
@@ -428,15 +427,24 @@ case class TriplestoreServiceLive(
   }
 
   /**
-   * Dumps the whole repository in N-Quads format, saving the response in a file.
+   * Dumps the whole repository or only specific graphs in N-Quads format, saving the response in a file.
    *
-   * @param outputFile           the output file.
-   * @return a string containing the contents of the graph in N-Quads format.
+   * @param outputFile  The path to the output file.
+   * @param graphs      Specify which graphs are to be dumped.
+   * @return [[Unit]]   Or fails if the export was not successful.
    */
-  override def downloadRepository(outputFile: Path): Task[Unit] = {
-    val request = new HttpGet(paths.repository)
-    request.addHeader("Accept", mimeTypeApplicationNQuads)
-    doHttpRequest(request, writeResponseFileAsPlainContent(outputFile)).unit
+  override def downloadRepository(outputFile: Path, graphs: GraphsForMigration): Task[Unit] = {
+    def downloadWholeRepository = {
+      val request = new HttpGet(paths.repository)
+      request.addHeader("Accept", mimeTypeApplicationNQuads)
+      doHttpRequest(request, writeResponseFileAsPlainContent(outputFile)).unit
+    }
+    graphs match {
+      case MigrateAllGraphs =>
+        downloadWholeRepository
+      case MigrateSpecificGraphs(graphIris) =>
+        ZIO.foreach(graphIris)(graphIri => downloadGraph(graphIri, zio.nio.file.Path.fromJava(outputFile), NQuads)).unit
+    }
   }
 
   /**

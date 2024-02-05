@@ -93,8 +93,8 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList014")
-        val children = node.getChildren
+        node.id should be("http://rdfh.ch/lists/0001/notUsedList014")
+        val children = node.children
         children.size should be(1)
         // last child must be shifted one place to left
         val leftChild = children.head
@@ -109,7 +109,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node     = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        val children = node.getChildren
+        val children = node.children
         children.size should be(2)
         // last child must be shifted one place to left
         val lastChild = children.last
@@ -131,8 +131,8 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList03")
-        val children = node.getChildren
+        node.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+        val children = node.children
         children.size should be(0)
       }
 

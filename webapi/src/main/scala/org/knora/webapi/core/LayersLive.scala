@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
@@ -74,14 +75,14 @@ object LayersLive {
       AuthorizationRestService & CacheService & CacheServiceRequestMessageHandler & CardinalityHandler &
       CardinalityService & ConstructResponseUtilV2 & ConstructTransformer & GravsearchTypeInspectionRunner &
       GroupsResponderADM & HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService &
-      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponderADM &
+      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
       OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
       PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
+      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -121,8 +122,11 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      ListsResponderADMLive.layer,
-      ListsResponderV2Live.layer,
+      ListRestService.layer,
+      ListsEndpoints.layer,
+      ListsEndpointsHandlers.layer,
+      ListsResponder.layer,
+      ListsResponderV2.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
@@ -148,6 +152,8 @@ object LayersLive {
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
+      StoreEndpoints.layer,
+      StoreEndpointsHandler.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
@@ -162,7 +168,7 @@ object LayersLive {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoresResponderADMLive.layer,
+      StoreRestService.layer,
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,

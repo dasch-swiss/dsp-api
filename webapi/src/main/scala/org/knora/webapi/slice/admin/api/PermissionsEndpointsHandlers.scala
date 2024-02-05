@@ -26,7 +26,7 @@ import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class PermissionsEndpointsHandlers(
   permissionsEndpoints: PermissionsEndpoints,
@@ -35,7 +35,7 @@ final case class PermissionsEndpointsHandlers(
 ) {
 
   private val postPermissionsApHandler =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       CreateAdministrativePermissionAPIRequestADM,
       AdministrativePermissionCreateResponseADM
     ](
@@ -46,7 +46,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsApByProjectIriHandler =
-    SecuredEndpointAndZioHandler[IriIdentifier, AdministrativePermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[IriIdentifier, AdministrativePermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsApByProjectIri(projectIri.value, user)
@@ -54,7 +54,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsApByProjectAndGroupIriHandler =
-    SecuredEndpointAndZioHandler[(IriIdentifier, GroupIri), AdministrativePermissionGetResponseADM](
+    SecuredEndpointHandler[(IriIdentifier, GroupIri), AdministrativePermissionGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
       user => { case (projectIri: IriIdentifier, groupIri: GroupIri) =>
         restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
@@ -62,7 +62,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsDaopByProjectIriHandler =
-    SecuredEndpointAndZioHandler[IriIdentifier, DefaultObjectAccessPermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[IriIdentifier, DefaultObjectAccessPermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsDoapByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsDaopByProjectIri(projectIri.value, user)
@@ -70,7 +70,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsByProjectIriHandler =
-    SecuredEndpointAndZioHandler[IriIdentifier, PermissionsForProjectGetResponseADM](
+    SecuredEndpointHandler[IriIdentifier, PermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsByProjectIri(projectIri.value, user)
@@ -78,7 +78,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val deletePermissionHandler =
-    SecuredEndpointAndZioHandler[PermissionIri, PermissionDeleteResponseADM](
+    SecuredEndpointHandler[PermissionIri, PermissionDeleteResponseADM](
       permissionsEndpoints.deletePermission,
       user => { case (permissionIri: PermissionIri) =>
         restService.deletePermission(permissionIri, user)
@@ -86,7 +86,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val postPermissionsDoapHandler =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       CreateDefaultObjectAccessPermissionAPIRequestADM,
       DefaultObjectAccessPermissionCreateResponseADM
     ](
@@ -97,7 +97,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsProjectIriGroupHandler =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (PermissionIri, ChangePermissionGroupApiRequestADM),
       PermissionGetResponseADM
     ](
@@ -108,7 +108,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsHasPermissionsHandler =
-    SecuredEndpointAndZioHandler[
+    SecuredEndpointHandler[
       (PermissionIri, ChangePermissionHasPermissionsApiRequestADM),
       PermissionGetResponseADM
     ](
@@ -119,7 +119,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsResourceClass =
-    SecuredEndpointAndZioHandler[(PermissionIri, ChangePermissionResourceClassApiRequestADM), PermissionGetResponseADM](
+    SecuredEndpointHandler[(PermissionIri, ChangePermissionResourceClassApiRequestADM), PermissionGetResponseADM](
       permissionsEndpoints.putPermisssionsResourceClass,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionResourceClassApiRequestADM) =>
         restService.updatePermissionResourceClass(permissionIri, request, user)
@@ -127,7 +127,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val putPermissionsProperty =
-    SecuredEndpointAndZioHandler[(PermissionIri, ChangePermissionPropertyApiRequestADM), PermissionGetResponseADM](
+    SecuredEndpointHandler[(PermissionIri, ChangePermissionPropertyApiRequestADM), PermissionGetResponseADM](
       permissionsEndpoints.putPermissionsProperty,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionPropertyApiRequestADM) =>
         restService.updatePermissionProperty(permissionIri, request, user)
@@ -147,7 +147,7 @@ final case class PermissionsEndpointsHandlers(
       putPermissionsResourceClass,
       deletePermissionHandler,
       postPermissionsDoapHandler
-    ).map(mapper.mapEndpointAndHandler(_))
+    ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHanders = securedHandlers
 }

@@ -37,23 +37,21 @@ Each developer machine should have the following prerequisites installed:
 * Linux or macOS
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Homebrew](https://brew.sh) (macOS)
-* JDK [Temurin 17](https://adoptium.net/en-GB/temurin/)
+* JDK [Temurin 21](https://adoptium.net/en-GB/temurin/)
 * [sbt](https://www.scala-sbt.org/)
+* [just](https://just.systems/man/en/)
 
-#### JDK Temurin 17
+#### JDK Temurin 21
 
-To install, follow these steps:
-
-```shell
-brew tap homebrew/cask-versions
-brew install --cask temurin17
-```
-
-To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
+Follow the steps described on [https://sdkman.io/](https://sdkman.io/) to install SDKMAN.
+Then, follow these steps:
 
 ```shell
-export JAVA_HOME=`/usr/libexec/java_home -v 17`
+sdk ls java  # choose the latest version of Temurin 21
+sdk install java 21.x.y-tem
 ```
+
+SDKMAN will take care of the environment variable JAVA_HOME.
 
 ### For building the documentation
 
@@ -63,33 +61,30 @@ See [docs/Readme.md](docs/Readme.md).
 
 ### Run DSP-API
 
-Create a test repository and load some test data into the triplestore:
+Create a test repository, load some test data into the triplestore, and start DSP-API:
 
 ```shell
-make init-db-test
+just stack-init-test
 ```
 
-Start DSP-API after loading the data:
-
-```shell
-make stack-up
-```
-
-Open [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
+Open [http://localhost:4200/](http://localhost:4200) in a web browser.
 
 On first installation, errors similar to the following can come up:
-```
+
+```text
 error decoding 'Volumes[0]': invalid spec: :/fuseki:delegated: empty section between colons
 ```
+
 To solve this, you need to deactivate Docker Compose V2. This can be done in Docker Desktop either by unchecking the "Use Docker Compose V2" flag under "Preferences > General" or by running
- ```
+
+```text
 docker-compose disable-v2
 ```
 
 Shut down DSP-API:
 
 ```shell
-make stack-down
+just stack-stop
 ```
 
 ### Run the automated tests
