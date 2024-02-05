@@ -295,8 +295,8 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         response.status should be(StatusCodes.Forbidden)
       }
 
-      "return a BadRequestException during list creation when payload is not correct" in {
-        // no project IRI
+      "return a BadRequestException during list creation when request does not contain a projectIri" in {
+        //
         val params01 =
           s"""
              |{
@@ -306,11 +306,15 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |}
                 """.stripMargin
 
-        val request01                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
+        val request01 =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response01: HttpResponse = singleAwaitingRequest(request01)
         response01.status should be(StatusCodes.BadRequest)
+      }
 
-        // invalid project IRI
+      "return a BadRequestException during list creation when request has invalid project IRI" in {
         val params02 =
           s"""
              |{
@@ -320,11 +324,15 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |}
                 """.stripMargin
 
-        val request02                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
+        val request02 =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response02: HttpResponse = singleAwaitingRequest(request02)
         response02.status should be(StatusCodes.BadRequest)
+      }
 
-        // missing label
+      "return a BadRequestException during list creation when request has a missing label" in {
         val params03 =
           s"""
              |{
@@ -334,7 +342,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
              |}
                 """.stripMargin
 
-        val request03                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
+        val request03 =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response03: HttpResponse = singleAwaitingRequest(request03)
         response03.status should be(StatusCodes.BadRequest)
 

@@ -5,39 +5,27 @@
 
 package org.knora.webapi.responders.admin
 
-import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
 import java.util.UUID
-import scala.annotation.tailrec
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.admin.ListsResponder.Queries
 import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -61,30 +49,13 @@ final case class ListsResponder(
   auth: AuthorizationRestService,
   iriService: IriService,
   projectRepo: KnoraProjectRepo,
-  messageRelay: MessageRelay,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
-) extends MessageHandler
-    with LazyLogging {
+) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[ListsResponderRequestADM]
-
-  /**
-   * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
-   */
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
-    case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
-      listCreateRequestADM(createRootNode, apiRequestID)
-    case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
-      listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
 
   /**
    * Gets all lists or list belonging to a project and returns them as a [[ListsGetResponseADM]]. For performance reasons
@@ -536,122 +507,29 @@ final case class ListsResponder(
   }
 
   /**
-   * Provides the path to a particular hierarchical list node.
-   *
-   * @param queryNodeIri   the IRI of the node whose path is to be queried.
-   * @param requestingUser the user making the request.
-   */
-  private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: User): Task[NodePathGetResponseADM] = {
-
-    /**
-     * Recursively constructs the path to a node.
-     *
-     * @param node      the IRI of the node whose path is to be constructed.
-     * @param nodeMap   a [[Map]] of node IRIs to query result row data, in the format described below.
-     * @param parentMap a [[Map]] of child node IRIs to parent node IRIs.
-     * @param path      the path constructed so far.
-     * @return the complete path to `node`.
-     */
-    @tailrec
-    def makePath(
-      node: IRI,
-      nodeMap: Map[IRI, Map[String, String]],
-      parentMap: Map[IRI, IRI],
-      path: Seq[NodePathElementADM]
-    ): Seq[NodePathElementADM] = {
-      // Get the details of the node.
-      val nodeData = nodeMap(node)
-
-      // Construct a NodePathElementV2 containing those details.
-      val pathElement = NodePathElementADM(
-        id = nodeData("node"),
-        name = nodeData.get("nodeName"),
-        labels = if (nodeData.contains("label")) {
-          StringLiteralSequenceV2(Vector(StringLiteralV2(nodeData("label"))))
-        } else {
-          StringLiteralSequenceV2.empty
-        },
-        comments = StringLiteralSequenceV2.empty
-      )
-
-      // Add it to the path.
-      val newPath = pathElement +: path
-
-      // Does this node have a parent?
-      parentMap.get(pathElement.id) match {
-        case Some(parentIri) =>
-          // Yes: recurse.
-          makePath(parentIri, nodeMap, parentMap, newPath)
-
-        case None =>
-          // No: the path is complete.
-          newPath
-      }
-    }
-
-    // TODO: Rewrite using a construct sparql query
-    for {
-      nodePathResponse <-
-        triplestore.query(
-          Select(sparql.admin.txt.getNodePath(queryNodeIri, requestingUser.lang, appConfig.fallbackLanguage))
-        )
-
-      /*
-
-            If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
-
-            node                                        nodeName     label                     child
-            <http://rdfh.ch/lists/c7f07a3fc1>    1            Heidi Film
-            <http://rdfh.ch/lists/2ebd2706c1>    7            FILM UND FOTO             <http://rdfh.ch/lists/c7f07a3fc1>
-            <http://rdfh.ch/lists/691eee1cbe>    4KUN         ART                       <http://rdfh.ch/lists/2ebd2706c1>
-
-            The order of the rows is arbitrary. Now we need to reconstruct the path based on the parent-child relationships between
-            nodes.
-
-       */
-
-      // A Map of node IRIs to query result rows.
-      nodeMap: Map[IRI, Map[String, String]] = nodePathResponse.results.bindings.map { row =>
-                                                 row.rowMap("node") -> row.rowMap
-                                               }.toMap
-
-      // A Map of child node IRIs to parent node IRIs.
-      parentMap: Map[IRI, IRI] = nodePathResponse.results.bindings.foldLeft(Map.empty[IRI, IRI]) { case (acc, row) =>
-                                   row.rowMap.get("child") match {
-                                     case Some(child) => acc + (child -> row.rowMap("node"))
-                                     case None        => acc
-                                   }
-                                 }
-    } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
-  }
-
-  /**
    * Creates a node (root or child).
    *
    * @param createNodeRequest    the new node's information.
    * @return a [newListNodeIri]
    */
   private def createNode(
-    createNodeRequest: ListNodeCreatePayloadADM
+    createNodeRequest: ListCreateRequest
   ): Task[IRI] = {
-    //    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIri] = createNodeRequest match {
-      case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
-      case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
+      case _: ListCreateRootNodeRequest      => None
+      case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
     }
 
     val (id, projectIri, name, position) = createNodeRequest match {
-      case root: ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM =>
-        (root.id, root.projectIri, root.name, None)
-      case child: ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM =>
-        (child.id, child.projectIri, child.name, child.position)
+      case root: ListCreateRootNodeRequest   => (root.id, root.projectIri, root.name, None)
+      case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
     }
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
       if (position.exists(_.value > children.size)) {
         val givenPosition = position.map(_.value)
         throw BadRequestException(
-          s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}."
+          s"Invalid position given ${givenPosition.get}, maximum allowed position is = ${children.size}."
         )
       }
 
@@ -711,17 +589,9 @@ final case class ListsResponder(
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      maybeProject <-
-        messageRelay.ask[Option[ProjectADM]](
-          ProjectGetADM(
-            IriIdentifier.fromString(projectIri.value).getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
-        )
-
-      project: ProjectADM = maybeProject match {
-                              case Some(project: ProjectADM) => project
-                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
-                            }
+      project <- projectRepo
+                   .findById(projectIri)
+                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
@@ -753,54 +623,38 @@ final case class ListsResponder(
       rootNodeIri: Option[IRI] = positionAndNode._2
 
       // check the custom IRI; if not given, create an unused IRI
-      customListIri          = id.map(_.value).map(_.toSmartIri)
-      maybeShortcode: String = project.shortcode
-      newListNodeIri <-
-        iriService.checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      customListIri   = id.map(_.value).map(_.toSmartIri)
+      newListNodeIri <- iriService.checkOrCreateEntityIri(customListIri, ListIri.makeNew(project).value)
 
       // Create the new list node depending on type
       createNewListSparqlString = createNodeRequest match {
-                                    case ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM(
-                                          _,
-                                          projectIri,
-                                          name,
-                                          labels,
-                                          comments
-                                        ) =>
+                                    case r: ListCreateRootNodeRequest =>
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
                                           listClassIri = KnoraBase.ListNode,
-                                          projectIri = projectIri.value,
+                                          projectIri = r.projectIri.value,
                                           nodeIri = newListNodeIri,
                                           parentNodeIri = None,
                                           rootNodeIri = rootNodeIri,
                                           position = None,
-                                          maybeName = name.map(_.value),
-                                          maybeLabels = labels.value,
-                                          maybeComments = Some(comments.value)
+                                          maybeName = r.name.map(_.value),
+                                          maybeLabels = r.labels.value,
+                                          maybeComments = Some(r.comments.value)
                                         )
-                                    case ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM(
-                                          _,
-                                          parentNodeIri,
-                                          projectIri,
-                                          name,
-                                          _,
-                                          labels,
-                                          comments
-                                        ) =>
+                                    case c: ListCreateChildNodeRequest =>
                                       sparql.admin.txt
                                         .createNewListNode(
                                           dataNamedGraph = dataNamedGraph,
                                           listClassIri = KnoraBase.ListNode,
-                                          projectIri = projectIri.value,
+                                          projectIri = c.projectIri.value,
                                           nodeIri = newListNodeIri,
-                                          parentNodeIri = Some(parentNodeIri.value),
+                                          parentNodeIri = Some(c.parentNodeIri.value),
                                           rootNodeIri = rootNodeIri,
                                           position = newPosition,
-                                          maybeName = name.map(_.value),
-                                          maybeLabels = labels.value,
-                                          maybeComments = comments.map(_.value)
+                                          maybeName = c.name.map(_.value),
+                                          maybeLabels = c.labels.value,
+                                          maybeComments = c.comments.map(_.value)
                                         )
                                   }
 
@@ -811,38 +665,18 @@ final case class ListsResponder(
   /**
    * Creates a list.
    *
-   * @param createRootRequest    the new list's information.
+   * @param req    the new list's information.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[RootNodeInfoGetResponseADM]]
+   * @return a [[ListGetResponseADM]]
    */
-  private def listCreateRequestADM(
-    createRootRequest: ListRootNodeCreatePayloadADM,
-    apiRequestID: UUID
-  ): Task[ListGetResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def listCreateTask(createRootRequest: ListRootNodeCreatePayloadADM): Task[ListGetResponseADM] =
-      for {
-        listRootIri <- createNode(createRootRequest)
-
-        // Verify that the list was created.
-        maybeNewListADM <- listGetADM(rootNodeIri = listRootIri)
-
-        newListADM = maybeNewListADM.getOrElse(
-                       throw UpdateNotPerformedException(
-                         s"List $listRootIri was not created. Please report this as a possible bug."
-                       )
-                     )
-
-      } yield ListGetResponseADM(newListADM)
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      LISTS_GLOBAL_LOCK_IRI,
-      listCreateTask(createRootRequest)
-    )
+  def listCreateRootNode(req: ListCreateRootNodeRequest, apiRequestID: UUID): Task[ListGetResponseADM] = {
+    val createTask = createNode(req).flatMap { createdIri =>
+      val errMsg = s"List $createdIri was not created. Please report this as a possible bug."
+      listGetADM(createdIri)
+        .someOrFail(UpdateNotPerformedException(errMsg))
+        .map(ListGetResponseADM.apply)
+    }
+    IriLocker.runWithIriLock(apiRequestID, LISTS_GLOBAL_LOCK_IRI, createTask)
   }
 
   /**
@@ -882,12 +716,12 @@ final case class ListsResponder(
   /**
    * Creates a new child node and appends it to an existing list node.
    *
-   * @param createChildNodeRequest the new list node's information.
+   * @param req the new list node's information.
    * @param apiRequestID           the unique api request ID.
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
-  private def listChildNodeCreateRequestADM(
-    createChildNodeRequest: ListChildNodeCreatePayloadADM,
+  def listCreateChildNode(
+    req: ListCreateChildNodeRequest,
     apiRequestID: UUID
   ): Task[ChildNodeInfoGetResponseADM] = {
 
@@ -895,7 +729,7 @@ final case class ListsResponder(
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ListChildNodeCreatePayloadADM
+      createChildNodeRequest: ListCreateChildNodeRequest
     ): Task[ChildNodeInfoGetResponseADM] =
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
@@ -918,7 +752,7 @@ final case class ListsResponder(
     IriLocker.runWithIriLock(
       apiRequestID,
       LISTS_GLOBAL_LOCK_IRI,
-      listChildNodeCreateTask(createChildNodeRequest)
+      listChildNodeCreateTask(req)
     )
   }
 
@@ -1671,11 +1505,10 @@ final case class ListsResponder(
    * @return an [[IRI]].
    */
   private def getDataNamedGraph(projectIri: ProjectIri): Task[IRI] =
-    for {
-      project <- messageRelay
-                   .ask[Option[ProjectADM]](ProjectGetADM(IriIdentifier.from(projectIri)))
-                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-    } yield ProjectADMService.projectDataNamedGraphV2(project).value
+    projectRepo
+      .findById(projectIri)
+      .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
+      .map(ProjectADMService.projectDataNamedGraphV2(_).value)
 
   /**
    * Helper method to get parent of a node.
@@ -1856,6 +1689,18 @@ object ListsResponder {
   def listNodeInfoGetRequestADM(nodeIri: String): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listNodeInfoGetRequestADM(nodeIri))
 
+  def listCreateRootNode(
+    req: ListCreateRootNodeRequest,
+    apiRequestID: UUID
+  ): ZIO[ListsResponder, Throwable, ListGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listCreateRootNode(req, apiRequestID))
+
+  def listCreateChildNode(
+    req: ListCreateChildNodeRequest,
+    apiRequestID: UUID
+  ): ZIO[ListsResponder, Throwable, ChildNodeInfoGetResponseADM] =
+    ZIO.serviceWithZIO[ListsResponder](_.listCreateChildNode(req, apiRequestID))
+
   def nodePositionChangeRequestADM(
     nodeIri: ListIri,
     changeNodePositionRequest: ListChangePositionRequest,
@@ -1885,20 +1730,5 @@ object ListsResponder {
   def canDeleteListRequestADM(iri: ListIri): ZIO[ListsResponder, Throwable, CanDeleteListResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.canDeleteListRequestADM(iri))
 
-  val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & PredicateObjectMapper & StringFormatter & TriplestoreService,
-    ListsResponder
-  ] = ZLayer.fromZIO {
-    for {
-      config   <- ZIO.service[AppConfig]
-      auth     <- ZIO.service[AuthorizationRestService]
-      iriS     <- ZIO.service[IriService]
-      projects <- ZIO.service[KnoraProjectRepo]
-      mr       <- ZIO.service[MessageRelay]
-      pom      <- ZIO.service[PredicateObjectMapper]
-      ts       <- ZIO.service[TriplestoreService]
-      sf       <- ZIO.service[StringFormatter]
-      handler  <- mr.subscribe(ListsResponder(config, auth, iriS, projects, mr, pom, ts, sf))
-    } yield handler
-  }
+  val layer = ZLayer.derive[ListsResponder]
 }

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.*
 
 import java.util.UUID
@@ -16,8 +15,6 @@ import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -27,6 +24,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
+import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
+import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.util.MutableTestIri
@@ -122,18 +121,18 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
     "used to modify lists" should {
       "create a list" in {
-        appActor ! ListRootNodeCreateRequestADM(
-          createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("neuelistename")),
-            labels = Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
-            comments = Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.listCreateRootNode(
+            ListCreateRootNodeRequest(
+              id = None,
+              Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")))),
+              Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+              Some(ListName.unsafeFrom("neuelistename")),
+              ProjectIri.unsafeFrom(imagesProjectIri)
+            ),
+            apiRequestID = UUID.randomUUID
+          )
         )
-
-        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
         val listInfo = received.list.listinfo
         listInfo.projectIri should be(imagesProjectIri)
@@ -158,20 +157,18 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
-        appActor ! ListRootNodeCreateRequestADM(
-          createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
-            labels =
-              Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de")))),
-            comments = Comments
-              .unsafeFrom(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.listCreateRootNode(
+            ListCreateRootNodeRequest(
+              id = None,
+              Comments.unsafeFrom(Seq(V2.StringLiteralV2(commentWithSpecialCharacter, language = Some("de")))),
+              Labels.unsafeFrom(Seq(V2.StringLiteralV2(labelWithSpecialCharacter, language = Some("de")))),
+              Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
+              ProjectIri.unsafeFrom(imagesProjectIri)
+            ),
+            apiRequestID = UUID.randomUUID
+          )
         )
-
-        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
         val listInfo = received.list.listinfo
         listInfo.projectIri should be(imagesProjectIri)
@@ -260,27 +257,28 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "add child to list - to the root node" in {
-        appActor ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("first")),
-            labels = Labels.unsafeFrom(
-              Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.listCreateChildNode(
+            ListCreateChildNodeRequest(
+              id = None,
+              Some(
+                Comments.unsafeFrom(
+                  Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+                )
+              ),
+              Labels.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+              ),
+              Some(ListName.unsafeFrom("first")),
+              ListIri.unsafeFrom(newListIri.get),
+              None,
+              ProjectIri.unsafeFrom(imagesProjectIri)
             ),
-            comments = Some(
-              Comments.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
-              )
-            )
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+            UUID.randomUUID
+          )
         )
 
-        val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo                              = received.nodeinfo
-
+        val nodeInfo = received.nodeinfo
         // check correct node info
         val childNodeInfo = nodeInfo match {
           case info: ListChildNodeInfoADM => info
@@ -313,27 +311,28 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "add second child to list in first position - to the root node" in {
-        appActor ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("second")),
-            position = Some(Position.unsafeFrom(0)),
-            labels = Labels.unsafeFrom(
-              Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.listCreateChildNode(
+            ListCreateChildNodeRequest(
+              id = None,
+              Some(
+                Comments.unsafeFrom(
+                  Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+                )
+              ),
+              Labels.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+              ),
+              Some(ListName.unsafeFrom("second")),
+              ListIri.unsafeFrom(newListIri.get),
+              Some(Position.unsafeFrom(0)),
+              ProjectIri.unsafeFrom(imagesProjectIri)
             ),
-            comments = Some(
-              Comments.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
-              )
-            )
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+            UUID.randomUUID
+          )
         )
 
-        val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo                              = received.nodeinfo
+        val nodeInfo = received.nodeinfo
 
         // check correct node info
         val childNodeInfo = nodeInfo match {
@@ -367,25 +366,28 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "add child to second child node" in {
-        appActor ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.unsafeFrom(secondChildIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("third")),
-            labels = Labels
-              .unsafeFrom(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))),
-            comments = Some(
-              Comments.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
-              )
-            )
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val received = UnsafeZioRun.runOrThrow(
+          ListsResponder.listCreateChildNode(
+            ListCreateChildNodeRequest(
+              id = None,
+              Some(
+                Comments.unsafeFrom(
+                  Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+                )
+              ),
+              Labels.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+              ),
+              Some(ListName.unsafeFrom("third")),
+              ListIri.unsafeFrom(secondChildIri.get),
+              Some(Position.unsafeFrom(0)),
+              ProjectIri.unsafeFrom(imagesProjectIri)
+            ),
+            UUID.randomUUID
+          )
         )
 
-        val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo                              = received.nodeinfo
+        val nodeInfo = received.nodeinfo
 
         // check correct node info
         val childNodeInfo = nodeInfo match {
@@ -419,31 +421,32 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = Some(Position.unsafeFrom(20))
-        appActor ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIri.unsafeFrom(newListIri.get),
-            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
-            name = Some(ListName.unsafeFrom("fourth")),
-            position = givenPosition,
-            labels = Labels.unsafeFrom(
-              Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
+        val givenPosition = Position.unsafeFrom(20)
+
+        val exit = UnsafeZioRun.run(
+          ListsResponder.listCreateChildNode(
+            ListCreateChildNodeRequest(
+              id = None,
+              Some(
+                Comments.unsafeFrom(
+                  Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+                )
+              ),
+              Labels.unsafeFrom(
+                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
+              ),
+              Some(ListName.unsafeFrom("fourth")),
+              ListIri.unsafeFrom(newListIri.get),
+              Some(givenPosition),
+              ProjectIri.unsafeFrom(imagesProjectIri)
             ),
-            comments = Some(
-              Comments.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
-              )
-            )
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"Invalid position given ${givenPosition.map(_.value)}, maximum allowed position is = 2."
-            )
+            UUID.randomUUID
           )
+        )
+
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2."
         )
       }
     }

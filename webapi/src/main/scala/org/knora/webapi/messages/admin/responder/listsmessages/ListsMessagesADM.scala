@@ -8,189 +8,19 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 
-import java.util.UUID
 import scala.util.Try
 
-import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.ListProperties
-import org.knora.webapi.slice.admin.domain.model.User
-
-/////////////// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new list root node.
- * At least one label and comment need to be supplied.
- *
- * @param id            the optional custom IRI of the list node.
- * @param projectIri    the IRI of the project.
- * @param name          the optional name of the list node.
- * @param labels        labels of the list node.
- * @param comments      comments of the list node.
- */
-case class ListRootNodeCreateApiRequestADM(
-  id: Option[IRI] = None,
-  projectIri: IRI,
-  name: Option[String] = None,
-  labels: Seq[V2.StringLiteralV2],
-  comments: Seq[V2.StringLiteralV2]
-) extends ListADMJsonProtocol {
-  def toJsValue: JsValue = createListRootNodeApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new list child node.
- * attached to given parent node as a sublist node.
- * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
- * to the end of the list of children.
- * At least one label needs to be supplied.
- *
- * @param id            the optional custom IRI of the list node.
- * @param parentNodeIri the optional IRI of the parent node.
- * @param projectIri    the IRI of the project.
- * @param name          the optional name of the list node.
- * @param position      the optional position of the node.
- * @param labels        labels of the list node.
- * @param comments      comments of the list node.
- */
-case class ListChildNodeCreateApiRequestADM(
-  id: Option[IRI] = None,
-  parentNodeIri: IRI,
-  projectIri: IRI,
-  name: Option[String] = None,
-  position: Option[Int] = None,
-  labels: Seq[V2.StringLiteralV2],
-  comments: Option[Seq[V2.StringLiteralV2]]
-) extends ListADMJsonProtocol {
-  def toJsValue: JsValue = createListChildNodeApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing node's basic information (root or child).
- *
- * @param listIri     the IRI of the node to change.
- * @param projectIri  the IRI of the project the list belongs to.
- * @param hasRootNode the flag to identify a child node.
- * @param position    the position of the node, if not a root node.
- * @param name        the name of the node
- * @param labels      the labels.
- * @param comments    the comments.
- */
-case class ListNodeChangeApiRequestADM(
-  listIri: IRI,
-  projectIri: IRI,
-  hasRootNode: Option[IRI] = None,
-  position: Option[Int] = None,
-  name: Option[String] = None,
-  labels: Option[Seq[V2.StringLiteralV2]] = None,
-  comments: Option[Seq[V2.StringLiteralV2]] = None
-) extends ListADMJsonProtocol {
-  def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing node's name (root or child).
- *
- * @param name the new name of the node.
- */
-case class ChangeNodeNameApiRequestADM(name: String) extends ListADMJsonProtocol {
-
-  def toJsValue: JsValue = changeNodeNameApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing node's labels (root or child).
- *
- * @param labels the new labels of the node
- */
-case class ChangeNodeLabelsApiRequestADM(labels: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
-
-  def toJsValue: JsValue = changeNodeLabelsApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing node's comments (root or child).
- *
- * @param comments the new comments of the node.
- */
-case class ChangeNodeCommentsApiRequestADM(comments: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
-
-  def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update the position of child node.
- *
- * @param position  the new position of the node.
- * @param parentIri the parent node Iri.
- */
-case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extends ListADMJsonProtocol {
-  if (parentIri.isEmpty) {
-    throw BadRequestException(s"IRI of parent node is missing.")
-  }
-  if (!Iri.isListIri(parentIri)) throw BadRequestException(s"Invalid IRI is given: $parentIri.")
-
-  ListProperties.Position.from(position).fold(error => throw BadRequestException(error), _ => ())
-
-  def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * A trait for messages that can be sent to `HierarchicalListsResponderV2`.
- */
-sealed trait ListsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Requests the path from the root node of a list to a particular node. A successful response will be
- * a [[NodePathGetResponseADM]].
- *
- * @param iri                  the IRI of the node.
- * @param requestingUser       the user making the request.
- */
-case class NodePathGetRequestADM(iri: IRI, requestingUser: User) extends ListsResponderRequestADM
-
-/**
- * Requests the creation of a new list.
- *
- * @param createRootNode       the [[ListRootNodeCreatePayloadADM]] information used for creating the root node of the list.
- * @param requestingUser       the user creating the new list.
- * @param apiRequestID         the ID of the API request.
- */
-case class ListRootNodeCreateRequestADM(
-  createRootNode: ListRootNodeCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-/**
- * Request the creation of a new list node, root or child.
- *
- * @param createChildNodeRequest the new node information.
- * @param requestingUser         the user making the request.
- * @param apiRequestID           the ID of the API request.
- */
-case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: ListChildNodeCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends ListsResponderRequestADM
-
-///////////////////////// Responses
+// Responses
 
 /**
  * Responds to deletion of list node's comments by returning a success message.
@@ -271,16 +101,6 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
 case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM {
 
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
-}
-
-/**
- * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
- *
- * @param elements a list of the nodes composing the path from the list's root node up to and including the specified node.
- */
-case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
-
-  def toJsValue: JsValue = nodePathGetResponseADMFormat.write(this)
 }
 
 sealed trait ListItemDeleteResponseADM extends AdminKnoraResponseADM with ListADMJsonProtocol
@@ -1103,41 +923,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListRootNodeApiRequestADMFormat: RootJsonFormat[ListRootNodeCreateApiRequestADM] =
-    jsonFormat(
-      ListRootNodeCreateApiRequestADM,
-      "id",
-//      "parentNodeIri",
-      "projectIri",
-      "name",
-//      "position",
-      "labels",
-      "comments"
-    )
-  implicit val createListChildNodeApiRequestADMFormat: RootJsonFormat[ListChildNodeCreateApiRequestADM] =
-    jsonFormat(
-      ListChildNodeCreateApiRequestADM,
-      "id",
-      "parentNodeIri",
-      "projectIri",
-      "name",
-      "position",
-      "labels",
-      "comments"
-    )
-  implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ListNodeChangeApiRequestADM] = jsonFormat(
-    ListNodeChangeApiRequestADM,
-    "listIri",
-    "projectIri",
-    "hasRootNode",
-    "position",
-    "name",
-    "labels",
-    "comments"
-  )
-
-  implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] =
-    jsonFormat(NodePathGetResponseADM, "elements")
   implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
 
   implicit val listItemGetResponseADMJsonFormat: RootJsonFormat[ListItemGetResponseADM] =
@@ -1169,14 +954,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ChildNodeInfoGetResponseADM] =
     jsonFormat(ChildNodeInfoGetResponseADM, "nodeinfo")
 
-  implicit val changeNodeNameApiRequestADMFormat: RootJsonFormat[ChangeNodeNameApiRequestADM] =
-    jsonFormat(ChangeNodeNameApiRequestADM, "name")
-  implicit val changeNodeLabelsApiRequestADMFormat: RootJsonFormat[ChangeNodeLabelsApiRequestADM] =
-    jsonFormat(ChangeNodeLabelsApiRequestADM, "labels")
-  implicit val changeNodeCommentsApiRequestADMFormat: RootJsonFormat[ChangeNodeCommentsApiRequestADM] =
-    jsonFormat(ChangeNodeCommentsApiRequestADM, "comments")
-  implicit val changeNodePositionApiRequestADMFormat: RootJsonFormat[ChangeNodePositionApiRequestADM] =
-    jsonFormat(ChangeNodePositionApiRequestADM, "position", "parentNodeIri")
   implicit val changeNodePositionApiResponseADMFormat: RootJsonFormat[NodePositionChangeResponseADM] =
     jsonFormat(NodePositionChangeResponseADM, "node")
 

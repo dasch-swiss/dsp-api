@@ -13,6 +13,7 @@ import dsp.valueobjects.Iri.validateAndEscapeIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
+import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -25,6 +26,18 @@ object ListProperties {
   final case class ListIri private (value: String) extends AnyVal with StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
+
+    /**
+     * Creates a new [[ListIri]] within a [[KnoraProject]] generating a new base 64 encoded uuid.
+     *
+     * @param project The reference to the [[KnoraProject]].
+     * @return a new [[ListIri]].
+     */
+    def makeNew(project: KnoraProject): ListIri = {
+      val uuid = UuidUtil.makeRandomBase64EncodedUuid
+      unsafeFrom(s"http://$IriDomain/lists/${project.shortcode.value}/$uuid")
+    }
+
     def from(value: String): Either[String, ListIri] =
       if (value.isEmpty) Left("List IRI cannot be empty.")
       else {
@@ -92,10 +105,4 @@ object ListProperties {
         Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
       }
   }
-}
-
-object ListErrorMessages {
-  val ListCreatePermission     = "A list can only be created by the project or system administrator."
-  val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
-  val ListChangePermission     = "A list can only be changed by the project or system administrator."
 }
