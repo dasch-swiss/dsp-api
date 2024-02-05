@@ -34,8 +34,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
-import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_INACTIVE
-import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_NOT_FOUND
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -149,11 +147,8 @@ trait Authenticator {
 }
 
 object Authenticator {
-
-  val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-  val BAD_CRED_NONE_SUPPLIED  = "bad credentials: none found"
-  val BAD_CRED_USER_INACTIVE  = "bad credentials: user inactive"
-  val BAD_CRED_NOT_VALID      = "bad credentials: not valid"
+  val BAD_CRED_NONE_SUPPLIED = "bad credentials: none found"
+  val BAD_CRED_NOT_VALID     = "bad credentials: not valid"
 
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 }
@@ -407,7 +402,7 @@ final case class AuthenticatorLive(
                               }
 
                       /* check if the user is active, if not, then no need to check the password */
-                      _ <- ZIO.fail(BadCredentialsException(BAD_CRED_USER_INACTIVE)).when(!user.isActive)
+                      _ <- ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID)).when(!user.isActive)
                       _ <- ZIO
                              .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
                              .when(!user.passwordMatch(passCreds.password))
@@ -661,7 +656,7 @@ final case class AuthenticatorLive(
     messageRelay
       .ask[Option[User]](UserGetByIriADM(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
       .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
+      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -677,7 +672,7 @@ final case class AuthenticatorLive(
         UserGetByEmailADM(email, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
       )
       .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
+      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -693,7 +688,7 @@ final case class AuthenticatorLive(
         UserGetByUsernameADM(username, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
       )
       .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_USER_NOT_FOUND))
+      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string
