@@ -6,22 +6,22 @@ import org.knora.webapi.slice.common.repo.rdf.LangString
 
 object RdfConversions {
   implicit val shortcodeConverter: String => Either[String, Shortcode] =
-    Shortcode.from(_).toEitherWith(_.head.getMessage)
+    Shortcode.from
 
   implicit val shortnameConverter: String => Either[String, Shortname] =
-    Shortname.from(_).toEitherWith(_.head.getMessage)
+    Shortname.from
 
   implicit val longnameConverter: String => Either[String, Longname] =
-    Longname.from(_).toEitherWith(_.head.getMessage)
+    Longname.from
 
   implicit val descriptionConverter: LangString => Either[String, Description] = langString =>
-    Description.from(V2.StringLiteralV2(langString.value, langString.lang)).toEitherWith(_.head.getMessage)
+    Description.from(V2.StringLiteralV2(langString.value, langString.lang))
 
   implicit val keywordConverter: String => Either[String, Keyword] =
-    Keyword.from(_).toEitherWith(_.head.getMessage)
+    Keyword.from
 
   implicit val logoConverter: String => Either[String, Logo] =
-    Logo.from(_).toEitherWith(_.head.getMessage)
+    Logo.from
 
   implicit val statusConverter: Boolean => Either[String, Status] =
     value => Right(Status.from(value))
