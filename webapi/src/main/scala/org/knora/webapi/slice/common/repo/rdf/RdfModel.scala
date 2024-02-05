@@ -110,8 +110,8 @@ final case class RdfResource(private val res: Resource) {
     } yield Chunk.fromIterable(domainObjects)
 
   private def getStringWithValidation(literal: Literal) =
-    if (literal.getDatatypeURI == "http://www.w3.org/2001/XMLSchema#string") literal.getString
-    else throw new IllegalArgumentException("Not a string literal")
+    if (literal.getDatatypeURI == "http://www.w3.org/2001/XMLSchema#string") ZIO.succeed(literal.getString)
+    else ZIO.fail(ConversionError(s"$literal is not a String"))
 
   /**
    * Returns the value of a literal with a given predicate IRI as a domain object of type `A`,
@@ -124,7 +124,11 @@ final case class RdfResource(private val res: Resource) {
    *                    an [[RdfError]] if the property does not contain a string literal or if the conversion fails.
    */
   def getStringLiteral[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
-    literalAsDomainObject(propertyIri, getStringWithValidation, mapper).unsome
+    for {
+      literal      <- getLiteral(propertyIri).unsome
+      string       <- ZIO.foreach(literal)(getStringWithValidation)
+      domainObject <- ZIO.foreach(string)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
+    } yield domainObject
 
   /**
    * Returns the value of a literal with a given predicate IRI as a domain object of type `A`,
@@ -153,10 +157,8 @@ final case class RdfResource(private val res: Resource) {
     propertyIri: String
   )(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
     for {
-      literals <- getLiterals(propertyIri)
-      strings <- ZIO.foreach(literals)(it =>
-                   ZIO.attempt(getStringWithValidation(it)).orElseFail(ConversionError(s"$it is not a String"))
-                 )
+      literals      <- getLiterals(propertyIri)
+      strings       <- ZIO.foreach(literals)(getStringWithValidation)
       domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
     } yield Chunk.fromIterable(domainObjects)
 
