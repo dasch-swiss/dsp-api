@@ -102,7 +102,6 @@ private final case class ApiRoutesImpl(
                 AuthenticationRouteV2().makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 HealthRoute().makeRoute ~
-                ListsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 RejectingRoute(appConfig, runtime).makeRoute ~

@@ -1652,17 +1652,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new list IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return a new list IRI.
-   */
-  def makeRandomListIri(shortcode: String): String = {
-    val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
-  }
-
-  /**
    * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
    *
    * @param customValueIri the custom value IRI to be validated.
