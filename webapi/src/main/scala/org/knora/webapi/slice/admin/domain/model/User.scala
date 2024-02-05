@@ -180,8 +180,8 @@ object UserIri extends StringValueCompanion[UserIri] {
   def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }
 
-final case class Username private (value: String) extends AnyVal
-object Username { self =>
+final case class Username private (value: String) extends AnyVal with StringValue
+object Username                                   extends StringValueCompanion[Username] {
 
   /**
    * A regex that matches a valid username
@@ -202,14 +202,12 @@ object Username { self =>
         case None        => Left(UserErrorMessages.UsernameInvalid)
       }
     }
-  def unsafeFrom(value: String): Username =
-    Username.from(value).fold(e => throw new IllegalArgumentException(e), identity)
 
   def validationFrom(value: String): Validation[String, Username] = Validation.fromEither(from(value))
 }
 
-final case class Email private (value: String) extends AnyVal
-object Email { self =>
+final case class Email private (value: String) extends AnyVal with StringValue
+object Email extends StringValueCompanion[Email] {
   private val EmailRegex: Regex = """^.+@.+$""".r
 
   def from(value: String): Either[String, Email] =
@@ -222,11 +220,7 @@ object Email { self =>
       }
     }
 
-  def unsafeFrom(value: String): Email =
-    Email.from(value).fold(e => throw new IllegalArgumentException(e), identity)
-
   def validationFrom(value: String): Validation[String, Email] = Validation.fromEither(from(value))
-
 }
 
 final case class GivenName private (value: String) extends AnyVal

@@ -35,8 +35,6 @@ final case class UsersRouteADM()(
 
   def makeRoute: Route =
     addUser() ~
-      getUserByEmail ~
-      getUserByUsername ~
       changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
@@ -63,34 +61,6 @@ final case class UsersRouteADM()(
       }
     }
   }
-
-  /**
-   * return a single user identified by email
-   */
-  private def getUserByEmail: Route =
-    path(usersBasePath / "email" / Segment)(emailStr =>
-      ctx => {
-        val task = for {
-          requestingUser <- Authenticator.getUserADM(ctx)
-          email          <- ZIO.fromEither(Email.from(emailStr)).mapError(BadRequestException(_))
-        } yield UserGetByEmailRequestADM(email, UserInformationTypeADM.Restricted, requestingUser)
-        runJsonRouteZ(task, ctx)
-      }
-    )
-
-  /**
-   * return a single user identified by username
-   */
-  private def getUserByUsername: Route =
-    path(usersBasePath / "username" / Segment)(usernameStr =>
-      ctx => {
-        val task = for {
-          requestingUser <- Authenticator.getUserADM(ctx)
-          username       <- ZIO.fromEither(Username.from(usernameStr)).mapError(BadRequestException(_))
-        } yield UserGetByUsernameRequestADM(username, UserInformationTypeADM.Restricted, requestingUser)
-        runJsonRouteZ(task, ctx)
-      }
-    )
 
   /**
    * Change existing user's basic information.

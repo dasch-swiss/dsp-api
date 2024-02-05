@@ -160,58 +160,6 @@ case class UserGetByIriADM(
 ) extends UsersResponderRequestADM
 
 /**
- * A message that requests a user's profile by username. A successful response will be a [[User]].
- *
- * @param username               the username of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByUsernameADM(
-  username: Username,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * A message that requests a user's profile by email. A successful response will be a [[User]].
- *
- * @param email                  the email of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByEmailADM(
-  email: Email,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * A message that requests a user's profile by email. A successful response will be a [[UserResponseADM]].
- *
- * @param email             the email of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByEmailRequestADM(
-  email: Email,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * A message that requests a user's profile by username. A successful response will be a [[UserResponseADM]].
- *
- * @param username             the username of the user to be queried.
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user initiating the request.
- */
-case class UserGetByUsernameRequestADM(
-  username: Username,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * Requests the creation of a new user.
  *
  * @param userCreatePayloadADM    the [[UserCreatePayloadADM]] information used for creating the new user.
