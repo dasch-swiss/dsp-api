@@ -235,17 +235,6 @@ case class UserChangeSystemAdminMembershipStatusRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests user's project memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- */
-case class UserProjectMembershipsGetRequestADM(
-  userIri: IRI,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * Requests adding the user to a project.
  *
  * @param userIri              the IRI of the user to be updated.
@@ -384,7 +373,7 @@ case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
  *
  * @param projects a sequence of projects the user is member of.
  */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
 }
 

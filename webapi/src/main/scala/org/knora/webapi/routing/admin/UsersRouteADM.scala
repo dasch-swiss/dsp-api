@@ -40,7 +40,6 @@ final case class UsersRouteADM()(
       changeUserPassword() ~
       changeUserStatus() ~
       changeUserSystemAdminMembership() ~
-      getUsersProjectMemberships() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
       getUsersProjectAdminMemberships ~
@@ -137,20 +136,6 @@ final case class UsersRouteADM()(
           } yield UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)
         }
-      }
-    }
-
-  /**
-   * get user's project memberships
-   */
-  private def getUsersProjectMemberships(): Route =
-    path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
-      get { requestContext =>
-        val requestTask = for {
-          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-          requestingUser <- Authenticator.getUserADM(requestContext)
-        } yield UserProjectMembershipsGetRequestADM(checkedUserIri, requestingUser)
-        runJsonRouteZ(requestTask, requestContext)
       }
     }
 

@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
@@ -20,6 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
 
 final case class UsersRestService(
   responder: UsersResponderADM,
@@ -47,6 +46,9 @@ final case class UsersRestService(
                   .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
+
+   def getProjectMemberShipsByIri(userIri: UserIri) =
+    responder.findProjectMemberShipsByIri(userIri).flatMap(format.toExternal)
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
     internal <- responder

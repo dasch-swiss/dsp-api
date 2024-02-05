@@ -5,21 +5,22 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.spray.jsonBody as sprayJsonBody
-import zio.*
-
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
+import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar
 import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.spray.jsonBody as sprayJsonBody
+import zio.*
 
 object PathVars {
   import Codecs.TapirCodec.*
@@ -56,13 +57,21 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[UserResponseADM])
     .description("Returns a user identified by their Username.")
 
+  val getUsersByIriProjectMemberShips = baseEndpoints.publicEndpoint.get
+    .in(base / "iri" / userIriPathVar / "project-memberships")
+    .out(sprayJsonBody[UserProjectMembershipsGetResponseADM])
+    .description("Returns the user's project memberships for a user identified by their IRI.")
+
+  // Deletes
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
     .description("Delete a user identified by IRI (change status to false).")
 
-  val endpoints: Seq[AnyEndpoint] =
-    Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, deleteUser).map(_.endpoint.tag("Admin Users"))
+  private val public = Seq(getUsersByIriProjectMemberShips)
+  private val secured =
+    Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, deleteUser).map(_.endpoint)
+  val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
 }
 
 object UsersEndpoints {

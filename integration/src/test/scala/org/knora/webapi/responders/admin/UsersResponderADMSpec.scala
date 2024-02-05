@@ -5,15 +5,12 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
-import org.apache.pekko.testkit.ImplicitSender
-
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.LanguageCode
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
@@ -26,7 +23,8 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.util.ZioScalaTestUtil.*
+
+import java.util.UUID
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
@@ -479,8 +477,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "ADD user to project" in {
 
         // get current project memberships
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user to images project (00FF)
@@ -494,8 +492,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         // wait for the response before checking the project membership
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         val received = UnsafeZioRun.runOrThrow(
@@ -509,8 +507,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "not ADD user to project as project admin of another project" in {
         // get current project memberships
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // try to add user to incunabula project but as project admin of another project
@@ -529,9 +527,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         // check that the user is still only member of one project
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-
-        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // check that the user was not added to the project
@@ -546,8 +543,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "ADD user to project as project admin" in {
         // get current project memberships
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // add user to images project (00FF)
@@ -561,8 +558,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         // wait for the response before checking the project membership
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -578,8 +575,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "DELETE user from project and also as project admin" in {
         // check project memberships (user should be member of images and incunabula projects)
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsBeforeUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -615,8 +612,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         // verify that the user has been removed as project member of the images project
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
-        val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+        val membershipsAfterUpdate =
+          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq(incunabulaProject))
 
         // this should also have removed him as project admin from images project

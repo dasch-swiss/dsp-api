@@ -141,6 +141,14 @@ trait UsersResponderADM {
     requestingUser: User,
     skipCache: Boolean = false
   ): Task[Option[User]]
+
+  /**
+   * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
+   *
+   * @param userIri the user's IRI.
+   * @return a [[UserProjectMembershipsGetResponseADM]].
+   */
+  def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM]
 }
 
 final case class UsersResponderADMLive(
@@ -203,7 +211,6 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserProjectMembershipsGetRequestADM(userIri, _) => userProjectMembershipsGetRequestADM(userIri)
     case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
@@ -704,10 +711,11 @@ final case class UsersResponderADMLive(
    * @param userIri        the user's IRI.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
-  private def userProjectMembershipsGetRequestADM(userIri: IRI) =
+  override def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     for {
-      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
-      projects <- userProjectMembershipsGetADM(userIri)
+      _ <-
+        ZIO.whenZIO(userExists(userIri.value).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+      projects <- userProjectMembershipsGetADM(userIri.value)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
@@ -756,7 +764,8 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMembershipIris <- userProjectMembershipsGetRequestADM(userIri).map(_.projects.map(_.id))
+        currentProjectMembershipIris <-
+          findProjectMemberShipsByIri(UserIri.unsafeFrom(userIri)).map(_.projects.map(_.id))
 
         // check if user is already member and if not then append to list
         updatedProjectMembershipIris =
