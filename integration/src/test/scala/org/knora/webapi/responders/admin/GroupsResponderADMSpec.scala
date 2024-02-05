@@ -30,8 +30,8 @@ class GroupsResponderADMSpec extends CoreSpec {
     "asked about all groups" should {
       "return a list" in {
         val groups = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupsGetADM)
-        groups.nonEmpty should be(true)
-        groups.size should be(2)
+        assert(groups.nonEmpty)
+        assert(groups.size == 2)
       }
     }
 
@@ -39,7 +39,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return group info if the group is known " in {
         val group = UnsafeZioRun.runOrThrow(GroupsResponderADM.groupGetADM(imagesReviewerGroup.id))
         assert(group.nonEmpty)
-        assert(group.get.id == imagesReviewerGroup.id)
+        assert(group.map(_.id).contains(imagesReviewerGroup.id))
       }
 
       "return 'None' when the group is unknown " in {

@@ -135,45 +135,6 @@ final case class GroupsRouteADM(
       }
     }
 
-//  RESPONSE
-//  {
-//    "group": {
-//      "descriptions": [ {
-//      "value": "A group for thing searchers.",
-//      "language": "en"
-//    }
-//      ],
-//      "id": "http://rdfh.ch/groups/0001/thing-searcher",
-//      "name": "Thing searcher",
-//      "project": {
-//      "description": [ {
-//      "value": "Anything Project"
-//    }
-//      ],
-//      "id": "http://rdfh.ch/projects/0001",
-//      "keywords": [
-//      "arbitrary test data",
-//      "things"
-//      ],
-//      "logo": null,
-//      "longname": "Anything Project",
-//      "ontologies": [
-//      "http://0.0.0.0:3333/ontology/0001/freetest/v2",
-//      "http://0.0.0.0:3333/ontology/0001/minimal/v2",
-//      "http://0.0.0.0:3333/ontology/0001/anything/v2",
-//      "http://0.0.0.0:3333/ontology/0001/something/v2",
-//      "http://0.0.0.0:3333/ontology/0001/sequences/v2"
-//      ],
-//      "selfjoin": false,
-//      "shortcode": "0001",
-//      "shortname": "anything",
-//      "status": true
-//    },
-//      "selfjoin": true,
-//      "status": false
-//    }
-//  }
-
   /**
    * Deletes a group (sets status to false).
    */
