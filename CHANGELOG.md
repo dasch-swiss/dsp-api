@@ -1,5 +1,36 @@
 # Changelog
 
+## [30.8.0](https://github.com/dasch-swiss/dsp-api/compare/v30.7.0...v30.8.0) (2024-02-05)
+
+
+### Maintenance
+
+* Admin groups cleanup ([#3011](https://github.com/dasch-swiss/dsp-api/issues/3011)) ([34fd51a](https://github.com/dasch-swiss/dsp-api/commit/34fd51a6417d5f593edb681e5ae9b714bcd30b96))
+* Bump sipi to 3.8.10 ([#3007](https://github.com/dasch-swiss/dsp-api/issues/3007)) ([be8ce70](https://github.com/dasch-swiss/dsp-api/commit/be8ce705f3407dec2b59f16bdcb2eeb70349baec))
+* Bump Sipi to 3.8.11 ([#3014](https://github.com/dasch-swiss/dsp-api/issues/3014)) ([67e6762](https://github.com/dasch-swiss/dsp-api/commit/67e676220537a7dd9312518cdce7a7d03fb37a56))
+* Dependency updates ([#3017](https://github.com/dasch-swiss/dsp-api/issues/3017)) ([4918f5c](https://github.com/dasch-swiss/dsp-api/commit/4918f5c0b7310b12752c181b6f8852fdf8509f20))
+* Migrate `GET /admin/lists?projectIri` route to tapir ([#3006](https://github.com/dasch-swiss/dsp-api/issues/3006)) ([a931357](https://github.com/dasch-swiss/dsp-api/commit/a931357160bc00ae54f285badb716f6ecb7d8a05))
+* Migrate `POST /admin/lists` and `POST /admin/lists/&lt;parentListIri&gt;` to Tapir (DEV-1589) ([#3018](https://github.com/dasch-swiss/dsp-api/issues/3018)) ([63fe560](https://github.com/dasch-swiss/dsp-api/commit/63fe5600aec489a68c9868e56315feb1b14278f6))
+* Migrate GET /admin/users/iri/&lt;userIri&gt; to tapir ([#3010](https://github.com/dasch-swiss/dsp-api/issues/3010)) ([34d2d7a](https://github.com/dasch-swiss/dsp-api/commit/34d2d7a226ead4e8dd4b1dd966e89376d58914f5))
+* Migrate some `GET /admin/lists/*` endpoints to Tapir ([#3012](https://github.com/dasch-swiss/dsp-api/issues/3012)) ([785b573](https://github.com/dasch-swiss/dsp-api/commit/785b57332f8b96969db020184ec8acfdbd2abceb))
+* Migrate update and delete of lists to Tapir ([#3013](https://github.com/dasch-swiss/dsp-api/issues/3013)) ([dafaffb](https://github.com/dasch-swiss/dsp-api/commit/dafaffba8dde87d9867ecf1dd82bf62e7f19b6c4))
+* Minor dependency updates ([#3016](https://github.com/dasch-swiss/dsp-api/issues/3016)) ([d59246f](https://github.com/dasch-swiss/dsp-api/commit/d59246fc479d5462d56b6972bd21cdfea3b75c69))
+* Patch dependency updates ([#3015](https://github.com/dasch-swiss/dsp-api/issues/3015)) ([b46f8f7](https://github.com/dasch-swiss/dsp-api/commit/b46f8f7fc39adc1aaad84a1af7cf31be56f4a600))
+* **readme:** Update installation instruction ([#2999](https://github.com/dasch-swiss/dsp-api/issues/2999)) ([296815c](https://github.com/dasch-swiss/dsp-api/commit/296815cb1a296d356524f6708db76b39b50e9a46))
+* **readme:** Use just targets instead of make targets ([#3000](https://github.com/dasch-swiss/dsp-api/issues/3000)) ([71e6119](https://github.com/dasch-swiss/dsp-api/commit/71e61198636df9a1a2a6271786db4ec41a91e677))
+* Remove needless `ProjectsResponderRequestADM` classes ([#3008](https://github.com/dasch-swiss/dsp-api/issues/3008)) ([1468d2c](https://github.com/dasch-swiss/dsp-api/commit/1468d2cfa58df3fb2abdce9e1acaeb75726939fa))
+
+
+### Enhancements
+
+* Enable `UpgradePlugin`s to restrict to a specific graph and update the knora base version to 26 ([#3005](https://github.com/dasch-swiss/dsp-api/issues/3005)) ([e54aa0b](https://github.com/dasch-swiss/dsp-api/commit/e54aa0bbc49b581215f9a655666823951be406ae))
+
+
+### Bug Fixes
+
+* Less information in auth error messages (DEV-3260) ([#3019](https://github.com/dasch-swiss/dsp-api/issues/3019)) ([569a6c1](https://github.com/dasch-swiss/dsp-api/commit/569a6c19512a3eb6273259cba8debff34630ed5a))
+* Only allow System Administrators to create users ([#3022](https://github.com/dasch-swiss/dsp-api/issues/3022)) ([5ab6e35](https://github.com/dasch-swiss/dsp-api/commit/5ab6e35187a4c334e85aea15e902fe3fb56edc6f))
+
 ## [30.7.0](https://github.com/dasch-swiss/dsp-api/compare/v30.6.0...v30.7.0) (2024-01-25)
 
 
