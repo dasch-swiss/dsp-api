@@ -20,7 +20,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
  *  - write tests
  *    - for rdf model
  *    - for repository
- *  - verify that `getResource()` fails if the resource is not present
+ *  - simplify literal extraction
  */
 
 object Errors {
@@ -109,21 +109,67 @@ final case class RdfResource(private val res: Resource) {
       domainObjects <- ZIO.foreach(typedLiterals)(a => ZIO.fromEither(mapper(a)).mapError(ConversionError))
     } yield Chunk.fromIterable(domainObjects)
 
-  def getStringLiteral[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
-    literalAsDomainObject(propertyIri, _.getString, mapper).unsome
+  private def getStringWithValidation(literal: Literal) =
+    if (literal.getDatatypeURI == "http://www.w3.org/2001/XMLSchema#string") literal.getString
+    else throw new IllegalArgumentException("Not a string literal")
 
+  /**
+   * Returns the value of a literal with a given predicate IRI as a domain object of type `A`,
+   * provided an implicit function `String => Either[String, A]` to convert the string literal to the domain object.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param mapper      the implicit function to convert the string literal to the domain object.
+   * @tparam A          the type of the domain object.
+   * @return            the domain object or None if the literal is not present;
+   *                    an [[RdfError]] if the property does not contain a string literal or if the conversion fails.
+   */
+  def getStringLiteral[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, Option[A]] =
+    literalAsDomainObject(propertyIri, getStringWithValidation, mapper).unsome
+
+  /**
+   * Returns the value of a literal with a given predicate IRI as a domain object of type `A`,
+   * provided an implicit function `String => Either[String, A]` to convert the string literal to the domain object.
+   * Fails if the literal is not present.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param mapper      the implicit function to convert the string literal to the domain object.
+   * @tparam A          the type of the domain object.
+   * @return            the domain object or an [[RdfError]] if the literal is not present or if the conversion fails.
+   */
   def getStringLiteralOrFail[A](propertyIri: String)(implicit mapper: String => Either[String, A]): IO[RdfError, A] =
     getStringLiteral(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
 
+  /**
+   * Returns the values of literals with a given predicate IRI as domain objects of type `A`,
+   * provided an implicit function `String => Either[String, A]` to convert the string literals to the domain objects.
+   * Returns an empty chunk if no literals are present.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param mapper      the implicit function to convert the string literals to the domain objects.
+   * @tparam A          the type of the domain objects.
+   * @return            the domain objects or an [[RdfError]] if the conversion fails.
+   */
   def getStringLiterals[A](
     propertyIri: String
   )(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
     for {
-      literals      <- getLiterals(propertyIri)
-      strings        = literals.map(_.getString)
+      literals <- getLiterals(propertyIri)
+      strings <- ZIO.foreach(literals)(it =>
+                   ZIO.attempt(getStringWithValidation(it)).orElseFail(ConversionError(s"$it is not a String"))
+                 )
       domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
     } yield Chunk.fromIterable(domainObjects)
 
+  /**
+   * Returns the values of literals with a given predicate IRI as domain objects of type `A`,
+   * provided an implicit function `String => Either[String, A]` to convert the string literals to the domain objects.
+   * Fails if no literals are present.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param mapper      the implicit function to convert the string literals to the domain objects.
+   * @tparam A          the type of the domain objects.
+   * @return            the domain objects or an [[RdfError]] if no literals are present or if the conversion fails.
+   */
   def getStringLiteralsOrFail[A](
     propertyIri: String
   )(implicit mapper: String => Either[String, A]): IO[RdfError, NonEmptyChunk[A]] =
@@ -208,10 +254,19 @@ final case class RdfResource(private val res: Resource) {
  * Exposes access to resources of the model's graph.
  */
 final case class RdfModel private (private val model: Model) {
-  def getResource(subjectIri: String): IO[RdfError, RdfResource] = ZIO.attempt {
-    val resource = model.createResource(subjectIri)
-    RdfResource(resource)
-  }.orElseFail(ResourceNotPresent(subjectIri))
+
+  /**
+   * Returns a [[RdfResource]] for the given subject IRI.
+   * Fails if no resource with the given IRI is present in the model.
+   *
+   * @param subjectIri the IRI of the resource.
+   * @return the [[RdfResource]] or an [[RdfError]] if the resource is not present.
+   */
+  def getResource(subjectIri: String): IO[RdfError, RdfResource] =
+    for {
+      resource <- ZIO.attempt(model.createResource(subjectIri)).orDie
+      _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
+    } yield RdfResource(resource)
 
 }
 object RdfModel {
