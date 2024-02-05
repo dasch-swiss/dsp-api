@@ -23,12 +23,13 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
  */
 final case class UsersRouteADM()(
-  private implicit val runtime: Runtime[Authenticator & StringFormatter & MessageRelay]
+  private implicit val runtime: Runtime[Authenticator & AuthorizationRestService & StringFormatter & MessageRelay]
 ) {
 
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
@@ -56,6 +57,7 @@ final case class UsersRouteADM()(
         val requestTask = for {
           payload <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
           r       <- getUserUuid(ctx)
+          _       <- AuthorizationRestService.ensureSystemAdmin(r.user)
         } yield UserCreateRequestADM(payload, r.user, r.uuid)
         runJsonRouteZ(requestTask, ctx)
       }
