@@ -1642,16 +1642,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new person IRI based on a UUID.
-   *
-   * @return a new person IRI.
-   */
-  def makeRandomPersonIri: IRI = {
-    val knoraPersonUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/users/$knoraPersonUuid"
-  }
-
-  /**
    * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
    *
    * @param customValueIri the custom value IRI to be validated.

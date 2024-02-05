@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
@@ -43,7 +44,9 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -166,11 +169,26 @@ trait UsersResponderADM {
    * @return a sequence of [[GroupADM]].
    */
   def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]]
+
+  /**
+   * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
+   * is allowed to create a new user.
+   *
+   * Referenced Websites:
+   *                     - https://crackstation.net/hashing-security.htm
+   *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
+   *
+   * @param req    a [[UserCreateRequest]] object containing information about the new user to be created.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[UserOperationResponseADM]].
+   */
+  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM]
 }
 
 final case class UsersResponderADMLive(
   appConfig: AppConfig,
   iriService: IriService,
+  iriConverter: IriConverter,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
@@ -180,6 +198,7 @@ final case class UsersResponderADMLive(
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
+  private val passwordEncoder       = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[UsersResponderRequestADM]
@@ -193,8 +212,6 @@ final case class UsersResponderADMLive(
       getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
-      createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
           userIri,
           userUpdateBasicInformationPayload,
@@ -518,13 +535,17 @@ final case class UsersResponderADMLive(
             }
 
         // check if username is unique in case of a change username request
-        usernameTaken <-
-          userByUsernameExists(userUpdateBasicInformationPayload.username, Some(currentUserInformation.get.username))
-        _ = if (usernameTaken) {
-              throw DuplicateValueException(
-                s"User with the username '${userUpdateBasicInformationPayload.username.get.value}' already exists"
-              )
-            }
+        _ <- userUpdateBasicInformationPayload.username match {
+               case Some(username) =>
+                 ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value))))(
+                   ZIO.fail(
+                     DuplicateValueException(
+                       s"User with the username '${userUpdateBasicInformationPayload.username.get.value}' already exists"
+                     )
+                   )
+                 )
+               case None => ZIO.unit
+             }
 
         // send change request as SystemUser
         result <- updateUserADM(
@@ -1533,116 +1554,69 @@ final case class UsersResponderADMLive(
    *                     - https://crackstation.net/hashing-security.htm
    *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
    *
-   * @param userCreatePayloadADM    a [[UserCreatePayloadADM]] object containing information about the new user to be created.
+   * @param req    a [[UserCreateRequest]] object containing information about the new user to be created.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def createNewUserADM(
-    userCreatePayloadADM: UserCreatePayloadADM,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
-
-    logger.debug("createNewUserADM - userCreatePayloadADM: {}", userCreatePayloadADM)
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def createNewUserTask(userCreatePayloadADM: UserCreatePayloadADM) =
+  override def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
+    val createNewUserTask =
       for {
-        // check if username is unique
-        usernameTaken <- userByUsernameExists(Some(userCreatePayloadADM.username))
-        _ = if (usernameTaken) {
-              throw DuplicateValueException(
-                s"User with the username '${userCreatePayloadADM.username.value}' already exists"
-              )
-            }
+        _ <- // check if username is unique
+          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(req.username.value))))(
+            ZIO.fail(DuplicateValueException(s"User with the username '${req.username.value}' already exists"))
+          )
 
-        // check if email is unique
-        emailTaken <- userByEmailExists(Some(userCreatePayloadADM.email))
-        _ = if (emailTaken) {
-              throw DuplicateValueException(
-                s"User with the email '${userCreatePayloadADM.email.value}' already exists"
-              )
-            }
+        _ <- // check if email is unique
+          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(req.email.value))))(
+            ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
+          )
 
         // check the custom IRI; if not given, create an unused IRI
-        customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
-        userIri                        <- iriService.checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
-
-        // hash password
-        encoder        = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
+        customUserIri <- ZIO.foreach(req.id.map(_.value))(iriConverter.asSmartIri)
+        userIri       <- iriService.checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
 
         // Create the new user.
-        createNewUserSparql = sparql.admin.txt.createNewUser(
-                                AdminConstants.adminDataNamedGraph.value,
-                                userIri = userIri,
-                                userClassIri = OntologyConstants.KnoraAdmin.User,
-                                username = Iri
-                                  .toSparqlEncodedString(userCreatePayloadADM.username.value)
-                                  .getOrElse(
-                                    throw BadRequestException(
-                                      s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
-                                    )
-                                  ),
-                                email = Iri
-                                  .toSparqlEncodedString(userCreatePayloadADM.email.value)
-                                  .getOrElse(
-                                    throw BadRequestException(
-                                      s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
-                                    )
-                                  ),
-                                password = hashedPassword,
-                                givenName = Iri
-                                  .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
-                                  .getOrElse(
-                                    throw BadRequestException(
-                                      s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
-                                    )
-                                  ),
-                                familyName = Iri
-                                  .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
-                                  .getOrElse(
-                                    throw BadRequestException(
-                                      s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
-                                    )
-                                  ),
-                                status = userCreatePayloadADM.status.value,
-                                preferredLanguage = Iri
-                                  .toSparqlEncodedString(userCreatePayloadADM.lang.value)
-                                  .getOrElse(
-                                    throw BadRequestException(
-                                      s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
-                                    )
-                                  ),
-                                systemAdmin = userCreatePayloadADM.systemAdmin.value
-                              )
+        createNewUserSparql =
+          sparql.admin.txt.createNewUser(
+            AdminConstants.adminDataNamedGraph.value,
+            userIri = userIri,
+            userClassIri = OntologyConstants.KnoraAdmin.User,
+            username = Iri
+              .toSparqlEncodedString(req.username.value)
+              .getOrElse(throw BadRequestException(s"The supplied username: '${req.username.value}' is not valid.")),
+            email = Iri
+              .toSparqlEncodedString(req.email.value)
+              .getOrElse(throw BadRequestException(s"The supplied email: '${req.email.value}' is not valid.")),
+            password = passwordEncoder.encode(req.password.value),
+            givenName = Iri
+              .toSparqlEncodedString(req.givenName.value)
+              .getOrElse(throw BadRequestException(s"The supplied given name: '${req.givenName.value}' is not valid.")),
+            familyName = Iri
+              .toSparqlEncodedString(req.familyName.value)
+              .getOrElse(
+                throw BadRequestException(s"The supplied family name: '${req.familyName.value}' is not valid.")
+              ),
+            status = req.status.value,
+            preferredLanguage = Iri
+              .toSparqlEncodedString(req.lang.value)
+              .getOrElse(throw BadRequestException(s"The supplied language: '${req.lang.value}' is not valid.")),
+            systemAdmin = req.systemAdmin.value
+          )
         _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
-        maybeNewUserADM <- findUserByIri(
-                             identifier = UserIri.unsafeFrom(userIri),
-                             requestingUser = KnoraSystemInstances.Users.SystemUser,
-                             userInformationType = UserInformationTypeADM.Full,
-                             skipCache = true
-                           )
-
-        // check to see if we could retrieve the new user
-        newUserADM =
-          maybeNewUserADM.getOrElse(
-            throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
+        createdUser <-
+          findUserByIri(
+            UserIri.unsafeFrom(userIri),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser,
+            skipCache = true
+          ).someOrFail(
+            UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
           )
+      } yield UserOperationResponseADM(createdUser.ofType(UserInformationTypeADM.Restricted))
 
-        // create the user operation response
-        _                        = logger.debug("createNewUserADM - created new user: {}", newUserADM)
-        userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.Restricted))
-
-      } yield userOperationResponseADM
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      USERS_GLOBAL_LOCK_IRI,
-      createNewUserTask(userCreatePayloadADM)
-    )
+    IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
 
   ////////////////////
@@ -1950,33 +1924,13 @@ final case class UsersResponderADMLive(
     triplestore.query(Ask(sparql.admin.txt.checkUserExists(userIri)))
 
   /**
-   * Helper method for checking if an username is already registered.
-   *
-   * @param maybeUsername the username of the user.
-   * @param maybeCurrent  the current username of the user.
-   * @return a [[Boolean]].
-   */
-  private def userByUsernameExists(
-    maybeUsername: Option[Username],
-    maybeCurrent: Option[String] = None
-  ): Task[Boolean] =
-    maybeUsername match {
-      case Some(username) =>
-        if (maybeCurrent.contains(username.value)) ZIO.succeed(true)
-        else
-          triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value)))
-
-      case None => ZIO.succeed(false)
-    }
-
-  /**
    * Helper method for checking if an email is already registered.
    *
    * @param maybeEmail   the email of the user.
    * @param maybeCurrent the current email of the user.
    * @return a [[Boolean]].
    */
-  private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String] = None): Task[Boolean] =
+  private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String]): Task[Boolean] =
     maybeEmail match {
       case Some(email) =>
         if (maybeCurrent.contains(email.value)) {
@@ -2102,16 +2056,17 @@ final case class UsersResponderADMLive(
 
 object UsersResponderADMLive {
   val layer: URLayer[
-    StringFormatter & TriplestoreService & MessageRelay & IriService & AppConfig,
+    AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
     UsersResponderADMLive
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
+      ic      <- ZIO.service[IriConverter]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, sf))
     } yield handler
   }
 }

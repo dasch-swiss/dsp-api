@@ -8,8 +8,12 @@ package org.knora.webapi.slice.admin.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
+import sttp.tapir.json.zio.jsonBody as zioJsonBody
 import zio.*
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
@@ -20,8 +24,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseA
 import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
 import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar
 import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -75,7 +85,14 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[UserGroupMembershipsGetResponseADM])
     .description("Returns the user's group memberships for a user identified by their IRI.")
 
-  // Deletes
+  // Create
+  val postUsers = baseEndpoints.securedEndpoint.post
+    .in(base)
+    .in(zioJsonBody[UserCreateRequest])
+    .out(sprayJsonBody[UserOperationResponseADM])
+    .description("Create a new user.")
+
+  // Delete
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
@@ -84,10 +101,29 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   private val public =
     Seq(getUsersByIriProjectMemberShips, getUsersByIriProjectAdminMemberShips, getUsersByIriGroupMemberships)
   private val secured =
-    Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, deleteUser).map(_.endpoint)
+    Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, postUsers, deleteUser).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
 }
 
 object UsersEndpoints {
+  object Requests {
+    final case class UserCreateRequest(
+      id: Option[UserIri] = None,
+      username: Username,
+      email: Email,
+      givenName: GivenName,
+      familyName: FamilyName,
+      password: Password,
+      status: UserStatus,
+      lang: LanguageCode,
+      systemAdmin: SystemAdmin
+    )
+    object UserCreateRequest {
+      import sttp.tapir.generic.auto.*
+      import Codecs.ZioJsonCodec.*
+      implicit val jsonCodec: JsonCodec[UserCreateRequest] = DeriveJsonCodec.gen[UserCreateRequest]
+    }
+  }
+
   val layer = ZLayer.derive[UsersEndpoints]
 }

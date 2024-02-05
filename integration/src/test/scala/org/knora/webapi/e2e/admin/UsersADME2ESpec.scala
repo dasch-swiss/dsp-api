@@ -310,7 +310,7 @@ class UsersADME2ESpec
           HttpEntity(ContentTypes.`application/json`, validUserCreationRequest)
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        response.status should be(StatusCodes.Forbidden)
+        response.status should be(StatusCodes.Unauthorized)
       }
 
       "create a user with the provided custom IRI" in {

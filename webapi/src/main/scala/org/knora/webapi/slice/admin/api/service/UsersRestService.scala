@@ -17,14 +17,17 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMember
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
+  auth: AuthorizationRestService,
   responder: UsersResponderADM,
   format: KnoraResponseRenderer
 ) {
@@ -53,6 +56,14 @@ final case class UsersRestService(
 
   def getGroupMemberShipsByIri(userIri: UserIri): Task[UserGroupMembershipsGetResponseADM] =
     responder.findGroupMembershipsByIri(userIri).map(UserGroupMembershipsGetResponseADM).flatMap(format.toExternal)
+
+  def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserOperationResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdmin(requestingUser)
+      uuid     <- Random.nextUUID
+      internal <- responder.createNewUserADM(userCreateRequest, uuid)
+      external <- format.toExternal(internal)
+    } yield external
 
   def getProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     responder.findProjectMemberShipsByIri(userIri).flatMap(format.toExternal)

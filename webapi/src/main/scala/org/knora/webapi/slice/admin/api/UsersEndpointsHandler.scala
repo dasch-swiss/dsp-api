@@ -10,6 +10,7 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -59,6 +60,12 @@ case class UsersEndpointsHandler(
     restService.getGroupMemberShipsByIri
   )
 
+  // Create
+  private val createUserHandler = SecuredEndpointHandler[UserCreateRequest, UserOperationResponseADM](
+    usersEndpoints.postUsers,
+    requestingUser => userCreateRequest => restService.createUser(requestingUser, userCreateRequest)
+  )
+
   // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
     usersEndpoints.deleteUser,
@@ -76,6 +83,7 @@ case class UsersEndpointsHandler(
     getUserByIriHandler,
     getUserByEmailHandler,
     getUserByUsernameHandler,
+    createUserHandler,
     deleteUserByIriHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 

@@ -25,7 +25,9 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
@@ -157,21 +159,22 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked to create a new user" should {
       "CREATE the user and return it's profile if the supplied email is unique " in {
-        appActor ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.unsafeFrom("donald.duck"),
-            email = Email.unsafeFrom("donald.duck@example.com"),
-            givenName = GivenName.unsafeFrom("Donald"),
-            familyName = FamilyName.unsafeFrom("Duck"),
-            password = Password.unsafeFrom("test"),
-            status = UserStatus.from(true),
-            lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.from(false)
-          ),
-          requestingUser = SharedTestDataADM.anonymousUser,
-          apiRequestID = UUID.randomUUID
+        val response = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.createNewUserADM(
+            UserCreateRequest(
+              username = Username.unsafeFrom("donald.duck"),
+              email = Email.unsafeFrom("donald.duck@example.com"),
+              givenName = GivenName.unsafeFrom("Donald"),
+              familyName = FamilyName.unsafeFrom("Duck"),
+              password = Password.unsafeFrom("test"),
+              status = UserStatus.from(true),
+              lang = LanguageCode.en,
+              systemAdmin = SystemAdmin.from(false)
+            ),
+            apiRequestID = UUID.randomUUID
+          )
         )
-        val u = expectMsgType[UserOperationResponseADM](timeout).user
+        val u = response.user
         u.username shouldBe "donald.duck"
         u.givenName shouldBe "Donald"
         u.familyName shouldBe "Duck"
@@ -181,39 +184,41 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
-        appActor ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.unsafeFrom("root"),
-            email = Email.unsafeFrom("root2@example.com"),
-            givenName = GivenName.unsafeFrom("Donald"),
-            familyName = FamilyName.unsafeFrom("Duck"),
-            password = Password.unsafeFrom("test"),
-            status = UserStatus.from(true),
-            lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.from(false)
-          ),
-          SharedTestDataADM.anonymousUser,
-          UUID.randomUUID
+        val exit = UnsafeZioRun.run(
+          UsersResponderADM.createNewUserADM(
+            UserCreateRequest(
+              username = Username.unsafeFrom("root"),
+              email = Email.unsafeFrom("root2@example.com"),
+              givenName = GivenName.unsafeFrom("Donald"),
+              familyName = FamilyName.unsafeFrom("Duck"),
+              password = Password.unsafeFrom("test"),
+              status = UserStatus.from(true),
+              lang = LanguageCode.en,
+              systemAdmin = SystemAdmin.from(false)
+            ),
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(DuplicateValueException(s"User with the username 'root' already exists")))
+        assertFailsWithA[DuplicateValueException](exit, s"User with the username 'root' already exists")
       }
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
-        appActor ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM(
-            username = Username.unsafeFrom("root2"),
-            email = Email.unsafeFrom("root@example.com"),
-            givenName = GivenName.unsafeFrom("Donald"),
-            familyName = FamilyName.unsafeFrom("Duck"),
-            password = Password.unsafeFrom("test"),
-            status = UserStatus.from(true),
-            lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.from(false)
-          ),
-          SharedTestDataADM.anonymousUser,
-          UUID.randomUUID
+        val exit = UnsafeZioRun.run(
+          UsersResponderADM.createNewUserADM(
+            UserCreateRequest(
+              username = Username.unsafeFrom("root2"),
+              email = Email.unsafeFrom("root@example.com"),
+              givenName = GivenName.unsafeFrom("Donald"),
+              familyName = FamilyName.unsafeFrom("Duck"),
+              password = Password.unsafeFrom("test"),
+              status = UserStatus.from(true),
+              lang = LanguageCode.en,
+              systemAdmin = SystemAdmin.from(false)
+            ),
+            UUID.randomUUID
+          )
         )
-        expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
+        assertFailsWithA[DuplicateValueException](exit, s"User with the email 'root@example.com' already exists")
       }
     }
 

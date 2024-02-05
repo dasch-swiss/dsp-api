@@ -31,34 +31,6 @@ import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new user.
- *
- * @param id          the optional IRI of the user to be created (unique).
- * @param username    the username of the user to be created (unique).
- * @param email       the email of the user to be created (unique).
- * @param givenName   the given name of the user to be created.
- * @param familyName  the family name of the user to be created
- * @param password    the password of the user to be created.
- * @param status      the status of the user to be created (active = true, inactive = false).
- * @param lang        the default language of the user to be created.
- * @param systemAdmin the system admin membership.
- */
-case class CreateUserApiRequestADM(
-  id: Option[IRI] = None,
-  username: String,
-  email: String,
-  givenName: String,
-  familyName: String,
-  password: String,
-  status: Boolean,
-  lang: String,
-  systemAdmin: Boolean
-) {
-
-  def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
-}
-
-/**
  * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
  * be changed are: user's username, email, given name, family name, language, user status, and system admin membership.
  *
@@ -158,19 +130,6 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Requests the creation of a new user.
- *
- * @param userCreatePayloadADM    the [[UserCreatePayloadADM]] information used for creating the new user.
- * @param requestingUser       the user creating the new user.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserCreateRequestADM(
-  userCreatePayloadADM: UserCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
 ) extends UsersResponderRequestADM
 
 /**
@@ -539,34 +498,6 @@ case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResp
   def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
 }
 
-final case class UserCreatePayloadADM(
-  id: Option[UserIri] = None,
-  username: Username,
-  email: Email,
-  givenName: GivenName,
-  familyName: FamilyName,
-  password: Password,
-  status: UserStatus,
-  lang: LanguageCode,
-  systemAdmin: SystemAdmin
-)
-
-object UserCreatePayloadADM {
-  def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
-    Validation
-      .validateWith(
-        validateOptionWithFrom(apiRequest.id, UserIri.from, a => a),
-        validateOneWithFrom(apiRequest.username, Username.from, a => a),
-        validateOneWithFrom(apiRequest.email, Email.from, a => a),
-        validateOneWithFrom(apiRequest.givenName, GivenName.from, a => a),
-        validateOneWithFrom(apiRequest.familyName, FamilyName.from, a => a),
-        validateOneWithFrom(apiRequest.password, Password.from, a => a),
-        Validation.succeed(UserStatus.from(apiRequest.status)),
-        LanguageCode.make(apiRequest.lang).mapError(_.getMessage),
-        Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
-      )(UserCreatePayloadADM.apply)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -583,18 +514,6 @@ object UsersADMJsonProtocol
   implicit val userADMFormat: JsonFormat[User] = jsonFormat12(User)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
-  implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
-    CreateUserApiRequestADM,
-    "id",
-    "username",
-    "email",
-    "givenName",
-    "familyName",
-    "password",
-    "status",
-    "lang",
-    "systemAdmin"
-  )
   implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
     jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
   implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(

@@ -34,8 +34,7 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    addUser() ~
-      changeUserBasicInformation() ~
+    changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
       changeUserSystemAdminMembership() ~
@@ -45,20 +44,6 @@ final case class UsersRouteADM()(
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /* create a new user */
-  private def addUser(): Route = path(usersBasePath) {
-    post {
-      entity(as[CreateUserApiRequestADM]) { apiRequest => ctx =>
-        val requestTask = for {
-          payload <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-          r       <- getUserUuid(ctx)
-          _       <- AuthorizationRestService.ensureSystemAdmin(r.user)
-        } yield UserCreateRequestADM(payload, r.user, r.uuid)
-        runJsonRouteZ(requestTask, ctx)
-      }
-    }
-  }
 
   /**
    * Change existing user's basic information.
