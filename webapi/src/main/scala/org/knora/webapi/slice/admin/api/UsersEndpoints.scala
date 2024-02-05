@@ -5,6 +5,11 @@
 
 package org.knora.webapi.slice.admin.api
 
+import sttp.tapir.*
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.spray.jsonBody as sprayJsonBody
+import zio.*
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
@@ -18,10 +23,6 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.spray.jsonBody as sprayJsonBody
-import zio.*
 
 object PathVars {
   import Codecs.TapirCodec.*

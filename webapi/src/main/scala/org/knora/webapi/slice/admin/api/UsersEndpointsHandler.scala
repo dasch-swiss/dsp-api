@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
+import zio.ZLayer
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
@@ -15,7 +17,6 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
-import zio.ZLayer
 
 case class UsersEndpointsHandler(
   usersEndpoints: UsersEndpoints,

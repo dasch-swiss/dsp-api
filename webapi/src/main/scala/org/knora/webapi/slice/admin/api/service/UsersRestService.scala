@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
@@ -20,7 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import zio.*
 
 final case class UsersRestService(
   responder: UsersResponderADM,

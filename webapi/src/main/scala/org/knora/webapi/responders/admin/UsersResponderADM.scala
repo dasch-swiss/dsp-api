@@ -6,6 +6,12 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.*
+import zio.macros.accessible
+
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -44,11 +50,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.*
-import zio.macros.accessible
-
-import java.util.UUID
 
 /**
  * Provides information about Knora users to other responders.

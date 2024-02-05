@@ -5,12 +5,15 @@
 
 package org.knora.webapi.responders.admin
 
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
+
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.LanguageCode
-import org.apache.pekko.actor.Status.Failure
-import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
@@ -23,8 +26,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
-
-import java.util.UUID
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
@@ -727,7 +728,6 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           UUID.randomUUID()
         )
         expectMsgType[UserOperationResponseADM](timeout)
-
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
