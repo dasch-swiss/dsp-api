@@ -28,10 +28,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.*
-import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
@@ -42,8 +40,6 @@ class UsersADME2ESpec
     with ProjectsADMJsonProtocol
     with GroupsADMJsonProtocol
     with TriplestoreJsonProtocol {
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
   private val rootUser                         = SharedTestDataADM.rootUser
   private val projectAdminUser                 = SharedTestDataADM.imagesUser01
