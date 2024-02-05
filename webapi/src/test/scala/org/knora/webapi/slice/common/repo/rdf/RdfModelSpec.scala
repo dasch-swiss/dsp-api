@@ -2,8 +2,8 @@ package org.knora.webapi.slice.common.repo.rdf
 
 import org.apache.jena.riot.RiotException
 import zio.*
-import zio.test.*
 import zio.test.Assertion.*
+import zio.test.*
 
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.LiteralNotPresent
