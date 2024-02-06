@@ -380,9 +380,14 @@ object RdfModel {
    * @param turtle the turtle string.
    * @return the [[RdfModel]] or a throwable, if parsing the underlying Jena model failed.
    */
-  def fromTurtle(turtle: String): IO[RdfParsingError, RdfModel] = ZIO.attempt {
-    val model = ModelFactory.createDefaultModel()
-    model.read(new StringReader(turtle), null, "TURTLE")
-    RdfModel(model)
-  }.orElseFail(RdfParsingError("Failed to parse the turtle string"))
+  def fromTurtle(turtle: String): IO[RdfParsingError, RdfModel] =
+    ZIO.scoped {
+      val model = ModelFactory.createDefaultModel()
+      for {
+        reader <- ZIO.acquireRelease(ZIO.succeed(new StringReader(turtle)))(it => ZIO.succeed(it.close()))
+        _ <- ZIO
+               .attempt(model.read(reader, null, "TURTLE"))
+               .orElseFail(RdfParsingError("Failed to parse the turtle string"))
+      } yield RdfModel(model)
+    }
 }
