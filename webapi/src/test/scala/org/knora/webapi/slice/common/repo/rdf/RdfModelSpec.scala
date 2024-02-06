@@ -13,7 +13,10 @@ import zio.test.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.LiteralNotPresent
 import org.knora.webapi.slice.common.repo.rdf.Errors.NotALiteral
+import org.knora.webapi.slice.common.repo.rdf.Errors.ObjectNotAResource
+import org.knora.webapi.slice.common.repo.rdf.Errors.ObjectNotPresent
 import org.knora.webapi.slice.common.repo.rdf.Errors.ResourceNotPresent
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object RdfModelSpec extends ZIOSpecDefault {
 
@@ -888,6 +891,166 @@ object RdfModelSpec extends ZIOSpecDefault {
       )
     )
 
+  private val objectsSuite =
+    suite("Objects")(
+      suite("getObjectIri")(
+        test("Get an IRI that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIri("http://example.org/predicate")
+          } yield assertTrue(iri.contains(InternalIri("http://example.org/object")))
+        },
+        test("Get None for an IRI that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIri("http://example.org/does-not-exist")
+          } yield assertTrue(iri.isEmpty)
+        },
+        test("Fail to get an IRI from a property that does not point to an IRI") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIri("http://example.org/predicate").exit
+          } yield assert(iri)(failsWithA[ObjectNotAResource])
+        }
+      ),
+      suite("getObjectIriOrFail")(
+        test("Get an IRI that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIriOrFail("http://example.org/predicate")
+          } yield assertTrue(iri == InternalIri("http://example.org/object"))
+        },
+        test("Fail to get an IRI that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIriOrFail("http://example.org/does-not-exist").exit
+          } yield assert(iri)(failsWithA[ObjectNotPresent])
+        },
+        test("Fail to get an IRI from a property that does not point to an IRI") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iri      <- resource.getObjectIriOrFail("http://example.org/predicate").exit
+          } yield assert(iri)(failsWithA[ObjectNotAResource])
+        }
+      ),
+      suite("getObjectIris")(
+        test("Get IRIs that exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object1 .
+               |ex:subject ex:predicate ex:object2 .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIris("http://example.org/predicate")
+          } yield assert(iris)(
+            hasSameElementsDistinct(
+              Chunk(
+                InternalIri("http://example.org/object1"),
+                InternalIri("http://example.org/object2")
+              )
+            )
+          )
+        },
+        test("Get an empty list for IRIs that do not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object1 .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIris("http://example.org/does-not-exist")
+          } yield assertTrue(iris.isEmpty)
+        },
+        test("Fail to get IRIs from a property that does not point to an IRI") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIris("http://example.org/predicate").exit
+          } yield assert(iris)(failsWithA[ObjectNotAResource])
+        }
+      ),
+      suite("getObjectIrisOrFail")(
+        test("Get IRIs that exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object1 .
+               |ex:subject ex:predicate ex:object2 .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIrisOrFail("http://example.org/predicate")
+          } yield assert(iris.toChunk)(
+            hasSameElementsDistinct(
+              Chunk(
+                InternalIri("http://example.org/object1"),
+                InternalIri("http://example.org/object2")
+              )
+            )
+          )
+        },
+        test("Fail to get IRIs that do not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object1 .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIrisOrFail("http://example.org/does-not-exist").exit
+          } yield assert(iris)(failsWithA[ObjectNotPresent])
+        },
+        test("Fail to get IRIs from a property that does not point to an IRI") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            iris     <- resource.getObjectIrisOrFail("http://example.org/predicate").exit
+          } yield assert(iris)(failsWithA[ObjectNotAResource])
+        }
+      )
+    )
+
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("RdfModelSpec")(
     rdfModelSuite,
     suite("RdfResource")(
@@ -895,7 +1058,8 @@ object RdfModelSpec extends ZIOSpecDefault {
         stringLiteralSuite,
         langStringLiteralSuite,
         booleanLiteralSuite
-      )
+      ),
+      objectsSuite
     )
   )
 }

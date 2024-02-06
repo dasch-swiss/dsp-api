@@ -14,15 +14,6 @@ import scala.jdk.CollectionConverters.*
 import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-/*
- * TODO:
- *  - add scaladoc
- *  - write tests
- *    - for rdf model
- *    - for repository
- *  - simplify literal extraction
- */
-
 object Errors {
   sealed trait RdfError
 
@@ -79,13 +70,6 @@ final case class RdfResource(private val res: Resource) {
       stmts     = Chunk.fromIterable(stmtIter.toList.asScala.toList)
       literals <- ZIO.attempt(stmts.map(_.getLiteral)).mapBoth(_ => NotALiteral(propertyIri), Chunk.fromIterable)
     } yield literals
-
-  private def toTypedLiteral[A](literal: Literal, f: Literal => A)(implicit
-    tag: Tag[A]
-  ): IO[ConversionError, A] =
-    ZIO
-      .attempt(f(literal))
-      .orElseFail(ConversionError(s"$literal is not an ${tag.getClass.getSimpleName}"))
 
   /**
    * Returns the string value for a string literal or fails if the literal is not a string.
@@ -325,15 +309,41 @@ final case class RdfResource(private val res: Resource) {
       nonEmptyChunk <- ZIO.fromOption(NonEmptyChunk.fromChunk(chunk)).orElseFail(LiteralNotPresent(propertyIri))
     } yield nonEmptyChunk
 
+  /**
+   * Returns the IRI of the object of a given predicate IRI.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @return            the [[InternalIri]] of the object or None if the object is not present.
+   */
   def getObjectIri(propertyIri: String): IO[RdfError, Option[InternalIri]] =
     getObjectUri(propertyIri).map(InternalIri).unsome
 
+  /**
+   * Returns the IRI of the object of a given predicate IRI.
+   * Fails if the object is not present.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @return            the [[InternalIri]] of the object or an [[RdfError]] if the object is not present.
+   */
   def getObjectIriOrFail(propertyIri: String): IO[RdfError, InternalIri] =
     getObjectIri(propertyIri).someOrFail(ObjectNotPresent(propertyIri))
 
+  /**
+   * Returns the IRIs of the objects of a given predicate IRI.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @return            the [[InternalIri]]s of the objects or an [[RdfError]] if the objects are not present.
+   */
   def getObjectIris(propertyIri: String): IO[RdfError, Chunk[InternalIri]] =
     getObjectUris(propertyIri).map(_.map(InternalIri))
 
+  /**
+   * Returns the IRIs of the objects of a given predicate IRI.
+   * Fails if the objects are not present.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @return            the [[InternalIri]]s of the objects or an [[RdfError]] if the objects are not present.
+   */
   def getObjectIrisOrFail(propertyIri: String): IO[RdfError, NonEmptyChunk[InternalIri]] =
     for {
       chunk         <- getObjectIris(propertyIri)
