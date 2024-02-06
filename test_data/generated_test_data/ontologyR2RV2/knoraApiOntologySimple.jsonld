@@ -539,7 +539,7 @@
                     "owl:onProperty": {
                         "@id": "knora-api:hasComment"
                     },
-                    "owl:minCardinality": 1
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",

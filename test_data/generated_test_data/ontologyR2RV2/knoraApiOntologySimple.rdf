@@ -330,7 +330,7 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:minCardinality>
+        >0</owl:minCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasComment"/>
         </owl:onProperty>
