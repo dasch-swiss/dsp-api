@@ -67,7 +67,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       prop     <- property(propertyIri)
       stmtIter  = res.listProperties(prop)
-      stmts     = Chunk.fromIterable(stmtIter.toList.asScala.toList)
+      stmts     = Chunk.fromIterator(stmtIter.asScala)
       literals <- ZIO.attempt(stmts.map(_.getLiteral)).mapBoth(_ => NotALiteral(propertyIri), Chunk.fromIterable)
     } yield literals
 
