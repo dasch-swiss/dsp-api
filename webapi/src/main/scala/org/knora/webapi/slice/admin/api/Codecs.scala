@@ -11,6 +11,7 @@ import zio.json.JsonCodec
 
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
@@ -19,6 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -49,10 +51,14 @@ object Codecs {
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
-    implicit val userIri: StringCodec[UserIri]                         = stringCodec(UserIri.from)
 
     // list properties
     implicit val listIri: StringCodec[ListIri] = stringCodec(ListIri.from)
+
+    // user value objects
+    implicit val userIri: StringCodec[UserIri]   = stringCodec(UserIri.from)
+    implicit val userEmail: StringCodec[Email]   = stringCodec(Email.from)
+    implicit val username: StringCodec[Username] = stringCodec(Username.from)
   }
 
   object ZioJsonCodec {

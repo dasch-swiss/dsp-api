@@ -29,7 +29,7 @@ object AppConfigSpec extends ZIOSpecDefault {
           appConfig.sipi.timeout == Duration.ofSeconds(120),
           appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
-          appConfig.bcryptPasswordStrength == PasswordStrength.unsafeMake(12).value,
+          appConfig.bcryptPasswordStrength == PasswordStrength.unsafeFrom(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",
