@@ -101,7 +101,7 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessag
  *
  * @param requestingUser         the user initiating the request.
  */
-case class UsersGetRequestADM( requestingUser: User ) extends UsersResponderRequestADM
+case class UsersGetRequestADM(requestingUser: User) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by IRI. A successful response will be a [[User]].
