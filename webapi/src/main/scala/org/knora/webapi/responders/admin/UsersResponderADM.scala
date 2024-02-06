@@ -212,8 +212,7 @@ final case class UsersResponderADMLive(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case UsersGetRequestADM(_, requestingUser) =>
-      getAllUserADMRequest(requestingUser)
+    case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
     case UserChangeBasicInformationRequestADM(
