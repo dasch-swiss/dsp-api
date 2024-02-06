@@ -32,6 +32,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
 object KnoraProjectQueries {
   private[service] def getProjectByIri(iri: ProjectIri): Construct =
@@ -79,7 +80,7 @@ final case class KnoraProjectRepoLive(
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
       ttl      <- triplestore.queryRdf(getProjectByIri(iri))
-      newModel <- RdfModel.fromTurtle(ttl)
+      newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
       project  <- toKnoraProjectNew(newModel, iri).option
     } yield project
 

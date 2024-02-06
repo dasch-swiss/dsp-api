@@ -23,6 +23,7 @@ object Errors {
   final case class NotALiteral(key: String)        extends RdfError
   final case class ObjectNotAResource(key: String) extends RdfError
   final case class ConversionError(msg: String)    extends RdfError
+  final case class RdfParsingError(msg: String)    extends RdfError
 }
 
 final case class LangString(value: String, lang: Option[String])
@@ -379,9 +380,9 @@ object RdfModel {
    * @param turtle the turtle string.
    * @return the [[RdfModel]] or a throwable, if parsing the underlying Jena model failed.
    */
-  def fromTurtle(turtle: String): Task[RdfModel] = ZIO.attempt {
+  def fromTurtle(turtle: String): IO[RdfParsingError, RdfModel] = ZIO.attempt {
     val model = ModelFactory.createDefaultModel()
     model.read(new StringReader(turtle), null, "TURTLE")
     RdfModel(model)
-  }
+  }.orElseFail(RdfParsingError("Failed to parse the turtle string"))
 }

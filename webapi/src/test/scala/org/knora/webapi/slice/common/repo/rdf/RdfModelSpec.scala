@@ -5,17 +5,11 @@
 
 package org.knora.webapi.slice.common.repo.rdf
 
-import org.apache.jena.riot.RiotException
 import zio.*
 import zio.test.Assertion.*
 import zio.test.*
 
-import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
-import org.knora.webapi.slice.common.repo.rdf.Errors.LiteralNotPresent
-import org.knora.webapi.slice.common.repo.rdf.Errors.NotALiteral
-import org.knora.webapi.slice.common.repo.rdf.Errors.ObjectNotAResource
-import org.knora.webapi.slice.common.repo.rdf.Errors.ObjectNotPresent
-import org.knora.webapi.slice.common.repo.rdf.Errors.ResourceNotPresent
+import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object RdfModelSpec extends ZIOSpecDefault {
@@ -58,7 +52,7 @@ object RdfModelSpec extends ZIOSpecDefault {
       test("Fail to create an RdfModel from invalid turtle") {
         for {
           rdfModel <- RdfModel.fromTurtle("Not turtle").exit
-        } yield assert(rdfModel)(failsWithA[RiotException])
+        } yield assert(rdfModel)(failsWithA[RdfParsingError])
       }
     ),
     suite("Get resource")(
