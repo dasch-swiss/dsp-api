@@ -552,7 +552,7 @@ final case class UsersResponderADMLive(
 
         // send change request as SystemUser
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(
                       username = userUpdateBasicInformationPayload.username,
                       email = userUpdateBasicInformationPayload.email,
@@ -663,7 +663,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(status = Some(status)),
                     requestingUser = Users.SystemUser
                   )
@@ -715,7 +715,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
                     requestingUser = Users.SystemUser
                   )
@@ -816,7 +816,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         updateUserResult <- updateUserADM(
-                              userIri = userIri,
+                              userIri = UserIri.unsafeFrom(userIri),
                               userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
                               requestingUser = requestingUser
                             )
@@ -900,7 +900,7 @@ final case class UsersResponderADMLive(
 
         // create the update request by using the SystemUser
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(
                       projects = Some(updatedProjectMembershipIris),
                       projectsAdmin = maybeUpdatedProjectAdminMembershipIris
@@ -1034,7 +1034,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
@@ -1106,7 +1106,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
@@ -1199,7 +1199,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
@@ -1275,7 +1275,7 @@ final case class UsersResponderADMLive(
 
         // create the update request
         result <- updateUserADM(
-                    userIri = userIri,
+                    userIri = UserIri.unsafeFrom(userIri),
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
                     requestingUser = requestingUser
                   )
@@ -1288,6 +1288,9 @@ final case class UsersResponderADMLive(
     )
   }
 
+  private def ensureNotABuiltInUser(userIri: UserIri) =
+    ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
+
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
@@ -1298,32 +1301,12 @@ final case class UsersResponderADMLive(
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: IRI, userUpdatePayload: UserChangeRequestADM, requestingUser: User) = {
-
-    logger.debug("updateUserADM - userUpdatePayload: {}", userUpdatePayload)
-
-    // check if it is a request for a built-in user
-    if (
-      userIri.contains(Users.SystemUser.id) || userIri.contains(
-        Users.AnonymousUser.id
-      )
-    ) {
-      throw BadRequestException("Changes to built-in users are not allowed.")
-    }
-
+  private def updateUserADM(userIri: UserIri, userUpdatePayload: UserChangeRequestADM, requestingUser: User) = {
     for {
-
+      _ <- ensureNotABuiltInUser(userIri)
       // get current user
-      maybeCurrentUser <- findUserByIri(
-                            identifier = UserIri.unsafeFrom(userIri),
-                            requestingUser = requestingUser,
-                            userInformationType = UserInformationTypeADM.Full,
-                            skipCache = true
-                          )
-
-      _ = if (maybeCurrentUser.isEmpty) {
-            throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
-          }
+      currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, requestingUser, skipCache = true)
+                       .someOrFail(NotFoundException(s"User '$userIri' not found. Aborting update request."))
 
       /* Update the user */
       maybeChangedUsername = userUpdatePayload.username match {
@@ -1387,7 +1370,7 @@ final case class UsersResponderADMLive(
 
       updateUserSparql = sparql.admin.txt.updateUser(
                            AdminConstants.adminDataNamedGraph.value,
-                           userIri = userIri,
+                           userIri = userIri.value,
                            maybeUsername = maybeChangedUsername,
                            maybeEmail = maybeChangedEmail,
                            maybeGivenName = maybeChangedGivenName,
@@ -1402,20 +1385,12 @@ final case class UsersResponderADMLive(
 
       // we are changing the user, so lets invalidate the cached copy
       // and write the updated user to the triplestore
-      _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
+      _ <- invalidateCachedUserADM(Some(currentUser)) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
-      maybeUpdatedUserADM <- findUserByIri(
-                               identifier = UserIri.unsafeFrom(userIri),
-                               requestingUser = Users.SystemUser,
-                               userInformationType = UserInformationTypeADM.Full,
-                               skipCache = true
-                             )
-
-      updatedUserADM: User =
-        maybeUpdatedUserADM.getOrElse(
-          throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
-        )
+      updatedUserADM <-
+        findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
+          .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
       _ = if (userUpdatePayload.username.isDefined) {
             if (updatedUserADM.username != userUpdatePayload.username.get.value)
@@ -1457,7 +1432,7 @@ final case class UsersResponderADMLive(
 
       _ = if (userUpdatePayload.projects.isDefined) {
             for {
-              projects <- userProjectMembershipsGetADM(userIri = userIri)
+              projects <- userProjectMembershipsGetADM(userIri = userIri.value)
               _ =
                 if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
                   throw UpdateNotPerformedException(
@@ -1481,11 +1456,7 @@ final case class UsersResponderADMLive(
               )
           }
 
-      _ <- writeUserADMToCache(
-             maybeUpdatedUserADM.getOrElse(
-               throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
-             )
-           )
+      _ <- writeUserADMToCache(updatedUserADM)
 
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
   }
