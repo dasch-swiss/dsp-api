@@ -5,8 +5,9 @@
 
 package org.knora.webapi.messages.util
 
-import jodd.datetime.JDateTime
-
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.JulianFields
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
@@ -423,17 +424,16 @@ object DateUtil {
 
   }
 
+  private val UTC: ZoneId = ZoneId.of("UTC")
+
   /**
    * Converts a [[GregorianCalendar]] to a Julian Day Number.
    *
    * @param date a [[GregorianCalendar]].
    * @return a Julian Day Number.
    */
-  def convertDateToJulianDayNumber(date: GregorianCalendar): Int = {
-    val conv = new JDateTime
-    conv.loadFrom(date)
-    conv.getJulianDate.getJulianDayNumber
-  }
+  def convertDateToJulianDayNumber(date: GregorianCalendar): Int =
+    date.toInstant.atZone(UTC).toLocalDate.getLong(JulianFields.JULIAN_DAY).toInt
 
   /**
    * Converts a Julian Day Number to a [[GregorianCalendar]].
@@ -446,13 +446,12 @@ object DateUtil {
     julianDay: Int,
     calendarType: KnoraCalendarType.Value
   ): GregorianCalendar = {
-    val conv              = new JDateTime(julianDay.toDouble)
-    val gregorianCalendar = new GregorianCalendar
+    val gregorianCalendar = GregorianCalendar.from(
+      LocalDate.MIN.`with`(JulianFields.JULIAN_DAY, julianDay).atStartOfDay(UTC)
+    )
 
     // Set the GregorianCalendar object to use the Gregorian calendar or the Julian calendar exclusively, depending on calendarType.
     gregorianCalendar.setGregorianChange(getGregorianCalendarChangeDate(calendarType))
-
-    conv.storeTo(gregorianCalendar)
     gregorianCalendar
   }
 
