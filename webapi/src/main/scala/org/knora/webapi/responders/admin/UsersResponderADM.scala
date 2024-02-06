@@ -553,7 +553,7 @@ final case class UsersResponderADMLive(
         // send change request as SystemUser
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(
+                    req = UserChangeRequestADM(
                       username = userUpdateBasicInformationPayload.username,
                       email = userUpdateBasicInformationPayload.email,
                       givenName = userUpdateBasicInformationPayload.givenName,
@@ -664,7 +664,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(status = Some(status)),
+                    req = UserChangeRequestADM(status = Some(status)),
                     requestingUser = Users.SystemUser
                   )
 
@@ -716,7 +716,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
+                    req = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
                     requestingUser = Users.SystemUser
                   )
 
@@ -817,7 +817,7 @@ final case class UsersResponderADMLive(
         // create the update request
         updateUserResult <- updateUserADM(
                               userIri = UserIri.unsafeFrom(userIri),
-                              userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                              req = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
                               requestingUser = requestingUser
                             )
       } yield updateUserResult
@@ -901,7 +901,7 @@ final case class UsersResponderADMLive(
         // create the update request by using the SystemUser
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(
+                    req = UserChangeRequestADM(
                       projects = Some(updatedProjectMembershipIris),
                       projectsAdmin = maybeUpdatedProjectAdminMembershipIris
                     ),
@@ -1035,7 +1035,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+                    req = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
       } yield result
@@ -1107,7 +1107,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+                    req = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
       } yield result
@@ -1200,7 +1200,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
+                    req = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
                     requestingUser = Users.SystemUser
                   )
       } yield result
@@ -1276,7 +1276,7 @@ final case class UsersResponderADMLive(
         // create the update request
         result <- updateUserADM(
                     userIri = UserIri.unsafeFrom(userIri),
-                    userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
+                    req = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
                     requestingUser = requestingUser
                   )
       } yield result
@@ -1291,175 +1291,61 @@ final case class UsersResponderADMLive(
   private def ensureNotABuiltInUser(userIri: UserIri) =
     ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
 
+  private def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, String] =
+    ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
+
+  private def sparqlEncode(maybe: Option[StringValue], msg: String): IO[BadRequestException, Option[String]] =
+    ZIO.foreach(maybe)(sparqlEncode(_, msg))
+
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param userUpdatePayload    the updated information.
+   * @param req    the updated information.
    * @param requestingUser       the requesting user.
    * @return a [[UserOperationResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: UserIri, userUpdatePayload: UserChangeRequestADM, requestingUser: User) = {
+  private def updateUserADM(userIri: UserIri, req: UserChangeRequestADM, requestingUser: User) =
     for {
       _ <- ensureNotABuiltInUser(userIri)
-      // get current user
       currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, requestingUser, skipCache = true)
                        .someOrFail(NotFoundException(s"User '$userIri' not found. Aborting update request."))
-
-      /* Update the user */
-      maybeChangedUsername = userUpdatePayload.username match {
-                               case Some(username) => Some(username.value)
-                               case None           => None
-                             }
-      maybeChangedEmail = userUpdatePayload.email match {
-                            case Some(email) => Some(email.value)
-                            case None        => None
-                          }
-      maybeChangedGivenName = userUpdatePayload.givenName match {
-                                case Some(givenName) =>
-                                  Some(
-                                    Iri
-                                      .toSparqlEncodedString(givenName.value)
-                                      .getOrElse(
-                                        throw BadRequestException(
-                                          s"The supplied given name: '${givenName.value}' is not valid."
-                                        )
-                                      )
-                                  )
-                                case None => None
-                              }
-      maybeChangedFamilyName = userUpdatePayload.familyName match {
-                                 case Some(familyName) =>
-                                   Some(
-                                     Iri
-                                       .toSparqlEncodedString(familyName.value)
-                                       .getOrElse(
-                                         throw BadRequestException(
-                                           s"The supplied family name: '${familyName.value}' is not valid."
-                                         )
-                                       )
-                                   )
-                                 case None => None
-                               }
-      maybeChangedStatus = userUpdatePayload.status match {
-                             case Some(status) => Some(status.value)
-                             case None         => None
-                           }
-      maybeChangedLang = userUpdatePayload.lang match {
-                           case Some(lang) => Some(lang.value)
-                           case None       => None
-                         }
-      maybeChangedProjects = userUpdatePayload.projects match {
-                               case Some(projects) => Some(projects)
-                               case None           => None
-                             }
-      maybeChangedProjectsAdmin = userUpdatePayload.projectsAdmin match {
-                                    case Some(projectsAdmin) => Some(projectsAdmin)
-                                    case None                => None
-                                  }
-      maybeChangedGroups = userUpdatePayload.groups match {
-                             case Some(groups) => Some(groups)
-                             case None         => None
-                           }
-      maybeChangedSystemAdmin = userUpdatePayload.systemAdmin match {
-                                  case Some(systemAdmin) => Some(systemAdmin.value)
-                                  case None              => None
-                                }
-
-      updateUserSparql = sparql.admin.txt.updateUser(
-                           AdminConstants.adminDataNamedGraph.value,
-                           userIri = userIri.value,
-                           maybeUsername = maybeChangedUsername,
-                           maybeEmail = maybeChangedEmail,
-                           maybeGivenName = maybeChangedGivenName,
-                           maybeFamilyName = maybeChangedFamilyName,
-                           maybeStatus = maybeChangedStatus,
-                           maybeLang = maybeChangedLang,
-                           maybeProjects = maybeChangedProjects,
-                           maybeProjectsAdmin = maybeChangedProjectsAdmin,
-                           maybeGroups = maybeChangedGroups,
-                           maybeSystemAdmin = maybeChangedSystemAdmin
-                         )
-
-      // we are changing the user, so lets invalidate the cached copy
-      // and write the updated user to the triplestore
-      _ <- invalidateCachedUserADM(Some(currentUser)) *> triplestore.query(Update(updateUserSparql))
-
-      /* Verify that the user was updated */
+      updateQuery <- updateUserQuery(userIri, req)
+      _           <- invalidateCachedUserADM(Some(currentUser)) *> triplestore.query(updateQuery)
       updatedUserADM <-
         findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-
-      _ = if (userUpdatePayload.username.isDefined) {
-            if (updatedUserADM.username != userUpdatePayload.username.get.value)
-              throw UpdateNotPerformedException(
-                "User's 'username' was not updated. Please report this as a possible bug."
-              )
-          }
-
-      _ = if (userUpdatePayload.email.isDefined) {
-            if (updatedUserADM.email != userUpdatePayload.email.get.value)
-              throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
-          }
-
-      _ = if (userUpdatePayload.givenName.isDefined) {
-            if (updatedUserADM.givenName != userUpdatePayload.givenName.get.value)
-              throw UpdateNotPerformedException(
-                "User's 'givenName' was not updated. Please report this as a possible bug."
-              )
-          }
-
-      _ = if (userUpdatePayload.familyName.isDefined) {
-            if (updatedUserADM.familyName != userUpdatePayload.familyName.get.value)
-              throw UpdateNotPerformedException(
-                "User's 'familyName' was not updated. Please report this as a possible bug."
-              )
-          }
-
-      _ = if (userUpdatePayload.status.isDefined) {
-            if (updatedUserADM.status != userUpdatePayload.status.get.value)
-              throw UpdateNotPerformedException(
-                "User's 'status' was not updated. Please report this as a possible bug."
-              )
-          }
-
-      _ = if (userUpdatePayload.lang.isDefined) {
-            if (updatedUserADM.lang != userUpdatePayload.lang.get.value)
-              throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
-          }
-
-      _ = if (userUpdatePayload.projects.isDefined) {
-            for {
-              projects <- userProjectMembershipsGetADM(userIri = userIri.value)
-              _ =
-                if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
-                  throw UpdateNotPerformedException(
-                    "User's 'project' memberships were not updated. Please report this as a possible bug."
-                  )
-                }
-            } yield UserProjectMembershipsGetResponseADM(projects)
-          }
-
-      _ = if (userUpdatePayload.systemAdmin.isDefined) {
-            if (updatedUserADM.permissions.isSystemAdmin != userUpdatePayload.systemAdmin.get.value)
-              throw UpdateNotPerformedException(
-                "User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug."
-              )
-          }
-
-      _ = if (userUpdatePayload.groups.isDefined) {
-            if (updatedUserADM.groups.map(_.id).sorted != userUpdatePayload.groups.get.sorted)
-              throw UpdateNotPerformedException(
-                "User's 'group' memberships were not updated. Please report this as a possible bug."
-              )
-          }
-
       _ <- writeUserADMToCache(updatedUserADM)
-
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-  }
+
+  private def updateUserQuery(userIri: UserIri, req: UserChangeRequestADM) = for {
+    username <-
+      sparqlEncode(req.username, s"The supplied username: '${req.username.map(_.value)}' is not valid.")
+    email <-
+      sparqlEncode(req.email, s"The supplied email: '${req.email.map(_.value)}' is not valid.")
+    givenName <-
+      sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.map(_.value)}' is not valid.")
+    familyName <-
+      sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.map(_.value)}' is not valid.")
+    preferredLanguage <-
+      sparqlEncode(req.lang, s"The supplied language: '${req.lang.map(_.value)}' is not valid.")
+    updateUserSparql = sparql.admin.txt.updateUser(
+                         AdminConstants.adminDataNamedGraph.value,
+                         userIri.value,
+                         username,
+                         email,
+                         givenName,
+                         familyName,
+                         req.status.map(_.value),
+                         preferredLanguage,
+                         req.projects,
+                         req.projectsAdmin,
+                         req.groups,
+                         req.systemAdmin.map(_.value)
+                       )
+  } yield Update(updateUserSparql)
 
   /**
    * Updates the password for a user.
@@ -1552,7 +1438,7 @@ final case class UsersResponderADMLive(
                      .map(UserIri.unsafeFrom)
 
         // Create the new user.
-        _ <- createUserUpdateQuery(userIri, req).flatMap(triplestore.query)
+        _ <- createNewUserQuery(userIri, req).flatMap(triplestore.query)
 
         // try to retrieve newly created user (will also add to cache)
         createdUser <-
@@ -1565,9 +1451,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
 
-  private def createUserUpdateQuery(userIri: UserIri, req: UserCreateRequest): IO[BadRequestException, Update] = {
-    def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, IRI] =
-      ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
+  private def createNewUserQuery(userIri: UserIri, req: UserCreateRequest): IO[BadRequestException, Update] =
     for {
       username          <- sparqlEncode(req.username, s"The supplied username: '${req.username.value}' is not valid.")
       email             <- sparqlEncode(req.email, s"The supplied email: '${req.email.value}' is not valid.")
@@ -1590,7 +1474,6 @@ final case class UsersResponderADMLive(
         req.systemAdmin.value
       )
     )
-  }
 
   /**
    * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
