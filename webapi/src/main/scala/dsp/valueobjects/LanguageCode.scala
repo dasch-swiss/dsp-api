@@ -9,11 +9,12 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import dsp.errors.ValidationException
+import org.knora.webapi.slice.common.Value.StringValue
 
 /**
  * LanguageCode value object.
  */
-sealed abstract case class LanguageCode private (value: String)
+final case class LanguageCode private (value: String) extends AnyVal with StringValue
 
 object LanguageCode { self =>
   implicit val codec: JsonCodec[LanguageCode] =
@@ -43,14 +44,14 @@ object LanguageCode { self =>
     } else if (!SupportedLanguageCodes.contains(value)) {
       Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(value)))
     } else {
-      Validation.succeed(new LanguageCode(value) {})
+      Validation.succeed(LanguageCode(value))
     }
 
-  lazy val en: LanguageCode = new LanguageCode(EN) {}
-  lazy val de: LanguageCode = new LanguageCode(DE) {}
-  lazy val fr: LanguageCode = new LanguageCode(FR) {}
-  lazy val it: LanguageCode = new LanguageCode(IT) {}
-  lazy val rm: LanguageCode = new LanguageCode(RM) {}
+  lazy val en: LanguageCode = LanguageCode(EN)
+  lazy val de: LanguageCode = LanguageCode(DE)
+  lazy val fr: LanguageCode = LanguageCode(FR)
+  lazy val it: LanguageCode = LanguageCode(IT)
+  lazy val rm: LanguageCode = LanguageCode(RM)
 }
 
 object LanguageCodeErrorMessages {

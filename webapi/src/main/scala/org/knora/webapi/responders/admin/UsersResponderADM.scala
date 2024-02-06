@@ -7,7 +7,11 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.*
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 import zio.macros.accessible
 
 import java.util.UUID
@@ -39,13 +43,14 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserA
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -522,7 +527,7 @@ final case class UsersResponderADMLive(
         currentUserInformation <- findUserByIri(
                                     identifier = UserIri.unsafeFrom(userIri),
                                     userInformationType = UserInformationTypeADM.Full,
-                                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                                    requestingUser = Users.SystemUser
                                   )
 
         // check if email is unique in case of a change email request
@@ -557,7 +562,7 @@ final case class UsersResponderADMLive(
                       familyName = userUpdateBasicInformationPayload.familyName,
                       lang = userUpdateBasicInformationPayload.lang
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
       } yield result
 
@@ -620,7 +625,7 @@ final case class UsersResponderADMLive(
         result <- updateUserPasswordADM(
                     userIri = userIri,
                     password = newHashedPassword,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
 
       } yield result
@@ -662,7 +667,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(status = Some(status)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
 
       } yield result
@@ -714,7 +719,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
 
       } yield result
@@ -736,7 +741,7 @@ final case class UsersResponderADMLive(
     findUserByIri(
       UserIri.unsafeFrom(userIri),
       UserInformationTypeADM.Full,
-      KnoraSystemInstances.Users.SystemUser
+      Users.SystemUser
     ).map(_.map(_.projects).getOrElse(Seq.empty))
 
   /**
@@ -902,7 +907,7 @@ final case class UsersResponderADMLive(
                       projects = Some(updatedProjectMembershipIris),
                       projectsAdmin = maybeUpdatedProjectAdminMembershipIris
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
       } yield result
 
@@ -1033,7 +1038,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
       } yield result
 
@@ -1105,7 +1110,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
       } yield result
 
@@ -1123,7 +1128,7 @@ final case class UsersResponderADMLive(
    * @return a sequence of [[GroupADM]].
    */
   override def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
-    findUserByIri(userIri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+    findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
       .map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
@@ -1155,7 +1160,7 @@ final case class UsersResponderADMLive(
         maybeUser <- findUserByIri(
                        UserIri.unsafeFrom(userIri),
                        UserInformationTypeADM.Full,
-                       KnoraSystemInstances.Users.SystemUser,
+                       Users.SystemUser,
                        skipCache = true
                      )
 
@@ -1198,7 +1203,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                    requestingUser = Users.SystemUser
                   )
       } yield result
 
@@ -1301,8 +1306,8 @@ final case class UsersResponderADMLive(
 
     // check if it is a request for a built-in user
     if (
-      userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
-        KnoraSystemInstances.Users.AnonymousUser.id
+      userIri.contains(Users.SystemUser.id) || userIri.contains(
+        Users.AnonymousUser.id
       )
     ) {
       throw BadRequestException("Changes to built-in users are not allowed.")
@@ -1404,7 +1409,7 @@ final case class UsersResponderADMLive(
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- findUserByIri(
                                identifier = UserIri.unsafeFrom(userIri),
-                               requestingUser = KnoraSystemInstances.Users.SystemUser,
+                               requestingUser = Users.SystemUser,
                                userInformationType = UserInformationTypeADM.Full,
                                skipCache = true
                              )
@@ -1501,8 +1506,8 @@ final case class UsersResponderADMLive(
 
     // check if it is a request for a built-in user
     if (
-      userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
-        KnoraSystemInstances.Users.AnonymousUser.id
+      userIri.contains(Users.SystemUser.id) || userIri.contains(
+        Users.AnonymousUser.id
       )
     ) {
       throw BadRequestException("Changes to built-in users are not allowed.")
@@ -1573,55 +1578,50 @@ final case class UsersResponderADMLive(
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri <- ZIO.foreach(req.id.map(_.value))(iriConverter.asSmartIri)
-        userIri       <- iriService.checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
+        userIri <- iriService
+                     .checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
+                     .map(UserIri.unsafeFrom)
 
         // Create the new user.
-        createNewUserSparql =
-          sparql.admin.txt.createNewUser(
-            AdminConstants.adminDataNamedGraph.value,
-            userIri = userIri,
-            userClassIri = OntologyConstants.KnoraAdmin.User,
-            username = Iri
-              .toSparqlEncodedString(req.username.value)
-              .getOrElse(throw BadRequestException(s"The supplied username: '${req.username.value}' is not valid.")),
-            email = Iri
-              .toSparqlEncodedString(req.email.value)
-              .getOrElse(throw BadRequestException(s"The supplied email: '${req.email.value}' is not valid.")),
-            password = passwordEncoder.encode(req.password.value),
-            givenName = Iri
-              .toSparqlEncodedString(req.givenName.value)
-              .getOrElse(throw BadRequestException(s"The supplied given name: '${req.givenName.value}' is not valid.")),
-            familyName = Iri
-              .toSparqlEncodedString(req.familyName.value)
-              .getOrElse(
-                throw BadRequestException(s"The supplied family name: '${req.familyName.value}' is not valid.")
-              ),
-            status = req.status.value,
-            preferredLanguage = Iri
-              .toSparqlEncodedString(req.lang.value)
-              .getOrElse(throw BadRequestException(s"The supplied language: '${req.lang.value}' is not valid.")),
-            systemAdmin = req.systemAdmin.value
-          )
-        _ <- triplestore.query(Update(createNewUserSparql))
+        _ <- createUserUpdateQuery(userIri, req).flatMap(triplestore.query)
 
         // try to retrieve newly created user (will also add to cache)
         createdUser <-
-          findUserByIri(
-            UserIri.unsafeFrom(userIri),
-            UserInformationTypeADM.Full,
-            KnoraSystemInstances.Users.SystemUser,
-            skipCache = true
-          ).someOrFail(
-            UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
-          )
+          findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true).someOrFail {
+            val msg = s"User ${userIri.value} was not created. Please report this as a possible bug."
+            UpdateNotPerformedException(msg)
+          }
       } yield UserOperationResponseADM(createdUser.ofType(UserInformationTypeADM.Restricted))
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
 
-  ////////////////////
-  // Helper Methods //
-  ////////////////////
+  private def createUserUpdateQuery(userIri: UserIri, req: UserCreateRequest): IO[BadRequestException, Update] = {
+    def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, IRI] =
+      ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
+    for {
+      username          <- sparqlEncode(req.username, s"The supplied username: '${req.username.value}' is not valid.")
+      email             <- sparqlEncode(req.email, s"The supplied email: '${req.email.value}' is not valid.")
+      password           = passwordEncoder.encode(req.password.value)
+      givenName         <- sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.value}' is not valid.")
+      familyName        <- sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.value}' is not valid.")
+      preferredLanguage <- sparqlEncode(req.lang, s"The supplied language: '${req.lang.value}' is not valid.")
+    } yield Update(
+      sparql.admin.txt.createNewUser(
+        AdminConstants.adminDataNamedGraph.value,
+        userIri.value,
+        OntologyConstants.KnoraAdmin.User,
+        username,
+        email,
+        password,
+        givenName,
+        familyName,
+        req.status.value,
+        preferredLanguage,
+        req.systemAdmin.value
+      )
+    )
+  }
 
   /**
    * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
@@ -1823,7 +1823,7 @@ final case class UsersResponderADMLive(
                                 groupIris = groupIris,
                                 isInProjectAdminGroups = isInProjectAdminGroups,
                                 isInSystemAdminGroup = isInSystemAdminGroup,
-                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                requestingUser = Users.SystemUser
                               )
                             )
 
