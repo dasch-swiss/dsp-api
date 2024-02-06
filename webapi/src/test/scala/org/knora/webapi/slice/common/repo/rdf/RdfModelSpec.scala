@@ -33,6 +33,14 @@ object RdfModelSpec extends ZIOSpecDefault {
   private implicit val failingLangStringContainerConverter: LangString => Either[String, FailingLangStringContainer] =
     langString => Left("Conversion failed")
 
+  private case class BooleanContainer(value: Boolean)
+  private implicit val booleanContainerConverter: Boolean => Either[String, BooleanContainer] =
+    bool => Right(BooleanContainer(bool))
+
+  private case class FailingBooleanContainer(value: Boolean)
+  private implicit val failingBooleanContainerConverter: Boolean => Either[String, FailingBooleanContainer] =
+    bool => Left("Conversion failed")
+
   private val rdfModelSuite = suite("RdfModel")(
     suite("Deserialize turtle")(
       test("Create an RdfModel from valid turtle") {
@@ -319,7 +327,7 @@ object RdfModelSpec extends ZIOSpecDefault {
     )
 
   private val langStringLiteralSuite =
-    suite("Multi-language string")(
+    suite("Multi-language string literal")(
       suite("getLangStringLiteral")(
         test("Get a multi-language string that exists and has a language tag") {
           val turtle =
@@ -620,11 +628,274 @@ object RdfModelSpec extends ZIOSpecDefault {
       )
     )
 
+  private val booleanLiteralSuite =
+    suite("Boolean literal")(
+      suite("getBooleanLiteral")(
+        test("Get a boolean literal that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate")
+          } yield assertTrue(literal.contains(BooleanContainer(true)))
+        },
+        test("Get a boolean literal that exists and that is explicitly typed") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate")
+          } yield assertTrue(literal.contains(BooleanContainer(true)))
+        },
+        test("Get None for a boolean literal that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/does-not-exist")
+          } yield assertTrue(literal.isEmpty)
+        },
+        test("Fail to get a boolean literal from a property that does not point to a literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[NotALiteral])
+        },
+        test("Fail to get a boolean literal from a property that does not point to a boolean literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "1.2"^^<http://www.w3.org/2001/XMLSchema#float> .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[ConversionError])
+        },
+        test("Fail to get a boolean literal, if the conversion to the domain object fails") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteral[FailingBooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[ConversionError])
+        }
+      ),
+      suite("getBooleanLiteralOrFail")(
+        test("Get a boolean literal that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate")
+          } yield assertTrue(literal == BooleanContainer(true))
+        },
+        test("Get a boolean literal that exists and that is explicitly typed") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate")
+          } yield assertTrue(literal == BooleanContainer(true))
+        },
+        test("Fail to get a boolean literal that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/does-not-exist").exit
+          } yield assert(literal)(failsWithA[LiteralNotPresent])
+        },
+        test("Fail to get a boolean literal from a property that does not point to a literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[NotALiteral])
+        },
+        test("Fail to get a boolean literal from a property that does not point to a boolean literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "1.2"^^<http://www.w3.org/2001/XMLSchema#float> .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[ConversionError])
+        },
+        test("Fail to get a boolean literal, if the conversion to the domain object fails") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literal  <- resource.getBooleanLiteralOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literal)(failsWithA[ConversionError])
+        }
+      ),
+      suite("getBooleanLiterals")(
+        test("Get boolean literals that exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate")
+          } yield assert(literals)(hasSameElementsDistinct(Chunk(BooleanContainer(true))))
+        },
+        test("Get an empty list for boolean literals that do not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/does-not-exist")
+          } yield assertTrue(literals.isEmpty)
+        },
+        test("Fail to get boolean literals from a property that does not point to a literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[NotALiteral])
+        },
+        test("Fail to get boolean literals from a property that does not point to a boolean literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+               |ex:subject ex:predicate "1.2"^^xsd:float .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[ConversionError])
+        },
+        test("Fail to get boolean literals, if the conversion to the domain object fails") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiterals[FailingBooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[ConversionError])
+        }
+      ),
+      suite("getBooleanLiteralsOrFail")(
+        test("Get boolean literals that exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <- resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate")
+          } yield assert(literals.toChunk)(hasSameElementsDistinct(Chunk(BooleanContainer(true))))
+        },
+        test("Fail to get boolean literals that do not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <-
+              resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/does-not-exist").exit
+          } yield assert(literals)(failsWithA[LiteralNotPresent])
+        },
+        test("Fail to get boolean literals from a property that does not point to a literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <-
+              resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[NotALiteral])
+        },
+        test("Fail to get boolean literals from a property that does not point to a boolean literal") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+               |ex:subject ex:predicate "1.2"^^xsd:float .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <-
+              resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[ConversionError])
+        },
+        test("Fail to get boolean literals, if the conversion to the domain object fails") {
+          val turtle =
+            """|@prefix ex: <http://example.org/>
+               |ex:subject ex:predicate true .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject")
+            literals <-
+              resource.getBooleanLiteralsOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
+          } yield assert(literals)(failsWithA[ConversionError])
+        }
+      )
+    )
+
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("RdfModelSpec")(
     rdfModelSuite,
     suite("RdfResource")(
-      stringLiteralSuite,
-      langStringLiteralSuite
+      suite("Literals")(
+        stringLiteralSuite,
+        langStringLiteralSuite,
+        booleanLiteralSuite
+      )
     )
   )
 }
