@@ -13,7 +13,6 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
-import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
@@ -87,79 +86,73 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetByIriADM(
-          identifier = UserIri.unsafeFrom(rootUser.id),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByIri(
+            UserIri.unsafeFrom(rootUser.id),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
+        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetByIriADM(
-          identifier = UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByIri(
+            UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(None)
+        actual shouldBe None
       }
     }
 
     "asked about an user identified by 'email'" should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetByEmailADM(
-          email = Email.unsafeFrom(rootUser.email),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByEmail(
+            Email.unsafeFrom(rootUser.email),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
-      }
-
-      "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetByEmailRequestADM(
-          email = Email.unsafeFrom("userwrong@example.com"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
+        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetByEmailADM(
-          email = Email.unsafeFrom("userwrong@example.com"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByEmail(
+            Email.unsafeFrom("userwrong@example.com"),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(None)
+        actual shouldBe None
       }
     }
 
     "asked about an user identified by 'username'" should {
       "return a profile if the user (root user) is known" in {
-        appActor ! UserGetByUsernameADM(
-          username = Username.unsafeFrom(rootUser.username),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByUsername(
+            Username.unsafeFrom(rootUser.username),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
-      }
-
-      "return 'NotFoundException' when the user is unknown" in {
-        appActor ! UserGetByUsernameRequestADM(
-          username = Username.unsafeFrom("userwrong"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
       }
 
       "return 'None' when the user is unknown" in {
-        appActor ! UserGetByUsernameADM(
-          username = Username.unsafeFrom("userwrong"),
-          userInformationTypeADM = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
+        val actual = UnsafeZioRun.runOrThrow(
+          UsersResponderADM.findUserByUsername(
+            Username.unsafeFrom("userwrong"),
+            UserInformationTypeADM.Full,
+            KnoraSystemInstances.Users.SystemUser
+          )
         )
-        expectMsg(None)
+        actual shouldBe None
       }
     }
 

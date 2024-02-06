@@ -94,7 +94,6 @@ object Dependencies {
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
-  val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.9"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.9"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
@@ -168,7 +167,6 @@ object Dependencies {
     icu4j,
     jakartaJSON,
     jenaText,
-    jodd,
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
