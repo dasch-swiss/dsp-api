@@ -7,13 +7,10 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import spray.json.*
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri.*
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
 /**
  * This spec is used to test 'ListAdminMessages'.
@@ -113,51 +110,6 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
 
       converted.nodeinfo should be(nodeInfo)
       converted.children should be(children)
-    }
-
-    "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "",
-           |    "position": 1
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
-
-      thrown.getMessage should equal("IRI of parent node is missing.")
-    }
-
-    "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when parent node IRI is invalid" in {
-      val invalid_parentIri = "invalid-iri"
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "$invalid_parentIri",
-           |    "position": 1
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
-
-      thrown.getMessage should equal(s"Invalid IRI is given: $invalid_parentIri.")
-    }
-
-    "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when position is invalid" in {
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "http://rdfh.ch/lists/0001/notUsedList01",
-           |    "position": -2
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
-
-      thrown.getMessage should equal(
-        "Invalid position value is given. Position should be either a positive value, 0 or -1."
-      )
     }
   }
 }

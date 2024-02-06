@@ -12,6 +12,8 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListItemDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCommentsDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
@@ -77,6 +79,24 @@ final case class ListRestService(
     response <- listsResponder.deleteListItemRequestADM(iri, user, uuid)
   } yield response
 
+  def listCreateRootNode(req: ListCreateRootNodeRequest, user: User): Task[ListGetResponseADM] = for {
+    project <- projectRepo
+                 .findById(req.projectIri)
+                 .someOrFail(BadRequestException("Project not found"))
+    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.listCreateRootNode(req, uuid)
+  } yield response
+
+  def listCreateChildNode(req: ListCreateChildNodeRequest, user: User): Task[ChildNodeInfoGetResponseADM] = for {
+    project <- projectRepo
+                 .findById(req.projectIri)
+                 .someOrFail(BadRequestException("Project not found"))
+    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.listCreateChildNode(req, uuid)
+  } yield response
+
 }
 
 object ListRestService {
@@ -114,6 +134,24 @@ final case class ListsEndpointsHandlers(
     listsEndpoints.getListsNodesByIri,
     (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
   )
+
+  // Creates
+  private val postListsCreateRootNodeHandler =
+    SecuredEndpointHandler[ListCreateRootNodeRequest, ListGetResponseADM](
+      listsEndpoints.postLists,
+      user => req => listRestService.listCreateRootNode(req, user)
+    )
+
+  private val postListsCreateChildNodeHandler =
+    SecuredEndpointHandler[(ListIri, ListCreateChildNodeRequest), ChildNodeInfoGetResponseADM](
+      listsEndpoints.postListsChild,
+      user => { case (iri: ListIri, req: ListCreateChildNodeRequest) =>
+        ZIO
+          .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
+          .when(iri != req.parentNodeIri) *>
+          listRestService.listCreateChildNode(req, user)
+      }
+    )
 
   // Updates
   private val putListsByIriNameHandler =
@@ -181,6 +219,8 @@ final case class ListsEndpointsHandlers(
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(
+    postListsCreateRootNodeHandler,
+    postListsCreateChildNodeHandler,
     putListsByIriNameHandler,
     putListsByIriLabelsHandler,
     putListsByIriCommentsHandler,

@@ -6,8 +6,6 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.*
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import sttp.tapir.json.zio.jsonBody as zioJsonBody
@@ -16,12 +14,13 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.api.Requests.ListChangeCommentsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeLabelsRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeNameRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
+import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
+import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.api.model.AdminQueryVariables
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
@@ -62,6 +61,17 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
     .out(sprayJsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
+
+  // Creates
+  val postLists = baseEndpoints.securedEndpoint.post
+    .in(base)
+    .in(zioJsonBody[ListCreateRootNodeRequest])
+    .out(sprayJsonBody[ListGetResponseADM])
+
+  val postListsChild = baseEndpoints.securedEndpoint.post
+    .in(base / listIriPathVar)
+    .in(zioJsonBody[ListCreateChildNodeRequest])
+    .out(sprayJsonBody[ChildNodeInfoGetResponseADM])
 
   // Updates
   val putListsByIriName = baseEndpoints.securedEndpoint.put
@@ -105,6 +115,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 
   private val secured =
     List(
+      postLists,
       putListsByIriName,
       putListsByIriLabels,
       putListsByIriComments,
@@ -120,6 +131,33 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
 }
 
 object Requests {
+  import Codecs.ZioJsonCodec.*
+
+  sealed trait ListCreateRequest
+
+  case class ListCreateRootNodeRequest(
+    id: Option[ListIri],
+    comments: Comments,
+    labels: Labels,
+    name: Option[ListName],
+    projectIri: ProjectIri
+  ) extends ListCreateRequest
+  object ListCreateRootNodeRequest {
+    implicit val jsonCodec: JsonCodec[ListCreateRootNodeRequest] = DeriveJsonCodec.gen[ListCreateRootNodeRequest]
+  }
+
+  case class ListCreateChildNodeRequest(
+    id: Option[ListIri],
+    comments: Option[Comments],
+    labels: Labels,
+    name: Option[ListName],
+    parentNodeIri: ListIri,
+    position: Option[Position],
+    projectIri: ProjectIri
+  ) extends ListCreateRequest
+  object ListCreateChildNodeRequest {
+    implicit val jsonCodec: JsonCodec[ListCreateChildNodeRequest] = DeriveJsonCodec.gen[ListCreateChildNodeRequest]
+  }
 
   case class ListChangeRequest(
     listIri: ListIri,

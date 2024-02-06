@@ -296,6 +296,27 @@ class UsersADME2ESpec
     }
 
     "given a custom Iri" should {
+      "given no credentials in the request when creating a user it must be forbidden" in {
+        val validUserCreationRequest: String =
+          s"""{
+             |    "id": "$customUserIri",
+             |    "username": "userWithCustomIri",
+             |    "email": "userWithCustomIri@example.org",
+             |    "givenName": "a user",
+             |    "familyName": "with a custom Iri",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": false
+             |}""".stripMargin
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, validUserCreationRequest)
+        )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.Forbidden)
+      }
+
       "create a user with the provided custom IRI" in {
         val createUserWithCustomIriRequest: String =
           s"""{
@@ -323,7 +344,7 @@ class UsersADME2ESpec
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserWithCustomIriRequest)
-        )
+        ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -359,7 +380,10 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, params)
+        ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -389,7 +413,7 @@ class UsersADME2ESpec
         val request = Post(
           baseApiUrl + s"/admin/users",
           HttpEntity(ContentTypes.`application/json`, createUserWithApostropheRequest)
-        )
+        ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -463,7 +487,11 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+        ) ~> addRootUserCredentials()
+
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -513,7 +541,10 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+        ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
@@ -553,7 +584,10 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+        ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
