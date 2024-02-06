@@ -6,16 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.IO
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.macros.accessible
-
-import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -34,8 +24,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
@@ -51,6 +41,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -58,6 +49,15 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.macros.accessible
+
+import java.util.UUID
 
 /**
  * Provides information about Knora users to other responders.
@@ -66,17 +66,7 @@ import org.knora.webapi.util.ZioHelper
 trait UsersResponderADM {
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM]
 
-  /**
-   * Change the user's status (active / inactive).
-   *
-   * @param userIri        the IRI of the existing user that we want to update.
-   * @param status         the new status.
-   * @param requestingUser the requesting user.
-   * @param apiRequestID   the unique api request ID.
-   * @return a task containing a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
-   */
+
   def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
@@ -196,6 +186,7 @@ final case class UsersResponderADMLive(
   iriConverter: IriConverter,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
+  auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter
 ) extends UsersResponderADM
     with MessageHandler
@@ -233,7 +224,7 @@ final case class UsersResponderADMLive(
           requestingUser,
           apiRequestID
         ) =>
-      changePasswordADM(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
+      changePasswordADM(UserIri.unsafeFrom(userIri), userUpdatePasswordPayload, requestingUser, apiRequestID)
     case UserChangeStatusRequestADM(userIri, status, requestingUser, apiRequestID) =>
       changeUserStatusADM(userIri, status, requestingUser, apiRequestID)
     case UserChangeSystemAdminMembershipStatusRequestADM(
@@ -282,6 +273,9 @@ final case class UsersResponderADMLive(
       userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
+
+  def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
+    ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
 
   /**
    * Gets all the users and returns them as a sequence of [[User]].
@@ -575,7 +569,7 @@ final case class UsersResponderADMLive(
    * Change the users password. The old password needs to be supplied for security purposes.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param userUpdatePasswordPayload    the current password of the requesting user and the new password.
+   * @param update    the current password of the requesting user and the new password.
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
@@ -586,55 +580,47 @@ final case class UsersResponderADMLive(
    *         fails with a [[NotFoundException]] if the user is not found.
    */
   private def changePasswordADM(
-    userIri: IRI,
-    userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+    userIri: UserIri,
+    update: UserUpdatePasswordPayloadADM,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
+    val encoder = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
 
-    /**
-     * The actual change password task run with an IRI lock.
-     */
-    def changePasswordTask(
-      userIri: IRI,
-      userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
-      for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- ZIO.attempt(
-               if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-                 throw ForbiddenException(
-                   "User's password can only be changed by the user itself or a system administrator"
-                 )
-               }
+    val updateTask = for {
+      _ <- ensureNotABuiltInUser(userIri)
+      _ <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+             .orElseFail(
+               ForbiddenException("User's password can only be changed by the user itself or a system administrator")
              )
-
-        // check if supplied password matches requesting user's password
-        _ = if (!requestingUser.passwordMatch(userUpdatePasswordPayload.requesterPassword.value)) {
-              throw ForbiddenException("The supplied password does not match the requesting user's password.")
-            }
-
-        // hash the new password
-        encoder           = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        newHashedPassword = Password.unsafeFrom(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-
-        // update the users password as SystemUser
-        result <- updateUserPasswordADM(
-                    userIri = userIri,
-                    password = newHashedPassword,
-                    requestingUser = Users.SystemUser
-                  )
-
-      } yield result
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser)
-    )
+      _ <- ZIO.when(!requestingUser.passwordMatch(update.requesterPassword.value))(
+             ZIO.fail(ForbiddenException("The supplied password does not match the requesting user's password."))
+           )
+      currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, requestingUser, skipCache = true)
+                       .someOrFail(NotFoundException(s"User '$userIri' not found. Aborting update request."))
+      _             <- invalidateCachedUserADM(Some(currentUser))
+      hashedPassword = encoder.encode(update.newPassword.value)
+      updateUserSparql =
+        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri.value, hashedPassword)
+      _ <- triplestore.query(Update(updateUserSparql))
+      updated <-
+        findUserByIri(userIri, UserInformationTypeADM.Full, requestingUser, skipCache = true)
+          .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
+    } yield UserOperationResponseADM(updated.ofType(UserInformationTypeADM.Restricted))
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
+  /**
+   * Change the user's status (active / inactive).
+   *
+   * @param userIri        the IRI of the existing user that we want to update.
+   * @param status         the new status.
+   * @param requestingUser the requesting user.
+   * @param apiRequestID   the unique api request ID.
+   * @return a task containing a [[UserOperationResponseADM]].
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
+   */
   override def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
@@ -1348,65 +1334,6 @@ final case class UsersResponderADMLive(
   } yield Update(updateUserSparql)
 
   /**
-   * Updates the password for a user.
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param password             the new password.
-   * @param requestingUser       the requesting user.
-   * @return a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
-   *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
-   */
-  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: User) = {
-
-    // check if it is a request for a built-in user
-    if (
-      userIri.contains(Users.SystemUser.id) || userIri.contains(
-        Users.AnonymousUser.id
-      )
-    ) {
-      throw BadRequestException("Changes to built-in users are not allowed.")
-    }
-
-    for {
-      maybeCurrentUser <- findUserByIri(
-                            identifier = UserIri.unsafeFrom(userIri),
-                            requestingUser = requestingUser,
-                            userInformationType = UserInformationTypeADM.Full,
-                            skipCache = true
-                          )
-
-      _ = if (maybeCurrentUser.isEmpty) {
-            throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
-          }
-      // we are changing the user, so lets get rid of the cached copy
-      _ <- invalidateCachedUserADM(maybeCurrentUser)
-
-      // update the password
-      updateUserSparql =
-        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri, password.value)
-      _ <- triplestore.query(Update(updateUserSparql))
-
-      /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- findUserByIri(
-                               identifier = UserIri.unsafeFrom(userIri),
-                               requestingUser = requestingUser,
-                               userInformationType = UserInformationTypeADM.Full,
-                               skipCache = true
-                             )
-
-      updatedUserADM: User =
-        maybeUpdatedUserADM.getOrElse(
-          throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
-        )
-
-      _ = if (updatedUserADM.password.get != password.value)
-            throw UpdateNotPerformedException("User's password was not updated. Please report this as a possible bug.")
-
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-  }
-
-  /**
    * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
    * is allowed to create a new user.
    *
@@ -1908,7 +1835,7 @@ final case class UsersResponderADMLive(
 
 object UsersResponderADMLive {
   val layer: URLayer[
-    AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
     UsersResponderADMLive
   ] = ZLayer.fromZIO {
     for {
@@ -1917,8 +1844,9 @@ object UsersResponderADMLive {
       ic      <- ZIO.service[IriConverter]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
+      au      <- ZIO.service[AuthorizationRestService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, au, sf))
     } yield handler
   }
 }
