@@ -14,9 +14,11 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResp
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
@@ -35,6 +37,22 @@ final case class UsersRestService(
            .when(deleteIri.isBuiltInUser)
     uuid     <- Random.nextUUID
     internal <- responder.changeUserStatusADM(deleteIri.value, UserStatus.Inactive, requestingUser, uuid)
+    external <- format.toExternal(internal)
+  } yield external
+
+  def getUserByEmail(requestingUser: User, email: Email): Task[UserResponseADM] = for {
+    internal <- responder
+                  .findUserByEmail(email, UserInformationTypeADM.Restricted, requestingUser)
+                  .someOrFail(NotFoundException(s"User with email '${email.value}' not found"))
+                  .map(UserResponseADM.apply)
+    external <- format.toExternal(internal)
+  } yield external
+
+  def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
+    internal <- responder
+                  .findUserByUsername(username, UserInformationTypeADM.Restricted, requestingUser)
+                  .someOrFail(NotFoundException(s"User with username '${username.value}' not found"))
+                  .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
 

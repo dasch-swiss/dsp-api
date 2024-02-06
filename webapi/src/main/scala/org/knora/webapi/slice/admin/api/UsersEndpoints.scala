@@ -14,13 +14,23 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResp
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.userIri
+import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
+import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 object PathVars {
+  import Codecs.TapirCodec.*
   val userIriPathVar: EndpointInput.PathCapture[UserIri] =
     path[UserIri].description("The user IRI. Must be URL-encoded.")
+
+  val emailPathVar: EndpointInput.PathCapture[Email] =
+    path[Email].description("The user email. Must be URL-encoded.")
+
+  val usernamePathVar: EndpointInput.PathCapture[Username] =
+    path[Username].description("The user name. Must be URL-encoded.")
 }
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -34,14 +44,25 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
   val getUserByIri = baseEndpoints.withUserEndpoint.get
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserResponseADM])
-    .description("Returns a user identified by IRI.")
+    .description("Returns a user identified by their IRI.")
+
+  val getUserByEmail = baseEndpoints.withUserEndpoint.get
+    .in(base / "email" / emailPathVar)
+    .out(sprayJsonBody[UserResponseADM])
+    .description("Returns a user identified by their Email.")
+
+  val getUserByUsername = baseEndpoints.withUserEndpoint.get
+    .in(base / "username" / usernamePathVar)
+    .out(sprayJsonBody[UserResponseADM])
+    .description("Returns a user identified by their Username.")
 
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
     .out(sprayJsonBody[UserOperationResponseADM])
     .description("Delete a user identified by IRI (change status to false).")
 
-  val endpoints: Seq[AnyEndpoint] = Seq(getUsers, getUserByIri, deleteUser).map(_.endpoint.tag("Admin Users"))
+  val endpoints: Seq[AnyEndpoint] =
+    Seq(getUsers, getUserByIri, getUserByEmail, getUserByUsername, deleteUser).map(_.endpoint.tag("Admin Users"))
 }
 
 object UsersEndpoints {

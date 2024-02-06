@@ -23,7 +23,6 @@ import java.util.Base64
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -31,6 +30,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.*
+import org.knora.webapi.responders.admin.UsersResponderADM
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
@@ -155,7 +155,7 @@ object Authenticator {
 
 final case class AuthenticatorLive(
   private val appConfig: AppConfig,
-  private val messageRelay: MessageRelay,
+  private val usersResponder: UsersResponderADM,
   private val jwtService: JwtService,
   private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
@@ -653,10 +653,9 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByIri(iri: UserIri): Task[User] =
-    messageRelay
-      .ask[Option[User]](UserGetByIriADM(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser))
-      .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    usersResponder
+      .findUserByIri(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -667,12 +666,9 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByEmail(email: Email): Task[User] =
-    messageRelay
-      .ask[Option[User]](
-        UserGetByEmailADM(email, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
-      )
-      .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    usersResponder
+      .findUserByEmail(email, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -683,12 +679,9 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByUsername(username: Username): Task[User] =
-    messageRelay
-      .ask[Option[User]](
-        UserGetByUsernameADM(username, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
-      )
-      .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    usersResponder
+      .findUserByUsername(username, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
+      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string
@@ -707,6 +700,5 @@ final case class AuthenticatorLive(
 }
 
 object AuthenticatorLive {
-  val layer: URLayer[AppConfig & JwtService & MessageRelay & StringFormatter, AuthenticatorLive] =
-    ZLayer.fromFunction(AuthenticatorLive.apply _)
+  val layer = ZLayer.derive[AuthenticatorLive]
 }
