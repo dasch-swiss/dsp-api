@@ -11,7 +11,7 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword   = "pass-word"
   private val validGivenName  = "John"
   private val validFamilyName = "Rambo"
-  private val pwStrength      = PasswordStrength.unsafeMake(12)
+  private val pwStrength      = PasswordStrength.unsafeFrom(12)
 
   private val userSuite = suite("User")()
 

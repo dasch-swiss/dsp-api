@@ -97,6 +97,50 @@ trait UsersResponderADM {
     requestingUser: User,
     skipCache: Boolean = false
   ): Task[Option[User]]
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param email               the email of the user.
+   * @param userInformationType the type of the requested profile (restricted
+   *                            of full).
+   * @param requestingUser      the user initiating the request.
+   * @param skipCache           the flag denotes to skip the cache and instead
+   *                            get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  def findUserByEmail(
+    email: Email,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): Task[Option[User]]
+
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param username            the username of the user.
+   * @param userInformationType the type of the requested profile (restricted
+   *                            of full).
+   * @param requestingUser      the user initiating the request.
+   * @param skipCache           the flag denotes to skip the cache and instead
+   *                            get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  def findUserByUsername(
+    username: Username,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): Task[Option[User]]
 }
 
 final case class UsersResponderADMLive(
@@ -124,14 +168,6 @@ final case class UsersResponderADMLive(
       getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserGetByEmailADM(email, userInformationTypeADM, requestingUser) =>
-      getSingleUserByEmailADM(email, userInformationTypeADM, requestingUser)
-    case UserGetByUsernameADM(username, userInformationTypeADM, requestingUser) =>
-      getSingleUserByUsernameADM(username, userInformationTypeADM, requestingUser)
-    case UserGetByEmailRequestADM(email, userInformationTypeADM, requestingUser) =>
-      getSingleUserByEmailADMRequest(email, userInformationTypeADM, requestingUser)
-    case UserGetByUsernameRequestADM(username, userInformationTypeADM, requestingUser) =>
-      getSingleUserByUsernameADMRequest(username, userInformationTypeADM, requestingUser)
     case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
       createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
@@ -329,7 +365,7 @@ final case class UsersResponderADMLive(
 
   /**
    * If the requesting user is a system admin, or is requesting themselves, or is a system user,
-   * returns the user in the requestet format. Otherwise, returns only public information.
+   * returns the user in the requested format. Otherwise, returns only public information.
    * @param user           the user to be returned
    * @param requestingUser the user requesting the information
    * @param infoType       the type of information requested
@@ -355,7 +391,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserByEmailADM(
+  override def findUserByEmail(
     email: Email,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -387,7 +423,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  private def getSingleUserByUsernameADM(
+  override def findUserByUsername(
     username: Username,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -404,52 +440,6 @@ final case class UsersResponderADMLive(
       finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
       _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${username.value}': ${finalResponse.nonEmpty}")
     } yield finalResponse
-
-  /**
-   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
-   *
-   * @param email          the IRI of the user.
-   * @param userInformationType the type of the requested profile (restricted of full).
-   * @param requestingUser      the user initiating the request.
-   * @return a [[UserResponseADM]]
-   */
-  private def getSingleUserByEmailADMRequest(
-    email: Email,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): Task[UserResponseADM] =
-    for {
-      maybeUserADM <- getSingleUserByEmailADM(email, userInformationType, requestingUser)
-      result <- ZIO
-                  .fromOption(maybeUserADM)
-                  .mapBoth(
-                    _ => NotFoundException(s"User '${email.value}' not found"),
-                    user => UserResponseADM(user = user)
-                  )
-    } yield result
-
-  /**
-   * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
-   *
-   * @param username          the IRI of the user.
-   * @param userInformationType the type of the requested profile (restricted of full).
-   * @param requestingUser      the user initiating the request.
-   * @return a [[UserResponseADM]]
-   */
-  private def getSingleUserByUsernameADMRequest(
-    username: Username,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): Task[UserResponseADM] =
-    for {
-      maybeUserADM <- getSingleUserByUsernameADM(username, userInformationType, requestingUser)
-      result <- ZIO
-                  .fromOption(maybeUserADM)
-                  .mapBoth(
-                    _ => NotFoundException(s"User '${username.value}' not found"),
-                    user => UserResponseADM(user = user)
-                  )
-    } yield result
 
   /**
    * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
