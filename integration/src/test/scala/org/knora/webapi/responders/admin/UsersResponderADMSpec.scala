@@ -26,7 +26,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.util.ZioScalaTestUtil.*
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.

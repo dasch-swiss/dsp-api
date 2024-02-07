@@ -86,9 +86,6 @@ object Dependencies {
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
 
-  // serialization
-  val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
-
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
@@ -98,7 +95,6 @@ object Dependencies {
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.9"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
-  val scallop        = "org.rogach"       %% "scallop"          % "5.0.1"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.3"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
@@ -174,7 +170,6 @@ object Dependencies {
     saxonHE,
     scalaGraph,
     scalaLogging,
-    scallop,
     slf4jApi,
     springSecurityCore,
     titaniumJSONLD,
