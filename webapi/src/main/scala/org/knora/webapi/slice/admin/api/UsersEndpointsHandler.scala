@@ -10,11 +10,13 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class UsersEndpointsHandler(
@@ -43,14 +45,49 @@ case class UsersEndpointsHandler(
     requestingUser => username => restService.getUserByUsername(requestingUser, username)
   )
 
+  private val getUsersByIriProjectMemberShipsHandler = PublicEndpointHandler(
+    usersEndpoints.getUsersByIriProjectMemberShips,
+    restService.getProjectMemberShipsByIri
+  )
+
+  private val getUsersByIriProjectAdminMemberShipsHandler = PublicEndpointHandler(
+    usersEndpoints.getUsersByIriProjectAdminMemberShips,
+    restService.getProjectAdminMemberShipsByIri
+  )
+
+  private val getUsersByIriGroupMembershipsHandler = PublicEndpointHandler(
+    usersEndpoints.getUsersByIriGroupMemberships,
+    restService.getGroupMemberShipsByIri
+  )
+
+  // Create
+  private val createUserHandler = SecuredEndpointHandler[UserCreateRequest, UserOperationResponseADM](
+    usersEndpoints.postUsers,
+    requestingUser => userCreateRequest => restService.createUser(requestingUser, userCreateRequest)
+  )
+
+  // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
     usersEndpoints.deleteUser,
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
-  val allHanders =
-    List(getUsersHandler, getUserByIriHandler, getUserByEmailHandler, getUserByUsernameHandler, deleteUserByIriHandler)
-      .map(mapper.mapSecuredEndpointHandler(_))
+  private val public = List(
+    getUsersByIriProjectMemberShipsHandler,
+    getUsersByIriProjectAdminMemberShipsHandler,
+    getUsersByIriGroupMembershipsHandler
+  ).map(mapper.mapPublicEndpointHandler(_))
+
+  private val secured = List(
+    getUsersHandler,
+    getUserByIriHandler,
+    getUserByEmailHandler,
+    getUserByUsernameHandler,
+    createUserHandler,
+    deleteUserByIriHandler
+  ).map(mapper.mapSecuredEndpointHandler(_))
+
+  val allHanders = public ++ secured
 }
 
 object UsersEndpointsHandler {

@@ -18,7 +18,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM
-import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
@@ -35,34 +34,16 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    addUser() ~
-      changeUserBasicInformation() ~
+    changeUserBasicInformation() ~
       changeUserPassword() ~
       changeUserStatus() ~
       changeUserSystemAdminMembership() ~
-      getUsersProjectMemberships() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
-      getUsersProjectAdminMemberships ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
-      getUsersGroupMemberships ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /* create a new user */
-  private def addUser(): Route = path(usersBasePath) {
-    post {
-      entity(as[CreateUserApiRequestADM]) { apiRequest => ctx =>
-        val requestTask = for {
-          payload <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-          r       <- getUserUuid(ctx)
-          _       <- AuthorizationRestService.ensureSystemAdmin(r.user)
-        } yield UserCreateRequestADM(payload, r.user, r.uuid)
-        runJsonRouteZ(requestTask, ctx)
-      }
-    }
-  }
 
   /**
    * Change existing user's basic information.
@@ -141,20 +122,6 @@ final case class UsersRouteADM()(
     }
 
   /**
-   * get user's project memberships
-   */
-  private def getUsersProjectMemberships(): Route =
-    path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
-      get { requestContext =>
-        val requestTask = for {
-          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-          requestingUser <- Authenticator.getUserADM(requestContext)
-        } yield UserProjectMembershipsGetRequestADM(checkedUserIri, requestingUser)
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-
-  /**
    * add user to project
    */
   private def addUserToProjectMembership(): Route =
@@ -195,20 +162,6 @@ final case class UsersRouteADM()(
     }
 
   /**
-   * get user's project admin memberships
-   */
-  private def getUsersProjectAdminMemberships: Route =
-    path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
-      get { requestContext =>
-        val task = for {
-          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
-          r <- getIriUserUuid(userIri, requestContext)
-        } yield UserProjectAdminMembershipsGetRequestADM(r.iri, r.user, r.uuid)
-        runJsonRouteZ(task, requestContext)
-      }
-    }
-
-  /**
    * add user to project admin
    */
   private def addUserToProjectAdminMembership(): Route =
@@ -233,20 +186,6 @@ final case class UsersRouteADM()(
           r              <- getIriUserUuid(projectIri, requestContext)
         } yield UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
-      }
-    }
-
-  /**
-   * get user's group memberships
-   */
-  private def getUsersGroupMemberships: Route =
-    path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
-      get { ctx =>
-        val requestTask = for {
-          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
-          r <- getIriUser(userIri, ctx)
-        } yield UserGroupMembershipsGetRequestADM(r.iri, r.user)
-        runJsonRouteZ(requestTask, ctx)
       }
     }
 

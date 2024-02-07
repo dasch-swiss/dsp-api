@@ -12,14 +12,19 @@ import zio.json.JsonCodec
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.admin.domain.model.Password
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
@@ -102,5 +107,16 @@ object Codecs {
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
     implicit val sparqlEncodedString: StringCodec[SparqlEncodedString] = stringCodec(SparqlEncodedString.from)
     implicit val status: StringCodec[Status]                           = booleanCodec(Status.from)
+
+    // user
+    implicit val userIri: StringCodec[UserIri]         = stringCodec(UserIri.from)
+    implicit val userEmail: StringCodec[Email]         = stringCodec(Email.from)
+    implicit val username: StringCodec[Username]       = stringCodec(Username.from)
+    implicit val givenName: StringCodec[GivenName]     = stringCodec(GivenName.from)
+    implicit val familyName: StringCodec[FamilyName]   = stringCodec(FamilyName.from)
+    implicit val password: StringCodec[Password]       = stringCodec(Password.from)
+    implicit val userStatus: StringCodec[UserStatus]   = booleanCodec(UserStatus.from)
+    implicit val systemAdmin: StringCodec[SystemAdmin] = booleanCodec(SystemAdmin.from)
+
   }
 }

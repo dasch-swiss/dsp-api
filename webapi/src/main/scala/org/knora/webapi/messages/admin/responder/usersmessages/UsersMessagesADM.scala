@@ -18,7 +18,6 @@ import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
@@ -30,34 +29,6 @@ import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new user.
- *
- * @param id          the optional IRI of the user to be created (unique).
- * @param username    the username of the user to be created (unique).
- * @param email       the email of the user to be created (unique).
- * @param givenName   the given name of the user to be created.
- * @param familyName  the family name of the user to be created
- * @param password    the password of the user to be created.
- * @param status      the status of the user to be created (active = true, inactive = false).
- * @param lang        the default language of the user to be created.
- * @param systemAdmin the system admin membership.
- */
-case class CreateUserApiRequestADM(
-  id: Option[IRI] = None,
-  username: String,
-  email: String,
-  givenName: String,
-  familyName: String,
-  password: String,
-  status: Boolean,
-  lang: String,
-  systemAdmin: Boolean
-) {
-
-  def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
-}
 
 /**
  * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
@@ -125,28 +96,12 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
 sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Get all information about all users in form of a sequence of [[User]]. Returns an empty sequence if
- * no users are found. Administration permission checking is skipped.
- *
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user that is making the request.
- */
-case class UsersGetADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
  * something or a NotFound exception if there are no users found. Administration permission checking is performed.
  *
- * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UsersGetRequestADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
+case class UsersGetRequestADM(requestingUser: User) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by IRI. A successful response will be a [[User]].
@@ -159,19 +114,6 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Requests the creation of a new user.
- *
- * @param userCreatePayloadADM    the [[UserCreatePayloadADM]] information used for creating the new user.
- * @param requestingUser       the user creating the new user.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserCreateRequestADM(
-  userCreatePayloadADM: UserCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
 ) extends UsersResponderRequestADM
 
 /**
@@ -235,17 +177,6 @@ case class UserChangeSystemAdminMembershipStatusRequestADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests user's project memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- */
-case class UserProjectMembershipsGetRequestADM(
-  userIri: IRI,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
  * Requests adding the user to a project.
  *
  * @param userIri              the IRI of the user to be updated.
@@ -271,19 +202,6 @@ case class UserProjectMembershipAddRequestADM(
 case class UserProjectMembershipRemoveRequestADM(
   userIri: IRI,
   projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests user's project admin memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectAdminMembershipsGetRequestADM(
-  userIri: IRI,
   requestingUser: User,
   apiRequestID: UUID
 ) extends UsersResponderRequestADM
@@ -316,17 +234,6 @@ case class UserProjectAdminMembershipRemoveRequestADM(
   projectIri: IRI,
   requestingUser: User,
   apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests user's group memberships.
- *
- * @param userIri              the IRI of the user.
- * @param requestingUser       the user initiating the request.
- */
-case class UserGroupMembershipsGetRequestADM(
-  userIri: IRI,
-  requestingUser: User
 ) extends UsersResponderRequestADM
 
 /**
@@ -384,7 +291,7 @@ case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
  *
  * @param projects a sequence of projects the user is member of.
  */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
 }
 
@@ -393,7 +300,7 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
 }
 
@@ -402,7 +309,7 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
  *
  * @param groups a sequence of groups the user is member of.
  */
-case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
+case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
 }
 
@@ -575,34 +482,6 @@ case class GroupMembersGetResponseADM(members: Seq[User]) extends AdminKnoraResp
   def toJsValue = UsersADMJsonProtocol.groupMembersGetResponseADMFormat.write(this)
 }
 
-final case class UserCreatePayloadADM(
-  id: Option[UserIri] = None,
-  username: Username,
-  email: Email,
-  givenName: GivenName,
-  familyName: FamilyName,
-  password: Password,
-  status: UserStatus,
-  lang: LanguageCode,
-  systemAdmin: SystemAdmin
-)
-
-object UserCreatePayloadADM {
-  def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
-    Validation
-      .validateWith(
-        validateOptionWithFrom(apiRequest.id, UserIri.from, a => a),
-        validateOneWithFrom(apiRequest.username, Username.from, a => a),
-        validateOneWithFrom(apiRequest.email, Email.from, a => a),
-        validateOneWithFrom(apiRequest.givenName, GivenName.from, a => a),
-        validateOneWithFrom(apiRequest.familyName, FamilyName.from, a => a),
-        validateOneWithFrom(apiRequest.password, Password.from, a => a),
-        Validation.succeed(UserStatus.from(apiRequest.status)),
-        LanguageCode.make(apiRequest.lang).mapError(_.getMessage),
-        Validation.succeed(SystemAdmin.from(apiRequest.systemAdmin))
-      )(UserCreatePayloadADM.apply)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -619,18 +498,6 @@ object UsersADMJsonProtocol
   implicit val userADMFormat: JsonFormat[User] = jsonFormat12(User)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
-  implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
-    CreateUserApiRequestADM,
-    "id",
-    "username",
-    "email",
-    "givenName",
-    "familyName",
-    "password",
-    "status",
-    "lang",
-    "systemAdmin"
-  )
   implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
     jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
   implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(

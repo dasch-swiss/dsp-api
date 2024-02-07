@@ -9,19 +9,25 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
+  auth: AuthorizationRestService,
   responder: UsersResponderADM,
   format: KnoraResponseRenderer
 ) {
@@ -47,6 +53,23 @@ final case class UsersRestService(
                   .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
+
+  def getGroupMemberShipsByIri(userIri: UserIri): Task[UserGroupMembershipsGetResponseADM] =
+    responder.findGroupMembershipsByIri(userIri).map(UserGroupMembershipsGetResponseADM).flatMap(format.toExternal)
+
+  def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserOperationResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdmin(requestingUser)
+      uuid     <- Random.nextUUID
+      internal <- responder.createNewUserADM(userCreateRequest, uuid)
+      external <- format.toExternal(internal)
+    } yield external
+
+  def getProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
+    responder.findProjectMemberShipsByIri(userIri).flatMap(format.toExternal)
+
+  def getProjectAdminMemberShipsByIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
+    responder.findUserProjectAdminMemberships(userIri).flatMap(format.toExternal)
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
     internal <- responder

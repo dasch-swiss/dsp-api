@@ -59,6 +59,8 @@ final case class User(
   permissions: PermissionsDataADM = PermissionsDataADM()
 ) extends Ordered[User] { self =>
 
+  def userIri = UserIri.unsafeFrom(id)
+
   /**
    * Allows to sort collections of UserADM. Sorting is done by the id.
    */
