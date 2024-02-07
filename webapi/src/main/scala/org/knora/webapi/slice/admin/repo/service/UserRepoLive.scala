@@ -1,13 +1,7 @@
 package org.knora.webapi.slice.admin.repo.service
 
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.stream.ZStream
-
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -28,6 +22,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.stream.ZStream
 
 final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo {
 
@@ -40,8 +38,7 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
   override def findById(id: UserIri): Task[Option[KnoraUser]] = {
     val construct = Queries.findById(id)
     for {
-      result   <- triplestore.queryRdf(construct)
-      model    <- RdfModel.fromTurtle(result).mapError(e => TriplestoreResponseException(e.msg))
+      model    <- triplestore.queryRdfModel(construct)
       resource <- model.getResource(id.value).option
       user     <- ZIO.foreach(resource)(toUser)
     } yield user
@@ -85,24 +82,39 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
    *
    * @return all instances of the type.
    */
-  override def findAll(): Task[List[KnoraUser]] = {
-    val query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
+  override def findAll(): Task[List[KnoraUser]] =
     for {
-      result    <- triplestore.queryRdf(query)
-      model     <- RdfModel.fromTurtle(result).mapError(e => TriplestoreResponseException(e.msg))
+      model     <- triplestore.queryRdfModel(Queries.findAll)
       resources <- model.getResources(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
       users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
     } yield users.toList
-  }
 
   override def save(user: KnoraUser): Task[KnoraUser] =
-    triplestore.query(Queries.update(user)).as(user)
+    triplestore.query(Queries.create(user)).as(user)
 }
 
 object UserRepoLive {
   private object Queries {
     private val adminGraphIri = AdminConstants.adminDataNamedGraph.value
 
+    def findAll = Construct(
+      s"""
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |
+         |CONSTRUCT {
+         |     ?s ?p ?o .
+         |}
+         |WHERE {
+         |    GRAPH <$adminGraphIri>{
+         |       ?s a knora-admin:User ;
+         |          ?p ?o .
+         |    }
+         |}
+         |""".stripMargin
+    )
     def findById(id: UserIri) = Construct(
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -130,8 +142,8 @@ object UserRepoLive {
          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
          |
          |INSERT {
-         |    GRAPH ?$adminGraphIri {
-         |        ?userIri rdf:type ?userClassIri .
+         |    GRAPH <$adminGraphIri> {
+         |        ?userIri rdf:type knora-admin:User .
          |        ?userIri knora-admin:username "@username"^^xsd:string .
          |        ?userIri knora-admin:email "@email"^^xsd:string .
          |        ?userIri knora-admin:password "@password"^^xsd:string .

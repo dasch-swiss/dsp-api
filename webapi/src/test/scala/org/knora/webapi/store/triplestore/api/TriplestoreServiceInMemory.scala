@@ -1,8 +1,3 @@
-/*
- * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.*
 import org.apache.jena.rdf.model.Model
@@ -52,6 +47,31 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
 }
+object TriplestoreServiceInMemory {
+  import org.knora.webapi.store.triplestore.TestDatasetBuilder
+
+  def setDataSet(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
+
+  def setDataSetFromTriG(triG: String): ZIO[TestTripleStore, Throwable, Unit] = TestDatasetBuilder
+    .datasetFromTriG(triG)
+    .flatMap(TriplestoreServiceInMemory.setDataSet)
+
+  /**
+   * Creates an empty TBD2 [[Dataset]].
+   *
+   * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
+   * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
+   */
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+
+  val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
+
+  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore] =
+    ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
+
+  val emptyLayer = emptyDatasetRefLayer >>> layer
+}
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TestTripleStore {
@@ -67,13 +87,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
-  private def getReadTransactionQueryExecution(query: String): ZIO[Any & Scope, Throwable, QueryExecution] = {
+  private def getReadTransactionQueryExecution(query: String): ZIO[Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
     getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
-  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any & Scope, Dataset] = {
+  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Scope, Dataset] = {
     val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
     def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
     finally { ds.end() })
@@ -243,25 +263,4 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def dropGraph(graphName: IRI): Task[Unit] =
     notImplemented
 
-}
-
-object TriplestoreServiceInMemory {
-
-  def setDataSet(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
-    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
-
-  /**
-   * Creates an empty TBD2 [[Dataset]].
-   *
-   * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
-   * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
-   */
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
-
-  val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
-
-  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore] =
-    ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
-
-  val emptyLayer = emptyDatasetRefLayer >>> layer
 }
