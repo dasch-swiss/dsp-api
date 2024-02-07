@@ -1,4 +1,4 @@
-    ###
+###
 # * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 # * SPDX-License-Identifier: Apache-2.0
 ###
@@ -19,7 +19,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v26" .
+    :ontologyVersion   "knora-base v27" .
 
 
 #################################################################
@@ -659,10 +659,10 @@
 :hasSequenceBounds
     rdf:type               owl:ObjectProperty ;
     :objectClassConstraint :IntervalValue ;
-    :isEditable             true ;
+    :isEditable            true ;
     rdfs:subPropertyOf     :hasValue ;
     rdfs:label             "Sequenz-Grenzen"@de,
-                           "Sequence Bounds"@en;
+                           "Sequence Bounds"@en ;
     rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
 
 
@@ -1769,7 +1769,7 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger ],
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasComment ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger ] ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     :resourceIcon      "region.gif"^^xsd:string ;
     :canBeInstantiated true ;
     rdfs:comment       "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
