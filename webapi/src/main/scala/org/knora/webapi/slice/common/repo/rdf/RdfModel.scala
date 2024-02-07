@@ -368,6 +368,8 @@ final case class RdfModel private (private val model: Model) {
    * @return the [[RdfResource]] or an [[RdfError]] if the resource is not present.
    */
   def getResource(subjectIri: String): IO[RdfError, RdfResource] =
+    // TODO: to be consistent with other naming, this should be called getResourceOrFail
+    //       and the other one should be created that is called getResource
     for {
       resource <- ZIO.attempt(model.createResource(subjectIri)).orDie
       _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
