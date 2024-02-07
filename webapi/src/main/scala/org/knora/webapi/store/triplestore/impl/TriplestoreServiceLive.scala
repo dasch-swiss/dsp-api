@@ -120,6 +120,8 @@ case class TriplestoreServiceLive(
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
+  override def queryRdf(sparql: Construct): Task[String] = executeSparqlQuery(sparql, mimeTypeTextTurtle)
+
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
    *

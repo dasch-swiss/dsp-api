@@ -23,11 +23,37 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
+import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
+import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+
+object KnoraProjectQueries {
+  private[service] def getProjectByIri(iri: ProjectIri): Construct =
+    Construct(
+      s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |CONSTRUCT {
+          |  ?project ?p ?o .
+          |  ?project knora-admin:belongsToOntology ?ontology .
+          |} WHERE {
+          |  BIND(IRI("${iri.value}") as ?project)
+          |  ?project a knora-admin:knoraProject .
+          |  OPTIONAL {
+          |      ?ontology a owl:Ontology .
+          |      ?ontology knora-base:attachedToProject ?project .
+          |  }
+          |  ?project ?p ?o .
+          |}""".stripMargin
+    )
+}
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -35,24 +61,59 @@ final case class KnoraProjectRepoLive(
   private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
 
-  override def findById(id: ProjectIri): Task[Option[KnoraProject]] =
-    findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
+  private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
-    val maybeIri       = id.asIriIdentifierOption
-    val maybeShortname = id.asShortnameIdentifierOption
-    val maybeShortcode = id.asShortcodeIdentifierOption
-    findOneByQuery(
-      sparql.admin.txt
-        .getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
-    )
-  }
+  override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
+
+  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
+    id.asIriIdentifierOption match {
+      case Some(iri) => findOneByIri(ProjectIri.unsafeFrom(iri))
+      case None =>
+        val maybeShortname = id.asShortnameIdentifierOption
+        val maybeShortcode = id.asShortcodeIdentifierOption
+        findOneByQuery(
+          sparql.admin.txt
+            .getProjects(None, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
+        )
+    }
+
+  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
+    for {
+      ttl      <- triplestore.queryRdf(getProjectByIri(iri))
+      newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
+      project  <- toKnoraProjectNew(newModel, iri).option
+    } yield project
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
       construct <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.headOption)
       project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
+
+  private def toKnoraProjectNew(model: RdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
+    for {
+      resource    <- model.getResource(iri.value)
+      shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+      shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+      longname    <- resource.getStringLiteral[Longname](ProjectLongname)
+      description <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+      keywords    <- resource.getStringLiterals[Keyword](ProjectKeyword)
+      logo        <- resource.getStringLiteral[Logo](ProjectLogo)
+      status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+      selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+      ontologies  <- resource.getObjectIris(belongsToOntology)
+    } yield KnoraProject(
+      id = iri,
+      shortcode = shortcode,
+      shortname = shortname,
+      longname = longname,
+      description = description,
+      keywords = keywords.toList.sortBy(_.value),
+      logo = logo,
+      status = status,
+      selfjoin = selfjoin,
+      ontologies = ontologies.toList
+    )
 
   override def findAll(): Task[List[KnoraProject]] = {
     val query = sparql.admin.txt.getProjects(None, None, None)

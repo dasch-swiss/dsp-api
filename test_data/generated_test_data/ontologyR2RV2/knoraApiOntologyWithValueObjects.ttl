@@ -4849,7 +4849,7 @@ knora-api:Region  rdf:type           owl:Class ;
                                        owl:onProperty         knora-api:hasPermissions
                                      ] ;
         rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  1 ;
+                                       owl:minCardinality  0 ;
                                        owl:onProperty      knora-api:hasComment
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;

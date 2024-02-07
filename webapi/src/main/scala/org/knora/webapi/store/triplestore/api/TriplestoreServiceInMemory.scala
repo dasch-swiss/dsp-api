@@ -240,6 +240,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def dropGraph(graphName: IRI): Task[Unit] =
     notImplemented
+
+  override def queryRdf(sparql: Construct): Task[String] =
+    notImplemented
 }
 
 object TriplestoreServiceInMemory {
