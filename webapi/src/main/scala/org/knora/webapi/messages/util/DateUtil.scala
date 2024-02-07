@@ -432,7 +432,7 @@ object DateUtil {
    * @param date a [[GregorianCalendar]].
    * @return a Julian Day Number.
    */
-  def convertDateToJulianDayNumber(date: GregorianCalendar): Int =
+  private def convertDateToJulianDayNumber(date: GregorianCalendar): Int =
     date.toInstant.atZone(UTC).toLocalDate.getLong(JulianFields.JULIAN_DAY).toInt
 
   /**
