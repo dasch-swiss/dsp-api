@@ -6,6 +6,16 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.macros.accessible
+
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -24,8 +34,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
@@ -49,15 +59,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.IO
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.macros.accessible
-
-import java.util.UUID
 
 /**
  * Provides information about Knora users to other responders.
@@ -65,7 +66,6 @@ import java.util.UUID
 @accessible
 trait UsersResponderADM {
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM]
-
 
   def changeUserStatusADM(
     userIri: IRI,

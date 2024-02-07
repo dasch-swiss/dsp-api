@@ -8,13 +8,14 @@ package org.knora.webapi.slice.admin.domain.model
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
-import zio.prelude.Validation
+import zio.Chunk
 
 import java.security.MessageDigest
 import java.security.SecureRandom
 import scala.util.matching.Regex
 
 import dsp.valueobjects.Iri
+import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -22,11 +23,26 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
+
+final case class KnoraUser(
+  id: UserIri,
+  username: Username,
+  email: Email,
+  familyName: FamilyName,
+  givenName: GivenName,
+  passwordHash: Password,
+  preferredLanguage: LanguageCode,
+  status: UserStatus,
+  projects: Chunk[ProjectIri],
+  groups: Chunk[GroupIri],
+  isInSystemAdminGroup: SystemAdmin
+)
 
 /**
  * Represents a user's profile.
@@ -133,8 +149,7 @@ final case class User(
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
 
-  def isActive: Boolean =
-    status
+  def isActive: Boolean = status
 
   def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
 
@@ -174,14 +189,11 @@ object UserIri extends StringValueCompanion[UserIri] {
   private def isValid(iri: String) =
     builtInIris.contains(iri) || (Iri.isIri(iri) && userIriRegEx.matches(iri))
 
-  private val isInvalid = "User IRI is invalid."
-
   def from(value: String): Either[String, UserIri] = value match {
     case _ if value.isEmpty  => Left("User IRI cannot be empty.")
     case _ if isValid(value) => Right(UserIri(value))
-    case _                   => Left(isInvalid)
+    case _                   => Left("User IRI is invalid.")
   }
-  def validationFrom(value: String): Validation[String, UserIri] = Validation.fromEither(from(value))
 }
 
 final case class Username private (value: String) extends AnyVal with StringValue

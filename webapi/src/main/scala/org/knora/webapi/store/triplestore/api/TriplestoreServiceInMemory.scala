@@ -108,7 +108,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtle <- ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
+      turtle <- queryRdf(query)
       rdfModel <- ZIO
                     .attempt(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
                     .foldZIO(
@@ -121,6 +121,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
                       ZIO.succeed(_)
                     )
     } yield SparqlConstructResponse.make(rdfModel)
+
+  override def queryRdf(query: Construct): Task[String] = ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
 
   private def execConstruct(query: String): ZIO[Any & Scope, Throwable, Model] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
@@ -241,11 +243,12 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def dropGraph(graphName: IRI): Task[Unit] =
     notImplemented
 
-  override def queryRdf(sparql: Construct): Task[String] =
-    notImplemented
 }
 
 object TriplestoreServiceInMemory {
+
+  def setDataSet(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
 
   /**
    * Creates an empty TBD2 [[Dataset]].
@@ -259,4 +262,6 @@ object TriplestoreServiceInMemory {
 
   val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
+
+  val emptyLayer = emptyDatasetRefLayer >>> layer
 }

@@ -38,6 +38,9 @@ object LanguageCode { self =>
     RM
   )
 
+  def from(value: String): Either[String, LanguageCode] =
+    make(value).toEitherWith(_.head.getMessage)
+
   def make(value: String): Validation[ValidationException, LanguageCode] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))

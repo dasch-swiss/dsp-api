@@ -1,0 +1,202 @@
+package org.knora.webapi.slice.admin.repo.service
+
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.stream.ZStream
+
+import dsp.valueobjects.LanguageCode
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.UserRepo
+import org.knora.webapi.slice.admin.repo.service.UserRepoLive.Queries
+import org.knora.webapi.slice.common.repo.rdf.RdfModel
+import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+
+final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo {
+
+  /**
+   * Retrieves an entity by its id.
+   *
+   * @param id The identifier of type [[Id]].
+   * @return the entity with the given id or [[None]] if none found.
+   */
+  override def findById(id: UserIri): Task[Option[KnoraUser]] = {
+    val construct = Queries.findById(id)
+    for {
+      result   <- triplestore.queryRdf(construct)
+      model    <- RdfModel.fromTurtle(result).mapError(e => TriplestoreResponseException(e.msg))
+      resource <- model.getResource(id.value).option
+      user     <- ZIO.foreach(resource)(toUser)
+    } yield user
+  }
+
+  private def toUser(resource: RdfResource) = {
+    for {
+      userIri <-
+        resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
+      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
+      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
+      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
+      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
+      passwordHash <- resource.getStringLiteralOrFail[Password](KnoraAdmin.Password)(Password.from)
+      preferredLanguage <-
+        resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)(LanguageCode.from)
+      status     <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)(b => Right(UserStatus.from(b)))
+      projects   <- resource.getObjectIris(KnoraAdmin.IsInProject)
+      projectIris = projects.flatMap(iri => ProjectIri.from(iri.value).toOption)
+      groups     <- resource.getObjectIris(KnoraAdmin.IsInGroup)
+      groupIris   = groups.flatMap(iri => GroupIri.from(iri.value).toOption)
+      isInSystemAdminGroup <-
+        resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)(b => Right(SystemAdmin.from(b)))
+    } yield KnoraUser(
+      userIri,
+      username,
+      email,
+      familyName,
+      givenName,
+      passwordHash,
+      preferredLanguage,
+      status,
+      projectIris,
+      groupIris,
+      isInSystemAdminGroup
+    )
+  }.mapError(e => TriplestoreResponseException(e.toString))
+
+  /**
+   * Returns all instances of the type.
+   *
+   * @return all instances of the type.
+   */
+  override def findAll(): Task[List[KnoraUser]] = {
+    val query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
+    for {
+      result    <- triplestore.queryRdf(query)
+      model     <- RdfModel.fromTurtle(result).mapError(e => TriplestoreResponseException(e.msg))
+      resources <- model.getResources(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
+      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
+    } yield users.toList
+  }
+
+  override def save(user: KnoraUser): Task[KnoraUser] =
+    triplestore.query(Queries.update(user)).as(user)
+}
+
+object UserRepoLive {
+  private object Queries {
+    private val adminGraphIri = AdminConstants.adminDataNamedGraph.value
+
+    def findById(id: UserIri) = Construct(
+      s"""
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |
+         |CONSTRUCT {
+         |     ?userIri ?p ?o .
+         |}
+         |WHERE {
+         |    GRAPH <$adminGraphIri>{
+         |       BIND(IRI("${id.value}") AS ?userIri)
+         |       ?userIri rdf:type knora-admin:User ;
+         |          ?p ?o .
+         |    }
+         |}
+         |""".stripMargin
+    )
+    def create(user: KnoraUser) = Update(
+      s"""
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |
+         |INSERT {
+         |    GRAPH ?$adminGraphIri {
+         |        ?userIri rdf:type ?userClassIri .
+         |        ?userIri knora-admin:username "@username"^^xsd:string .
+         |        ?userIri knora-admin:email "@email"^^xsd:string .
+         |        ?userIri knora-admin:password "@password"^^xsd:string .
+         |        ?userIri knora-admin:givenName "@givenName"^^xsd:string .
+         |        ?userIri knora-admin:familyName "@familyName"^^xsd:string .
+         |        ?userIri knora-admin:status "@status"^^xsd:boolean .
+         |        ?userIri knora-admin:preferredLanguage "@preferredLanguage"^^xsd:string .
+         |        ?userIri knora-admin:isInSystemAdminGroup "@systemAdmin"^^xsd:boolean .
+         |    }
+         |}
+         |WHERE {
+         |    BIND(IRI("${user.id}") AS ?userIri)
+         |}
+         |""".stripMargin
+    )
+    def update(user: KnoraUser) = Update(
+      s"""
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |
+         |WITH <$adminGraphIri>
+         |DELETE {
+         |  ?user knora-admin:username ?previousUsername .
+         |  ?user knora-admin:email ?previousEmail .
+         |  ?user knora-admin:givenName ?previousGivenName .
+         |  ?user knora-admin:familyName ?previousFamilyName .
+         |  ?user knora-admin:status ?previousStatus .
+         |  ?user knora-admin:preferredLanguage ?previousPreferredLanguage .
+         |  ?user knora-admin:isInProject ?previousIsInProject .
+         |  ?user knora-admin:isInGroup ?previousIsInGroup .
+         |  ?user knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
+         |}
+         |INSERT {
+         |  ${toTriples(user)}
+         |}
+         |WHERE {
+         |  BIND(IRI("${user.id.value}") AS ?user)
+         |  ?user knora-admin:username ?previousUsername .
+         |  ?user knora-admin:email ?previousEmail .
+         |  ?user knora-admin:givenName ?previousGivenName .
+         |  ?user knora-admin:familyName ?previousFamilyName .
+         |  ?user knora-admin:status ?previousStatus .
+         |  ?user knora-admin:preferredLanguage ?previousPreferredLanguage .
+         |  ?user knora-admin:isInProject ?previousIsInProject .
+         |  ?user knora-admin:isInGroup ?previousIsInGroup .
+         |  ?user knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
+         |}
+         |""".stripMargin
+    )
+
+    private def toTriples(current: KnoraUser) =
+      s"""
+         |?user knora-admin:username "${current.username.value}"^^xsd:string .
+         |?user knora-admin:email "${current.email.value}"^^xsd:string .
+         |?user knora-admin:givenName "${current.givenName.value}"^^xsd:string .
+         |?user knora-admin:familyName "${current.familyName.value}"^^xsd:string .
+         |?user knora-admin:password "${current.passwordHash.value}"^^xsd:string .
+         |?user knora-admin:preferredLanguage "${current.preferredLanguage.value}"^^xsd:string .
+         |?user knora-admin:status "${current.status.value}"^^xsd:boolean .
+         |${current.projects.map(prjIri => s"?user knora-admin:isInProject <${prjIri.value}> .").mkString("\n")}
+         |${current.groups.map(grpIri => s"?user knora-admin:isInGroup <${grpIri.value}> .").mkString("\n")}
+         |?user knora-admin:isInSystemAdminGroup "${current.isInSystemAdminGroup.value}"^^xsd:boolean .
+         |""".stripMargin
+  }
+  val layer = ZLayer.derive[UserRepoLive]
+}
