@@ -38,14 +38,24 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 object PathVars {
   import Codecs.TapirCodec.*
   val userIriPathVar: EndpointInput.PathCapture[UserIri] =
-    path[UserIri].description("The user IRI. Must be URL-encoded.")
+    path[UserIri]
+      .name("userIri")
+      .description("The user IRI. Must be URL-encoded.")
+      .example(UserIri.makeNew)
 
   val emailPathVar: EndpointInput.PathCapture[Email] =
-    path[Email].description("The user email. Must be URL-encoded.")
+    path[Email]
+      .name("email")
+      .description("The user email. Must be URL-encoded.")
+      .example(Email.unsafeFrom("jane@example.com"))
 
   val usernamePathVar: EndpointInput.PathCapture[Username] =
-    path[Username].description("The user name. Must be URL-encoded.")
+    path[Username]
+      .name("username")
+      .description("The user name. Must be URL-encoded.")
+      .example(Username.unsafeFrom("JaneDoe"))
 }
+
 final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "users"
