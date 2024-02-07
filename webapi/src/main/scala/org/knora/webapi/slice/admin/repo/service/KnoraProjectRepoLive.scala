@@ -25,8 +25,10 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortcode
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfModel
+import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -53,6 +55,28 @@ object KnoraProjectQueries {
           |  ?project ?p ?o .
           |}""".stripMargin
     )
+
+  private[service] def getProjectByShortcode(shortcode: Shortcode): Construct =
+    Construct(
+      s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |CONSTRUCT {
+          |  ?project ?p ?o .
+          |  ?project knora-admin:belongsToOntology ?ontology .
+          |}
+          |WHERE {
+          |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
+          |  ?project a knora-admin:knoraProject .
+          |    OPTIONAL{
+          |        ?ontology a owl:Ontology .
+          |        ?ontology knora-base:attachedToProject ?project .
+          |    }
+          |    ?project ?p ?o .
+          |}""".stripMargin
+    )
 }
 
 final case class KnoraProjectRepoLive(
@@ -66,22 +90,34 @@ final case class KnoraProjectRepoLive(
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
-    id.asIriIdentifierOption match {
+    id.asIriIdentifierOption match { // TODO: clean this up
       case Some(iri) => findOneByIri(ProjectIri.unsafeFrom(iri))
       case None =>
-        val maybeShortname = id.asShortnameIdentifierOption
-        val maybeShortcode = id.asShortcodeIdentifierOption
-        findOneByQuery(
-          sparql.admin.txt
-            .getProjects(None, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
-        )
+        id.asShortcodeIdentifierOption match {
+          case Some(shortcode) => findOneByShortcode(Shortcode.unsafeFrom(shortcode))
+          case None =>
+            val maybeShortname = id.asShortnameIdentifierOption
+            findOneByQuery(
+              sparql.admin.txt
+                .getProjects(None, maybeShortname = maybeShortname, None)
+            )
+        }
     }
 
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
       ttl      <- triplestore.queryRdf(getProjectByIri(iri))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      project  <- toKnoraProjectNew(newModel, iri).option
+      resource <- newModel.getResource(iri.value).option
+      project  <- ZIO.foreach(resource)(it => toKnoraProjectNew(it).option).map(_.flatten) // TODO: improve this
+    } yield project
+
+  private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
+    for {
+      ttl      <- triplestore.queryRdf(getProjectByShortcode(shortcode))
+      newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
+      resource <- newModel.getResourceByPropertyValue(ProjectShortcode, shortcode.value).option
+      project  <- ZIO.foreach(resource)(it => toKnoraProjectNew(it).option).map(_.flatten) // TODO: improve this
     } yield project
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
@@ -90,9 +126,9 @@ final case class KnoraProjectRepoLive(
       project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
 
-  private def toKnoraProjectNew(model: RdfModel, iri: ProjectIri): IO[RdfError, KnoraProject] =
+  private def toKnoraProjectNew(resource: RdfResource): IO[RdfError, KnoraProject] =
     for {
-      resource    <- model.getResource(iri.value)
+      iri         <- resource.getSubjectIri
       shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
       shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
       longname    <- resource.getStringLiteral[Longname](ProjectLongname)
@@ -103,7 +139,7 @@ final case class KnoraProjectRepoLive(
       selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
       ontologies  <- resource.getObjectIris(belongsToOntology)
     } yield KnoraProject(
-      id = iri,
+      id = ProjectIri.unsafeFrom(iri.value),
       shortcode = shortcode,
       shortname = shortname,
       longname = longname,
