@@ -56,26 +56,50 @@ object RdfModelSpec extends ZIOSpecDefault {
       }
     ),
     suite("Get resource")(
-      test("Get a resource that exists") {
-        val turtle =
-          """|@prefix ex: <http://example.org/> .
-             |ex:subject ex:predicate ex:object .
-             |""".stripMargin
-        for {
-          rdfModel <- RdfModel.fromTurtle(turtle)
-          resource <- rdfModel.getResource("http://example.org/subject").exit
-        } yield assertTrue(resource.isSuccess)
-      },
-      test("Fail to get a resource that does not exist") {
-        val turtle =
-          """|@prefix ex: <http://example.org/> .
-             |ex:subject ex:predicate ex:object .
-             |""".stripMargin
-        for {
-          rdfModel <- RdfModel.fromTurtle(turtle)
-          resource <- rdfModel.getResource("http://example.org/does-not-exist").exit
-        } yield assert(resource)(failsWithA[ResourceNotPresent])
-      }
+      suite("Get resource by subject IRI")(
+        test("Get a resource that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/subject").exit
+          } yield assertTrue(resource.isSuccess)
+        },
+        test("Fail to get a resource that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate ex:object .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResource("http://example.org/does-not-exist").exit
+          } yield assert(resource)(failsWithA[ResourceNotPresent])
+        }
+      ),
+      suite("Get resource by property IRI and value")(
+        test("Get a resource that exists") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResourceByPropertyValue("http://example.org/predicate", "object").exit
+          } yield assertTrue(resource.isSuccess)
+        },
+        test("Fail to get a resource that does not exist") {
+          val turtle =
+            """|@prefix ex: <http://example.org/> .
+               |ex:subject ex:predicate "object" .
+               |""".stripMargin
+          for {
+            rdfModel <- RdfModel.fromTurtle(turtle)
+            resource <- rdfModel.getResourceByPropertyValue("http://example.org/predicate", "does-not-exist").exit
+          } yield assert(resource)(failsWithA[ResourceNotPresent])
+        }
+      )
     )
   )
 
