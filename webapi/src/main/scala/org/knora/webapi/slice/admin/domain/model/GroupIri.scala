@@ -19,22 +19,26 @@ object GroupIri {
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
 
+  private val groupIriBase            = "http://rdfh.ch/groups/"
+  private def isGroupIri(iri: String) = Iri.isIri(iri) && iri.startsWith(groupIriBase)
+  private def isValid(iri: String)    = BuiltInGroups.contains((iri)) || isGroupIri(iri)
+
+  def from(value: String): Either[String, GroupIri] = value match {
+    case _ if value.isEmpty => Left("Group IRI cannot be empty.")
+    case _ if isValid(value) => Right(GroupIri(value))
+    case _ => Left("Group IRI is invalid.")
+  }
+
+  def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
   /**
    * Creates a new group IRI based on a UUID.
    *
    * @param shortcode the shortcode of a project the group belongs to.
    * @return a new group IRI.
    */
-  def makeNew(shortcode: Shortcode): GroupIri =
-    GroupIri.unsafeFrom(s"http://rdfh.ch/groups/${shortcode.value}/${UuidUtil.makeRandomBase64EncodedUuid}")
-
-  def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
-
-  private def isValid(iri: String) = BuiltInGroups.contains((iri)) || Iri.isIri(iri)
-
-  def from(value: String): Either[String, GroupIri] = value match {
-    case _ if value.isEmpty  => Left("Group IRI cannot be empty.")
-    case _ if isValid(value) => Right(GroupIri(value))
-    case _                   => Left("Group IRI is invalid.")
+  def makeNew(shortcode: Shortcode): GroupIri = {
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
+    unsafeFrom(s"$groupIriBase${shortcode.value}/$uuid")
   }
 }
