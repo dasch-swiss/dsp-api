@@ -351,6 +351,7 @@ final case class RdfResource(private val res: Resource) {
       nonEmptyChunk <- ZIO.fromOption(NonEmptyChunk.fromChunk(chunk)).orElseFail(ObjectNotPresent(propertyIri))
     } yield nonEmptyChunk
 
+  def getSubjectIri: UIO[InternalIri] = ZIO.succeed(InternalIri(res.getURI))
 }
 
 /**
@@ -371,6 +372,25 @@ final case class RdfModel private (private val model: Model) {
       resource <- ZIO.attempt(model.createResource(subjectIri)).orDie
       _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
     } yield RdfResource(resource)
+
+  def getResourceByPropertyValue(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
+    // TODO: make this more scala-like
+    def getThrowing: String = {
+      val property = model.createProperty(propertyIri)
+      val iter     = model.listStatements(null, property, value)
+      while (iter.hasNext) {
+        val stmt    = iter.nextStatement()
+        val subject = stmt.getSubject
+        return subject.getURI
+      }
+      throw new RuntimeException("failed")
+    }
+    for {
+      // TODO: figure out how that behaves with non-string types
+      iri <- ZIO.attempt(getThrowing).orElseFail(ResourceNotPresent(s"No resource with: $propertyIri -> $value"))
+      res <- getResource(iri)
+    } yield res
+  }
 
 }
 object RdfModel {
