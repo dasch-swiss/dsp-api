@@ -11,7 +11,6 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 
@@ -28,15 +27,34 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     },
     test("pass an invalid value and return an error") {
       val invalid = "ftp://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-      assertTrue(ListIri.from(invalid) == Left("List IRI is invalid"))
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      val invalid = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
-      assertTrue(ListIri.from(invalid) == Left(IriErrorMessages.UuidVersionInvalid))
+      assertTrue(ListIri.from(invalid) == Left("List IRI is invalid."))
     },
     test("pass a valid value and successfully create value object") {
       val valid = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
       assertTrue(ListIri.from(valid).map(_.value) == Right(valid))
+    },
+    test("valid iris should be a valid iri") {
+      val validIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/lists/0001/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_",
+          "http://rdfh.ch/lists/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/lists/0111/UUID1",
+          "http://rdfh.ch/lists/0111/1234"
+        )
+      )
+      check(validIris)(i => assertTrue(ListIri.from(i).isRight))
+    },
+    test("pass an invalid value and return an error") {
+      val invalidIris = Gen.fromIterable(
+        Seq(
+          "Invalid IRI",
+          "http://rdfh.ch/lists/0111/123",
+          "http://rdfh.ch/lists/0001/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_1",
+          "http://rdfh.ch/lists/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/lists/jDEEitJESRi3pDaDjjQ1WQ"
+        )
+      )
+      check(invalidIris)(i => assertTrue(ListIri.from(i) == Left(s"List IRI is invalid.")))
     }
   )
 

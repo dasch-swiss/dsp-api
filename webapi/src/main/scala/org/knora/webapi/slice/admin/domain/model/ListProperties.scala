@@ -8,12 +8,8 @@ package org.knora.webapi.slice.admin.domain.model
 import zio.prelude.Validation
 
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.isListIri
-import dsp.valueobjects.Iri.validateAndEscapeIri
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
-import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -26,6 +22,27 @@ object ListProperties {
   final case class ListIri private (value: String) extends AnyVal with StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
+    /**
+     * Explanation of the user IRI regex:
+     * `^` asserts the start of the string.
+     * `http://rdfh\.ch/lists/` matches the specified prefix.
+     * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
+     * `[a-zA-Z0-9_-]{4,83}` matches any alphanumeric character, hyphen, or underscore between 4 and 84 times.
+     * TODO: 84 is max length spotted on production DB - subject to discussion/change
+     * `$` asserts the end of the string.
+     */
+    private val listIriRegEx = """^http://rdfh\.ch/lists/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,84}$""".r
+
+    private def isListIriValid(iri: String) = Iri.isIri(iri) && listIriRegEx.matches(iri)
+
+    def from(value: String): Either[String, ListIri] = value match {
+      case _ if value.isEmpty         => Left("List IRI cannot be empty.")
+      case _ if isListIriValid(value) => Right(ListIri(value))
+      case _                          => Left("List IRI is invalid.")
+    }
+
+//   TODO: check the IRIs on prod and ls-prod using filtering for and against REGEX and create adjusted regex for lists
+//    the same goes for other IRIs except USER which is already supplied with regex
 
     /**
      * Creates a new [[ListIri]] within a [[KnoraProject]] generating a new base 64 encoded uuid.
@@ -35,24 +52,8 @@ object ListProperties {
      */
     def makeNew(project: KnoraProject): ListIri = {
       val uuid = UuidUtil.makeRandomBase64EncodedUuid
-      unsafeFrom(s"http://$IriDomain/lists/${project.shortcode.value}/$uuid")
+      unsafeFrom(s"http://rdfh.ch/lists/${project.shortcode.value}/$uuid")
     }
-
-    def from(value: String): Either[String, ListIri] =
-      if (value.isEmpty) Left("List IRI cannot be empty.")
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
-
-        if (!isListIri(value))
-          Left("List IRI is invalid")
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Left(IriErrorMessages.UuidVersionInvalid)
-        else
-          validateAndEscapeIri(value)
-            .mapError(_ => "List IRI is invalid")
-            .map(ListIri.apply)
-            .toEitherWith(_.head)
-      }
   }
 
   final case class ListName private (value: String) extends AnyVal with StringValue
