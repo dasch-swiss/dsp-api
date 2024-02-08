@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
+import scalax.collection.hyperedges.DiHyperEdge
+import scalax.collection.immutable.Graph
 
 /**
  * A utility for finding all topological orders of a graph.
@@ -20,8 +20,10 @@ object TopologicalSortUtil {
    * @param graph the graph to be sorted.
    * @tparam T the type of the nodes in the graph.
    */
-  def findAllTopologicalOrderPermutations[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
-    type NodeT = Graph[T, DiHyperEdge]#NodeT
+  def findAllTopologicalOrderPermutations[T](
+    graph: Graph[T, DiHyperEdge[T]]
+  ): Set[Vector[Graph[T, DiHyperEdge[T]]#NodeT]] = {
+    type NodeT = Graph[T, DiHyperEdge[T]]#NodeT
 
     /**
      * Finds all possible topological order permutations of a graph using layer information. This method considers all
@@ -55,7 +57,9 @@ object TopologicalSortUtil {
               // Get those nodes within a layer that are origins of outgoing edges to the nodes already in set of ordered nodes.
               val origins: Set[NodeT] = acc.foldRight(Set.empty[NodeT]) { (node, originsAcc) =>
                 val maybeOriginNode: Option[NodeT] =
-                  layerNodes.find(layerNode => graph.edges.contains(DiHyperEdge(layerNode, node)))
+                  layerNodes.find { layerNode =>
+                    graph.edges.find(DiHyperEdge(layerNode.outer)(node.outer)).isDefined
+                  }
                 // Is there any edge which has its origin in this layer and target in already visited layers?
                 maybeOriginNode match {
                   // Yes. Add the origin node to the topological order
