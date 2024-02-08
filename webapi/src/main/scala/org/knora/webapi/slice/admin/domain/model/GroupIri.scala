@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
@@ -19,14 +20,16 @@ object GroupIri {
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
 
-  private val groupIriBase            = "http://rdfh.ch/groups/"
+  private val groupIriBase = "http://rdfh.ch/groups/"
+
   private def isGroupIri(iri: String) = Iri.isIri(iri) && iri.startsWith(groupIriBase)
-  private def isValid(iri: String)    = BuiltInGroups.contains((iri)) || isGroupIri(iri)
+
+  private def isValid(iri: String) = BuiltInGroups.contains((iri)) || isGroupIri(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
-    case _ if value.isEmpty => Left("Group IRI cannot be empty.")
+    case _ if value.isEmpty  => Left("Group IRI cannot be empty.")
     case _ if isValid(value) => Right(GroupIri(value))
-    case _ => Left("Group IRI is invalid.")
+    case _                   => Left("Group IRI is invalid.")
   }
 
   def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)

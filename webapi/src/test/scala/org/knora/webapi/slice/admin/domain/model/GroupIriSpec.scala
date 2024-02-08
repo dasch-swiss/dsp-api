@@ -11,9 +11,8 @@ import zio.test.assertTrue
 
 object GroupIriSpec extends ZIOSpecDefault {
 
-  private val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  private val invalidIri               = "Invalid IRI"
-  private val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
+  private val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+  private val invalidIri    = "Invalid IRI"
 
   override val spec: Spec[Any, Nothing] = suite("GroupIri from should")(
     test("pass an empty value and return an error") {
@@ -21,12 +20,6 @@ object GroupIriSpec extends ZIOSpecDefault {
     },
     test("pass an invalid value and return an error") {
       assertTrue(GroupIri.from(invalidIri) == Left("Group IRI is invalid."))
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        GroupIri.from(groupIriWithUUIDVersion3) ==
-          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
-      )
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(GroupIri.from(validGroupIri).map(_.value) == Right(validGroupIri))

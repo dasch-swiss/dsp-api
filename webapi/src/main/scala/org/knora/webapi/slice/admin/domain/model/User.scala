@@ -150,7 +150,7 @@ object UserIri extends StringValueCompanion[UserIri] {
     def isRegularUser: Boolean = !isBuiltInUser
   }
 
-  def makeNew: UserIri = UserIri.unsafeFrom(s"http://rdfh.ch/users/${UuidUtil.makeRandomBase64EncodedUuid}")
+  def makeNew: UserIri = unsafeFrom(s"http://rdfh.ch/users/${UuidUtil.makeRandomBase64EncodedUuid}")
 
   /**
    * Explanation of the user IRI regex:
