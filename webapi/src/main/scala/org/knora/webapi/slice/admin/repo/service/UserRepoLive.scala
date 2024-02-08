@@ -123,12 +123,12 @@ object UserRepoLive {
          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
          |
          |CONSTRUCT {
-         |     ?userIri ?p ?o .
+         |     ?userIriIri ?p ?o .
          |}
          |WHERE {
          |    GRAPH <$adminGraphIri>{
-         |       BIND(IRI("${id.value}") AS ?userIri)
-         |       ?userIri rdf:type knora-admin:User ;
+         |       BIND(IRI("${id.value}") AS ?userIriIri)
+         |       ?userIriIri rdf:type knora-admin:User ;
          |          ?p ?o .
          |    }
          |}
@@ -143,19 +143,12 @@ object UserRepoLive {
          |
          |INSERT {
          |    GRAPH <$adminGraphIri> {
-         |        ?userIri rdf:type knora-admin:User .
-         |        ?userIri knora-admin:username "@username"^^xsd:string .
-         |        ?userIri knora-admin:email "@email"^^xsd:string .
-         |        ?userIri knora-admin:password "@password"^^xsd:string .
-         |        ?userIri knora-admin:givenName "@givenName"^^xsd:string .
-         |        ?userIri knora-admin:familyName "@familyName"^^xsd:string .
-         |        ?userIri knora-admin:status "@status"^^xsd:boolean .
-         |        ?userIri knora-admin:preferredLanguage "@preferredLanguage"^^xsd:string .
-         |        ?userIri knora-admin:isInSystemAdminGroup "@systemAdmin"^^xsd:boolean .
+         |        ${toTriples(user)}
          |    }
          |}
-         |WHERE {
-         |    BIND(IRI("${user.id}") AS ?userIri)
+         |WHERE
+         |{
+         |    BIND(IRI("${user.id.value}") AS ?userIri)
          |}
          |""".stripMargin
     )
@@ -168,46 +161,47 @@ object UserRepoLive {
          |
          |WITH <$adminGraphIri>
          |DELETE {
-         |  ?user knora-admin:username ?previousUsername .
-         |  ?user knora-admin:email ?previousEmail .
-         |  ?user knora-admin:givenName ?previousGivenName .
-         |  ?user knora-admin:familyName ?previousFamilyName .
-         |  ?user knora-admin:status ?previousStatus .
-         |  ?user knora-admin:preferredLanguage ?previousPreferredLanguage .
-         |  ?user knora-admin:isInProject ?previousIsInProject .
-         |  ?user knora-admin:isInGroup ?previousIsInGroup .
-         |  ?user knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
+         |  ?userIri knora-admin:username ?previousUsername .
+         |  ?userIri knora-admin:email ?previousEmail .
+         |  ?userIri knora-admin:givenName ?previousGivenName .
+         |  ?userIri knora-admin:familyName ?previousFamilyName .
+         |  ?userIri knora-admin:status ?previousStatus .
+         |  ?userIri knora-admin:preferredLanguage ?previousPreferredLanguage .
+         |  ?userIri knora-admin:isInProject ?previousIsInProject .
+         |  ?userIri knora-admin:isInGroup ?previousIsInGroup .
+         |  ?userIri knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
          |}
          |INSERT {
          |  ${toTriples(user)}
          |}
          |WHERE {
-         |  BIND(IRI("${user.id.value}") AS ?user)
-         |  ?user knora-admin:username ?previousUsername .
-         |  ?user knora-admin:email ?previousEmail .
-         |  ?user knora-admin:givenName ?previousGivenName .
-         |  ?user knora-admin:familyName ?previousFamilyName .
-         |  ?user knora-admin:status ?previousStatus .
-         |  ?user knora-admin:preferredLanguage ?previousPreferredLanguage .
-         |  ?user knora-admin:isInProject ?previousIsInProject .
-         |  ?user knora-admin:isInGroup ?previousIsInGroup .
-         |  ?user knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
+         |  BIND(IRI("${user.id.value}") AS ?userIri)
+         |  ?userIri knora-admin:username ?previousUsername .
+         |  ?userIri knora-admin:email ?previousEmail .
+         |  ?userIri knora-admin:givenName ?previousGivenName .
+         |  ?userIri knora-admin:familyName ?previousFamilyName .
+         |  ?userIri knora-admin:status ?previousStatus .
+         |  ?userIri knora-admin:preferredLanguage ?previousPreferredLanguage .
+         |  ?userIri knora-admin:isInProject ?previousIsInProject .
+         |  ?userIri knora-admin:isInGroup ?previousIsInGroup .
+         |  ?userIri knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
          |}
          |""".stripMargin
     )
 
     private def toTriples(current: KnoraUser) =
       s"""
-         |?user knora-admin:username "${current.username.value}"^^xsd:string .
-         |?user knora-admin:email "${current.email.value}"^^xsd:string .
-         |?user knora-admin:givenName "${current.givenName.value}"^^xsd:string .
-         |?user knora-admin:familyName "${current.familyName.value}"^^xsd:string .
-         |?user knora-admin:password "${current.passwordHash.value}"^^xsd:string .
-         |?user knora-admin:preferredLanguage "${current.preferredLanguage.value}"^^xsd:string .
-         |?user knora-admin:status "${current.status.value}"^^xsd:boolean .
-         |${current.projects.map(prjIri => s"?user knora-admin:isInProject <${prjIri.value}> .").mkString("\n")}
-         |${current.groups.map(grpIri => s"?user knora-admin:isInGroup <${grpIri.value}> .").mkString("\n")}
-         |?user knora-admin:isInSystemAdminGroup "${current.isInSystemAdminGroup.value}"^^xsd:boolean .
+         |?userIri a knora-admin:User .
+         |?userIri knora-admin:username "${current.username.value}"^^xsd:string .
+         |?userIri knora-admin:email "${current.email.value}"^^xsd:string .
+         |?userIri knora-admin:givenName "${current.givenName.value}"^^xsd:string .
+         |?userIri knora-admin:familyName "${current.familyName.value}"^^xsd:string .
+         |?userIri knora-admin:password "${current.passwordHash.value}"^^xsd:string .
+         |?userIri knora-admin:preferredLanguage "${current.preferredLanguage.value}"^^xsd:string .
+         |?userIri knora-admin:status "${current.status.value}"^^xsd:boolean .
+         |${current.projects.map(prjIri => s"?userIri knora-admin:isInProject <${prjIri.value}> .").mkString("\n")}
+         |${current.groups.map(grpIri => s"?userIri knora-admin:isInGroup <${grpIri.value}> .").mkString("\n")}
+         |?userIri knora-admin:isInSystemAdminGroup "${current.isInSystemAdminGroup.value}"^^xsd:boolean .
          |""".stripMargin
   }
   val layer = ZLayer.derive[UserRepoLive]

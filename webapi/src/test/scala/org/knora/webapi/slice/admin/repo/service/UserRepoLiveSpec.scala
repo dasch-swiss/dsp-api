@@ -21,6 +21,7 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import org.knora.webapi.TestDataFactory.User.*
 
 object UserRepoLiveSpec extends ZIOSpecDefault {
 
@@ -33,35 +34,8 @@ object UserRepoLiveSpec extends ZIOSpecDefault {
 
   // Test data
   val unknownUserIri: UserIri = UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist")
-  val knownUserIri: UserIri   = UserIri.unsafeFrom("http://rdfh.ch/users/exists")
-  val testUser: KnoraUser = KnoraUser(
-    knownUserIri,
-    Username.unsafeFrom("testuser"),
-    Email.unsafeFrom("jane@example.com"),
-    FamilyName.unsafeFrom("Doe"),
-    GivenName.unsafeFrom("Jane"),
-    Password.unsafeFrom("hashedPassword"),
-    LanguageCode.en,
-    UserStatus.Active,
-    projects = Chunk.empty,
-    groups = Chunk.empty,
-    isInSystemAdminGroup = SystemAdmin.from(false)
-  )
-  val knownUserIri2: UserIri = UserIri.unsafeFrom("http://rdfh.ch/users/exists2")
-  val testUser2: KnoraUser = KnoraUser(
-    knownUserIri2,
-    Username.unsafeFrom("testuser2"),
-    Email.unsafeFrom("jane2@example.com"),
-    FamilyName.unsafeFrom("Doe2"),
-    GivenName.unsafeFrom("Jane2"),
-    Password.unsafeFrom("hashedPassword2"),
-    LanguageCode.de,
-    UserStatus.Inactive,
-    projects = Chunk.empty,
-    groups = Chunk.empty,
-    isInSystemAdminGroup = SystemAdmin.from(true)
-  )
 
+  // Conversion functions from user to triples
   val userToTriples: KnoraUser => String = u => {
     s"""
        |<${u.id.value}> a knora-admin:User ;
