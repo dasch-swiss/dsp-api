@@ -72,23 +72,23 @@ object RepositoryUpdatePlan {
    */
   val builtInNamedGraphs: Set[RdfDataObject] = Set(
     RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/knora-admin.ttl",
+      path = "knora-ontologies/knora-admin.ttl",
       name = "http://www.knora.org/ontology/knora-admin"
     ),
     RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+      path = "knora-ontologies/knora-base.ttl",
       name = "http://www.knora.org/ontology/knora-base"
     ),
     RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/salsah-gui.ttl",
+      path = "knora-ontologies/salsah-gui.ttl",
       name = "http://www.knora.org/ontology/salsah-gui"
     ),
     RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/standoff-onto.ttl",
+      path = "knora-ontologies/standoff-onto.ttl",
       name = "http://www.knora.org/ontology/standoff"
     ),
     RdfDataObject(
-      path = "webapi/src/main/resources/knora-ontologies/standoff-data.ttl",
+      path = "knora-ontologies/standoff-data.ttl",
       name = "http://www.knora.org/data/standoff"
     )
   )
