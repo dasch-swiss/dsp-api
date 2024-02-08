@@ -14,6 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -38,8 +39,8 @@ object TestDataFactory {
       Password.unsafeFrom("hashedPassword"),
       LanguageCode.en,
       UserStatus.Active,
-      projects = Chunk.empty,
-      groups = Chunk.empty,
+      projects = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
+      groups = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
       isInSystemAdminGroup = SystemAdmin.from(false)
     )
     val testUser2: KnoraUser = KnoraUser(
