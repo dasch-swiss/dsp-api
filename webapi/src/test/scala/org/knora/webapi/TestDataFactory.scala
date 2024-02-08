@@ -5,6 +5,9 @@
 
 package org.knora.webapi
 
+import zio.Chunk
+import zio.NonEmptyChunk
+
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -19,8 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
-import zio.Chunk
-import zio.NonEmptyChunk
 
 /**
  * Helps in creating value objects for tests.
@@ -33,7 +34,7 @@ object TestDataFactory {
       Username.unsafeFrom("testuser"),
       Email.unsafeFrom("jane@example.com"),
       FamilyName.unsafeFrom("Doe"),
-      GivenName.unsafeFrom("Jane"),
+      GivenName.unsafeFrom("""Jane "TheFirst" J"""),
       Password.unsafeFrom("hashedPassword"),
       LanguageCode.en,
       UserStatus.Active,
@@ -45,8 +46,8 @@ object TestDataFactory {
       UserIri.unsafeFrom("http://rdfh.ch/users/exists2"),
       Username.unsafeFrom("testuser2"),
       Email.unsafeFrom("jane2@example.com"),
-      FamilyName.unsafeFrom("Doe2"),
-      GivenName.unsafeFrom("Jane2"),
+      FamilyName.unsafeFrom("""D’Oe"""),
+      GivenName.unsafeFrom("""D'Juan"""),
       Password.unsafeFrom("hashedPassword2"),
       LanguageCode.de,
       UserStatus.Inactive,
