@@ -491,7 +491,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val ValueAsString: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Complex.ValueAsString,
-    propertyType = OntologyConstants.Owl.ObjectProperty,
+    propertyType = OntologyConstants.Owl.DatatypeProperty,
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
