@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
+import scalax.collection.hyperedges.DiHyperEdge
+import scalax.collection.immutable.Graph
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -18,10 +18,13 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
 
+import GravsearchQueryOptimisation.StringHyperGraph
+
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
  */
 object GravsearchQueryOptimisation {
+  type StringHyperGraph = Graph[String, DiHyperEdge[String]]
 
   def optimiseQueryPatterns(
     patterns: Seq[QueryPattern],
@@ -191,11 +194,10 @@ private object ReorderPatternsByDependency {
    */
   private def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
     @scala.annotation.tailrec
-    def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
-      val graph: Graph[String, DiHyperEdge] = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) {
-        (graph, edgeDef) =>
-          val edge: DiHyperEdge[String] = DiHyperEdge(edgeDef._1, edgeDef._2)
-          graph ++ Vector(edge) // add nodes and edges to graph
+    def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): StringHyperGraph = {
+      val graph: StringHyperGraph = graphComponents.foldLeft(Graph.empty: StringHyperGraph) { (graph, edgeDef) =>
+        val edge = DiHyperEdge(edgeDef._1)(edgeDef._2)
+        graph ++ Vector(edge) // add nodes and edges to graph
       }
 
       if (graph.isCyclic) {
@@ -205,8 +207,8 @@ private object ReorderPatternsByDependency {
         // the cyclic node is the one that cycle starts and ends with
         val cyclicNode: graph.NodeT        = cycle.endNode
         val cyclicEdge: graph.EdgeT        = cyclicNode.edges.last
-        val originNodeOfCyclicEdge: String = cyclicEdge._1.value
-        val TargetNodeOfCyclicEdge: String = cyclicEdge._2.value
+        val originNodeOfCyclicEdge: String = cyclicEdge.node1.outer
+        val TargetNodeOfCyclicEdge: String = cyclicEdge.node2.outer
         val graphComponentsWithOutCycle =
           graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
 
@@ -216,7 +218,7 @@ private object ReorderPatternsByDependency {
       }
     }
 
-    def createGraph: Graph[String, DiHyperEdge] = {
+    def createGraph: StringHyperGraph = {
       val graphComponents: Seq[(String, String)] = statementPatterns.map { statementPattern =>
         // transform every statementPattern to pair of nodes that will consist an edge.
         val node1 = statementPattern.subj.toSparql
@@ -235,10 +237,10 @@ private object ReorderPatternsByDependency {
      * @return the filtered topological orders.
      */
     def findOrdersNotEndingWithObjectOfRdfType(
-      orders: Set[Vector[Graph[String, DiHyperEdge]#NodeT]],
+      orders: Set[Vector[StringHyperGraph#NodeT]],
       statementPatterns: Seq[StatementPattern]
-    ): Set[Vector[Graph[String, DiHyperEdge]#NodeT]] = {
-      type NodeT = Graph[String, DiHyperEdge]#NodeT
+    ): Set[Vector[StringHyperGraph#NodeT]] = {
+      type NodeT = StringHyperGraph#NodeT
 
       // Find the nodes that are objects of rdf:type in the statement patterns.
       val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns.filter { statementPattern =>
@@ -252,7 +254,7 @@ private object ReorderPatternsByDependency {
 
       // Filter out the topological orders that end with any of those nodes.
       orders.filterNot { (order: Vector[NodeT]) =>
-        nodesThatAreObjectsOfRdfType.contains(order.last.value)
+        nodesThatAreObjectsOfRdfType.contains(order.last.outer)
       }
     }
 
@@ -265,16 +267,16 @@ private object ReorderPatternsByDependency {
      * @return a topological order.
      */
     def findBestTopologicalOrder(
-      graph: Graph[String, DiHyperEdge],
+      graph: StringHyperGraph,
       statementPatterns: Seq[StatementPattern]
-    ): Vector[Graph[String, DiHyperEdge]#NodeT] = {
-      type NodeT = Graph[String, DiHyperEdge]#NodeT
+    ): Vector[StringHyperGraph#NodeT] = {
+      type NodeT = StringHyperGraph#NodeT
 
       /**
        * An ordering for sorting topological orders.
        */
       object TopologicalOrderOrdering extends Ordering[Vector[NodeT]] {
-        private def orderToString(order: Vector[NodeT]) = order.map(_.value).mkString("|")
+        private def orderToString(order: Vector[NodeT]) = order.map(_.outer).mkString("|")
 
         override def compare(left: Vector[NodeT], right: Vector[NodeT]): Int =
           orderToString(left).compare(orderToString(right))
@@ -313,10 +315,10 @@ private object ReorderPatternsByDependency {
     }
 
     def sortStatementPatterns(
-      createdGraph: Graph[String, DiHyperEdge],
+      createdGraph: StringHyperGraph,
       statementPatterns: Seq[StatementPattern]
     ): Seq[QueryPattern] = {
-      type NodeT = Graph[String, DiHyperEdge]#NodeT
+      type NodeT = StringHyperGraph#NodeT
 
       // Try to find the best topological order for the graph.
       val topologicalOrder: Vector[NodeT] =
@@ -326,7 +328,7 @@ private object ReorderPatternsByDependency {
       if (topologicalOrder.nonEmpty) {
         // Yes. Sort the statement patterns according to the reverse topological order.
         topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-          val nextStatements = statementPatterns.filter(_.obj.toSparql.equals(node.value)).toVector
+          val nextStatements = statementPatterns.filter(_.obj.toSparql.equals(node.outer)).toVector
           nextStatements ++ sortedStatements
         }
       } else {
