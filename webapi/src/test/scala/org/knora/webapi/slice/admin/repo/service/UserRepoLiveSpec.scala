@@ -1,31 +1,30 @@
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.valueobjects.LanguageCode
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.GivenName
-import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.Password
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service.UserRepo
-import org.knora.webapi.store.triplestore.api.TestTripleStore
-import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
-import zio.Chunk
+import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.RIO
 import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
 import org.knora.webapi.TestDataFactory.User.*
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.UserRepo
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object UserRepoLiveSpec extends ZIOSpecDefault {
-
-  private val adminGraphIri = AdminConstants.adminDataNamedGraph.value
 
   // Accessor functions of the UserRepo service which are tested
   def save(user: KnoraUser): ZIO[UserRepo, Throwable, KnoraUser]         = ZIO.serviceWithZIO[UserRepo](_.save(user))
@@ -35,39 +34,39 @@ object UserRepoLiveSpec extends ZIOSpecDefault {
   // Test data
   val unknownUserIri: UserIri = UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist")
 
-  // Conversion functions from user to triples
-  val userToTriples: KnoraUser => String = u => {
-    s"""
-       |<${u.id.value}> a knora-admin:User ;
-       |knora-admin:username "${u.username.value}"^^xsd:string ;
-       |knora-admin:email "${u.email.value}"^^xsd:string ;
-       |knora-admin:password "${u.passwordHash.value}"^^xsd:string ;
-       |knora-admin:givenName "${u.givenName.value}"^^xsd:string ;
-       |knora-admin:familyName "${u.familyName.value}"^^xsd:string ;
-       |knora-admin:status "${u.status.value}"^^xsd:boolean ;
-       |knora-admin:preferredLanguage "${u.preferredLanguage.value}"^^xsd:string ;
-       |knora-admin:isInSystemAdminGroup "${u.isInSystemAdminGroup.value}"^^xsd:boolean .
-       |""".stripMargin
+  private def createUserQuery(u: KnoraUser): Update = {
+    val userIri = Rdf.iri(u.id.value)
+    val userRequiredTriples = userIri
+      .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+      .andHas(Vocabulary.KnoraAdmin.username, Rdf.literalOf(u.username.value))
+      .andHas(Vocabulary.KnoraAdmin.email, Rdf.literalOf(u.email.value))
+      .andHas(Vocabulary.KnoraAdmin.givenName, Rdf.literalOf(u.givenName.value))
+      .andHas(Vocabulary.KnoraAdmin.familyName, Rdf.literalOf(u.familyName.value))
+      .andHas(Vocabulary.KnoraAdmin.preferredLanguage, Rdf.literalOf(u.preferredLanguage.value))
+      .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(u.status.value))
+      .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
+      .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
+    val userTriplesWithProjects = u.projects.foldLeft(userRequiredTriples)((acc, prjIri) =>
+      acc.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prjIri.value))
+    )
+    val userTriplesWithGroupsAndProjects = u.groups.foldLeft(userTriplesWithProjects)((acc, grpIri) =>
+      acc.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grpIri.value))
+    )
+    val query: ModifyQuery =
+      Queries
+        .INSERT(userTriplesWithGroupsAndProjects)
+        .into(Rdf.iri(adminDataNamedGraph.value))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+    Update(query)
   }
 
-  def usersToTrig(users: KnoraUser*): String =
-    s"""
-       |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
-       |@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-       |
-       |GRAPH <$adminGraphIri>
-       |{ ${users.map(userToTriples).mkString("\n")} }
-       |""".stripMargin
-
-  def storeUsersInTripleStore(users: KnoraUser*): RIO[TestTripleStore, Unit] =
-    TriplestoreServiceInMemory.setDataSetFromTriG(usersToTrig(users*)).orDie
+  def storeUsersInTripleStore(users: KnoraUser*): RIO[TriplestoreService, Unit] =
+    ZIO.foreach(users)(user => ZIO.serviceWithZIO[TriplestoreService](_.query(createUserQuery(user)))).unit
 
   val spec: Spec[Any, Any] = suite("UserRepoLiveSpec")(
     test("findById given an  existing user should return that user") {
       for {
-        _    <- storeUsersInTripleStore(testUser, testUser2)
+        _    <- storeUsersInTripleStore(testUser)
         user <- findById(testUser.id)
       } yield assertTrue(user.contains(testUser))
     },
@@ -88,6 +87,13 @@ object UserRepoLiveSpec extends ZIOSpecDefault {
         savedUser <- save(testUser)
         foundUser <- findById(savedUser.id).someOrFail(new Exception("User not found"))
       } yield assertTrue(savedUser == testUser, foundUser == testUser)
+    },
+    test("should update an existing user find user with new username") {
+      for {
+        _           <- save(testUser)                                                     // create the user
+        _           <- save(testUser.copy(username = Username.unsafeFrom("newUsername"))) // update the username
+        updatedUser <- findById(testUser.id).someOrFail(new Exception("User not found"))
+      } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))
     }
   )
     .provide(UserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)

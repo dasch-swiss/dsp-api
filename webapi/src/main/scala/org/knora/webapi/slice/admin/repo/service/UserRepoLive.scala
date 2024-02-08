@@ -1,8 +1,21 @@
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.model.vocabulary.*
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.stream.ZStream
+
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
-import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -15,16 +28,13 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserRepo
-import org.knora.webapi.slice.admin.repo.service.UserRepoLive.Queries
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
+import org.knora.webapi.slice.admin.repo.service.UserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.stream.ZStream
 
 final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo {
 
@@ -35,7 +45,7 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
    * @return the entity with the given id or [[None]] if none found.
    */
   override def findById(id: UserIri): Task[Option[KnoraUser]] = {
-    val construct = Queries.findById(id)
+    val construct = UserQueries.findById(id)
     for {
       model    <- triplestore.queryRdfModel(construct)
       resource <- model.getResource(id.value).option
@@ -83,128 +93,104 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
    */
   override def findAll(): Task[List[KnoraUser]] =
     for {
-      model     <- triplestore.queryRdfModel(Queries.findAll)
+      model     <- triplestore.queryRdfModel(UserQueries.findAll)
       resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
       users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
     } yield users.toList
 
-  override def save(user: KnoraUser): Task[KnoraUser] =
-    triplestore.query(Queries.create(user)).as(user)
+  override def save(user: KnoraUser): Task[KnoraUser] = for {
+    query <- findById(user.id).map {
+               case Some(_) => UserQueries.update(user)
+               case None    => UserQueries.create(user)
+             }
+    _ <- triplestore.query(query)
+  } yield user
 }
 
 object UserRepoLive {
-  private object Queries {
-    private val adminGraphIri = AdminConstants.adminDataNamedGraph.value
+  private object UserQueries {
 
-    def findAll: Construct = Construct(
-      s"""
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |
-         |CONSTRUCT {
-         |     ?s ?p ?o .
-         |}
-         |WHERE {
-         |    GRAPH <$adminGraphIri>{
-         |       ?s a knora-admin:User ;
-         |          ?p ?o .
-         |    }
-         |}
-         |""".stripMargin
-    )
+    def findAll: Construct = {
+      val (s, p, o) = (variable("s"), variable("p"), variable("o"))
+      val query = Queries
+        .CONSTRUCT(tp(s, p, o))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
+        .where(
+          s
+            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+            .and(s.has(p, o))
+            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+        )
+      Construct(query.getQueryString)
+    }
 
-    def findById(id: UserIri): Construct = Construct(
-      s"""
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |
-         |CONSTRUCT {
-         |     ?userIriIri ?p ?o .
-         |}
-         |WHERE {
-         |    GRAPH <$adminGraphIri>{
-         |       BIND(IRI("${id.value}") AS ?userIriIri)
-         |       ?userIriIri a knora-admin:User ;
-         |          ?p ?o .
-         |    }
-         |}
-         |""".stripMargin
-    )
+    def findById(id: UserIri): Construct = {
+      val s      = Rdf.iri(id.value)
+      val (p, o) = (variable("p"), variable("o"))
+      val query: ConstructQuery = Queries
+        .CONSTRUCT(tp(s, p, o))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
+        .where(
+          s
+            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+            .and(tp(s, p, o))
+            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+        )
+      Construct(query)
+    }
 
-    def create(user: KnoraUser): Update = Update(
-      s"""
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |
-         |INSERT {
-         |    GRAPH <$adminGraphIri> {
-         |        ${toTriples(user)}
-         |    }
-         |}
-         |WHERE
-         |{
-         |    BIND(IRI("${user.id.value}") AS ?userIri)
-         |}
-         |""".stripMargin
-    )
+    def create(u: KnoraUser): Update = {
+      val query: ModifyQuery =
+        Queries
+          .INSERT(toTriples(u))
+          .into(Rdf.iri(adminDataNamedGraph.value))
+          .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+      Update(query)
+    }
 
-    def update(user: KnoraUser): Update = Update(
-      s"""
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |
-         |WITH <$adminGraphIri>
-         |DELETE {
-         |  ?userIri knora-admin:username ?previousUsername .
-         |  ?userIri knora-admin:email ?previousEmail .
-         |  ?userIri knora-admin:givenName ?previousGivenName .
-         |  ?userIri knora-admin:familyName ?previousFamilyName .
-         |  ?userIri knora-admin:status ?previousStatus .
-         |  ?userIri knora-admin:preferredLanguage ?previousPreferredLanguage .
-         |  ?userIri knora-admin:isInProject ?previousIsInProject .
-         |  ?userIri knora-admin:isInGroup ?previousIsInGroup .
-         |  ?userIri knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
-         |}
-         |INSERT {
-         |  ${toTriples(user)}
-         |}
-         |WHERE {
-         |  BIND(IRI("${user.id.value}") AS ?userIri)
-         |  ?userIri knora-admin:username ?previousUsername .
-         |  ?userIri knora-admin:email ?previousEmail .
-         |  ?userIri knora-admin:givenName ?previousGivenName .
-         |  ?userIri knora-admin:familyName ?previousFamilyName .
-         |  ?userIri knora-admin:status ?previousStatus .
-         |  ?userIri knora-admin:preferredLanguage ?previousPreferredLanguage .
-         |  ?userIri knora-admin:isInProject ?previousIsInProject .
-         |  ?userIri knora-admin:isInGroup ?previousIsInGroup .
-         |  ?userIri knora-admin:isInSystemAdminGroup ?previousIsInSystemAdminGroup .
-         |}
-         |""".stripMargin
-    )
+    def update(u: KnoraUser): Update = {
+      val userToDeletePattern = Rdf
+        .iri(u.id.value)
+        .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+        .andHas(Vocabulary.KnoraAdmin.username, variable("previousUsername"))
+        .andHas(Vocabulary.KnoraAdmin.email, variable("previousEmail"))
+        .andHas(Vocabulary.KnoraAdmin.givenName, variable("previousGivenName"))
+        .andHas(Vocabulary.KnoraAdmin.familyName, variable("previousFamilyName"))
+        .andHas(Vocabulary.KnoraAdmin.status, variable("previousStatus"))
+        .andHas(Vocabulary.KnoraAdmin.preferredLanguage, variable("previousPreferredLanguage"))
+        .andHas(Vocabulary.KnoraAdmin.password, variable("previousPassword"))
+        .andHas(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject"))
+        .andHas(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup"))
+        .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup"))
+      val query: ModifyQuery =
+        Queries
+          .MODIFY()
+          .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+          .`with`(Rdf.iri(adminDataNamedGraph.value))
+          .insert(toTriples(u))
+          .delete(userToDeletePattern)
+          .where(userToDeletePattern)
+      println(query.getQueryString)
+      Update(query)
+    }
 
-    private def toTriples(current: KnoraUser) =
-      s"""
-         |?userIri a knora-admin:User .
-         |?userIri knora-admin:username "${current.username.value}"^^xsd:string .
-         |?userIri knora-admin:email "${current.email.value}"^^xsd:string .
-         |?userIri knora-admin:givenName "${current.givenName.value}"^^xsd:string .
-         |?userIri knora-admin:familyName "${current.familyName.value}"^^xsd:string .
-         |?userIri knora-admin:password "${current.passwordHash.value}"^^xsd:string .
-         |?userIri knora-admin:preferredLanguage "${current.preferredLanguage.value}"^^xsd:string .
-         |?userIri knora-admin:status "${current.status.value}"^^xsd:boolean .
-         |${current.projects.map(prjIri => s"?userIri knora-admin:isInProject <${prjIri.value}> .").mkString("\n")}
-         |${current.groups.map(grpIri => s"?userIri knora-admin:isInGroup <${grpIri.value}> .").mkString("\n")}
-         |?userIri knora-admin:isInSystemAdminGroup "${current.isInSystemAdminGroup.value}"^^xsd:boolean .
-         |""".stripMargin
+    private def toTriples(u: KnoraUser) = {
+      val triples =
+        Rdf
+          .iri(u.id.value)
+          .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+          .andHas(Vocabulary.KnoraAdmin.username, Rdf.literalOf(u.username.value))
+          .andHas(Vocabulary.KnoraAdmin.email, Rdf.literalOf(u.email.value))
+          .andHas(Vocabulary.KnoraAdmin.givenName, Rdf.literalOf(u.givenName.value))
+          .andHas(Vocabulary.KnoraAdmin.familyName, Rdf.literalOf(u.familyName.value))
+          .andHas(Vocabulary.KnoraAdmin.preferredLanguage, Rdf.literalOf(u.preferredLanguage.value))
+          .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(u.status.value))
+          .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
+          .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
+      u.projects.foreach(prj => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prj.value)))
+      u.groups.foreach(grp => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grp.value)))
+      triples
+    }
   }
   val layer = ZLayer.derive[UserRepoLive]
 }
