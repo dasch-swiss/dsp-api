@@ -7,13 +7,12 @@ package org.knora.webapi.slice.common.repo.rdf
 
 import org.apache.jena.rdf.model.*
 import org.apache.jena.vocabulary.RDF
+import org.knora.webapi.slice.common.repo.rdf.Errors.*
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import zio.*
 
 import java.io.StringReader
 import scala.jdk.CollectionConverters.*
-
-import org.knora.webapi.slice.common.repo.rdf.Errors.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object Errors {
   sealed trait RdfError
@@ -375,10 +374,10 @@ final case class RdfModel private (private val model: Model) {
       _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
     } yield RdfResource(resource)
 
-  def getResources(objectClass: String): IO[RdfError, Iterator[RdfResource]] = {
-    val resourcesJIter = model.listResourcesWithProperty(RDF.`type`, model.createResource(objectClass))
-    ZIO.succeed(resourcesJIter.asScala.map(RdfResource))
-  }
+  def getResourcesRdfType(objectClass: String): IO[RdfError, Iterator[RdfResource]] = for {
+    objClassProp  <- ZIO.attempt(model.createProperty(objectClass)).orDie
+    resourcesJIter = model.listResourcesWithProperty(RDF.`type`, objClassProp)
+  } yield resourcesJIter.asScala.map(RdfResource)
 }
 
 object RdfModel {

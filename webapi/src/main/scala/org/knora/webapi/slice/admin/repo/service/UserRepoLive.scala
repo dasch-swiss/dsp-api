@@ -84,7 +84,7 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
   override def findAll(): Task[List[KnoraUser]] =
     for {
       model     <- triplestore.queryRdfModel(Queries.findAll)
-      resources <- model.getResources(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
+      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
       users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
     } yield users.toList
 
