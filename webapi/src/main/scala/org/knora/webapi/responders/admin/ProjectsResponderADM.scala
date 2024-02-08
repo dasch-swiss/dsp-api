@@ -17,7 +17,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
@@ -186,8 +185,7 @@ final case class ProjectsResponderADMLive(
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
-    with LazyLogging
-    with InstrumentationSupport {
+    with LazyLogging {
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"

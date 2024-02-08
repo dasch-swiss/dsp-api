@@ -68,9 +68,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.11" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21"
 
   // input validation
   val commonsValidator =
@@ -164,8 +162,6 @@ object Dependencies {
     jakartaJSON,
     jenaText,
     jwtSprayJson,
-    kamonCore,
-    kamonScalaFuture,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
