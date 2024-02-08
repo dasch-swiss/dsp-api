@@ -94,7 +94,7 @@ services:
     volumes:
       - /tmp:/tmp
       # Needed for local development when resetting the triplestore
-      - ./knora-ontologies:/opt/knora-ontologies
+      - ./webapi/src/main/resources/knora-ontologies:/opt/knora-ontologies
       - ./test_data:/opt/test_data
     networks:
       - knora-net

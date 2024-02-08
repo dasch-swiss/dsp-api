@@ -262,7 +262,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             _ <- TriplestoreService.insertDataIntoTriplestore(
                    List(
                      RdfDataObject(
-                       path = "knora-ontologies/knora-base.ttl",
+                       path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
                        name = "http://www.knora.org/ontology/knora-admin"
                      )
                    ),
@@ -283,7 +283,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             _ <- TriplestoreService.insertDataIntoTriplestore(
                    List(
                      RdfDataObject(
-                       path = "knora-ontologies/knora-base.ttl",
+                       path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
                        name = "http://www.knora.org/ontology/knora-base"
                      )
                    ),
