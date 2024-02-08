@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   app:
-    image: daschswiss/dsp-app:v11.1.0
+    image: daschswiss/dsp-app:v11.4.1
     ports:
       - "4200:4200"
     networks:
