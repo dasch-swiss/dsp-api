@@ -16,7 +16,6 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserRepo
 import org.knora.webapi.slice.admin.repo.service.UserRepoLive.Queries
-import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -97,7 +96,7 @@ object UserRepoLive {
   private object Queries {
     private val adminGraphIri = AdminConstants.adminDataNamedGraph.value
 
-    def findAll = Construct(
+    def findAll: Construct = Construct(
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -115,7 +114,8 @@ object UserRepoLive {
          |}
          |""".stripMargin
     )
-    def findById(id: UserIri) = Construct(
+
+    def findById(id: UserIri): Construct = Construct(
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -128,13 +128,14 @@ object UserRepoLive {
          |WHERE {
          |    GRAPH <$adminGraphIri>{
          |       BIND(IRI("${id.value}") AS ?userIriIri)
-         |       ?userIriIri rdf:type knora-admin:User ;
+         |       ?userIriIri a knora-admin:User ;
          |          ?p ?o .
          |    }
          |}
          |""".stripMargin
     )
-    def create(user: KnoraUser) = Update(
+
+    def create(user: KnoraUser): Update = Update(
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -152,7 +153,8 @@ object UserRepoLive {
          |}
          |""".stripMargin
     )
-    def update(user: KnoraUser) = Update(
+
+    def update(user: KnoraUser): Update = Update(
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
