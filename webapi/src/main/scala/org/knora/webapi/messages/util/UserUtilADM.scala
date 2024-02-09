@@ -12,7 +12,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 
@@ -36,7 +36,7 @@ object UserUtilADM {
     requestingUser: User,
     requestedUserIri: IRI,
     projectIri: IRI
-  ): ZIO[UsersResponderADM, Throwable, User] = {
+  ): ZIO[UsersResponder, Throwable, User] = {
     val userIri = UserIri.unsafeFrom(requestedUserIri)
     requestingUser match {
       case _ if requestingUser.id == userIri.value => ZIO.succeed(requestingUser)
@@ -45,7 +45,7 @@ object UserUtilADM {
           s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"
         ZIO.fail(ForbiddenException(msg))
       case _ =>
-        UsersResponderADM
+        UsersResponder
           .findUserByIri(userIri, Full, SystemUser)
           .someOrFail(NotFoundException(s"User '${userIri.value}' not found"))
     }

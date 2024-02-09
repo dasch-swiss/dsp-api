@@ -83,7 +83,7 @@ object LayersLive {
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
+      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -177,7 +177,7 @@ object LayersLive {
       UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
-      UsersResponderADMLive.layer,
+      UsersResponder.layer,
       UsersRestService.layer,
       ValuesResponderV2Live.layer
     )

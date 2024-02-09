@@ -140,7 +140,7 @@ object LayersTest {
       with StoreRestService
       with TestClientService
       with TriplestoreService
-      with UsersResponderADM
+      with UsersResponder
       with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
@@ -228,7 +228,7 @@ object LayersTest {
       UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
-      UsersResponderADMLive.layer,
+      UsersResponder.layer,
       UsersRestService.layer,
       ValuesResponderV2Live.layer
     )

@@ -6,16 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.IO
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.macros.accessible
-
-import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -34,8 +24,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
@@ -58,147 +48,23 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
-/**
- * Provides information about Knora users to other responders.
- */
-@accessible
-trait UsersResponderADM {
-  def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM]
+import java.util.UUID
 
-  /**
-   * Change the user's status (active / inactive).
-   *
-   * @param userIri        the IRI of the existing user that we want to update.
-   * @param status         the new status.
-   * @param requestingUser the requesting user.
-   * @param apiRequestID   the unique api request ID.
-   * @return a task containing a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
-   */
-  def changeUserStatusADM(
-    userIri: IRI,
-    status: UserStatus,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM]
-
-  /**
-   * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
-   *
-   * @param identifier          the IRI of the user.
-   * @param userInformationType the type of the requested profile (restricted
-   *                            of full).
-   * @param requestingUser      the user initiating the request.
-   * @param skipCache           the flag denotes to skip the cache and instead
-   *                            get data from the triplestore
-   * @return a [[User]] describing the user.
-   */
-  def findUserByIri(
-    identifier: UserIri,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
-  ): Task[Option[User]]
-
-  /**
-   * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
-   *
-   * @param email               the email of the user.
-   * @param userInformationType the type of the requested profile (restricted
-   *                            of full).
-   * @param requestingUser      the user initiating the request.
-   * @param skipCache           the flag denotes to skip the cache and instead
-   *                            get data from the triplestore
-   * @return a [[User]] describing the user.
-   */
-  def findUserByEmail(
-    email: Email,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
-  ): Task[Option[User]]
-
-  /**
-   * ~ CACHED ~
-   * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
-   *
-   * @param username            the username of the user.
-   * @param userInformationType the type of the requested profile (restricted
-   *                            of full).
-   * @param requestingUser      the user initiating the request.
-   * @param skipCache           the flag denotes to skip the cache and instead
-   *                            get data from the triplestore
-   * @return a [[User]] describing the user.
-   */
-  def findUserByUsername(
-    username: Username,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
-  ): Task[Option[User]]
-
-  /**
-   * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
-   *
-   * @param userIri the user's IRI.
-   * @return a [[UserProjectMembershipsGetResponseADM]].
-   */
-  def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM]
-
-  /**
-   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
-   * is a member of the project admin group.
-   *
-   * @param userIri the user's IRI.
-   * @return a [[UserProjectAdminMembershipsGetResponseADM]].
-   */
-  def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM]
-
-  /**
-   * Returns the user's group memberships as a sequence of [[GroupADM]]
-   *
-   * @param userIri the IRI of the user.
-   * @return a sequence of [[GroupADM]].
-   */
-  def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]]
-
-  /**
-   * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
-   * is allowed to create a new user.
-   *
-   * Referenced Websites:
-   *                     - https://crackstation.net/hashing-security.htm
-   *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
-   *
-   * @param req    a [[UserCreateRequest]] object containing information about the new user to be created.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]].
-   */
-  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM]
-}
-
-final case class UsersResponderADMLive(
+final case class UsersResponder(
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
-) extends UsersResponderADM
-    with MessageHandler
+) extends MessageHandler
     with LazyLogging {
 
   // The IRI used to lock user creation and update
@@ -386,7 +252,22 @@ final case class UsersResponderADMLive(
                 else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
-  override def findUserByIri(
+  /**
+   * ~ CACHED ~
+   * Gets information about a Knora user, and returns it as a [[User]].
+   * If possible, tries to retrieve it from the cache. If not, it retrieves
+   * it from the triplestore, and then writes it to the cache. Writes to the
+   * cache are always `UserInformationTypeADM.FULL`.
+   *
+   * @param identifier          the IRI of the user.
+   * @param userInformationType the type of the requested profile (restricted
+   *                            of full).
+   * @param requestingUser      the user initiating the request.
+   * @param skipCache           the flag denotes to skip the cache and instead
+   *                            get data from the triplestore
+   * @return a [[User]] describing the user.
+   */
+  def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -431,7 +312,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  override def findUserByEmail(
+  def findUserByEmail(
     email: Email,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -463,7 +344,7 @@ final case class UsersResponderADMLive(
    *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
-  override def findUserByUsername(
+  def findUserByUsername(
     username: Username,
     userInformationType: UserInformationTypeADM,
     requestingUser: User,
@@ -635,7 +516,18 @@ final case class UsersResponderADMLive(
     )
   }
 
-  override def changeUserStatusADM(
+  /**
+   * Change the user's status (active / inactive).
+   *
+   * @param userIri        the IRI of the existing user that we want to update.
+   * @param status         the new status.
+   * @param requestingUser the requesting user.
+   * @param apiRequestID   the unique api request ID.
+   * @return a task containing a [[UserOperationResponseADM]].
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
+   */
+  def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
     requestingUser: User,
@@ -748,7 +640,7 @@ final case class UsersResponderADMLive(
    * @param userIri        the user's IRI.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
-  override def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
+  def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     for {
       _ <-
         ZIO.whenZIO(userExists(userIri.value).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
@@ -958,7 +850,7 @@ final case class UsersResponderADMLive(
    * @param userIri              the user's IRI.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
-  override def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
+  def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     ZIO.whenZIO(userExists(userIri.value).negate)(
       ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
     ) *> userProjectAdminMembershipsGetADM(userIri.value).map(UserProjectAdminMembershipsGetResponseADM)
@@ -1125,7 +1017,7 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the user.
    * @return a sequence of [[GroupADM]].
    */
-  override def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
+  def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
     findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
       .map(_.map(_.groups).getOrElse(Seq.empty))
 
@@ -1418,7 +1310,7 @@ final case class UsersResponderADMLive(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  override def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
+  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
     val createNewUserTask =
       for {
         _ <- // check if username is unique
@@ -1906,10 +1798,65 @@ final case class UsersResponderADMLive(
     }
 }
 
-object UsersResponderADMLive {
+object UsersResponder {
+
+  def getAllUserADMRequest(requestingUser: User): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.getAllUserADMRequest(requestingUser))
+
+  def changeUserStatusADM(
+    userIri: IRI,
+    status: UserStatus,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.changeUserStatusADM(userIri, status, requestingUser, apiRequestID))
+
+  def findUserByIri(
+    identifier: UserIri,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): ZIO[UsersResponder, Throwable, Option[User]] =
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser, skipCache))
+
+  def findUserByEmail(
+    email: Email,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): ZIO[UsersResponder, Throwable, Option[User]] =
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByEmail(email, userInformationType, requestingUser, skipCache))
+
+  def findUserByUsername(
+    username: Username,
+    userInformationType: UserInformationTypeADM,
+    requestingUser: User,
+    skipCache: Boolean = false
+  ): ZIO[UsersResponder, Throwable, Option[User]] =
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByUsername(username, userInformationType, requestingUser, skipCache))
+
+  def findProjectMemberShipsByIri(
+    userIri: UserIri
+  ): ZIO[UsersResponder, Throwable, UserProjectMembershipsGetResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.findProjectMemberShipsByIri(userIri))
+
+  def findUserProjectAdminMemberships(
+    userIri: UserIri
+  ): ZIO[UsersResponder, Throwable, UserProjectAdminMembershipsGetResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.findUserProjectAdminMemberships(userIri))
+
+  def findGroupMembershipsByIri(userIri: UserIri): ZIO[UsersResponder, Throwable, Seq[GroupADM]] =
+    ZIO.serviceWithZIO[UsersResponder](_.findGroupMembershipsByIri(userIri))
+
+  def createNewUserADM(
+    req: UserCreateRequest,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
+
   val layer: URLayer[
     AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
-    UsersResponderADMLive
+    UsersResponder
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
@@ -1918,7 +1865,7 @@ object UsersResponderADMLive {
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(config, iriS, ic, mr, ts, sf))
     } yield handler
   }
 }

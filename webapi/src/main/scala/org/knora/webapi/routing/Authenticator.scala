@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.*
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
@@ -154,10 +154,10 @@ object Authenticator {
 }
 
 final case class AuthenticatorLive(
-  private val appConfig: AppConfig,
-  private val usersResponder: UsersResponderADM,
-  private val jwtService: JwtService,
-  private implicit val stringFormatter: StringFormatter
+                                    private val appConfig: AppConfig,
+                                    private val usersResponder: UsersResponder,
+                                    private val jwtService: JwtService,
+                                    private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
