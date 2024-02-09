@@ -70,7 +70,7 @@ object AuthorizationRestService {
     isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminSystemUserOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
     isSystemUser(userADM) || isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
-  def isSystemAdminOrProjectAdminInAnyProject(user: User) =
+  def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =
     isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 

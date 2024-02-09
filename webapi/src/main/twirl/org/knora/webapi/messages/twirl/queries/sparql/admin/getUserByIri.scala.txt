@@ -1,0 +1,20 @@
+@*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all information about a user, given the user's IRI.
+ *
+ * @param userIri the user's IRI.
+ *@
+@(userIri: IRI)
+
+SELECT ?s ?p ?o
+
+WHERE {
+    BIND(IRI("@userIri") as ?s)
+    ?s ?p ?o .
+}
