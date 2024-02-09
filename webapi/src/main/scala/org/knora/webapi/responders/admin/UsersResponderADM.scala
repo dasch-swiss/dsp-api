@@ -22,15 +22,11 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
@@ -38,7 +34,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
-import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
@@ -53,9 +48,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 /**
  * Provides information about Knora users to other responders.
@@ -763,7 +756,8 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project admin membership list
-        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
+        currentProjectAdminMembershipIris <-
+          userService.findUserIsInProjectAdminGroup(UserIri.unsafeFrom(userIri)).map(_.sorted).map(_.map(_.id))
 
         // in case the user has an admin membership for that project, remove it as well
         maybeUpdatedProjectAdminMembershipIris =
@@ -792,41 +786,6 @@ final case class UsersResponderADMLive(
   }
 
   /**
-   * Returns the user's project admin group memberships as a sequence of [[IRI]]
-   *
-   * @param userIri              the user's IRI.
-   * @return a list of [[ProjectADM]].
-   */
-  private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
-    for {
-      userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
-
-      groupedUserData = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-                          predicate -> rows.map(_.rowMap("o"))
-                        }
-
-      /* the projects the user is member of */
-      projectIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-                      case Some(projects) => projects
-                      case None           => Seq.empty[IRI]
-                    }
-
-      maybeProjectFutures =
-        projectIris.map { projectIri =>
-          messageRelay.ask[Option[ProjectADM]](
-            ProjectGetADM(
-              identifier = IriIdentifier
-                .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
-        }
-      maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-      projects: Seq[ProjectADM] = maybeProjects.flatten
-
-    } yield projects
-
-  /**
    * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
    * is a member of the project admin group.
    *
@@ -836,7 +795,10 @@ final case class UsersResponderADMLive(
   override def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     ZIO.whenZIO(userExists(userIri.value).negate)(
       ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
-    ) *> userProjectAdminMembershipsGetADM(userIri.value).map(UserProjectAdminMembershipsGetResponseADM)
+    ) *> userService
+      .findUserIsInProjectAdminGroup(userIri)
+      .map(_.sorted)
+      .map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -895,7 +857,8 @@ final case class UsersResponderADMLive(
             }
 
         // get users current project admin membership list
-        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
+        currentProjectAdminMembershipIris <-
+          userService.findUserIsInProjectAdminGroup(UserIri.unsafeFrom(userIri)).map(_.sorted).map(_.map(_.id))
 
         // check if user is already project admin and if not then append to list
         updatedProjectAdminMembershipIris =
@@ -967,7 +930,8 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
+        currentProjectAdminMembershipIris <-
+          userService.findUserIsInProjectAdminGroup(UserIri.unsafeFrom(userIri)).map(_.sorted).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedProjectAdminMembershipIris =
@@ -1369,31 +1333,11 @@ final case class UsersResponderADMLive(
     email: Email
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
-      // caching enabled
       getUserFromCacheByEmail(email).flatMap {
-        case None =>
-          // none found in cache. getting from triplestore.
-          userService.findUserByEmail(email).flatMap {
-            case None =>
-              // also none found in triplestore. finally returning none.
-              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.none
-            case Some(user) =>
-              // found a user in the triplestore. need to write to cache.
-              logger.debug(
-                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
-              )
-              // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
-          }
-        case Some(user) =>
-          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
-          ZIO.some(user)
+        case None       => userService.findUserByEmail(email).tap(ZIO.foreach(_)(writeUserADMToCache))
+        case Some(user) => ZIO.some(user)
       }
-    } else {
-      // caching disabled
-      userService.findUserByEmail(email)
-    }
+    } else userService.findUserByEmail(email)
 
   /**
    * Helper method for checking if a user exists.

@@ -1,9 +1,11 @@
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -27,6 +29,11 @@ case class UserService(
     userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
   def findAll: Task[Seq[User]] =
     userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
+  def findUserIsInProjectAdminGroup(userIri: UserIri): Task[Chunk[ProjectADM]] = for {
+    projectAdminGroupIris <-
+      userRepo.findById(userIri).map(_.map(_.isInProjectAdminGroup)).map(_.getOrElse(Chunk.empty))
+    projects <- ZIO.foreach(projectAdminGroupIris)(projectsService.findById).map(_.flatten)
+  } yield projects
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
     projects        <- ZIO.foreach(kUser.projects)(projectsService.findById).map(_.flatten)

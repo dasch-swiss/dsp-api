@@ -81,11 +81,6 @@ object TriplestoreServiceInMemory {
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 
   val emptyLayer = emptyDatasetRefLayer >>> layer
-
-  def apply(datasetRef: Ref[Dataset], sf: StringFormatter): TriplestoreServiceInMemory = {
-    println("TriplestoreServiceInMemory.apply")
-    new TriplestoreServiceInMemory(datasetRef, sf)
-  }
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
