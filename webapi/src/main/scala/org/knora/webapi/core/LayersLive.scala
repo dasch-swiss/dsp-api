@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -90,12 +91,13 @@ object LayersLive {
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
-      AdminApiRoutes.layer,
       AdminApiEndpoints.layer,
-      ApiV2Endpoints.layer,
+      AdminApiRoutes.layer,
       ApiRoutes.layer,
+      ApiV2Endpoints.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AssetPermissionsResponder.layer,
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
@@ -111,8 +113,8 @@ object LayersLive {
       GravsearchTypeInspectionRunner.layer,
       GroupsEndpoints.layer,
       GroupsEndpointsHandler.layer,
-      GroupsRestServiceLive.layer,
       GroupsResponderADMLive.layer,
+      GroupsRestServiceLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -122,6 +124,7 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
+      KnoraUserRepoLive.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
@@ -144,7 +147,7 @@ object LayersLive {
       PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectADMServiceLive.layer,
+      ProjectADMService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
@@ -152,8 +155,6 @@ object LayersLive {
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
-      StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
@@ -163,19 +164,21 @@ object LayersLive {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      AssetPermissionsResponder.layer,
       SipiServiceLive.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
+      StoreEndpoints.layer,
+      StoreEndpointsHandler.layer,
       StoreRestService.layer,
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
-      UsersRestService.layer,
+      UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
       UsersResponderADMLive.layer,
+      UsersRestService.layer,
       ValuesResponderV2Live.layer
     )
 }

@@ -50,6 +50,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -187,6 +188,7 @@ final case class UsersResponderADMLive(
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
+  userService: UserService,
   implicit val stringFormatter: StringFormatter
 ) extends UsersResponderADM
     with MessageHandler
@@ -387,15 +389,9 @@ final case class UsersResponderADMLive(
     skipCache: Boolean = false
   ): Task[Option[User]] =
     for {
-      _ <-
-        ZIO.logDebug(
-          s"getSingleUserByIriADM - id: ${identifier.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
-        )
-      maybeUserADM <- if (skipCache) getUserFromTriplestoreByIri(identifier)
+      maybeUserADM <- if (skipCache) userService.findUserByIri(identifier)
                       else getUserFromCacheOrTriplestoreByIri(identifier)
-      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${identifier.value}': ${finalResponse.nonEmpty}")
-    } yield finalResponse
+    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
 
   /**
    * If the requesting user is a system admin, or is requesting themselves, or is a system user,
@@ -1414,7 +1410,7 @@ final case class UsersResponderADMLive(
       getUserFromCacheByIri(userIri).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestoreByIri(userIri).flatMap {
+          userService.findUserByIri(userIri).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1434,7 +1430,7 @@ final case class UsersResponderADMLive(
     } else {
       // caching disabled
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestoreByIri(userIri)
+      userService.findUserByIri(userIri)
     }
 
   /**
@@ -1507,22 +1503,6 @@ final case class UsersResponderADMLive(
       getUserFromTriplestoreByEmail(email)
     }
 
-  private def getUserFromTriplestoreByIri(
-    identifier: UserIri
-  ): Task[Option[User]] = {
-    val query = Construct(
-      sparql.admin.txt.getUsers(
-        maybeIri = Some(identifier.value),
-        maybeUsername = None,
-        maybeEmail = None
-      )
-    )
-    triplestore
-      .query(query)
-      .flatMap(_.asExtended)
-      .map(_.statements.headOption)
-      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
-  }
   private def getUserFromTriplestoreByUsername(
     identifier: Username
   ): Task[Option[User]] = {
@@ -1835,7 +1815,7 @@ final case class UsersResponderADMLive(
 
 object UsersResponderADMLive {
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService & UserService,
     UsersResponderADMLive
   ] = ZLayer.fromZIO {
     for {
@@ -1845,8 +1825,9 @@ object UsersResponderADMLive {
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       au      <- ZIO.service[AuthorizationRestService]
+      us      <- ZIO.service[UserService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, au, sf))
+      handler <- mr.subscribe(UsersResponderADMLive(config, iriS, ic, mr, ts, au, us, sf))
     } yield handler
   }
 }

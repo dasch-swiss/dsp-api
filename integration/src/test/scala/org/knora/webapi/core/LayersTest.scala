@@ -37,6 +37,7 @@ import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -144,11 +145,12 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      AdminApiRoutes.layer,
       AdminApiEndpoints.layer,
-      ApiV2Endpoints.layer,
+      AdminApiRoutes.layer,
       ApiRoutes.layer,
+      ApiV2Endpoints.layer,
       AppRouter.layer,
+      AssetPermissionsResponder.layer,
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
@@ -164,8 +166,8 @@ object LayersTest {
       GravsearchTypeInspectionRunner.layer,
       GroupsEndpoints.layer,
       GroupsEndpointsHandler.layer,
-      GroupsRestServiceLive.layer,
       GroupsResponderADMLive.layer,
+      GroupsRestServiceLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -174,6 +176,7 @@ object LayersTest {
       IriService.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
+      KnoraUserRepoLive.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
@@ -196,7 +199,7 @@ object LayersTest {
       PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectADMServiceLive.layer,
+      ProjectADMService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
@@ -204,8 +207,6 @@ object LayersTest {
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
-      StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
@@ -215,18 +216,20 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      AssetPermissionsResponder.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
+      StoreEndpoints.layer,
+      StoreEndpointsHandler.layer,
       StoreRestService.layer,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      UsersRestService.layer,
+      UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
       UsersResponderADMLive.layer,
+      UsersRestService.layer,
       ValuesResponderV2Live.layer
     )
 

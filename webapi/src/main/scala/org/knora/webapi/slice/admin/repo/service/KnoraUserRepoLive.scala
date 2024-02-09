@@ -191,10 +191,10 @@ object KnoraUserRepoLive {
           .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
           .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
 
-      u.projects.foreach(prj => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prj.value)))
-      u.groups.foreach(grp => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grp.value)))
-      u.isInProjectAdminGroup.foreach(grp =>
-        triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(grp.value))
+      u.projects.foreach(project => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(project.value)))
+      u.groups.foreach(group => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(group.value)))
+      u.isInProjectAdminGroup.foreach(projectAdminGroup =>
+        triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(projectAdminGroup.value))
       )
       triples
     }
