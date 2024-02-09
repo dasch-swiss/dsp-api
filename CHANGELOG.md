@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.0...v0.6.1) (2024-02-09)
+
+
+### Maintenance
+
+* Dependency updates ([#164](https://github.com/dasch-swiss/dsp-ingest/issues/164)) ([282a733](https://github.com/dasch-swiss/dsp-ingest/commit/282a733042ec236a7f2aa64a0f994ee6af5d1468))
+* **logging:** Improve logging ([#160](https://github.com/dasch-swiss/dsp-ingest/issues/160)) ([e18aca9](https://github.com/dasch-swiss/dsp-ingest/commit/e18aca9138187f415be7dac5286da392edaf8a7b))
+* Minor dependency updates ([#163](https://github.com/dasch-swiss/dsp-ingest/issues/163)) ([30750b3](https://github.com/dasch-swiss/dsp-ingest/commit/30750b39ac7767a6d65f266c166946a3d62601e7))
+* Patch dependency updates ([#162](https://github.com/dasch-swiss/dsp-ingest/issues/162)) ([ef4eb10](https://github.com/dasch-swiss/dsp-ingest/commit/ef4eb10a09b4f6a0ee8afaec14ac556999698c40))
+* Update Sipi dependency ([#165](https://github.com/dasch-swiss/dsp-ingest/issues/165)) ([dbee73d](https://github.com/dasch-swiss/dsp-ingest/commit/dbee73d3c63991b73667bc2094967c0986206245))
+
 ## [0.6.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.5.0...v0.6.0) (2024-01-16)
 
 
