@@ -1,7 +1,8 @@
 package org.knora.webapi.slice.admin.domain.service
 
-import org.knora.webapi.slice.admin.domain.model.Email
 import zio.Task
+
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username

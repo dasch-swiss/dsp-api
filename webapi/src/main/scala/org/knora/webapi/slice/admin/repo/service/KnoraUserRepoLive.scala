@@ -7,13 +7,14 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
+
 import dsp.valueobjects.LanguageCode
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email

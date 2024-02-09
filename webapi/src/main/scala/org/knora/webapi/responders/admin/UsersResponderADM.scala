@@ -6,6 +6,16 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.macros.accessible
+
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -15,17 +25,14 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
@@ -46,19 +53,9 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.IO
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.macros.accessible
-
-import java.util.UUID
 
 /**
  * Provides information about Knora users to other responders.
@@ -279,107 +276,17 @@ final case class UsersResponderADMLive(
     ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
 
   /**
-   * Gets all the users and returns them as a sequence of [[User]].
-   *
-   * @param requestingUser       the user initiating the request.
-   * @return all the users as a sequence of [[User]].
-   */
-  private def getAllUserADM(requestingUser: User) =
-    for {
-      _ <- ZIO.attempt(
-             if (
-               !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions
-                 .isProjectAdminInAnyProject() && !requestingUser.isSystemUser
-             ) {
-               throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
-             }
-           )
-
-      query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
-
-      statements <- triplestore
-                      .query(query)
-                      .flatMap(_.asExtended)
-                      .map(_.statements.toList)
-
-      users: Seq[User] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                           User(
-                             id = userIri.toString,
-                             username = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'username' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             email = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                                 throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             givenName = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'givenName' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             familyName = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'familyName' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             status = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'status' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[BooleanLiteralV2]
-                               .value,
-                             lang = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'preferedLanguage' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value
-                           )
-                         }
-
-    } yield users.sorted
-
-  /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
-    for {
-      maybeUsersListToReturn <- getAllUserADM(requestingUser)
-      result <- if (maybeUsersListToReturn.nonEmpty) ZIO.succeed(UsersGetResponseADM(maybeUsersListToReturn))
-                else ZIO.fail(NotFoundException(s"No users found"))
-    } yield result
+    auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser) *>
+      userService.findAll
+        .map(_.sorted)
+        .filterOrFail(_.nonEmpty)(NotFoundException(s"No users found"))
+        .map(UsersGetResponseADM)
 
   override def findUserByIri(
     identifier: UserIri,

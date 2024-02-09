@@ -3,6 +3,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -24,6 +25,8 @@ case class UserService(
     userRepo.findByEmail(email).flatMap(ZIO.foreach(_)(toUser))
   def findUserByUsername(username: Username): Task[Option[User]] =
     userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
+  def findAll: Task[Seq[User]] =
+    userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
     projects        <- ZIO.foreach(kUser.projects)(projectsService.findById).map(_.flatten)
