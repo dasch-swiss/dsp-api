@@ -168,78 +168,7 @@ final case class UsersResponder(
                throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
              }
            )
-
-      query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
-
-      statements <- triplestore
-                      .query(query)
-                      .flatMap(_.asExtended)
-                      .map(_.statements.toList)
-
-      users: Seq[User] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                           User(
-                             id = userIri.toString,
-                             username = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'username' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             email = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                                 throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             givenName = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'givenName' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             familyName = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'familyName' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value,
-                             status = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'status' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[BooleanLiteralV2]
-                               .value,
-                             lang = propsMap
-                               .getOrElse(
-                                 OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                                 throw InconsistentRepositoryDataException(
-                                   s"User: $userIri has no 'preferedLanguage' defined."
-                                 )
-                               )
-                               .head
-                               .asInstanceOf[StringLiteralV2]
-                               .value
-                           )
-                         }
-
+      users <- userService.findAll
     } yield users.sorted
 
   /**
