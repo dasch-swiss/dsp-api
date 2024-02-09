@@ -320,7 +320,7 @@ final case class UsersResponder(
         ZIO.logDebug(
           s"getSingleUserByIriADM - id: ${email.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
         )
-      maybeUserADM <- if (skipCache) getUserFromTriplestoreByEmail(email)
+      maybeUserADM <- if (skipCache) userService.findUserByEmail(email)
                       else getUserFromCacheOrTriplestoreByEmail(email)
       finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
       _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${email.value}': ${finalResponse.nonEmpty}")
@@ -353,7 +353,7 @@ final case class UsersResponder(
           s"getSingleUserByIriADM - id: ${username.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
         )
       maybeUserADM <-
-        if (skipCache) getUserFromTriplestoreByUsername(username)
+        if (skipCache) userService.findUserByUsername(username)
         else getUserFromCacheOrTriplestoreByUsername(username)
       finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
       _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${username.value}': ${finalResponse.nonEmpty}")
@@ -1411,7 +1411,7 @@ final case class UsersResponder(
       getUserFromCacheByUsername(username).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestoreByUsername(username).flatMap {
+          userService.findUserByUsername(username).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1431,7 +1431,7 @@ final case class UsersResponder(
     } else {
       // caching disabled
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestoreByUsername(username)
+      userService.findUserByUsername(username)
     }
 
   /**
@@ -1446,7 +1446,7 @@ final case class UsersResponder(
       getUserFromCacheByEmail(email).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestoreByEmail(email).flatMap {
+          userService.findUserByEmail(email).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1466,178 +1466,8 @@ final case class UsersResponder(
     } else {
       // caching disabled
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestoreByEmail(email)
+      userService.findUserByEmail(email)
     }
-
-  private def getUserFromTriplestoreByUsername(
-    identifier: Username
-  ): Task[Option[User]] = {
-    val query = Construct(
-      sparql.admin.txt.getUsers(
-        maybeIri = None,
-        maybeUsername = Some(identifier.value),
-        maybeEmail = None
-      )
-    )
-    triplestore
-      .query(query)
-      .flatMap(_.asExtended)
-      .map(_.statements.headOption)
-      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
-  }
-  private def getUserFromTriplestoreByEmail(
-    identifier: Email
-  ): Task[Option[User]] = {
-    val query = Construct(
-      sparql.admin.txt.getUsers(
-        maybeIri = None,
-        maybeUsername = None,
-        maybeEmail = Some(identifier.value)
-      )
-    )
-    triplestore
-      .query(query)
-      .flatMap(_.asExtended)
-      .map(_.statements.headOption)
-      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
-  }
-
-  /**
-   * Helper method used to create a [[User]] from the [[SparqlExtendedConstructResponse]] containing user data.
-   *
-   * @param statements           result from the SPARQL query containing user data.
-   * @return a [[Option[UserADM]]]
-   */
-  private def statements2UserADM(
-    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
-  ): Task[Option[User]] = {
-
-    val userIri: IRI                            = statements._1.toString
-    val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
-
-    if (propsMap.nonEmpty) {
-
-      /* the groups the user is member of (only explicit groups) */
-      val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInGroup.toSmartIri) match {
-        case Some(groups) => groups.map(_.asInstanceOf[IriLiteralV2].value)
-        case None         => Seq.empty[IRI]
-      }
-
-      /* the projects the user is member of (only explicit projects) */
-      val projectIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInProject.toSmartIri) match {
-        case Some(projects) => projects.map(_.asInstanceOf[IriLiteralV2].value)
-        case None           => Seq.empty[IRI]
-      }
-
-      /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-      val isInProjectAdminGroups: Seq[IRI] = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup.toSmartIri, Vector.empty[IRI])
-        .map(_.asInstanceOf[IriLiteralV2].value)
-
-      /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-      val isInSystemAdminGroup = propsMap
-        .get(OntologyConstants.KnoraAdmin.IsInSystemAdminGroup.toSmartIri)
-        .exists(p => p.head.asInstanceOf[BooleanLiteralV2].value)
-
-      for {
-        /* get the user's permission profile from the permissions responder */
-        permissionData <- messageRelay
-                            .ask[PermissionsDataADM](
-                              PermissionDataGetADM(
-                                projectIris = projectIris,
-                                groupIris = groupIris,
-                                isInProjectAdminGroups = isInProjectAdminGroups,
-                                isInSystemAdminGroup = isInSystemAdminGroup,
-                                requestingUser = Users.SystemUser
-                              )
-                            )
-
-        maybeGroupFutures: Seq[Task[Option[GroupADM]]] = groupIris.map { groupIri =>
-                                                           messageRelay.ask[Option[GroupADM]](GroupGetADM(groupIri))
-                                                         }
-        maybeGroups          <- ZioHelper.sequence(maybeGroupFutures)
-        groups: Seq[GroupADM] = maybeGroups.flatten
-
-        maybeProjectFutures =
-          projectIris.map { projectIri =>
-            messageRelay
-              .ask[Option[ProjectADM]](
-                ProjectGetADM(
-                  identifier = IriIdentifier
-                    .fromString(projectIri)
-                    .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                )
-              )
-          }
-        projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
-
-        /* construct the user profile from the different parts */
-        user = User(
-                 id = userIri,
-                 username = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.Username.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'username' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 email = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.Email.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'email' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 givenName = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'givenName' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 familyName = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.FamilyName.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'familyName' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 status = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'status' defined.")
-                   )
-                   .head
-                   .asInstanceOf[BooleanLiteralV2]
-                   .value,
-                 lang = propsMap
-                   .getOrElse(
-                     OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri,
-                     throw InconsistentRepositoryDataException(s"User: $userIri has no 'preferredLanguage' defined.")
-                   )
-                   .head
-                   .asInstanceOf[StringLiteralV2]
-                   .value,
-                 password = propsMap
-                   .get(OntologyConstants.KnoraAdmin.Password.toSmartIri)
-                   .map(_.head.asInstanceOf[StringLiteralV2].value),
-                 token = None,
-                 groups = groups,
-                 projects = projects,
-                 permissions = permissionData
-               )
-
-        result: Option[User] = Some(user)
-      } yield result
-
-    } else {
-      ZIO.none
-    }
-  }
 
   /**
    * Helper method for checking if a user exists.
