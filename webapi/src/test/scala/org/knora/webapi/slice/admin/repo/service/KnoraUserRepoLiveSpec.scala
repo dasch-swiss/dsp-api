@@ -10,10 +10,10 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-
 import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
@@ -29,10 +29,9 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
   def save(user: KnoraUser): ZIO[KnoraUserRepo, Throwable, KnoraUser] = ZIO.serviceWithZIO[KnoraUserRepo](_.save(user))
   def findById(id: UserIri): ZIO[KnoraUserRepo, Throwable, Option[KnoraUser]] =
     ZIO.serviceWithZIO[KnoraUserRepo](_.findById(id))
+  def findByEmail(id: Email): ZIO[KnoraUserRepo, Throwable, Option[KnoraUser]] =
+    ZIO.serviceWithZIO[KnoraUserRepo](_.findByEmail(id))
   def findAll(): ZIO[KnoraUserRepo, Throwable, List[KnoraUser]] = ZIO.serviceWithZIO[KnoraUserRepo](_.findAll())
-
-  // Test data
-  val unknownUserIri: UserIri = UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist")
 
   private def createUserQuery(u: KnoraUser): Update = {
     val triples = Rdf
@@ -63,23 +62,39 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     ZIO.foreach(users)(user => ZIO.serviceWithZIO[TriplestoreService](_.query(createUserQuery(user)))).unit
 
   val spec: Spec[Any, Any] = suite("UserRepoLiveSpec")(
-    test("findById given an  existing user should return that user") {
-      for {
-        _    <- storeUsersInTripleStore(testUser)
-        user <- findById(testUser.id)
-      } yield assertTrue(user.contains(testUser))
-    },
+    suite("findById")(
+      test("findById given an  existing user should return that user") {
+        for {
+          _    <- storeUsersInTripleStore(testUser)
+          user <- findById(testUser.id)
+        } yield assertTrue(user.contains(testUser))
+      },
+      test("findById given a non existing user should return None") {
+        for {
+          _    <- storeUsersInTripleStore(testUser, testUser2)
+          user <- findById(UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist"))
+        } yield assertTrue(user.isEmpty)
+      }
+    ),
+    suite("findByEmail")(
+      test("findByEmail given an existing user should return that user") {
+        for {
+          _    <- storeUsersInTripleStore(testUser)
+          user <- findByEmail(testUser.email)
+        } yield assertTrue(user.contains(testUser))
+      },
+      test("findByEmail given a non existing user should return None") {
+        for {
+          _    <- storeUsersInTripleStore(testUser, testUser2)
+          user <- findByEmail(Email.unsafeFrom("doesNotExist@example.com"))
+        } yield assertTrue(user.isEmpty)
+      }
+    ),
     test("findAll given existing users should return all user") {
       for {
         _    <- storeUsersInTripleStore(testUser, testUser2)
         user <- findAll()
       } yield assertTrue(user.sortBy(_.id.value) == List(testUser, testUser2).sortBy(_.id.value))
-    },
-    test("findById given a non existing user should return None") {
-      for {
-        _    <- storeUsersInTripleStore(testUser, testUser2)
-        user <- findById(unknownUserIri)
-      } yield assertTrue(user.isEmpty)
     },
     test("should create and find user") {
       for {

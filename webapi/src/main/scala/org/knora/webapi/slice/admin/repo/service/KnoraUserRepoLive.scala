@@ -38,18 +38,22 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
 final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends KnoraUserRepo {
 
-  /**
-   * Retrieves an entity by its id.
-   *
-   * @param id The identifier of type [[Id]].
-   * @return the entity with the given id or [[None]] if none found.
-   */
   override def findById(id: UserIri): Task[Option[KnoraUser]] = {
     val construct = UserQueries.findById(id)
     for {
       model    <- triplestore.queryRdfModel(construct)
       resource <- model.getResource(id.value).option
       user     <- ZIO.foreach(resource)(toUser)
+    } yield user
+  }
+  override def findByEmail(email: Email): Task[Option[KnoraUser]] = {
+    val construct = UserQueries.findByEmail(email)
+    for {
+      model <- triplestore.queryRdfModel(construct)
+      resource <- model
+                    .getResourcesRdfType(KnoraAdmin.User)
+                    .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
+      user <- ZIO.foreach(resource.nextOption)(toUser)
     } yield user
   }
 
@@ -137,6 +141,20 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(tp(s, p, o))
+            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+        )
+      Construct(query)
+    }
+    def findByEmail(email: Email): Construct = {
+      val (s, p, o) = (variable("s"), variable("p"), variable("o"))
+      val query: ConstructQuery = Queries
+        .CONSTRUCT(tp(s, p, o))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
+        .where(
+          s
+            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+            .andHas(Vocabulary.KnoraAdmin.email, Rdf.literalOf(email.value))
+            .andHas(p, o)
             .from(Vocabulary.NamedGraphs.knoraAdminIri)
         )
       Construct(query)
