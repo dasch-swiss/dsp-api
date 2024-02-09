@@ -115,7 +115,7 @@ final case class User(
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Restricted =>
-        self.copy(password = None )
+        self.copy(password = None)
       case UserInformationTypeADM.Full =>
         self
     }
