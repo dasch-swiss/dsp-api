@@ -4,8 +4,8 @@ import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -36,18 +36,15 @@ case class UserService(
   } yield projects
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
-    projects        <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
-    groups          <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
-    isInAdminGroups <- ZIO.foreach(kUser.isInProjectAdminGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
-
-    projectIris          = projects.map(_.id)
-    groupIris            = groups.map(_.id)
-    isInAdminGroupIris   = isInAdminGroups.map(_.id)
-    isInSystemAdminGroup = kUser.isInSystemAdminGroup.value
-
+    projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
+    groups   <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
     permissionData <-
-      permissionService.permissionsDataGetADM(projectIris, groupIris, isInAdminGroupIris, isInSystemAdminGroup)
-
+      permissionService.permissionsDataGetADM(
+        kUser.isInProject.map(_.value),
+        kUser.isInGroup.map(_.value),
+        kUser.isInProjectAdminGroup.map(_.value),
+        kUser.isInSystemAdminGroup.value
+      )
   } yield User(
     kUser.id.value,
     kUser.username.value,

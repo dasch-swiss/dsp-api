@@ -154,10 +154,10 @@ object Authenticator {
 }
 
 final case class AuthenticatorLive(
-                                    private val appConfig: AppConfig,
-                                    private val usersResponder: UsersResponder,
-                                    private val jwtService: JwtService,
-                                    private implicit val stringFormatter: StringFormatter
+  private val appConfig: AppConfig,
+  private val usersResponder: UsersResponder,
+  private val jwtService: JwtService,
+  private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))

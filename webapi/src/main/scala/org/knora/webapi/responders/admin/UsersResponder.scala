@@ -6,6 +6,15 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import zio.IO
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -24,8 +33,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
@@ -40,6 +49,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -48,19 +58,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio.IO
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-
-import java.util.UUID
 
 final case class UsersResponder(
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
+  userService: UserService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
@@ -274,15 +277,9 @@ final case class UsersResponder(
     skipCache: Boolean = false
   ): Task[Option[User]] =
     for {
-      _ <-
-        ZIO.logDebug(
-          s"getSingleUserByIriADM - id: ${identifier.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
-        )
-      maybeUserADM <- if (skipCache) getUserFromTriplestoreByIri(identifier)
+      maybeUserADM <- if (skipCache) userService.findUserByIri(identifier)
                       else getUserFromCacheOrTriplestoreByIri(identifier)
-      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${identifier.value}': ${finalResponse.nonEmpty}")
-    } yield finalResponse
+    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
 
   /**
    * If the requesting user is a system admin, or is requesting themselves, or is a system user,
@@ -1379,7 +1376,7 @@ final case class UsersResponder(
       getUserFromCacheByIri(userIri).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestoreByIri(userIri).flatMap {
+          userService.findUserByIri(userIri).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1399,7 +1396,7 @@ final case class UsersResponder(
     } else {
       // caching disabled
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestoreByIri(userIri)
+      userService.findUserByIri(userIri)
     }
 
   /**
@@ -1472,22 +1469,6 @@ final case class UsersResponder(
       getUserFromTriplestoreByEmail(email)
     }
 
-  private def getUserFromTriplestoreByIri(
-    identifier: UserIri
-  ): Task[Option[User]] = {
-    val query = Construct(
-      sparql.admin.txt.getUsers(
-        maybeIri = Some(identifier.value),
-        maybeUsername = None,
-        maybeEmail = None
-      )
-    )
-    triplestore
-      .query(query)
-      .flatMap(_.asExtended)
-      .map(_.statements.headOption)
-      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
-  }
   private def getUserFromTriplestoreByUsername(
     identifier: Username
   ): Task[Option[User]] = {
@@ -1855,17 +1836,18 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
 
   val layer: URLayer[
-    AppConfig & IriConverter & IriService & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & IriConverter & IriService & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
+      us      <- ZIO.service[UserService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(config, iriS, ic, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(config, iriS, ic, us, mr, ts, sf))
     } yield handler
   }
 }

@@ -27,9 +27,9 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
-                                   auth: AuthorizationRestService,
-                                   responder: UsersResponder,
-                                   format: KnoraResponseRenderer
+  auth: AuthorizationRestService,
+  responder: UsersResponder,
+  format: KnoraResponseRenderer
 ) {
 
   def listAllUsers(user: User): Task[UsersGetResponseADM] = for {
