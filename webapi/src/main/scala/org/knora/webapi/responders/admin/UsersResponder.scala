@@ -153,25 +153,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Gets all the users and returns them as a sequence of [[User]].
-   *
-   * @param requestingUser       the user initiating the request.
-   * @return all the users as a sequence of [[User]].
-   */
-  private def getAllUserADM(requestingUser: User) =
-    for {
-      _ <- ZIO.attempt(
-             if (
-               !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions
-                 .isProjectAdminInAnyProject() && !requestingUser.isSystemUser
-             ) {
-               throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
-             }
-           )
-      users <- userService.findAll
-    } yield users.sorted
-
-  /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
    * @param requestingUser       the user initiating the request.
@@ -179,8 +160,16 @@ final case class UsersResponder(
    */
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
     for {
-      maybeUsersListToReturn <- getAllUserADM(requestingUser)
-      result <- if (maybeUsersListToReturn.nonEmpty) ZIO.succeed(UsersGetResponseADM(maybeUsersListToReturn))
+      _ <- ZIO.attempt(
+        if (
+          !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions
+            .isProjectAdminInAnyProject() && !requestingUser.isSystemUser
+        ) {
+          throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
+        }
+      )
+      users <- userService.findAll
+      result <- if (users.nonEmpty) ZIO.succeed(UsersGetResponseADM(users.sorted))
                 else ZIO.fail(NotFoundException(s"No users found"))
     } yield result
 
