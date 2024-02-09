@@ -31,6 +31,8 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     ZIO.serviceWithZIO[KnoraUserRepo](_.findById(id))
   def findByEmail(id: Email): ZIO[KnoraUserRepo, Throwable, Option[KnoraUser]] =
     ZIO.serviceWithZIO[KnoraUserRepo](_.findByEmail(id))
+  def findByUsername(id: Username): ZIO[KnoraUserRepo, Throwable, Option[KnoraUser]] =
+    ZIO.serviceWithZIO[KnoraUserRepo](_.findByUsername(id))
   def findAll(): ZIO[KnoraUserRepo, Throwable, List[KnoraUser]] = ZIO.serviceWithZIO[KnoraUserRepo](_.findAll())
 
   private def createUserQuery(u: KnoraUser): Update = {
@@ -87,6 +89,20 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         for {
           _    <- storeUsersInTripleStore(testUser, testUser2)
           user <- findByEmail(Email.unsafeFrom("doesNotExist@example.com"))
+        } yield assertTrue(user.isEmpty)
+      }
+    ),
+    suite("findByUsername")(
+      test("findByUsername given an existing user should return that user") {
+        for {
+          _    <- storeUsersInTripleStore(testUser)
+          user <- findByUsername(testUser.username)
+        } yield assertTrue(user.contains(testUser))
+      },
+      test("findByUsername given a non existing user should return None") {
+        for {
+          _    <- storeUsersInTripleStore(testUser, testUser2)
+          user <- findByUsername(Username.unsafeFrom("doesNotExistUsername"))
         } yield assertTrue(user.isEmpty)
       }
     ),

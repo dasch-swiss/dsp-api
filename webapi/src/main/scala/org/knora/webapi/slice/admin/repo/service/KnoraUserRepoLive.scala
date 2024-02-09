@@ -12,8 +12,8 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
-
 import dsp.valueobjects.LanguageCode
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -46,8 +46,13 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       user     <- ZIO.foreach(resource)(toUser)
     } yield user
   }
-  override def findByEmail(email: Email): Task[Option[KnoraUser]] = {
-    val construct = UserQueries.findByEmail(email)
+  override def findByEmail(email: Email): Task[Option[KnoraUser]] =
+    findOneByQuery(UserQueries.findByEmail(email))
+
+  override def findByUsername(username: Username): Task[Option[KnoraUser]] =
+    findOneByQuery(UserQueries.findByUsername(username))
+
+  private def findOneByQuery(construct: Construct) =
     for {
       model <- triplestore.queryRdfModel(construct)
       resource <- model
@@ -55,7 +60,6 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
                     .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
       user <- ZIO.foreach(resource.nextOption)(toUser)
     } yield user
-  }
 
   private def toUser(resource: RdfResource) = {
     for {
@@ -145,7 +149,14 @@ object KnoraUserRepoLive {
         )
       Construct(query)
     }
-    def findByEmail(email: Email): Construct = {
+
+    def findByEmail(email: Email): Construct =
+      findByProperty(Vocabulary.KnoraAdmin.email, email.value)
+
+    def findByUsername(username: Username): Construct =
+      findByProperty(Vocabulary.KnoraAdmin.username, username.value)
+
+    private def findByProperty(property: Iri, propertyValue: String) = {
       val (s, p, o) = (variable("s"), variable("p"), variable("o"))
       val query: ConstructQuery = Queries
         .CONSTRUCT(tp(s, p, o))
@@ -153,7 +164,7 @@ object KnoraUserRepoLive {
         .where(
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .andHas(Vocabulary.KnoraAdmin.email, Rdf.literalOf(email.value))
+            .andHas(property, Rdf.literalOf(propertyValue))
             .andHas(p, o)
             .from(Vocabulary.NamedGraphs.knoraAdminIri)
         )
