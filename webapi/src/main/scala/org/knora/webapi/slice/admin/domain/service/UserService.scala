@@ -3,12 +3,13 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.Username
 
 case class UserService(
   private val userRepo: KnoraUserRepo,
@@ -17,7 +18,12 @@ case class UserService(
   private val permissionService: PermissionsResponderADM
 ) {
 
-  def findUserByIri(iri: UserIri): Task[Option[User]] = userRepo.findById(iri).flatMap(ZIO.foreach(_)(toUser))
+  def findUserByIri(iri: UserIri): Task[Option[User]] =
+    userRepo.findById(iri).flatMap(ZIO.foreach(_)(toUser))
+  def findUserByEmail(email: Email): Task[Option[User]] =
+    userRepo.findByEmail(email).flatMap(ZIO.foreach(_)(toUser))
+  def findUserByUsername(username: Username): Task[Option[User]] =
+    userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
     projects        <- ZIO.foreach(kUser.projects)(projectsService.findById).map(_.flatten)

@@ -81,7 +81,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     suite("findByEmail")(
       test("findByEmail given an existing user should return that user") {
         for {
-          _    <- storeUsersInTripleStore(testUser)
+          _    <- storeUsersInTripleStore(testUser, testUser2)
           user <- findByEmail(testUser.email)
         } yield assertTrue(user.contains(testUser))
       },
@@ -95,9 +95,9 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     suite("findByUsername")(
       test("findByUsername given an existing user should return that user") {
         for {
-          _    <- storeUsersInTripleStore(testUser)
-          user <- findByUsername(testUser.username)
-        } yield assertTrue(user.contains(testUser))
+          _    <- storeUsersInTripleStore(testUser, testUser2)
+          user <- findByUsername(testUser2.username)
+        } yield assertTrue(user.contains(testUser2))
       },
       test("findByUsername given a non existing user should return None") {
         for {
