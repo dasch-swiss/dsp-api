@@ -21,15 +21,11 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -40,7 +36,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
-import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
@@ -51,15 +46,16 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateReques
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 final case class UsersResponder(
+  auth: AuthorizationRestService,
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
@@ -157,21 +153,13 @@ final case class UsersResponder(
    *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
+   *         [[NotFoundException]] if no users are found.
    */
   def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
-    for {
-      _ <- ZIO.attempt(
-        if (
-          !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions
-            .isProjectAdminInAnyProject() && !requestingUser.isSystemUser
-        ) {
-          throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
-        }
-      )
-      users <- userService.findAll
-      result <- if (users.nonEmpty) ZIO.succeed(UsersGetResponseADM(users.sorted))
-                else ZIO.fail(NotFoundException(s"No users found"))
-    } yield result
+    auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser) *>
+      userService.findAll
+        .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
+        .map(users => UsersGetResponseADM(users.sorted))
 
   /**
    * ~ CACHED ~
@@ -234,15 +222,9 @@ final case class UsersResponder(
     skipCache: Boolean = false
   ): Task[Option[User]] =
     for {
-      _ <-
-        ZIO.logDebug(
-          s"getSingleUserByIriADM - id: ${email.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
-        )
       maybeUserADM <- if (skipCache) userService.findUserByEmail(email)
                       else getUserFromCacheOrTriplestoreByEmail(email)
-      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${email.value}': ${finalResponse.nonEmpty}")
-    } yield finalResponse
+    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
 
   /**
    * ~ CACHED ~
@@ -266,16 +248,10 @@ final case class UsersResponder(
     skipCache: Boolean = false
   ): Task[Option[User]] =
     for {
-      _ <-
-        ZIO.logDebug(
-          s"getSingleUserByIriADM - id: ${username.value}, type: $userInformationType, requester: ${requestingUser.username}, skipCache: $skipCache"
-        )
       maybeUserADM <-
         if (skipCache) userService.findUserByUsername(username)
         else getUserFromCacheOrTriplestoreByUsername(username)
-      finalResponse = maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
-      _            <- ZIO.logDebug(s"getSingleUserByIriADM - retrieved user '${username.value}': ${finalResponse.nonEmpty}")
-    } yield finalResponse
+    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
 
   /**
    * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
@@ -1584,10 +1560,11 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
 
   val layer: URLayer[
-    AppConfig & IriConverter & IriService & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
+      auth    <- ZIO.service[AuthorizationRestService]
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
@@ -1595,7 +1572,7 @@ object UsersResponder {
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(config, iriS, ic, us, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, mr, ts, sf))
     } yield handler
   }
 }

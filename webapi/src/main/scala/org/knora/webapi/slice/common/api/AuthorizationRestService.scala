@@ -15,6 +15,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
 
 /**
@@ -36,6 +37,7 @@ trait AuthorizationRestService {
    *         Fails with a [[ForbiddenException]] otherwise.
    */
   def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit]
+  def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit]
 
   /**
    * Checks if the user is a system or project administrator.
@@ -72,6 +74,8 @@ object AuthorizationRestService {
     isSystemUser(userADM) || isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =
     isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
+  def isSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): Boolean =
+    isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
 final case class AuthorizationRestServiceLive() extends AuthorizationRestService {
@@ -110,6 +114,11 @@ final case class AuthorizationRestServiceLive() extends AuthorizationRestService
   override def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
     lazy val msg = s"ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
+  }
+
+  override def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit] = {
+    val msg = "ProjectAdmin or SystemAdmin permissions are required."
+    checkActiveUser(user, isSystemAdminSystemUserOrProjectAdminInAnyProject, msg)
   }
 }
 
