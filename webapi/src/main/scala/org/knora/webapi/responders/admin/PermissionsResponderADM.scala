@@ -360,10 +360,6 @@ final case class PermissionsResponderADMLive(
     }
 
     for {
-      _ <-
-        ZIO.logWarning(
-          "Called with projectIris: " + projectIris + " groupIris: " + groupIris + " isInProjectAdminGroups: " + isInProjectAdminGroups + " isInSystemAdminGroup: " + isInSystemAdminGroup
-        )
       groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
