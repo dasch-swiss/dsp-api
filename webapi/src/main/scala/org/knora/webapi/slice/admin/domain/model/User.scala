@@ -36,11 +36,11 @@ final case class KnoraUser(
   email: Email,
   familyName: FamilyName,
   givenName: GivenName,
-  passwordHash: Password,
+  password: Password,
   preferredLanguage: LanguageCode,
   status: UserStatus,
-  projects: Chunk[ProjectIri],
-  groups: Chunk[GroupIri],
+  isInProject: Chunk[ProjectIri],
+  isInGroup: Chunk[GroupIri],
   isInSystemAdminGroup: SystemAdmin,
   isInProjectAdminGroup: Chunk[ProjectIri]
 )

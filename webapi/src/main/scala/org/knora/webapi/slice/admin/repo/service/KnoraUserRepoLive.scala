@@ -66,18 +66,18 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
-      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
-      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
-      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
-      passwordHash <- resource.getStringLiteralOrFail[Password](KnoraAdmin.Password)(Password.from)
+      username   <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
+      email      <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
+      familyName <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
+      givenName  <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
+      password   <- resource.getStringLiteralOrFail[Password](KnoraAdmin.Password)(Password.from)
       preferredLanguage <-
         resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)(LanguageCode.from)
-      status     <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)(b => Right(UserStatus.from(b)))
-      projects   <- resource.getObjectIris(KnoraAdmin.IsInProject)
-      projectIris = projects.flatMap(iri => ProjectIri.from(iri.value).toOption)
-      groups     <- resource.getObjectIris(KnoraAdmin.IsInGroup)
-      groupIris   = groups.flatMap(iri => GroupIri.from(iri.value).toOption)
+      status         <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)(b => Right(UserStatus.from(b)))
+      isInProject    <- resource.getObjectIris(KnoraAdmin.IsInProject)
+      isInProjectIris = isInProject.flatMap(iri => ProjectIri.from(iri.value).toOption)
+      isInGroup      <- resource.getObjectIris(KnoraAdmin.IsInGroup)
+      isInGroupIris   = isInGroup.flatMap(iri => GroupIri.from(iri.value).toOption)
       isInSystemAdminGroup <-
         resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)(b => Right(SystemAdmin.from(b)))
       isInProjectAdminGroup    <- resource.getObjectIris(KnoraAdmin.IsInProjectAdminGroup)
@@ -88,11 +88,11 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       email,
       familyName,
       givenName,
-      passwordHash,
+      password,
       preferredLanguage,
       status,
-      projectIris,
-      groupIris,
+      isInProjectIris,
+      isInGroupIris,
       isInSystemAdminGroup,
       isInProjectAdminGroupIris
     )
@@ -218,11 +218,11 @@ object KnoraUserRepoLive {
           .andHas(Vocabulary.KnoraAdmin.familyName, Rdf.literalOf(u.familyName.value))
           .andHas(Vocabulary.KnoraAdmin.preferredLanguage, Rdf.literalOf(u.preferredLanguage.value))
           .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(u.status.value))
-          .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
+          .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.password.value))
           .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
 
-      u.projects.foreach(project => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(project.value)))
-      u.groups.foreach(group => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(group.value)))
+      u.isInProject.foreach(project => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(project.value)))
+      u.isInGroup.foreach(group => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(group.value)))
       u.isInProjectAdminGroup.foreach(projectAdminGroup =>
         triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(projectAdminGroup.value))
       )

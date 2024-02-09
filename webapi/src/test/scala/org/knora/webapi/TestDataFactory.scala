@@ -39,11 +39,11 @@ object TestDataFactory {
       Password.unsafeFrom("hashedPassword"),
       LanguageCode.en,
       UserStatus.Active,
-      projects = Chunk(
+      isInProject = Chunk(
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
       ),
-      groups = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
+      isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
       isInSystemAdminGroup = SystemAdmin.from(false),
       isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
     )
@@ -56,8 +56,8 @@ object TestDataFactory {
       Password.unsafeFrom("hashedPassword2"),
       LanguageCode.de,
       UserStatus.Inactive,
-      projects = Chunk.empty,
-      groups = Chunk.empty,
+      isInProject = Chunk.empty,
+      isInGroup = Chunk.empty,
       isInSystemAdminGroup = SystemAdmin.from(true),
       isInProjectAdminGroup = Chunk.empty
     )

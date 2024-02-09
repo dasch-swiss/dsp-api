@@ -36,8 +36,8 @@ case class UserService(
   } yield projects
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
-    projects        <- ZIO.foreach(kUser.projects)(projectsService.findById).map(_.flatten)
-    groups          <- ZIO.foreach(kUser.groups.map(_.value))(groupsService.groupGetADM).map(_.flatten)
+    projects        <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
+    groups          <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
     isInAdminGroups <- ZIO.foreach(kUser.isInProjectAdminGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
 
     projectIris          = projects.map(_.id)
@@ -56,7 +56,7 @@ case class UserService(
     kUser.familyName.value,
     kUser.status.value,
     kUser.preferredLanguage.value,
-    Some(kUser.passwordHash.value),
+    Some(kUser.password.value),
     None,
     groups,
     projects,

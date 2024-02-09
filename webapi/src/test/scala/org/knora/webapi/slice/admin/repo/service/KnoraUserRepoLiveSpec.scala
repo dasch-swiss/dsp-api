@@ -46,10 +46,10 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       .andHas(Vocabulary.KnoraAdmin.familyName, Rdf.literalOf(u.familyName.value))
       .andHas(Vocabulary.KnoraAdmin.preferredLanguage, Rdf.literalOf(u.preferredLanguage.value))
       .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(u.status.value))
-      .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
+      .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.password.value))
       .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
-    u.projects.foreach(prjIri => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prjIri.value)))
-    u.groups.foreach(grpIri => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grpIri.value)))
+    u.isInProject.foreach(prjIri => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prjIri.value)))
+    u.isInGroup.foreach(grpIri => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grpIri.value)))
     u.isInProjectAdminGroup.foreach(admGrp =>
       triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(admGrp.value))
     )
