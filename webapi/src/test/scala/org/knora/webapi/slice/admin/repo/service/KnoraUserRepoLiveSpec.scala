@@ -17,18 +17,19 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service.UserRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object UserRepoLiveSpec extends ZIOSpecDefault {
+object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
 
   // Accessor functions of the UserRepo service which are tested
-  def save(user: KnoraUser): ZIO[UserRepo, Throwable, KnoraUser]         = ZIO.serviceWithZIO[UserRepo](_.save(user))
-  def findById(id: UserIri): ZIO[UserRepo, Throwable, Option[KnoraUser]] = ZIO.serviceWithZIO[UserRepo](_.findById(id))
-  def findAll(): ZIO[UserRepo, Throwable, List[KnoraUser]]               = ZIO.serviceWithZIO[UserRepo](_.findAll())
+  def save(user: KnoraUser): ZIO[KnoraUserRepo, Throwable, KnoraUser] = ZIO.serviceWithZIO[KnoraUserRepo](_.save(user))
+  def findById(id: UserIri): ZIO[KnoraUserRepo, Throwable, Option[KnoraUser]] =
+    ZIO.serviceWithZIO[KnoraUserRepo](_.findById(id))
+  def findAll(): ZIO[KnoraUserRepo, Throwable, List[KnoraUser]] = ZIO.serviceWithZIO[KnoraUserRepo](_.findAll())
 
   // Test data
   val unknownUserIri: UserIri = UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist")
@@ -47,6 +48,9 @@ object UserRepoLiveSpec extends ZIOSpecDefault {
       .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
     u.projects.foreach(prjIri => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prjIri.value)))
     u.groups.foreach(grpIri => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grpIri.value)))
+    u.isInProjectAdminGroup.foreach(admGrp =>
+      triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(admGrp.value))
+    )
     Update(
       Queries
         .INSERT_DATA(triples)
@@ -91,5 +95,5 @@ object UserRepoLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))
     }
   )
-    .provide(UserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
+    .provide(KnoraUserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
 }

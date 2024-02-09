@@ -39,9 +39,13 @@ object TestDataFactory {
       Password.unsafeFrom("hashedPassword"),
       LanguageCode.en,
       UserStatus.Active,
-      projects = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
+      projects = Chunk(
+        ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+        ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
+      ),
       groups = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
-      isInSystemAdminGroup = SystemAdmin.from(false)
+      isInSystemAdminGroup = SystemAdmin.from(false),
+      isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
     )
     val testUser2: KnoraUser = KnoraUser(
       UserIri.unsafeFrom("http://rdfh.ch/users/exists2"),
@@ -54,7 +58,8 @@ object TestDataFactory {
       UserStatus.Inactive,
       projects = Chunk.empty,
       groups = Chunk.empty,
-      isInSystemAdminGroup = SystemAdmin.from(true)
+      isInSystemAdminGroup = SystemAdmin.from(true),
+      isInProjectAdminGroup = Chunk.empty
     )
   }
 

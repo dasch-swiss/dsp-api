@@ -6,7 +6,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.repo.service.Repository
 
-trait UserRepo extends Repository[KnoraUser, UserIri] {
+trait KnoraUserRepo extends Repository[KnoraUser, UserIri] {
 
   /**
    * Saves a given user. Use the returned instance for further operations as the save operation might have changed the entity instance completely.

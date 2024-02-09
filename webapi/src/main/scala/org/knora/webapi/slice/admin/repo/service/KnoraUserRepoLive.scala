@@ -27,16 +27,16 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service.UserRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.slice.admin.repo.service.UserRepoLive.UserQueries
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo {
+final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends KnoraUserRepo {
 
   /**
    * Retrieves an entity by its id.
@@ -71,6 +71,8 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
       groupIris   = groups.flatMap(iri => GroupIri.from(iri.value).toOption)
       isInSystemAdminGroup <-
         resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)(b => Right(SystemAdmin.from(b)))
+      isInProjectAdminGroup    <- resource.getObjectIris(KnoraAdmin.IsInProjectAdminGroup)
+      isInProjectAdminGroupIris = isInProjectAdminGroup.flatMap(iri => ProjectIri.from(iri.value).toOption)
     } yield KnoraUser(
       userIri,
       username,
@@ -82,7 +84,8 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
       status,
       projectIris,
       groupIris,
-      isInSystemAdminGroup
+      isInSystemAdminGroup,
+      isInProjectAdminGroupIris
     )
   }.mapError(e => TriplestoreResponseException(e.toString))
 
@@ -107,7 +110,7 @@ final case class UserRepoLive(triplestore: TriplestoreService) extends UserRepo 
   } yield user
 }
 
-object UserRepoLive {
+object KnoraUserRepoLive {
   private object UserQueries {
 
     def findAll: Construct = {
@@ -161,6 +164,7 @@ object UserRepoLive {
         .andHas(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject"))
         .andHas(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup"))
         .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup"))
+        .andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup"))
       val query: ModifyQuery =
         Queries
           .MODIFY()
@@ -186,10 +190,14 @@ object UserRepoLive {
           .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(u.status.value))
           .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf(u.passwordHash.value))
           .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
+
       u.projects.foreach(prj => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prj.value)))
       u.groups.foreach(grp => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grp.value)))
+      u.isInProjectAdminGroup.foreach(grp =>
+        triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(grp.value))
+      )
       triples
     }
   }
-  val layer = ZLayer.derive[UserRepoLive]
+  val layer = ZLayer.derive[KnoraUserRepoLive]
 }

@@ -41,7 +41,8 @@ final case class KnoraUser(
   status: UserStatus,
   projects: Chunk[ProjectIri],
   groups: Chunk[GroupIri],
-  isInSystemAdminGroup: SystemAdmin
+  isInSystemAdminGroup: SystemAdmin,
+  isInProjectAdminGroup: Chunk[ProjectIri]
 )
 
 /**

@@ -61,7 +61,8 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 24, plugin = new MigrateOnlyBuiltInGraphs), // PR 2076
       PluginForKnoraBaseVersion(versionNumber = 25, plugin = new MigrateOnlyBuiltInGraphs), // PR 2268
       PluginForKnoraBaseVersion(versionNumber = 26, plugin = new MigrateOnlyBuiltInGraphs), // PR 3003
-      PluginForKnoraBaseVersion(versionNumber = 27, plugin = new MigrateOnlyBuiltInGraphs)  // PR 3026
+      PluginForKnoraBaseVersion(versionNumber = 27, plugin = new MigrateOnlyBuiltInGraphs), // PR 3026
+      PluginForKnoraBaseVersion(versionNumber = 28, plugin = new MigrateOnlyBuiltInGraphs)
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )
