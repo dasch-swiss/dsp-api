@@ -1752,7 +1752,6 @@ final case class UsersResponderADMLive(
                  password = propsMap
                    .get(OntologyConstants.KnoraAdmin.Password.toSmartIri)
                    .map(_.head.asInstanceOf[StringLiteralV2].value),
-                 token = None,
                  groups = groups,
                  projects = projects,
                  permissions = permissionData
