@@ -328,7 +328,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -1202,7 +1202,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -2314,7 +2314,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -2490,7 +2490,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -2883,7 +2883,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -3142,7 +3142,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -3622,7 +3622,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -4129,7 +4129,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -4987,7 +4987,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -5172,7 +5172,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -5243,7 +5243,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -5357,7 +5357,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -5676,7 +5676,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -5810,7 +5810,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -6060,7 +6060,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -6345,7 +6345,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -6823,7 +6823,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -7297,7 +7297,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -7460,7 +7460,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -7926,7 +7926,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -8147,7 +8147,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -8624,7 +8624,7 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -8717,11 +8717,11 @@
     <knora-api:isLinkValueProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
     >true</knora-api:isLinkValueProperty>
   </owl:ObjectProperty>
-  <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString">
+  <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#valueAsString">
     <rdfs:comment>A plain string representation of a value</rdfs:comment>
     <knora-api:subjectType rdf:resource="http://api.knora.org/ontology/knora-api/v2#Value"/>
     <knora-api:objectType rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-  </owl:ObjectProperty>
+  </owl:DatatypeProperty>
   <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/v2#hasGeometry">
     <rdfs:comment>Represents a geometrical shape.</rdfs:comment>
     <knora-api:subjectType rdf:resource="http://api.knora.org/ontology/knora-api/v2#Region"/>
