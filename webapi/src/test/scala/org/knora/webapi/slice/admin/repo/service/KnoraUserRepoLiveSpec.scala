@@ -115,72 +115,80 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(user.isEmpty)
       }
     ),
-    test("findAll given existing users should return all user") {
-      for {
-        _    <- storeUsersInTripleStore(testUser, testUserWithoutAnyGroups)
-        user <- findAll()
-      } yield assertTrue(user.sortBy(_.id.value) == List(testUser, testUserWithoutAnyGroups).sortBy(_.id.value))
-    },
-    test("should create and find user") {
-      for {
-        savedUser <- save(testUser)
-        foundUser <- findById(savedUser.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(savedUser == testUser, foundUser == testUser)
-    },
-    test("should update an existing user's username find user with new username") {
-      for {
-        _           <- save(testUser)                                                     // create the user
-        updated     <- save(testUser.copy(username = Username.unsafeFrom("newUsername"))) // update the username
-        updatedUser <- findByUsername(updated.username).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))
-    },
-    test("should update an existing user isInProject ") {
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id)))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInProject == Chunk(TestDataFactory.someProject.id))
-    },
-    test("should update an existing user isInProject and remove them") {
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id)))
-        _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk.empty))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInProject.isEmpty)
-    },
-    test("should update an existing user isInProjectAdminGroup ") {
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id)))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInProjectAdminGroup == Chunk(TestDataFactory.someProject.id))
-    },
-    test("should update an existing user isInProjectAdminGroup and remove them") {
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id)))
-        _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk.empty))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInProjectAdminGroup.isEmpty)
-    },
-    test("should update an existing user isInGroup ") {
-      val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInGroup == Chunk(groupIri))
-    },
-    test("should update an existing user isInGroup and remove them") {
-      val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
-      for {
-        _           <- save(testUserWithoutAnyGroups) // create the user
-        _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))
-        _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk.empty))
-        updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
-      } yield assertTrue(updatedUser.isInGroup.isEmpty)
-    }
-  )
-    .provide(KnoraUserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
+    suite("findAll")(
+      test("given existing users should return all user") {
+        for {
+          _     <- storeUsersInTripleStore(testUser, testUserWithoutAnyGroups)
+          users <- findAll()
+        } yield assertTrue(users.sortBy(_.id.value) == List(testUser, testUserWithoutAnyGroups).sortBy(_.id.value))
+      },
+      test("given no users present should return empty result") {
+        for {
+          users <- findAll()
+        } yield assertTrue(users.isEmpty)
+      }
+    ),
+    suite("save")(
+      test("should create and find user") {
+        for {
+          savedUser <- save(testUser)
+          foundUser <- findById(savedUser.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(savedUser == testUser, foundUser == testUser)
+      },
+      test("should update an existing user's username find user with new username") {
+        for {
+          _           <- save(testUser)                                                     // create the user
+          updated     <- save(testUser.copy(username = Username.unsafeFrom("newUsername"))) // update the username
+          updatedUser <- findByUsername(updated.username).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))
+      },
+      test("should update an existing user isInProject ") {
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id)))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInProject == Chunk(TestDataFactory.someProject.id))
+      },
+      test("should update an existing user isInProject and remove them") {
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id)))
+          _           <- save(testUserWithoutAnyGroups.copy(isInProject = Chunk.empty))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInProject.isEmpty)
+      },
+      test("should update an existing user isInProjectAdminGroup ") {
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id)))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInProjectAdminGroup == Chunk(TestDataFactory.someProject.id))
+      },
+      test("should update an existing user isInProjectAdminGroup and remove them") {
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id)))
+          _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk.empty))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInProjectAdminGroup.isEmpty)
+      },
+      test("should update an existing user isInGroup ") {
+        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInGroup == Chunk(groupIri))
+      },
+      test("should update an existing user isInGroup and remove them") {
+        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
+        for {
+          _           <- save(testUserWithoutAnyGroups) // create the user
+          _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))
+          _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk.empty))
+          updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
+        } yield assertTrue(updatedUser.isInGroup.isEmpty)
+      }
+    )
+  ).provide(KnoraUserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
 }
