@@ -19,7 +19,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createE
 
 object TestDatasetBuilder {
 
-  private def readToModel(turtle: String)(model: Model): Model   = model.read(new StringReader(turtle), null, "TTL")
+  private def readToModel(turtle: String)(model: Model): Model = model.read(new StringReader(turtle), null, "TTL")
 
   private def transactionalWrite(change: Model => Model)(ds: Dataset): Task[Dataset] = ZIO.attempt {
     ds.begin(ReadWrite.WRITE)
