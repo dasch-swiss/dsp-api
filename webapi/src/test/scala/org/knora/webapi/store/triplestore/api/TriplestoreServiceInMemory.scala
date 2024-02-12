@@ -22,6 +22,7 @@ import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
 
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -210,18 +211,21 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     }
   }
 
-  private def insertRdfDataObject(elem: RdfDataObject): ZIO[Any, Throwable, Unit] = {
-    val inputFile = Paths.get("..", elem.path)
+  private def insertRdfDataObject(elem: RdfDataObject): ZIO[Any, Throwable, Unit] =
     ZIO.scoped {
       for {
         graphName <- checkGraphName(elem)
-        in        <- fileInputStream(inputFile)
+        in        <- loadRdfUrl(elem.path)
         ds        <- getDataSetWithTransaction(ReadWrite.WRITE)
         model      = ds.getNamedModel(graphName)
         _          = model.read(in, null, "TURTLE")
       } yield ()
     }
-  }
+
+  private def loadRdfUrl(path: String): ZIO[Any & Scope, Throwable, InputStream] =
+    ZIO
+      .attemptBlocking(Option(getClass.getClassLoader.getResourceAsStream(path)).get)
+      .orElse(fileInputStream(Paths.get("..", path)))
 
   private def checkGraphName(elem: RdfDataObject): Task[String] =
     checkGraphName(elem.name)
