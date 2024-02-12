@@ -28,7 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -71,11 +71,11 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-      username   <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
-      email      <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
-      familyName <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
-      givenName  <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
-      password   <- resource.getStringLiteralOrFail[Password](KnoraAdmin.Password)(Password.from)
+      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
+      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
+      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
+      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
+      passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)(PasswordHash.from)
       preferredLanguage <-
         resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)(LanguageCode.from)
       status         <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)(b => Right(UserStatus.from(b)))
@@ -86,14 +86,14 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       isInSystemAdminGroup <-
         resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)(b => Right(SystemAdmin.from(b)))
       isInProjectAdminGroup    <- resource.getObjectIris(KnoraAdmin.IsInProjectAdminGroup)
-      isInProjectAdminGroupIris = isInProjectAdminGroup.flatMap(iri => ProjectIri.from(iri.value).toOption)
+      isInProjectAdminGroupIris = isInProjectAdminGroup.map(_.value).map(ProjectIri.unsafeFrom)
     } yield KnoraUser(
       userIri,
       username,
       email,
       familyName,
       givenName,
-      password,
+      passwordHash,
       preferredLanguage,
       status,
       isInProjectIris,
@@ -174,6 +174,7 @@ object KnoraUserRepoLive {
             .andHas(p, o)
             .from(Vocabulary.NamedGraphs.knoraAdminIri)
         )
+      println(s"FIND BY:\n ${query.getQueryString}")
       Construct(query)
     }
 
@@ -182,12 +183,14 @@ object KnoraUserRepoLive {
         .INSERT_DATA(toTriples(u))
         .into(Rdf.iri(adminDataNamedGraph.value))
         .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+      println(s"CREATE:\n ${query.getQueryString}")
       Update(query)
     }
 
     def update(u: KnoraUser): Update = {
-      val userToDeletePattern = Rdf
+      val userIri = Rdf
         .iri(u.id.value)
+      def commonUserPattern = userIri
         .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
         .andHas(Vocabulary.KnoraAdmin.username, variable("previousUsername"))
         .andHas(Vocabulary.KnoraAdmin.email, variable("previousEmail"))
@@ -196,19 +199,27 @@ object KnoraUserRepoLive {
         .andHas(Vocabulary.KnoraAdmin.status, variable("previousStatus"))
         .andHas(Vocabulary.KnoraAdmin.preferredLanguage, variable("previousPreferredLanguage"))
         .andHas(Vocabulary.KnoraAdmin.password, variable("previousPassword"))
+        .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup"))
+
+      val deletePattern = commonUserPattern
         .andHas(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject"))
         .andHas(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup"))
-        .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup"))
         .andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup"))
+      val wherePattern = commonUserPattern
+        .and(userIri.has(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject")).optional())
+        .and(userIri.has(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup")).optional())
+        .and(
+          userIri.has(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup")).optional()
+        )
       val query: ModifyQuery =
         Queries
           .MODIFY()
           .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
           .`with`(Rdf.iri(adminDataNamedGraph.value))
           .insert(toTriples(u))
-          .delete(userToDeletePattern)
-          .where(userToDeletePattern)
-      println(query.getQueryString)
+          .delete(deletePattern)
+          .where(wherePattern)
+      println(s"UPDATE:\n${query.getQueryString}")
       Update(query)
     }
 

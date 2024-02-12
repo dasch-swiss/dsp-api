@@ -5,13 +5,9 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import spray.json.JsValue
 import zio.Chunk
 
-import java.security.MessageDigest
-import java.security.SecureRandom
 import scala.util.matching.Regex
 
 import dsp.valueobjects.Iri
@@ -36,7 +32,7 @@ final case class KnoraUser(
   email: Email,
   familyName: FamilyName,
   givenName: GivenName,
-  password: Password,
+  password: PasswordHash,
   preferredLanguage: LanguageCode,
   status: UserStatus,
   isInProject: Chunk[ProjectIri],
@@ -82,30 +78,6 @@ final case class User(
    * Allows to sort collections of UserADM. Sorting is done by the id.
    */
   def compare(that: User): Int = this.id.compareTo(that.id)
-
-  /**
-   * Check password (in clear text) using SCrypt. The password supplied in clear text is hashed and
-   * compared against the stored hash.
-   *
-   * @param password the password to check.
-   * @return true if password matches and false if password doesn't match.
-   */
-  def passwordMatch(password: String): Boolean =
-    this.password.exists { hashedPassword =>
-      // check which type of hash we have
-      if (hashedPassword.startsWith("$e0801$")) {
-        new SCryptPasswordEncoder(16384, 8, 1, 32, 64).matches(password, hashedPassword)
-      } else if (hashedPassword.startsWith("$2a$")) {
-        new BCryptPasswordEncoder().matches(password, hashedPassword)
-      } else {
-        MessageDigest
-          .getInstance("SHA-1")
-          .digest(password.getBytes("UTF-8"))
-          .map("%02x".format(_))
-          .mkString
-          .equals(hashedPassword)
-      }
-    }
 
   /**
    * Creating a [[User]] of the requested type.
@@ -269,50 +241,13 @@ object Password extends StringValueCompanion[Password] {
     }
 }
 
-final case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
+final case class PasswordHash private (value: String) extends AnyVal with StringValue
+object PasswordHash extends StringValueCompanion[PasswordHash] {
 
-  /**
-   * Check password (in clear text). The password supplied in clear text is compared against the
-   * stored hash.
-   *
-   * @param passwordString Password (clear text) to be checked
-   * @return true if password matches, false otherwise
-   */
-  def matches(passwordString: String): Boolean =
-    // check which type of hash we have
-    if (self.value.startsWith("$e0801$")) {
-      // SCrypt
-      val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
-      encoder.matches(passwordString, self.value)
-    } else if (self.value.startsWith("$2a$")) {
-      // BCrypt
-      val encoder = new BCryptPasswordEncoder()
-      encoder.matches(passwordString, self.value)
-    } else false
+  def from(hashedValue: String): Either[String, PasswordHash] =
+    if (hashedValue.isEmpty) { Left(UserErrorMessages.PasswordMissing) }
+    else { Right(PasswordHash(hashedValue)) }
 
-}
-object PasswordHash {
-  private val PasswordRegex: Regex = """^[\s\S]*$""".r
-
-  def from(value: String, passwordStrength: PasswordStrength): Either[String, PasswordHash] =
-    if (value.isEmpty) {
-      Left(UserErrorMessages.PasswordMissing)
-    } else {
-      PasswordRegex.findFirstIn(value) match {
-        case Some(value) =>
-          val encoder =
-            new BCryptPasswordEncoder(
-              passwordStrength.value,
-              new SecureRandom()
-            )
-          val hashedValue = encoder.encode(value)
-          Right(PasswordHash(hashedValue, passwordStrength))
-        case None => Left(UserErrorMessages.PasswordInvalid)
-      }
-    }
-
-  def unsafeFrom(value: String, passwordStrength: PasswordStrength): PasswordHash =
-    PasswordHash.from(value, passwordStrength).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
 final case class PasswordStrength private (value: Int) extends AnyVal with IntValue

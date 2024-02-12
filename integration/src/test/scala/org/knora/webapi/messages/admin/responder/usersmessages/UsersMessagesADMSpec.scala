@@ -5,14 +5,10 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 
@@ -82,60 +78,6 @@ class UsersMessagesADMSpec extends CoreSpec {
         SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false,
         "user is ProjectAdmin in one of his projects"
       )
-    }
-
-    "allow checking the SCrypt passwords" in {
-      val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
-      val hp      = encoder.encode("123456")
-      val up = User(
-        id = "something",
-        username = "something",
-        email = "something",
-        givenName = "something",
-        familyName = "something",
-        status = status,
-        lang = lang,
-        password = Some(hp),
-        token = None,
-        groups = groups,
-        projects = projects,
-        permissions = PermissionsDataADM()
-      )
-
-      // test SCrypt
-      assert(encoder.matches("123456", encoder.encode("123456")))
-
-      // test UserADM SCrypt usage
-      assert(up.passwordMatch("123456"))
-    }
-
-    "allow checking the BCrypt passwords" in {
-      val encoder = new BCryptPasswordEncoder()
-      val hp      = encoder.encode("123456")
-      val up = User(
-        id = "something",
-        username = "something",
-        email = "something",
-        givenName = "something",
-        familyName = "something",
-        status = status,
-        lang = lang,
-        password = Some(hp),
-        token = None,
-        groups = groups,
-        projects = projects,
-        permissions = PermissionsDataADM()
-      )
-
-      // test BCrypt
-      assert(encoder.matches("123456", encoder.encode("123456")))
-
-      // test UserADM BCrypt usage
-      assert(up.passwordMatch("123456"))
-    }
-
-    "allow checking the password (2)" in {
-      SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
     }
   }
 

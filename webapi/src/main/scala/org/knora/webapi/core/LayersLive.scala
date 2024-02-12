@@ -78,7 +78,7 @@ object LayersLive {
       GroupsResponderADM & HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService &
       InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
+      OntologyResponderV2 & PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
       PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
@@ -140,6 +140,7 @@ object LayersLive {
       OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
+      PasswordService.layer,
       PermissionUtilADMLive.layer,
       PermissionsEndpoints.layer,
       PermissionsEndpointsHandlers.layer,

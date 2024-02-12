@@ -18,7 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -36,7 +36,7 @@ object TestDataFactory {
       Email.unsafeFrom("jane@example.com"),
       FamilyName.unsafeFrom("Doe"),
       GivenName.unsafeFrom("""Jane "TheFirst" J"""),
-      Password.unsafeFrom("hashedPassword"),
+      PasswordHash.unsafeFrom("hashedPassword"),
       LanguageCode.en,
       UserStatus.Active,
       isInProject = Chunk(
@@ -47,13 +47,13 @@ object TestDataFactory {
       isInSystemAdminGroup = SystemAdmin.from(false),
       isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
     )
-    val testUser2: KnoraUser = KnoraUser(
+    val testUserWithoutAnyGroups: KnoraUser = KnoraUser(
       UserIri.unsafeFrom("http://rdfh.ch/users/exists2"),
       Username.unsafeFrom("testuser2"),
       Email.unsafeFrom("jane2@example.com"),
       FamilyName.unsafeFrom("""D’Oe"""),
       GivenName.unsafeFrom("""D'Juan"""),
-      Password.unsafeFrom("hashedPassword2"),
+      PasswordHash.unsafeFrom("hashedPassword2"),
       LanguageCode.de,
       UserStatus.Inactive,
       isInProject = Chunk.empty,

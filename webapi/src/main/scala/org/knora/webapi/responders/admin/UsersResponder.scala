@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import zio.IO
 import zio.Task
 import zio.URLayer
@@ -44,6 +43,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -60,6 +60,7 @@ final case class UsersResponder(
   iriService: IriService,
   iriConverter: IriConverter,
   userService: UserService,
+  passwordService: PasswordService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
@@ -68,7 +69,6 @@ final case class UsersResponder(
 
   // The IRI used to lock user creation and update
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
-  private val passwordEncoder       = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[UsersResponderRequestADM]
@@ -369,7 +369,7 @@ final case class UsersResponder(
      */
     def changePasswordTask(
       userIri: IRI,
-      userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+      update: UserUpdatePasswordPayloadADM,
       requestingUser: User
     ): Task[UserOperationResponseADM] =
       for {
@@ -383,20 +383,19 @@ final case class UsersResponder(
              )
 
         // check if supplied password matches requesting user's password
-        _ = if (!requestingUser.passwordMatch(userUpdatePasswordPayload.requesterPassword.value)) {
-              throw ForbiddenException("The supplied password does not match the requesting user's password.")
-            }
+        _ <- ZIO
+               .fromOption(requestingUser.password)
+               .map(PasswordHash.unsafeFrom)
+               .mapBoth(
+                 _ => ForbiddenException("The requesting user has no password."),
+                 pwHash => passwordService.matches(update.requesterPassword, pwHash)
+               )
+               .filterOrFail(identity)(
+                 ForbiddenException("The supplied password does not match the requesting user's password.")
+               )
 
-        // hash the new password
-        encoder           = new BCryptPasswordEncoder(appConfig.bcryptPasswordStrength)
-        newHashedPassword = Password.unsafeFrom(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-
-        // update the users password as SystemUser
-        result <- updateUserPasswordADM(
-                    userIri = userIri,
-                    password = newHashedPassword,
-                    requestingUser = Users.SystemUser
-                  )
+        newPasswordHash = passwordService.hashPassword(update.newPassword)
+        result         <- updateUserPasswordADM(userIri, newPasswordHash, Users.SystemUser)
 
       } yield result
 
@@ -1140,7 +1139,7 @@ final case class UsersResponder(
    *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
    *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
    */
-  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: User) = {
+  private def updateUserPasswordADM(userIri: IRI, password: PasswordHash, requestingUser: User) = {
 
     // check if it is a request for a built-in user
     if (
@@ -1238,7 +1237,7 @@ final case class UsersResponder(
     for {
       username          <- sparqlEncode(req.username, s"The supplied username: '${req.username.value}' is not valid.")
       email             <- sparqlEncode(req.email, s"The supplied email: '${req.email.value}' is not valid.")
-      password           = passwordEncoder.encode(req.password.value)
+      passwordHash       = passwordService.hashPassword(req.password)
       givenName         <- sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.value}' is not valid.")
       familyName        <- sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.value}' is not valid.")
       preferredLanguage <- sparqlEncode(req.lang, s"The supplied language: '${req.lang.value}' is not valid.")
@@ -1249,7 +1248,7 @@ final case class UsersResponder(
         OntologyConstants.KnoraAdmin.User,
         username,
         email,
-        password,
+        passwordHash.value,
         givenName,
         familyName,
         req.status.value,
@@ -1560,7 +1559,7 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
 
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
@@ -1569,10 +1568,11 @@ object UsersResponder {
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
       us      <- ZIO.service[UserService]
+      ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ps, mr, ts, sf))
     } yield handler
   }
 }
