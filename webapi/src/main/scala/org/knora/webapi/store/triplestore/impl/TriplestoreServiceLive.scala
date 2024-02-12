@@ -20,6 +20,7 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.config.SocketConfig
+import org.apache.http.entity.AbstractHttpEntity
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
@@ -42,6 +43,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.time.temporal.ChronoUnit
 import java.util
+import scala.io.Source
 
 import dsp.errors.*
 import org.knora.webapi.*
@@ -224,21 +226,17 @@ case class TriplestoreServiceLive(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
   ): Task[Unit] = {
-
     val calculateCompleteRdfDataObjectList: Task[NonEmptyChunk[RdfDataObject]] =
-      if (prependDefaults) { // prepend
-        if (rdfDataObjects.isEmpty) {
-          ZIO.succeed(DefaultRdfData.data)
-        } else {
-          // prepend default data objects like those of knora-base, knora-admin, etc.
-          ZIO.succeed(DefaultRdfData.data ++ NonEmptyChunk.fromIterable(rdfDataObjects.head, rdfDataObjects.tail))
-        }
-      } else { // don't prepend
-        if (rdfDataObjects.isEmpty) {
-          ZIO.fail(BadRequestException("Cannot insert list with empty data into triplestore."))
-        } else {
-          ZIO.succeed(NonEmptyChunk.fromIterable(rdfDataObjects.head, rdfDataObjects.tail))
-        }
+      if (prependDefaults) {
+        ZIO.succeed(DefaultRdfData.data.append(Chunk(rdfDataObjects: _*)))
+      } else {
+        NonEmptyChunk
+          .fromIterableOption(rdfDataObjects)
+          .fold[Task[NonEmptyChunk[RdfDataObject]]](
+            ZIO.fail(BadRequestException("Cannot insert list with empty data into triplestore."))
+          )(
+            ZIO.succeed(_)
+          )
       }
 
     for {
@@ -261,19 +259,12 @@ case class TriplestoreServiceLive(
                 uriBuilder
               }
 
+            inputEntity <- loadRdfObject(elem.path)
+
             httpPost <-
               ZIO.attemptBlocking {
                 val httpPost = new HttpPost(uriBuilder.build())
-                // Add the input file to the body of the request.
-                // here we need to tweak the base directory path from "webapi"
-                // to the parent folder where the files can be found
-                val inputFile = Paths.get("..", elem.path)
-                if (!Files.exists(inputFile)) {
-                  throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
-                }
-                val fileEntity =
-                  new FileEntity(inputFile.toFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
-                httpPost.setEntity(fileEntity)
+                httpPost.setEntity(inputEntity)
                 httpPost
               }
             responseHandler <- ZIO.attempt(returnInsertGraphDataResponse(graphName)(_))
@@ -282,6 +273,30 @@ case class TriplestoreServiceLive(
       _ <- ZIO.foreachDiscard(request)(elem => doHttpRequest(request = elem._1, processResponse = elem._2))
       _ <- ZIO.logDebug("==>> Loading Data End")
     } yield ()
+  }
+
+  /**
+   * Load the RdfDataObject into some AbstractHttpEntity from either a relative ../$path or through a resource.
+   */
+  private def loadRdfObject(path: String): Task[AbstractHttpEntity] = {
+    val turtleContentType = ContentType.create(mimeTypeTextTurtle, "UTF-8")
+
+    val relativeFileEntity = {
+      // Add the input file to the body of the request.
+      // here we need to tweak the base directory path from "webapi"
+      // to the parent folder where the files can be found
+      val inputFile = Paths.get("..", path)
+      ZIO.attemptBlocking {
+        if (!Files.exists(inputFile))
+          throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
+        new FileEntity(inputFile.toFile, turtleContentType)
+      }
+    }
+
+    val resourceStringEntity =
+      ZIO.attemptBlocking(new StringEntity(Source.fromResource(path).mkString, turtleContentType))
+
+    relativeFileEntity.orElse(resourceStringEntity)
   }
 
   /**
