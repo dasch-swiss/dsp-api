@@ -20,7 +20,6 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.config.SocketConfig
-import org.apache.http.entity.AbstractHttpEntity
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
