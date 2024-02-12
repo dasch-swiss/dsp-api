@@ -59,7 +59,6 @@ case class UserService(
     kUser.status.value,
     kUser.preferredLanguage.value,
     Some(kUser.password.value),
-    None,
     groups,
     projects,
     permissionData

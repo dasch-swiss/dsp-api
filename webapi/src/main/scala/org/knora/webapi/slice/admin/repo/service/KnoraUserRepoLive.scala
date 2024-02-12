@@ -64,7 +64,7 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       resource <- model
                     .getResourcesRdfType(KnoraAdmin.User)
                     .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
-      user <- ZIO.foreach(resource.nextOption)(toUser)
+      user <- ZIO.foreach(resource.nextOption())(toUser)
     } yield user
 
   private def toUser(resource: RdfResource) = {

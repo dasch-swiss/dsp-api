@@ -1,5 +1,27 @@
 # Changelog
 
+## [30.8.1](https://github.com/dasch-swiss/dsp-api/compare/v30.8.0...v30.8.1) (2024-02-08)
+
+
+### Maintenance
+
+* Change RDF handling for querying Projects from DB (DEV-3175) ([#2989](https://github.com/dasch-swiss/dsp-api/issues/2989)) ([884e3a8](https://github.com/dasch-swiss/dsp-api/commit/884e3a894adde26c7b83531694049763c90e8c07))
+* **CI:** Run integration tests on actuated again ([#3027](https://github.com/dasch-swiss/dsp-api/issues/3027)) ([ca8319c](https://github.com/dasch-swiss/dsp-api/commit/ca8319c695f20ff55cc0bdd289085eae42a442dc))
+* Migrate `GET /admin/users/&lt;iri|email|name&gt;` to Tapir ([#3020](https://github.com/dasch-swiss/dsp-api/issues/3020)) ([4b25387](https://github.com/dasch-swiss/dsp-api/commit/4b253875189c4f6b4b3247b007e0631614238cab))
+* Migrate `GET /admin/users/iri/&lt;userIri&gt;/*memberships` and `POST /admin/users` to tapir ([#3021](https://github.com/dasch-swiss/dsp-api/issues/3021)) ([cafbc16](https://github.com/dasch-swiss/dsp-api/commit/cafbc1623829e967ff81732396af0ee7a2a1a3df))
+* Remove chill, scallop dependency (DEV-3263) (DEV-3262) ([#3029](https://github.com/dasch-swiss/dsp-api/issues/3029)) ([a1e5db1](https://github.com/dasch-swiss/dsp-api/commit/a1e5db182db8a38eadb690cf1f2cd6a4f1fd7dc7))
+* Remove jodd dependency (DEV-3069) ([#3024](https://github.com/dasch-swiss/dsp-api/issues/3024)) ([35ff4ed](https://github.com/dasch-swiss/dsp-api/commit/35ff4ed3148439be719a0c7bc2812e0a95e78a20))
+* Remove jodd dependency leftovers ([#3028](https://github.com/dasch-swiss/dsp-api/issues/3028)) ([21a4c83](https://github.com/dasch-swiss/dsp-api/commit/21a4c83373ca64a3f6aed27d6352462d7c5c6ed5))
+* Remove kamon (DEV-3261) ([#3030](https://github.com/dasch-swiss/dsp-api/issues/3030)) ([f27f118](https://github.com/dasch-swiss/dsp-api/commit/f27f1185670549c54d3f65c8c8a23a8c7cb1397c))
+* Update dsp-app image in docker-compose.yml to v11.4.1 ([#3034](https://github.com/dasch-swiss/dsp-api/issues/3034)) ([71677a2](https://github.com/dasch-swiss/dsp-api/commit/71677a2d92a85c34ce5bd03e1677b8c5a6781c9a))
+* Update fuseki to latest release 2.1.5 ([#3023](https://github.com/dasch-swiss/dsp-api/issues/3023)) ([6acbe4b](https://github.com/dasch-swiss/dsp-api/commit/6acbe4bfd0b691a5fc5378e9dd6edfae92ea2006))
+* Update scala-graph to 2.0.1 (DEV-3072) ([#3031](https://github.com/dasch-swiss/dsp-api/issues/3031)) ([9b04b8f](https://github.com/dasch-swiss/dsp-api/commit/9b04b8f7d9588eab7c17081e9a66b0f5d46fd7bf))
+
+
+### Bug Fixes
+
+* Remove cardinality restriction for comments on regions (DEV-3179) ([#3026](https://github.com/dasch-swiss/dsp-api/issues/3026)) ([9ea8d6e](https://github.com/dasch-swiss/dsp-api/commit/9ea8d6e03b6c4606377dee2aced38a426248c6ec))
+
 ## [30.8.0](https://github.com/dasch-swiss/dsp-api/compare/v30.7.0...v30.8.0) (2024-02-05)
 
 

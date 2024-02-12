@@ -30,7 +30,6 @@ object KnoraSystemInstances {
       status = true,
       lang = "en",
       password = None,
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM()
@@ -48,11 +47,9 @@ object KnoraSystemInstances {
       status = true,
       lang = "en",
       password = None,
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM()
     )
   }
-
 }

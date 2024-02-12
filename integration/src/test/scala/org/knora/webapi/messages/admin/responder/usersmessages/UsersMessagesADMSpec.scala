@@ -21,7 +21,6 @@ class UsersMessagesADMSpec extends CoreSpec {
   private val username    = SharedTestDataADM.rootUser.username
   private val email       = SharedTestDataADM.rootUser.email
   private val password    = SharedTestDataADM.rootUser.password
-  private val token       = SharedTestDataADM.rootUser.token
   private val givenName   = SharedTestDataADM.rootUser.givenName
   private val familyName  = SharedTestDataADM.rootUser.familyName
   private val status      = SharedTestDataADM.rootUser.status
@@ -43,7 +42,6 @@ class UsersMessagesADMSpec extends CoreSpec {
         status = status,
         lang = lang,
         password = password,
-        token = token,
         groups = groups,
         projects = projects,
         permissions = permissions
@@ -57,7 +55,6 @@ class UsersMessagesADMSpec extends CoreSpec {
         status = status,
         lang = lang,
         password = None,
-        token = None,
         groups = groups,
         projects = projects,
         permissions = permissions.ofType(PermissionProfileType.Restricted)

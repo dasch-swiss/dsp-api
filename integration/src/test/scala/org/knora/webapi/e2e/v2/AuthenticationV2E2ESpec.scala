@@ -396,7 +396,6 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
       /* check for sensitive information leakage */
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
       assert(body contains "\"password\":null")
-      assert(body contains "\"token\":null")
     }
   }
 }
