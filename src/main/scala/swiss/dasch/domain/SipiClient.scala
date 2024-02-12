@@ -16,14 +16,14 @@ import java.time.temporal.ChronoUnit
 
 sealed trait SipiCommand {
   def flag(): String
-  def render(): UIO[String]
+  def render(): UIO[List[String]]
 }
 
 object SipiCommand {
   final case class QueryArgument(fileIn: Path) extends SipiCommand {
     def flag(): String = "--query"
-    def render(): UIO[String] =
-      fileIn.toAbsolutePath.orDie.map(abs => s"${flag()} $abs")
+    def render(): UIO[List[String]] =
+      fileIn.toAbsolutePath.orDie.map(abs => List(flag(), abs.toString))
   }
 
   final case class FormatArgument(
@@ -32,11 +32,11 @@ object SipiCommand {
     fileOut: Path
   ) extends SipiCommand {
     def flag(): String = "--format"
-    def render(): UIO[String] =
+    def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield s"${flag()} ${outputFormat.toCliString} $abs1 $abs2").orDie
+      } yield List(flag(), outputFormat.toCliString, abs1.toString, abs2.toString)).orDie
   }
 
   /**
@@ -58,11 +58,11 @@ object SipiCommand {
     fileOut: Path
   ) extends SipiCommand {
     def flag(): String = "--topleft"
-    def render(): UIO[String] =
+    def render(): UIO[List[String]] =
       (for {
         abs1 <- fileIn.toAbsolutePath
         abs2 <- fileOut.toAbsolutePath
-      } yield s"${flag()} $abs1 $abs2").orDie
+      } yield List(flag(), abs1.toString, abs2.toString)).orDie
   }
 }
 
@@ -103,7 +103,7 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
   private def execute(command: SipiCommand) =
     for {
       sipiParams <- command.render()
-      cmd        <- executor.buildCommand(sipiPrefix, sipiParams)
+      cmd        <- executor.buildCommand(sipiPrefix, sipiParams: _*)
       timerTagged = timer.tagged("command", command.flag())
       out        <- executor.execute(cmd).orDie @@ timerTagged.trackDuration
     } yield out

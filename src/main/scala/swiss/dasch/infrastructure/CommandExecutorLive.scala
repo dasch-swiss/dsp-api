@@ -11,10 +11,10 @@ import swiss.dasch.version.BuildInfo
 import zio.{IO, UIO, ZIO, ZLayer}
 
 import java.io.IOException
-import scala.sys.process.{ProcessLogger, stringToProcess}
+import scala.sys.process.{ProcessLogger, stringSeqToProcess}
 
 final case class ProcessOutput(stdout: String, stderr: String, exitCode: Int)
-final case class Command private[infrastructure] (cmd: String)
+final case class Command private[infrastructure] (cmd: List[String])
 
 trait CommandExecutor {
 
@@ -29,7 +29,7 @@ trait CommandExecutor {
    * @param params  the parameters to pass to the command.
    * @return the command to execute.
    */
-  def buildCommand(command: String, params: String): UIO[Command]
+  def buildCommand(command: String, params: String*): UIO[Command]
 
   /**
    * Executes a command and returns the [[ProcessOutput]].
@@ -53,21 +53,29 @@ trait CommandExecutor {
 }
 
 object CommandExecutor {
-  def buildCommand(command: String, params: String): ZIO[CommandExecutor, Nothing, Command] =
-    ZIO.serviceWithZIO[CommandExecutor](_.buildCommand(command, params))
+  def buildCommand(command: String, params: String*): ZIO[CommandExecutor, Nothing, Command] =
+    ZIO.serviceWithZIO[CommandExecutor](_.buildCommand(command, params: _*))
 }
 
 final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: StorageService) extends CommandExecutor {
 
-  override def buildCommand(command: String, params: String): UIO[Command] =
+  override def buildCommand(command: String, params: String*): UIO[Command] =
     if (sipiConfig.useLocalDev) {
       for {
         assetDir <- storageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath).orDie
-      } yield Command(
-        s"docker run --entrypoint $command -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} $params"
-      )
+      } yield {
+        Command(
+          List(
+            List("docker", "run", "--entrypoint", command),
+            List("-v", s"$assetDir:$assetDir"),
+            List(s"daschswiss/knora-sipi:${BuildInfo.sipiVersion}"),
+            params
+          ).flatten
+        )
+      }
+
     } else {
-      ZIO.succeed(Command(s"$command $params"))
+      ZIO.succeed(Command(command +: params.toList))
     }
 
   private class InMemoryProcessLogger extends ProcessLogger {

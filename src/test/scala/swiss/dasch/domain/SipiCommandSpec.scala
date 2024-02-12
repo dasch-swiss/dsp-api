@@ -18,18 +18,18 @@ object SipiCommandSpec extends ZIOSpecDefault {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>
           for {
             cmd <- FormatArgument(format, Path("/tmp/example"), Path("/tmp/example2")).render()
-          } yield assertTrue(cmd == s"--format ${format.toCliString} /tmp/example /tmp/example2")
+          } yield assertTrue(cmd == List("--format", format.toCliString, "/tmp/example", "/tmp/example2"))
         }
       },
       test("should assemble query command") {
         for {
           cmd <- QueryArgument(Path("/tmp/example")).render()
-        } yield assertTrue(cmd == s"--query /tmp/example")
+        } yield assertTrue(cmd == List("--query", "/tmp/example"))
       },
       test("should assemble topleft command") {
         for {
           cmd <- TopLeftArgument(Path("/tmp/example"), Path("/tmp/example2")).render()
-        } yield assertTrue(cmd == s"--topleft /tmp/example /tmp/example2")
+        } yield assertTrue(cmd == List("--topleft", "/tmp/example", "/tmp/example2"))
       }
     )
 }

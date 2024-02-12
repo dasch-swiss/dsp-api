@@ -22,14 +22,14 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
         assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
         expected =
           s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} customParams"
-      } yield assertTrue(cmd.cmd == expected)
+      } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     },
     test("buildCommand without docker when useLocalDev is false") {
       val prodLayer = ZLayer.succeed(SipiConfig(useLocalDev = false)) >>> CommandExecutorLive.layer
       for {
         cmd     <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](prodLayer)
         expected = "customCommand customParams"
-      } yield assertTrue(cmd.cmd == expected)
+      } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     }
   ).provide(
     SpecConfigurations.storageConfigLayer,

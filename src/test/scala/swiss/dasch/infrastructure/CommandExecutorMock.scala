@@ -10,8 +10,8 @@ import zio.{IO, Ref, UIO, ZIO, ZLayer}
 import java.io.IOException
 
 final case class CommandExecutorMock(out: Ref[ProcessOutput]) extends CommandExecutor {
-  override def buildCommand(command: String, params: String): UIO[Command] =
-    ZIO.succeed(Command(s"$command $params"))
+  override def buildCommand(command: String, params: String*): UIO[Command] =
+    ZIO.succeed(Command(command +: params.toList))
 
   override def execute(command: Command): IO[IOException, ProcessOutput] = out.get
 

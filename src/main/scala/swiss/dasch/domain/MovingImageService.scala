@@ -38,7 +38,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
     for {
       _       <- ZIO.logInfo(s"Extracting key frames for $file, $assetRef")
       absPath <- file.toAbsolutePath
-      cmd     <- executor.buildCommand("/sipi/scripts/export-moving-image-frames.sh", s"-i $absPath")
+      cmd     <- executor.buildCommand("/sipi/scripts/export-moving-image-frames.sh", "-i", absPath.toString)
       _       <- executor.executeOrFail(cmd)
     } yield ()
 
