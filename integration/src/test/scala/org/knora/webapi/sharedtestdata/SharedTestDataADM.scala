@@ -47,7 +47,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
@@ -69,7 +68,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
@@ -90,7 +88,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM()
@@ -107,7 +104,6 @@ object SharedTestDataADM {
       status = false,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM()
@@ -127,7 +123,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq(imagesReviewerGroup),
       projects = Seq(incunabulaProject, imagesProject),
       permissions = PermissionsDataADM(
@@ -208,7 +203,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
@@ -238,7 +232,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
@@ -264,7 +257,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
-      token = None,
       groups = Seq(imagesReviewerGroup),
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
@@ -375,7 +367,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
@@ -405,7 +396,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
@@ -431,7 +421,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
@@ -546,7 +535,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
@@ -575,7 +563,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
@@ -603,7 +590,6 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
@@ -694,7 +680,6 @@ object SharedTestDataADM {
     status = true,
     lang = "en",
     password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
-    token = None,
     groups = Seq.empty[GroupADM],
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(

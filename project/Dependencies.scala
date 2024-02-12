@@ -68,9 +68,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.11" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21"
 
   // input validation
   val commonsValidator =
@@ -94,7 +92,7 @@ object Dependencies {
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.9"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.9"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.1" // Should be Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.3"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
@@ -164,8 +162,6 @@ object Dependencies {
     jakartaJSON,
     jenaText,
     jwtSprayJson,
-    kamonCore,
-    kamonScalaFuture,
     rdf4jShacl,
     saxonHE,
     scalaGraph,

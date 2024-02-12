@@ -5,8 +5,8 @@
 
 package org.knora.webapi.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.*
+import scalax.collection.hyperedges.DiHyperEdge
+import scalax.collection.immutable.Graph
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
@@ -15,15 +15,16 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSort
  * Tests [[TopologicalSortUtil]].
  */
 class TopologicalSortUtilSpec extends CoreSpec {
-  type NodeT = Graph[Int, DiHyperEdge]#NodeT
+  type GraphT = Graph[Int, DiHyperEdge[Int]]
+  type NodeT  = GraphT#NodeT
 
-  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] = orders.map(_.map(_.value))
+  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] = orders.map(_.map(_.outer))
 
   "TopologicalSortUtilSpec" should {
 
     "return all topological orders of a graph with one leaf" in {
-      val graph: Graph[Int, DiHyperEdge] =
-        Graph[Int, DiHyperEdge](DiHyperEdge[Int](2, 4), DiHyperEdge[Int](2, 7), DiHyperEdge[Int](4, 5))
+      val graph: GraphT =
+        Graph.from(List(DiHyperEdge[Int](2)(4), DiHyperEdge[Int](2)(7), DiHyperEdge[Int](4)(5)))
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
@@ -38,13 +39,15 @@ class TopologicalSortUtilSpec extends CoreSpec {
     }
 
     "return all topological orders of a graph with multiple leaves" in {
-      val graph: Graph[Int, DiHyperEdge] =
-        Graph[Int, DiHyperEdge](
-          DiHyperEdge[Int](2, 4),
-          DiHyperEdge[Int](2, 7),
-          DiHyperEdge[Int](2, 8),
-          DiHyperEdge[Int](4, 5),
-          DiHyperEdge[Int](7, 3)
+      val graph: GraphT =
+        Graph.from(
+          List(
+            DiHyperEdge[Int](2)(4),
+            DiHyperEdge[Int](2)(7),
+            DiHyperEdge[Int](2)(8),
+            DiHyperEdge[Int](4)(5),
+            DiHyperEdge[Int](7)(3)
+          )
         )
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
@@ -61,7 +64,7 @@ class TopologicalSortUtilSpec extends CoreSpec {
     }
 
     "return an empty set of orders for an empty graph" in {
-      val graph: Graph[Int, DiHyperEdge] = Graph[Int, DiHyperEdge]()
+      val graph: GraphT = Graph.empty
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
@@ -72,8 +75,8 @@ class TopologicalSortUtilSpec extends CoreSpec {
     }
 
     "return an empty set of orders for a cyclic graph" in {
-      val graph: Graph[Int, DiHyperEdge] =
-        Graph[Int, DiHyperEdge](DiHyperEdge[Int](2, 4), DiHyperEdge[Int](4, 7), DiHyperEdge[Int](7, 2))
+      val graph: GraphT =
+        Graph.from(List(DiHyperEdge[Int](2)(4), DiHyperEdge[Int](4)(7), DiHyperEdge[Int](7)(2)))
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
