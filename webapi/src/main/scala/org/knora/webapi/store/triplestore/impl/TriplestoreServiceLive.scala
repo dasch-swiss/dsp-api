@@ -259,12 +259,13 @@ case class TriplestoreServiceLive(
                 uriBuilder
               }
 
-            inputEntity <- loadRdfObject(elem.path)
+            rdfContents <- loadRdfObject(elem.path)
 
             httpPost <-
               ZIO.attemptBlocking {
-                val httpPost = new HttpPost(uriBuilder.build())
-                httpPost.setEntity(inputEntity)
+                val httpPost          = new HttpPost(uriBuilder.build())
+                val turtleContentType = ContentType.create(mimeTypeTextTurtle, "UTF-8")
+                httpPost.setEntity(new StringEntity(rdfContents, turtleContentType))
                 httpPost
               }
             responseHandler <- ZIO.attempt(returnInsertGraphDataResponse(graphName)(_))
@@ -278,23 +279,9 @@ case class TriplestoreServiceLive(
   /**
    * Load the RdfDataObject into some AbstractHttpEntity from either a relative ../$path or through a resource.
    */
-  private def loadRdfObject(path: String): Task[AbstractHttpEntity] = {
-    val turtleContentType = ContentType.create(mimeTypeTextTurtle, "UTF-8")
-
-    val relativeFileEntity = {
-      // Add the input file to the body of the request.
-      // here we need to tweak the base directory path from "webapi"
-      // to the parent folder where the files can be found
-      val inputFile = Paths.get("..", path)
-      ZIO.attemptBlocking {
-        if (!Files.exists(inputFile))
-          throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
-        new FileEntity(inputFile.toFile, turtleContentType)
-      }
-    }
-
-    val resourceStringEntity =
-      ZIO.attemptBlocking(new StringEntity(Source.fromResource(path).mkString, turtleContentType))
+  private def loadRdfObject(path: String): Task[String] = {
+    val relativeFileEntity   = ZIO.readFile(Paths.get("..", path))
+    val resourceStringEntity = ZIO.attemptBlocking(Source.fromResource(path).mkString)
 
     relativeFileEntity.orElse(resourceStringEntity)
   }
