@@ -129,7 +129,6 @@ object UsersEndpoints {
       systemAdmin: SystemAdmin
     )
     object UserCreateRequest {
-      import sttp.tapir.generic.auto.*
       import Codecs.ZioJsonCodec.*
       implicit val jsonCodec: JsonCodec[UserCreateRequest] = DeriveJsonCodec.gen[UserCreateRequest]
     }
