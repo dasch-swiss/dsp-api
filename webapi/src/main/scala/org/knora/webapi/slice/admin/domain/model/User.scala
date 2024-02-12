@@ -53,7 +53,6 @@ final case class User(
   status: Boolean,
   lang: String,
   password: Option[String] = None,
-  token: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   permissions: PermissionsDataADM = PermissionsDataADM()
@@ -104,7 +103,6 @@ final case class User(
           status = false,
           lang = "",
           password = None,
-          token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM()
@@ -112,13 +110,12 @@ final case class User(
       case UserInformationTypeADM.Short =>
         self.copy(
           password = None,
-          token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Restricted =>
-        self.copy(password = None, token = None)
+        self.copy(password = None)
       case UserInformationTypeADM.Full =>
         self
     }
