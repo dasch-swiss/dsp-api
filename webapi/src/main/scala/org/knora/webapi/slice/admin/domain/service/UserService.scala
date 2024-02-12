@@ -34,11 +34,6 @@ case class UserService(
     userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
   def findAll: Task[Seq[User]] =
     userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
-  def findUserIsInProjectAdminGroup(userIri: UserIri): Task[Chunk[ProjectADM]] = for {
-    projectAdminGroupIris <-
-      userRepo.findById(userIri).map(_.map(_.isInProjectAdminGroup)).map(_.getOrElse(Chunk.empty))
-    projects <- ZIO.foreach(projectAdminGroupIris)(projectsService.findById).map(_.flatten)
-  } yield projects
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
