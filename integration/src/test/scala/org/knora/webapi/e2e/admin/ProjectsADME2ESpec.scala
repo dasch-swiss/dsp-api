@@ -5,7 +5,6 @@
 
 package org.knora.webapi.e2e.admin
 
-import dsp.valueobjects.V2
 import org.apache.pekko.http.scaladsl.model.ContentTypes
 import org.apache.pekko.http.scaladsl.model.HttpEntity
 import org.apache.pekko.http.scaladsl.model.HttpResponse
@@ -13,6 +12,13 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.pekko.util.Timeout
+
+import java.net.URLEncoder
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.*
+
+import dsp.valueobjects.V2
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -26,11 +32,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
-
-import java.net.URLEncoder
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.*
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
