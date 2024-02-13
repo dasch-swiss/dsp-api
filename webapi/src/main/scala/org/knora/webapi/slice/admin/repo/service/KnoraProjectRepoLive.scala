@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import play.twirl.api.TxtFormat
 import zio.*
 
 import dsp.valueobjects.V2
