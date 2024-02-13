@@ -238,7 +238,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     deleteComment: Option[String] = None,
     requestingUser: User,
     isLinkValue: Boolean = false
-  ): Any = {
+  ): Unit = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -282,6 +282,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
         case None          => ()
       }
+      ()
     } else {
       // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
       if (
@@ -4325,7 +4326,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteDate: Instant                       = Instant.now
     val deleteComment                             = Some("this value was incorrect")
 
-    // TODO comment out
     UnsafeZioRun.run(
       ValuesResponderV2.deleteValueV2(
         DeleteValueV2(
