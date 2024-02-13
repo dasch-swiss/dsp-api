@@ -129,7 +129,7 @@ final case class KnoraProjectRepoLive(
     for {
       ttl      <- triplestore.queryRdf(getProjectByShortcode(shortcode))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      resource <- newModel.getResourceByPropertyValue(ProjectShortcode, shortcode.value)
+      resource <- newModel.getResourceByPropertyStringValue(ProjectShortcode, shortcode.value)
       project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
     } yield project
 
@@ -137,7 +137,7 @@ final case class KnoraProjectRepoLive(
     for {
       ttl      <- triplestore.queryRdf(getProjectByShortname(shortname))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      resource <- newModel.getResourceByPropertyValue(ProjectShortname, shortname.value)
+      resource <- newModel.getResourceByPropertyStringValue(ProjectShortname, shortname.value)
       project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
     } yield project
 

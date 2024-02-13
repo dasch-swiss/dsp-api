@@ -360,7 +360,12 @@ final case class RdfResource(private val res: Resource) {
  */
 final case class RdfModel private (private val model: Model) {
 
-  // TODO: Docs, tests
+  /**
+   * Returns a [[RdfResource]] for the given subject IRI.
+   *
+   * @param subjectIri the IRI of the resource.
+   * @return           the [[RdfResource]] or None if the resource is not present.
+   */
   def getResource(subjectIri: String): UIO[Option[RdfResource]] =
     for {
       resource   <- ZIO.attempt(model.createResource(subjectIri)).orDie
@@ -377,12 +382,25 @@ final case class RdfModel private (private val model: Model) {
   def getResourceOrFail(subjectIri: String): IO[RdfError, RdfResource] =
     getResource(subjectIri).someOrFail(ResourceNotPresent(subjectIri))
 
-  // TODO: Docs, tests
-  def getResourceByPropertyValue(propertyIri: String, value: String): UIO[Option[RdfResource]] =
-    getResourceByPropertyValueOrFail(propertyIri, value).option
+  /**
+   * Returns a [[RdfResource]] for a given property IRI and value.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param value       the value of the object.
+   * @return            the [[RdfResource]] or None if the resource is not present.
+   */
+  def getResourceByPropertyStringValue(propertyIri: String, value: String): UIO[Option[RdfResource]] =
+    getResourceByPropertyStringValueOrFail(propertyIri, value).option
 
-  // TODO: Docs, tests
-  def getResourceByPropertyValueOrFail(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
+  /**
+   * Returns a [[RdfResource]] for a given property IRI and value.
+   * Fails if no resource with the given property IRI and value is present in the model.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param value       the value of the object.
+   * @return            the [[RdfResource]] or an [[RdfError]] if the resource is not present.
+   */
+  def getResourceByPropertyStringValueOrFail(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
     val iter = model.listStatements(null, model.createProperty(propertyIri), value)
     val iri  = Option.when(iter.hasNext)(iter.nextStatement().getSubject.getURI)
     for {
