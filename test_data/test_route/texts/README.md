@@ -21,7 +21,7 @@ Is the mapping used to translate html markup using the default mapping `Ontology
 - example text file: `StandardHTML`
 
 Note: that you can use this mapping to generate the default mapping that is distributed
-as `knora-ontologies/standoff-data.ttl`.  
+as `webapi/src/main/resources/knora-ontologies/standoff-data.ttl`.
 Please read the official documentation about Standoff Standard Mapping.
 
 Step to update standard mapping:
@@ -76,7 +76,7 @@ WHERE {
 }
 ```
 
-5. Find differences to update by hand (to avoid massive IRI update) the `knora-ontologies/standoff-data.ttl`, pay attention to namespaces (e.g. replace all `http://rdfh.ch/projects/0001/mappings/update-standard-mapping` by `http://rdfh.ch/standoff/mappings/StandardMapping`)!
+5. Find differences to update by hand (to avoid massive IRI update) the `webapi/src/main/resources/knora-ontologies/standoff-data.ttl`, pay attention to namespaces (e.g. replace all `http://rdfh.ch/projects/0001/mappings/update-standard-mapping` by `http://rdfh.ch/standoff/mappings/StandardMapping`)!
 6. Prepare an upgrade script of an existing Knora base
 
 ## HTML
