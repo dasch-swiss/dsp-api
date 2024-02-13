@@ -3684,7 +3684,7 @@ knora-api:Resource  rdf:type       owl:Class ;
         knora-api:isResourceClass  true .
 
 knora-api:valueAsString
-        rdf:type               owl:ObjectProperty ;
+        rdf:type               owl:DatatypeProperty ;
         rdfs:comment           "A plain string representation of a value" ;
         knora-api:objectType   xsd:string ;
         knora-api:subjectType  knora-api:Value .
