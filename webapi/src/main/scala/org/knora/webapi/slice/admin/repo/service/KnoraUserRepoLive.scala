@@ -86,11 +86,11 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
       preferredLanguage <-
         resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
-      status               <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
-      isInProjectIris      <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
-      isInGroupIris        <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
-      isInSystemAdminGroup <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
-      isInProjectAdminGroupIris <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInSystemAdminGroup)
+      status                    <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
+      isInProjectIris           <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
+      isInGroupIris             <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
+      isInSystemAdminGroup      <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
+      isInProjectAdminGroupIris <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProjectAdminGroup)
     } yield KnoraUser(
       userIri,
       username,
