@@ -157,7 +157,8 @@ val customScalacOptions = Seq(
   "-Wvalue-discard",
   "-Xlint:doc-detached",
   // silence twirl templates unused imports warnings
-  "-Wconf:src=target/.*:s"
+  "-Wconf:src=target/.*:s",
+  "-Xfatal-warnings"
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
@@ -207,7 +208,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
         contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
     },
     // add 'config' directory to the classpath of the start script,
-    Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
+    Universal / scriptClasspath := Seq(
+      "webapi/scripts",
+      "webapi/src/main/resources/knora-ontologies",
+      "../config/"
+    ) ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
     Compile / mainClass := Some("org.knora.webapi.Main"),
     // add dockerCommands used to create the image

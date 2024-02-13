@@ -203,8 +203,8 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations =
-    AppConfig & DspIngestConfig & InstrumentationServerConfig & JwtConfig & KnoraApi & Triplestore
+  type AppConfigurationsTest = AppConfig & DspIngestConfig & Triplestore
+  type AppConfigurations     = AppConfigurationsTest & InstrumentationServerConfig & JwtConfig & KnoraApi
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
 

@@ -298,7 +298,6 @@ final case class ValuesResponderV2Live(
                        // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
                        val permissionComparisonResult: PermissionComparisonResult =
                          PermissionUtilADM.comparePermissionsADM(
-                           entityCreator = requestingUser.id,
                            entityProject = resourceInfo.projectADM.id,
                            permissionLiteralA = validatedCustomPermissions,
                            permissionLiteralB = defaultValuePermissions,

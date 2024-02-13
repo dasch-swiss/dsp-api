@@ -20,7 +20,7 @@ object RdfModelSpec extends ZIOSpecDefault {
 
   private case class FailingStringContainer(value: String)
   private implicit val failingStringContainerConverter: String => Either[String, FailingStringContainer] =
-    str => Left("Conversion failed")
+    _ => Left("Conversion failed")
 
   private case class LangStringContainer(value: LangString)
   private implicit val langStringContainerConverter: LangString => Either[String, LangStringContainer] =
@@ -28,7 +28,7 @@ object RdfModelSpec extends ZIOSpecDefault {
 
   private case class FailingLangStringContainer(value: LangString)
   private implicit val failingLangStringContainerConverter: LangString => Either[String, FailingLangStringContainer] =
-    langString => Left("Conversion failed")
+    _ => Left("Conversion failed")
 
   private case class BooleanContainer(value: Boolean)
   private implicit val booleanContainerConverter: Boolean => Either[String, BooleanContainer] =
@@ -36,7 +36,7 @@ object RdfModelSpec extends ZIOSpecDefault {
 
   private case class FailingBooleanContainer(value: Boolean)
   private implicit val failingBooleanContainerConverter: Boolean => Either[String, FailingBooleanContainer] =
-    bool => Left("Conversion failed")
+    _ => Left("Conversion failed")
 
   private val rdfModelSuite = suite("RdfModel")(
     suite("Deserialize turtle")(

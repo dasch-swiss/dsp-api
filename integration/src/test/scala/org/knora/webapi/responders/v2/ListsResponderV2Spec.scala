@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2
 import org.apache.pekko
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
@@ -22,9 +21,7 @@ import pekko.testkit.ImplicitSender
  * Tests [[ListsResponderV2]].
  */
 class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
-
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val listsResponderV2SpecFullData              = new ListsResponderV2SpecFullData
+  private val listsResponderV2SpecFullData = new ListsResponderV2SpecFullData
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

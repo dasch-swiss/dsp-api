@@ -13,7 +13,6 @@ import scala.concurrent.duration.NANOSECONDS
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.HttpMethods.*
 import pekko.http.scaladsl.model.HttpResponse
 import pekko.http.scaladsl.model.StatusCodes
@@ -25,7 +24,7 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
  */
 class CORSSupportE2ESpec extends E2ESpec {
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+  implicit def default: RouteTestTimeout = RouteTestTimeout(
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 

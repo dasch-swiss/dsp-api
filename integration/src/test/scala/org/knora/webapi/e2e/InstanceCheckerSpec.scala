@@ -17,7 +17,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.FileUtil
 
-import pekko.actor.ActorSystem
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
@@ -26,7 +25,7 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+  implicit def default: RouteTestTimeout = RouteTestTimeout(
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 
