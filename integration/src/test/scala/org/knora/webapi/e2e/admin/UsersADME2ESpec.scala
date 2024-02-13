@@ -805,6 +805,21 @@ class UsersADME2ESpec
         response2.status should be(StatusCodes.OK)
       }
 
+      "return 'Forbidden' when updating another user's password ifarequesting user is not a SystemAdmin" in {
+        val changeUserPasswordRequest: String =
+          s"""{
+             |    "requesterPassword": "test",
+             |    "newPassword": "test123456"
+             |}""".stripMargin
+
+        val request1 = Put(
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(customUserIri, "utf-8")}/Password",
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test"))
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+        response1.status should be(StatusCodes.Forbidden)
+      }
+
       "return 'BadRequest' if new password in change password request is missing" in {
         val changeUserPasswordRequest: String =
           s"""{

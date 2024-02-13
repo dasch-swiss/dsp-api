@@ -7,7 +7,6 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
-import zio.prelude.Validation
 
 import java.util.UUID
 
@@ -23,7 +22,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -81,10 +79,6 @@ case class ChangeUserApiRequestADM(
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
 
-case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], newPassword: Option[String]) {
-  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserPasswordApiRequestADMFormat.write(this)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -112,21 +106,6 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Request updating the users password.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param userUpdatePasswordPayload    the [[UserUpdatePasswordPayloadADM]] object containing the old and new password.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangePasswordRequestADM(
-  userIri: IRI,
-  userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
 ) extends UsersResponderRequestADM
 
 /**
@@ -408,20 +387,6 @@ case class UserChangeRequestADM(
   }
 }
 
-case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password)
-object UserUpdatePasswordPayloadADM {
-  def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
-    val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(validateOneWithFrom(_, Password.from, a => a))
-      .getOrElse(Validation.fail("The requester's password is missing."))
-    val newPasswordValidation =
-      apiRequest.newPassword
-        .map(validateOneWithFrom(_, Password.from, a => a))
-        .getOrElse(Validation.fail("The new password is missing."))
-    Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
-  }
-}
-
 /**
  * Represents an answer to a group membership request.
  *
@@ -449,11 +414,6 @@ object UsersADMJsonProtocol
     jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
     jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
-  implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(
-    ChangeUserPasswordApiRequestADM,
-    "requesterPassword",
-    "newPassword"
-  )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =

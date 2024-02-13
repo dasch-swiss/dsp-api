@@ -17,7 +17,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.RouteUtilADM
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
@@ -34,8 +33,7 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    changeUserPassword() ~
-      changeUserStatus() ~
+    changeUserStatus() ~
       changeUserSystemAdminMembership() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
@@ -43,23 +41,6 @@ final case class UsersRouteADM()(
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * Change user's password.
-   */
-  private def changeUserPassword(): Route =
-    path(usersBasePath / "iri" / Segment / "Password") { userIri =>
-      put {
-        entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            payload        <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-            r              <- getUserUuid(requestContext)
-          } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
-          RouteUtilADM.runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
 
   /**
    * Change user's status.

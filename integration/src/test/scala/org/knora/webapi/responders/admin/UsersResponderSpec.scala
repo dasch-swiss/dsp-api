@@ -26,6 +26,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -297,21 +298,18 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       "UPDATE the user's password (by himself)" in {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test123456")
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = requesterPassword,
-            newPassword = newPassword
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          apiRequestID = UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.changePassword(
+            SharedTestDataADM.normalUser.userIri,
+            PasswordChangeRequest(requesterPassword, newPassword),
+            SharedTestDataADM.normalUser,
+            UUID.randomUUID
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test123456")
+        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, newPassword.value)
         val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
 
         resF map { res => assert(res) }
@@ -321,17 +319,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test654321")
 
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = requesterPassword,
-            newPassword = newPassword
-          ),
-          requestingUser = SharedTestDataADM.rootUser,
-          apiRequestID = UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.changePassword(
+            SharedTestDataADM.normalUser.userIri,
+            PasswordChangeRequest(requesterPassword, newPassword),
+            SharedTestDataADM.rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
@@ -383,49 +378,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.permissions.isSystemAdmin should equal(false)
-      }
-
-      "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
-        /* Password is updated by other normal user */
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = Password.unsafeFrom("test"),
-            newPassword = Password.unsafeFrom("test123456")
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's password can only be changed by the user itself or a system administrator")
-          )
-        )
-
-        /* Status is updated by other normal user */
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator"))
-        )
-
-        /* System admin group membership */
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(true),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator"))
-        )
       }
 
       "return 'BadRequest' if system user is requested to change" in {

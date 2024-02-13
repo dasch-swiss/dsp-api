@@ -19,6 +19,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseA
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -90,17 +91,32 @@ final case class UsersRestService(
 
   private def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
     ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
+  private def ensureNotABuiltInUser(userIri: UserIri) =
+    ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
 
   def updateUser(
     requestingUser: User,
     userIri: UserIri,
     changeRequest: BasicUserInformationChangeRequest
   ): Task[UserOperationResponseADM] = for {
+    _    <- ensureNotABuiltInUser(userIri)
     _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
     uuid <- Random.nextUUID
     response <-
       responder.changeBasicUserInformationADM(userIri, changeRequest, uuid).flatMap(format.toExternal)
   } yield response
+
+  def changePassword(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: PasswordChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changePassword(userIri, changeRequest, requestingUser, uuid).flatMap(format.toExternal)
+    } yield response
 }
 
 object UsersRestService {
