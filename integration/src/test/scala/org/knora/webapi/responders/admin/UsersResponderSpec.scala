@@ -357,24 +357,22 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's system admin membership" in {
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(true),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response1 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeSystemAdmin(
+            SharedTestDataADM.normalUser.userIri,
+            SystemAdmin.from(true),
+            UUID.randomUUID()
+          )
         )
-
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.isSystemAdmin should equal(true)
 
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response2 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeSystemAdmin(
+            SharedTestDataADM.normalUser.userIri,
+            SystemAdmin.from(false),
+            UUID.randomUUID()
+          )
         )
-
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.permissions.isSystemAdmin should equal(false)
       }
     }

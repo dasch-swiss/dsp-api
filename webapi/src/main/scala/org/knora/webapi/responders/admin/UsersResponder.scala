@@ -83,18 +83,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri,
-          changeSystemAdminMembershipStatusRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeUserSystemAdminMembershipStatusADM(
-        userIri,
-        changeSystemAdminMembershipStatusRequest,
-        requestingUser,
-        apiRequestID
-      )
     case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
@@ -357,50 +345,18 @@ final case class UsersResponder(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param systemAdmin    the new status.
    *
-   * @param requestingUser       the user profile of the requesting user.
-   * @param apiRequestID         the unique api request ID.
+   * @param apiRequestId         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
    *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
    *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeUserSystemAdminMembershipStatusADM(
-    userIri: IRI,
+  def changeSystemAdmin(
+    userIri: UserIri,
     systemAdmin: SystemAdmin,
-    requestingUser: User,
-    apiRequestID: UUID
+    apiRequestId: UUID
   ): Task[UserOperationResponseADM] = {
-
-    /**
-     * The actual change user status task run with an IRI lock.
-     */
-    def changeUserSystemAdminMembershipStatusTask(
-      userIri: IRI,
-      systemAdmin: SystemAdmin,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
-      for {
-        // check if the requesting user is allowed to perform updates (i.e. system admin)
-        _ <-
-          ZIO.attempt(
-            if (!requestingUser.permissions.isSystemAdmin) {
-              throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
-            }
-          )
-
-        // create the update request
-        result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
-                    requestingUser = Users.SystemUser
-                  )
-
-      } yield result
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser)
-    )
+    val updateTask = updateUserADM(userIri, UserChangeRequestADM(systemAdmin = Some(systemAdmin)), Users.SystemUser)
+    IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
   }
 
   /**
@@ -1405,6 +1361,13 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeUserStatus(userIri, status, apiRequestID))
+
+  def changeSystemAdmin(
+    userIri: UserIri,
+    systemAdmin: SystemAdmin,
+    apiRequestId: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.changeSystemAdmin(userIri, systemAdmin, apiRequestId))
 
   def findUserByIri(
     identifier: UserIri,

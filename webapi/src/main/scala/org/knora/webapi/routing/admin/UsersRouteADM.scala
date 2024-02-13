@@ -14,11 +14,9 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
-import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -33,32 +31,12 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    changeUserSystemAdminMembership() ~
-      addUserToProjectMembership() ~
+    addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * Change user's SystemAdmin membership.
-   */
-  private def changeUserSystemAdminMembership(): Route =
-    path(usersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
-      put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            r              <- getUserUuid(requestContext)
-            newSystemAdmin <- ZIO
-                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.from))
-                                .orElseFail(BadRequestException("The systemAdmin is missing."))
-          } yield UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid)
-          runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
 
   /**
    * add user to project

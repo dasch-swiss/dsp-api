@@ -24,62 +24,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.slice.admin.domain.model.*
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
- * be changed are: user's username, email, given name, family name, language, user status, and system admin membership.
- *
- * @param username          the new username. Needs to be unique on the server.
- * @param email             the new email address. Needs to be unique on the server.
- * @param givenName         the new given name.
- * @param familyName        the new family name.
- * @param lang              the new ISO 639-1 code of the new preferred language.
- * @param status            the new user status (active = true, inactive = false).
- * @param systemAdmin       the new system admin membership status.
- */
-case class ChangeUserApiRequestADM(
-  username: Option[String] = None,
-  email: Option[String] = None,
-  givenName: Option[String] = None,
-  familyName: Option[String] = None,
-  lang: Option[String] = None,
-  status: Option[Boolean] = None,
-  systemAdmin: Option[Boolean] = None
-) {
-
-  val parametersCount: Int = List(
-    username,
-    email,
-    givenName,
-    familyName,
-    lang,
-    status,
-    systemAdmin
-  ).flatten.size
-
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-  /* check that only allowed information for the 3 cases (changing status, systemAdmin and basic information) is sent and not more. */
-
-  // change status case
-  if (status.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
-  }
-
-  // change system admin membership case
-  if (systemAdmin.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
-  }
-
-  // change basic user information case
-  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for change request.")
-
-  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
 /**
@@ -106,21 +50,6 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
- *
- * @param userIri              the IRI of the user to be updated.
- * @param systemAdmin          the [[SystemAdmin]] value object containing the new system admin membership status (true / false).
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeSystemAdminMembershipStatusRequestADM(
-  userIri: IRI,
-  systemAdmin: SystemAdmin,
-  requestingUser: User,
-  apiRequestID: UUID
 ) extends UsersResponderRequestADM
 
 /**
@@ -397,8 +326,6 @@ object UsersADMJsonProtocol
   implicit val userADMFormat: JsonFormat[User] = jsonFormat11(User)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
-  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
-    jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =

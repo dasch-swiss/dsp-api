@@ -27,6 +27,7 @@ import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -126,6 +127,13 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(zioJsonBody[StatusChangeRequest])
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Change a user's status identified by IRI.")
+
+    val usersIriSystemAdmin = baseEndpoints.securedEndpoint.put
+      .in(base / "iri" / PathVars.userIriPathVar / "SystemAdmin")
+      .in(zioJsonBody[SystemAdminChangeRequest])
+      .out(sprayJsonBody[UserOperationResponseADM])
+      .description("Change a user's SystemAdmin status identified by IRI.")
+
   }
 
   object delete {
@@ -151,6 +159,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       put.usersIriBasicInformation,
       put.usersIriPassword,
       put.usersIriStatus,
+      put.usersIriSystemAdmin,
       delete.deleteUser
     ).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
@@ -194,6 +203,11 @@ object UsersEndpoints {
     final case class StatusChangeRequest(status: UserStatus)
     object StatusChangeRequest {
       implicit val jsonCodec: JsonCodec[StatusChangeRequest] = DeriveJsonCodec.gen[StatusChangeRequest]
+    }
+
+    final case class SystemAdminChangeRequest(systemAdmin: SystemAdmin)
+    object SystemAdminChangeRequest {
+      implicit val jsonCodec: JsonCodec[SystemAdminChangeRequest] = DeriveJsonCodec.gen[SystemAdminChangeRequest]
     }
   }
 

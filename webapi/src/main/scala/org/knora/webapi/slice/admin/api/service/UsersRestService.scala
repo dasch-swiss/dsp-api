@@ -20,6 +20,8 @@ import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -120,13 +122,25 @@ final case class UsersRestService(
   def changeStatus(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: Requests.StatusChangeRequest
+    changeRequest: StatusChangeRequest
   ): Task[UserOperationResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
       _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
       uuid     <- Random.nextUUID
       response <- responder.changeUserStatus(userIri, changeRequest.status, uuid)
+    } yield response
+
+  def changeSystemAdmin(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: SystemAdminChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdmin(requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changeSystemAdmin(userIri, changeRequest.systemAdmin, uuid)
     } yield response
 }
 
