@@ -814,7 +814,6 @@ final case class ResourcesResponderV2Live(
                      // Make sure they don't give themselves higher permissions than they would get from the default permissions.
                      val permissionComparisonResult: PermissionComparisonResult =
                        PermissionUtilADM.comparePermissionsADM(
-                         requestingUser.id,
                          internalCreateResource.projectADM.id,
                          validatedCustomPermissions,
                          defaultResourcePermissions,
@@ -1155,7 +1154,6 @@ final case class ResourcesResponderV2Live(
 
                          val permissionComparisonResult: PermissionComparisonResult =
                            PermissionUtilADM.comparePermissionsADM(
-                             entityCreator = requestingUser.id,
                              entityProject = project.id,
                              permissionLiteralA = validatedCustomPermissions,
                              permissionLiteralB = defaultPropertyPermissions(propertyIri),

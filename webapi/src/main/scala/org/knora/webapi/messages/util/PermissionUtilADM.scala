@@ -290,7 +290,6 @@ object PermissionUtilADM extends LazyLogging {
    * @return a [[PermissionComparisonResult]].
    */
   def comparePermissionsADM(
-    entityCreator: IRI,
     entityProject: IRI,
     permissionLiteralA: String,
     permissionLiteralB: String,

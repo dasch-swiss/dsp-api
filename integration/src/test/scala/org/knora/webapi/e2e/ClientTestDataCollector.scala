@@ -48,6 +48,7 @@ class ClientTestDataCollector(appConfig: AppConfig) extends LazyLogging {
     Files.createDirectories(fullPath.getParent())
     Files.createFile(fullPath)
     Files.write(fullPath, s.getBytes(StandardCharsets.UTF_8))
+    ()
   }
 }
 

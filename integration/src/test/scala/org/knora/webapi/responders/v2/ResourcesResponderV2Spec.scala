@@ -479,7 +479,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   )
 
-  private def getResource(resourceIri: IRI, requestingUser: User): ReadResourceV2 = {
+  private def getResource(resourceIri: IRI): ReadResourceV2 = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -908,7 +908,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it again.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -944,7 +944,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -1103,7 +1103,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -1140,7 +1140,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -1174,7 +1174,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -1211,7 +1211,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -1747,7 +1747,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+      val outputResource: ReadResourceV2 = getResource(aThingIri)
       assert(outputResource.label == newLabel)
       assert(
         PermissionUtilADM.parsePermissions(outputResource.permissions) == PermissionUtilADM.parsePermissions(
@@ -1809,7 +1809,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+      val outputResource: ReadResourceV2 = getResource(aThingIri)
       assert(outputResource.label == newLabel)
       val updatedLastModificationDate = outputResource.lastModificationDate.get
       assert(updatedLastModificationDate.isAfter(aThingLastModificationDate))
@@ -1851,7 +1851,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+      val outputResource: ReadResourceV2 = getResource(aThingIri)
       val updatedLastModificationDate    = outputResource.lastModificationDate.get
       assert(updatedLastModificationDate == newModificationDate)
       aThingLastModificationDate = updatedLastModificationDate
@@ -2144,7 +2144,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
-      val outputResource: ReadResourceV2  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val outputResource: ReadResourceV2  = getResource(resourceIri)
       val firstTextValue: ReadTextValueV2 = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
       firstValueIriToErase.set(firstTextValue.valueIri)
 
@@ -2175,7 +2175,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
       secondValueIriToErase.set(updateValueResponse.valueIri)
 
-      val updatedResource                  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val updatedResource                  = getResource(resourceIri)
       val secondTextValue: ReadTextValueV2 = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
       secondValueIriToErase.set(secondTextValue.valueIri)
 
@@ -2247,7 +2247,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
       val outputResource: ReadResourceV2 =
-        getResource(resourceIri = resourceWithLinkIri, requestingUser = anythingUserProfile)
+        getResource(resourceWithLinkIri)
       val linkValue: ReadLinkValueV2 = outputResource.values(linkValuePropertyIri).head.asInstanceOf[ReadLinkValueV2]
 
       // Try to erase the first resource.
@@ -2356,7 +2356,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it again.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -2405,7 +2405,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the resource from the triplestore and check it.
 
-      val outputResource = getResource(resourceIri, anythingUserProfile)
+      val outputResource = getResource(resourceIri)
 
       checkCreateResource(
         inputResourceIri = resourceIri,
@@ -2494,7 +2494,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val testValue   = "a test value"
       // create new value.
 
-      val createValueResponse = UnsafeZioRun.runOrThrow(
+      UnsafeZioRun.runOrThrow(
         ValuesResponderV2.createValueV2(
           CreateValueV2(
             resourceIri = resourceIri,

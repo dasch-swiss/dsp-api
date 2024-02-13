@@ -31,7 +31,7 @@ object MetricsServer {
     docs       <- DocsServer.docsEndpoints.map(endpoints => ZioHttpInterpreter().toHttp(endpoints))
     prometheus <- ZIO.service[PrometheusApp]
     _          <- Server.install(prometheus.route ++ docs)
-    _          <- ZIO.never
+    _          <- ZIO.never.as(())
   } yield ()
 
   val make: ZIO[KnoraApi & State & InstrumentationServerConfig & ApiV2Endpoints & AdminApiEndpoints, Throwable, Unit] =
@@ -48,7 +48,7 @@ object MetricsServer {
                s"find docs on ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs"
            )
       _ <- metricsServer
-             .provideSome[State](
+             .provideSome(
                ZLayer.succeed(knoraApiConfig),
                ZLayer.succeed(adminApiEndpoints),
                ZLayer.succeed(apiV2Endpoints),

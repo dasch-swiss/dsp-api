@@ -94,7 +94,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val printErrorMessages           = false
   private var fooLastModDate: Instant      = Instant.now
   private var barLastModDate: Instant      = Instant.now
-  private var chairLastModDate: Instant    = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
   private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
 
@@ -164,7 +163,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "invalidate cached project information when adding an ontology to a project" in {
       // ernsure that the project is cached
       appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val projectResponse = expectMsgType[ProjectGetResponseADM](timeout)
+      expectMsgType[ProjectGetResponseADM](timeout)
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       val cachedProjectBefore = expectMsgType[Option[ProjectADM]](timeout)
       assert(cachedProjectBefore.isDefined)
@@ -176,7 +175,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID,
         requestingUser = imagesUser
       )
-      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      expectMsgType[ReadOntologyMetadataV2](timeout)
       // ensure that the project is no longer cached
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       val cachedProject = expectMsgType[Option[ProjectADM]](timeout)
@@ -648,7 +647,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val metadata = response.ontologies.head
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
       chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
-      chairLastModDate = metadata.lastModificationDate.getOrElse(
+      metadata.lastModificationDate.getOrElse(
         throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
       )
     }

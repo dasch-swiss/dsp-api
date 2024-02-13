@@ -342,7 +342,7 @@ object MockDspApiServer {
           )
         )
         .logError
-        .fold(err => false, succ => true)
+        .fold(_ => false, _ => true)
   }
 
   private def stubGetJsonResponse(
@@ -355,6 +355,7 @@ object MockDspApiServer {
     val jsonResponse = aResponse().withStatus(status).withBody(json).withHeader("Content-Type", "application/json")
     val stubBuilder  = get(urlEqualTo(url)).willReturn(jsonResponse)
     server.stubFor(stubBuilder)
+    ()
   }
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
