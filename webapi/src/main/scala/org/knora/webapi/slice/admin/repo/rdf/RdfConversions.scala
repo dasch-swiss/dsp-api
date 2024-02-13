@@ -5,8 +5,15 @@
 
 package org.knora.webapi.slice.admin.repo.rdf
 
+import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.V2
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.repo.rdf.LangString
 
 object RdfConversions {
@@ -33,4 +40,14 @@ object RdfConversions {
 
   implicit val selfjoinConverter: Boolean => Either[String, SelfJoin] =
     value => Right(SelfJoin.from(value))
+
+  // User properties
+  implicit val usernameConverter: String => Either[String, Username]         = Username.from
+  implicit val emailConverter: String => Either[String, Email]               = Email.from
+  implicit val familyNameConverter: String => Either[String, FamilyName]     = FamilyName.from
+  implicit val givenNameConverter: String => Either[String, GivenName]       = GivenName.from
+  implicit val passwordHashConverter: String => Either[String, PasswordHash] = PasswordHash.from
+  implicit val languageCodeConverter: String => Either[String, LanguageCode] = LanguageCode.from
+  implicit val userStatusConverter: Boolean => Either[String, UserStatus]    = Right(_).map(UserStatus.from)
+
 }

@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
@@ -71,14 +72,14 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)(Username.from)
-      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)(Email.from)
-      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)(FamilyName.from)
-      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)(GivenName.from)
-      passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)(PasswordHash.from)
+      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)
+      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)
+      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)
+      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)
+      passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
       preferredLanguage <-
-        resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)(LanguageCode.from)
-      status         <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)(b => Right(UserStatus.from(b)))
+        resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
+      status         <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
       isInProject    <- resource.getObjectIris(KnoraAdmin.IsInProject)
       isInProjectIris = isInProject.flatMap(iri => ProjectIri.from(iri.value).toOption)
       isInGroup      <- resource.getObjectIris(KnoraAdmin.IsInGroup)
