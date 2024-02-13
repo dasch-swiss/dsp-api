@@ -25,14 +25,6 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(ListIri.from("") == Left("List IRI cannot be empty."))
     },
-    test("pass an invalid value and return an error") {
-      val invalid = "ftp://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-      assertTrue(ListIri.from(invalid) == Left("List IRI is invalid."))
-    },
-    test("pass a valid value and successfully create value object") {
-      val valid = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-      assertTrue(ListIri.from(valid).map(_.value) == Right(valid))
-    },
     test("valid iris should be a valid iri") {
       val validIris = Gen.fromIterable(
         Seq(
