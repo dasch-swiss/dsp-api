@@ -27,14 +27,12 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectB
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortcode
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortname
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
-import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
 object KnoraProjectQueries {
   private[service] def getProjectByIri(iri: ProjectIri): Construct =
