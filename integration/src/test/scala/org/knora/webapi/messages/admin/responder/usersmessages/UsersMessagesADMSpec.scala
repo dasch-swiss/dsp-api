@@ -7,7 +7,6 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
@@ -28,8 +27,6 @@ class UsersMessagesADMSpec extends CoreSpec {
   private val groups      = SharedTestDataADM.rootUser.groups
   private val projects    = SharedTestDataADM.rootUser.projects
   private val permissions = SharedTestDataADM.rootUser.permissions
-
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   "The UserADM case class" should {
     "return a RESTRICTED UserADM when requested " in {

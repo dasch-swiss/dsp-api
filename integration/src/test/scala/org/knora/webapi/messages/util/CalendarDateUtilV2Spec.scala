@@ -5,6 +5,8 @@
 
 package org.knora.webapi.util
 
+import org.scalatest.compatible.Assertion
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.*
@@ -18,7 +20,7 @@ class CalendarDateUtilV2Spec extends CoreSpec {
     expectedStartJDN: Int,
     expectedEndJDN: Int,
     dateStr: String
-  ): Unit = {
+  ): Assertion = {
     val calendarDateRange = CalendarDateRangeV2(
       startCalendarDate = calendarDate,
       endCalendarDate = calendarDate
@@ -37,7 +39,7 @@ class CalendarDateUtilV2Spec extends CoreSpec {
     expectedStartJDN: Int,
     expectedEndJDN: Int,
     dateStr: String
-  ): Unit = {
+  ): Assertion = {
     // Convert the date range to Julian Day Numbers and check that they're correct.
     val (startJDN: Int, endJDN: Int) = calendarDateRange.toJulianDayRange
     assert(startJDN == expectedStartJDN)

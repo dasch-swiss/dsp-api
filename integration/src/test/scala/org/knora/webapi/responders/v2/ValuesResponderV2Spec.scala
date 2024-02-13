@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko.testkit.ImplicitSender
+import org.scalatest.compatible.Assertion
 
 import java.time.Instant
 import java.util.UUID
@@ -237,7 +238,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     deleteComment: Option[String] = None,
     requestingUser: User,
     isLinkValue: Boolean = false
-  ): Unit = {
+  ): Any = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -298,12 +299,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
     maybeUpdatedLastModDate: Option[Instant]
-  ): Unit =
+  ): Assertion =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {
           case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => ()
+          case None                      => assert(true)
         }
 
       case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
@@ -4324,7 +4325,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteDate: Instant                       = Instant.now
     val deleteComment                             = Some("this value was incorrect")
 
-    val actual = UnsafeZioRun.run(
+    // TODO comment out
+    UnsafeZioRun.run(
       ValuesResponderV2.deleteValueV2(
         DeleteValueV2(
           resourceIri = resourceIri,

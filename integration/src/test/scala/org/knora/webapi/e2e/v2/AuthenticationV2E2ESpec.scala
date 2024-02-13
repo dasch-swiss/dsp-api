@@ -104,8 +104,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
   }
 
   "The Authentication Route ('v2/authentication')" should {
-
-    var token = new MutableTestString
+    val token = new MutableTestString
 
     "login with IRI" in {
 
@@ -279,8 +278,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
   }
 
   "The Users V1 Route using the Authenticator trait " ignore {
-
-    var token = new MutableTestString
+    val token = new MutableTestString
 
     "login in v2" in {
       /* Correct username and correct password */
@@ -348,8 +346,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
   }
 
   "The Users ADM Route using the Authenticator trait" should {
-
-    var token = new MutableTestString
+    val token = new MutableTestString
 
     "login in v2" in {
       /* Correct username and correct password */

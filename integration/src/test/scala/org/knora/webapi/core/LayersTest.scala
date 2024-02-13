@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import org.apache.pekko
 import zio.*
 
+import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
@@ -82,7 +83,7 @@ object LayersTest {
     with DspIngestTestContainer
     with SharedVolumes.Images
 
-  type CommonR0 = ActorSystem with AppConfigurations with JwtService with SipiService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurationsTest with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
       with ApiV2Endpoints

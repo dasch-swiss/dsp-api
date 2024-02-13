@@ -157,7 +157,8 @@ val customScalacOptions = Seq(
   "-Wvalue-discard",
   "-Xlint:doc-detached",
   // silence twirl templates unused imports warnings
-  "-Wconf:src=target/.*:s"
+  "-Wconf:src=target/.*:s",
+  "-Xfatal-warnings"
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))

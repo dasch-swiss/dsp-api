@@ -480,6 +480,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   )
 
   private def getResource(resourceIri: IRI, requestingUser: User): ReadResourceV2 = {
+    (requestingUser, requestingUser.id) // TODO: is this fine to remove? (silenced warning for now)
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
@@ -2494,7 +2495,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val testValue   = "a test value"
       // create new value.
 
-      val createValueResponse = UnsafeZioRun.runOrThrow(
+      UnsafeZioRun.runOrThrow(
         ValuesResponderV2.createValueV2(
           CreateValueV2(
             resourceIri = resourceIri,
