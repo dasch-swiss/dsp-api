@@ -8,6 +8,7 @@ import org.apache.jena.query.*
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -239,8 +240,10 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def getDataset: UIO[Dataset] =
     datasetRef.get
 
-  override def printDataset: UIO[Unit] =
+  override def printDataset: UIO[Unit] = {
+    println(s"TDB Context:\n${TDB.getContext}\n")
     getDataset.flatMap(ds => ZIO.logInfo(s"TriplestoreServiceInMemory.printDataset: ${printDatasetContents(ds)}"))
+  }
 
   def printDatasetContents(dataset: Dataset): Unit = {
     // Iterate over the named models
