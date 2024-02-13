@@ -17,7 +17,7 @@ object Vocabulary {
   object KnoraAdmin {
     val NS: Namespace = new SimpleNamespace("knora-admin", KnoraAdminPrefixExpansion)
 
-    // objectClass IRIs
+    // resource class IRIs
     val User: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "User")
 
     // property IRIs
