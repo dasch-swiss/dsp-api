@@ -5,21 +5,16 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import dsp.valueobjects.LanguageCode
 import org.eclipse.rdf4j.model.vocabulary.*
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.stream.ZStream
-
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -37,11 +32,16 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
+import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.stream.ZStream
 
 final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends KnoraUserRepo {
 
@@ -69,6 +69,13 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     } yield user
 
   private def toUser(resource: RdfResource) = {
+    def getObjectIrisConvert[A](r: RdfResource, prop: String)(implicit f: String => Either[String, A]) = for {
+      iris <- r.getObjectIris(prop)
+      as <- ZIO.foreach(iris)(it =>
+              ZIO.fromEither(f(it.value)).mapError(err => ConversionError(s"Unable to parse $it: $err"))
+            )
+    } yield as
+
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
@@ -79,15 +86,11 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
       preferredLanguage <-
         resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
-      status         <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
-      isInProject    <- resource.getObjectIris(KnoraAdmin.IsInProject)
-      isInProjectIris = isInProject.flatMap(iri => ProjectIri.from(iri.value).toOption)
-      isInGroup      <- resource.getObjectIris(KnoraAdmin.IsInGroup)
-      isInGroupIris   = isInGroup.flatMap(iri => GroupIri.from(iri.value).toOption)
-      isInSystemAdminGroup <-
-        resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)(b => Right(SystemAdmin.from(b)))
-      isInProjectAdminGroup    <- resource.getObjectIris(KnoraAdmin.IsInProjectAdminGroup)
-      isInProjectAdminGroupIris = isInProjectAdminGroup.map(_.value).map(ProjectIri.unsafeFrom)
+      status               <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
+      isInProjectIris      <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
+      isInGroupIris        <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
+      isInSystemAdminGroup <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
+      isInSystemAdminGroup <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInSystemAdminGroup)
     } yield KnoraUser(
       userIri,
       username,
