@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import zio.NonEmptyChunk
-import zio.URIO
 import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
@@ -30,11 +29,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
 
   private def findAll: ZIO[KnoraProjectRepoLive, Throwable, List[KnoraProject]] =
     ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findAll())
-
-  private def repoFromTrig(trig: String): URIO[TriplestoreServiceInMemory, Unit] = {
-    val ds = ???
-    ZIO.serviceWithZIO[TriplestoreServiceInMemory](_.setDataset(ds))
-  }
 
   override def spec: Spec[Any, Any] = suite("KnoraProjectRepoLive")(
     suite("findAll")(
