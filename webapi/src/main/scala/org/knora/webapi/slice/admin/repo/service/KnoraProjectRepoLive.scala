@@ -5,6 +5,9 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.model.vocabulary.OWL
+import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
@@ -26,6 +29,10 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 
 object KnoraProjectQueries {
   private[service] def getProjectByIri(iri: ProjectIri): Construct =
@@ -89,26 +96,23 @@ object KnoraProjectQueries {
           |}""".stripMargin
     )
 
-  private[service] def getAllProjects: Construct =
-    Construct(
-      """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-         |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-         |CONSTRUCT {
-         |  ?project ?p ?o .
-         |  ?project knora-admin:belongsToOntology ?ontology .
-         |}
-         |WHERE {
-         |  ?project a knora-admin:knoraProject .
-         |  OPTIONAL{
-         |    ?ontology a owl:Ontology .
-         |    ?ontology knora-base:attachedToProject ?project .
-         |  }
-         |  ?project ?p ?o .
-         |}""".stripMargin
-    )
+  private[service] def getAllProjects: Construct = {
+    val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
+    def spo                       = tp(project, p, o)
+    val query =
+      Queries
+        .CONSTRUCT(spo.andHas(Vocabulary.KnoraAdmin.belongsToProject, ontology))
+        .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
+        .where(
+          project
+            .isA(Vocabulary.KnoraAdmin.KnoraProject)
+            .and(
+              ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional
+            )
+            .and(spo)
+        )
+    Construct(query.getQueryString)
+  }
 }
 
 final case class KnoraProjectRepoLive(

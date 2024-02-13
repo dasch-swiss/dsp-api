@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 
 object Vocabulary {
@@ -18,7 +19,8 @@ object Vocabulary {
     val NS: Namespace = new SimpleNamespace("knora-admin", KnoraAdminPrefixExpansion)
 
     // resource class IRIs
-    val User: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val User: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val KnoraProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "KnoraProject")
 
     // property IRIs
     val username: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "username")
@@ -32,7 +34,18 @@ object Vocabulary {
     val isInGroup: Iri             = Rdf.iri(KnoraAdminPrefixExpansion, "isInGroup")
     val isInSystemAdminGroup: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "isInSystemAdminGroup")
     val isInProjectAdminGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "isInProjectAdminGroup")
+
+    // property not in ontology!
+    val belongsToProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
   }
+
+  object KnoraBase {
+    val NS: Namespace = new SimpleNamespace("knora-base", KnoraBasePrefixExpansion)
+
+    // property IRIs
+    val attachedToProject: Iri = Rdf.iri(KnoraBasePrefixExpansion, "attachedToProject")
+  }
+
   object NamedGraphs {
     val knoraAdminIri: Iri = Rdf.iri(adminDataNamedGraph.value)
   }
