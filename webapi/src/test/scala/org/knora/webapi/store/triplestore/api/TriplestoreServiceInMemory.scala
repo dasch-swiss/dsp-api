@@ -224,7 +224,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   private def loadRdfUrl(path: String): ZIO[Any & Scope, Throwable, InputStream] =
     ZIO
-      .attemptBlocking(Option(getClass.getClassLoader.getResourceAsStream(path)).get)
+      .attemptBlocking(
+        Option(getClass.getClassLoader.getResourceAsStream(path)).getOrElse(throw new Exception("can't find resource"))
+      )
       .orElse(fileInputStream(Paths.get("..", path)))
 
   private def checkGraphName(elem: RdfDataObject): Task[String] =
