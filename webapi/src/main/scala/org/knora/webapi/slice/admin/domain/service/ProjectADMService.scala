@@ -18,52 +18,17 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-trait ProjectADMService {
-  def findAll: Task[List[ProjectADM]]
-  def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]]
-  def findByShortname(shortname: String): Task[Option[ProjectADM]] =
-    ProjectIdentifierADM.ShortnameIdentifier.fromString(shortname).fold(_ => ZIO.none, findByProjectIdentifier)
-  def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
-  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
-  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit]
-  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit]
-}
-
-object ProjectADMService {
-
-  /**
-   * Given the [[ProjectADM]] constructs the project's data named graph.
-   *
-   * @param project A [[ProjectADM]].
-   * @return the [[InternalIri]] of the project's data named graph.
-   */
-  def projectDataNamedGraphV2(project: ProjectADM): InternalIri = {
-    val shortcode = Shortcode.unsafeFrom(project.shortcode)
-    val shortname = Shortname.unsafeFrom(project.shortname)
-    projectDataNamedGraphV2(shortcode, shortname)
-  }
-
-  /**
-   * Given the [[KnoraProject]] constructs the project's data named graph.
-   *
-   * @param project A [[KnoraProject]].
-   * @return the [[InternalIri]] of the project's data named graph.
-   */
-  def projectDataNamedGraphV2(project: KnoraProject): InternalIri =
-    projectDataNamedGraphV2(project.shortcode, project.shortname)
-
-  private def projectDataNamedGraphV2(shortcode: Shortcode, shortname: Shortname) =
-    InternalIri(s"${OntologyConstants.NamedGraphs.DataNamedGraphStart}/${shortcode.value}/${shortname.value}")
-}
-
-final case class ProjectADMServiceLive(
+final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,
   private val projectRepo: KnoraProjectRepo
-) extends ProjectADMService {
+) {
 
-  override def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
-  override def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+  def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
+
+  def findById(id: ProjectIri): Task[Option[ProjectADM]] =
+    findByProjectIdentifier(ProjectIdentifierADM.from(id))
+
+  def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] =
@@ -98,20 +63,20 @@ final case class ProjectADMServiceLive(
       ontologies = project.ontologies.map(InternalIri.apply).toList
     )
 
-  override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
+  def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectRepo.findAll()
       keywords  = projects.flatMap(_.keywords.map(_.value)).distinct.sorted
     } yield ProjectsKeywordsGetResponseADM(keywords)
 
-  override def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
+  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
     for {
       projectMaybe <- projectRepo.findById(id)
       keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
       result        = keywordsMaybe.map(ProjectKeywordsGetResponseADM(_))
     } yield result
 
-  override def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
+  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
     val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
     ontologyRepo
       .findByProject(project.id)
@@ -119,14 +84,38 @@ final case class ProjectADMServiceLive(
       .map(_ :+ projectGraph)
   }
 
-  override def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
+  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
     projectRepo.setProjectRestrictedView(project, settings)
 
-  override def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit] =
+  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit] =
     setProjectRestrictedView(toKnoraProject(project), settings)
 }
 
-object ProjectADMServiceLive {
-  val layer: URLayer[OntologyRepo & KnoraProjectRepo, ProjectADMServiceLive] =
-    ZLayer.fromFunction(ProjectADMServiceLive.apply _)
+object ProjectADMService {
+
+  /**
+   * Given the [[ProjectADM]] constructs the project's data named graph.
+   *
+   * @param project A [[ProjectADM]].
+   * @return the [[InternalIri]] of the project's data named graph.
+   */
+  def projectDataNamedGraphV2(project: ProjectADM): InternalIri = {
+    val shortcode = Shortcode.unsafeFrom(project.shortcode)
+    val shortname = Shortname.unsafeFrom(project.shortname)
+    projectDataNamedGraphV2(shortcode, shortname)
+  }
+
+  /**
+   * Given the [[KnoraProject]] constructs the project's data named graph.
+   *
+   * @param project A [[KnoraProject]].
+   * @return the [[InternalIri]] of the project's data named graph.
+   */
+  def projectDataNamedGraphV2(project: KnoraProject): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
+
+  private def projectDataNamedGraphV2(shortcode: Shortcode, shortname: Shortname) =
+    InternalIri(s"${OntologyConstants.NamedGraphs.DataNamedGraphStart}/${shortcode.value}/${shortname.value}")
+
+  val layer = ZLayer.derive[ProjectADMService]
 }

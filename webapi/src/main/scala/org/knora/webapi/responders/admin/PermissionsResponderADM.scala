@@ -220,6 +220,22 @@ trait PermissionsResponderADM {
     requestingUser: User,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM]
+
+  /**
+   * Creates the user's [[PermissionsDataADM]]
+   *
+   * @param projectIris            the projects the user is part of.
+   * @param groupIris              the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
+   * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
+   * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
+   * @return
+   */
+  def permissionsDataGetADM(
+    projectIris: Seq[IRI],
+    groupIris: Seq[IRI],
+    isInProjectAdminGroups: Seq[IRI],
+    isInSystemAdminGroup: Boolean
+  ): Task[PermissionsDataADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -318,7 +334,7 @@ final case class PermissionsResponderADMLive(
    * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
    * @return
    */
-  private def permissionsDataGetADM(
+  override def permissionsDataGetADM(
     projectIris: Seq[IRI],
     groupIris: Seq[IRI],
     isInProjectAdminGroups: Seq[IRI],
