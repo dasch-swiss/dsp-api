@@ -20,6 +20,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.0"
   val JenaVersion       = "4.10.0"
+  val Rdf4jVersion      = "4.3.9"
 
   val ZioConfigVersion            = "4.0.1"
   val ZioLoggingVersion           = "2.1.17"
@@ -85,16 +86,17 @@ object Dependencies {
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
 
   // other
-  val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
-  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.2"
-  val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.9"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.9"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
-  val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "2.0.1" // Should be Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.3"
-  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
+  val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"
+  val gwtServlet     = "com.google.gwt"    % "gwt-servlet"         % "2.10.0"
+  val icu4j          = "com.ibm.icu"       % "icu4j"               % "74.2"
+  val jakartaJSON    = "org.glassfish"     % "jakarta.json"        % "2.0.1"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"        % Rdf4jVersion
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"         % Rdf4jVersion
+  val rdf4jSparql    = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
+  val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.3.3"
+  val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.9.1"
 
   // test
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
@@ -163,6 +165,7 @@ object Dependencies {
     jenaText,
     jwtSprayJson,
     rdf4jShacl,
+    rdf4jSparql,
     saxonHE,
     scalaGraph,
     scalaLogging,

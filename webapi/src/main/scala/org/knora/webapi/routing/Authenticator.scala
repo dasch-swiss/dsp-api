@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.*
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -155,8 +156,9 @@ object Authenticator {
 
 final case class AuthenticatorLive(
   private val appConfig: AppConfig,
-  private val usersResponder: UsersResponderADM,
+  private val usersResponder: UsersResponder,
   private val jwtService: JwtService,
+  private val passwordService: PasswordService,
   private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
 
@@ -403,9 +405,10 @@ final case class AuthenticatorLive(
 
                       /* check if the user is active, if not, then no need to check the password */
                       _ <- ZIO.fail(BadCredentialsException(BAD_CRED_NOT_VALID)).when(!user.isActive)
-                      _ <- ZIO
-                             .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-                             .when(!user.passwordMatch(passCreds.password))
+                      _ <-
+                        ZIO
+                          .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
+                          .when(!user.password.exists(passwordService.matchesStr(passCreds.password, _)))
                     } yield true
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                     ZIO

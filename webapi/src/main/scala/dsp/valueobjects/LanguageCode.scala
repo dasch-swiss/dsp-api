@@ -38,6 +38,12 @@ object LanguageCode { self =>
     RM
   )
 
+  def unsafeFrom(value: String): LanguageCode =
+    make(value).fold(e => throw new IllegalArgumentException(e.head.getMessage), identity)
+
+  def from(value: String): Either[String, LanguageCode] =
+    make(value).toEitherWith(_.head.getMessage)
+
   def make(value: String): Validation[ValidationException, LanguageCode] =
     if (value.isEmpty) {
       Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))

@@ -16,7 +16,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
@@ -28,7 +28,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
-  responder: UsersResponderADM,
+  responder: UsersResponder,
   format: KnoraResponseRenderer
 ) {
 
