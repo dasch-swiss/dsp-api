@@ -35,7 +35,6 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
 
   override def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
     ZIO.die(new UnsupportedOperationException("Not implemented yet"))
-
 }
 
 object KnoraProjectRepoInMemory {

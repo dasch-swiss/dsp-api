@@ -406,7 +406,10 @@
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ],
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :isInSystemAdminGroup ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+                    [ rdf:type        owl:Restriction ;
+                      owl:onProperty  :isInProjectAdminGroup ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "Represents a Knora user."@en .
 
 

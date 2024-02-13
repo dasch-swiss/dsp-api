@@ -30,9 +30,9 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
- * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
+ * This spec is used to test the messages received by the [[UsersResponder]] actor.
  */
-class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
+class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser          = SharedTestDataADM.rootUser
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
@@ -88,7 +88,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByIri(
+          UsersResponder.findUserByIri(
             UserIri.unsafeFrom(rootUser.id),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -99,7 +99,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'None' when the user is unknown" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByIri(
+          UsersResponder.findUserByIri(
             UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -112,7 +112,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked about an user identified by 'email'" should {
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByEmail(
+          UsersResponder.findUserByEmail(
             Email.unsafeFrom(rootUser.email),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -123,7 +123,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'None' when the user is unknown" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByEmail(
+          UsersResponder.findUserByEmail(
             Email.unsafeFrom("userwrong@example.com"),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -136,7 +136,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked about an user identified by 'username'" should {
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByUsername(
+          UsersResponder.findUserByUsername(
             Username.unsafeFrom(rootUser.username),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -147,7 +147,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'None' when the user is unknown" in {
         val actual = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.findUserByUsername(
+          UsersResponder.findUserByUsername(
             Username.unsafeFrom("userwrong"),
             UserInformationTypeADM.Full,
             KnoraSystemInstances.Users.SystemUser
@@ -160,7 +160,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked to create a new user" should {
       "CREATE the user and return it's profile if the supplied email is unique " in {
         val response = UnsafeZioRun.runOrThrow(
-          UsersResponderADM.createNewUserADM(
+          UsersResponder.createNewUserADM(
             UserCreateRequest(
               username = Username.unsafeFrom("donald.duck"),
               email = Email.unsafeFrom("donald.duck@example.com"),
@@ -185,7 +185,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val exit = UnsafeZioRun.run(
-          UsersResponderADM.createNewUserADM(
+          UsersResponder.createNewUserADM(
             UserCreateRequest(
               username = Username.unsafeFrom("root"),
               email = Email.unsafeFrom("root2@example.com"),
@@ -204,7 +204,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         val exit = UnsafeZioRun.run(
-          UsersResponderADM.createNewUserADM(
+          UsersResponder.createNewUserADM(
             UserCreateRequest(
               username = Username.unsafeFrom("root2"),
               email = Email.unsafeFrom("root@example.com"),
@@ -484,7 +484,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // get current project memberships
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user to images project (00FF)
@@ -499,7 +499,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         val received = UnsafeZioRun.runOrThrow(
@@ -514,7 +514,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "not ADD user to project as project admin of another project" in {
         // get current project memberships
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // try to add user to incunabula project but as project admin of another project
@@ -534,7 +534,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // check that the user is still only member of one project
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // check that the user was not added to the project
@@ -550,7 +550,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "ADD user to project as project admin" in {
         // get current project memberships
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // add user to images project (00FF)
@@ -565,7 +565,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -582,7 +582,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "DELETE user from project and also as project admin" in {
         // check project memberships (user should be member of images and incunabula projects)
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -599,7 +599,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // verify that the user has been added as project admin to the images project
         val projectAdminMembershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // remove the user as member of the images project
@@ -613,12 +613,12 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // verify that the user has been removed as project member of the images project
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findProjectMemberShipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq(incunabulaProject))
 
         // this should also have removed him as project admin from images project
         val projectAdminMembershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         projectAdminMembershipsAfterUpdate.projects should equal(Seq())
 
         // also check that the user has been removed from the project's list of users
@@ -664,7 +664,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "Not ADD user to project admin group if he is not a member of that project" in {
         // get the current project admin memberships (should be empty)
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
@@ -687,7 +687,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "ADD user to project admin group" in {
         // get the current project admin memberships (should be empty)
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user as project member to images project
@@ -711,7 +711,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // get the updated project admin memberships (should contain images project)
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         // get project admins for images project (should contain normal user)
@@ -723,7 +723,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "DELETE user from project admin group" in {
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! UserProjectAdminMembershipRemoveRequestADM(
@@ -735,7 +735,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findUserProjectAdminMemberships(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
@@ -783,7 +783,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked to update the user's group membership" should {
       "ADD user to group" in {
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate should equal(Seq())
 
         appActor ! UserGroupMembershipAddRequestADM(
@@ -795,7 +795,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! GroupMembersGetRequestADM(
@@ -809,7 +809,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "DELETE user from group" in {
         val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! UserGroupMembershipRemoveRequestADM(
@@ -821,7 +821,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponderADM.findGroupMembershipsByIri(normalUser.userIri))
+          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsAfterUpdate should equal(Seq())
 
         appActor ! GroupMembersGetRequestADM(

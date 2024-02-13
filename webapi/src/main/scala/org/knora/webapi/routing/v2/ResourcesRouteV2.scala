@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetIngested
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
@@ -45,7 +45,7 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & UsersResponderADM
+    AppConfig & Authenticator & IriConverter & MessageRelay & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & UsersResponder
   ]
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi

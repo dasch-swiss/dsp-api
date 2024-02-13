@@ -11,7 +11,6 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword   = "pass-word"
   private val validGivenName  = "John"
   private val validFamilyName = "Rambo"
-  private val pwStrength      = PasswordStrength.unsafeFrom(12)
 
   private val userSuite = suite("User")()
 
@@ -159,24 +158,7 @@ object UserSpec extends ZIOSpecDefault {
 
   private val passwordHashSuite = suite("PasswordHash")(
     test("pass an empty value and return an error") {
-      assertTrue(PasswordHash.from("", pwStrength) == Left("Password cannot be empty."))
-    },
-    test("pass a valid value and successfully create value object") {
-      val passwordString = "password1"
-      val password       = PasswordHash.from(passwordString, pwStrength)
-      assertTrue(password.exists(_.matches(passwordString)))
-    },
-    test("test if a password matches its hashed value") {
-      val passwordString         = "password1"
-      val passwordEqualString    = "password1"
-      val passwordNotEqualString = "password2"
-
-      val password = PasswordHash.from(passwordString, pwStrength)
-
-      assertTrue(
-        password.exists(_.matches(passwordEqualString)),
-        password.exists(!_.matches(passwordNotEqualString))
-      )
+      assertTrue(PasswordHash.from("") == Left("Password cannot be empty."))
     },
     test("pass an invalid password strength value and return an error") {
       assertTrue(PasswordStrength.from(-1) == Left("PasswordStrength is invalid."))

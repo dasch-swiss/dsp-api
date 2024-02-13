@@ -23,7 +23,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-import dsp.errors.FileWriteException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -206,19 +205,5 @@ abstract class E2ESpec
       responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
     )
     responseAsString
-  }
-
-  private def createTmpFileDir(): Unit = {
-    // check if tmp datadir exists and create it if not
-    val tmpFileDir = Path.of(appConfig.tmpDatadir)
-
-    if (!Files.exists(tmpFileDir)) {
-      try {
-        Files.createDirectories(tmpFileDir)
-      } catch {
-        case e: Throwable =>
-          throw FileWriteException(s"Tmp data directory ${appConfig.tmpDatadir} could not be created: ${e.getMessage}")
-      }
-    }
   }
 }

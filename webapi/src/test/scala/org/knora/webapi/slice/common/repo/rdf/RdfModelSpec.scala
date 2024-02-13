@@ -75,6 +75,26 @@ object RdfModelSpec extends ZIOSpecDefault {
           rdfModel <- RdfModel.fromTurtle(turtle)
           resource <- rdfModel.getResource("http://example.org/does-not-exist").exit
         } yield assert(resource)(failsWithA[ResourceNotPresent])
+      },
+      test("Get more than a single resource that exists") {
+        val turtle =
+          """|
+             |@prefix ex: <http://example.org/> .
+             |@prefix rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+             |
+             |ex:subject ex:predicate ex:object ;
+             |     a ex:objectClass .
+             |     
+             |ex:subject2 ex:predicate ex:object2 ;
+             |     a ex:objectClass .
+             |
+             |ex:shouldNotBeReturned ex:predicate ex:object ;
+             |     a ex:differentObjectClass .
+             |""".stripMargin
+        for {
+          rdfModel  <- RdfModel.fromTurtle(turtle)
+          resources <- rdfModel.getResourcesRdfType("http://example.org/objectClass")
+        } yield assertTrue(Chunk.fromIterator(resources).size == 2)
       }
     )
   )

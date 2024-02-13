@@ -37,7 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
@@ -685,7 +685,7 @@ object CreateResourceRequestV2 {
     requestingUser: User,
     ingestState: AssetIngestState = AssetInTemp
   ): ZIO[
-    IriConverter & MessageRelay & SipiService & StringFormatter & UsersResponderADM,
+    IriConverter & MessageRelay & SipiService & StringFormatter & UsersResponder,
     Throwable,
     CreateResourceRequestV2
   ] =

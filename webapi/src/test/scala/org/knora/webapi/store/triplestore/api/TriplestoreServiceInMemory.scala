@@ -7,9 +7,11 @@ package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.*
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
+import zio.RIO
 import zio.Ref
 import zio.Scope
 import zio.Task
@@ -33,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.TestDatasetBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -52,6 +55,8 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 @accessible
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
+  def getDataset: UIO[Dataset]
+  def printDataset: UIO[Unit]
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
@@ -68,14 +73,14 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
-  private def getReadTransactionQueryExecution(query: String): ZIO[Any & Scope, Throwable, QueryExecution] = {
+  private def getReadTransactionQueryExecution(query: String): ZIO[Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
     getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
-  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any & Scope, Dataset] = {
-    val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
+  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Scope, Dataset] = {
+    val acquire = getDataset.tap(ds => ZIO.succeed(ds.begin(readWrite)))
     def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
     finally { ds.end() })
     ZIO.acquireRelease(acquire)(release)
@@ -109,7 +114,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtle <- ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
+      turtle <- queryRdf(query)
       rdfModel <- ZIO
                     .attempt(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
                     .foldZIO(
@@ -122,6 +127,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
                       ZIO.succeed(_)
                     )
     } yield SparqlConstructResponse.make(rdfModel)
+
+  override def queryRdf(query: Construct): Task[String] = ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
 
   private def execConstruct(query: String): ZIO[Any & Scope, Throwable, Model] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
@@ -165,7 +172,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   ): Task[Unit] = ZIO.scoped {
     for {
       fos <- fileOutputStream(outputFile)
-      ds  <- datasetRef.get
+      ds  <- getDataset
       lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
@@ -233,6 +240,31 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def checkTriplestore(): Task[TriplestoreStatus] = ZIO.succeed(Available)
 
   override def setDataset(ds: Dataset): UIO[Unit] = datasetRef.set(ds)
+  override def getDataset: UIO[Dataset] =
+    datasetRef.get
+
+  override def printDataset: UIO[Unit] =
+    getDataset.flatMap(ds => ZIO.logInfo(s"TriplestoreServiceInMemory.printDataset: ${printDatasetContents(ds)}"))
+
+  def printDatasetContents(dataset: Dataset): Unit = {
+    // Iterate over the named models
+    dataset.begin(ReadWrite.READ)
+    val names = dataset.listNames()
+
+    while (names.hasNext) {
+      val name  = names.next()
+      val model = dataset.getNamedModel(name)
+
+      println(s"Graph: $name\n")
+      // Write the model in Turtle format
+      RDFDataMgr.write(System.out, model, org.apache.jena.riot.Lang.TURTLE)
+    }
+
+    // Print the default model
+    println("Default Graph:\n")
+    RDFDataMgr.write(System.out, dataset.getDefaultModel, org.apache.jena.riot.Lang.TURTLE)
+    dataset.end()
+  }
 
   private val notImplemented = ZIO.die(new UnsupportedOperationException("Not implemented yet."))
 
@@ -245,11 +277,22 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def dropGraph(graphName: IRI): Task[Unit] =
     notImplemented
 
-  override def queryRdf(sparql: Construct): Task[String] =
-    notImplemented
 }
 
 object TriplestoreServiceInMemory {
+
+  def setDataset(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
+
+  def getDataset: RIO[TestTripleStore, Dataset] =
+    ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
+
+  def printDataset: RIO[TestTripleStore, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.printDataset)
+
+  def setDataSetFromTriG(triG: String): ZIO[TestTripleStore, Throwable, Unit] = TestDatasetBuilder
+    .datasetFromTriG(triG)
+    .flatMap(TriplestoreServiceInMemory.setDataset)
 
   /**
    * Creates an empty TBD2 [[Dataset]].
@@ -261,6 +304,8 @@ object TriplestoreServiceInMemory {
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
-  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore] =
+  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TriplestoreServiceInMemory] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
+
+  val emptyLayer = emptyDatasetRefLayer >>> layer
 }
