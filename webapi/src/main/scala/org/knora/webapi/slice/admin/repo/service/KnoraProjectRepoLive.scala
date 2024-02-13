@@ -110,11 +110,10 @@ final case class KnoraProjectRepoLive(
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
-    (id.asIriIdentifierOption, id.asShortcodeIdentifierOption, id.asShortnameIdentifierOption) match {
-      case (Some(iri), _, _)       => findOneByIri(ProjectIri.unsafeFrom(iri))
-      case (_, Some(shortcode), _) => findOneByShortcode(Shortcode.unsafeFrom(shortcode))
-      case (_, _, Some(shortname)) => findOneByShortname(Shortname.unsafeFrom(shortname))
-      case _                       => ZIO.fail(new IllegalStateException("Invalid project identifier"))
+    id match {
+      case ProjectIdentifierADM.IriIdentifier(iri)             => findOneByIri(iri)
+      case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => findOneByShortcode(shortcode)
+      case ProjectIdentifierADM.ShortnameIdentifier(shortname) => findOneByShortname(shortname)
     }
 
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
