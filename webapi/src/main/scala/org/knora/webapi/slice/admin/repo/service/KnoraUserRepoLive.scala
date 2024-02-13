@@ -174,7 +174,6 @@ object KnoraUserRepoLive {
             .andHas(p, o)
             .from(Vocabulary.NamedGraphs.knoraAdminIri)
         )
-      println(s"FIND BY:\n ${query.getQueryString}")
       Construct(query)
     }
 
@@ -183,7 +182,6 @@ object KnoraUserRepoLive {
         .INSERT_DATA(toTriples(u))
         .into(Rdf.iri(adminDataNamedGraph.value))
         .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-      println(s"CREATE:\n ${query.getQueryString}")
       Update(query)
     }
 
@@ -219,7 +217,6 @@ object KnoraUserRepoLive {
           .insert(toTriples(u))
           .delete(deletePattern)
           .where(wherePattern)
-      println(s"UPDATE:\n${query.getQueryString}")
       Update(query)
     }
 
