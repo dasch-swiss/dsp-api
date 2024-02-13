@@ -109,21 +109,6 @@ case class UserGetByIriADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Request updating the users status ('knora-base:isActiveUser' property)
- *
- * @param userIri              the IRI of the user to be updated.
- * @param status               the [[UserStatus]] containing the new status (true / false).
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeStatusRequestADM(
-  userIri: IRI,
-  status: UserStatus,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
  * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
  *
  * @param userIri              the IRI of the user to be updated.

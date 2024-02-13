@@ -40,11 +40,10 @@ final case class UsersRestService(
   } yield external
 
   def deleteUser(requestingUser: User, deleteIri: UserIri): Task[UserOperationResponseADM] = for {
-    _ <- ZIO
-           .fail(BadRequestException("Changes to built-in users are not allowed."))
-           .when(deleteIri.isBuiltInUser)
+    _        <- ensureNotABuiltInUser(deleteIri)
+    _        <- ensureSelfUpdateOrSystemAdmin(deleteIri, requestingUser)
     uuid     <- Random.nextUUID
-    internal <- responder.changeUserStatusADM(deleteIri.value, UserStatus.Inactive, requestingUser, uuid)
+    internal <- responder.changeUserStatus(deleteIri, UserStatus.Inactive, uuid)
     external <- format.toExternal(internal)
   } yield external
 
@@ -116,6 +115,18 @@ final case class UsersRestService(
       _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
       uuid     <- Random.nextUUID
       response <- responder.changePassword(userIri, changeRequest, requestingUser, uuid).flatMap(format.toExternal)
+    } yield response
+
+  def changeStatus(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: Requests.StatusChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changeUserStatus(userIri, changeRequest.status, uuid)
     } yield response
 }
 

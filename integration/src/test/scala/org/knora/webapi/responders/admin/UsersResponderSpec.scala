@@ -336,25 +336,23 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         resF map { res => assert(res) }
       }
 
-      "UPDATE the user's status, (deleting) making him inactive " in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+      "UPDATE the user's status, making them inactive " in {
+        val response1 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeUserStatus(
+            SharedTestDataADM.normalUser.userIri,
+            UserStatus.from(false),
+            UUID.randomUUID
+          )
         )
-
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.status should equal(false)
 
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.from(true),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response2 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeUserStatus(
+            SharedTestDataADM.normalUser.userIri,
+            UserStatus.from(true),
+            UUID.randomUUID()
+          )
         )
-
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.status should equal(true)
       }
 
@@ -378,28 +376,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.permissions.isSystemAdmin should equal(false)
-      }
-
-      "return 'BadRequest' if system user is requested to change" in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = KnoraSystemInstances.Users.SystemUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
-        )
-
-        expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
-      }
-
-      "return 'BadRequest' if anonymous user is requested to change" in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = KnoraSystemInstances.Users.AnonymousUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
-        )
-
-        expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
       }
     }
 

@@ -33,33 +33,13 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    changeUserStatus() ~
-      changeUserSystemAdminMembership() ~
+    changeUserSystemAdminMembership() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * Change user's status.
-   */
-  private def changeUserStatus(): Route =
-    path(usersBasePath / "iri" / Segment / "Status") { userIri =>
-      put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            newStatus <- ZIO
-                           .fromOption(apiRequest.status.map(UserStatus.from))
-                           .orElseFail(BadRequestException("The status is missing."))
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            r              <- getUserUuid(requestContext)
-          } yield UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid)
-          runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
 
   /**
    * Change user's SystemAdmin membership.

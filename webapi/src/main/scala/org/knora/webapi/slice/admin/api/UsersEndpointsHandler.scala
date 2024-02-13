@@ -12,6 +12,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -85,6 +86,14 @@ case class UsersEndpointsHandler(
       }
     )
 
+  private val putUsersIriStatusHandler =
+    SecuredEndpointHandler[(UserIri, StatusChangeRequest), UserOperationResponseADM](
+      usersEndpoints.put.usersIriStatus,
+      requestingUser => { case (userIri: UserIri, changeRequest: StatusChangeRequest) =>
+        restService.changeStatus(requestingUser, userIri, changeRequest)
+      }
+    )
+
   // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
     usersEndpoints.delete.deleteUser,
@@ -105,6 +114,7 @@ case class UsersEndpointsHandler(
     createUserHandler,
     putUsersIriBasicInformationHandler,
     putUsersIriPasswordHandler,
+    putUsersIriStatusHandler,
     deleteUserByIriHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 

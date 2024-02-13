@@ -26,6 +26,7 @@ import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar
 import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -107,7 +108,6 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .description("Create a new user.")
   }
 
-  // Update
   object put {
     val usersIriBasicInformation = baseEndpoints.securedEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "BasicUserInformation")
@@ -120,8 +120,14 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(zioJsonBody[PasswordChangeRequest])
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Change a user's password identified by IRI.")
+
+    val usersIriStatus = baseEndpoints.securedEndpoint.put
+      .in(base / "iri" / PathVars.userIriPathVar / "Status")
+      .in(zioJsonBody[StatusChangeRequest])
+      .out(sprayJsonBody[UserOperationResponseADM])
+      .description("Change a user's status identified by IRI.")
   }
-  // Delete
+
   object delete {
     val deleteUser = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar)
@@ -144,6 +150,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       post.users,
       put.usersIriBasicInformation,
       put.usersIriPassword,
+      put.usersIriStatus,
       delete.deleteUser
     ).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
@@ -182,6 +189,11 @@ object UsersEndpoints {
     final case class PasswordChangeRequest(requesterPassword: Password, newPassword: Password)
     object PasswordChangeRequest {
       implicit val jsonCodec: JsonCodec[PasswordChangeRequest] = DeriveJsonCodec.gen[PasswordChangeRequest]
+    }
+
+    final case class StatusChangeRequest(status: UserStatus)
+    object StatusChangeRequest {
+      implicit val jsonCodec: JsonCodec[StatusChangeRequest] = DeriveJsonCodec.gen[StatusChangeRequest]
     }
   }
 

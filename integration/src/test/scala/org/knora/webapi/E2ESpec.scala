@@ -119,7 +119,9 @@ abstract class E2ESpec
     Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
 
   protected def singleAwaitingRequest(request: HttpRequest): HttpResponse =
-    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request)))
+    UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, printFailure = true))
+    )
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration): HttpResponse =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, Some(duration))))
