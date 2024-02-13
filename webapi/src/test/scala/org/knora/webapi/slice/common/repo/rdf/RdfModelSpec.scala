@@ -64,7 +64,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject").exit
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject").exit
           } yield assertTrue(resource.isSuccess)
         },
         test("Fail to get a resource that does not exist") {
@@ -74,7 +74,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/does-not-exist").exit
+            resource <- rdfModel.getResourceOrFail("http://example.org/does-not-exist").exit
           } yield assert(resource)(failsWithA[ResourceNotPresent])
         }
       ),
@@ -86,7 +86,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResourceByPropertyValue("http://example.org/predicate", "object").exit
+            resource <- rdfModel.getResourceByPropertyValueOrFail("http://example.org/predicate", "object").exit
           } yield assertTrue(resource.isSuccess)
         },
         test("Fail to get a resource that does not exist") {
@@ -96,7 +96,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResourceByPropertyValue("http://example.org/predicate", "does-not-exist").exit
+            resource <- rdfModel.getResourceByPropertyValueOrFail("http://example.org/predicate", "does-not-exist").exit
           } yield assert(resource)(failsWithA[ResourceNotPresent])
         }
       )
@@ -113,7 +113,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[StringContainer]("http://example.org/predicate")
           } yield assertTrue(literal.contains(StringContainer("object")))
         },
@@ -124,7 +124,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[StringContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literal.isEmpty)
         },
@@ -135,7 +135,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[StringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -147,7 +147,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[StringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -158,7 +158,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         }
@@ -171,7 +171,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[StringContainer]("http://example.org/predicate")
           } yield assertTrue(literal == StringContainer("object"))
         },
@@ -182,7 +182,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[StringContainer]("http://example.org/does-not-exist").exit
           } yield assert(literal)(failsWithA[LiteralNotPresent])
         },
@@ -193,7 +193,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[StringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -205,7 +205,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[StringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -216,7 +216,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         }
@@ -230,7 +230,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[StringContainer]("http://example.org/predicate")
           } yield assert(literals)(
             hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2")))
@@ -243,7 +243,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[StringContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literals.isEmpty)
         },
@@ -254,7 +254,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[StringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
         },
@@ -266,7 +266,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[StringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         },
@@ -278,7 +278,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         }
@@ -292,7 +292,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[StringContainer]("http://example.org/predicate")
           } yield assert(literals.toChunk)(
             hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2")))
@@ -305,7 +305,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[StringContainer]("http://example.org/does-not-exist").exit
           } yield assert(literals)(failsWithA[LiteralNotPresent])
         },
@@ -316,7 +316,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[StringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
         },
@@ -328,7 +328,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[StringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         },
@@ -340,7 +340,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         }
@@ -357,7 +357,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[LangStringContainer]("http://example.org/predicate")
           } yield assertTrue(literal.contains(LangStringContainer(LangString("object", Some("en")))))
         },
@@ -368,7 +368,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[LangStringContainer]("http://example.org/predicate")
           } yield assertTrue(literal.contains(LangStringContainer(LangString("object", None))))
         },
@@ -379,7 +379,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[LangStringContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literal.isEmpty)
         },
@@ -390,7 +390,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -402,7 +402,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -413,7 +413,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         }
@@ -426,7 +426,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate")
           } yield assertTrue(literal == LangStringContainer(LangString("object", Some("en"))))
         },
@@ -437,7 +437,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate")
           } yield assertTrue(literal == LangStringContainer(LangString("object", None)))
         },
@@ -448,7 +448,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/does-not-exist").exit
           } yield assert(literal)(failsWithA[LiteralNotPresent])
@@ -460,7 +460,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
@@ -473,7 +473,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal <-
               resource.getLangStringLiteralOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
@@ -485,7 +485,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal <-
               resource.getLangStringLiteralOrFail[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
@@ -501,7 +501,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[LangStringContainer]("http://example.org/predicate")
           } yield assert(literals)(
             hasSameElementsDistinct(
@@ -522,7 +522,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[LangStringContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literals.isEmpty)
         },
@@ -535,7 +535,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
         },
@@ -549,7 +549,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         },
@@ -562,7 +562,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         }
@@ -577,7 +577,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiteralsOrFail[LangStringContainer]("http://example.org/predicate")
           } yield assert(literals.toChunk)(
             hasSameElementsDistinct(
@@ -598,7 +598,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getLangStringLiteralsOrFail[LangStringContainer]("http://example.org/does-not-exist").exit
           } yield assert(literals)(failsWithA[LiteralNotPresent])
@@ -612,7 +612,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getLangStringLiteralsOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
@@ -627,7 +627,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getLangStringLiteralsOrFail[LangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
@@ -641,7 +641,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getLangStringLiteralsOrFail[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
@@ -659,7 +659,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate")
           } yield assertTrue(literal.contains(BooleanContainer(true)))
         },
@@ -670,7 +670,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate")
           } yield assertTrue(literal.contains(BooleanContainer(true)))
         },
@@ -681,7 +681,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literal.isEmpty)
         },
@@ -692,7 +692,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -703,7 +703,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -714,7 +714,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         }
@@ -727,7 +727,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate")
           } yield assertTrue(literal == BooleanContainer(true))
         },
@@ -738,7 +738,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate")
           } yield assertTrue(literal == BooleanContainer(true))
         },
@@ -749,7 +749,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/does-not-exist").exit
           } yield assert(literal)(failsWithA[LiteralNotPresent])
         },
@@ -760,7 +760,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[NotALiteral])
         },
@@ -771,7 +771,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         },
@@ -782,7 +782,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
         }
@@ -795,7 +795,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate")
           } yield assert(literals)(hasSameElementsDistinct(Chunk(BooleanContainer(true))))
         },
@@ -806,7 +806,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/does-not-exist")
           } yield assertTrue(literals.isEmpty)
         },
@@ -817,7 +817,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
         },
@@ -829,7 +829,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         },
@@ -840,7 +840,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
         }
@@ -853,7 +853,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate")
           } yield assert(literals.toChunk)(hasSameElementsDistinct(Chunk(BooleanContainer(true))))
         },
@@ -864,7 +864,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/does-not-exist").exit
           } yield assert(literals)(failsWithA[LiteralNotPresent])
@@ -876,7 +876,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[NotALiteral])
@@ -889,7 +889,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getBooleanLiteralsOrFail[BooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
@@ -901,7 +901,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <-
               resource.getBooleanLiteralsOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
@@ -919,7 +919,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIri("http://example.org/predicate")
           } yield assertTrue(iri.contains(InternalIri("http://example.org/object")))
         },
@@ -930,7 +930,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIri("http://example.org/does-not-exist")
           } yield assertTrue(iri.isEmpty)
         },
@@ -941,7 +941,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIri("http://example.org/predicate").exit
           } yield assert(iri)(failsWithA[ObjectNotAResource])
         }
@@ -954,7 +954,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIriOrFail("http://example.org/predicate")
           } yield assertTrue(iri == InternalIri("http://example.org/object"))
         },
@@ -965,7 +965,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIriOrFail("http://example.org/does-not-exist").exit
           } yield assert(iri)(failsWithA[ObjectNotPresent])
         },
@@ -976,7 +976,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIriOrFail("http://example.org/predicate").exit
           } yield assert(iri)(failsWithA[ObjectNotAResource])
         }
@@ -990,7 +990,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIris("http://example.org/predicate")
           } yield assert(iris)(
             hasSameElementsDistinct(
@@ -1008,7 +1008,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIris("http://example.org/does-not-exist")
           } yield assertTrue(iris.isEmpty)
         },
@@ -1019,7 +1019,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIris("http://example.org/predicate").exit
           } yield assert(iris)(failsWithA[ObjectNotAResource])
         }
@@ -1033,7 +1033,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIrisOrFail("http://example.org/predicate")
           } yield assert(iris.toChunk)(
             hasSameElementsDistinct(
@@ -1051,7 +1051,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIrisOrFail("http://example.org/does-not-exist").exit
           } yield assert(iris)(failsWithA[ObjectNotPresent])
         },
@@ -1062,7 +1062,7 @@ object RdfModelSpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             rdfModel <- RdfModel.fromTurtle(turtle)
-            resource <- rdfModel.getResource("http://example.org/subject")
+            resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIrisOrFail("http://example.org/predicate").exit
           } yield assert(iris)(failsWithA[ObjectNotAResource])
         }

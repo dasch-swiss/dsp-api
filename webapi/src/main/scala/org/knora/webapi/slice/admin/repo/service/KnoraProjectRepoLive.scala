@@ -122,24 +122,24 @@ final case class KnoraProjectRepoLive(
     for {
       ttl      <- triplestore.queryRdf(getProjectByIri(iri))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      resource <- newModel.getResource(iri.value).option
-      project  <- ZIO.foreach(resource)(it => toKnoraProjectNew(it).option).map(_.flatten) // TODO: improve this
+      resource <- newModel.getResource(iri.value)
+      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
     for {
       ttl      <- triplestore.queryRdf(getProjectByShortcode(shortcode))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      resource <- newModel.getResourceByPropertyValue(ProjectShortcode, shortcode.value).option
-      project  <- ZIO.foreach(resource)(it => toKnoraProjectNew(it).option).map(_.flatten) // TODO: improve this
+      resource <- newModel.getResourceByPropertyValue(ProjectShortcode, shortcode.value)
+      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
     for {
       ttl      <- triplestore.queryRdf(getProjectByShortname(shortname))
       newModel <- RdfModel.fromTurtle(ttl).mapError(e => TriplestoreResponseException(e.msg))
-      resource <- newModel.getResourceByPropertyValue(ProjectShortname, shortname.value).option
-      project  <- ZIO.foreach(resource)(it => toKnoraProjectNew(it).option).map(_.flatten) // TODO: improve this
+      resource <- newModel.getResourceByPropertyValue(ProjectShortname, shortname.value)
+      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
     } yield project
 
   private def toKnoraProjectNew(resource: RdfResource): IO[RdfError, KnoraProject] =

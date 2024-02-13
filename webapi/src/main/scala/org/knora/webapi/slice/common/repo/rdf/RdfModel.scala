@@ -31,7 +31,7 @@ final case class LangString(value: String, lang: Option[String])
 /**
  * A wrapper around Jena's [[Resource]].
  * Exposes access to the resource's properties.
- * Should be created via [[RdfModel.getResource]].
+ * Should be created via [[RdfModel.getResourceOrFail]].
  */
 final case class RdfResource(private val res: Resource) {
 
@@ -360,6 +360,13 @@ final case class RdfResource(private val res: Resource) {
  */
 final case class RdfModel private (private val model: Model) {
 
+  // TODO: Docs, tests
+  def getResource(subjectIri: String): UIO[Option[RdfResource]] =
+    for {
+      resource   <- ZIO.attempt(model.createResource(subjectIri)).orDie
+      rdfResource = Option.when(resource.listProperties().hasNext)(RdfResource(resource))
+    } yield rdfResource
+
   /**
    * Returns a [[RdfResource]] for the given subject IRI.
    * Fails if no resource with the given IRI is present in the model.
@@ -367,30 +374,21 @@ final case class RdfModel private (private val model: Model) {
    * @param subjectIri the IRI of the resource.
    * @return the [[RdfResource]] or an [[RdfError]] if the resource is not present.
    */
-  def getResource(subjectIri: String): IO[RdfError, RdfResource] =
-    // TODO: to be consistent with other naming, this should be called getResourceOrFail
-    //       and the other one should be created that is called getResource
-    for {
-      resource <- ZIO.attempt(model.createResource(subjectIri)).orDie
-      _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
-    } yield RdfResource(resource)
+  def getResourceOrFail(subjectIri: String): IO[RdfError, RdfResource] =
+    getResource(subjectIri).someOrFail(ResourceNotPresent(subjectIri))
 
-  def getResourceByPropertyValue(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
-    // TODO: make this more scala-like
-    def getThrowing: String = {
-      val property = model.createProperty(propertyIri)
-      val iter     = model.listStatements(null, property, value)
-      while (iter.hasNext) {
-        val stmt    = iter.nextStatement()
-        val subject = stmt.getSubject
-        return subject.getURI
-      }
-      throw new RuntimeException("failed")
-    }
+  // TODO: Docs, tests
+  def getResourceByPropertyValue(propertyIri: String, value: String): UIO[Option[RdfResource]] =
+    getResourceByPropertyValueOrFail(propertyIri, value).option
+
+  // TODO: Docs, tests
+  def getResourceByPropertyValueOrFail(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
+    val iter = model.listStatements(null, model.createProperty(propertyIri), value)
+    val iri  = Option.when(iter.hasNext)(iter.nextStatement().getSubject.getURI)
     for {
       // TODO: figure out how that behaves with non-string types
-      iri <- ZIO.attempt(getThrowing).orElseFail(ResourceNotPresent(s"No resource with: $propertyIri -> $value"))
-      res <- getResource(iri)
+      iri <- ZIO.fromOption(iri).orElseFail(ResourceNotPresent(s"No resource with: $propertyIri -> $value"))
+      res <- getResourceOrFail(iri)
     } yield res
   }
 
