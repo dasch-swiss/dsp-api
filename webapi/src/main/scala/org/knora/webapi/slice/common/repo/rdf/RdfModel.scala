@@ -417,6 +417,9 @@ final case class RdfModel private (private val model: Model) {
     objClassProp  <- ZIO.attempt(model.createProperty(objectClass)).orDie
     resourcesJIter = model.listResourcesWithProperty(RDF.`type`, objClassProp)
   } yield resourcesJIter.asScala.map(RdfResource)
+
+  def getSubjectResources: UIO[Chunk[RdfResource]] =
+    ZIO.succeed(Chunk.fromIterator(model.listSubjects().asScala).map(RdfResource))
 }
 
 object RdfModel {

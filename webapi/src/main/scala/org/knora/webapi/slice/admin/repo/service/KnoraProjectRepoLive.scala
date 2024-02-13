@@ -7,16 +7,10 @@ package org.knora.webapi.slice.admin.repo.service
 
 import zio.*
 
-import dsp.valueobjects.V2
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -29,7 +23,6 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectB
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -95,6 +88,27 @@ object KnoraProjectQueries {
           |    ?project ?p ?o .
           |}""".stripMargin
     )
+
+  private[service] def getAllProjects: Construct =
+    Construct(
+      """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+         |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+         |CONSTRUCT {
+         |  ?project ?p ?o .
+         |  ?project knora-admin:belongsToOntology ?ontology .
+         |}
+         |WHERE {
+         |  ?project a knora-admin:knoraProject .
+         |  OPTIONAL{
+         |    ?ontology a owl:Ontology .
+         |    ?ontology knora-base:attachedToProject ?project .
+         |  }
+         |  ?project ?p ?o .
+         |}""".stripMargin
+    )
 }
 
 final case class KnoraProjectRepoLive(
@@ -104,6 +118,17 @@ final case class KnoraProjectRepoLive(
 ) extends KnoraProjectRepo {
 
   private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
+
+  override def findAll(): Task[List[KnoraProject]] =
+    for {
+      model     <- triplestore.queryRdfModel(KnoraProjectQueries.getAllProjects)
+      resources <- model.getSubjectResources
+      projects <- ZIO.foreach(resources)(res =>
+                    toKnoraProjectNew(res).orElseFail(
+                      InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject")
+                    )
+                  )
+    } yield projects.toList
 
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
 
@@ -159,61 +184,6 @@ final case class KnoraProjectRepoLive(
       selfjoin = selfjoin,
       ontologies = ontologies.toList
     )
-
-  override def findAll(): Task[List[KnoraProject]] = {
-    val query = sparql.admin.txt.getProjects(None, None, None)
-    for {
-      projectsResponse <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.toList)
-      projects         <- ZIO.foreach(projectsResponse)(toKnoraProject)
-    } yield projects
-  }
-
-  private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
-    val (subject, propertiesMap) = subjectPropsTuple
-    for {
-      projectIri <- mapper.eitherOrDie(ProjectIri.from(subject.value))
-      shortname <- mapper
-                     .getSingleOrFail[StringLiteralV2](ProjectShortname, propertiesMap)
-                     .flatMap(l => mapper.eitherOrDie(Shortname.from(l.value)))
-      shortcode <- mapper
-                     .getSingleOrFail[StringLiteralV2](ProjectShortcode, propertiesMap)
-                     .flatMap(l => mapper.eitherOrDie(Shortcode.from(l.value)))
-      longname <- mapper
-                    .getSingleOption[StringLiteralV2](ProjectLongname, propertiesMap)
-                    .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Longname.from(it.value))))
-      description <- mapper
-                       .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propertiesMap)
-                       .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
-                       .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Description.from(it))))
-      keywords <- mapper
-                    .getList[StringLiteralV2](ProjectKeyword, propertiesMap)
-                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(it => mapper.eitherOrDie(Keyword.from(it))))
-      logo <- mapper
-                .getSingleOption[StringLiteralV2](ProjectLogo, propertiesMap)
-                .flatMap(ZIO.foreach(_)(it => mapper.eitherOrDie(Logo.from(it.value))))
-      status <- mapper
-                  .getSingleOrFail[BooleanLiteralV2](StatusProp, propertiesMap)
-                  .map(l => Status.from(l.value))
-      selfjoin <- mapper
-                    .getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propertiesMap)
-                    .map(l => SelfJoin.from(l.value))
-      ontologies <-
-        mapper
-          .getList[IriLiteralV2]("http://www.knora.org/ontology/knora-admin#belongsToOntology", propertiesMap)
-          .map(_.map(l => InternalIri(l.value)))
-    } yield KnoraProject(
-      projectIri,
-      shortname,
-      shortcode,
-      longname,
-      description,
-      keywords,
-      logo,
-      status,
-      selfjoin,
-      ontologies
-    )
-  }
 
   override def setProjectRestrictedView(
     project: KnoraProject,
