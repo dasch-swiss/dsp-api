@@ -5,16 +5,21 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.valueobjects.LanguageCode
 import org.eclipse.rdf4j.model.vocabulary.*
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.stream.ZStream
+
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -38,10 +43,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.stream.ZStream
 
 final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends KnoraUserRepo {
 
@@ -79,13 +80,12 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-      username     <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)
-      email        <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)
-      familyName   <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)
-      givenName    <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)
-      passwordHash <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
-      preferredLanguage <-
-        resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
+      username                  <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)
+      email                     <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)
+      familyName                <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)
+      givenName                 <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)
+      passwordHash              <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
+      preferredLanguage         <- resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
       status                    <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
       isInProjectIris           <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
       isInGroupIris             <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
