@@ -112,7 +112,7 @@ final case class AuthorizationRestServiceLive() extends AuthorizationRestService
   }
 
   override def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
-    lazy val msg = s"ProjectAdmin or SystemAdmin permissions are required."
+    val msg = "ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
   }
 
