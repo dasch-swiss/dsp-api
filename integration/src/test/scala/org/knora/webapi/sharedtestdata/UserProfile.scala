@@ -61,7 +61,6 @@ object UserProfile {
       },
       email = Some(userADM.email),
       password = userADM.password,
-      token = userADM.token,
       firstname = Some(userADM.givenName),
       lastname = Some(userADM.familyName),
       status = Some(userADM.status),

@@ -495,7 +495,7 @@ object UsersADMJsonProtocol
     with GroupsADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userADMFormat: JsonFormat[User] = jsonFormat12(User)
+  implicit val userADMFormat: JsonFormat[User] = jsonFormat11(User)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
