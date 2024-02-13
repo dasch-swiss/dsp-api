@@ -90,7 +90,7 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       isInProjectIris      <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
       isInGroupIris        <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
       isInSystemAdminGroup <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
-      isInSystemAdminGroup <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInSystemAdminGroup)
+      isInProjectAdminGroupIris <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInSystemAdminGroup)
     } yield KnoraUser(
       userIri,
       username,
