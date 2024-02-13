@@ -24,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseA
 import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
 import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar
 import org.knora.webapi.slice.admin.api.PathVars.usernamePathVar
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -102,6 +103,13 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[UserOperationResponseADM])
     .description("Create a new user.")
 
+  // Upadate
+  val putUsersIriBasicInformation = baseEndpoints.securedEndpoint.put
+    .in(base / "iri" / PathVars.userIriPathVar / "BasicUserInformation")
+    .in(zioJsonBody[BasicUserInformationChangeRequest])
+    .out(sprayJsonBody[UserOperationResponseADM])
+    .description("Update a user's basic information identified by IRI.")
+
   // Delete
   val deleteUser = baseEndpoints.securedEndpoint.delete
     .in(base / "iri" / PathVars.userIriPathVar)
@@ -116,6 +124,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object UsersEndpoints {
+  import Codecs.ZioJsonCodec.*
   object Requests {
     final case class UserCreateRequest(
       id: Option[UserIri] = None,
@@ -129,8 +138,19 @@ object UsersEndpoints {
       systemAdmin: SystemAdmin
     )
     object UserCreateRequest {
-      import Codecs.ZioJsonCodec.*
       implicit val jsonCodec: JsonCodec[UserCreateRequest] = DeriveJsonCodec.gen[UserCreateRequest]
+    }
+
+    final case class BasicUserInformationChangeRequest(
+      username: Option[Username] = None,
+      email: Option[Email] = None,
+      givenName: Option[GivenName] = None,
+      familyName: Option[FamilyName] = None,
+      lang: Option[LanguageCode] = None
+    )
+    object BasicUserInformationChangeRequest {
+      implicit val jsonCodec: JsonCodec[BasicUserInformationChangeRequest] =
+        DeriveJsonCodec.gen[BasicUserInformationChangeRequest]
     }
   }
 

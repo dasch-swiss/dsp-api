@@ -41,6 +41,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -80,18 +81,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserChangeBasicInformationRequestADM(
-          userIri,
-          userUpdateBasicInformationPayload,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeBasicUserInformationADM(
-        userIri,
-        userUpdateBasicInformationPayload,
-        requestingUser,
-        apiRequestID
-      )
     case UserChangePasswordRequestADM(
           userIri,
           userUpdatePasswordPayload,
@@ -258,7 +247,7 @@ final case class UsersResponder(
    * can be changed. For changing the password or user status, use the separate methods.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param userUpdateBasicInformationPayload    the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   * @param changeRequest        the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
@@ -266,56 +255,29 @@ final case class UsersResponder(
    *               with a [[BadRequestException]] if the necessary parameters are not supplied.
    *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeBasicUserInformationADM(
-    userIri: IRI,
-    userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-    requestingUser: User,
+  def changeBasicUserInformationADM(
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    logger.debug(s"changeBasicUserInformationADM: changeUserRequest: {}", userUpdateBasicInformationPayload)
-
-    /**
-     * The actual change basic user data task run with an IRI lock.
-     */
-    def changeBasicUserDataTask(
-      userIri: IRI,
-      userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- ZIO.attempt(
-               if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-                 throw ForbiddenException(
-                   "User information can only be changed by the user itself or a system administrator"
-                 )
-               }
-             )
-
         // get current user information
-        currentUserInformation <- findUserByIri(
-                                    identifier = UserIri.unsafeFrom(userIri),
-                                    userInformationType = UserInformationTypeADM.Full,
-                                    requestingUser = Users.SystemUser
-                                  )
+        currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
+                         .someOrFail(NotFoundException(s"User with IRI $userIri not found"))
 
-        // check if email is unique in case of a change email request
-        emailTaken <-
-          userByEmailExists(userUpdateBasicInformationPayload.email, Some(currentUserInformation.get.email))
-        _ = if (emailTaken) {
-              throw DuplicateValueException(
-                s"User with the email '${userUpdateBasicInformationPayload.email.get.value}' already exists"
-              )
-            }
+        _ <- // check if email is unique in case of a change email request
+          ZIO.whenZIO(userByEmailExists(changeRequest.email, Some(currentUser.email))) {
+            ZIO.fail(DuplicateValueException(s"User with the email '${changeRequest.email.get.value}' already exists"))
+          }
 
         // check if username is unique in case of a change username request
-        _ <- userUpdateBasicInformationPayload.username match {
+        _ <- changeRequest.username match {
                case Some(username) =>
                  ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value))))(
                    ZIO.fail(
                      DuplicateValueException(
-                       s"User with the username '${userUpdateBasicInformationPayload.username.get.value}' already exists"
+                       s"User with the username '${changeRequest.username.get.value}' already exists"
                      )
                    )
                  )
@@ -324,23 +286,19 @@ final case class UsersResponder(
 
         // send change request as SystemUser
         result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(
-                      username = userUpdateBasicInformationPayload.username,
-                      email = userUpdateBasicInformationPayload.email,
-                      givenName = userUpdateBasicInformationPayload.givenName,
-                      familyName = userUpdateBasicInformationPayload.familyName,
-                      lang = userUpdateBasicInformationPayload.lang
+                    userIri,
+                    UserChangeRequestADM(
+                      changeRequest.username,
+                      changeRequest.email,
+                      changeRequest.givenName,
+                      changeRequest.familyName,
+                      lang = changeRequest.lang
                     ),
                     requestingUser = Users.SystemUser
                   )
       } yield result
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      USERS_GLOBAL_LOCK_IRI,
-      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
   }
 
   /**
@@ -1209,7 +1167,7 @@ final case class UsersResponder(
           )
 
         _ <- // check if email is unique
-          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(req.email.value))))(
+          ZIO.whenZIO(userExistsByEmail(req.email))(
             ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
           )
 
@@ -1381,19 +1339,19 @@ final case class UsersResponder(
   private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String]): Task[Boolean] =
     maybeEmail match {
       case Some(email) =>
-        if (maybeCurrent.contains(email.value)) {
-          ZIO.succeed(true)
-        } else {
-          for {
-            _ <- ZIO
-                   .fromEither(Email.from(email.value))
-                   .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
-            userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
-          } yield userExists
-        }
-
+        if (maybeCurrent.contains(email.value)) { ZIO.succeed(true) }
+        else { userExistsByEmail(email) }
       case None => ZIO.succeed(false)
     }
+
+  /**
+   * Helper method for checking if an Email address exists.
+   *
+   * @param email the Email adresss
+   * @return a [[Boolean]].
+   */
+  private def userExistsByEmail(email: Email) =
+    triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
 
   /**
    * Helper method for checking if a project exists.
@@ -1557,6 +1515,13 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
+
+  def changeBasicUserInformationADM(
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.changeBasicUserInformationADM(userIri, changeRequest, apiRequestID))
 
   val layer: URLayer[
     AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & MessageRelay & UserService & StringFormatter & TriplestoreService,

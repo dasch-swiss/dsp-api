@@ -12,7 +12,6 @@ import zio.prelude.Validation
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
@@ -25,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -114,21 +112,6 @@ case class UserGetByIriADM(
   identifier: UserIri,
   userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Request updating of an existing user.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param userUpdateBasicInformationPayload    the [[UserUpdateBasicInformationPayloadADM]] object containing the data to be updated.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeBasicInformationRequestADM(
-  userIri: IRI,
-  userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
 ) extends UsersResponderRequestADM
 
 /**
@@ -423,40 +406,6 @@ case class UserChangeRequestADM(
   if (parametersCount > 5) {
     throw BadRequestException("Too many parameters sent for basic user information change.")
   }
-}
-
-/**
- * Payload used for updating basic information of an existing user.
- *
- * @param username      the new username.
- * @param email         the new email address. Needs to be unique on the server.
- * @param givenName     the new given name.
- * @param familyName    the new family name.
- * @param lang          the new language.
- */
-case class UserUpdateBasicInformationPayloadADM(
-  username: Option[Username] = None,
-  email: Option[Email] = None,
-  givenName: Option[GivenName] = None,
-  familyName: Option[FamilyName] = None,
-  lang: Option[LanguageCode] = None
-) {
-  def isAtLeastOneParamSet: Boolean = Seq(username, email, givenName, familyName, lang).flatten.nonEmpty
-}
-
-object UserUpdateBasicInformationPayloadADM {
-
-  private def validateWithOptionOrNone[I, O, E](opt: Option[I], f: I => Validation[E, O]): Validation[E, Option[O]] =
-    opt.map(f(_).map(Some(_))).getOrElse(Validation.succeed(None))
-
-  def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
-    Validation.validateWith(
-      validateOptionWithFrom(req.username, Username.from, ValidationException.apply),
-      validateOptionWithFrom(req.email, Email.from, ValidationException.apply),
-      validateOptionWithFrom(req.givenName, GivenName.from, ValidationException.apply),
-      validateOptionWithFrom(req.familyName, FamilyName.from, ValidationException.apply),
-      validateWithOptionOrNone(req.lang, LanguageCode.make)
-    )(UserUpdateBasicInformationPayloadADM.apply)
 }
 
 case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password)

@@ -18,6 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -86,6 +87,20 @@ final case class UsersRestService(
                   .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
+
+  private def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
+    ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
+
+  def updateUser(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest
+  ): Task[UserOperationResponseADM] = for {
+    _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+    uuid <- Random.nextUUID
+    response <-
+      responder.changeBasicUserInformationADM(userIri, changeRequest, uuid).flatMap(format.toExternal)
+  } yield response
 }
 
 object UsersRestService {

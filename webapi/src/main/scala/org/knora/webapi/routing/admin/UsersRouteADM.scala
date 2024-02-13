@@ -34,8 +34,7 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    changeUserBasicInformation() ~
-      changeUserPassword() ~
+    changeUserPassword() ~
       changeUserStatus() ~
       changeUserSystemAdminMembership() ~
       addUserToProjectMembership() ~
@@ -44,27 +43,6 @@ final case class UsersRouteADM()(
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * Change existing user's basic information.
-   */
-  private def changeUserBasicInformation(): Route =
-    path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
-      put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            r              <- getUserUuid(requestContext)
-            payload <- UserUpdateBasicInformationPayloadADM
-                         .make(apiRequest)
-                         .mapError(e => BadRequestException(e.getMessage))
-                         .toZIO
-                         .filterOrFail(_.isAtLeastOneParamSet)(BadRequestException("No data sent in API request."))
-          } yield UserChangeBasicInformationRequestADM(checkedUserIri, payload, r.user, r.uuid)
-          RouteUtilADM.runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
 
   /**
    * Change user's password.

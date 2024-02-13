@@ -25,6 +25,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -225,43 +226,39 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     "asked to update a user" should {
       "UPDATE the user's basic information" in {
         /* User information is updated by the user */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.unsafeFrom("Donald"))
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          apiRequestID = UUID.randomUUID
+        val response1: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald"))),
+            UUID.randomUUID
+          )
         )
 
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.givenName should equal("Donald")
 
         /* User information is updated by a system admin */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            familyName = Some(FamilyName.unsafeFrom("Duck"))
-          ),
-          requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = UUID.randomUUID
+        val response2: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck"))),
+            UUID.randomUUID
+          )
         )
 
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.familyName should equal("Duck")
 
         /* User information is updated by a system admin */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
-            familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
-          ),
-          requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = UUID.randomUUID
+        val response3: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(
+              givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
+              familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
+            ),
+            apiRequestID = UUID.randomUUID
+          )
         )
 
-        val response3 = expectMsgType[UserOperationResponseADM](timeout)
         response3.user.givenName should equal(SharedTestDataADM.normalUser.givenName)
         response3.user.familyName should equal(SharedTestDataADM.normalUser.familyName)
       }
@@ -269,37 +266,31 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val duplicateUsername =
           Some(Username.unsafeFrom(SharedTestDataADM.anythingUser1.username))
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            username = duplicateUsername
-          ),
-          SharedTestDataADM.superUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists"
-            )
+        val exit = UnsafeZioRun.run(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(username = duplicateUsername),
+            UUID.randomUUID
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists"
         )
       }
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         val duplicateEmail = Some(Email.unsafeFrom(SharedTestDataADM.anythingUser1.email))
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            email = duplicateEmail
-          ),
-          SharedTestDataADM.superUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists")
+        val exit = UnsafeZioRun.run(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(email = duplicateEmail),
+            UUID.randomUUID
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists"
         )
       }
 
@@ -395,25 +386,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
-        /* User information is updated by other normal user */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            email = None,
-            givenName = Some(GivenName.unsafeFrom("Donald")),
-            familyName = None,
-            lang = None
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User information can only be changed by the user itself or a system administrator")
-          )
-        )
-
         /* Password is updated by other normal user */
         appActor ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.superUser.id,
