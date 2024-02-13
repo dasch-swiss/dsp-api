@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common.repo.rdf
 
 import org.apache.jena.rdf.model.*
+import org.apache.jena.vocabulary.RDF
 import zio.*
 
 import java.io.StringReader
@@ -36,6 +37,8 @@ final case class LangString(value: String, lang: Option[String])
 final case class RdfResource(private val res: Resource) {
 
   private val model = res.getModel
+
+  def iri: UIO[InternalIri] = ZIO.succeed(InternalIri(res.getURI))
 
   private def property(iri: String): UIO[Property] = ZIO.succeed(model.createProperty(iri))
 
@@ -372,7 +375,12 @@ final case class RdfModel private (private val model: Model) {
       _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
     } yield RdfResource(resource)
 
+  def getResourcesRdfType(objectClass: String): IO[RdfError, Iterator[RdfResource]] = for {
+    objClassProp  <- ZIO.attempt(model.createProperty(objectClass)).orDie
+    resourcesJIter = model.listResourcesWithProperty(RDF.`type`, objClassProp)
+  } yield resourcesJIter.asScala.map(RdfResource)
 }
+
 object RdfModel {
 
   /**

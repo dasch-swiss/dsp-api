@@ -5,12 +5,12 @@
 
 package org.knora.webapi.routing
 
+import com.typesafe.scalalogging.Logger
 import org.apache.pekko
 import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.model.StatusCodes.MethodNotAllowed
 import org.apache.pekko.http.scaladsl.model.StatusCodes.NotFound
-
-import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.slf4j.LoggerFactory
 
 import pekko.http.scaladsl.server.Directive0
 import pekko.http.scaladsl.server.Directives.*
@@ -18,7 +18,9 @@ import pekko.http.scaladsl.server.Directives.*
 /**
  * Pekko HTTP directives which can be wrapped around a [[pekko.http.scaladsl.server.Route]]].
  */
-trait AroundDirectives extends InstrumentationSupport {
+trait AroundDirectives {
+  protected lazy val metricsLogger: Logger =
+    Logger(LoggerFactory.getLogger(s"M-this.getClass.getSimpleName"))
 
   /**
    * When wrapped around a [[pekko.http.scaladsl.server.Route]], logs the time it took for the route to run.

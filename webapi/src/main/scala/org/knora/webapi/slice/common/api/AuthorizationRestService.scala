@@ -13,7 +13,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdmin
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
 
 /**
@@ -35,6 +37,7 @@ trait AuthorizationRestService {
    *         Fails with a [[ForbiddenException]] otherwise.
    */
   def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit]
+  def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit]
 
   /**
    * Checks if the user is a system or project administrator.
@@ -51,6 +54,8 @@ trait AuthorizationRestService {
     user: User,
     project: KnoraProject
   ): IO[ForbiddenException, Unit]
+
+  def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit]
 }
 
 /**
@@ -67,6 +72,10 @@ object AuthorizationRestService {
     isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminSystemUserOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
     isSystemUser(userADM) || isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
+  def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =
+    isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
+  def isSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): Boolean =
+    isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
 final case class AuthorizationRestServiceLive() extends AuthorizationRestService {
@@ -100,6 +109,16 @@ final case class AuthorizationRestServiceLive() extends AuthorizationRestService
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator, system user or project administrator has permissions for this operation."
     checkActiveUser(user, isSystemAdminSystemUserOrProjectAdmin(project), msg)
+  }
+
+  override def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
+    val msg = "ProjectAdmin or SystemAdmin permissions are required."
+    checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
+  }
+
+  override def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit] = {
+    val msg = "ProjectAdmin or SystemAdmin permissions are required."
+    checkActiveUser(user, isSystemAdminSystemUserOrProjectAdminInAnyProject, msg)
   }
 }
 

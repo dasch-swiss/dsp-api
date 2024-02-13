@@ -72,14 +72,6 @@ object Iri {
     isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
-   * Returns `true` if an IRI string looks like a Knora user IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isUserIri(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
@@ -145,16 +137,6 @@ object Iri {
    */
   def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
     if (isProjectIri(iri)) toSparqlEncodedString(iri)
-    else None
-
-  /**
-   * Check that the supplied IRI represents a valid user IRI.
-   *
-   * @param iri the string to be checked.
-   * @return the same string but escaped.
-   */
-  def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (isUserIri(iri)) toSparqlEncodedString(iri)
     else None
 
   /**

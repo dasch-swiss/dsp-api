@@ -5,6 +5,9 @@
 
 package org.knora.webapi.store.triplestore.api
 
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import play.twirl.api.TxtFormat
 import zio.*
 import zio.macros.accessible
@@ -14,12 +17,14 @@ import java.nio.file.Path
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
 @accessible
@@ -42,6 +47,9 @@ trait TriplestoreService {
   def query(sparql: Construct): Task[SparqlConstructResponse]
 
   def queryRdf(sparql: Construct): Task[String]
+
+  final def queryRdfModel(sparql: Construct): Task[RdfModel] = queryRdf(sparql)
+    .flatMap(RdfModel.fromTurtle(_).mapError(e => TriplestoreResponseException(e.toString)))
 
   /**
    * Performs a SPARQL SELECT query.
@@ -165,6 +173,9 @@ object TriplestoreService {
       def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Construct =
         Construct(sparql.toString, isGravsearch)
 
+      def apply(query: ConstructQuery): Construct =
+        Construct(query.getQueryString, isGravsearch = false)
+
       def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
     }
 
@@ -173,6 +184,8 @@ object TriplestoreService {
     }
     object Update {
       def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
+      def apply(query: ModifyQuery): Update           = Update(query.getQueryString)
+      def apply(query: InsertDataQuery): Update       = Update(query.getQueryString)
     }
   }
 }
