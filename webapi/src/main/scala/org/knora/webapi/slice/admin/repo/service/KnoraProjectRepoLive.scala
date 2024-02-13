@@ -6,13 +6,13 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -20,19 +20,15 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortcode
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortname
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
-
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 
 object KnoraProjectQueries {
   private[service] def getProjectByIri(iri: ProjectIri): Construct =
@@ -98,27 +94,23 @@ object KnoraProjectQueries {
 
   private[service] def getAllProjects: Construct = {
     val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
-    def spo                       = tp(project, p, o)
+    def projectPo                 = tp(project, p, o)
     val query =
       Queries
-        .CONSTRUCT(spo.andHas(Vocabulary.KnoraAdmin.belongsToProject, ontology))
+        .CONSTRUCT(projectPo.andHas(Vocabulary.KnoraAdmin.belongsToOntology, ontology))
         .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
         .where(
           project
             .isA(Vocabulary.KnoraAdmin.KnoraProject)
-            .and(
-              ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional
-            )
-            .and(spo)
+            .and(ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional)
+            .and(projectPo)
         )
     Construct(query.getQueryString)
   }
 }
 
 final case class KnoraProjectRepoLive(
-  private val triplestore: TriplestoreService,
-  private val mapper: PredicateObjectMapper,
-  private implicit val sf: StringFormatter
+  private val triplestore: TriplestoreService
 ) extends KnoraProjectRepo {
 
   private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
