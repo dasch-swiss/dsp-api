@@ -26,6 +26,9 @@ import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
 
+/**
+ * The user entity as found in the knora-admin ontology.
+ */
 final case class KnoraUser(
   id: UserIri,
   username: Username,
