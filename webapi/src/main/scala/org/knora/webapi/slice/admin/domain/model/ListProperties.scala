@@ -22,13 +22,14 @@ object ListProperties {
   final case class ListIri private (value: String) extends AnyVal with StringValue
 
   object ListIri extends StringValueCompanion[ListIri] {
+
     /**
      * Explanation of the user IRI regex:
      * `^` asserts the start of the string.
      * `http://rdfh\.ch/lists/` matches the specified prefix.
      * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
      * `[a-zA-Z0-9_-]{4,83}` matches any alphanumeric character, hyphen, or underscore between 4 and 84 times.
-     * TODO: 84 is max length spotted on production DB - subject to discussion/change
+     * TODO: 84 is max length found on production DBs - subject to discussion/change
      * `$` asserts the end of the string.
      */
     private val listIriRegEx = """^http://rdfh\.ch/lists/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,84}$""".r

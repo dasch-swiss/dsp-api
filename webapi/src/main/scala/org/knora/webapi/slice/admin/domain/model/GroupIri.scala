@@ -20,16 +20,24 @@ object GroupIri {
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
 
-  private val groupIriBase = "http://rdfh.ch/groups/"
+  /**
+   * Explanation of the user IRI regex:
+   * `^` asserts the start of the string.
+   * `http://rdfh\.ch/groups/` matches the specified prefix.
+   * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
+   * `[a-zA-Z0-9_-]{4,30}` matches any alphanumeric character, hyphen, or underscore between 4 and 30 times.
+   * TODO: 30 is max length found on production DBs - subject to discussion/change
+   * `$` asserts the end of the string.
+   */
+  private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,30}$""".r
 
-  private def isGroupIri(iri: String) = Iri.isIri(iri) && iri.startsWith(groupIriBase)
-
-  private def isValid(iri: String) = BuiltInGroups.contains((iri)) || isGroupIri(iri)
+  private def isGroupIriValid(iri: String) =
+    (Iri.isIri(iri) && groupIriRegEx.matches(iri)) || BuiltInGroups.contains(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
-    case _ if value.isEmpty  => Left("Group IRI cannot be empty.")
-    case _ if isValid(value) => Right(GroupIri(value))
-    case _                   => Left("Group IRI is invalid.")
+    case _ if value.isEmpty          => Left("Group IRI cannot be empty.")
+    case _ if isGroupIriValid(value) => Right(GroupIri(value))
+    case _                           => Left("Group IRI is invalid.")
   }
 
   def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
@@ -42,6 +50,6 @@ object GroupIri {
    */
   def makeNew(shortcode: Shortcode): GroupIri = {
     val uuid = UuidUtil.makeRandomBase64EncodedUuid
-    unsafeFrom(s"$groupIriBase${shortcode.value}/$uuid")
+    unsafeFrom(s"http://rdfh.ch/groups/${shortcode.value}/$uuid")
   }
 }

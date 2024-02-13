@@ -21,11 +21,11 @@ object ListPropertiesSpec extends ZIOSpecDefault {
   def spec: Spec[Any, Any] =
     suite("ListProperties")(listIriSuite, listNameSuite, positionSuite, labelsTest, commentsTest)
 
-  private val listIriSuite = suite("ListIri")(
-    test("pass an empty value and return an error") {
+  private val listIriSuite = suite("ListIri should")(
+    test("not be created from an empty value") {
       assertTrue(ListIri.from("") == Left("List IRI cannot be empty."))
     },
-    test("valid iris should be a valid iri") {
+    test("be created from a valid value") {
       val validIris = Gen.fromIterable(
         Seq(
           "http://rdfh.ch/lists/0001/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_",
@@ -36,7 +36,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
       )
       check(validIris)(i => assertTrue(ListIri.from(i).isRight))
     },
-    test("pass an invalid value and return an error") {
+    test("not be created from an invalid value") {
       val invalidIris = Gen.fromIterable(
         Seq(
           "Invalid IRI",

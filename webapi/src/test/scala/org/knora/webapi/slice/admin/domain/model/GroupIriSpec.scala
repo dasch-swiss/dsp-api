@@ -5,24 +5,39 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.test.check
 
 object GroupIriSpec extends ZIOSpecDefault {
-
-  private val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  private val invalidIri    = "Invalid IRI"
-
-  override val spec: Spec[Any, Nothing] = suite("GroupIri from should")(
-    test("pass an empty value and return an error") {
+  override val spec: Spec[Any, Nothing] = suite("GroupIri should")(
+    test("not be created from an empty value") {
       assertTrue(GroupIri.from("") == Left("Group IRI cannot be empty."))
     },
-    test("pass an invalid value and return an error") {
-      assertTrue(GroupIri.from(invalidIri) == Left("Group IRI is invalid."))
+    test("be created from valid value") {
+      val validIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/groups/0001/30-characters-iri-for-testing1",
+          "http://rdfh.ch/groups/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/groups/0111/UUID1",
+          "http://rdfh.ch/groups/0111/1234"
+        )
+      )
+      check(validIris)(i => assertTrue(GroupIri.from(i).isRight))
     },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(GroupIri.from(validGroupIri).map(_.value) == Right(validGroupIri))
+    test("not be created from an invalid value") {
+      val invalidIris = Gen.fromIterable(
+        Seq(
+          "Invalid IRI",
+          "http://rdfh.ch/groups/0111/123",
+          "http://rdfh.ch/groups/0001/31-characters-iri-for-testing12",
+          "http://rdfh.ch/groups/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ"
+        )
+      )
+      check(invalidIris)(i => assertTrue(GroupIri.from(i) == Left(s"Group IRI is invalid.")))
     }
   )
 }
