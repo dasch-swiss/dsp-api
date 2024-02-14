@@ -86,13 +86,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserProjectMembershipRemoveRequestADM(
-          userIri,
-          projectIri,
-          requestingUser,
-          apiRequestID
-        ) =>
-      userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
@@ -406,7 +399,7 @@ final case class UsersResponder(
         kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
         currentIsInProject = kUser.isInProject
         _ <- ZIO.when(currentIsInProject.contains(projectIri))(
-               ZIO.fail(BadRequestException(s"User $userIri is already member of project $projectIri."))
+               ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
              )
         newIsInProject    = (currentIsInProject :+ projectIri).map(_.value)
         theChange         = UserChangeRequestADM(projects = Some(newIsInProject))
@@ -416,7 +409,9 @@ final case class UsersResponder(
   }
 
   /**
-   * Removes a user from a project.
+   * Removes a project from the user's projects.
+   * If the project is not in the user's projects, a BadRequestException is returned.
+   * If the project is in the user's admin projects, it is removed.
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
@@ -424,81 +419,29 @@ final case class UsersResponder(
    * @param apiRequestID         the unique api request ID.
    * @return
    */
-  private def userProjectMembershipRemoveRequestADM(
-    userIri: IRI,
-    projectIri: IRI,
+  def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
+    userIri: UserIri,
+    projectIri: ProjectIri,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def userProjectMembershipRemoveRequestTask(
-      userIri: IRI,
-      projectIri: IRI,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
-        _ <-
-          ZIO.attempt(
-            if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-              throw ForbiddenException(
-                "User's project membership can only be changed by a project or system administrator"
-              )
-            }
-          )
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _           = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectMemberships   <- userProjectMembershipsGetADM(userIri = userIri)
-        currentProjectMembershipIris = currentProjectMemberships.map(_.id)
-
-        // check if user is a member and if he is then remove the project from to list
-        updatedProjectMembershipIris =
-          if (currentProjectMembershipIris.contains(projectIri)) {
-            currentProjectMembershipIris diff Seq(projectIri)
-          } else {
-            throw BadRequestException(
-              s"User $userIri is not member of project $projectIri."
-            )
-          }
-
-        // get users current project admin membership list
-        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
-
-        // in case the user has an admin membership for that project, remove it as well
-        maybeUpdatedProjectAdminMembershipIris =
-          if (currentProjectAdminMembershipIris.contains(projectIri)) {
-            Some(currentProjectAdminMembershipIris.filterNot(p => p == projectIri))
-          } else {
-            None
-          }
-
-        // create the update request by using the SystemUser
-        result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(
-                      projects = Some(updatedProjectMembershipIris),
-                      projectsAdmin = maybeUpdatedProjectAdminMembershipIris
-                    ),
-                    requestingUser = Users.SystemUser
-                  )
-      } yield result
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser)
-    )
+        kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
+        currentIsInProject = kUser.isInProject
+        _ <- ZIO.when(!currentIsInProject.contains(projectIri))(
+               ZIO.fail(BadRequestException(s"User $userIri is not member of project ${projectIri.value}."))
+             )
+        newIsInProject               = currentIsInProject.filterNot(_ == projectIri).map(_.value)
+        currentIsInProjectAdminGroup = kUser.isInProjectAdminGroup
+        newIsInProjectAdminGroup     = currentIsInProjectAdminGroup.filterNot(_ == projectIri).map(_.value)
+        theChange = UserChangeRequestADM(
+                      projects = Some(newIsInProject),
+                      projectsAdmin = Some(newIsInProjectAdminGroup)
+                    )
+        updateUserResult <- updateUserADM(userIri, theChange, requestingUser)
+      } yield updateUserResult
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   /**
@@ -1360,6 +1303,16 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProject(userIri, projectIri, requestingUser, apiRequestID))
+
+  def removeProjectFromUserIsInProject(
+    userIri: UserIri,
+    projectIri: ProjectIri,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](
+      _.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(userIri, projectIri, requestingUser, apiRequestID)
+    )
 
   def findUserProjectAdminMemberships(
     userIri: UserIri

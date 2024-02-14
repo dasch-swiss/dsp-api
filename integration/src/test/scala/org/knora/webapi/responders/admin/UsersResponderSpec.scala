@@ -463,13 +463,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // remove the user as member of the images project
-        appActor ! UserProjectMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeProjectFromUserIsInProject(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // verify that the user has been removed as project member of the images project
         val membershipsAfterUpdate =

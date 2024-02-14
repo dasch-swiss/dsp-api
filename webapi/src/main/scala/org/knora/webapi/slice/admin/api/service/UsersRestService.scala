@@ -155,6 +155,23 @@ final case class UsersRestService(
       uuid     <- Random.nextUUID
       response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, requestingUser, uuid)
     } yield response
+
+  def removeProjectToUserIsInProject(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _    <- ensureNotABuiltInUser(userIri)
+      _    <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid <- Random.nextUUID
+      response <- responder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
+                    userIri,
+                    projectIri.value,
+                    requestingUser,
+                    uuid
+                  )
+    } yield response
 }
 
 object UsersRestService {

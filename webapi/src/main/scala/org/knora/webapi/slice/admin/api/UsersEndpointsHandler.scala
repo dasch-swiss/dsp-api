@@ -118,6 +118,14 @@ case class UsersEndpointsHandler(
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
+  private val deleteUsersByIriProjectMemberShipsHandler =
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+      usersEndpoints.delete.usersByIriProjectMemberShips,
+      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
+        restService.removeProjectToUserIsInProject(requestingUser, userIri, projectIri)
+      }
+    )
+
   private val public = List(
     getUsersByIriProjectMemberShipsHandler,
     getUsersByIriProjectAdminMemberShipsHandler,
@@ -135,7 +143,8 @@ case class UsersEndpointsHandler(
     putUsersIriPasswordHandler,
     putUsersIriStatusHandler,
     putUsersIriSystemAdminHandler,
-    deleteUserByIriHandler
+    deleteUserByIriHandler,
+    deleteUsersByIriProjectMemberShipsHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHanders = public ++ secured

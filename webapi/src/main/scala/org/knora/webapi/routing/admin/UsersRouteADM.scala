@@ -31,8 +31,7 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    removeUserFromProjectMembership() ~
-      addUserToProjectAdminMembership() ~
+    addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
@@ -48,20 +47,6 @@ final case class UsersRouteADM()(
       .validateAndEscapeIri(groupIri)
       .toZIO
       .orElseFail(BadRequestException(s"Invalid group IRI $groupIri"))
-
-  /**
-   * remove user from project (and all groups belonging to this project)
-   */
-  private def removeUserFromProjectMembership(): Route =
-    path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
-      delete { requestContext =>
-        val task = for {
-          checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-          r              <- getIriUserUuid(projectIri, requestContext)
-        } yield UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        runJsonRouteZ(task, requestContext)
-      }
-    }
 
   /**
    * add user to project admin
