@@ -18,6 +18,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -38,11 +40,10 @@ final case class UsersRestService(
   } yield external
 
   def deleteUser(requestingUser: User, deleteIri: UserIri): Task[UserOperationResponseADM] = for {
-    _ <- ZIO
-           .fail(BadRequestException("Changes to built-in users are not allowed."))
-           .when(deleteIri.isBuiltInUser)
+    _        <- ensureNotABuiltInUser(deleteIri)
+    _        <- ensureSelfUpdateOrSystemAdmin(deleteIri, requestingUser)
     uuid     <- Random.nextUUID
-    internal <- responder.changeUserStatusADM(deleteIri.value, UserStatus.Inactive, requestingUser, uuid)
+    internal <- responder.changeUserStatus(deleteIri, UserStatus.Inactive, uuid)
     external <- format.toExternal(internal)
   } yield external
 
@@ -86,6 +87,47 @@ final case class UsersRestService(
                   .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
+
+  private def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
+    ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
+  private def ensureNotABuiltInUser(userIri: UserIri) =
+    ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
+
+  def updateUser(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest
+  ): Task[UserOperationResponseADM] = for {
+    _    <- ensureNotABuiltInUser(userIri)
+    _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+    uuid <- Random.nextUUID
+    response <-
+      responder.changeBasicUserInformationADM(userIri, changeRequest, uuid).flatMap(format.toExternal)
+  } yield response
+
+  def changePassword(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: PasswordChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changePassword(userIri, changeRequest, requestingUser, uuid).flatMap(format.toExternal)
+    } yield response
+
+  def changeStatus(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: Requests.StatusChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changeUserStatus(userIri, changeRequest.status, uuid)
+    } yield response
 }
 
 object UsersRestService {

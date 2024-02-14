@@ -10,6 +10,9 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -26,49 +29,74 @@ case class UsersEndpointsHandler(
 ) {
 
   private val getUsersHandler = SecuredEndpointHandler[Unit, UsersGetResponseADM](
-    usersEndpoints.getUsers,
+    usersEndpoints.get.users,
     requestingUser => _ => restService.listAllUsers(requestingUser)
   )
 
   private val getUserByIriHandler = SecuredEndpointHandler[UserIri, UserResponseADM](
-    usersEndpoints.getUserByIri,
+    usersEndpoints.get.userByIri,
     requestingUser => userIri => restService.getUserByIri(requestingUser, userIri)
   )
 
   private val getUserByEmailHandler = SecuredEndpointHandler[Email, UserResponseADM](
-    usersEndpoints.getUserByEmail,
+    usersEndpoints.get.userByEmail,
     requestingUser => email => restService.getUserByEmail(requestingUser, email)
   )
 
   private val getUserByUsernameHandler = SecuredEndpointHandler[Username, UserResponseADM](
-    usersEndpoints.getUserByUsername,
+    usersEndpoints.get.userByUsername,
     requestingUser => username => restService.getUserByUsername(requestingUser, username)
   )
 
   private val getUsersByIriProjectMemberShipsHandler = PublicEndpointHandler(
-    usersEndpoints.getUsersByIriProjectMemberShips,
+    usersEndpoints.get.usersByIriProjectMemberShips,
     restService.getProjectMemberShipsByIri
   )
 
   private val getUsersByIriProjectAdminMemberShipsHandler = PublicEndpointHandler(
-    usersEndpoints.getUsersByIriProjectAdminMemberShips,
+    usersEndpoints.get.usersByIriProjectAdminMemberShips,
     restService.getProjectAdminMemberShipsByIri
   )
 
   private val getUsersByIriGroupMembershipsHandler = PublicEndpointHandler(
-    usersEndpoints.getUsersByIriGroupMemberships,
+    usersEndpoints.get.usersByIriGroupMemberships,
     restService.getGroupMemberShipsByIri
   )
 
   // Create
   private val createUserHandler = SecuredEndpointHandler[UserCreateRequest, UserOperationResponseADM](
-    usersEndpoints.postUsers,
+    usersEndpoints.post.users,
     requestingUser => userCreateRequest => restService.createUser(requestingUser, userCreateRequest)
   )
 
+  // Update
+  private val putUsersIriBasicInformationHandler =
+    SecuredEndpointHandler[(UserIri, BasicUserInformationChangeRequest), UserOperationResponseADM](
+      usersEndpoints.put.usersIriBasicInformation,
+      requestingUser => { case (userIri: UserIri, changeRequest: BasicUserInformationChangeRequest) =>
+        restService.updateUser(requestingUser, userIri, changeRequest)
+      }
+    )
+
+  private val putUsersIriPasswordHandler =
+    SecuredEndpointHandler[(UserIri, PasswordChangeRequest), UserOperationResponseADM](
+      usersEndpoints.put.usersIriPassword,
+      requestingUser => { case (userIri: UserIri, changeRequest: PasswordChangeRequest) =>
+        restService.changePassword(requestingUser, userIri, changeRequest)
+      }
+    )
+
+  private val putUsersIriStatusHandler =
+    SecuredEndpointHandler[(UserIri, StatusChangeRequest), UserOperationResponseADM](
+      usersEndpoints.put.usersIriStatus,
+      requestingUser => { case (userIri: UserIri, changeRequest: StatusChangeRequest) =>
+        restService.changeStatus(requestingUser, userIri, changeRequest)
+      }
+    )
+
   // Deletes
   private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
-    usersEndpoints.deleteUser,
+    usersEndpoints.delete.deleteUser,
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
@@ -84,6 +112,9 @@ case class UsersEndpointsHandler(
     getUserByEmailHandler,
     getUserByUsernameHandler,
     createUserHandler,
+    putUsersIriBasicInformationHandler,
+    putUsersIriPasswordHandler,
+    putUsersIriStatusHandler,
     deleteUserByIriHandler
   ).map(mapper.mapSecuredEndpointHandler(_))
 

@@ -17,7 +17,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.RouteUtilADM
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
@@ -34,73 +33,13 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    changeUserBasicInformation() ~
-      changeUserPassword() ~
-      changeUserStatus() ~
-      changeUserSystemAdminMembership() ~
+    changeUserSystemAdminMembership() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * Change existing user's basic information.
-   */
-  private def changeUserBasicInformation(): Route =
-    path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
-      put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            r              <- getUserUuid(requestContext)
-            payload <- UserUpdateBasicInformationPayloadADM
-                         .make(apiRequest)
-                         .mapError(e => BadRequestException(e.getMessage))
-                         .toZIO
-                         .filterOrFail(_.isAtLeastOneParamSet)(BadRequestException("No data sent in API request."))
-          } yield UserChangeBasicInformationRequestADM(checkedUserIri, payload, r.user, r.uuid)
-          RouteUtilADM.runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
-
-  /**
-   * Change user's password.
-   */
-  private def changeUserPassword(): Route =
-    path(usersBasePath / "iri" / Segment / "Password") { userIri =>
-      put {
-        entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            payload        <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-            r              <- getUserUuid(requestContext)
-          } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
-          RouteUtilADM.runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
-
-  /**
-   * Change user's status.
-   */
-  private def changeUserStatus(): Route =
-    path(usersBasePath / "iri" / Segment / "Status") { userIri =>
-      put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          val task = for {
-            newStatus <- ZIO
-                           .fromOption(apiRequest.status.map(UserStatus.from))
-                           .orElseFail(BadRequestException("The status is missing."))
-            checkedUserIri <- validateUserIriAndEnsureRegularUser(userIri)
-            r              <- getUserUuid(requestContext)
-          } yield UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid)
-          runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
 
   /**
    * Change user's SystemAdmin membership.

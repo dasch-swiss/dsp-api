@@ -25,6 +25,8 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -225,43 +227,39 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     "asked to update a user" should {
       "UPDATE the user's basic information" in {
         /* User information is updated by the user */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.unsafeFrom("Donald"))
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          apiRequestID = UUID.randomUUID
+        val response1: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald"))),
+            UUID.randomUUID
+          )
         )
 
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.givenName should equal("Donald")
 
         /* User information is updated by a system admin */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            familyName = Some(FamilyName.unsafeFrom("Duck"))
-          ),
-          requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = UUID.randomUUID
+        val response2: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck"))),
+            UUID.randomUUID
+          )
         )
 
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.familyName should equal("Duck")
 
         /* User information is updated by a system admin */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
-            familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
-          ),
-          requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = UUID.randomUUID
+        val response3: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(
+              givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
+              familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
+            ),
+            apiRequestID = UUID.randomUUID
+          )
         )
 
-        val response3 = expectMsgType[UserOperationResponseADM](timeout)
         response3.user.givenName should equal(SharedTestDataADM.normalUser.givenName)
         response3.user.familyName should equal(SharedTestDataADM.normalUser.familyName)
       }
@@ -269,58 +267,49 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val duplicateUsername =
           Some(Username.unsafeFrom(SharedTestDataADM.anythingUser1.username))
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            username = duplicateUsername
-          ),
-          SharedTestDataADM.superUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists"
-            )
+        val exit = UnsafeZioRun.run(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(username = duplicateUsername),
+            UUID.randomUUID
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists"
         )
       }
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         val duplicateEmail = Some(Email.unsafeFrom(SharedTestDataADM.anythingUser1.email))
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            email = duplicateEmail
-          ),
-          SharedTestDataADM.superUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists")
+        val exit = UnsafeZioRun.run(
+          UsersResponder.changeBasicUserInformationADM(
+            SharedTestDataADM.normalUser.userIri,
+            BasicUserInformationChangeRequest(email = duplicateEmail),
+            UUID.randomUUID
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists"
         )
       }
 
       "UPDATE the user's password (by himself)" in {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test123456")
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = requesterPassword,
-            newPassword = newPassword
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          apiRequestID = UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.changePassword(
+            SharedTestDataADM.normalUser.userIri,
+            PasswordChangeRequest(requesterPassword, newPassword),
+            SharedTestDataADM.normalUser,
+            UUID.randomUUID
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
-        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test123456")
+        val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, newPassword.value)
         val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
 
         resF map { res => assert(res) }
@@ -330,17 +319,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test654321")
 
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = requesterPassword,
-            newPassword = newPassword
-          ),
-          requestingUser = SharedTestDataADM.rootUser,
-          apiRequestID = UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.changePassword(
+            SharedTestDataADM.normalUser.userIri,
+            PasswordChangeRequest(requesterPassword, newPassword),
+            SharedTestDataADM.rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
@@ -350,25 +336,23 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         resF map { res => assert(res) }
       }
 
-      "UPDATE the user's status, (deleting) making him inactive " in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+      "UPDATE the user's status, making them inactive " in {
+        val response1 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeUserStatus(
+            SharedTestDataADM.normalUser.userIri,
+            UserStatus.from(false),
+            UUID.randomUUID
+          )
         )
-
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.status should equal(false)
 
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          status = UserStatus.from(true),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response2 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeUserStatus(
+            SharedTestDataADM.normalUser.userIri,
+            UserStatus.from(true),
+            UUID.randomUUID()
+          )
         )
-
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.status should equal(true)
       }
 
@@ -392,90 +376,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.permissions.isSystemAdmin should equal(false)
-      }
-
-      "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
-        /* User information is updated by other normal user */
-        appActor ! UserChangeBasicInformationRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
-            email = None,
-            givenName = Some(GivenName.unsafeFrom("Donald")),
-            familyName = None,
-            lang = None
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User information can only be changed by the user itself or a system administrator")
-          )
-        )
-
-        /* Password is updated by other normal user */
-        appActor ! UserChangePasswordRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
-            requesterPassword = Password.unsafeFrom("test"),
-            newPassword = Password.unsafeFrom("test123456")
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's password can only be changed by the user itself or a system administrator")
-          )
-        )
-
-        /* Status is updated by other normal user */
-        appActor ! UserChangeStatusRequestADM(
-          userIri = SharedTestDataADM.superUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID
-        )
-        expectMsg(
-          timeout,
-          Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator"))
-        )
-
-        /* System admin group membership */
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(true),
-          requestingUser = SharedTestDataADM.normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator"))
-        )
-      }
-
-      "return 'BadRequest' if system user is requested to change" in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = KnoraSystemInstances.Users.SystemUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
-        )
-
-        expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
-      }
-
-      "return 'BadRequest' if anonymous user is requested to change" in {
-        appActor ! UserChangeStatusRequestADM(
-          userIri = KnoraSystemInstances.Users.AnonymousUser.id,
-          status = UserStatus.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
-        )
-
-        expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
       }
     }
 

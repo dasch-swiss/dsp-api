@@ -7,6 +7,7 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.IO
+import zio.RIO
 import zio.Task
 import zio.URLayer
 import zio.ZIO
@@ -41,6 +42,8 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -80,27 +83,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserChangeBasicInformationRequestADM(
-          userIri,
-          userUpdateBasicInformationPayload,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changeBasicUserInformationADM(
-        userIri,
-        userUpdateBasicInformationPayload,
-        requestingUser,
-        apiRequestID
-      )
-    case UserChangePasswordRequestADM(
-          userIri,
-          userUpdatePasswordPayload,
-          requestingUser,
-          apiRequestID
-        ) =>
-      changePasswordADM(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
-    case UserChangeStatusRequestADM(userIri, status, requestingUser, apiRequestID) =>
-      changeUserStatusADM(userIri, status, requestingUser, apiRequestID)
     case UserChangeSystemAdminMembershipStatusRequestADM(
           userIri,
           changeSystemAdminMembershipStatusRequest,
@@ -258,7 +240,7 @@ final case class UsersResponder(
    * can be changed. For changing the password or user status, use the separate methods.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param userUpdateBasicInformationPayload    the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   * @param changeRequest        the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
@@ -266,56 +248,29 @@ final case class UsersResponder(
    *               with a [[BadRequestException]] if the necessary parameters are not supplied.
    *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
-  private def changeBasicUserInformationADM(
-    userIri: IRI,
-    userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-    requestingUser: User,
+  def changeBasicUserInformationADM(
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    logger.debug(s"changeBasicUserInformationADM: changeUserRequest: {}", userUpdateBasicInformationPayload)
-
-    /**
-     * The actual change basic user data task run with an IRI lock.
-     */
-    def changeBasicUserDataTask(
-      userIri: IRI,
-      userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- ZIO.attempt(
-               if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-                 throw ForbiddenException(
-                   "User information can only be changed by the user itself or a system administrator"
-                 )
-               }
-             )
-
         // get current user information
-        currentUserInformation <- findUserByIri(
-                                    identifier = UserIri.unsafeFrom(userIri),
-                                    userInformationType = UserInformationTypeADM.Full,
-                                    requestingUser = Users.SystemUser
-                                  )
+        currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
+                         .someOrFail(NotFoundException(s"User with IRI $userIri not found"))
 
-        // check if email is unique in case of a change email request
-        emailTaken <-
-          userByEmailExists(userUpdateBasicInformationPayload.email, Some(currentUserInformation.get.email))
-        _ = if (emailTaken) {
-              throw DuplicateValueException(
-                s"User with the email '${userUpdateBasicInformationPayload.email.get.value}' already exists"
-              )
-            }
+        _ <- // check if email is unique in case of a change email request
+          ZIO.whenZIO(userByEmailExists(changeRequest.email, Some(currentUser.email))) {
+            ZIO.fail(DuplicateValueException(s"User with the email '${changeRequest.email.get.value}' already exists"))
+          }
 
         // check if username is unique in case of a change username request
-        _ <- userUpdateBasicInformationPayload.username match {
+        _ <- changeRequest.username match {
                case Some(username) =>
                  ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value))))(
                    ZIO.fail(
                      DuplicateValueException(
-                       s"User with the username '${userUpdateBasicInformationPayload.username.get.value}' already exists"
+                       s"User with the username '${changeRequest.username.get.value}' already exists"
                      )
                    )
                  )
@@ -324,30 +279,26 @@ final case class UsersResponder(
 
         // send change request as SystemUser
         result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(
-                      username = userUpdateBasicInformationPayload.username,
-                      email = userUpdateBasicInformationPayload.email,
-                      givenName = userUpdateBasicInformationPayload.givenName,
-                      familyName = userUpdateBasicInformationPayload.familyName,
-                      lang = userUpdateBasicInformationPayload.lang
+                    userIri,
+                    UserChangeRequestADM(
+                      changeRequest.username,
+                      changeRequest.email,
+                      changeRequest.givenName,
+                      changeRequest.familyName,
+                      lang = changeRequest.lang
                     ),
                     requestingUser = Users.SystemUser
                   )
       } yield result
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      USERS_GLOBAL_LOCK_IRI,
-      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
   }
 
   /**
    * Change the users password. The old password needs to be supplied for security purposes.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param userUpdatePasswordPayload    the current password of the requesting user and the new password.
+   * @param changeRequest    the current password of the requesting user and the new password.
    *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
@@ -357,53 +308,32 @@ final case class UsersResponder(
    *         fails with a [[ForbiddenException]] if the supplied old password doesn't match with the user's current password.
    *         fails with a [[NotFoundException]] if the user is not found.
    */
-  private def changePasswordADM(
-    userIri: IRI,
-    userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+  def changePassword(
+    userIri: UserIri,
+    changeRequest: PasswordChangeRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    /**
-     * The actual change password task run with an IRI lock.
-     */
-    def changePasswordTask(
-      userIri: IRI,
-      update: UserUpdatePasswordPayloadADM,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- ZIO.attempt(
-               if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-                 throw ForbiddenException(
-                   "User's password can only be changed by the user itself or a system administrator"
-                 )
-               }
-             )
+        _ <- // check if supplied password matches requesting user's password
+          ZIO
+            .fromOption(requestingUser.password)
+            .map(PasswordHash.unsafeFrom)
+            .mapBoth(
+              _ => ForbiddenException("The requesting user has no password."),
+              pwHash => passwordService.matches(changeRequest.requesterPassword, pwHash)
+            )
+            .filterOrFail(identity)(
+              ForbiddenException("The supplied password does not match the requesting user's password.")
+            )
 
-        // check if supplied password matches requesting user's password
-        _ <- ZIO
-               .fromOption(requestingUser.password)
-               .map(PasswordHash.unsafeFrom)
-               .mapBoth(
-                 _ => ForbiddenException("The requesting user has no password."),
-                 pwHash => passwordService.matches(update.requesterPassword, pwHash)
-               )
-               .filterOrFail(identity)(
-                 ForbiddenException("The supplied password does not match the requesting user's password.")
-               )
-
-        newPasswordHash = passwordService.hashPassword(update.newPassword)
-        result         <- updateUserPasswordADM(userIri, newPasswordHash, Users.SystemUser)
+        newPasswordHash = passwordService.hashPassword(changeRequest.newPassword)
+        result         <- updateUserPasswordADM(userIri.value, newPasswordHash, Users.SystemUser)
 
       } yield result
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   /**
@@ -411,52 +341,14 @@ final case class UsersResponder(
    *
    * @param userIri        the IRI of the existing user that we want to update.
    * @param status         the new status.
-   * @param requestingUser the requesting user.
    * @param apiRequestID   the unique api request ID.
    * @return a task containing a [[UserOperationResponseADM]].
    *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
    *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
    */
-  def changeUserStatusADM(
-    userIri: IRI,
-    status: UserStatus,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
-
-    logger.debug(s"changeUserStatusADM - new status: {}", status)
-
-    /**
-     * The actual change user status task run with an IRI lock.
-     */
-    def changeUserStatusTask(
-      userIri: IRI,
-      status: UserStatus,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
-      for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <-
-          ZIO.attempt(
-            if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-              throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
-            }
-          )
-
-        // create the update request
-        result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(status = Some(status)),
-                    requestingUser = Users.SystemUser
-                  )
-
-      } yield result
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      changeUserStatusTask(userIri, status, requestingUser)
-    )
+  def changeUserStatus(userIri: UserIri, status: UserStatus, apiRequestID: UUID): Task[UserOperationResponseADM] = {
+    val updateTask = updateUserADM(userIri, UserChangeRequestADM(status = Some(status)), Users.SystemUser)
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   /**
@@ -1209,7 +1101,7 @@ final case class UsersResponder(
           )
 
         _ <- // check if email is unique
-          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(req.email.value))))(
+          ZIO.whenZIO(userExistsByEmail(req.email))(
             ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
           )
 
@@ -1381,19 +1273,19 @@ final case class UsersResponder(
   private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String]): Task[Boolean] =
     maybeEmail match {
       case Some(email) =>
-        if (maybeCurrent.contains(email.value)) {
-          ZIO.succeed(true)
-        } else {
-          for {
-            _ <- ZIO
-                   .fromEither(Email.from(email.value))
-                   .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
-            userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
-          } yield userExists
-        }
-
+        if (maybeCurrent.contains(email.value)) { ZIO.succeed(true) }
+        else { userExistsByEmail(email) }
       case None => ZIO.succeed(false)
     }
+
+  /**
+   * Helper method for checking if an Email address exists.
+   *
+   * @param email the Email adresss
+   * @return a [[Boolean]].
+   */
+  private def userExistsByEmail(email: Email) =
+    triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
 
   /**
    * Helper method for checking if a project exists.
@@ -1507,13 +1399,12 @@ object UsersResponder {
   def getAllUserADMRequest(requestingUser: User): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.getAllUserADMRequest(requestingUser))
 
-  def changeUserStatusADM(
-    userIri: IRI,
+  def changeUserStatus(
+    userIri: UserIri,
     status: UserStatus,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.changeUserStatusADM(userIri, status, requestingUser, apiRequestID))
+    ZIO.serviceWithZIO[UsersResponder](_.changeUserStatus(userIri, status, apiRequestID))
 
   def findUserByIri(
     identifier: UserIri,
@@ -1557,6 +1448,21 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
+
+  def changeBasicUserInformationADM(
+    userIri: UserIri,
+    changeRequest: BasicUserInformationChangeRequest,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.changeBasicUserInformationADM(userIri, changeRequest, apiRequestID))
+
+  def changePassword(
+    userIri: UserIri,
+    changeRequest: PasswordChangeRequest,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): RIO[UsersResponder, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
 
   val layer: URLayer[
     AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & MessageRelay & UserService & StringFormatter & TriplestoreService,
