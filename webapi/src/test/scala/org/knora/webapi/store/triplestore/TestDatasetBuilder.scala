@@ -39,7 +39,6 @@ object TestDatasetBuilder {
   def datasetFromTriG(trig: String): Task[Dataset] =
     for {
       ds         <- createEmptyDataset
-      _          <- ZIO.succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
       is          = IOUtils.toInputStream(trig, "UTF-8")
       r: Runnable = () => { RDFDataMgr.read(ds, is, Lang.TRIG) }
       _          <- ZIO.attempt(ds.executeWrite(r))

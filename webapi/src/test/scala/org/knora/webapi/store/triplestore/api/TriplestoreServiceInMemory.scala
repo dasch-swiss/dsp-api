@@ -12,6 +12,7 @@ import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
+import zio.Console
 import zio.RIO
 import zio.Ref
 import zio.Scope
@@ -246,10 +247,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def getDataset: UIO[Dataset] =
     datasetRef.get
 
-  override def printDataset: UIO[Unit] = {
-    println(s"TDB Context:\n${TDB.getContext}\n")
-    getDataset.flatMap(ds => ZIO.logInfo(s"TriplestoreServiceInMemory.printDataset: ${printDatasetContents(ds)}"))
-  }
+  override def printDataset: UIO[Unit] =
+    for {
+      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+      ds <- getDataset
+      _  <- Console.printLine(s"TriplestoreServiceInMemory.printDataset:").orDie
+      _   = printDatasetContents(ds)
+    } yield ()
 
   def printDatasetContents(dataset: Dataset): Unit = {
     // Iterate over the named models
@@ -264,10 +268,6 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       // Write the model in Turtle format
       RDFDataMgr.write(System.out, model, org.apache.jena.riot.Lang.TURTLE)
     }
-
-    // Print the default model
-    println("Default Graph:\n")
-    RDFDataMgr.write(System.out, dataset.getDefaultModel, org.apache.jena.riot.Lang.TURTLE)
     dataset.end()
   }
 
@@ -305,7 +305,11 @@ object TriplestoreServiceInMemory {
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+  val createEmptyDataset: UIO[Dataset] = ZIO.succeed {
+    val ds = TDB2Factory.createDataset()
+    TDB.getContext.set(TDB.symUnionDefaultGraph, true)
+    ds
+  }
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
