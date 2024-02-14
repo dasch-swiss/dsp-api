@@ -448,14 +448,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
 
         // add user as project admin to images project
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // verify that the user has been added as project admin to the images project
         val projectAdminMembershipsBeforeUpdate =
@@ -498,19 +498,17 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            BadRequestException(
-              "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
-            )
+        val exit = UnsafeZioRun.run(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[BadRequestException](
+          exit,
+          "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
         )
       }
 
@@ -531,14 +529,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
 
         // add user as project admin to images project
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // get the updated project admin memberships (should contain images project)
         val membershipsAfterUpdate =
@@ -574,41 +572,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
         received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
-
-      "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
-        /* User is added to a project by a normal user */
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException(
-              "User's project admin membership can only be changed by a project or system administrator"
-            )
-          )
-        )
-
-        /* User is removed from a project by a normal user */
-        appActor ! UserProjectAdminMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException(
-              "User's project admin membership can only be changed by a project or system administrator"
-            )
-          )
-        )
-      }
-
     }
 
     "asked to update the user's group membership" should {

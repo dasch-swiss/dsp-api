@@ -79,6 +79,14 @@ case class UsersEndpointsHandler(
       }
     )
 
+  private val postUsersByIriProjectAdminMemberShipsHandler =
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+      usersEndpoints.post.usersByIriProjectAdminMemberShips,
+      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
+        restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri)
+      }
+    )
+
   // Update
   private val putUsersIriBasicInformationHandler =
     SecuredEndpointHandler[(UserIri, BasicUserInformationChangeRequest), UserOperationResponseADM](
@@ -139,6 +147,7 @@ case class UsersEndpointsHandler(
     getUserByUsernameHandler,
     createUserHandler,
     postUsersByIriProjectMemberShipsHandler,
+    postUsersByIriProjectAdminMemberShipsHandler,
     putUsersIriBasicInformationHandler,
     putUsersIriPasswordHandler,
     putUsersIriStatusHandler,

@@ -112,6 +112,11 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Add a user to a project identified by IRI.")
+
+    val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.post
+      .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
+      .out(sprayJsonBody[UserOperationResponseADM])
+      .description("Add a user as an admin to a project identified by IRI.")
   }
 
   object put {
@@ -167,6 +172,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       get.userByUsername,
       post.users,
       post.usersByIriProjectMemberShips,
+      post.usersByIriProjectAdminMemberShips,
       put.usersIriBasicInformation,
       put.usersIriPassword,
       put.usersIriStatus,
