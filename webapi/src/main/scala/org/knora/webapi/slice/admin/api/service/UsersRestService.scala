@@ -208,6 +208,17 @@ final case class UsersRestService(
       uuid     <- Random.nextUUID
       response <- responder.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, uuid)
     } yield response
+
+  def removeGroupFromUserIsInGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    groupIri: GroupIri
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      uuid     <- Random.nextUUID
+      response <- responder.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, uuid)
+    } yield response
 }
 
 object UsersRestService {

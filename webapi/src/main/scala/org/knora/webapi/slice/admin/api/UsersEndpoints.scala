@@ -166,6 +166,11 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Remove a user form an admin project membership identified by IRI.")
+
+    val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
+      .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIri)
+      .out(sprayJsonBody[UserOperationResponseADM])
+      .description("Remove a user form an group membership identified by IRI.")
   }
 
   private val public =
@@ -190,7 +195,8 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       put.usersIriSystemAdmin,
       delete.deleteUser,
       delete.usersByIriProjectMemberShips,
-      delete.usersByIriProjectAdminMemberShips
+      delete.usersByIriProjectAdminMemberShips,
+      delete.usersByIriGroupMemberShips
     ).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
 }

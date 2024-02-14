@@ -25,7 +25,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -88,7 +87,7 @@ final case class UsersResponder(
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+      removeGroupFromUserIsInGroup(userIri, projectIri, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -598,71 +597,39 @@ final case class UsersResponder(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def userGroupMembershipRemoveRequestADM(
-    userIri: IRI,
-    groupIri: IRI,
+  def removeGroupFromUserIsInGroup(
+    userIri: UserIri,
+    groupIri: GroupIri,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def userGroupMembershipRemoveRequestTask(
-      userIri: IRI,
-      groupIri: IRI,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if user exists
-        userExists <- userExists(userIri)
-        _           = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+        kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
+        group <- groupResponder
+                   .groupGetADM(groupIri.value)
+                   .someOrFail(NotFoundException(s"The group $groupIri does not exist."))
+        projectIri = group.project.id
+        _ <- // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
+          ZIO
+            .fail(
+              ForbiddenException("User's group membership can only be changed by a project or system administrator")
+            )
+            .when(
+              !requestingUser.permissions
+                .isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser
+            )
 
-        // check if group exists
-        projectExists <- groupExists(groupIri)
-        _              = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-        // get group's info. we need the project IRI.
-        maybeGroupADM <- messageRelay.ask[Option[GroupADM]](GroupGetADM(groupIri))
-
-        projectIri = maybeGroupADM
-                       .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
-                       .project
-                       .id
-
-        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
-        _ =
-          if (
-            !requestingUser.permissions
-              .isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser
-          ) {
-            throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-          }
-
-        // get users current project membership list
-        currentGroupMembershipIris <- findGroupMembershipsByIri(UserIri.unsafeFrom(userIri)).map(_.map(_.id))
-
-        // check if user is not already a member and if he is then remove the project from to list
-        updatedGroupMembershipIris =
-          if (currentGroupMembershipIris.contains(groupIri)) {
-            currentGroupMembershipIris diff Seq(groupIri)
-          } else {
-            throw BadRequestException(s"User $userIri is not member of group $groupIri.")
-          }
-
+        currentIsInGroup = kUser.isInGroup
+        _ <- ZIO.when(!currentIsInGroup.contains(groupIri))(
+               ZIO.fail(BadRequestException(s"User $userIri is not member of group $groupIri."))
+             )
         // create the update request
-        result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = requestingUser
-                  )
+        newIsInGroup = currentIsInGroup.filterNot(_ == groupIri).map(_.value)
+        theUpdate    = UserChangeRequestADM(groups = Some(newIsInGroup))
+        result      <- updateUserADM(userIri, theUpdate, requestingUser)
       } yield result
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   private def ensureNotABuiltInUser(userIri: UserIri) =
@@ -991,15 +958,6 @@ final case class UsersResponder(
     triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
 
   /**
-   * Helper method for checking if a group exists.
-   *
-   * @param groupIri the IRI of the group.
-   * @return a [[Boolean]].
-   */
-  private def groupExists(groupIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByIri(groupIri)))
-
-  /**
    * Tries to retrieve a [[User]] from the cache.
    *
    * @param identifier the user's identifier
@@ -1210,6 +1168,14 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
+
+  def removeGroupFromUserIsInGroup(
+    userIri: UserIri,
+    groupIri: GroupIri,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
 
   val layer: URLayer[
     AuthorizationRestService & AppConfig & IriConverter & IriService & GroupsResponderADM & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,

@@ -608,13 +608,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
-        appActor ! UserGroupMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeGroupFromUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
@@ -645,17 +646,17 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
 
         /* User is removed from a project by a normal user */
-        appActor ! UserGroupMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's group membership can only be changed by a project or system administrator")
+        val exit2 = UnsafeZioRun.run(
+          UsersResponder.removeGroupFromUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            normalUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[ForbiddenException](
+          exit2,
+          "User's group membership can only be changed by a project or system administrator"
         )
       }
     }
