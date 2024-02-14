@@ -100,7 +100,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .out(sprayJsonBody[UserGroupMembershipsGetResponseADM])
       .description("Returns the user's group memberships for a user identified by their IRI.")
   }
-  // Create
+
   object post {
     val users = baseEndpoints.securedEndpoint.post
       .in(base)

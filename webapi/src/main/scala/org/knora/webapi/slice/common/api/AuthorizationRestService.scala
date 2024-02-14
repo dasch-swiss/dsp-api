@@ -10,7 +10,9 @@ import zio.macros.accessible
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
@@ -38,6 +40,7 @@ trait AuthorizationRestService {
    */
   def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit]
   def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit]
+  def ensureSystemAdminOrProjectAdmin(user: User, project: ProjectIri): IO[ForbiddenException, KnoraProject]
 
   /**
    * Checks if the user is a system or project administrator.
@@ -78,7 +81,7 @@ object AuthorizationRestService {
     isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
-final case class AuthorizationRestServiceLive() extends AuthorizationRestService {
+final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo) extends AuthorizationRestService {
   override def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
@@ -89,13 +92,25 @@ final case class AuthorizationRestServiceLive() extends AuthorizationRestService
     user: User,
     condition: User => Boolean,
     errorMsg: String
-  ): ZIO[Any, ForbiddenException, Unit] =
+  ): IO[ForbiddenException, Unit] =
     ensureIsActive(user) *> ZIO.fail(ForbiddenException(errorMsg)).unless(condition(user)).unit
 
   private def ensureIsActive(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg = s"The account with username '${user.username}' is not active."
     ZIO.fail(ForbiddenException(msg)).unless(isActive(user)).unit
   }
+
+  override def ensureSystemAdminOrProjectAdmin(
+    user: User,
+    projectIri: ProjectIri
+  ): IO[ForbiddenException, KnoraProject] =
+    for {
+      project <- projectRepo
+                   .findById(projectIri)
+                   .orDie
+                   .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))
+      _ <- ensureSystemAdminOrProjectAdmin(user, project)
+    } yield project
 
   override def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
     lazy val msg =
@@ -123,5 +138,5 @@ final case class AuthorizationRestServiceLive() extends AuthorizationRestService
 }
 
 object AuthorizationRestServiceLive {
-  val layer: ULayer[AuthorizationRestService] = ZLayer.fromFunction(AuthorizationRestServiceLive.apply _)
+  val layer = ZLayer.derive[AuthorizationRestServiceLive]
 }
