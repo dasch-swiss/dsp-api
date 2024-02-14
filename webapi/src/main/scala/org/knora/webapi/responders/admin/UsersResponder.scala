@@ -45,7 +45,9 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
@@ -63,6 +65,7 @@ final case class UsersResponder(
   iriService: IriService,
   iriConverter: IriConverter,
   userService: UserService,
+  userRepo: KnoraUserRepo,
   passwordService: PasswordService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
@@ -83,8 +86,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
           userIri,
           projectIri,
@@ -394,70 +395,24 @@ final case class UsersResponder(
    * @param apiRequestID         the unique api request ID.
    * @return
    */
-  private def userProjectMembershipAddRequestADM(
-    userIri: IRI,
-    projectIri: IRI,
+  def addProjectToUserIsInProject(
+    userIri: UserIri,
+    projectIri: ProjectIri,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    logger.debug(s"userProjectMembershipAddRequestADM: userIri: {}, projectIri: {}", userIri, projectIri)
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def userProjectMembershipAddRequestTask(
-      userIri: IRI,
-      projectIri: IRI,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
-        _ <-
-          ZIO.attempt(
-            if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-              throw ForbiddenException(
-                "User's project membership can only be changed by a project or system administrator"
-              )
-            }
-          )
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _           = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectMembershipIris <-
-          findProjectMemberShipsByIri(UserIri.unsafeFrom(userIri)).map(_.projects.map(_.id))
-
-        // check if user is already member and if not then append to list
-        updatedProjectMembershipIris =
-          if (!currentProjectMembershipIris.contains(projectIri)) {
-            currentProjectMembershipIris :+ projectIri
-          } else {
-            throw BadRequestException(
-              s"User $userIri is already member of project $projectIri."
-            )
-          }
-
-        // create the update request
-        updateUserResult <- updateUserADM(
-                              userIri = UserIri.unsafeFrom(userIri),
-                              req = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                              requestingUser = requestingUser
-                            )
+        kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
+        currentIsInProject = kUser.isInProject
+        _ <- ZIO.when(currentIsInProject.contains(projectIri))(
+               ZIO.fail(BadRequestException(s"User $userIri is already member of project $projectIri."))
+             )
+        newIsInProject    = (currentIsInProject :+ projectIri).map(_.value)
+        theChange         = UserChangeRequestADM(projects = Some(newIsInProject))
+        updateUserResult <- updateUserADM(userIri, theChange, requestingUser)
       } yield updateUserResult
-
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser)
-    )
-
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   /**
@@ -1398,6 +1353,14 @@ object UsersResponder {
   ): ZIO[UsersResponder, Throwable, UserProjectMembershipsGetResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.findProjectMemberShipsByIri(userIri))
 
+  def addProjectToUserIsInProject(
+    userIri: UserIri,
+    projectIri: ProjectIri,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProject(userIri, projectIri, requestingUser, apiRequestID))
+
   def findUserProjectAdminMemberships(
     userIri: UserIri
   ): ZIO[UsersResponder, Throwable, UserProjectAdminMembershipsGetResponseADM] =
@@ -1428,7 +1391,7 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
 
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
@@ -1437,11 +1400,12 @@ object UsersResponder {
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
       us      <- ZIO.service[UserService]
+      ur      <- ZIO.service[KnoraUserRepo]
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ps, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, ts, sf))
     } yield handler
   }
 }

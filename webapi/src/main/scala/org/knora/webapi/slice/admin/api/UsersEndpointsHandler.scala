@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.api
 
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
@@ -70,6 +71,14 @@ case class UsersEndpointsHandler(
     requestingUser => userCreateRequest => restService.createUser(requestingUser, userCreateRequest)
   )
 
+  private val postUsersByIriProjectMemberShipsHandler =
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+      usersEndpoints.post.usersByIriProjectMemberShips,
+      requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
+        restService.addProjectToUserIsInProject(requestingUser, userIri, projectIri)
+      }
+    )
+
   // Update
   private val putUsersIriBasicInformationHandler =
     SecuredEndpointHandler[(UserIri, BasicUserInformationChangeRequest), UserOperationResponseADM](
@@ -121,6 +130,7 @@ case class UsersEndpointsHandler(
     getUserByEmailHandler,
     getUserByUsernameHandler,
     createUserHandler,
+    postUsersByIriProjectMemberShipsHandler,
     putUsersIriBasicInformationHandler,
     putUsersIriPasswordHandler,
     putUsersIriStatusHandler,

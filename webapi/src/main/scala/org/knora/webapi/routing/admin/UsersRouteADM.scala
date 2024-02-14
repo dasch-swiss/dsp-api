@@ -31,26 +31,11 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    addUserToProjectMembership() ~
-      removeUserFromProjectMembership() ~
+    removeUserFromProjectMembership() ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
-
-  /**
-   * add user to project
-   */
-  private def addUserToProjectMembership(): Route =
-    path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
-      post { requestContext =>
-        val task = for {
-          userIri <- validateUserIriAndEnsureRegularUser(userIri)
-          r       <- getIriUserUuid(projectIri, requestContext)
-        } yield UserProjectMembershipAddRequestADM(userIri, r.iri, r.user, r.uuid)
-        runJsonRouteZ(task, requestContext)
-      }
-    }
 
   private def validateUserIriAndEnsureRegularUser(userIri: String) =
     ZIO

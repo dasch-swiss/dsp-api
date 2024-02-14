@@ -107,6 +107,11 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .in(zioJsonBody[UserCreateRequest])
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Create a new user.")
+
+    val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.post
+      .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
+      .out(sprayJsonBody[UserOperationResponseADM])
+      .description("Add a user to a project identified by IRI.")
   }
 
   object put {
@@ -156,6 +161,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       get.userByEmail,
       get.userByUsername,
       post.users,
+      post.usersByIriProjectMemberShips,
       put.usersIriBasicInformation,
       put.usersIriPassword,
       put.usersIriStatus,

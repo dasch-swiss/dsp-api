@@ -9,6 +9,7 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
@@ -141,6 +142,18 @@ final case class UsersRestService(
       _        <- auth.ensureSystemAdmin(requestingUser)
       uuid     <- Random.nextUUID
       response <- responder.changeSystemAdmin(userIri, changeRequest.systemAdmin, uuid)
+    } yield response
+
+  def addProjectToUserIsInProject(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid     <- Random.nextUUID
+      response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, requestingUser, uuid)
     } yield response
 }
 
