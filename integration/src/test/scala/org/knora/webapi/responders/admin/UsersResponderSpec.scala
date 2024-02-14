@@ -464,7 +464,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         // remove the user as member of the images project
         UnsafeZioRun.runOrThrow(
-          UsersResponder.removeProjectFromUserIsInProject(
+          UsersResponder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
             rootUser,
@@ -555,13 +555,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq(imagesProject))
 
-        appActor ! UserProjectAdminMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeProjectFromUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))

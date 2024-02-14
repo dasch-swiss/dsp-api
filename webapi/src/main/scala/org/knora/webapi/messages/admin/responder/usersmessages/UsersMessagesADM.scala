@@ -53,21 +53,6 @@ case class UserGetByIriADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests removing the user from a project as project admin.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectAdminMembershipRemoveRequestADM(
-  userIri: IRI,
-  projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
  * Requests adding the user to a group.
  *
  * @param userIri              the IRI of the user to be updated.
