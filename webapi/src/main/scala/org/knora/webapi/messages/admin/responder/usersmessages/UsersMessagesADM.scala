@@ -53,21 +53,6 @@ case class UserGetByIriADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Requests adding the user to a group.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param groupIri             the IRI of the group.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserGroupMembershipAddRequestADM(
-  userIri: IRI,
-  groupIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
  * Requests removing the user from a group.
  *
  * @param userIri              the IRI of the user to be updated.

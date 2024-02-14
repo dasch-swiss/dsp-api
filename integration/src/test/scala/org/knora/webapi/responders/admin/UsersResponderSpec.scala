@@ -581,13 +581,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate should equal(Seq())
 
-        appActor ! UserGroupMembershipAddRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addGroupToUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
@@ -630,17 +631,17 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
         /* User is added to a project by a normal user */
-        appActor ! UserGroupMembershipAddRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's group membership can only be changed by a project or system administrator")
+        val exit = UnsafeZioRun.run(
+          UsersResponder.addGroupToUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            normalUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          "User's group membership can only be changed by a project or system administrator"
         )
 
         /* User is removed from a project by a normal user */

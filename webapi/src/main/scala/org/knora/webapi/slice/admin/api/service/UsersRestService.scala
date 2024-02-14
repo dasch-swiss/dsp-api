@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -195,6 +196,17 @@ final case class UsersRestService(
       _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
       uuid     <- Random.nextUUID
       response <- responder.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri.value, requestingUser, uuid)
+    } yield response
+
+  def addGroupToUserIsInGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    groupIri: GroupIri
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      uuid     <- Random.nextUUID
+      response <- responder.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, uuid)
     } yield response
 }
 

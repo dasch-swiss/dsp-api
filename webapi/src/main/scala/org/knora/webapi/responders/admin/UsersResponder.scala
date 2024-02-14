@@ -64,6 +64,7 @@ final case class UsersResponder(
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
+  groupResponder: GroupsResponderADM,
   userService: UserService,
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
@@ -86,8 +87,6 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -558,78 +557,36 @@ final case class UsersResponder(
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
-  private def userGroupMembershipAddRequestADM(
-    userIri: IRI,
-    groupIri: IRI,
+  def addGroupToUserIsInGroup(
+    userIri: UserIri,
+    groupIri: GroupIri,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
-
-    /**
-     * The actual task run with an IRI lock.
-     */
-    def userGroupMembershipAddRequestTask(
-      userIri: IRI,
-      groupIri: IRI,
-      requestingUser: User
-    ): Task[UserOperationResponseADM] =
+    val updateTask =
       for {
-        // check if user exists
-        maybeUser <- findUserByIri(
-                       UserIri.unsafeFrom(userIri),
-                       UserInformationTypeADM.Full,
-                       Users.SystemUser,
-                       skipCache = true
-                     )
+        kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
+        group <- groupResponder
+                   .groupGetADM(groupIri.value)
+                   .someOrFail(NotFoundException(s"The group $groupIri does not exist."))
+        projectIri = group.project.id
 
-        userToChange: User = maybeUser match {
-                               case Some(user) => user
-                               case None       => throw NotFoundException(s"The user $userIri does not exist.")
-                             }
+        _ <- // check if the requesting user is allowed to perform updates (i.e. project or system administrator)
+          ZIO
+            .fail(
+              ForbiddenException("User's group membership can only be changed by a project or system administrator")
+            )
+            .when(!(requestingUser.permissions.isProjectAdmin(projectIri) || requestingUser.permissions.isSystemAdmin))
 
-        // check if group exists
-        groupExists <- groupExists(groupIri)
-        _            = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-        // get group's info. we need the project IRI.
-        maybeGroupADM <- messageRelay.ask[Option[GroupADM]](GroupGetADM(groupIri))
-
-        projectIri = maybeGroupADM
-                       .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
-                       .project
-                       .id
-
-        // check if the requesting user is allowed to perform updates (i.e. project or system administrator)
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-              throw ForbiddenException(
-                "User's group membership can only be changed by a project or system administrator"
-              )
-            }
-
-        // get users current group membership list
-        currentGroupMembershipIris = userToChange.groups.map(_.id)
-
-        // check if user is already member and if not then append to list
-        updatedGroupMembershipIris =
-          if (!currentGroupMembershipIris.contains(groupIri)) {
-            currentGroupMembershipIris :+ groupIri
-          } else {
-            throw BadRequestException(s"User $userIri is already member of group $groupIri.")
-          }
-
-        // create the update request
-        result <- updateUserADM(
-                    userIri = UserIri.unsafeFrom(userIri),
-                    req = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = Users.SystemUser
-                  )
+        currentIsInGroup = kUser.isInGroup
+        _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
+               ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
+             )
+        theChange = UserChangeRequestADM(groups = Some((currentIsInGroup :+ groupIri).map(_.value)))
+        result   <- updateUserADM(userIri, theChange, requestingUser)
       } yield result
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      userIri,
-      userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
   /**
@@ -1246,8 +1203,16 @@ object UsersResponder {
   ): RIO[UsersResponder, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
 
+  def addGroupToUserIsInGroup(
+    userIri: UserIri,
+    groupIri: GroupIri,
+    requestingUser: User,
+    apiRequestID: UUID
+  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
+
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & GroupsResponderADM & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
@@ -1255,13 +1220,14 @@ object UsersResponder {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
+      gr      <- ZIO.service[GroupsResponderADM]
       us      <- ZIO.service[UserService]
       ur      <- ZIO.service[KnoraUserRepo]
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, gr, us, ur, ps, mr, ts, sf))
     } yield handler
   }
 }

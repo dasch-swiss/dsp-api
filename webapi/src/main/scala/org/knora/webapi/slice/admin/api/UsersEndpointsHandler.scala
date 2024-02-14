@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChang
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -84,6 +85,14 @@ case class UsersEndpointsHandler(
       usersEndpoints.post.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
         restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri)
+      }
+    )
+
+  private val postUsersByIriGroupMemberShipsHandler =
+    SecuredEndpointHandler[(UserIri, GroupIri), UserOperationResponseADM](
+      usersEndpoints.post.usersByIriGroupMemberShips,
+      requestingUser => { case (userIri: UserIri, groupIri: GroupIri) =>
+        restService.addGroupToUserIsInGroup(requestingUser, userIri, groupIri)
       }
     )
 
@@ -155,6 +164,7 @@ case class UsersEndpointsHandler(
     createUserHandler,
     postUsersByIriProjectMemberShipsHandler,
     postUsersByIriProjectAdminMemberShipsHandler,
+    postUsersByIriGroupMemberShipsHandler,
     putUsersIriBasicInformationHandler,
     putUsersIriPasswordHandler,
     putUsersIriStatusHandler,
