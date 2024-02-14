@@ -30,6 +30,9 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
   private def findAll: ZIO[KnoraProjectRepoLive, Throwable, List[KnoraProject]] =
     ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findAll())
 
+  // TODO: more tests
+  // TODO: structure more nicely with expected data
+
   override def spec: Spec[Any, Any] = suite("KnoraProjectRepoLive")(
     suite("findAll")(
       test("return all projects if some exist") {
@@ -41,7 +44,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
                   |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
                   |
                   |<graph1> {
-                  |  <http://rdfh.ch/projects/1234> a knora-admin:KnoraProject ;
+                  |  <http://rdfh.ch/projects/1234> a knora-admin:knoraProject ;
                   |    knora-admin:projectShortcode "1234" ;
                   |    knora-admin:projectShortname "project1" ;
                   |    knora-admin:projectLongname "Project 1" ;

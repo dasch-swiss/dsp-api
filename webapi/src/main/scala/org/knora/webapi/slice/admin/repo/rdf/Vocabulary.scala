@@ -20,7 +20,7 @@ object Vocabulary {
 
     // resource class IRIs
     val User: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "User")
-    val KnoraProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "KnoraProject")
+    val KnoraProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "knoraProject")
 
     // property IRIs
     val username: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "username")
