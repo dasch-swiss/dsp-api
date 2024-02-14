@@ -63,7 +63,6 @@ final case class UsersResponder(
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
-  groupResponder: GroupsResponderADM,
   userService: UserService,
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
@@ -564,19 +563,7 @@ final case class UsersResponder(
   ): Task[UserOperationResponseADM] = {
     val updateTask =
       for {
-        kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
-        group <- groupResponder
-                   .groupGetADM(groupIri.value)
-                   .someOrFail(NotFoundException(s"The group $groupIri does not exist."))
-        projectIri = group.project.id
-
-        _ <- // check if the requesting user is allowed to perform updates (i.e. project or system administrator)
-          ZIO
-            .fail(
-              ForbiddenException("User's group membership can only be changed by a project or system administrator")
-            )
-            .when(!(requestingUser.permissions.isProjectAdmin(projectIri) || requestingUser.permissions.isSystemAdmin))
-
+        kUser           <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
         currentIsInGroup = kUser.isInGroup
         _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
@@ -584,7 +571,6 @@ final case class UsersResponder(
         theChange = UserChangeRequestADM(groups = Some((currentIsInGroup :+ groupIri).map(_.value)))
         result   <- updateUserADM(userIri, theChange, requestingUser)
       } yield result
-
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
@@ -605,26 +591,11 @@ final case class UsersResponder(
   ): Task[UserOperationResponseADM] = {
     val updateTask =
       for {
-        kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
-        group <- groupResponder
-                   .groupGetADM(groupIri.value)
-                   .someOrFail(NotFoundException(s"The group $groupIri does not exist."))
-        projectIri = group.project.id
-        _ <- // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
-          ZIO
-            .fail(
-              ForbiddenException("User's group membership can only be changed by a project or system administrator")
-            )
-            .when(
-              !requestingUser.permissions
-                .isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser
-            )
-
+        kUser           <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
         currentIsInGroup = kUser.isInGroup
         _ <- ZIO.when(!currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is not member of group $groupIri."))
              )
-        // create the update request
         newIsInGroup = currentIsInGroup.filterNot(_ == groupIri).map(_.value)
         theUpdate    = UserChangeRequestADM(groups = Some(newIsInGroup))
         result      <- updateUserADM(userIri, theUpdate, requestingUser)
@@ -1178,7 +1149,7 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
 
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & GroupsResponderADM & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
@@ -1186,14 +1157,13 @@ object UsersResponder {
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
-      gr      <- ZIO.service[GroupsResponderADM]
       us      <- ZIO.service[UserService]
       ur      <- ZIO.service[KnoraUserRepo]
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, gr, us, ur, ps, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, ts, sf))
     } yield handler
   }
 }

@@ -205,6 +205,7 @@ final case class UsersRestService(
   ): Task[UserOperationResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       uuid     <- Random.nextUUID
       response <- responder.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, uuid)
     } yield response
@@ -216,6 +217,7 @@ final case class UsersRestService(
   ): Task[UserOperationResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       uuid     <- Random.nextUUID
       response <- responder.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, uuid)
     } yield response
