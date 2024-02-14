@@ -305,11 +305,8 @@ object TriplestoreServiceInMemory {
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed {
-    val ds = TDB2Factory.createDataset()
-    TDB.getContext.set(TDB.symUnionDefaultGraph, true)
-    ds
-  }
+  val createEmptyDataset: UIO[Dataset] =
+    ZIO.succeed(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
