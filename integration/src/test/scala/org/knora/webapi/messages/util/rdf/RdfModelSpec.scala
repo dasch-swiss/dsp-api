@@ -5,12 +5,13 @@
 
 package org.knora.webapi.util.rdf
 
+import org.scalatest.compatible.Assertion
+
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 
 import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JenaRepository
 import org.knora.webapi.messages.util.rdf.*
@@ -33,9 +34,8 @@ class RdfModelSpec() extends CoreSpec {
   private def addAndFindBySubjAndPred(
     subj: RdfResource,
     pred: IriNode,
-    obj: RdfNode,
-    context: Option[IRI] = None
-  ): Unit = {
+    obj: RdfNode
+  ): Assertion = {
     val statement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
     model.addStatement(statement)
     assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement))

@@ -21,7 +21,6 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 
-import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.ContentTypes
 import pekko.http.scaladsl.model.HttpEntity
 import pekko.http.scaladsl.model.HttpResponse
@@ -33,7 +32,7 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
  */
 class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
+  implicit def default: RouteTestTimeout = RouteTestTimeout(5.seconds)
 
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("admin", "lists")

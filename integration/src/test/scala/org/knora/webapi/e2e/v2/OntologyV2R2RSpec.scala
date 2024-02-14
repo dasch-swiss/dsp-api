@@ -154,6 +154,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
+        ()
       }
 
     /**

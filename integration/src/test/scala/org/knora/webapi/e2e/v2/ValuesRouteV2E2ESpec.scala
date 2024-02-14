@@ -8,6 +8,7 @@ package org.knora.webapi.e2e.v2
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.scalatest.compatible.Assertion
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -215,12 +216,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
     maybeUpdatedLastModDate: Option[Instant]
-  ): Unit =
+  ): Assertion =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {
           case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => ()
+          case None                      => assert(true)
         }
 
       case None => throw AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate")
