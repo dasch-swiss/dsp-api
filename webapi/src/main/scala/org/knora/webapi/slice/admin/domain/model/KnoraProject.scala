@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.NonEmptyChunk
-
-import scala.util.matching.Regex
-
 import dsp.valueobjects.Iri.isProjectIri
 import dsp.valueobjects.Iri.validateAndEscapeProjectIri
 import dsp.valueobjects.IriErrorMessages
@@ -20,7 +16,9 @@ import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import zio.NonEmptyChunk
+
+import scala.util.matching.Regex
 
 case class KnoraProject(
   id: ProjectIri,
@@ -31,8 +29,7 @@ case class KnoraProject(
   keywords: List[Keyword],
   logo: Option[Logo],
   status: Status,
-  selfjoin: SelfJoin,
-  ontologies: List[InternalIri]
+  selfjoin: SelfJoin
 )
 
 object KnoraProject {

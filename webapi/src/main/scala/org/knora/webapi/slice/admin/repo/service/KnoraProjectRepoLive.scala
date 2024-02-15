@@ -13,7 +13,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
@@ -28,7 +27,6 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectB
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -60,8 +58,6 @@ final case class KnoraProjectRepoLive(
   private val mapper: PredicateObjectMapper,
   private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
-
-  private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
 
   override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
 
@@ -101,7 +97,6 @@ final case class KnoraProjectRepoLive(
       logo        <- resource.getStringLiteral[Logo](ProjectLogo)
       status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
       selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-      ontologies  <- resource.getObjectIris(belongsToOntology)
     } yield KnoraProject(
       id = iri,
       shortcode = shortcode,
@@ -112,7 +107,6 @@ final case class KnoraProjectRepoLive(
       logo = logo,
       status = status,
       selfjoin = selfjoin,
-      ontologies = ontologies.toList
     )
 
   override def findAll(): Task[List[KnoraProject]] = {
@@ -152,10 +146,7 @@ final case class KnoraProjectRepoLive(
       selfjoin <- mapper
                     .getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propertiesMap)
                     .map(l => SelfJoin.from(l.value))
-      ontologies <-
-        mapper
-          .getList[IriLiteralV2]("http://www.knora.org/ontology/knora-admin#belongsToOntology", propertiesMap)
-          .map(_.map(l => InternalIri(l.value)))
+
     } yield KnoraProject(
       projectIri,
       shortname,
@@ -166,7 +157,6 @@ final case class KnoraProjectRepoLive(
       logo,
       status,
       selfjoin,
-      ontologies
     )
   }
 
