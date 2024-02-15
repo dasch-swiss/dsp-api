@@ -5,15 +5,11 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import dsp.errors.InconsistentRepositoryDataException
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import zio.*
-
-import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -23,110 +19,24 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByIri
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortcode
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectQueries.getProjectByShortname
+import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive.ProjectQueries
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-
-object KnoraProjectQueries {
-
-  // property does not exist in ontology, therefor this is not declared in Vocabulary
-  private val belongsToOntology: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToOntology")
-
-  private[service] def getProjectByIri(iri: ProjectIri): Construct =
-    Construct(
-      s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |CONSTRUCT {
-          |  ?project ?p ?o .
-          |  ?project knora-admin:belongsToOntology ?ontology .
-          |} WHERE {
-          |  BIND(IRI("${iri.value}") as ?project)
-          |  ?project a knora-admin:knoraProject .
-          |  OPTIONAL {
-          |      ?ontology a owl:Ontology .
-          |      ?ontology knora-base:attachedToProject ?project .
-          |  }
-          |  ?project ?p ?o .
-          |}""".stripMargin
-    )
-
-  private[service] def getProjectByShortcode(shortcode: Shortcode): Construct =
-    Construct(
-      s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |CONSTRUCT {
-          |  ?project ?p ?o .
-          |  ?project knora-admin:belongsToOntology ?ontology .
-          |} WHERE {
-          |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
-          |  ?project a knora-admin:knoraProject .
-          |    OPTIONAL{
-          |        ?ontology a owl:Ontology .
-          |        ?ontology knora-base:attachedToProject ?project .
-          |    }
-          |    ?project ?p ?o .
-          |}""".stripMargin
-    )
-
-  private[service] def getProjectByShortname(shortname: Shortname): Construct =
-    Construct(
-      s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |CONSTRUCT {
-          |  ?project ?p ?o .
-          |  ?project knora-admin:belongsToOntology ?ontology .
-          |} WHERE {
-          |  ?project knora-admin:projectShortname "${shortname.value}"^^xsd:string .
-          |  ?project a knora-admin:knoraProject .
-          |    OPTIONAL{
-          |        ?ontology a owl:Ontology .
-          |        ?ontology knora-base:attachedToProject ?project .
-          |    }
-          |    ?project ?p ?o .
-          |}""".stripMargin
-    )
-
-  private[service] def getAllProjects: Construct = {
-    val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
-    def projectPo                 = tp(project, p, o)
-    val query =
-      Queries
-        .CONSTRUCT(projectPo.andHas(belongsToOntology, ontology))
-        .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
-        .where(
-          project
-            .isA(Vocabulary.KnoraAdmin.KnoraProject)
-            .and(ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional)
-            .and(projectPo)
-        )
-    Construct(query.getQueryString)
-  }
-}
+import zio.*
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService
 ) extends KnoraProjectRepo {
 
-  private val belongsToOntology = "http://www.knora.org/ontology/knora-admin#belongsToOntology"
-
   override def findAll(): Task[List[KnoraProject]] =
     for {
-      model     <- triplestore.queryRdfModel(KnoraProjectQueries.getAllProjects)
+      model     <- triplestore.queryRdfModel(ProjectQueries.getAllProjects)
       resources <- model.getSubjectResources
       projects <- ZIO.foreach(resources)(res =>
-                    toKnoraProjectNew(res).orElseFail(
+                    toKnoraProject(res).orElseFail(
                       InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject")
                     )
                   )
@@ -143,26 +53,26 @@ final case class KnoraProjectRepoLive(
 
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(getProjectByIri(iri))
+      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByIri(iri))
       resource <- model.getResource(iri.value)
-      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
+      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(getProjectByShortcode(shortcode))
+      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByShortcode(shortcode))
       resource <- model.getResourceByPropertyStringValue(ProjectShortcode, shortcode.value)
-      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
+      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(getProjectByShortname(shortname))
+      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByShortname(shortname))
       resource <- model.getResourceByPropertyStringValue(ProjectShortname, shortname.value)
-      project  <- ZIO.foreach(resource)(toKnoraProjectNew).orElse(ZIO.none)
+      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
-  private def toKnoraProjectNew(resource: RdfResource): IO[RdfError, KnoraProject] =
+  private def toKnoraProject(resource: RdfResource): IO[RdfError, KnoraProject] =
     for {
       iri         <- resource.getSubjectIri
       shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
@@ -173,7 +83,6 @@ final case class KnoraProjectRepoLive(
       logo        <- resource.getStringLiteral[Logo](ProjectLogo)
       status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
       selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
-      ontologies  <- resource.getObjectIris(belongsToOntology)
     } yield KnoraProject(
       id = ProjectIri.unsafeFrom(iri.value),
       shortcode = shortcode,
@@ -183,17 +92,95 @@ final case class KnoraProjectRepoLive(
       keywords = keywords.toList.sortBy(_.value),
       logo = logo,
       status = status,
-      selfjoin = selfjoin,
-      ontologies = ontologies.toList
+      selfjoin = selfjoin
     )
 
   override def setProjectRestrictedView(
     project: KnoraProject,
     settings: RestrictedView
   ): Task[Unit] =
-    triplestore.query(Update(Queries.setRestrictedView(project.id, settings.size, settings.watermark)))
+    triplestore.query(Update(ProjectQueries.setRestrictedView(project.id, settings.size, settings.watermark)))
 
-  object Queries {
+}
+
+object KnoraProjectRepoLive {
+
+  private object ProjectQueries {
+
+    def getProjectByIri(iri: ProjectIri): Construct =
+      Construct(
+        s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            |CONSTRUCT {
+            |  ?project ?p ?o .
+            |} WHERE {
+            |  BIND(IRI("${iri.value}") as ?project)
+            |  ?project a knora-admin:knoraProject .
+            |  OPTIONAL {
+            |      ?ontology a owl:Ontology .
+            |      ?ontology knora-base:attachedToProject ?project .
+            |  }
+            |  ?project ?p ?o .
+            |}""".stripMargin
+      )
+
+    def getProjectByShortcode(shortcode: Shortcode): Construct =
+      Construct(
+        s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            |CONSTRUCT {
+            |  ?project ?p ?o .
+            |} WHERE {
+            |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
+            |  ?project a knora-admin:knoraProject .
+            |    OPTIONAL{
+            |        ?ontology a owl:Ontology .
+            |        ?ontology knora-base:attachedToProject ?project .
+            |    }
+            |    ?project ?p ?o .
+            |}""".stripMargin
+      )
+
+    def getProjectByShortname(shortname: Shortname): Construct =
+      Construct(
+        s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            |CONSTRUCT {
+            |  ?project ?p ?o .
+            |} WHERE {
+            |  ?project knora-admin:projectShortname "${shortname.value}"^^xsd:string .
+            |  ?project a knora-admin:knoraProject .
+            |    OPTIONAL{
+            |        ?ontology a owl:Ontology .
+            |        ?ontology knora-base:attachedToProject ?project .
+            |    }
+            |    ?project ?p ?o .
+            |}""".stripMargin
+      )
+
+    def getAllProjects: Construct = {
+      val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
+      def projectPo                 = tp(project, p, o)
+      val query =
+        Queries
+          .CONSTRUCT(projectPo)
+          .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
+          .where(
+            project
+              .isA(Vocabulary.KnoraAdmin.KnoraProject)
+              .and(ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional)
+              .and(projectPo)
+          )
+      Construct(query.getQueryString)
+    }
+
     def setRestrictedView(projectIri: ProjectIri, size: RestrictedViewSize, watermark: Boolean): String =
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -220,8 +207,6 @@ final case class KnoraProjectRepoLive(
          |}
          |""".stripMargin
   }
-}
 
-object KnoraProjectRepoLive {
   val layer = ZLayer.derive[KnoraProjectRepoLive]
 }

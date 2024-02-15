@@ -26,7 +26,6 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
 CONSTRUCT {
   ?project ?p ?o .
-  ?project knora-admin:belongsToOntology ?ontology .
 }
 WHERE {
 
@@ -40,12 +39,6 @@ WHERE {
 
     @if(maybeShortcode.nonEmpty) {
         ?project knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
-    }
-
-    ?project a knora-admin:knoraProject .
-    OPTIONAL{
-        ?ontology a owl:Ontology .
-        ?ontology knora-base:attachedToProject ?project .
     }
     ?project ?p ?o .
 }

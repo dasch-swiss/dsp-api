@@ -20,7 +20,6 @@ import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
   id: ProjectIri,
@@ -32,7 +31,6 @@ case class KnoraProject(
   logo: Option[Logo],
   status: Status,
   selfjoin: SelfJoin,
-  ontologies: List[InternalIri]
 )
 
 object KnoraProject {
