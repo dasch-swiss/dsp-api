@@ -63,7 +63,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       assertTrue(Shortcode.from("") == Left("Shortcode cannot be empty."))
     },
     test("pass an invalid value and return an error") {
-      val invalidShortcodes = Gen.fromIterable(Seq("123", "000G", "12345"))
+      val invalidShortcodes = Gen.fromIterable(Seq("123", "000G", "12345", "aa"))
       check(invalidShortcodes) { shortcode =>
         assertTrue(Shortcode.from(shortcode) == Left(s"Shortcode is invalid: $shortcode"))
       }

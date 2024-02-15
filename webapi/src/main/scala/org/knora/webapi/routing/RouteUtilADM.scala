@@ -104,12 +104,6 @@ object RouteUtilADM {
   )(implicit runtime: Runtime[R & StringFormatter & MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
-  def runJsonRoute(
-    request: KnoraRequestADM,
-    requestContext: RequestContext
-  )(implicit runtime: Runtime[StringFormatter & MessageRelay]): Future[RouteResult] =
-    UnsafeZioRun.runToFuture(doRunJsonRoute(request, requestContext))
-
   private def doRunJsonRoute(
     request: KnoraRequestADM,
     ctx: RequestContext
@@ -132,7 +126,6 @@ object RouteUtilADM {
 
   case class IriUserUuid(iri: IRI, user: User, uuid: UUID)
   case class IriUser(iri: IRI, user: User)
-  case class UserUuid(user: User, uuid: UUID)
 
   def getIriUserUuid(
     iri: String,
@@ -154,10 +147,4 @@ object RouteUtilADM {
 
   def validateAndEscape(iri: String): IO[BadRequestException, IRI] =
     Iri.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
-
-  def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
-    for {
-      user <- Authenticator.getUserADM(ctx)
-      uuid <- RouteUtilZ.randomUuid()
-    } yield UserUuid(user, uuid)
 }
