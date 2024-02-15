@@ -10,6 +10,7 @@ import scala.language.postfixOps
 import scala.sys.process.*
 
 import org.knora.Dependencies
+import org.knora.LocalSettings
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -194,6 +195,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver
   )
+  .settings(LocalSettings.localScalacOptions: _*)
   .settings(
     // prepare for publishing
 
@@ -283,6 +285,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
   )
+  .settings(LocalSettings.localScalacOptions: _*)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "integration",
