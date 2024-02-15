@@ -19,8 +19,8 @@ object Vocabulary {
     val NS: Namespace = new SimpleNamespace("knora-admin", KnoraAdminPrefixExpansion)
 
     // resource class IRIs
-    val User: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "User")
-    val UserGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "UserGroup")
+    val User: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val UserGroup: Iri    = Rdf.iri(KnoraAdminPrefixExpansion, "UserGroup")
     val KnoraProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "knoraProject")
 
     // property IRIs
