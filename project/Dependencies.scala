@@ -26,7 +26,7 @@ object Dependencies {
   val ZioLoggingVersion           = "2.2.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC22"
+  val ZioPreludeVersion           = "1.0.0-RC23"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.21"
 
@@ -69,7 +69,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.11" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21.1"
 
   // input validation
   val commonsValidator =
