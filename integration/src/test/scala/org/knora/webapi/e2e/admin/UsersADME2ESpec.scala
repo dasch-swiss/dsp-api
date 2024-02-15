@@ -1108,6 +1108,16 @@ class UsersADME2ESpec
     }
 
     "used to modify project membership" should {
+
+      "NOT add a user to project if the requesting user is not a SystemAdmin or ProjectAdmin" in {
+        val request = Post(
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321"))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        assert(response.status === StatusCodes.Forbidden)
+      }
+
       "add user to project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq())

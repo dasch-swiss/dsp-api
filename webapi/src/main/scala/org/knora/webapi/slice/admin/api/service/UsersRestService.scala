@@ -9,6 +9,7 @@ import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
@@ -20,7 +21,10 @@ import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -120,13 +124,102 @@ final case class UsersRestService(
   def changeStatus(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: Requests.StatusChangeRequest
+    changeRequest: StatusChangeRequest
   ): Task[UserOperationResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
       _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
       uuid     <- Random.nextUUID
       response <- responder.changeUserStatus(userIri, changeRequest.status, uuid)
+    } yield response
+
+  def changeSystemAdmin(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: SystemAdminChangeRequest
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdmin(requestingUser)
+      uuid     <- Random.nextUUID
+      response <- responder.changeSystemAdmin(userIri, changeRequest.systemAdmin, uuid)
+    } yield response
+
+  def addProjectToUserIsInProject(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid     <- Random.nextUUID
+      response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, requestingUser, uuid)
+    } yield response
+
+  def addProjectToUserIsInProjectAdminGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid     <- Random.nextUUID
+      response <- responder.addProjectToUserIsInProjectAdminGroup(userIri, projectIri.value, requestingUser, uuid)
+    } yield response
+
+  def removeProjectToUserIsInProject(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _    <- ensureNotABuiltInUser(userIri)
+      _    <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid <- Random.nextUUID
+      response <- responder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
+                    userIri,
+                    projectIri.value,
+                    requestingUser,
+                    uuid
+                  )
+    } yield response
+
+  def removeProjectFromUserIsInProjectAdminGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIdentifierADM.IriIdentifier
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid     <- Random.nextUUID
+      response <- responder.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri.value, requestingUser, uuid)
+    } yield response
+
+  def addGroupToUserIsInGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    groupIri: GroupIri
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
+      uuid     <- Random.nextUUID
+      response <- responder.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, uuid)
+    } yield response
+
+  def removeGroupFromUserIsInGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    groupIri: GroupIri
+  ): Task[UserOperationResponseADM] =
+    for {
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
+      uuid     <- Random.nextUUID
+      response <- responder.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, uuid)
     } yield response
 }
 
