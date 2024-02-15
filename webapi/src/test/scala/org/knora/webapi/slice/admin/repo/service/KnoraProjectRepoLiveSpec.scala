@@ -29,8 +29,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
 
-  TDB.getContext.set(TDB.symUnionDefaultGraph, true)
-
   private val someProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234"),
     Shortname.unsafeFrom("project1"),
