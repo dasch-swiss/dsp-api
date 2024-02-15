@@ -18,7 +18,8 @@ object Vocabulary {
     val NS: Namespace = new SimpleNamespace("knora-admin", KnoraAdminPrefixExpansion)
 
     // resource class IRIs
-    val User: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val User: Iri      = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val UserGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "UserGroup")
 
     // property IRIs
     val username: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "username")
@@ -32,6 +33,9 @@ object Vocabulary {
     val isInGroup: Iri             = Rdf.iri(KnoraAdminPrefixExpansion, "isInGroup")
     val isInSystemAdminGroup: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "isInSystemAdminGroup")
     val isInProjectAdminGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "isInProjectAdminGroup")
+
+    // user group properties
+    val belongsToProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
   }
   object NamedGraphs {
     val knoraAdminIri: Iri = Rdf.iri(adminDataNamedGraph.value)

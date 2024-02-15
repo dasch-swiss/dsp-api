@@ -357,24 +357,22 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE the user's system admin membership" in {
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(true),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response1 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeSystemAdmin(
+            SharedTestDataADM.normalUser.userIri,
+            SystemAdmin.from(true),
+            UUID.randomUUID()
+          )
         )
-
-        val response1 = expectMsgType[UserOperationResponseADM](timeout)
         response1.user.isSystemAdmin should equal(true)
 
-        appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
-          userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.from(false),
-          requestingUser = SharedTestDataADM.superUser,
-          UUID.randomUUID()
+        val response2 = UnsafeZioRun.runOrThrow(
+          UsersResponder.changeSystemAdmin(
+            SharedTestDataADM.normalUser.userIri,
+            SystemAdmin.from(false),
+            UUID.randomUUID()
+          )
         )
-
-        val response2 = expectMsgType[UserOperationResponseADM](timeout)
         response2.user.permissions.isSystemAdmin should equal(false)
       }
     }
@@ -388,15 +386,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user to images project (00FF)
-        appActor ! UserProjectMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProject(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        // wait for the response before checking the project membership
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
@@ -411,42 +408,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         received.members.map(_.id) should contain(normalUser.id)
       }
 
-      "not ADD user to project as project admin of another project" in {
-        // get current project memberships
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
-        membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
-
-        // try to add user to incunabula project but as project admin of another project
-        appActor ! UserProjectMembershipAddRequestADM(
-          normalUser.id,
-          incunabulaProject.id,
-          anythingAdminUser,
-          UUID.randomUUID()
-        )
-
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's project membership can only be changed by a project or system administrator")
-          )
-        )
-
-        // check that the user is still only member of one project
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
-        membershipsAfterUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
-
-        // check that the user was not added to the project
-        val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectMembersGetRequestADM(
-            IriIdentifier.unsafeFrom(incunabulaProject.id),
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
-        received.members.map(_.id) should not contain normalUser.id
-      }
-
       "ADD user to project as project admin" in {
         // get current project memberships
         val membershipsBeforeUpdate =
@@ -454,15 +415,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // add user to images project (00FF)
-        appActor ! UserProjectMembershipAddRequestADM(
-          normalUser.id,
-          incunabulaProject.id,
-          incunabulaProjectAdminUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProject(
+            normalUser.userIri,
+            incunabulaProject.projectIri,
+            incunabulaProjectAdminUser,
+            UUID.randomUUID()
+          )
         )
-
-        // wait for the response before checking the project membership
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
@@ -488,14 +448,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
 
         // add user as project admin to images project
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // verify that the user has been added as project admin to the images project
         val projectAdminMembershipsBeforeUpdate =
@@ -503,13 +463,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // remove the user as member of the images project
-        appActor ! UserProjectMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // verify that the user has been removed as project member of the images project
         val membershipsAfterUpdate =
@@ -527,37 +488,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
         received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
-
-      "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
-        /* User is added to a project by a normal user */
-        appActor ! UserProjectMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's project membership can only be changed by a project or system administrator")
-          )
-        )
-
-        /* User is removed from a project by a normal user */
-        appActor ! UserProjectMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's project membership can only be changed by a project or system administrator")
-          )
-        )
-      }
-
     }
 
     "asked to update the user's project admin group membership" should {
@@ -568,19 +498,17 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            BadRequestException(
-              "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
-            )
+        val exit = UnsafeZioRun.run(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[BadRequestException](
+          exit,
+          "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
         )
       }
 
@@ -591,23 +519,24 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user as project member to images project
-        appActor ! UserProjectMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProject(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // add user as project admin to images project
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addProjectToUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-
-        expectMsgType[UserOperationResponseADM](timeout)
 
         // get the updated project admin memberships (should contain images project)
         val membershipsAfterUpdate =
@@ -626,13 +555,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
         membershipsBeforeUpdate.projects should equal(Seq(imagesProject))
 
-        appActor ! UserProjectAdminMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeProjectFromUserIsInProjectAdminGroup(
+            normalUser.userIri,
+            imagesProject.projectIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findUserProjectAdminMemberships(normalUser.userIri))
@@ -643,41 +573,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
         received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
-
-      "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
-        /* User is added to a project by a normal user */
-        appActor ! UserProjectAdminMembershipAddRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException(
-              "User's project admin membership can only be changed by a project or system administrator"
-            )
-          )
-        )
-
-        /* User is removed from a project by a normal user */
-        appActor ! UserProjectAdminMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesProject.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException(
-              "User's project admin membership can only be changed by a project or system administrator"
-            )
-          )
-        )
-      }
-
     }
 
     "asked to update the user's group membership" should {
@@ -686,13 +581,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate should equal(Seq())
 
-        appActor ! UserGroupMembershipAddRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.addGroupToUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
@@ -712,13 +608,14 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
         membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
-        appActor ! UserGroupMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          rootUser,
-          UUID.randomUUID()
+        UnsafeZioRun.runOrThrow(
+          UsersResponder.removeGroupFromUserIsInGroup(
+            normalUser.userIri,
+            imagesReviewerGroup.groupIri,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        expectMsgType[UserOperationResponseADM](timeout)
 
         val membershipsAfterUpdate =
           UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
@@ -731,36 +628,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
         received.members.map(_.id) should not contain normalUser.id
-      }
-
-      "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
-        /* User is added to a project by a normal user */
-        appActor ! UserGroupMembershipAddRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's group membership can only be changed by a project or system administrator")
-          )
-        )
-
-        /* User is removed from a project by a normal user */
-        appActor ! UserGroupMembershipRemoveRequestADM(
-          normalUser.id,
-          imagesReviewerGroup.id,
-          normalUser,
-          UUID.randomUUID()
-        )
-        expectMsg(
-          timeout,
-          Failure(
-            ForbiddenException("User's group membership can only be changed by a project or system administrator")
-          )
-        )
       }
     }
   }

@@ -607,10 +607,10 @@ final case class GroupsResponderADMLive(
             messageRelay
               .ask[UserOperationResponseADM](
                 UserGroupMembershipRemoveRequestADM(
-                  userIri = user.id,
-                  groupIri = changedGroup.id,
-                  requestingUser = KnoraSystemInstances.Users.SystemUser,
-                  apiRequestID = apiRequestID
+                  user.userIri,
+                  changedGroup.groupIri,
+                  KnoraSystemInstances.Users.SystemUser,
+                  apiRequestID
                 )
               )
           }
