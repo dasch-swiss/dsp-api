@@ -407,7 +407,6 @@ final case class RdfModel private (private val model: Model) {
     val iter = model.listStatements(null, model.createProperty(propertyIri), value)
     val iri  = Option.when(iter.hasNext)(iter.nextStatement().getSubject.getURI)
     for {
-      // TODO: figure out how that behaves with non-string types
       iri <- ZIO.fromOption(iri).orElseFail(ResourceNotPresent(s"No resource with: $propertyIri -> $value"))
       res <- getResourceOrFail(iri)
     } yield res
