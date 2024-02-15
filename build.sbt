@@ -9,7 +9,7 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val sipiVersion                 = "v30.8.0"
-val tapirVersion                = "1.9.8"
+val tapirVersion                = "1.9.9"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.1"
 val zioHttpVersion              = "3.0.0-RC4"
@@ -102,7 +102,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.9"        % Test
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.10"       % Test
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
