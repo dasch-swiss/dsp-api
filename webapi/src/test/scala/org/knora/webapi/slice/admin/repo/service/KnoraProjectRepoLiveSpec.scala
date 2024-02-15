@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.apache.jena.tdb.TDB
 import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.Spec
