@@ -204,6 +204,8 @@ case class ProjectADM(
   selfjoin: Boolean
 ) extends Ordered[ProjectADM] {
 
+  def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
+
   if (description.isEmpty) {
     throw OntologyConstraintException("Project description is a required property.")
   }

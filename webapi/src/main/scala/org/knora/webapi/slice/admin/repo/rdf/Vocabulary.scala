@@ -19,7 +19,8 @@ object Vocabulary {
     val NS: Namespace = new SimpleNamespace("knora-admin", KnoraAdminPrefixExpansion)
 
     // resource class IRIs
-    val User: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val User: Iri              = Rdf.iri(KnoraAdminPrefixExpansion, "User")
+    val UserGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "UserGroup")
     val KnoraProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "knoraProject")
 
     // property IRIs
@@ -34,6 +35,9 @@ object Vocabulary {
     val isInGroup: Iri             = Rdf.iri(KnoraAdminPrefixExpansion, "isInGroup")
     val isInSystemAdminGroup: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "isInSystemAdminGroup")
     val isInProjectAdminGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "isInProjectAdminGroup")
+
+    // user group properties
+    val belongsToProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
 
     // property not in ontology!
     val belongsToOntology: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToOntology")

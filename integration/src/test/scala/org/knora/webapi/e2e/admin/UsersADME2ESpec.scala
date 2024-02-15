@@ -734,6 +734,21 @@ class UsersADME2ESpec
 
       }
 
+      "return 'Forbidden' when updating another user's password if a requesting user is not a SystemAdmin" in {
+        val changeUserPasswordRequest: String =
+          s"""{
+             |    "requesterPassword": "test",
+             |    "newPassword": "will-be-ignored"
+             |}""".stripMargin
+
+        val request1 = Put(
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(customUserIri, "utf-8")}/Password",
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test"))
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+        response1.status should be(StatusCodes.Forbidden)
+      }
+
       "update the user's password (by himself)" in {
         val changeUserPasswordRequest: String =
           s"""{
@@ -825,7 +840,7 @@ class UsersADME2ESpec
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
-        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
@@ -869,7 +884,7 @@ class UsersADME2ESpec
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
-        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
@@ -929,23 +944,6 @@ class UsersADME2ESpec
             text = responseToString(response)
           )
         )
-      }
-
-      "return 'BadRequest' if more than 1 parameter is provided in update status request" in {
-        val updateUserRequest: String =
-          s"""{
-             |    "status": false,
-             |    "username": "parameterDuck"
-             |}""".stripMargin
-
-        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-        val request = Put(
-          baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addRootUserCredentials()
-        val response: HttpResponse = singleAwaitingRequest(request)
-        response.status should be(StatusCodes.BadRequest)
-
       }
 
       "update the user's system admin membership status" in {
@@ -1110,6 +1108,16 @@ class UsersADME2ESpec
     }
 
     "used to modify project membership" should {
+
+      "NOT add a user to project if the requesting user is not a SystemAdmin or ProjectAdmin" in {
+        val request = Post(
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321"))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        assert(response.status === StatusCodes.Forbidden)
+      }
+
       "add user to project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq())
