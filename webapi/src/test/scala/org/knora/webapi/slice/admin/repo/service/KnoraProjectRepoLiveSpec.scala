@@ -29,6 +29,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
 
+  TDB.getContext.set(TDB.symUnionDefaultGraph, true)
+
   private val someProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234"),
     Shortname.unsafeFrom("project1"),
@@ -74,7 +76,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       test("return all projects if some exist") {
         for {
           _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-          _         = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
           projects <- findAll
         } yield assertTrue(projects == List(someProject))
       },
@@ -89,7 +90,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234"))
           } yield assertTrue(project.contains(someProject))
         },
@@ -103,7 +103,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234"))
           } yield assertTrue(project.contains(someProject))
         },
@@ -117,7 +116,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1"))
           } yield assertTrue(project.contains(someProject))
         },
