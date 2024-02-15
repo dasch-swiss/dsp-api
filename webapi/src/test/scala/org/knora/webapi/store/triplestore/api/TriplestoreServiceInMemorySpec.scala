@@ -127,8 +127,11 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         val updateQuery = s"""
                              |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                              |
-                             |INSERT { <http://aNewArticle> a <${Biblio.Class.Article.value}> }
-                             |WHERE { ?s ?p ?o }
+                             |INSERT DATA {
+                             |  GRAPH <http://rdfh.ch/1234> {
+                             |    <http://aNewArticle> a <${Biblio.Class.Article.value}>
+                             |  }
+                             |}
                              |""".stripMargin
         val askQuery = s"""
                           |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
