@@ -102,7 +102,7 @@ object Dependencies {
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
   val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion // Scala 3 compatible
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion // Scala 3 compatible
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.17"          // Scala 3 compatible
+  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"          // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
