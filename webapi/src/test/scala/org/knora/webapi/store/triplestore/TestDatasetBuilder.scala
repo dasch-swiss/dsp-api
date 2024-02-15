@@ -11,7 +11,6 @@ import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb.TDB
 import zio.*
 
 import java.io.StringReader
@@ -39,7 +38,6 @@ object TestDatasetBuilder {
   def datasetFromTriG(trig: String): Task[Dataset] =
     for {
       ds         <- createEmptyDataset
-      _           = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
       is          = IOUtils.toInputStream(trig, "UTF-8")
       r: Runnable = () => { RDFDataMgr.read(ds, is, Lang.TRIG) }
       _          <- ZIO.attempt(ds.executeWrite(r))

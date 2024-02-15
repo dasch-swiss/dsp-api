@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.apache.jena.tdb.TDB
 import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.Spec
@@ -73,6 +74,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       test("return all projects if some exist") {
         for {
           _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+          _         = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
           projects <- findAll
         } yield assertTrue(projects == List(someProject))
       },
@@ -87,6 +89,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234"))
           } yield assertTrue(project.contains(someProject))
         },
@@ -100,6 +103,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234"))
           } yield assertTrue(project.contains(someProject))
         },
@@ -113,6 +117,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            _        = TDB.getContext.set(TDB.symUnionDefaultGraph, true)
             project <- findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1"))
           } yield assertTrue(project.contains(someProject))
         },
