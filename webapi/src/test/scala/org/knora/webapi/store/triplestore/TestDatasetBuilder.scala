@@ -24,7 +24,7 @@ object TestDatasetBuilder {
   private def transactionalWrite(change: Model => Model)(ds: Dataset): Task[Dataset] = ZIO.attempt {
     ds.begin(ReadWrite.WRITE)
     try {
-      change apply ds.getDefaultModel
+      change apply ds.getNamedModel("http://www.example.org/graph")
       ds.commit()
     } finally {
       ds.end()
@@ -33,7 +33,11 @@ object TestDatasetBuilder {
   }
 
   private def datasetFromTurtle(turtle: String): Task[Dataset] =
-    createEmptyDataset.flatMap(transactionalWrite(readToModel(turtle)))
+    for {
+      dsEmpty <- createEmptyDataset
+      ds      <- transactionalWrite(readToModel(turtle))(dsEmpty)
+    } yield ds
+//    createEmptyDataset.flatMap(transactionalWrite(readToModel(turtle)))
 
   def datasetFromTriG(trig: String): Task[Dataset] =
     for {
