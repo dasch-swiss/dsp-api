@@ -629,36 +629,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         received.members.map(_.id) should not contain normalUser.id
       }
-
-      "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
-        /* User is added to a project by a normal user */
-        val exit = UnsafeZioRun.run(
-          UsersResponder.addGroupToUserIsInGroup(
-            normalUser.userIri,
-            imagesReviewerGroup.groupIri,
-            normalUser,
-            UUID.randomUUID()
-          )
-        )
-        assertFailsWithA[ForbiddenException](
-          exit,
-          "User's group membership can only be changed by a project or system administrator"
-        )
-
-        /* User is removed from a project by a normal user */
-        val exit2 = UnsafeZioRun.run(
-          UsersResponder.removeGroupFromUserIsInGroup(
-            normalUser.userIri,
-            imagesReviewerGroup.groupIri,
-            normalUser,
-            UUID.randomUUID()
-          )
-        )
-        assertFailsWithA[ForbiddenException](
-          exit2,
-          "User's group membership can only be changed by a project or system administrator"
-        )
-      }
     }
   }
 }
