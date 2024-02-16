@@ -48,6 +48,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -85,8 +86,8 @@ final case class UsersResponder(
     case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
-    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      removeGroupFromUserIsInGroup(userIri, projectIri, requestingUser, apiRequestID)
+    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, apiRequestID) =>
+      removeGroupFromUserIsInGroup(userIri, projectIri, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -237,18 +238,14 @@ final case class UsersResponder(
                case None => ZIO.unit
              }
 
-        // send change request as SystemUser
-        result <- updateUserADM(
-                    userIri,
-                    UserChangeRequestADM(
+        theChange = UserChangeRequest(
                       changeRequest.username,
                       changeRequest.email,
                       changeRequest.givenName,
                       changeRequest.familyName,
                       lang = changeRequest.lang
-                    ),
-                    requestingUser = Users.SystemUser
-                  )
+                    )
+        result <- updateUserADM(userIri, theChange)
       } yield result
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
@@ -289,8 +286,8 @@ final case class UsersResponder(
             )
 
         newPasswordHash = passwordService.hashPassword(changeRequest.newPassword)
-        result         <- updateUserPasswordADM(userIri.value, newPasswordHash, Users.SystemUser)
-
+        theChange       = UserChangeRequest(passwordHash = Some(newPasswordHash))
+        result         <- updateUserADM(userIri, theChange)
       } yield result
 
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
@@ -307,7 +304,7 @@ final case class UsersResponder(
    *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
    */
   def changeUserStatus(userIri: UserIri, status: UserStatus, apiRequestID: UUID): Task[UserOperationResponseADM] = {
-    val updateTask = updateUserADM(userIri, UserChangeRequestADM(status = Some(status)), Users.SystemUser)
+    val updateTask = updateUserADM(userIri, UserChangeRequest(status = Some(status)))
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
@@ -327,7 +324,7 @@ final case class UsersResponder(
     systemAdmin: SystemAdmin,
     apiRequestId: UUID
   ): Task[UserOperationResponseADM] = {
-    val updateTask = updateUserADM(userIri, UserChangeRequestADM(systemAdmin = Some(systemAdmin)), Users.SystemUser)
+    val updateTask = updateUserADM(userIri, UserChangeRequest(systemAdmin = Some(systemAdmin)))
     IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
   }
 
@@ -362,14 +359,12 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
    */
   def addProjectToUserIsInProject(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -379,9 +374,9 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProject.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
              )
-        newIsInProject    = (currentIsInProject :+ projectIri).map(_.value)
-        theChange         = UserChangeRequestADM(projects = Some(newIsInProject))
-        updateUserResult <- updateUserADM(userIri, theChange, requestingUser)
+        newIsInProject    = (currentIsInProject :+ projectIri)
+        theChange         = UserChangeRequest(projects = Some(newIsInProject))
+        updateUserResult <- updateUserADM(userIri, theChange)
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -393,14 +388,12 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
    */
   def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -410,14 +403,11 @@ final case class UsersResponder(
         _ <- ZIO.when(!currentIsInProject.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User $userIri is not member of project ${projectIri.value}."))
              )
-        newIsInProject               = currentIsInProject.filterNot(_ == projectIri).map(_.value)
+        newIsInProject               = currentIsInProject.filterNot(_ == projectIri)
         currentIsInProjectAdminGroup = kUser.isInProjectAdminGroup
-        newIsInProjectAdminGroup     = currentIsInProjectAdminGroup.filterNot(_ == projectIri).map(_.value)
-        theChange = UserChangeRequestADM(
-                      projects = Some(newIsInProject),
-                      projectsAdmin = Some(newIsInProjectAdminGroup)
-                    )
-        updateUserResult <- updateUserADM(userIri, theChange, requestingUser)
+        newIsInProjectAdminGroup     = currentIsInProjectAdminGroup.filterNot(_ == projectIri)
+        theChange                    = UserChangeRequest(projects = Some(newIsInProject), projectsAdmin = Some(newIsInProjectAdminGroup))
+        updateUserResult            <- updateUserADM(userIri, theChange)
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -481,7 +471,6 @@ final case class UsersResponder(
   def addProjectToUserIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -500,9 +489,9 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProjectAdminGroup.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already a project admin for project $projectIri."))
              )
-        newIsInProjectAdminGroup = (currentIsInProjectAdminGroup :+ projectIri).map(_.value)
-        theChange                = UserChangeRequestADM(projectsAdmin = Some(newIsInProjectAdminGroup))
-        updateUserResult        <- updateUserADM(userIri, theChange, requestingUser)
+        newIsInProjectAdminGroup = (currentIsInProjectAdminGroup :+ projectIri)
+        theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
+        updateUserResult        <- updateUserADM(userIri, theChange)
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -512,14 +501,12 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]]
    */
   def removeProjectFromUserIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -529,9 +516,9 @@ final case class UsersResponder(
         _ <- ZIO.when(!currentIsInProjectAdminGroup.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User $userIri is not a project admin of project $projectIri."))
              )
-        newIsInProjectAdminGroup = currentIsInProjectAdminGroup.filterNot(_ == projectIri).map(_.value)
-        theChange                = UserChangeRequestADM(projectsAdmin = Some(newIsInProjectAdminGroup))
-        updateUserResult        <- updateUserADM(userIri, theChange, requestingUser)
+        newIsInProjectAdminGroup = currentIsInProjectAdminGroup.filterNot(_ == projectIri)
+        theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
+        updateUserResult        <- updateUserADM(userIri, theChange)
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -551,14 +538,12 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param groupIri             the group IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
   def addGroupToUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -568,8 +553,8 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
              )
-        theChange = UserChangeRequestADM(groups = Some((currentIsInGroup :+ groupIri).map(_.value)))
-        result   <- updateUserADM(userIri, theChange, requestingUser)
+        theChange = UserChangeRequest(groups = Some((currentIsInGroup :+ groupIri)))
+        result   <- updateUserADM(userIri, theChange)
       } yield result
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -579,14 +564,12 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param groupIri             the group IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
     val updateTask =
@@ -596,9 +579,9 @@ final case class UsersResponder(
         _ <- ZIO.when(!currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is not member of group $groupIri."))
              )
-        newIsInGroup = currentIsInGroup.filterNot(_ == groupIri).map(_.value)
-        theUpdate    = UserChangeRequestADM(groups = Some(newIsInGroup))
-        result      <- updateUserADM(userIri, theUpdate, requestingUser)
+        newIsInGroup = currentIsInGroup.filterNot(_ == groupIri)
+        theUpdate    = UserChangeRequest(groups = Some(newIsInGroup))
+        result      <- updateUserADM(userIri, theUpdate)
       } yield result
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -609,117 +592,30 @@ final case class UsersResponder(
   private def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, String] =
     ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
 
-  private def sparqlEncode(maybe: Option[StringValue], msg: String): IO[BadRequestException, Option[String]] =
-    ZIO.foreach(maybe)(sparqlEncode(_, msg))
-
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param req    the updated information.
-   * @param requestingUser       the requesting user.
    * @return a [[UserOperationResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: UserIri, req: UserChangeRequestADM, requestingUser: User) =
+  private def updateUserADM(userIri: UserIri, req: UserChangeRequest): ZIO[Any, Throwable, UserOperationResponseADM] =
     for {
       _ <- ensureNotABuiltInUser(userIri)
-      currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, requestingUser, skipCache = true)
-                       .someOrFail(NotFoundException(s"User '$userIri' not found. Aborting update request."))
-      updateQuery <- updateUserQuery(userIri, req)
-      _           <- invalidateCachedUserADM(Some(currentUser)) *> triplestore.query(updateQuery)
+      currentUser <- userRepo
+                       .findById(userIri)
+                       .someOrFail(NotFoundException(s"User '$userIri' not found."))
+      _ <- userService.updateUser(currentUser, req)
+      _ <- messageRelay.ask[Unit](
+             CacheServiceRemoveValues(Set(currentUser.id.value, currentUser.email.value, currentUser.username.value))
+           )
       updatedUserADM <-
         findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
       _ <- writeUserADMToCache(updatedUserADM)
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-
-  private def updateUserQuery(userIri: UserIri, req: UserChangeRequestADM) = for {
-    username <-
-      sparqlEncode(req.username, s"The supplied username: '${req.username.map(_.value)}' is not valid.")
-    email <-
-      sparqlEncode(req.email, s"The supplied email: '${req.email.map(_.value)}' is not valid.")
-    givenName <-
-      sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.map(_.value)}' is not valid.")
-    familyName <-
-      sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.map(_.value)}' is not valid.")
-    preferredLanguage <-
-      sparqlEncode(req.lang, s"The supplied language: '${req.lang.map(_.value)}' is not valid.")
-    updateUserSparql = sparql.admin.txt.updateUser(
-                         AdminConstants.adminDataNamedGraph.value,
-                         userIri.value,
-                         username,
-                         email,
-                         givenName,
-                         familyName,
-                         req.status.map(_.value),
-                         preferredLanguage,
-                         req.projects,
-                         req.projectsAdmin,
-                         req.groups,
-                         req.systemAdmin.map(_.value)
-                       )
-  } yield Update(updateUserSparql)
-
-  /**
-   * Updates the password for a user.
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param password             the new password.
-   * @param requestingUser       the requesting user.
-   * @return a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
-   *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
-   */
-  private def updateUserPasswordADM(userIri: IRI, password: PasswordHash, requestingUser: User) = {
-
-    // check if it is a request for a built-in user
-    if (
-      userIri.contains(Users.SystemUser.id) || userIri.contains(
-        Users.AnonymousUser.id
-      )
-    ) {
-      throw BadRequestException("Changes to built-in users are not allowed.")
-    }
-
-    for {
-      maybeCurrentUser <- findUserByIri(
-                            identifier = UserIri.unsafeFrom(userIri),
-                            requestingUser = requestingUser,
-                            userInformationType = UserInformationTypeADM.Full,
-                            skipCache = true
-                          )
-
-      _ = if (maybeCurrentUser.isEmpty) {
-            throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
-          }
-      // we are changing the user, so lets get rid of the cached copy
-      _ <- invalidateCachedUserADM(maybeCurrentUser)
-
-      // update the password
-      updateUserSparql =
-        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri, password.value)
-      _ <- triplestore.query(Update(updateUserSparql))
-
-      /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- findUserByIri(
-                               identifier = UserIri.unsafeFrom(userIri),
-                               requestingUser = requestingUser,
-                               userInformationType = UserInformationTypeADM.Full,
-                               skipCache = true
-                             )
-
-      updatedUserADM: User =
-        maybeUpdatedUserADM.getOrElse(
-          throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
-        )
-
-      _ = if (updatedUserADM.password.get != password.value)
-            throw UpdateNotPerformedException("User's password was not updated. Please report this as a possible bug.")
-
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-  }
 
   /**
    * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
@@ -991,30 +887,6 @@ final case class UsersResponder(
   private def writeUserADMToCache(user: User): Task[Unit] =
     messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
       ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
-
-  /**
-   * Removes the user from cache.
-   *
-   * @param maybeUser the optional user which is removed from the cache
-   * @return a [[Unit]]
-   */
-  private def invalidateCachedUserADM(maybeUser: Option[User]): Task[Unit] =
-    if (appConfig.cacheService.enabled) {
-      val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
-      // only send to cache if keys are not empty
-      if (keys.nonEmpty) {
-        val result = messageRelay.ask[Any](CacheServiceRemoveValues(keys))
-        result.map { res =>
-          logger.debug("invalidateCachedUserADM - result: {}", res)
-        }
-      } else {
-        // since there was nothing to remove, we can immediately return
-        ZIO.unit
-      }
-    } else {
-      // caching is turned off, so nothing to do.
-      ZIO.unit
-    }
 }
 
 object UsersResponder {
@@ -1068,39 +940,35 @@ object UsersResponder {
   def addProjectToUserIsInProject(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProject(userIri, projectIri, requestingUser, apiRequestID))
+    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProject(userIri, projectIri, apiRequestID))
 
   def addProjectToUserIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](
-      _.addProjectToUserIsInProjectAdminGroup(userIri, projectIri, requestingUser, apiRequestID)
+      _.addProjectToUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
 
   def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](
-      _.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(userIri, projectIri, requestingUser, apiRequestID)
+      _.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
 
   def removeProjectFromUserIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](
-      _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, requestingUser, apiRequestID)
+      _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
 
   def findUserProjectAdminMemberships(
@@ -1135,18 +1003,16 @@ object UsersResponder {
   def addGroupToUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
+    ZIO.serviceWithZIO[UsersResponder](_.addGroupToUserIsInGroup(userIri, groupIri, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
-    requestingUser: User,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, apiRequestID))
+    ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, apiRequestID))
 
   val layer: URLayer[
     AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,

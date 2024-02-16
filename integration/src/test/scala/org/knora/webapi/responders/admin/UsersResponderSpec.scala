@@ -40,8 +40,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
   private val normalUser        = SharedTestDataADM.normalUser
 
-  private val incunabulaProjectAdminUser = SharedTestDataADM.incunabulaProjectAdminUser
-
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val incunabulaProject   = SharedTestDataADM.incunabulaProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
@@ -387,12 +385,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         // add user to images project (00FF)
         UnsafeZioRun.runOrThrow(
-          UsersResponder.addProjectToUserIsInProject(
-            normalUser.userIri,
-            imagesProject.projectIri,
-            rootUser,
-            UUID.randomUUID()
-          )
+          UsersResponder.addProjectToUserIsInProject(normalUser.userIri, imagesProject.projectIri, UUID.randomUUID())
         )
 
         val membershipsAfterUpdate =
@@ -419,7 +412,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.addProjectToUserIsInProject(
             normalUser.userIri,
             incunabulaProject.projectIri,
-            incunabulaProjectAdminUser,
             UUID.randomUUID()
           )
         )
@@ -452,7 +444,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.addProjectToUserIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
-            rootUser,
             UUID.randomUUID()
           )
         )
@@ -467,7 +458,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
-            rootUser,
             UUID.randomUUID()
           )
         )
@@ -502,7 +492,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.addProjectToUserIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
-            rootUser,
             UUID.randomUUID()
           )
         )
@@ -520,12 +509,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         // add user as project member to images project
         UnsafeZioRun.runOrThrow(
-          UsersResponder.addProjectToUserIsInProject(
-            normalUser.userIri,
-            imagesProject.projectIri,
-            rootUser,
-            UUID.randomUUID()
-          )
+          UsersResponder.addProjectToUserIsInProject(normalUser.userIri, imagesProject.projectIri, UUID.randomUUID())
         )
 
         // add user as project admin to images project
@@ -533,7 +517,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.addProjectToUserIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
-            rootUser,
             UUID.randomUUID()
           )
         )
@@ -559,7 +542,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.removeProjectFromUserIsInProjectAdminGroup(
             normalUser.userIri,
             imagesProject.projectIri,
-            rootUser,
             UUID.randomUUID()
           )
         )
@@ -582,12 +564,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate should equal(Seq())
 
         UnsafeZioRun.runOrThrow(
-          UsersResponder.addGroupToUserIsInGroup(
-            normalUser.userIri,
-            imagesReviewerGroup.groupIri,
-            rootUser,
-            UUID.randomUUID()
-          )
+          UsersResponder.addGroupToUserIsInGroup(normalUser.userIri, imagesReviewerGroup.groupIri, UUID.randomUUID())
         )
 
         val membershipsAfterUpdate =
@@ -612,7 +589,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           UsersResponder.removeGroupFromUserIsInGroup(
             normalUser.userIri,
             imagesReviewerGroup.groupIri,
-            rootUser,
             UUID.randomUUID()
           )
         )

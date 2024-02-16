@@ -154,7 +154,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
       uuid     <- Random.nextUUID
-      response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, requestingUser, uuid)
+      response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, uuid)
     } yield response
 
   def addProjectToUserIsInProjectAdminGroup(
@@ -166,7 +166,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
       uuid     <- Random.nextUUID
-      response <- responder.addProjectToUserIsInProjectAdminGroup(userIri, projectIri.value, requestingUser, uuid)
+      response <- responder.addProjectToUserIsInProjectAdminGroup(userIri, projectIri.value, uuid)
     } yield response
 
   def removeProjectToUserIsInProject(
@@ -175,15 +175,10 @@ final case class UsersRestService(
     projectIri: ProjectIdentifierADM.IriIdentifier
   ): Task[UserOperationResponseADM] =
     for {
-      _    <- ensureNotABuiltInUser(userIri)
-      _    <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
-      uuid <- Random.nextUUID
-      response <- responder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
-                    userIri,
-                    projectIri.value,
-                    requestingUser,
-                    uuid
-                  )
+      _        <- ensureNotABuiltInUser(userIri)
+      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
+      uuid     <- Random.nextUUID
+      response <- responder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(userIri, projectIri.value, uuid)
     } yield response
 
   def removeProjectFromUserIsInProjectAdminGroup(
@@ -195,7 +190,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
       uuid     <- Random.nextUUID
-      response <- responder.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri.value, requestingUser, uuid)
+      response <- responder.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri.value, uuid)
     } yield response
 
   def addGroupToUserIsInGroup(
@@ -207,7 +202,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       uuid     <- Random.nextUUID
-      response <- responder.addGroupToUserIsInGroup(userIri, groupIri, requestingUser, uuid)
+      response <- responder.addGroupToUserIsInGroup(userIri, groupIri, uuid)
     } yield response
 
   def removeGroupFromUserIsInGroup(
@@ -219,7 +214,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       uuid     <- Random.nextUUID
-      response <- responder.removeGroupFromUserIsInGroup(userIri, groupIri, requestingUser, uuid)
+      response <- responder.removeGroupFromUserIsInGroup(userIri, groupIri, uuid)
     } yield response
 }
 
