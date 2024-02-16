@@ -81,7 +81,6 @@ final case class UsersResponder(
   /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
-   * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    *         [[NotFoundException]] if no users are found.
    */
@@ -412,7 +411,6 @@ final case class UsersResponder(
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
