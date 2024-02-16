@@ -38,8 +38,9 @@ final case class UsersRestService(
   format: KnoraResponseRenderer
 ) {
 
-  def listAllUsers(user: User): Task[UsersGetResponseADM] = for {
-    internal <- responder.getAllUserADMRequest(user)
+  def listAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
+    _        <- auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser)
+    internal <- responder.findAllUsers()
     external <- format.toExternal(internal)
   } yield external
 

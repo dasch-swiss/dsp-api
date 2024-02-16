@@ -44,7 +44,7 @@ object TestDataFactory {
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
       ),
       isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
-      isInSystemAdminGroup = SystemAdmin.from(false),
+      isInSystemAdminGroup = SystemAdmin.IsNotSystemAdmin,
       isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
     )
     val testUserWithoutAnyGroups: KnoraUser = KnoraUser(
@@ -58,7 +58,7 @@ object TestDataFactory {
       UserStatus.Inactive,
       isInProject = Chunk.empty,
       isInGroup = Chunk.empty,
-      isInSystemAdminGroup = SystemAdmin.from(true),
+      isInSystemAdminGroup = SystemAdmin.IsSystemAdmin,
       isInProjectAdminGroup = Chunk.empty
     )
   }
