@@ -186,7 +186,7 @@ final case class UsersResponder(
    * can be changed. For changing the password or user status, use the separate methods.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param changeRequest        the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   * @param changeRequest        the updated information stored as [[BasicUserInformationChangeRequest]].
    *
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
