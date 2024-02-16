@@ -238,17 +238,14 @@ final case class UsersResponder(
                case None => ZIO.unit
              }
 
-        // send change request as SystemUser
-        result <- updateUserADM(
-                    userIri,
-                    UserChangeRequest(
+        theChange = UserChangeRequest(
                       changeRequest.username,
                       changeRequest.email,
                       changeRequest.givenName,
                       changeRequest.familyName,
                       lang = changeRequest.lang
                     )
-                  )
+        result <- updateUserADM(userIri, theChange)
       } yield result
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
@@ -289,8 +286,8 @@ final case class UsersResponder(
             )
 
         newPasswordHash = passwordService.hashPassword(changeRequest.newPassword)
-        result         <- updateUserPasswordADM(userIri.value, newPasswordHash, Users.SystemUser)
-
+        theChange       = UserChangeRequest(passwordHash = Some(newPasswordHash))
+        result         <- updateUserADM(userIri, theChange)
       } yield result
 
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
@@ -409,11 +406,8 @@ final case class UsersResponder(
         newIsInProject               = currentIsInProject.filterNot(_ == projectIri)
         currentIsInProjectAdminGroup = kUser.isInProjectAdminGroup
         newIsInProjectAdminGroup     = currentIsInProjectAdminGroup.filterNot(_ == projectIri)
-        theChange = UserChangeRequest(
-                      projects = Some(newIsInProject),
-                      projectsAdmin = Some(newIsInProjectAdminGroup)
-                    )
-        updateUserResult <- updateUserADM(userIri, theChange)
+        theChange                    = UserChangeRequest(projects = Some(newIsInProject), projectsAdmin = Some(newIsInProjectAdminGroup))
+        updateUserResult            <- updateUserADM(userIri, theChange)
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -622,65 +616,6 @@ final case class UsersResponder(
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
       _ <- writeUserADMToCache(updatedUserADM)
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-
-  /**
-   * Updates the password for a user.
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param password             the new password.
-   * @param requestingUser       the requesting user.
-   * @return a [[UserOperationResponseADM]].
-   *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
-   *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
-   */
-  private def updateUserPasswordADM(userIri: IRI, password: PasswordHash, requestingUser: User) = {
-
-    // check if it is a request for a built-in user
-    if (
-      userIri.contains(Users.SystemUser.id) || userIri.contains(
-        Users.AnonymousUser.id
-      )
-    ) {
-      throw BadRequestException("Changes to built-in users are not allowed.")
-    }
-
-    for {
-      maybeCurrentUser <- findUserByIri(
-                            identifier = UserIri.unsafeFrom(userIri),
-                            requestingUser = requestingUser,
-                            userInformationType = UserInformationTypeADM.Full,
-                            skipCache = true
-                          )
-
-      _ = if (maybeCurrentUser.isEmpty) {
-            throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
-          }
-      // we are changing the user, so lets get rid of the cached copy
-      _ <- invalidateCachedUserADM(maybeCurrentUser)
-
-      // update the password
-      updateUserSparql =
-        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri, password.value)
-      _ <- triplestore.query(Update(updateUserSparql))
-
-      /* Verify that the password was updated. */
-      maybeUpdatedUserADM <- findUserByIri(
-                               identifier = UserIri.unsafeFrom(userIri),
-                               requestingUser = requestingUser,
-                               userInformationType = UserInformationTypeADM.Full,
-                               skipCache = true
-                             )
-
-      updatedUserADM: User =
-        maybeUpdatedUserADM.getOrElse(
-          throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
-        )
-
-      _ = if (updatedUserADM.password.get != password.value)
-            throw UpdateNotPerformedException("User's password was not updated. Please report this as a possible bug.")
-
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
-  }
 
   /**
    * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
@@ -952,30 +887,6 @@ final case class UsersResponder(
   private def writeUserADMToCache(user: User): Task[Unit] =
     messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
       ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
-
-  /**
-   * Removes the user from cache.
-   *
-   * @param maybeUser the optional user which is removed from the cache
-   * @return a [[Unit]]
-   */
-  private def invalidateCachedUserADM(maybeUser: Option[User]): Task[Unit] =
-    if (appConfig.cacheService.enabled) {
-      val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
-      // only send to cache if keys are not empty
-      if (keys.nonEmpty) {
-        val result = messageRelay.ask[Any](CacheServiceRemoveValues(keys))
-        result.map { res =>
-          logger.debug("invalidateCachedUserADM - result: {}", res)
-        }
-      } else {
-        // since there was nothing to remove, we can immediately return
-        ZIO.unit
-      }
-    } else {
-      // caching is turned off, so nothing to do.
-      ZIO.unit
-    }
 }
 
 object UsersResponder {

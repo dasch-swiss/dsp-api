@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -32,6 +33,7 @@ final case class UserChangeRequest(
   familyName: Option[FamilyName] = None,
   status: Option[UserStatus] = None,
   lang: Option[LanguageCode] = None,
+  passwordHash: Option[PasswordHash] = None,
   projects: Option[Chunk[ProjectIri]] = None,
   projectsAdmin: Option[Chunk[ProjectIri]] = None,
   groups: Option[Chunk[GroupIri]] = None,
@@ -64,6 +66,7 @@ case class UserService(
       givenName = update.givenName.getOrElse(kUser.givenName),
       familyName = update.familyName.getOrElse(kUser.familyName),
       status = update.status.getOrElse(kUser.status),
+      password = update.passwordHash.getOrElse(kUser.password),
       preferredLanguage = update.lang.getOrElse(kUser.preferredLanguage),
       isInProject = update.projects.getOrElse(kUser.isInProject),
       isInProjectAdminGroup = update.projectsAdmin.getOrElse(kUser.isInProjectAdminGroup),
