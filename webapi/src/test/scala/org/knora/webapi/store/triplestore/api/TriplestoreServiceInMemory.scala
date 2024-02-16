@@ -8,6 +8,7 @@ import org.apache.jena.query.*
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -302,7 +303,10 @@ object TriplestoreServiceInMemory {
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
-  val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
+  val createEmptyDataset: UIO[Dataset] =
+    ZIO
+      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
+      .as(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
