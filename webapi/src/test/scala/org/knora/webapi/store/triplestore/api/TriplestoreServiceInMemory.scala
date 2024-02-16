@@ -306,7 +306,9 @@ object TriplestoreServiceInMemory {
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
   val createEmptyDataset: UIO[Dataset] =
-    ZIO.succeed(TDB2Factory.createDataset())
+    ZIO
+      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
+      .as(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 

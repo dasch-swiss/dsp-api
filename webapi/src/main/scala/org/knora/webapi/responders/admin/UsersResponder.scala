@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.IO
+import zio.Chunk
 import zio.RIO
 import zio.Task
 import zio.URLayer
@@ -16,12 +16,10 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -35,12 +33,10 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
@@ -50,17 +46,10 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 final case class UsersResponder(
-  auth: AuthorizationRestService,
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
@@ -68,7 +57,6 @@ final case class UsersResponder(
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
   messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends MessageHandler
     with LazyLogging {
@@ -83,7 +71,6 @@ final case class UsersResponder(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, apiRequestID) =>
@@ -94,15 +81,13 @@ final case class UsersResponder(
   /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
-   * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    *         [[NotFoundException]] if no users are found.
    */
-  def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
-    auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser) *>
-      userService.findAll
-        .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
-        .map(users => UsersGetResponseADM(users.sorted))
+  def findAllUsers(): Task[UsersGetResponseADM] =
+    userService.findAll
+      .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
+      .map(users => UsersGetResponseADM(users.sorted))
 
   /**
    * ~ CACHED ~
@@ -201,9 +186,8 @@ final case class UsersResponder(
    * can be changed. For changing the password or user status, use the separate methods.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param changeRequest        the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   * @param changeRequest        the updated information stored as [[BasicUserInformationChangeRequest]].
    *
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
    *               with a [[BadRequestException]] if the necessary parameters are not supplied.
@@ -216,33 +200,14 @@ final case class UsersResponder(
   ): Task[UserOperationResponseADM] = {
     val updateTask =
       for {
-        // get current user information
-        currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
-                         .someOrFail(NotFoundException(s"User with IRI $userIri not found"))
-
-        _ <- // check if email is unique in case of a change email request
-          ZIO.whenZIO(userByEmailExists(changeRequest.email, Some(currentUser.email))) {
-            ZIO.fail(DuplicateValueException(s"User with the email '${changeRequest.email.get.value}' already exists"))
-          }
-
-        // check if username is unique in case of a change username request
-        _ <- changeRequest.username match {
-               case Some(username) =>
-                 ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value))))(
-                   ZIO.fail(
-                     DuplicateValueException(
-                       s"User with the username '${changeRequest.username.get.value}' already exists"
-                     )
-                   )
-                 )
-               case None => ZIO.unit
-             }
-
+        _ <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with IRI $userIri not found"))
+        _ <- ZIO.foreachDiscard(changeRequest.email)(ensureEmailDoesNotExist)
+        _ <- ZIO.foreachDiscard(changeRequest.username)(ensureUsernameDoesNotExist)
         theChange = UserChangeRequest(
-                      changeRequest.username,
-                      changeRequest.email,
-                      changeRequest.givenName,
-                      changeRequest.familyName,
+                      username = changeRequest.username,
+                      email = changeRequest.email,
+                      givenName = changeRequest.givenName,
+                      familyName = changeRequest.familyName,
                       lang = changeRequest.lang
                     )
         result <- updateUserADM(userIri, theChange)
@@ -251,12 +216,21 @@ final case class UsersResponder(
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
   }
 
+  private def ensureEmailDoesNotExist(email: Email) =
+    ZIO.whenZIO(userRepo.existsByEmail(email))(
+      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
+    )
+
+  private def ensureUsernameDoesNotExist(username: Username) =
+    ZIO.whenZIO(userRepo.existsByUsername(username))(
+      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
+    )
+
   /**
    * Change the users password. The old password needs to be supplied for security purposes.
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param changeRequest    the current password of the requesting user and the new password.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -350,7 +324,9 @@ final case class UsersResponder(
   def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     for {
       _ <-
-        ZIO.whenZIO(userExists(userIri.value).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+        ZIO.whenZIO(userRepo.existsById(userIri).negate)(
+          ZIO.fail(BadRequestException(s"User $userIri does not exist."))
+        )
       projects <- userProjectMembershipsGetADM(userIri.value)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
@@ -374,7 +350,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProject.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
              )
-        newIsInProject    = (currentIsInProject :+ projectIri)
+        newIsInProject    = currentIsInProject :+ projectIri
         theChange         = UserChangeRequest(projects = Some(newIsInProject))
         updateUserResult <- updateUserADM(userIri, theChange)
       } yield updateUserResult
@@ -413,41 +389,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Returns the user's project admin group memberships as a sequence of [[IRI]]
-   *
-   * @param userIri              the user's IRI.
-   * @return a list of [[ProjectADM]].
-   */
-  private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
-    for {
-      userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
-
-      groupedUserData = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-                          predicate -> rows.map(_.rowMap("o"))
-                        }
-
-      /* the projects the user is member of */
-      projectIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-                      case Some(projects) => projects
-                      case None           => Seq.empty[IRI]
-                    }
-
-      maybeProjectFutures =
-        projectIris.map { projectIri =>
-          messageRelay.ask[Option[ProjectADM]](
-            ProjectGetADM(
-              identifier = IriIdentifier
-                .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
-        }
-      maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-      projects: Seq[ProjectADM] = maybeProjects.flatten
-
-    } yield projects
-
-  /**
    * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
    * is a member of the project admin group.
    *
@@ -455,16 +396,21 @@ final case class UsersResponder(
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
   def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.whenZIO(userExists(userIri.value).negate)(
+    ZIO.whenZIO(userRepo.existsById(userIri).negate)(
       ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
-    ) *> userProjectAdminMembershipsGetADM(userIri.value).map(UserProjectAdminMembershipsGetResponseADM)
+    ) *> (for {
+      kUser <- userRepo
+                 .findById(userIri)
+                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      requests  = kUser.isInProjectAdminGroup.map(IriIdentifier.from).map(ProjectGetADM.apply)
+      projects <- ZIO.foreach(requests)(messageRelay.ask[Option[ProjectADM]](_))
+    } yield projects.flatten).map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
@@ -489,7 +435,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProjectAdminGroup.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already a project admin for project $projectIri."))
              )
-        newIsInProjectAdminGroup = (currentIsInProjectAdminGroup :+ projectIri)
+        newIsInProjectAdminGroup = currentIsInProjectAdminGroup :+ projectIri
         theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
         updateUserResult        <- updateUserADM(userIri, theChange)
       } yield updateUserResult
@@ -553,7 +499,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
              )
-        theChange = UserChangeRequest(groups = Some((currentIsInGroup :+ groupIri)))
+        theChange = UserChangeRequest(groups = Some(currentIsInGroup :+ groupIri))
         result   <- updateUserADM(userIri, theChange)
       } yield result
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
@@ -589,9 +535,6 @@ final case class UsersResponder(
   private def ensureNotABuiltInUser(userIri: UserIri) =
     ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
 
-  private def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, String] =
-    ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
-
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
@@ -614,7 +557,7 @@ final case class UsersResponder(
       updatedUserADM <-
         findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-      _ <- writeUserADMToCache(updatedUserADM)
+      _ <- messageRelay.ask[Unit](CacheServicePutUserADM(updatedUserADM))
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
 
   /**
@@ -632,24 +575,34 @@ final case class UsersResponder(
   def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
     val createNewUserTask =
       for {
-        _ <- // check if username is unique
-          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(req.username.value))))(
-            ZIO.fail(DuplicateValueException(s"User with the username '${req.username.value}' already exists"))
-          )
-
-        _ <- // check if email is unique
-          ZIO.whenZIO(userExistsByEmail(req.email))(
-            ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
-          )
+        _ <- ensureUsernameDoesNotExist(req.username)
+        _ <- ensureEmailDoesNotExist(req.email)
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri <- ZIO.foreach(req.id.map(_.value))(iriConverter.asSmartIri)
         userIri <- iriService
                      .checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
-                     .map(UserIri.unsafeFrom)
+                     .flatMap(iri =>
+                       ZIO.fromEither(UserIri.from(iri)).orElseFail(BadRequestException(s"Invalid User IRI: $iri"))
+                     )
 
         // Create the new user.
-        _ <- createNewUserQuery(userIri, req).flatMap(triplestore.query)
+        passwordHash = passwordService.hashPassword(req.password)
+        newUser = KnoraUser(
+                    userIri,
+                    req.username,
+                    req.email,
+                    familyName = req.familyName,
+                    req.givenName,
+                    passwordHash,
+                    preferredLanguage = req.lang,
+                    req.status,
+                    Chunk.empty,
+                    Chunk.empty,
+                    req.systemAdmin,
+                    Chunk.empty
+                  )
+        _ <- userRepo.save(newUser)
 
         // try to retrieve newly created user (will also add to cache)
         createdUser <-
@@ -662,30 +615,6 @@ final case class UsersResponder(
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
 
-  private def createNewUserQuery(userIri: UserIri, req: UserCreateRequest): IO[BadRequestException, Update] =
-    for {
-      username          <- sparqlEncode(req.username, s"The supplied username: '${req.username.value}' is not valid.")
-      email             <- sparqlEncode(req.email, s"The supplied email: '${req.email.value}' is not valid.")
-      passwordHash       = passwordService.hashPassword(req.password)
-      givenName         <- sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.value}' is not valid.")
-      familyName        <- sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.value}' is not valid.")
-      preferredLanguage <- sparqlEncode(req.lang, s"The supplied language: '${req.lang.value}' is not valid.")
-    } yield Update(
-      sparql.admin.txt.createNewUser(
-        AdminConstants.adminDataNamedGraph.value,
-        userIri.value,
-        OntologyConstants.KnoraAdmin.User,
-        username,
-        email,
-        passwordHash.value,
-        givenName,
-        familyName,
-        req.status.value,
-        preferredLanguage,
-        req.systemAdmin.value
-      )
-    )
-
   /**
    * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
    * If user is not found in cache but in triplestore, then user is written to cache.
@@ -695,7 +624,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByIri(userIri).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(userIri)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByIri(userIri).flatMap {
@@ -709,7 +638,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -730,7 +659,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByUsername(username).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByUsername(username).flatMap {
@@ -744,7 +673,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -765,7 +694,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByEmail(email).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByEmail(email).flatMap {
@@ -779,7 +708,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -790,109 +719,12 @@ final case class UsersResponder(
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       userService.findUserByEmail(email)
     }
-
-  /**
-   * Helper method for checking if a user exists.
-   *
-   * @param userIri the IRI of the user.
-   * @return a [[Boolean]].
-   */
-  private def userExists(userIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkUserExists(userIri)))
-
-  /**
-   * Helper method for checking if an email is already registered.
-   *
-   * @param maybeEmail   the email of the user.
-   * @param maybeCurrent the current email of the user.
-   * @return a [[Boolean]].
-   */
-  private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String]): Task[Boolean] =
-    maybeEmail match {
-      case Some(email) =>
-        if (maybeCurrent.contains(email.value)) { ZIO.succeed(true) }
-        else { userExistsByEmail(email) }
-      case None => ZIO.succeed(false)
-    }
-
-  /**
-   * Helper method for checking if an Email address exists.
-   *
-   * @param email the Email adresss
-   * @return a [[Boolean]].
-   */
-  private def userExistsByEmail(email: Email) =
-    triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param identifier the user's identifier
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByIri(identifier: UserIri): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(identifier))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", identifier)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", identifier)
-        None
-    }
-  }
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param email the user's email
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByEmail(email: Email): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", email)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", email)
-        None
-    }
-  }
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param username the user's identifier
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByUsername(username: Username): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", username)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", username)
-        None
-    }
-  }
-
-  /**
-   * Writes the user profile to cache.
-   *
-   * @param user a [[User]].
-   * @return Unit
-   */
-  private def writeUserADMToCache(user: User): Task[Unit] =
-    messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
-      ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
 }
 
 object UsersResponder {
 
-  def getAllUserADMRequest(requestingUser: User): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.getAllUserADMRequest(requestingUser))
+  def findAllUsers(): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.findAllUsers())
 
   def changeUserStatus(
     userIri: UserIri,
@@ -1015,11 +847,10 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, apiRequestID))
 
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
-      auth    <- ZIO.service[AuthorizationRestService]
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
@@ -1027,9 +858,8 @@ object UsersResponder {
       ur      <- ZIO.service[KnoraUserRepo]
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
-      ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(config, iriS, ic, us, ur, ps, mr, sf))
     } yield handler
   }
 }

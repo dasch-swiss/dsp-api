@@ -23,6 +23,9 @@ trait KnoraUserRepo extends Repository[KnoraUser, UserIri] {
    */
   def findByEmail(id: Email): Task[Option[KnoraUser]]
 
+  final def existsByEmail(email: Email): Task[Boolean] =
+    findByEmail(email).map(_.isDefined)
+
   /**
    * Retrieves an user by its username.
    *
@@ -30,6 +33,9 @@ trait KnoraUserRepo extends Repository[KnoraUser, UserIri] {
    * @return the entity with the given id or [[None]] if none found.
    */
   def findByUsername(id: Username): Task[Option[KnoraUser]]
+
+  final def existsByUsername(id: Username): Task[Boolean] =
+    findByUsername(id).map(_.isDefined)
 
   /**
    * Saves a given user. Use the returned instance for further operations as the save operation might have changed the entity instance completely.
