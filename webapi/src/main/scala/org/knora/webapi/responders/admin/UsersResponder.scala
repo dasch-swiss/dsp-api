@@ -350,7 +350,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProject.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
              )
-        newIsInProject    = (currentIsInProject :+ projectIri)
+        newIsInProject    = currentIsInProject :+ projectIri
         theChange         = UserChangeRequest(projects = Some(newIsInProject))
         updateUserResult <- updateUserADM(userIri, theChange)
       } yield updateUserResult
@@ -435,7 +435,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInProjectAdminGroup.contains(projectIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already a project admin for project $projectIri."))
              )
-        newIsInProjectAdminGroup = (currentIsInProjectAdminGroup :+ projectIri)
+        newIsInProjectAdminGroup = currentIsInProjectAdminGroup :+ projectIri
         theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
         updateUserResult        <- updateUserADM(userIri, theChange)
       } yield updateUserResult
@@ -499,7 +499,7 @@ final case class UsersResponder(
         _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
                ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
              )
-        theChange = UserChangeRequest(groups = Some((currentIsInGroup :+ groupIri)))
+        theChange = UserChangeRequest(groups = Some(currentIsInGroup :+ groupIri))
         result   <- updateUserADM(userIri, theChange)
       } yield result
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
