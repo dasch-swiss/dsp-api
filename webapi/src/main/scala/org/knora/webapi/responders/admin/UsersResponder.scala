@@ -20,7 +20,6 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -34,7 +33,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -51,9 +49,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.util.ZioHelper
 
 final case class UsersResponder(
   auth: AuthorizationRestService,
@@ -199,7 +194,6 @@ final case class UsersResponder(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param changeRequest        the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
    *
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
    *               with a [[BadRequestException]] if the necessary parameters are not supplied.
@@ -224,7 +218,7 @@ final case class UsersResponder(
         // check if username is unique in case of a change username request
         _ <- changeRequest.username match {
                case Some(username) =>
-                 ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value))))(
+                 ZIO.whenZIO(userRepo.existsByUsername(username))(
                    ZIO.fail(
                      DuplicateValueException(
                        s"User with the username '${changeRequest.username.get.value}' already exists"
@@ -346,7 +340,9 @@ final case class UsersResponder(
   def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     for {
       _ <-
-        ZIO.whenZIO(userExists(userIri.value).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+        ZIO.whenZIO(userRepo.existsById(userIri).negate)(
+          ZIO.fail(BadRequestException(s"User $userIri does not exist."))
+        )
       projects <- userProjectMembershipsGetADM(userIri.value)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
@@ -409,41 +405,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Returns the user's project admin group memberships as a sequence of [[IRI]]
-   *
-   * @param userIri              the user's IRI.
-   * @return a list of [[ProjectADM]].
-   */
-  private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
-    for {
-      userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
-
-      groupedUserData = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-                          predicate -> rows.map(_.rowMap("o"))
-                        }
-
-      /* the projects the user is member of */
-      projectIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-                      case Some(projects) => projects
-                      case None           => Seq.empty[IRI]
-                    }
-
-      maybeProjectFutures =
-        projectIris.map { projectIri =>
-          messageRelay.ask[Option[ProjectADM]](
-            ProjectGetADM(
-              identifier = IriIdentifier
-                .fromString(projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
-        }
-      maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-      projects: Seq[ProjectADM] = maybeProjects.flatten
-
-    } yield projects
-
-  /**
    * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
    * is a member of the project admin group.
    *
@@ -451,9 +412,15 @@ final case class UsersResponder(
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
   def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.whenZIO(userExists(userIri.value).negate)(
+    ZIO.whenZIO(userRepo.existsById(userIri).negate)(
       ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
-    ) *> userProjectAdminMembershipsGetADM(userIri.value).map(UserProjectAdminMembershipsGetResponseADM)
+    ) *> (for {
+      kUser <- userRepo
+                 .findById(userIri)
+                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      requests  = kUser.isInProjectAdminGroup.map(IriIdentifier.from).map(ProjectGetADM.apply)
+      projects <- ZIO.foreach(requests)(messageRelay.ask[Option[ProjectADM]](_))
+    } yield projects.flatten).map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -626,12 +593,12 @@ final case class UsersResponder(
     val createNewUserTask =
       for {
         _ <- // check if username is unique
-          ZIO.whenZIO(triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(req.username.value))))(
+          ZIO.whenZIO(userRepo.existsByUsername(req.username))(
             ZIO.fail(DuplicateValueException(s"User with the username '${req.username.value}' already exists"))
           )
 
         _ <- // check if email is unique
-          ZIO.whenZIO(userExistsByEmail(req.email))(
+          ZIO.whenZIO(userRepo.existsByEmail(req.email))(
             ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
           )
 
@@ -776,15 +743,6 @@ final case class UsersResponder(
     }
 
   /**
-   * Helper method for checking if a user exists.
-   *
-   * @param userIri the IRI of the user.
-   * @return a [[Boolean]].
-   */
-  private def userExists(userIri: IRI): Task[Boolean] =
-    triplestore.query(Ask(sparql.admin.txt.checkUserExists(userIri)))
-
-  /**
    * Helper method for checking if an email is already registered.
    *
    * @param maybeEmail   the email of the user.
@@ -795,18 +753,9 @@ final case class UsersResponder(
     maybeEmail match {
       case Some(email) =>
         if (maybeCurrent.contains(email.value)) { ZIO.succeed(true) }
-        else { userExistsByEmail(email) }
+        else { userRepo.existsByEmail(email) }
       case None => ZIO.succeed(false)
     }
-
-  /**
-   * Helper method for checking if an Email address exists.
-   *
-   * @param email the Email adresss
-   * @return a [[Boolean]].
-   */
-  private def userExistsByEmail(email: Email) =
-    triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
 
   /**
    * Tries to retrieve a [[User]] from the cache.
