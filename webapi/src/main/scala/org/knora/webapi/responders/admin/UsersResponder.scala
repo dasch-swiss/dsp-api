@@ -51,7 +51,6 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class UsersResponder(
-  auth: AuthorizationRestService,
   appConfig: AppConfig,
   iriService: IriService,
   iriConverter: IriConverter,
@@ -851,11 +850,10 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, apiRequestID))
 
   val layer: URLayer[
-    AuthorizationRestService & AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
+    AppConfig & IriConverter & IriService & PasswordService & KnoraUserRepo & MessageRelay & UserService & StringFormatter & TriplestoreService,
     UsersResponder
   ] = ZLayer.fromZIO {
     for {
-      auth    <- ZIO.service[AuthorizationRestService]
       config  <- ZIO.service[AppConfig]
       iriS    <- ZIO.service[IriService]
       ic      <- ZIO.service[IriConverter]
@@ -864,7 +862,7 @@ object UsersResponder {
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, sf))
+      handler <- mr.subscribe(UsersResponder(config, iriS, ic, us, ur, ps, mr, sf))
     } yield handler
   }
 }
