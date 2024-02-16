@@ -119,13 +119,8 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
       users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
     } yield users.toList
 
-  override def save(user: KnoraUser): Task[KnoraUser] = for {
-    query <- findById(user.id).map {
-               case Some(_) => UserQueries.update(user)
-               case None    => UserQueries.create(user)
-             }
-    _ <- triplestore.query(query)
-  } yield user
+  override def save(user: KnoraUser): Task[KnoraUser] =
+    triplestore.query(UserQueries.save(user)).as(user)
 }
 
 object KnoraUserRepoLive {
@@ -181,18 +176,9 @@ object KnoraUserRepoLive {
       Construct(query)
     }
 
-    def create(u: KnoraUser): Update = {
-      val query = Queries
-        .INSERT_DATA(toTriples(u))
-        .into(Rdf.iri(adminDataNamedGraph.value))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-      Update(query)
-    }
-
-    def update(u: KnoraUser): Update = {
-      val userIri = Rdf
-        .iri(u.id.value)
-      def commonUserPattern = userIri
+    def save(u: KnoraUser): Update = {
+      val userIri = Rdf.iri(u.id.value)
+      val deletePattern = userIri
         .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
         .andHas(Vocabulary.KnoraAdmin.username, variable("previousUsername"))
         .andHas(Vocabulary.KnoraAdmin.email, variable("previousEmail"))
@@ -202,17 +188,30 @@ object KnoraUserRepoLive {
         .andHas(Vocabulary.KnoraAdmin.preferredLanguage, variable("previousPreferredLanguage"))
         .andHas(Vocabulary.KnoraAdmin.password, variable("previousPassword"))
         .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup"))
-
-      val deletePattern = commonUserPattern
         .andHas(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject"))
         .andHas(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup"))
         .andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup"))
-      val wherePattern = commonUserPattern
-        .and(userIri.has(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject")).optional())
-        .and(userIri.has(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup")).optional())
-        .and(
-          userIri.has(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup")).optional()
-        )
+      val wherePattern =
+        userIri
+          .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+          .optional()
+          .and(userIri.has(Vocabulary.KnoraAdmin.username, variable("previousUsername")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.email, variable("previousEmail")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.givenName, variable("previousGivenName")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.familyName, variable("previousFamilyName")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.status, variable("previousStatus")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.preferredLanguage, variable("previousPreferredLanguage")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.password, variable("previousPassword")).optional())
+          .and(
+            userIri.has(Vocabulary.KnoraAdmin.isInSystemAdminGroup, variable("previousIsInSystemAdminGroup")).optional()
+          )
+          .and(userIri.has(Vocabulary.KnoraAdmin.isInProject, variable("previousIsInProject")).optional())
+          .and(userIri.has(Vocabulary.KnoraAdmin.isInGroup, variable("previousIsInGroup")).optional())
+          .and(
+            userIri
+              .has(Vocabulary.KnoraAdmin.isInProjectAdminGroup, variable("previousIsInProjectAdminGroup"))
+              .optional()
+          )
       val query: ModifyQuery =
         Queries
           .MODIFY()
