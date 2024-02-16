@@ -5,17 +5,40 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+
+final case class UserChangeRequest(
+  username: Option[Username] = None,
+  email: Option[Email] = None,
+  givenName: Option[GivenName] = None,
+  familyName: Option[FamilyName] = None,
+  status: Option[UserStatus] = None,
+  lang: Option[LanguageCode] = None,
+  passwordHash: Option[PasswordHash] = None,
+  projects: Option[Chunk[ProjectIri]] = None,
+  projectsAdmin: Option[Chunk[ProjectIri]] = None,
+  groups: Option[Chunk[GroupIri]] = None,
+  systemAdmin: Option[SystemAdmin] = None
+)
 
 case class UserService(
   private val userRepo: KnoraUserRepo,
@@ -26,12 +49,32 @@ case class UserService(
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
     userRepo.findById(iri).flatMap(ZIO.foreach(_)(toUser))
+
   def findUserByEmail(email: Email): Task[Option[User]] =
     userRepo.findByEmail(email).flatMap(ZIO.foreach(_)(toUser))
+
   def findUserByUsername(username: Username): Task[Option[User]] =
     userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
+
   def findAll: Task[Seq[User]] =
     userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
+
+  def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
+    val updatedUser = kUser.copy(
+      username = update.username.getOrElse(kUser.username),
+      email = update.email.getOrElse(kUser.email),
+      givenName = update.givenName.getOrElse(kUser.givenName),
+      familyName = update.familyName.getOrElse(kUser.familyName),
+      status = update.status.getOrElse(kUser.status),
+      password = update.passwordHash.getOrElse(kUser.password),
+      preferredLanguage = update.lang.getOrElse(kUser.preferredLanguage),
+      isInProject = update.projects.getOrElse(kUser.isInProject),
+      isInProjectAdminGroup = update.projectsAdmin.getOrElse(kUser.isInProjectAdminGroup),
+      isInGroup = update.groups.getOrElse(kUser.isInGroup),
+      isInSystemAdminGroup = update.systemAdmin.getOrElse(kUser.isInSystemAdminGroup)
+    )
+    userRepo.save(updatedUser)
+  }
 
   private def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
