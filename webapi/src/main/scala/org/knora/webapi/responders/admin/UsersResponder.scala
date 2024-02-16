@@ -59,7 +59,6 @@ final case class UsersResponder(
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
   messageRelay: MessageRelay,
-  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends MessageHandler
     with LazyLogging {
@@ -960,9 +959,8 @@ object UsersResponder {
       ur      <- ZIO.service[KnoraUserRepo]
       ps      <- ZIO.service[PasswordService]
       mr      <- ZIO.service[MessageRelay]
-      ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, ts, sf))
+      handler <- mr.subscribe(UsersResponder(auth, config, iriS, ic, us, ur, ps, mr, sf))
     } yield handler
   }
 }
