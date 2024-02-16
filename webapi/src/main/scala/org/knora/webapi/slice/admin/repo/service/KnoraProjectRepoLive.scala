@@ -106,7 +106,7 @@ final case class KnoraProjectRepoLive(
       keywords = keywords.toList.sortBy(_.value),
       logo = logo,
       status = status,
-      selfjoin = selfjoin,
+      selfjoin = selfjoin
     )
 
   override def findAll(): Task[List[KnoraProject]] = {
@@ -156,7 +156,7 @@ final case class KnoraProjectRepoLive(
       keywords,
       logo,
       status,
-      selfjoin,
+      selfjoin
     )
   }
 

@@ -51,7 +51,7 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           keywords = List.empty,
           logo = None,
           status = Status.Active,
-          selfjoin = SelfJoin.CanJoin,
+          selfjoin = SelfJoin.CanJoin
         )
         assertTrue(
           ProjectADMService
