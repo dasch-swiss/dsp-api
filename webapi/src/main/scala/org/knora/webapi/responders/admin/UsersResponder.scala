@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.IO
+import zio.Chunk
 import zio.RIO
 import zio.Task
 import zio.URLayer
@@ -16,7 +16,6 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -40,7 +39,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
@@ -50,13 +48,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 final case class UsersResponder(
@@ -589,9 +585,6 @@ final case class UsersResponder(
   private def ensureNotABuiltInUser(userIri: UserIri) =
     ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
 
-  private def sparqlEncode(value: StringValue, msg: String): IO[BadRequestException, String] =
-    ZIO.fromOption(Iri.toSparqlEncodedString(value.value)).orElseFail(BadRequestException(msg))
-
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
@@ -649,7 +642,22 @@ final case class UsersResponder(
                      .map(UserIri.unsafeFrom)
 
         // Create the new user.
-        _ <- createNewUserQuery(userIri, req).flatMap(triplestore.query)
+        passwordHash = passwordService.hashPassword(req.password)
+        newUser = KnoraUser(
+                    userIri,
+                    req.username,
+                    req.email,
+                    familyName = req.familyName,
+                    req.givenName,
+                    passwordHash,
+                    preferredLanguage = req.lang,
+                    req.status,
+                    Chunk.empty,
+                    Chunk.empty,
+                    req.systemAdmin,
+                    Chunk.empty
+                  )
+        _ <- userRepo.save(newUser)
 
         // try to retrieve newly created user (will also add to cache)
         createdUser <-
@@ -661,30 +669,6 @@ final case class UsersResponder(
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
-
-  private def createNewUserQuery(userIri: UserIri, req: UserCreateRequest): IO[BadRequestException, Update] =
-    for {
-      username          <- sparqlEncode(req.username, s"The supplied username: '${req.username.value}' is not valid.")
-      email             <- sparqlEncode(req.email, s"The supplied email: '${req.email.value}' is not valid.")
-      passwordHash       = passwordService.hashPassword(req.password)
-      givenName         <- sparqlEncode(req.givenName, s"The supplied given name: '${req.givenName.value}' is not valid.")
-      familyName        <- sparqlEncode(req.familyName, s"The supplied family name: '${req.familyName.value}' is not valid.")
-      preferredLanguage <- sparqlEncode(req.lang, s"The supplied language: '${req.lang.value}' is not valid.")
-    } yield Update(
-      sparql.admin.txt.createNewUser(
-        AdminConstants.adminDataNamedGraph.value,
-        userIri.value,
-        OntologyConstants.KnoraAdmin.User,
-        username,
-        email,
-        passwordHash.value,
-        givenName,
-        familyName,
-        req.status.value,
-        preferredLanguage,
-        req.systemAdmin.value
-      )
-    )
 
   /**
    * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
