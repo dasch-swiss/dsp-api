@@ -57,7 +57,7 @@ case class UserService(
   def findAll: Task[Seq[User]] =
     userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
 
-  def updateUser(kUser: KnoraUser, update: UserChangeRequest) = {
+  def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
     val updatedUser = kUser.copy(
       username = update.username.getOrElse(kUser.username),
       email = update.email.getOrElse(kUser.email),
