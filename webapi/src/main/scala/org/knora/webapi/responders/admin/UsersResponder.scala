@@ -205,33 +205,14 @@ final case class UsersResponder(
   ): Task[UserOperationResponseADM] = {
     val updateTask =
       for {
-        // get current user information
-        currentUser <- findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
-                         .someOrFail(NotFoundException(s"User with IRI $userIri not found"))
-
-        _ <- // check if email is unique in case of a change email request
-          ZIO.whenZIO(userByEmailExists(changeRequest.email, Some(currentUser.email))) {
-            ZIO.fail(DuplicateValueException(s"User with the email '${changeRequest.email.get.value}' already exists"))
-          }
-
-        // check if username is unique in case of a change username request
-        _ <- changeRequest.username match {
-               case Some(username) =>
-                 ZIO.whenZIO(userRepo.existsByUsername(username))(
-                   ZIO.fail(
-                     DuplicateValueException(
-                       s"User with the username '${changeRequest.username.get.value}' already exists"
-                     )
-                   )
-                 )
-               case None => ZIO.unit
-             }
-
+        _ <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with IRI $userIri not found"))
+        _ <- ZIO.foreachDiscard(changeRequest.email)(ensureEmailDoesNotExist)
+        _ <- ZIO.foreachDiscard(changeRequest.username)(ensureUsernameDoesNotExist)
         theChange = UserChangeRequest(
-                      changeRequest.username,
-                      changeRequest.email,
-                      changeRequest.givenName,
-                      changeRequest.familyName,
+                      username = changeRequest.username,
+                      email = changeRequest.email,
+                      givenName = changeRequest.givenName,
+                      familyName = changeRequest.familyName,
                       lang = changeRequest.lang
                     )
         result <- updateUserADM(userIri, theChange)
@@ -240,12 +221,21 @@ final case class UsersResponder(
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
   }
 
+  private def ensureEmailDoesNotExist(email: Email) =
+    ZIO.whenZIO(userRepo.existsByEmail(email))(
+      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
+    )
+
+  private def ensureUsernameDoesNotExist(username: Username) =
+    ZIO.whenZIO(userRepo.existsByUsername(username))(
+      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
+    )
+
   /**
    * Change the users password. The old password needs to be supplied for security purposes.
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param changeRequest    the current password of the requesting user and the new password.
-   *
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -573,7 +563,7 @@ final case class UsersResponder(
       updatedUserADM <-
         findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-      _ <- writeUserADMToCache(updatedUserADM)
+      _ <- messageRelay.ask[Unit](CacheServicePutUserADM(updatedUserADM))
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
 
   /**
@@ -591,21 +581,16 @@ final case class UsersResponder(
   def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
     val createNewUserTask =
       for {
-        _ <- // check if username is unique
-          ZIO.whenZIO(userRepo.existsByUsername(req.username))(
-            ZIO.fail(DuplicateValueException(s"User with the username '${req.username.value}' already exists"))
-          )
-
-        _ <- // check if email is unique
-          ZIO.whenZIO(userRepo.existsByEmail(req.email))(
-            ZIO.fail(DuplicateValueException(s"User with the email '${req.email.value}' already exists"))
-          )
+        _ <- ensureUsernameDoesNotExist(req.username)
+        _ <- ensureEmailDoesNotExist(req.email)
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri <- ZIO.foreach(req.id.map(_.value))(iriConverter.asSmartIri)
         userIri <- iriService
                      .checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
-                     .map(UserIri.unsafeFrom)
+                     .flatMap(iri =>
+                       ZIO.fromEither(UserIri.from(iri)).orElseFail(BadRequestException(s"Invalid User IRI: $iri"))
+                     )
 
         // Create the new user.
         passwordHash = passwordService.hashPassword(req.password)
@@ -645,7 +630,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByIri(userIri).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(userIri)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByIri(userIri).flatMap {
@@ -659,7 +644,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -680,7 +665,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByUsername(username).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByUsername(username).flatMap {
@@ -694,7 +679,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -715,7 +700,7 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     if (appConfig.cacheService.enabled) {
       // caching enabled
-      getUserFromCacheByEmail(email).flatMap {
+      messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email)).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
           userService.findUserByEmail(email).flatMap {
@@ -729,7 +714,7 @@ final case class UsersResponder(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).as(Some(user))
+              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -740,91 +725,9 @@ final case class UsersResponder(
       logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       userService.findUserByEmail(email)
     }
-
-  /**
-   * Helper method for checking if an email is already registered.
-   *
-   * @param maybeEmail   the email of the user.
-   * @param maybeCurrent the current email of the user.
-   * @return a [[Boolean]].
-   */
-  private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String]): Task[Boolean] =
-    maybeEmail match {
-      case Some(email) =>
-        if (maybeCurrent.contains(email.value)) { ZIO.succeed(true) }
-        else { userRepo.existsByEmail(email) }
-      case None => ZIO.succeed(false)
-    }
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param identifier the user's identifier
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByIri(identifier: UserIri): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(identifier))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", identifier)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", identifier)
-        None
-    }
-  }
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param email the user's email
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByEmail(email: Email): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", email)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", email)
-        None
-    }
-  }
-
-  /**
-   * Tries to retrieve a [[User]] from the cache.
-   *
-   * @param username the user's identifier
-   * @return a [[Option[UserADM]]]
-   */
-  private def getUserFromCacheByUsername(username: Username): Task[Option[User]] = {
-    val result = messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username))
-    result.map {
-      case Some(user) =>
-        logger.debug("getUserFromCache - cache hit for: {}", username)
-        Some(user)
-      case None =>
-        logger.debug("getUserFromCache - no cache hit for: {}", username)
-        None
-    }
-  }
-
-  /**
-   * Writes the user profile to cache.
-   *
-   * @param user a [[User]].
-   * @return Unit
-   */
-  private def writeUserADMToCache(user: User): Task[Unit] =
-    messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
-      ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
 }
 
 object UsersResponder {
-
-  def getAllUserADMRequest(requestingUser: User): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.getAllUserADMRequest(requestingUser))
 
   def changeUserStatus(
     userIri: UserIri,
