@@ -60,12 +60,8 @@ case class UserGetByIriADM(
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
-case class UserGroupMembershipRemoveRequestADM(
-  userIri: UserIri,
-  groupIri: GroupIri,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
+case class UserGroupMembershipRemoveRequestADM(userIri: UserIri, groupIri: GroupIri, apiRequestID: UUID)
+    extends UsersResponderRequestADM
 
 // Responses
 
