@@ -32,14 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.*
 sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
- * something or a NotFound exception if there are no users found. Administration permission checking is performed.
- *
- * @param requestingUser         the user initiating the request.
- */
-case class UsersGetRequestADM(requestingUser: User) extends UsersResponderRequestADM
-
-/**
  * A message that requests a user's profile by IRI. A successful response will be a [[User]].
  *
  * @param identifier             the IRI of the user to be queried.

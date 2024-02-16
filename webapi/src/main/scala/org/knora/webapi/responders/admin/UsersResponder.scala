@@ -73,7 +73,6 @@ final case class UsersResponder(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case UsersGetRequestADM(requestingUser) => getAllUserADMRequest(requestingUser)
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       findUserByIri(identifier, userInformationTypeADM, requestingUser)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, apiRequestID) =>
@@ -88,11 +87,10 @@ final case class UsersResponder(
    * @return all the users as a [[UsersGetResponseADM]].
    *         [[NotFoundException]] if no users are found.
    */
-  def getAllUserADMRequest(requestingUser: User): Task[UsersGetResponseADM] =
-    auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser) *>
-      userService.findAll
-        .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
-        .map(users => UsersGetResponseADM(users.sorted))
+  def findAllUsers(): Task[UsersGetResponseADM] =
+    userService.findAll
+      .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
+      .map(users => UsersGetResponseADM(users.sorted))
 
   /**
    * ~ CACHED ~
@@ -728,6 +726,9 @@ final case class UsersResponder(
 }
 
 object UsersResponder {
+
+  def findAllUsers(): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
+    ZIO.serviceWithZIO[UsersResponder](_.findAllUsers())
 
   def changeUserStatus(
     userIri: UserIri,

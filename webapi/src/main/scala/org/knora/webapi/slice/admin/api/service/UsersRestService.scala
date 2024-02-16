@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -31,6 +29,7 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
@@ -38,8 +37,9 @@ final case class UsersRestService(
   format: KnoraResponseRenderer
 ) {
 
-  def listAllUsers(user: User): Task[UsersGetResponseADM] = for {
-    internal <- responder.getAllUserADMRequest(user)
+  def listAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
+    _        <- auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser)
+    internal <- responder.findAllUsers()
     external <- format.toExternal(internal)
   } yield external
 

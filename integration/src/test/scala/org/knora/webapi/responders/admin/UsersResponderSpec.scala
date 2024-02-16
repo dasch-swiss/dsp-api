@@ -5,14 +5,12 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
-import dsp.errors.ForbiddenException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
@@ -36,9 +34,8 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  */
 class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
-  private val rootUser          = SharedTestDataADM.rootUser
-  private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
-  private val normalUser        = SharedTestDataADM.normalUser
+  private val rootUser   = SharedTestDataADM.rootUser
+  private val normalUser = SharedTestDataADM.normalUser
 
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val incunabulaProject   = SharedTestDataADM.incunabulaProject
@@ -49,35 +46,19 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
   "The UsersResponder " when {
     "asked about all users" should {
       "return a list if asked by SystemAdmin" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = rootUser
-        )
-        val response = expectMsgType[UsersGetResponseADM](timeout)
+        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
       }
 
       "return a list if asked by ProjectAdmin" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = anythingAdminUser
-        )
-        val response = expectMsgType[UsersGetResponseADM](timeout)
+        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
       }
 
-      "return 'ForbiddenException' if asked by normal user'" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = normalUser
-        )
-        expectMsg(timeout, Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
-      }
-
       "not return the system and anonymous users" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = rootUser
-        )
-        val response = expectMsgType[UsersGetResponseADM](timeout)
+        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
         response.users.count(_.id == KnoraSystemInstances.Users.AnonymousUser.id) should be(0)
