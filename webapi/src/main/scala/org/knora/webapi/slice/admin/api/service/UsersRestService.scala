@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -29,7 +31,6 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
