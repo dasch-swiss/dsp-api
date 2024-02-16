@@ -169,7 +169,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.from(false)
+              systemAdmin = SystemAdmin.IsNotSystemAdmin
             ),
             apiRequestID = UUID.randomUUID
           )
@@ -194,7 +194,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.from(false)
+              systemAdmin = SystemAdmin.IsNotSystemAdmin
             ),
             UUID.randomUUID
           )
@@ -213,7 +213,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.from(false)
+              systemAdmin = SystemAdmin.IsNotSystemAdmin
             ),
             UUID.randomUUID
           )
@@ -358,7 +358,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val response1 = UnsafeZioRun.runOrThrow(
           UsersResponder.changeSystemAdmin(
             SharedTestDataADM.normalUser.userIri,
-            SystemAdmin.from(true),
+            SystemAdmin.IsSystemAdmin,
             UUID.randomUUID()
           )
         )
@@ -367,7 +367,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val response2 = UnsafeZioRun.runOrThrow(
           UsersResponder.changeSystemAdmin(
             SharedTestDataADM.normalUser.userIri,
-            SystemAdmin.from(false),
+            SystemAdmin.IsNotSystemAdmin,
             UUID.randomUUID()
           )
         )
