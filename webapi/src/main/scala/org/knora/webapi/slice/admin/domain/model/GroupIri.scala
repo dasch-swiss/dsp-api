@@ -24,7 +24,7 @@ object GroupIri {
     Codec.string.mapEither(GroupIri.from)(_.value)
 
   /**
-   * Explanation of the user IRI regex:
+   * Explanation of the group IRI regex:
    * `^` asserts the start of the string.
    * `http://rdfh\.ch/groups/` matches the specified prefix.
    * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.

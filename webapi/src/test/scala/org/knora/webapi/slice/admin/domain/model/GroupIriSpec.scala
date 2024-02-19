@@ -16,7 +16,7 @@ object GroupIriSpec extends ZIOSpecDefault {
     test("not be created from an empty value") {
       assertTrue(GroupIri.from("") == Left("Group IRI cannot be empty."))
     },
-    test("be created from valid value") {
+    test("be created from a valid value") {
       val validIris = Gen.fromIterable(
         Seq(
           "http://rdfh.ch/groups/0001/40-characters-iri-for-testing-purposes-1",
