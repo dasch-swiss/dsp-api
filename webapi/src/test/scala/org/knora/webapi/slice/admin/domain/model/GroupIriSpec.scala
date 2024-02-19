@@ -19,7 +19,7 @@ object GroupIriSpec extends ZIOSpecDefault {
     test("be created from valid value") {
       val validIris = Gen.fromIterable(
         Seq(
-          "http://rdfh.ch/groups/0001/30-characters-iri-for-testing1",
+          "http://rdfh.ch/groups/0001/40-characters-iri-for-testing-purposes-1",
           "http://rdfh.ch/groups/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
           "http://rdfh.ch/groups/0111/UUID1",
           "http://rdfh.ch/groups/0111/1234"
@@ -32,7 +32,7 @@ object GroupIriSpec extends ZIOSpecDefault {
         Seq(
           "Invalid IRI",
           "http://rdfh.ch/groups/0111/123",
-          "http://rdfh.ch/groups/0001/31-characters-iri-for-testing12",
+          "http://rdfh.ch/groups/0001/41-characters-iri-for-testing-purposes-12",
           "http://rdfh.ch/groups/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
           "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ"
         )
