@@ -43,7 +43,7 @@ object TestDataFactory {
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
       ),
-      isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")),
+      isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")),
       isInSystemAdminGroup = SystemAdmin.from(false),
       isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
     )

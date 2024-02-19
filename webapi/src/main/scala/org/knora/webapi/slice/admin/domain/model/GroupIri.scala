@@ -31,7 +31,7 @@ object GroupIri {
    */
   private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,30}$""".r
 
-  private def isGroupIriValid(iri: String) =
+  private def isGroupIriValid(iri: String): Boolean =
     (Iri.isIri(iri) && groupIriRegEx.matches(iri)) || BuiltInGroups.contains(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
@@ -40,7 +40,8 @@ object GroupIri {
     case _                           => Left("Group IRI is invalid.")
   }
 
-  def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
+  def unsafeFrom(value: String): GroupIri =
+    from(value).fold(e => throw new IllegalArgumentException(e), identity)
 
   /**
    * Creates a new group IRI based on a UUID.
