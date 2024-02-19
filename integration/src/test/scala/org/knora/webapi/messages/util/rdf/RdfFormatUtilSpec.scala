@@ -6,6 +6,7 @@
 package org.knora.webapi.util.rdf
 
 import org.apache.jena
+import org.scalatest.compatible.Assertion
 
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
@@ -30,7 +31,7 @@ import org.knora.webapi.util.FileUtil
  */
 class RdfFormatUtilSpec() extends CoreSpec {
 
-  private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Unit = {
+  private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Assertion = {
     val statements: Set[Statement] = rdfModel
       .find(
         subj = Some(JenaNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
@@ -44,7 +45,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     assert(statements.head.obj == JenaNodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
   }
 
-  private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit =
+  private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Assertion =
     assert(
       jsonLDDocument.body
         .getRequiredString(JsonLDKeywords.TYPE)

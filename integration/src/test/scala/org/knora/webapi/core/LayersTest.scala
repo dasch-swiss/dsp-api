@@ -9,6 +9,7 @@ import org.apache.pekko
 import zio.*
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
+import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.*
@@ -37,6 +38,7 @@ import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.KnoraUserGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -82,7 +84,7 @@ object LayersTest {
     with DspIngestTestContainer
     with SharedVolumes.Images
 
-  type CommonR0 = ActorSystem with AppConfigurations with JwtService with SipiService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurationsTest with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
       with ApiV2Endpoints
@@ -178,6 +180,7 @@ object LayersTest {
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
       KnoraUserRepoLive.layer,
+      KnoraUserGroupRepoLive.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,

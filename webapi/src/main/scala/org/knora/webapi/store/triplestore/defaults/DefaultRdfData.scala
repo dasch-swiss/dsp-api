@@ -5,9 +5,11 @@
 
 package org.knora.webapi.store.triplestore.defaults
 
+import zio.Chunk
 import zio.NonEmptyChunk
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan
 
 object DefaultRdfData {
 
@@ -18,27 +20,7 @@ object DefaultRdfData {
    * then a list of `RdfDataObject` instances containing the path and the name of the named graph
    * can be supplied to the `ResetTriplestoreContent` message.
    */
-  val data = NonEmptyChunk(
-    RdfDataObject(
-      path = "knora-ontologies/knora-admin.ttl",
-      name = "http://www.knora.org/ontology/knora-admin"
-    ),
-    RdfDataObject(
-      path = "knora-ontologies/knora-base.ttl",
-      name = "http://www.knora.org/ontology/knora-base"
-    ),
-    RdfDataObject(
-      path = "knora-ontologies/standoff-onto.ttl",
-      name = "http://www.knora.org/ontology/standoff"
-    ),
-    RdfDataObject(
-      path = "knora-ontologies/standoff-data.ttl",
-      name = "http://www.knora.org/data/standoff"
-    ),
-    RdfDataObject(
-      path = "knora-ontologies/salsah-gui.ttl",
-      name = "http://www.knora.org/ontology/salsah-gui"
-    ),
+  val data: NonEmptyChunk[RdfDataObject] = NonEmptyChunk(
     RdfDataObject(
       path = "test_data/project_data/admin-data.ttl",
       name = "http://www.knora.org/data/admin"
@@ -83,5 +65,5 @@ object DefaultRdfData {
       path = "test_data/project_ontologies/webern-onto.ttl",
       name = "http://www.knora.org/ontology/0806/webern"
     )
-  )
+  ) ++ Chunk(RepositoryUpdatePlan.builtInNamedGraphs.toSeq: _*)
 }

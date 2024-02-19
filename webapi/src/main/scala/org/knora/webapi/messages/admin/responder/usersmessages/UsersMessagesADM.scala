@@ -7,12 +7,10 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
-import zio.prelude.Validation
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
@@ -24,68 +22,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.common.ToValidation.validateOneWithFrom
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
- * be changed are: user's username, email, given name, family name, language, user status, and system admin membership.
- *
- * @param username          the new username. Needs to be unique on the server.
- * @param email             the new email address. Needs to be unique on the server.
- * @param givenName         the new given name.
- * @param familyName        the new family name.
- * @param lang              the new ISO 639-1 code of the new preferred language.
- * @param status            the new user status (active = true, inactive = false).
- * @param systemAdmin       the new system admin membership status.
- */
-case class ChangeUserApiRequestADM(
-  username: Option[String] = None,
-  email: Option[String] = None,
-  givenName: Option[String] = None,
-  familyName: Option[String] = None,
-  lang: Option[String] = None,
-  status: Option[Boolean] = None,
-  systemAdmin: Option[Boolean] = None
-) {
-
-  val parametersCount: Int = List(
-    username,
-    email,
-    givenName,
-    familyName,
-    lang,
-    status,
-    systemAdmin
-  ).flatten.size
-
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-  /* check that only allowed information for the 3 cases (changing status, systemAdmin and basic information) is sent and not more. */
-
-  // change status case
-  if (status.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
-  }
-
-  // change system admin membership case
-  if (systemAdmin.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
-  }
-
-  // change basic user information case
-  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for change request.")
-
-  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
-}
-
-case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], newPassword: Option[String]) {
-  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserPasswordApiRequestADMFormat.write(this)
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -94,14 +30,6 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
  * An abstract trait representing message that can be sent to `UsersResponderADM`.
  */
 sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-/**
- * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
- * something or a NotFound exception if there are no users found. Administration permission checking is performed.
- *
- * @param requestingUser         the user initiating the request.
- */
-case class UsersGetRequestADM(requestingUser: User) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile by IRI. A successful response will be a [[User]].
@@ -117,141 +45,6 @@ case class UserGetByIriADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Request updating of an existing user.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param userUpdateBasicInformationPayload    the [[UserUpdateBasicInformationPayloadADM]] object containing the data to be updated.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeBasicInformationRequestADM(
-  userIri: IRI,
-  userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Request updating the users password.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param userUpdatePasswordPayload    the [[UserUpdatePasswordPayloadADM]] object containing the old and new password.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangePasswordRequestADM(
-  userIri: IRI,
-  userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Request updating the users status ('knora-base:isActiveUser' property)
- *
- * @param userIri              the IRI of the user to be updated.
- * @param status               the [[UserStatus]] containing the new status (true / false).
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeStatusRequestADM(
-  userIri: IRI,
-  status: UserStatus,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
- *
- * @param userIri              the IRI of the user to be updated.
- * @param systemAdmin          the [[SystemAdmin]] value object containing the new system admin membership status (true / false).
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserChangeSystemAdminMembershipStatusRequestADM(
-  userIri: IRI,
-  systemAdmin: SystemAdmin,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests adding the user to a project.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectMembershipAddRequestADM(
-  userIri: IRI,
-  projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests removing the user from a project.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectMembershipRemoveRequestADM(
-  userIri: IRI,
-  projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests adding the user to a project as project admin.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectAdminMembershipAddRequestADM(
-  userIri: IRI,
-  projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests removing the user from a project as project admin.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param projectIri           the IRI of the project.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserProjectAdminMembershipRemoveRequestADM(
-  userIri: IRI,
-  projectIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
- * Requests adding the user to a group.
- *
- * @param userIri              the IRI of the user to be updated.
- * @param groupIri             the IRI of the group.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class UserGroupMembershipAddRequestADM(
-  userIri: IRI,
-  groupIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
-
-/**
  * Requests removing the user from a group.
  *
  * @param userIri              the IRI of the user to be updated.
@@ -259,12 +52,8 @@ case class UserGroupMembershipAddRequestADM(
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
-case class UserGroupMembershipRemoveRequestADM(
-  userIri: IRI,
-  groupIri: IRI,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends UsersResponderRequestADM
+case class UserGroupMembershipRemoveRequestADM(userIri: UserIri, groupIri: GroupIri, apiRequestID: UUID)
+    extends UsersResponderRequestADM
 
 // Responses
 
@@ -426,54 +215,6 @@ case class UserChangeRequestADM(
 }
 
 /**
- * Payload used for updating basic information of an existing user.
- *
- * @param username      the new username.
- * @param email         the new email address. Needs to be unique on the server.
- * @param givenName     the new given name.
- * @param familyName    the new family name.
- * @param lang          the new language.
- */
-case class UserUpdateBasicInformationPayloadADM(
-  username: Option[Username] = None,
-  email: Option[Email] = None,
-  givenName: Option[GivenName] = None,
-  familyName: Option[FamilyName] = None,
-  lang: Option[LanguageCode] = None
-) {
-  def isAtLeastOneParamSet: Boolean = Seq(username, email, givenName, familyName, lang).flatten.nonEmpty
-}
-
-object UserUpdateBasicInformationPayloadADM {
-
-  private def validateWithOptionOrNone[I, O, E](opt: Option[I], f: I => Validation[E, O]): Validation[E, Option[O]] =
-    opt.map(f(_).map(Some(_))).getOrElse(Validation.succeed(None))
-
-  def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
-    Validation.validateWith(
-      validateOptionWithFrom(req.username, Username.from, ValidationException.apply),
-      validateOptionWithFrom(req.email, Email.from, ValidationException.apply),
-      validateOptionWithFrom(req.givenName, GivenName.from, ValidationException.apply),
-      validateOptionWithFrom(req.familyName, FamilyName.from, ValidationException.apply),
-      validateWithOptionOrNone(req.lang, LanguageCode.make)
-    )(UserUpdateBasicInformationPayloadADM.apply)
-}
-
-case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password)
-object UserUpdatePasswordPayloadADM {
-  def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
-    val requesterPasswordValidation = apiRequest.requesterPassword
-      .map(validateOneWithFrom(_, Password.from, a => a))
-      .getOrElse(Validation.fail("The requester's password is missing."))
-    val newPasswordValidation =
-      apiRequest.newPassword
-        .map(validateOneWithFrom(_, Password.from, a => a))
-        .getOrElse(Validation.fail("The new password is missing."))
-    Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
-  }
-}
-
-/**
  * Represents an answer to a group membership request.
  *
  * @param members the group's members.
@@ -498,13 +239,6 @@ object UsersADMJsonProtocol
   implicit val userADMFormat: JsonFormat[User] = jsonFormat11(User)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
-  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
-    jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
-  implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(
-    ChangeUserPasswordApiRequestADM,
-    "requesterPassword",
-    "newPassword"
-  )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =

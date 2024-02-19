@@ -11,7 +11,11 @@ import sttp.tapir.CodecFormat
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
+import org.knora.webapi.messages.StringFormatter.IriDomain
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+
+final case class KnoraUserGroup(id: GroupIri, belongsToProject: ProjectIri)
 
 final case class GroupIri private (value: String) extends AnyVal
 

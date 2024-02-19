@@ -10,6 +10,7 @@ import scala.language.postfixOps
 import scala.sys.process.*
 
 import org.knora.Dependencies
+import org.knora.LocalSettings
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -157,7 +158,8 @@ val customScalacOptions = Seq(
   "-Wvalue-discard",
   "-Xlint:doc-detached",
   // silence twirl templates unused imports warnings
-  "-Wconf:src=target/.*:s"
+  "-Wconf:src=target/.*:s",
+  "-Xfatal-warnings"
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
@@ -193,6 +195,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver
   )
+  .settings(LocalSettings.localScalacOptions: _*)
   .settings(
     // prepare for publishing
 
@@ -207,7 +210,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
         contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
     },
     // add 'config' directory to the classpath of the start script,
-    Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
+    Universal / scriptClasspath := Seq(
+      "webapi/scripts",
+      "webapi/src/main/resources/knora-ontologies",
+      "../config/"
+    ) ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
     Compile / mainClass := Some("org.knora.webapi.Main"),
     // add dockerCommands used to create the image
@@ -278,6 +285,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
   )
+  .settings(LocalSettings.localScalacOptions: _*)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "integration",

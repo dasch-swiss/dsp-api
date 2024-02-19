@@ -13,20 +13,20 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.5" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.11" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.8.12" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.12"
 
   val PekkoActorVersion = "1.0.2"
-  val PekkoHttpVersion  = "1.0.0"
+  val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "4.10.0"
   val Rdf4jVersion      = "4.3.9"
 
   val ZioConfigVersion            = "4.0.1"
-  val ZioLoggingVersion           = "2.1.17"
+  val ZioLoggingVersion           = "2.2.0"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
-  val ZioPreludeVersion           = "1.0.0-RC22"
+  val ZioPreludeVersion           = "1.0.0-RC23"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.21"
 
@@ -41,7 +41,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.2"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.3"
 
   // refined
   val refined = Seq(
@@ -66,10 +66,10 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.11" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.12" // the logging interface
 
   // Metrics
-  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.21.1"
 
   // input validation
   val commonsValidator =
@@ -102,20 +102,20 @@ object Dependencies {
   val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
   val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion // Scala 3 compatible
   val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion // Scala 3 compatible
-  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.17"          // Scala 3 compatible
+  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.18"          // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.4"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.5"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.8"
+  val tapirVersion = "1.9.9"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -123,7 +123,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.8"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.9"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,

@@ -21,6 +21,7 @@ import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +213,8 @@ case class GroupADM(
   status: Boolean,
   selfjoin: Boolean
 ) extends Ordered[GroupADM] {
+
+  def groupIri: GroupIri = GroupIri.unsafeFrom(id)
 
   /**
    * Allows to sort collections of GroupADM. Sorting is done by the id.

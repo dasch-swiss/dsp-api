@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko.actor.ActorRef
-import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.model.HttpResponse
 import org.apache.pekko.http.scaladsl.testkit.RouteTestTimeout
 import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
@@ -67,7 +66,7 @@ abstract class R2RSpec
   implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // the default timeout for route tests
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+  implicit def default: RouteTestTimeout = RouteTestTimeout(
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 
@@ -99,6 +98,7 @@ abstract class R2RSpec
       runtime.unsafe.shutdown()
     }
     system.terminate()
+    ()
   }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {

@@ -270,7 +270,9 @@ object UserStatus {
 final case class SystemAdmin private (value: Boolean) extends AnyVal with BooleanValue
 
 object SystemAdmin {
-  def from(value: Boolean): SystemAdmin = SystemAdmin(value)
+  val IsSystemAdmin: SystemAdmin        = SystemAdmin(true)
+  val IsNotSystemAdmin: SystemAdmin     = SystemAdmin(false)
+  def from(value: Boolean): SystemAdmin = if (value) IsSystemAdmin else IsNotSystemAdmin
 }
 
 object UserErrorMessages {
