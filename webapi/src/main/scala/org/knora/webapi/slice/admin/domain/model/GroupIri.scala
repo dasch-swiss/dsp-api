@@ -11,7 +11,6 @@ import sttp.tapir.CodecFormat
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
-import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
@@ -29,11 +28,11 @@ object GroupIri {
    * `^` asserts the start of the string.
    * `http://rdfh\.ch/groups/` matches the specified prefix.
    * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
-   * `[a-zA-Z0-9_-]{4,30}` matches any alphanumeric character, hyphen, or underscore between 4 and 30 times.
-   * TODO: 30 is max length found on production DBs - subject to discussion/change
+   * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
+   * TODO: 30 was max length found on production DBs, but is increased to 40 - subject to discussion/change
    * `$` asserts the end of the string.
    */
-  private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,30}$""".r
+  private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,40}$""".r
 
   private def isGroupIriValid(iri: String): Boolean =
     (Iri.isIri(iri) && groupIriRegEx.matches(iri)) || BuiltInGroups.contains(iri)
