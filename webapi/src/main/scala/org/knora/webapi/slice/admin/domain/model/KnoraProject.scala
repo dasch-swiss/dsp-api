@@ -99,8 +99,8 @@ object KnoraProject {
 
   object Description extends WithFrom[V2.StringLiteralV2, Description] {
 
-    def unsafeFrom(text: String, lang: Option[String] = Some("en")): Description =
-      Description(V2.StringLiteralV2(text, lang))
+    def unsafeFrom(text: String, lang: Option[String]): Description =
+      Description.from(V2.StringLiteralV2(text, lang)).fold(e => throw new IllegalArgumentException(e), identity)
 
     def from(literal: V2.StringLiteralV2): Either[String, Description] =
       if (literal.value.length >= 3 && literal.value.length <= 40960) Right(Description(literal))

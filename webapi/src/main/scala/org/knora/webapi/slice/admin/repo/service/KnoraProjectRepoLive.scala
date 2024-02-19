@@ -9,6 +9,8 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
@@ -31,6 +33,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object KnoraProjectQueries {
+
+  // property does not exist in ontology, therefor this is not declared in Vocabulary
+  private val belongsToOntology: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToOntology")
+
   private[service] def getProjectByIri(iri: ProjectIri): Construct =
     Construct(
       s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
@@ -97,7 +103,7 @@ object KnoraProjectQueries {
     def projectPo                 = tp(project, p, o)
     val query =
       Queries
-        .CONSTRUCT(projectPo.andHas(Vocabulary.KnoraAdmin.belongsToOntology, ontology))
+        .CONSTRUCT(projectPo.andHas(belongsToOntology, ontology))
         .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
         .where(
           project

@@ -38,9 +38,6 @@ object Vocabulary {
 
     // user group properties
     val belongsToProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
-
-    // property not in ontology!
-    val belongsToOntology: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToOntology")
   }
 
   object KnoraBase {

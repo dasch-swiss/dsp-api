@@ -33,7 +33,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Shortname.unsafeFrom("project1"),
     Shortcode.unsafeFrom("1234"),
     Some(Longname.unsafeFrom("Project 1")),
-    NonEmptyChunk(Description.unsafeFrom("A project")),
+    NonEmptyChunk(Description.unsafeFrom("A project", Some("en"))),
     List(Keyword.unsafeFrom("project1")),
     Some(Logo.unsafeFrom("logo.png")),
     Status.Active,
