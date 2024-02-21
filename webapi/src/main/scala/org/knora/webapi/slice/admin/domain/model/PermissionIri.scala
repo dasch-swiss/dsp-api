@@ -26,7 +26,7 @@ object PermissionIri {
    * `http://rdfh\.ch/permissions/` matches the specified prefix.
    * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
    * `[a-zA-Z0-9_-]{2,30}` matches any alphanumeric character, hyphen, or underscore between 2 and 30 times.
-   * TODO: 2 was min length found on production DB - only projects 00FF and 0807 - 28 entries
+   * TODO: 2 was min length found on production DB - projects 00FF and 0807 - 28 entries
    * `$` asserts the end of the string.
    */
   private val permissionIriRegEx = """^http://rdfh\.ch/permissions/\p{XDigit}{4}/[a-zA-Z0-9_-]{2,30}$""".r
