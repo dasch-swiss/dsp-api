@@ -10,7 +10,7 @@ import sttp.tapir.CodecFormat
 
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.StringFormatter.IriDomain
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.DefaultPermissionProperties
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class PermissionIri private (value: String) extends AnyVal
@@ -21,26 +21,36 @@ object PermissionIri {
     Codec.string.mapEither(PermissionIri.from)(_.value)
 
   /**
+   * Explanation of the permission IRI regex:
+   * `^` asserts the start of the string.
+   * `http://rdfh\.ch/permissions/` matches the specified prefix.
+   * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
+   * `[a-zA-Z0-9_-]{2,30}` matches any alphanumeric character, hyphen, or underscore between 2 and 30 times.
+   * TODO: 2 was min length found on production DB - only projects 00FF and 0807 - 28 entries
+   * `$` asserts the end of the string.
+   */
+  private val permissionIriRegEx = """^http://rdfh\.ch/permissions/\p{XDigit}{4}/[a-zA-Z0-9_-]{2,30}$""".r
+
+  private def isPermissionIriValid(iri: String): Boolean =
+    (permissionIriRegEx.matches(iri) && isIri(iri)) || DefaultPermissionProperties.contains(iri)
+
+  def from(value: String): Either[String, PermissionIri] = value match {
+    case _ if value.isEmpty               => Left("Permission IRI cannot be empty.")
+    case _ if isPermissionIriValid(value) => Right(PermissionIri(value))
+    case _                                => Left("Permission IRI is invalid.")
+  }
+
+  def unsafeFrom(value: String): PermissionIri =
+    from(value).fold(msg => throw new IllegalArgumentException(msg), identity)
+
+  /**
    * Creates a new permission IRI based on a UUID.
    *
    * @param shortcode the required project shortcode.
    * @return the IRI of the permission object.
    */
   def makeNew(shortcode: Shortcode): PermissionIri = {
-    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
-    unsafeFrom(s"http://$IriDomain/permissions/${shortcode.value}/$knoraPermissionUuid")
-  }
-
-  def unsafeFrom(value: String): PermissionIri =
-    from(value).fold(msg => throw new IllegalArgumentException(msg), identity)
-
-  def from(value: String): Either[String, PermissionIri] = {
-    val isPermissionIri     = value.startsWith("http://rdfh.ch/permissions/") && isIri(value)
-    val hasSupportedVersion = UuidUtil.hasSupportedVersion(value)
-    (isPermissionIri, hasSupportedVersion) match {
-      case (true, true)  => Right(PermissionIri(value))
-      case (true, false) => Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
-      case _             => Left(s"Invalid permission IRI: $value.")
-    }
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
+    unsafeFrom(s"http://rdfh.ch/permissions/${shortcode.value}/$uuid")
   }
 }

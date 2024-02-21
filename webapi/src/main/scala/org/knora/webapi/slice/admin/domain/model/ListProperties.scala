@@ -24,7 +24,7 @@ object ListProperties {
   object ListIri extends StringValueCompanion[ListIri] {
 
     /**
-     * Explanation of the user IRI regex:
+     * Explanation of the list IRI regex:
      * `^` asserts the start of the string.
      * `http://rdfh\.ch/lists/` matches the specified prefix.
      * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
@@ -41,9 +41,6 @@ object ListProperties {
       case _ if isListIriValid(value) => Right(ListIri(value))
       case _                          => Left("List IRI is invalid.")
     }
-
-//   TODO: check the IRIs on prod and ls-prod using filtering for and against REGEX and create adjusted regex for lists
-//    the same goes for other IRIs except USER which is already supplied with regex
 
     /**
      * Creates a new [[ListIri]] within a [[KnoraProject]] generating a new base 64 encoded uuid.
