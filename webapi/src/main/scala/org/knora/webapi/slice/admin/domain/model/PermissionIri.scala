@@ -37,7 +37,7 @@ object PermissionIri {
   def from(value: String): Either[String, PermissionIri] = value match {
     case _ if value.isEmpty               => Left("Permission IRI cannot be empty.")
     case _ if isPermissionIriValid(value) => Right(PermissionIri(value))
-    case _                                => Left("Permission IRI is invalid.")
+    case _                                => Left(s"Invalid permission IRI: $value.")
   }
 
   def unsafeFrom(value: String): PermissionIri =

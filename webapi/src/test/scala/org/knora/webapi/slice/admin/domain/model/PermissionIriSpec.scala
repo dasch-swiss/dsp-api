@@ -37,7 +37,7 @@ object PermissionIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/permissions/jDEEitJESRi3pDaDjjQ1WQ"
         )
       )
-      check(invalidIris)(i => assertTrue(PermissionIri.from(i) == Left(s"Permission IRI is invalid.")))
+      check(invalidIris)(i => assertTrue(PermissionIri.from(i) == Left(s"Invalid permission IRI: $i.")))
     }
   )
 }
