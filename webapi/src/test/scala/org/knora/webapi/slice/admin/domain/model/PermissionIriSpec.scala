@@ -5,7 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.test.{Gen, Spec, ZIOSpecDefault, assertTrue, check}
+import zio.test.Gen
+import zio.test.Spec
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
 
 object PermissionIriSpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("PermissionIri should")(

@@ -29,7 +29,7 @@ object GroupIri {
    * `http://rdfh\.ch/groups/` matches the specified prefix.
    * `p{XDigit}{4}/` matches project shortcode built with 4 hexadecimal digits.
    * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
-   * TODO: 30 was max length found on production DBs, but is increased to 40 - subject to discussion/change
+   * TODO: 30 was max length found on production DBs, but increased it to 40 - some tests may fail.
    * `$` asserts the end of the string.
    */
   private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,40}$""".r
