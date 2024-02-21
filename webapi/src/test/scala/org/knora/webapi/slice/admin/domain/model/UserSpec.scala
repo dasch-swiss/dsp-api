@@ -18,8 +18,8 @@ object UserSpec extends ZIOSpecDefault {
     test("Username must not be empty") {
       assertTrue(Username.from("") == Left("Username cannot be empty."))
     },
-    test("Username may contain alphanumeric characters, underscore and dot") {
-      assertTrue(Username.from("a_2.3").isRight)
+    test("Username may contain alphanumeric characters, underscore, hyphen and dot") {
+      assertTrue(Username.from("a_2.3-4").isRight)
     },
     test("Username has to be at least 4 characters long") {
       assertTrue(Username.from("abc") == Left("Username is invalid."))
@@ -30,7 +30,7 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("Username must not contain other characters") {
-      val invalid = List("a_2.3!", "a_2-3", "a.b@example.com")
+      val invalid = List("a_2.3!", "a_2,3", "a.b@example.com")
       check(Gen.fromIterable(invalid)) { i =>
         assertTrue(Username.from(i) == Left("Username is invalid."))
       }
@@ -52,6 +52,15 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("Username must not contain two underscores in a row") {
       assertTrue(Username.from("a__bc") == Left("Username is invalid."))
+    },
+    test("Username must not start with an hyphen") {
+      assertTrue(Username.from("-abc") == Left("Username is invalid."))
+    },
+    test("Username must not end with an hyphen") {
+      assertTrue(Username.from("abc-") == Left("Username is invalid."))
+    },
+    test("Username must not contain two hyphen in a row") {
+      assertTrue(Username.from("a--bc") == Left("Username is invalid."))
     }
   )
 
