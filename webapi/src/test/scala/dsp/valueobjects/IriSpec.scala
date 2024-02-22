@@ -8,7 +8,6 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import zio.test.*
 
-import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
 
@@ -20,9 +19,6 @@ object IriSpec extends ZIOSpecDefault {
   private val supportedUuid = "jDEEitJESRi3pDaDjjQ1WQ"
 
   private val invalidIri = "Invalid IRI"
-
-  private val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
-  private val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
 
   def spec: Spec[Any, Throwable] = uuidTest + roleIriTest
 
@@ -47,26 +43,30 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val roleIriTest = suite("IriSpec - roleIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
+  private val roleIriTest = suite("RoleIri should")(
+    test("not be created from an empty value") {
+      assertTrue(RoleIri.from("") == Left("Role IRI cannot be empty."))
     },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        RoleIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.RoleIriInvalid(invalidIri))
+    test("be created from a valid value") {
+      val validIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/roles/40-characters-iri-for-testing-purposes-1",
+          "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ",
+          "http://rdfh.ch/roles/1234"
         )
       )
+      check(validIris)(i => assertTrue(RoleIri.from(i).isRight))
     },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        RoleIri.make(roleIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+    test("not be created from an invalid value") {
+      val invalidIris = Gen.fromIterable(
+        Seq(
+          "Invalid IRI",
+          "http://rdfh.ch/roles/123",
+          "http://rdfh.ch/roles/41-characters-iri-for-testing-purposes-12",
+          "http://rdfh.ch/roles/(DEEitJESRi3pDaDjjQ1WQ"
         )
       )
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(RoleIri.make(validRoleIri).toOption.get.value == validRoleIri)
+      check(invalidIris)(i => assertTrue(RoleIri.from(i) == Left(s"Role IRI is invalid.")))
     }
   )
 }

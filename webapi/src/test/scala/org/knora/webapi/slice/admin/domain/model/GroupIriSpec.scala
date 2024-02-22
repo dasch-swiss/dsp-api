@@ -5,31 +5,39 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.test.check
 
 object GroupIriSpec extends ZIOSpecDefault {
-
-  private val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-  private val invalidIri               = "Invalid IRI"
-  private val groupIriWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
-
-  override val spec: Spec[Any, Nothing] = suite("GroupIri from should")(
-    test("pass an empty value and return an error") {
+  override val spec: Spec[Any, Nothing] = suite("GroupIri should")(
+    test("not be created from an empty value") {
       assertTrue(GroupIri.from("") == Left("Group IRI cannot be empty."))
     },
-    test("pass an invalid value and return an error") {
-      assertTrue(GroupIri.from(invalidIri) == Left("Group IRI is invalid."))
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        GroupIri.from(groupIriWithUUIDVersion3) ==
-          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
+    test("be created from a valid value") {
+      val validIris = Gen.fromIterable(
+        Seq(
+          "http://rdfh.ch/groups/0001/40-characters-iri-for-testing-purposes-1",
+          "http://rdfh.ch/groups/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/groups/0111/UUID1",
+          "http://rdfh.ch/groups/0111/1234"
+        )
       )
+      check(validIris)(i => assertTrue(GroupIri.from(i).isRight))
     },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(GroupIri.from(validGroupIri).map(_.value) == Right(validGroupIri))
+    test("not be created from an invalid value") {
+      val invalidIris = Gen.fromIterable(
+        Seq(
+          "Invalid IRI",
+          "http://rdfh.ch/groups/0111/123",
+          "http://rdfh.ch/groups/0001/41-characters-iri-for-testing-purposes-12",
+          "http://rdfh.ch/groups/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
+          "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ"
+        )
+      )
+      check(invalidIris)(i => assertTrue(GroupIri.from(i) == Left(s"Group IRI is invalid.")))
     }
   )
 }
