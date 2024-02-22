@@ -5,27 +5,30 @@
 
 package org.knora.webapi.slice.admin.api
 
+import dsp.valueobjects.Group.{GroupDescriptions, GroupName, GroupSelfJoin, GroupStatus}
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
-
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.{
+  Email,
+  FamilyName,
+  GivenName,
+  GroupIri,
+  Password,
+  RestrictedViewSize,
+  SystemAdmin,
+  UserIri,
+  UserStatus,
+  Username
+}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.admin.domain.model.Password
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -118,5 +121,12 @@ object Codecs {
     implicit val userStatus: StringCodec[UserStatus]   = booleanCodec(UserStatus.from)
     implicit val systemAdmin: StringCodec[SystemAdmin] = booleanCodec(SystemAdmin.from)
 
+    // group
+    implicit val groupIri: StringCodec[GroupIri]   = stringCodec(GroupIri.from)
+    implicit val groupName: StringCodec[GroupName] = stringCodec(GroupName.from)
+    implicit val groupDescriptions: StringCodec[GroupDescriptions] =
+      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)
+    implicit val groupStatus: StringCodec[GroupStatus]     = booleanCodec(GroupStatus.from)
+    implicit val groupSelfJoin: StringCodec[GroupSelfJoin] = booleanCodec(GroupSelfJoin.from)
   }
 }

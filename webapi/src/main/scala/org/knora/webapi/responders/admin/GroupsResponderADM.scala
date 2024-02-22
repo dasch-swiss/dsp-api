@@ -10,7 +10,6 @@ import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.*
@@ -36,6 +35,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.GroupsEndpoints.Requests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -88,13 +88,13 @@ trait GroupsResponderADM {
   /**
    * Create a new group.
    *
-   * @param createRequest  the create request information.
+   * @param request  the create request information.
    * @param requestingUser the user making the request.
    * @param apiRequestID   the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
   def createGroupADM(
-    createRequest: GroupCreatePayloadADM,
+    request: GroupCreateRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
@@ -142,9 +142,6 @@ final case class GroupsResponderADMLive(
     with GroupsADMJsonProtocol
     with LazyLogging {
 
-  // Global lock IRI used for group creation and updating
-  private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
-
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[GroupsResponderRequestADM]
 
   /**
@@ -155,7 +152,6 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupCreateRequestADM       => createGroupADM(r.createRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeRequestADM =>
       changeGroupBasicInformationRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeStatusRequestADM =>
@@ -304,18 +300,18 @@ final case class GroupsResponderADMLive(
   /**
    * Create a new group.
    *
-   * @param createRequest        the create request information.
-   * @param requestingUser       the user making the request.
+   * @param request              the create request information.
+   * @param requestingUser       the user making the request. TODO: to remove? check is done in rest srvice
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
   override def createGroupADM(
-    createRequest: GroupCreatePayloadADM,
+    request: GroupCreateRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
     def createGroupTask(
-      createRequest: GroupCreatePayloadADM,
+      request: GroupCreateRequest,
       requestingUser: User
     ): Task[GroupGetResponseADM] =
       for {
@@ -324,28 +320,25 @@ final case class GroupsResponderADMLive(
                .fail(ForbiddenException("A new group can only be created by a project or system admin."))
                .when {
                  val userPermissions = requestingUser.permissions
-                 !userPermissions.isProjectAdmin(createRequest.project.value) &&
+                 !userPermissions.isProjectAdmin(request.project.value) &&
                  !userPermissions.isSystemAdmin
                }
 
-        iri = createRequest.project.value
-        nameExists <- groupByNameAndProjectExists(
-                        name = createRequest.name.value,
-                        projectIri = iri
-                      )
+        iri         = request.project.value
+        nameExists <- groupByNameAndProjectExists(request.name.value, iri)
         _ <- ZIO
-               .fail(DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists"))
+               .fail(DuplicateValueException(s"Group with the name '${request.name.value}' already exists"))
                .when(nameExists)
 
         projectADM <- findProjectByIriOrFail(
                         iri,
                         NotFoundException(
-                          s"Cannot create group inside project <${createRequest.project}>. The project was not found."
+                          s"Cannot create group inside project <${request.project}>. The project was not found."
                         )
                       )
 
         // check the custom IRI; if not given, create an unused IRI
-        customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
+        customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
         groupIri <- iriService.checkOrCreateEntityIri(
                       customGroupIri,
                       GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value
@@ -358,11 +351,11 @@ final case class GroupsResponderADMLive(
               AdminConstants.adminDataNamedGraph.value,
               groupIri,
               groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
-              name = createRequest.name.value,
-              descriptions = createRequest.descriptions.value,
-              projectIri = createRequest.project.value,
-              status = createRequest.status.value,
-              hasSelfJoinEnabled = createRequest.selfjoin.value
+              name = request.name.value,
+              descriptions = request.descriptions.value,
+              projectIri = request.project.value,
+              status = request.status.value,
+              hasSelfJoinEnabled = request.selfjoin.value
             )
 
         _ <- triplestore.query(Update(createNewGroupSparqlString))
@@ -375,8 +368,8 @@ final case class GroupsResponderADMLive(
 
       } yield GroupGetResponseADM(createdGroup)
 
-    val task = createGroupTask(createRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, GROUPS_GLOBAL_LOCK_IRI, task)
+    val task = createGroupTask(request, requestingUser)
+    IriLocker.runWithIriLock(apiRequestID, "http://rdfh.ch/groups", task)
   }
 
   /**

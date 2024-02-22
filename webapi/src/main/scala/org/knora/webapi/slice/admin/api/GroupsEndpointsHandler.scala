@@ -38,7 +38,7 @@ case class GroupsEndpointsHandler(
   private val postGroupHandler =
     SecuredEndpointHandler(
       endpoints.postGroup,
-      user => payload => restService.postGroup(payload, user)
+      user => request => restService.postGroup(request, user)
     )
 
   private val securedHandlers = List(getGroupMembersHandler, postGroupHandler).map(mapper.mapSecuredEndpointHandler(_))

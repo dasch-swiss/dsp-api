@@ -5,15 +5,21 @@
 
 package org.knora.webapi.slice.admin.api
 
+import dsp.valueobjects.Group.{GroupDescriptions, GroupName, GroupSelfJoin, GroupStatus}
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
+import sttp.tapir.json.zio.jsonBody as zioJsonBody
 import zio.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
+import org.knora.webapi.slice.admin.api.GroupsEndpoints.Requests.GroupCreateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import zio.json.{DeriveJsonCodec, JsonCodec}
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -36,7 +42,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
-    .in(sprayJsonBody[CreateGroupApiRequestADM])
+    .in(zioJsonBody[GroupCreateRequest])
     .out(sprayJsonBody[GroupsGetResponseADM])
     .description("Creates a new group.")
 
@@ -47,5 +53,19 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 }
 
 object GroupsEndpoints {
+  object Requests {
+    final case class GroupCreateRequest(
+      id: Option[GroupIri] = None,
+      name: GroupName,
+      descriptions: GroupDescriptions,
+      project: ProjectIri,
+      status: GroupStatus,
+      selfjoin: GroupSelfJoin
+    )
+    object GroupCreateRequest {
+      implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
+    }
+  }
+
   val layer = ZLayer.derive[GroupsEndpoints]
 }
