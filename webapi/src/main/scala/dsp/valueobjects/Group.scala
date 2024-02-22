@@ -8,7 +8,7 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.common.StringValueCompanion
-import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.Value.{BooleanValue, StringValue}
 
 object Group {
 
@@ -55,11 +55,11 @@ object Group {
   /**
    * GroupStatus value object.
    */
-  sealed abstract case class GroupStatus private (value: Boolean)
-  object GroupStatus { self =>
-    val active: GroupStatus               = new GroupStatus(true) {}
-    val inactive: GroupStatus             = new GroupStatus(false) {}
-    def make(value: Boolean): GroupStatus = if (value) active else inactive
+  final case class GroupStatus private (value: Boolean) extends AnyVal with BooleanValue
+  object GroupStatus {
+    val active: GroupStatus               = GroupStatus.from(true)
+    val inactive: GroupStatus             = GroupStatus.from(false)
+    def from(value: Boolean): GroupStatus = if (value) active else inactive
   }
 
   /**

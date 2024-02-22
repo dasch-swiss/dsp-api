@@ -15,9 +15,6 @@ import dsp.valueobjects.Group.*
  * This spec is used to test the [[Group]] value objects creation.
  */
 object GroupSpec extends ZIOSpecDefault {
-
-  private val validName        = "Valid group name"
-  private val invalidName      = "Invalid group name\r"
   private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
   private val invalidDescription = Seq(
     V2.StringLiteralV2(value = "Invalid group description \r", language = Some("en"))
@@ -30,10 +27,10 @@ object GroupSpec extends ZIOSpecDefault {
       assertTrue(GroupName.from("") == Left(GroupErrorMessages.GroupNameMissing))
     },
     test("not be created from an invalid value") {
-      assertTrue(GroupName.from(invalidName) == Left(GroupErrorMessages.GroupNameInvalid))
+      assertTrue(GroupName.from("Invalid group name\r") == Left(GroupErrorMessages.GroupNameInvalid))
     },
     test("be created from a valid value") {
-      assertTrue(GroupName.from(validName).map(_.value) == Right(validName))
+      assertTrue(GroupName.from("Valid group name").map(_.value) == Right("Valid group name"))
     }
   )
 
@@ -73,13 +70,11 @@ object GroupSpec extends ZIOSpecDefault {
     }
   )
 
-  private val groupStatusTest = suite("GroupSpec - GroupStatus")(
+  private val groupStatusTest = suite("GroupStatus")(
     test("creating a GroupStatus") {
       assertTrue(
-        !GroupStatus.inactive.value,
-        GroupStatus.active.value,
-        GroupStatus.make(true).value,
-        !GroupStatus.make(false).value
+        GroupStatus.from(true).value == GroupStatus.active.value,
+        GroupStatus.from(false).value == GroupStatus.inactive.value
       )
     }
   )

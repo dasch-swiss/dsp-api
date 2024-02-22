@@ -59,7 +59,7 @@ final case class GroupsRouteADM(
         val project: Validation[Throwable, ProjectIri] = Validation
           .fromEither(ProjectIri.from(apiRequest.project))
           .mapError(ValidationException.apply)
-        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.make(apiRequest.status))
+        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.from(apiRequest.status))
         val selfjoin: Validation[Throwable, GroupSelfJoin] = GroupSelfJoin.make(apiRequest.selfjoin)
         val payloadValidation: Validation[Throwable, GroupCreatePayloadADM] =
           Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
@@ -90,7 +90,7 @@ final case class GroupsRouteADM(
                  .when(apiRequest.status.nonEmpty)
           name             = validateOptionWithFrom(apiRequest.name, GroupName.from, BadRequestException.apply)
           descriptions     = GroupDescriptions.make(apiRequest.descriptions)
-          status           = Validation.succeed(apiRequest.status.map(GroupStatus.make))
+          status           = Validation.succeed(apiRequest.status.map(GroupStatus.from))
           selfjoin         = GroupSelfJoin.make(apiRequest.selfjoin)
           validatedPayload = Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
           iri <- Iri
