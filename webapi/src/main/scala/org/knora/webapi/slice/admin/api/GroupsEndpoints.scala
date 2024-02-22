@@ -9,7 +9,6 @@ import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.*
-
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
@@ -35,7 +34,13 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupMembersGetResponseADM])
     .description("Returns all members of a single group.")
 
-  private val securedEndpoins = Seq(getGroupMembers).map(_.endpoint)
+  val postGroup = baseEndpoints.securedEndpoint.post
+    .in(base)
+    .in(sprayJsonBody[CreateGroupApiRequestADM])
+    .out(sprayJsonBody[GroupsGetResponseADM])
+    .description("Creates a new group.")
+
+  private val securedEndpoins = Seq(getGroupMembers, postGroup).map(_.endpoint)
 
   val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
     .map(_.tag("Admin Groups"))

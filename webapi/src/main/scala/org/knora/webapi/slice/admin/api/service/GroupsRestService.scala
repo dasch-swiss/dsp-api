@@ -7,23 +7,25 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.macros.accessible
-
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
+import org.knora.webapi.slice.admin.api.GroupsEndpoints.Requests.CreateGroup
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.{AuthorizationRestService, KnoraResponseRenderer}
 
 @accessible
 trait GroupsRestService {
   def getGroups: Task[GroupsGetResponseADM]
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM]
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
+  def postGroup(payload: GroupCreatePayloadADM, user: User): Task[GroupGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
+  auth: AuthorizationRestService,
   responder: GroupsResponderADM,
   format: KnoraResponseRenderer
 ) extends GroupsRestService {
@@ -44,6 +46,14 @@ final case class GroupsRestServiceLive(
   override def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     for {
       internal <- responder.groupMembersGetRequest(iri, user)
+      external <- format.toExternal(internal)
+    } yield external
+
+  override def postGroup(payload: GroupCreatePayloadADM, user: User): Task[GroupGetResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdmin(user)
+      uuid     <- Random.nextUUID
+      internal <- responder.createGroupADM(payload, user, uuid)
       external <- format.toExternal(internal)
     } yield external
 }

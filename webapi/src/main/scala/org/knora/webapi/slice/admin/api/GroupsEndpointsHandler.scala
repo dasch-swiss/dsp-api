@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api
 
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -36,7 +35,13 @@ case class GroupsEndpointsHandler(
       user => iri => restService.getGroupMembers(iri, user)
     )
 
-  private val securedHandlers = List(getGroupMembersHandler).map(mapper.mapSecuredEndpointHandler(_))
+  private val postGroupHandler =
+    SecuredEndpointHandler(
+      endpoints.postGroup,
+      user => payload => restService.postGroup(payload, user)
+    )
+
+  private val securedHandlers = List(getGroupMembersHandler, postGroupHandler).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = List(getGroupsHandler, getGroupByIriHandler).map(mapper.mapPublicEndpointHandler(_))
     ++ securedHandlers
