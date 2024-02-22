@@ -173,7 +173,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(updatedUser.isInProjectAdminGroup.isEmpty)
       },
       test("should update an existing user isInGroup ") {
-        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
+        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")
         for {
           _           <- save(testUserWithoutAnyGroups) // create the user
           _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))
@@ -181,7 +181,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(updatedUser.isInGroup == Chunk(groupIri))
       },
       test("should update an existing user isInGroup and remove them") {
-        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001")
+        val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")
         for {
           _           <- save(testUserWithoutAnyGroups) // create the user
           _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri)))

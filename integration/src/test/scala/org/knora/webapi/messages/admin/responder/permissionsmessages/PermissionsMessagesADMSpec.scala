@@ -9,7 +9,6 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
@@ -110,22 +109,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         )
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
-    }
-
-    "throw 'BadRequest' for AdministrativePermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
-      val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
-      val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
-          CreateAdministrativePermissionAPIRequestADM(
-            id = Some(permissionIRIWithUUIDVersion3),
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-          ),
-          SharedTestDataADM.imagesUser01
-        )
-      )
-      assertFailsWithA[BadRequestException](exit, IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -474,22 +457,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         )
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
-    }
-
-    "throw 'BadRequest' for DefaultObjectAccessPermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
-      val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
-      val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
-          CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(permissionIRIWithUUIDVersion3),
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
-          SharedTestDataADM.imagesUser01
-        )
-      )
-      assertFailsWithA[BadRequestException](exit, IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {

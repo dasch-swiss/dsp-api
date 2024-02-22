@@ -56,22 +56,6 @@ object Iri {
     urlValidator.isValid(s)
 
   /**
-   * Returns `true` if an IRI string looks like a Knora list IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isListIri(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora role IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isRoleIri(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
@@ -169,22 +153,32 @@ object Iri {
   /**
    * RoleIri value object.
    */
-  sealed abstract case class RoleIri private (value: String) extends Iri
+  final case class RoleIri private (value: String) extends Iri
   object RoleIri {
-    def make(value: String): Validation[Throwable, RoleIri] =
-      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
 
-        if (!isRoleIri(value))
-          Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        else
-          validateAndEscapeIri(value)
-            .mapError(_ => BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-            .map(new RoleIri(_) {})
-      }
+    /**
+     * Explanation of the role IRI regex:
+     * `^` asserts the start of the string.
+     * `http://rdfh\.ch/roles/` matches the specified prefix.
+     * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
+     * `$` asserts the end of the string.
+     */
+    private val roleIriRegEx = """^http://rdfh\.ch/roles/[a-zA-Z0-9_-]{4,40}$""".r
+
+    private def isRoleIriValid(iri: IRI): Boolean = isIri(iri) && roleIriRegEx.matches(iri)
+    def from(value: String): Either[String, RoleIri] = value match {
+      case _ if value.isEmpty         => Left("Role IRI cannot be empty.")
+      case _ if isRoleIriValid(value) => Right(RoleIri(value))
+      case _                          => Left("Role IRI is invalid.")
+    }
+
+    def unsafeFrom(value: String): RoleIri =
+      from(value).fold(e => throw new IllegalArgumentException(e), identity)
+
+    def makeNew: RoleIri = {
+      val uuid = UuidUtil.makeRandomBase64EncodedUuid
+      unsafeFrom(s"http://rdfh.ch/roles/$uuid")
+    }
   }
 
   /**
@@ -212,8 +206,6 @@ object Iri {
 object IriErrorMessages {
   val ProjectIriMissing  = "Project IRI cannot be empty."
   val ProjectIriInvalid  = "Project IRI is invalid."
-  val RoleIriMissing     = "Role IRI cannot be empty."
-  val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
   val UuidMissing        = "UUID cannot be empty"
   val UuidInvalid        = (uuid: String) => s"'$uuid' is not a UUID"
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
