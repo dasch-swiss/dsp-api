@@ -10,7 +10,6 @@ import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 import zio.prelude.Validation
-
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Group.*
@@ -25,6 +24,7 @@ import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides a routing function for API routes that deal with groups.
@@ -53,7 +53,8 @@ final case class GroupsRouteADM(
         val id: Validation[Throwable, Option[GroupIri]] = apiRequest.id
           .map(id => Validation.fromEither(GroupIri.from(id).map(Some(_))).mapError(BadRequestException(_)))
           .getOrElse(Validation.succeed(None))
-        val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
+        val name: Validation[Throwable, GroupName] =
+          Validation.fromEither(GroupName.from(apiRequest.name)).mapError(ValidationException.apply)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
         val project: Validation[Throwable, ProjectIri] = Validation
           .fromEither(ProjectIri.from(apiRequest.project))
@@ -87,7 +88,7 @@ final case class GroupsRouteADM(
                    )
                  )
                  .when(apiRequest.status.nonEmpty)
-          name             = GroupName.make(apiRequest.name)
+          name             = validateOptionWithFrom(apiRequest.name, GroupName.from, BadRequestException.apply)
           descriptions     = GroupDescriptions.make(apiRequest.descriptions)
           status           = Validation.succeed(apiRequest.status.map(GroupStatus.make))
           selfjoin         = GroupSelfJoin.make(apiRequest.selfjoin)

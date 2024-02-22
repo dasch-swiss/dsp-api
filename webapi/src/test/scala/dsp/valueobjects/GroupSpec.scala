@@ -25,29 +25,15 @@ object GroupSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest
 
-  private val groupNameTest = suite("GroupSpec - GroupName")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        GroupName.make("") == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing)),
-        GroupName.make(Some("")) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
-      )
+  private val groupNameTest = suite("GroupName should")(
+    test("not be created from an empty value") {
+      assertTrue(GroupName.from("") == Left(GroupErrorMessages.GroupNameMissing))
     },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        GroupName.make(invalidName) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid)),
-        GroupName.make(Some(invalidName)) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid))
-      )
+    test("not be created from an invalid value") {
+      assertTrue(GroupName.from(invalidName) == Left(GroupErrorMessages.GroupNameInvalid))
     },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(
-        GroupName.make(validName).toOption.get.value == validName,
-        GroupName.make(Option(validName)).getOrElse(null).get.value == validName
-      )
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        GroupName.make(None) == Validation.succeed(None)
-      )
+    test("be created from a valid value") {
+      assertTrue(GroupName.from(validName).map(_.value) == Right(validName))
     }
   )
 

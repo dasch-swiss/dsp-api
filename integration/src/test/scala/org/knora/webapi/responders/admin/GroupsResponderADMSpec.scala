@@ -56,7 +56,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = None,
-            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
               .make(
                 Seq(
@@ -94,7 +94,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
-            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
@@ -115,7 +115,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
                 .make(
@@ -144,7 +144,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           GroupUpdatePayloadADM(
-            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
                 .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
@@ -164,7 +164,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.make("Image reviewer").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("Image reviewer")),
             Some(
               GroupDescriptions
                 .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))

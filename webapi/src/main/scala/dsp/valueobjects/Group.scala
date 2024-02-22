@@ -6,28 +6,25 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-
 import dsp.errors.BadRequestException
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
 
 object Group {
 
   /**
    * GroupName value object.
    */
-  sealed abstract case class GroupName private (value: String)
-  object GroupName { self =>
-    def make(value: String): Validation[BadRequestException, GroupName] =
-      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
-      else
-        Validation
-          .fromOption(Iri.toSparqlEncodedString(value))
-          .mapError(_ => BadRequestException(GroupErrorMessages.GroupNameInvalid))
-          .map(new GroupName(_) {})
-
-    def make(value: Option[String]): Validation[Throwable, Option[GroupName]] =
+  final case class GroupName private (value: String) extends AnyVal with StringValue
+  object GroupName extends StringValueCompanion[GroupName] {
+    def from(value: String): Either[String, GroupName] =
       value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+        case _ if value.isEmpty => Left(GroupErrorMessages.GroupNameMissing)
+        case _ =>
+          Iri
+            .toSparqlEncodedString(value)
+            .toRight(GroupErrorMessages.GroupNameInvalid)
+            .map(GroupName.apply)
       }
   }
 
