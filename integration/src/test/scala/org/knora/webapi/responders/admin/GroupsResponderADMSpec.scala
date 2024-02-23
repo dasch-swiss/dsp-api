@@ -56,20 +56,19 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = None,
-            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
-              .make(
+              .unsafeFrom(
                 Seq(
                   V2.StringLiteralV2(
                     value = """NewGroupDescription with "quotes" and <html tag>""",
                     language = Some("en")
                   )
                 )
-              )
-              .fold(e => throw e.head, v => v),
+              ),
             project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
+            selfjoin = GroupSelfJoin.impossible
           ),
           requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -94,13 +93,12 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
-            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
-              .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
             project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
+            selfjoin = GroupSelfJoin.impossible
           ),
           requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -115,13 +113,12 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
-                .make(
+                .unsafeFrom(
                   Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
                 )
-                .fold(e => throw e.head, v => v)
             )
           ),
           requestingUser = imagesUser01,
@@ -144,11 +141,10 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           GroupUpdatePayloadADM(
-            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
-                .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
             )
           ),
           requestingUser = imagesUser01,
@@ -164,11 +160,10 @@ class GroupsResponderADMSpec extends CoreSpec {
         appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.make("Image reviewer").fold(e => throw e.head, v => v)),
+            Some(GroupName.unsafeFrom("Image reviewer")),
             Some(
               GroupDescriptions
-                .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
             )
           ),
           requestingUser = imagesUser01,
