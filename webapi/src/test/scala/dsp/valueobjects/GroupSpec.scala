@@ -71,22 +71,19 @@ object GroupSpec extends ZIOSpecDefault {
   )
 
   private val groupStatusTest = suite("GroupStatus")(
-    test("creating a GroupStatus") {
+    test("should be created from a valid value") {
       assertTrue(
-        GroupStatus.from(true).value == GroupStatus.active.value,
-        GroupStatus.from(false).value == GroupStatus.inactive.value
+        GroupStatus.from(true) == GroupStatus.active,
+        GroupStatus.from(false) == GroupStatus.inactive
       )
     }
   )
 
-  private val groupSelfJoinTest = suite("GroupSpec - GroupSelfJoin")(
-    test("pass a valid object and successfully create value object") {
-      assertTrue(GroupSelfJoin.make(true).toOption.get.value == true) &&
-      assertTrue(GroupSelfJoin.make(Some(false)).getOrElse(null).get.value == false)
-    },
-    test("successfully validate passing None") {
+  private val groupSelfJoinTest = suite("GroupSelfJoin")(
+    test("should be created from a valid value") {
       assertTrue(
-        GroupSelfJoin.make(None) == Validation.succeed(None)
+        GroupSelfJoin.from(true) == GroupSelfJoin.possible,
+        GroupSelfJoin.from(false) == GroupSelfJoin.impossible
       )
     }
   )

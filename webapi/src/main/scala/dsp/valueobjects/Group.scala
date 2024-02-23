@@ -62,18 +62,11 @@ object Group {
     def from(value: Boolean): GroupStatus = if (value) active else inactive
   }
 
-  /**
-   * GroupSelfJoin value object.
-   */
-  sealed abstract case class GroupSelfJoin private (value: Boolean)
-  object GroupSelfJoin { self =>
-    def make(value: Boolean): Validation[Throwable, GroupSelfJoin] =
-      Validation.succeed(new GroupSelfJoin(value) {})
-    def make(value: Option[Boolean]): Validation[Throwable, Option[GroupSelfJoin]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  final case class GroupSelfJoin private (value: Boolean) extends AnyVal with BooleanValue
+  object GroupSelfJoin {
+    val possible: GroupSelfJoin            = GroupSelfJoin.from(true)
+    val impossible: GroupSelfJoin          = GroupSelfJoin.from(false)
+    def from(bool: Boolean): GroupSelfJoin = if (bool) possible else impossible
   }
 }
 
