@@ -76,7 +76,7 @@ class GroupsResponderADMSpec extends CoreSpec {
 
         val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
         val newGroupInfo                  = received.group
-        println(111111, newGroupInfo.descriptions, newGroupInfo.status, newGroupInfo.selfjoin)
+
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
