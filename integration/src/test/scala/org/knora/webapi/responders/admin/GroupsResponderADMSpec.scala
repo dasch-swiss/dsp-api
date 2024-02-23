@@ -58,18 +58,17 @@ class GroupsResponderADMSpec extends CoreSpec {
             id = None,
             name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
-              .make(
+              .unsafeFrom(
                 Seq(
                   V2.StringLiteralV2(
                     value = """NewGroupDescription with "quotes" and <html tag>""",
                     language = Some("en")
                   )
                 )
-              )
-              .fold(e => throw e.head, v => v),
+              ),
             project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
+            selfjoin = GroupSelfJoin.impossible
           ),
           requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -77,7 +76,7 @@ class GroupsResponderADMSpec extends CoreSpec {
 
         val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
         val newGroupInfo                  = received.group
-
+        println(111111, newGroupInfo.descriptions, newGroupInfo.status, newGroupInfo.selfjoin)
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
@@ -96,11 +95,10 @@ class GroupsResponderADMSpec extends CoreSpec {
             id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
             name = GroupName.unsafeFrom("NewGroup"),
             descriptions = GroupDescriptions
-              .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
+              .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
             project = ProjectIri.unsafeFrom(imagesProjectIri),
             status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
+            selfjoin = GroupSelfJoin.impossible
           ),
           requestingUser = imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -118,10 +116,9 @@ class GroupsResponderADMSpec extends CoreSpec {
             Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
-                .make(
+                .unsafeFrom(
                   Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
                 )
-                .fold(e => throw e.head, v => v)
             )
           ),
           requestingUser = imagesUser01,
@@ -147,8 +144,7 @@ class GroupsResponderADMSpec extends CoreSpec {
             Some(GroupName.unsafeFrom("UpdatedGroupName")),
             Some(
               GroupDescriptions
-                .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
             )
           ),
           requestingUser = imagesUser01,
@@ -167,8 +163,7 @@ class GroupsResponderADMSpec extends CoreSpec {
             Some(GroupName.unsafeFrom("Image reviewer")),
             Some(
               GroupDescriptions
-                .make(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-                .fold(e => throw e.head, v => v)
+                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
             )
           ),
           requestingUser = imagesUser01,

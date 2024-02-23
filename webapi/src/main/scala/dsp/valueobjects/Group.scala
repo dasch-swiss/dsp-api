@@ -5,8 +5,11 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.slice.common.{StringValueCompanion, Value, WithFrom}
-import org.knora.webapi.slice.common.Value.{BooleanValue, StringValue}
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 
 object Group {
 
@@ -44,16 +47,16 @@ object Group {
    */
   final case class GroupStatus private (value: Boolean) extends AnyVal with BooleanValue
   object GroupStatus {
-    val active: GroupStatus               = GroupStatus.from(true)
-    val inactive: GroupStatus             = GroupStatus.from(false)
+    val active: GroupStatus               = new GroupStatus(true)
+    val inactive: GroupStatus             = new GroupStatus(false)
     def from(value: Boolean): GroupStatus = if (value) active else inactive
   }
 
   final case class GroupSelfJoin private (value: Boolean) extends AnyVal with BooleanValue
   object GroupSelfJoin {
-    val possible: GroupSelfJoin            = GroupSelfJoin.from(true)
-    val impossible: GroupSelfJoin          = GroupSelfJoin.from(false)
-    def from(bool: Boolean): GroupSelfJoin = if (bool) possible else impossible
+    val possible: GroupSelfJoin             = new GroupSelfJoin(true)
+    val impossible: GroupSelfJoin           = new GroupSelfJoin(false)
+    def from(value: Boolean): GroupSelfJoin = if (value) possible else impossible
   }
 }
 
