@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.1...v0.6.2) (2024-02-15)
+
+
+### Maintenance
+
+* Dependency updates ([#171](https://github.com/dasch-swiss/dsp-ingest/issues/171)) ([8902b1e](https://github.com/dasch-swiss/dsp-ingest/commit/8902b1e7d3ed847532e493c8815536d8fa211e32))
+* Major dependency updates ([#170](https://github.com/dasch-swiss/dsp-ingest/issues/170)) ([3f7e717](https://github.com/dasch-swiss/dsp-ingest/commit/3f7e717b063983263cf3e8da5d7f08435191e232))
+* Minor dependency updates ([#169](https://github.com/dasch-swiss/dsp-ingest/issues/169)) ([0fa24ff](https://github.com/dasch-swiss/dsp-ingest/commit/0fa24ff5913717c356bd1e53a84632f6d9cc7e93))
+* Patch dependency updates ([#168](https://github.com/dasch-swiss/dsp-ingest/issues/168)) ([444aa35](https://github.com/dasch-swiss/dsp-ingest/commit/444aa358f08d078dc63e89d24712aa9a42f90169))
+* Safer command interpolation (DEV-3184) ([#166](https://github.com/dasch-swiss/dsp-ingest/issues/166)) ([9190f82](https://github.com/dasch-swiss/dsp-ingest/commit/9190f823e8f6b4f548be006729bb45ecc793a50d))
+
 ## [0.6.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.0...v0.6.1) (2024-02-09)
 
 
