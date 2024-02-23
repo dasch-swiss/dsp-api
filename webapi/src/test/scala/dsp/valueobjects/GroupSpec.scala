@@ -5,10 +5,8 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import zio.test.*
 
-import dsp.errors.BadRequestException
 import dsp.valueobjects.Group.*
 
 /**
@@ -34,39 +32,16 @@ object GroupSpec extends ZIOSpecDefault {
     }
   )
 
-  private val groupDescriptionsTest = suite("GroupSpec - GroupDescriptions")(
-    test("pass an empty object and return an error") {
-      assertTrue(
-        GroupDescriptions.make(Seq.empty) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
-        )
-      ) &&
-      assertTrue(
-        GroupDescriptions.make(Some(Seq.empty)) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
-        )
-      )
+  private val groupDescriptionsTest = suite("GroupDescriptions should")(
+    test("not be created from an empty value") {
+      val emptyDescription = Seq.empty[V2.StringLiteralV2]
+      assertTrue(GroupDescriptions.from(emptyDescription) == Left(GroupErrorMessages.GroupDescriptionsMissing))
     },
-    test("pass an invalid object and return an error") {
-      assertTrue(
-        GroupDescriptions.make(invalidDescription) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
-        )
-      ) &&
-      assertTrue(
-        GroupDescriptions.make(Some(invalidDescription)) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
-        )
-      )
+    test("not be created from an invalid value") {
+      assertTrue(GroupDescriptions.from(invalidDescription) == Left(GroupErrorMessages.GroupDescriptionsInvalid))
     },
-    test("pass a valid object and successfully create value object") {
-      assertTrue(GroupDescriptions.make(validDescription).toOption.get.value == validDescription) &&
-      assertTrue(GroupDescriptions.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        GroupDescriptions.make(None) == Validation.succeed(None)
-      )
+    test("be created from a valid value") {
+      assertTrue(GroupDescriptions.from(validDescription).map(_.value) == Right(validDescription))
     }
   )
 

@@ -5,9 +5,7 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
-import dsp.errors.BadRequestException
-import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.{StringValueCompanion, Value, WithFrom}
 import org.knora.webapi.slice.common.Value.{BooleanValue, StringValue}
 
 object Group {
@@ -28,28 +26,17 @@ object Group {
       }
   }
 
-  /**
-   * GroupDescriptions value object.
-   */
-  sealed abstract case class GroupDescriptions private (value: Seq[V2.StringLiteralV2])
-  object GroupDescriptions { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, GroupDescriptions] =
-      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
-      else {
-        val validatedDescriptions = value.map(d =>
-          Validation
-            .fromOption(Iri.toSparqlEncodedString(d.value))
-            .mapError(_ => BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid))
-            .map(s => V2.StringLiteralV2(s, d.language))
-        )
-        Validation.validateAll(validatedDescriptions).map(new GroupDescriptions(_) {})
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[GroupDescriptions]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  final case class GroupDescriptions private (override val value: Seq[V2.StringLiteralV2])
+      extends AnyVal
+      with Value[Seq[V2.StringLiteralV2]]
+  object GroupDescriptions extends WithFrom[Seq[V2.StringLiteralV2], GroupDescriptions] {
+    def from(value: Seq[V2.StringLiteralV2]): Either[String, GroupDescriptions] =
+      if (value.isEmpty) Left(GroupErrorMessages.GroupDescriptionsMissing)
+      else
+        Iri
+          .toSparqlEncodedString(value.head.value)
+          .toRight(GroupErrorMessages.GroupDescriptionsInvalid)
+          .map(_ => GroupDescriptions(value))
   }
 
   /**
