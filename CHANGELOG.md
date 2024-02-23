@@ -1,5 +1,34 @@
 # Changelog
 
+## [30.8.2](https://github.com/dasch-swiss/dsp-api/compare/v30.8.1...v30.8.2) (2024-02-22)
+
+
+### Maintenance
+
+* Add -Xfatal-warnings ([#3042](https://github.com/dasch-swiss/dsp-api/issues/3042)) ([8e51a94](https://github.com/dasch-swiss/dsp-api/commit/8e51a94404d0ee34b9182d564e338e79dc2a6545))
+* Add option to make warnings non-fatal locally. ([#3044](https://github.com/dasch-swiss/dsp-api/issues/3044)) ([0d2367e](https://github.com/dasch-swiss/dsp-api/commit/0d2367e67a3d7c94e43313d9779ffaa7b311d1d6))
+* Bump Sipi to 3.8.12 ([#3051](https://github.com/dasch-swiss/dsp-api/issues/3051)) ([cbddd97](https://github.com/dasch-swiss/dsp-api/commit/cbddd9778be9fb07db900ed3680d204626a7cd4b))
+* Dependency updates ([#3049](https://github.com/dasch-swiss/dsp-api/issues/3049)) ([bf60688](https://github.com/dasch-swiss/dsp-api/commit/bf6068865db7b3ca7e075c2e7a2ecd88e94d8c06))
+* Enable Default Union Graph in TriplestoreServiceInMemory (DEV-3295) ([#3052](https://github.com/dasch-swiss/dsp-api/issues/3052)) ([8b59d54](https://github.com/dasch-swiss/dsp-api/commit/8b59d543383581bf4ddb18d2fb70a6877a87b378))
+* Introduce repository and service for user and write queries with rdf4j's `SparqlBuilder` (DEV-3273) ([#3038](https://github.com/dasch-swiss/dsp-api/issues/3038)) ([f3df298](https://github.com/dasch-swiss/dsp-api/commit/f3df298e9c9a4b2574ed351c5871644203e40f36))
+* Migrate user group endpoints to Tapir and remove UserRouteADM ([#3046](https://github.com/dasch-swiss/dsp-api/issues/3046)) ([52c798d](https://github.com/dasch-swiss/dsp-api/commit/52c798d4a2760e079d0a4380baae9d6e27fa2689))
+* Migrate users endpoints to tapir (BasicInformation, Status, Password)  ([#3043](https://github.com/dasch-swiss/dsp-api/issues/3043)) ([6e16782](https://github.com/dasch-swiss/dsp-api/commit/6e16782f26385455a764fba6d00fdc4b457f4a18))
+* Minor dependency updates ([#3048](https://github.com/dasch-swiss/dsp-api/issues/3048)) ([aa9b718](https://github.com/dasch-swiss/dsp-api/commit/aa9b718085b36ef27f7c3cff91c98cfa76615fc3))
+* Patch dependency updates ([#3047](https://github.com/dasch-swiss/dsp-api/issues/3047)) ([5949e85](https://github.com/dasch-swiss/dsp-api/commit/5949e85aefa4448d0a9450368245a86709065bc8))
+* Remove `knora-ontologies` symlink (DEV-3236) ([#3035](https://github.com/dasch-swiss/dsp-api/issues/3035)) ([df28afc](https://github.com/dasch-swiss/dsp-api/commit/df28afc23f90ec067ef3e9e20ff1603e8bb4d501))
+* Remove token property from user which is always None ([#3041](https://github.com/dasch-swiss/dsp-api/issues/3041)) ([1b7f88b](https://github.com/dasch-swiss/dsp-api/commit/1b7f88b58eb8263481c819d7f81fd25d59db5ee0))
+* Remove TriplestoreService dependency from UsersResponder ([#3054](https://github.com/dasch-swiss/dsp-api/issues/3054)) ([61f04e0](https://github.com/dasch-swiss/dsp-api/commit/61f04e00ca73c80042fc3e307f9f7fb17803e5fd))
+* Replace watermark (DEV-3297) ([#3056](https://github.com/dasch-swiss/dsp-api/issues/3056)) ([60c804f](https://github.com/dasch-swiss/dsp-api/commit/60c804f5afcde0c24056f585f0d2499f51e0559f))
+* Update APP to v11.5.1 ([#3039](https://github.com/dasch-swiss/dsp-api/issues/3039)) ([8290921](https://github.com/dasch-swiss/dsp-api/commit/82909218503e1371a807e34441277139bb6ed425))
+* Use UserService to update a user ([#3053](https://github.com/dasch-swiss/dsp-api/issues/3053)) ([25ef280](https://github.com/dasch-swiss/dsp-api/commit/25ef2809653fb5150034f834d764cdb472ce6db6))
+
+
+### Bug Fixes
+
+* Allow hyphens in usernames (DEV-3306) ([#3055](https://github.com/dasch-swiss/dsp-api/issues/3055)) ([9398d21](https://github.com/dasch-swiss/dsp-api/commit/9398d21bfcb144df369ffee170f54eb55e7a94ee))
+* OWL property type of knora-api:valueAsString ([#3036](https://github.com/dasch-swiss/dsp-api/issues/3036)) ([686c8fb](https://github.com/dasch-swiss/dsp-api/commit/686c8fb8862124381c308e2d49eec340e65b39cf))
+* Remove UUID version check from IRI value objects (DEV-3310) ([#3033](https://github.com/dasch-swiss/dsp-api/issues/3033)) ([6de0374](https://github.com/dasch-swiss/dsp-api/commit/6de0374ab973661a17213a6cde656c88645a577e))
+
 ## [30.8.1](https://github.com/dasch-swiss/dsp-api/compare/v30.8.0...v30.8.1) (2024-02-08)
 
 

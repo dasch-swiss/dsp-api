@@ -5,78 +5,58 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
-
-import dsp.errors.BadRequestException
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value
+import org.knora.webapi.slice.common.Value.BooleanValue
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.slice.common.WithFrom
 
 object Group {
 
   /**
    * GroupName value object.
    */
-  sealed abstract case class GroupName private (value: String)
-  object GroupName { self =>
-    def make(value: String): Validation[BadRequestException, GroupName] =
-      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
-      else
-        Validation
-          .fromOption(Iri.toSparqlEncodedString(value))
-          .mapError(_ => BadRequestException(GroupErrorMessages.GroupNameInvalid))
-          .map(new GroupName(_) {})
-
-    def make(value: Option[String]): Validation[Throwable, Option[GroupName]] =
+  final case class GroupName private (value: String) extends AnyVal with StringValue
+  object GroupName extends StringValueCompanion[GroupName] {
+    def from(value: String): Either[String, GroupName] =
       value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+        case _ if value.isEmpty => Left(GroupErrorMessages.GroupNameMissing)
+        case _ =>
+          Iri
+            .toSparqlEncodedString(value)
+            .toRight(GroupErrorMessages.GroupNameInvalid)
+            .map(GroupName.apply)
       }
   }
 
-  /**
-   * GroupDescriptions value object.
-   */
-  sealed abstract case class GroupDescriptions private (value: Seq[V2.StringLiteralV2])
-  object GroupDescriptions { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, GroupDescriptions] =
-      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
-      else {
-        val validatedDescriptions = value.map(d =>
-          Validation
-            .fromOption(Iri.toSparqlEncodedString(d.value))
-            .mapError(_ => BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid))
-            .map(s => V2.StringLiteralV2(s, d.language))
-        )
-        Validation.validateAll(validatedDescriptions).map(new GroupDescriptions(_) {})
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[GroupDescriptions]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  final case class GroupDescriptions private (override val value: Seq[V2.StringLiteralV2])
+      extends AnyVal
+      with Value[Seq[V2.StringLiteralV2]]
+  object GroupDescriptions extends WithFrom[Seq[V2.StringLiteralV2], GroupDescriptions] {
+    def from(value: Seq[V2.StringLiteralV2]): Either[String, GroupDescriptions] =
+      if (value.isEmpty) Left(GroupErrorMessages.GroupDescriptionsMissing)
+      else
+        Iri
+          .toSparqlEncodedString(value.head.value)
+          .toRight(GroupErrorMessages.GroupDescriptionsInvalid)
+          .map(_ => GroupDescriptions(value))
   }
 
   /**
    * GroupStatus value object.
    */
-  sealed abstract case class GroupStatus private (value: Boolean)
-  object GroupStatus { self =>
-    val active: GroupStatus               = new GroupStatus(true) {}
-    val inactive: GroupStatus             = new GroupStatus(false) {}
-    def make(value: Boolean): GroupStatus = if (value) active else inactive
+  final case class GroupStatus private (value: Boolean) extends AnyVal with BooleanValue
+  object GroupStatus {
+    val active: GroupStatus               = new GroupStatus(true)
+    val inactive: GroupStatus             = new GroupStatus(false)
+    def from(value: Boolean): GroupStatus = if (value) active else inactive
   }
 
-  /**
-   * GroupSelfJoin value object.
-   */
-  sealed abstract case class GroupSelfJoin private (value: Boolean)
-  object GroupSelfJoin { self =>
-    def make(value: Boolean): Validation[Throwable, GroupSelfJoin] =
-      Validation.succeed(new GroupSelfJoin(value) {})
-    def make(value: Option[Boolean]): Validation[Throwable, Option[GroupSelfJoin]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+  final case class GroupSelfJoin private (value: Boolean) extends AnyVal with BooleanValue
+  object GroupSelfJoin {
+    val possible: GroupSelfJoin             = new GroupSelfJoin(true)
+    val impossible: GroupSelfJoin           = new GroupSelfJoin(false)
+    def from(value: Boolean): GroupSelfJoin = if (value) possible else impossible
   }
 }
 

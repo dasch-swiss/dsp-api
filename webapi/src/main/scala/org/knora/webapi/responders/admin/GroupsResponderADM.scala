@@ -475,7 +475,7 @@ final case class GroupsResponderADMLive(
                  !userPermissions.isSystemAdmin
                }
 
-        maybeStatus = changeGroupRequest.status.map(GroupStatus.make)
+        maybeStatus = changeGroupRequest.status.map(GroupStatus.from)
 
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(status = maybeStatus)
