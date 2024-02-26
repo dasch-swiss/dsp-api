@@ -40,5 +40,7 @@ WHERE {
     @if(maybeShortcode.nonEmpty) {
         ?project knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
     }
+
+    ?project a knora-admin:knoraProject .
     ?project ?p ?o .
 }
