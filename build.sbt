@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val sipiVersion                 = "v30.8.0"
+val sipiVersion                 = "v30.8.2"
 val tapirVersion                = "1.9.9"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.1"
