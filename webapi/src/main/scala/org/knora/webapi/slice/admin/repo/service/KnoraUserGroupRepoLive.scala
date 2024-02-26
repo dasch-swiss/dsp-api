@@ -32,7 +32,7 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
 
   override def findById(id: GroupIri): Task[Option[KnoraUserGroup]] = for {
     model    <- triplestore.queryRdfModel(UserGroupQueries.findById(id))
-    resource <- model.getResource(id.value).option
+    resource <- model.getResource(id.value)
     user     <- ZIO.foreach(resource)(toGroup)
   } yield user
 

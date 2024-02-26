@@ -50,7 +50,7 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     val construct = UserQueries.findById(id)
     for {
       model    <- triplestore.queryRdfModel(construct)
-      resource <- model.getResource(id.value).option
+      resource <- model.getResource(id.value)
       user     <- ZIO.foreach(resource)(toUser)
     } yield user
   }
