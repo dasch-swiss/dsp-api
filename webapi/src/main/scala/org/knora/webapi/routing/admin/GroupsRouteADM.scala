@@ -25,6 +25,7 @@ import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides a routing function for API routes that deal with groups.
@@ -53,13 +54,15 @@ final case class GroupsRouteADM(
         val id: Validation[Throwable, Option[GroupIri]] = apiRequest.id
           .map(id => Validation.fromEither(GroupIri.from(id).map(Some(_))).mapError(BadRequestException(_)))
           .getOrElse(Validation.succeed(None))
-        val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
-        val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
+        val name: Validation[Throwable, GroupName] =
+          Validation.fromEither(GroupName.from(apiRequest.name)).mapError(ValidationException.apply)
+        val descriptions: Validation[Throwable, GroupDescriptions] =
+          Validation.fromEither(GroupDescriptions.from(apiRequest.descriptions)).mapError(ValidationException.apply)
         val project: Validation[Throwable, ProjectIri] = Validation
           .fromEither(ProjectIri.from(apiRequest.project))
           .mapError(ValidationException.apply)
-        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.make(apiRequest.status))
-        val selfjoin: Validation[Throwable, GroupSelfJoin] = GroupSelfJoin.make(apiRequest.selfjoin)
+        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.from(apiRequest.status))
+        val selfjoin: Validation[Throwable, GroupSelfJoin] = Validation.succeed(GroupSelfJoin.from(apiRequest.selfjoin))
         val payloadValidation: Validation[Throwable, GroupCreatePayloadADM] =
           Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
 
@@ -87,10 +90,11 @@ final case class GroupsRouteADM(
                    )
                  )
                  .when(apiRequest.status.nonEmpty)
-          name             = GroupName.make(apiRequest.name)
-          descriptions     = GroupDescriptions.make(apiRequest.descriptions)
-          status           = Validation.succeed(apiRequest.status.map(GroupStatus.make))
-          selfjoin         = GroupSelfJoin.make(apiRequest.selfjoin)
+          name = validateOptionWithFrom(apiRequest.name, GroupName.from, BadRequestException.apply)
+          descriptions =
+            validateOptionWithFrom(apiRequest.descriptions, GroupDescriptions.from, BadRequestException.apply)
+          status           = Validation.succeed(apiRequest.status.map(GroupStatus.from))
+          selfjoin         = Validation.succeed(apiRequest.selfjoin.map(GroupSelfJoin.from))
           validatedPayload = Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
           iri <- Iri
                    .validateAndEscapeIri(value)
