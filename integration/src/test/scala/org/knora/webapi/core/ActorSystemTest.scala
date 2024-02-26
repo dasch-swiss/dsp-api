@@ -8,18 +8,8 @@ package org.knora.webapi.core
 import org.apache.pekko
 import zio.*
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-
 object ActorSystemTest {
 
-  def layer(sys: pekko.actor.ActorSystem): ZLayer[AppConfig, Nothing, ActorSystem] =
-    ZLayer.scoped {
-      ZIO.serviceWith[AppConfig] { config =>
-        new ActorSystem {
-          override val system: pekko.actor.ActorSystem            = sys
-          override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)
-        }
-      }
-    }
+  def layer(sys: pekko.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
+    ZLayer.scoped(ZIO.succeed(new ActorSystem { override val system: pekko.actor.ActorSystem = sys }))
 }
