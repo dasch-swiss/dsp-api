@@ -15,11 +15,11 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
-import org.knora.webapi.slice.admin.api.GroupsEndpoints.Requests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import zio.json.{DeriveJsonCodec, JsonCodec}
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -43,7 +43,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
     .in(zioJsonBody[GroupCreateRequest])
-    .out(sprayJsonBody[GroupsGetResponseADM])
+    .out(sprayJsonBody[GroupGetResponseADM])
     .description("Creates a new group.")
 
   private val securedEndpoins = Seq(getGroupMembers, postGroup).map(_.endpoint)
@@ -52,20 +52,24 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .map(_.tag("Admin Groups"))
 }
 
-object GroupsEndpoints {
-  object Requests {
-    final case class GroupCreateRequest(
-      id: Option[GroupIri] = None,
-      name: GroupName,
-      descriptions: GroupDescriptions,
-      project: ProjectIri,
-      status: GroupStatus,
-      selfjoin: GroupSelfJoin
-    )
-    object GroupCreateRequest {
-      implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
-    }
+object GroupsRequests {
+  import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+  final case class GroupCreateRequest(
+    id: Option[GroupIri] = None,
+    name: GroupName,
+    descriptions: GroupDescriptions,
+    project: ProjectIri,
+    status: GroupStatus,
+    selfjoin: GroupSelfJoin
+  )
+
+  object GroupCreateRequest {
+    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+    implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
   }
+}
+
+object GroupsEndpoints {
 
   val layer = ZLayer.derive[GroupsEndpoints]
 }

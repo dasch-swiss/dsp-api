@@ -35,7 +35,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.GroupsEndpoints.Requests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
