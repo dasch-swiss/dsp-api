@@ -23,7 +23,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
@@ -37,8 +36,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     List(Keyword.unsafeFrom("project1")),
     Some(Logo.unsafeFrom("logo.png")),
     Status.Active,
-    SelfJoin.CannotJoin,
-    List(InternalIri("http://rdfh.ch/projects/1234/onto1"))
+    SelfJoin.CannotJoin
   )
 
   private val someProjectTrig =
@@ -56,9 +54,6 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:projectLogo "logo.png" ;
         |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false .
-        |
-        |  <http://rdfh.ch/projects/1234/onto1> a owl:Ontology ;
-        |    knora-base:attachedToProject <http://rdfh.ch/projects/1234> .
         |}
         |""".stripMargin
 

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.errors.InconsistentRepositoryDataException
 import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import zio.*
+
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -25,7 +27,6 @@ import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import zio.*
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService
