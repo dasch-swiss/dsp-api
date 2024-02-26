@@ -233,9 +233,10 @@ final case class ProjectsResponderADMLive(
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
-    findByProjectIdentifier(id)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
+    projectService
+      .findByProjectIdentifier(id)
+      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
+      .map(ProjectGetResponseADM.apply)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -251,9 +252,9 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- findByProjectIdentifier(id)
-                   .flatMap(ZIO.fromOption(_))
-                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project <- projectService
+                   .findByProjectIdentifier(id)
+                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
              .when {
@@ -312,9 +313,9 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- findByProjectIdentifier(id)
-                   .flatMap(ZIO.fromOption(_))
-                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project <- projectService
+                   .findByProjectIdentifier(id)
+                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
              .when {
