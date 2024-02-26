@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
@@ -112,16 +111,11 @@ object KnoraProjectRepoLive {
       Construct(
         s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
             |CONSTRUCT {
             |  ?project ?p ?o .
             |} WHERE {
             |  BIND(IRI("${iri.value}") as ?project)
             |  ?project a knora-admin:knoraProject .
-            |  OPTIONAL {
-            |      ?ontology a owl:Ontology .
-            |      ?ontology knora-base:attachedToProject ?project .
-            |  }
             |  ?project ?p ?o .
             |}""".stripMargin
       )
@@ -132,17 +126,12 @@ object KnoraProjectRepoLive {
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
             |CONSTRUCT {
             |  ?project ?p ?o .
             |} WHERE {
             |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
-            |    OPTIONAL{
-            |        ?ontology a owl:Ontology .
-            |        ?ontology knora-base:attachedToProject ?project .
-            |    }
-            |    ?project ?p ?o .
+            |  ?project ?p ?o .
             |}""".stripMargin
       )
 
@@ -151,34 +140,23 @@ object KnoraProjectRepoLive {
         s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |PREFIX owl: <http://www.w3.org/2002/07/owl#>
             |CONSTRUCT {
             |  ?project ?p ?o .
             |} WHERE {
             |  ?project knora-admin:projectShortname "${shortname.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
-            |    OPTIONAL{
-            |        ?ontology a owl:Ontology .
-            |        ?ontology knora-base:attachedToProject ?project .
-            |    }
-            |    ?project ?p ?o .
+            |  ?project ?p ?o .
             |}""".stripMargin
       )
 
     def findAll: Construct = {
-      val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
-      def projectPo                 = tp(project, p, o)
+      val (project, p, o) = (variable("project"), variable("p"), variable("o"))
+      def projectPo       = tp(project, p, o)
       val query =
         Queries
           .CONSTRUCT(projectPo)
-          .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS, OWL.NS)
-          .where(
-            project
-              .isA(Vocabulary.KnoraAdmin.KnoraProject)
-              .and(ontology.isA(OWL.ONTOLOGY).andHas(Vocabulary.KnoraBase.attachedToProject, project).optional)
-              .and(projectPo)
-          )
+          .prefix(Vocabulary.KnoraAdmin.NS)
+          .where(project.isA(Vocabulary.KnoraAdmin.KnoraProject).and(projectPo))
       Construct(query.getQueryString)
     }
 
