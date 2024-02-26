@@ -33,7 +33,7 @@ final case class KnoraProjectRepoLive(
 
   override def findAll(): Task[List[KnoraProject]] =
     for {
-      model     <- triplestore.queryRdfModel(ProjectQueries.getAllProjects)
+      model     <- triplestore.queryRdfModel(ProjectQueries.findAll)
       resources <- model.getSubjectResources
       projects <- ZIO.foreach(resources)(res =>
                     toKnoraProject(res).orElseFail(
@@ -53,21 +53,21 @@ final case class KnoraProjectRepoLive(
 
   private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByIri(iri))
+      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByIri(iri))
       resource <- model.getResource(iri.value)
       project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByShortcode(shortcode))
+      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByShortcode(shortcode))
       resource <- model.getResourceByPropertyStringValue(ProjectShortcode, shortcode.value)
       project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
   private def findOneByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
     for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.getProjectByShortname(shortname))
+      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByShortname(shortname))
       resource <- model.getResourceByPropertyStringValue(ProjectShortname, shortname.value)
       project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
@@ -99,7 +99,7 @@ final case class KnoraProjectRepoLive(
     project: KnoraProject,
     settings: RestrictedView
   ): Task[Unit] =
-    triplestore.query(Update(ProjectQueries.setRestrictedView(project.id, settings.size, settings.watermark)))
+    triplestore.query(Update(ProjectQueries.setProjectRestrictedView(project.id, settings.size, settings.watermark)))
 
 }
 
@@ -107,7 +107,7 @@ object KnoraProjectRepoLive {
 
   private object ProjectQueries {
 
-    def getProjectByIri(iri: ProjectIri): Construct =
+    def findOneByIri(iri: ProjectIri): Construct =
       Construct(
         s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -125,7 +125,7 @@ object KnoraProjectRepoLive {
             |}""".stripMargin
       )
 
-    def getProjectByShortcode(shortcode: Shortcode): Construct =
+    def findOneByShortcode(shortcode: Shortcode): Construct =
       Construct(
         s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -145,7 +145,7 @@ object KnoraProjectRepoLive {
             |}""".stripMargin
       )
 
-    def getProjectByShortname(shortname: Shortname): Construct =
+    def findOneByShortname(shortname: Shortname): Construct =
       Construct(
         s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -165,7 +165,7 @@ object KnoraProjectRepoLive {
             |}""".stripMargin
       )
 
-    def getAllProjects: Construct = {
+    def findAll: Construct = {
       val (project, p, o, ontology) = (variable("project"), variable("p"), variable("o"), variable("ontology"))
       def projectPo                 = tp(project, p, o)
       val query =
@@ -181,7 +181,7 @@ object KnoraProjectRepoLive {
       Construct(query.getQueryString)
     }
 
-    def setRestrictedView(projectIri: ProjectIri, size: RestrictedViewSize, watermark: Boolean): String =
+    def setProjectRestrictedView(projectIri: ProjectIri, size: RestrictedViewSize, watermark: Boolean): String =
       s"""
          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
