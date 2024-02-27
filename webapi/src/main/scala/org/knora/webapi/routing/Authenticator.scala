@@ -371,7 +371,7 @@ final case class AuthenticatorLive(
     if (credentials.isEmpty) {
       ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser)
     } else {
-      getUserADMThroughCredentialsV2(credentials).map(_.ofType(UserInformationTypeADM.Full))
+      getUserADMThroughCredentialsV2(credentials).map(_.ofType(UserInformationType.Full))
     }
   }
 

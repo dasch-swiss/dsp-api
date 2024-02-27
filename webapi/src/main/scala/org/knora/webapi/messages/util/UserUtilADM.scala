@@ -10,7 +10,7 @@ import zio.*
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType.Full
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.domain.model.User

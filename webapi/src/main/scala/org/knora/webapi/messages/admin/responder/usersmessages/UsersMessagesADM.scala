@@ -40,7 +40,7 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessag
  */
 case class UserGetByIriADM(
   identifier: UserIri,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
+  userInformationTypeADM: UserInformationType = UserInformationType.Short,
   requestingUser: User
 ) extends UsersResponderRequestADM
 
@@ -126,12 +126,12 @@ case class UserOperationResponseADM(user: User) extends AdminKnoraResponseADM {
  * sensitive information to the outside world. Since in API Admin [[User]] is returned with some responses,
  * we use 'restricted' in those cases.
  */
-sealed trait UserInformationTypeADM
-object UserInformationTypeADM {
-  case object Public     extends UserInformationTypeADM
-  case object Short      extends UserInformationTypeADM
-  case object Restricted extends UserInformationTypeADM
-  case object Full       extends UserInformationTypeADM
+sealed trait UserInformationType
+object UserInformationType {
+  case object Public     extends UserInformationType
+  case object Short      extends UserInformationType
+  case object Restricted extends UserInformationType
+  case object Full       extends UserInformationType
 
 }
 

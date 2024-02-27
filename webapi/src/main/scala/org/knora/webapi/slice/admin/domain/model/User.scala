@@ -17,7 +17,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.IntValueCompanion
@@ -88,9 +88,9 @@ final case class User(
    *
    * @return a [[User]]
    */
-  def ofType(userTemplateType: UserInformationTypeADM): User =
+  def ofType(userTemplateType: UserInformationType): User =
     userTemplateType match {
-      case UserInformationTypeADM.Public =>
+      case UserInformationType.Public =>
         self.copy(
           username = "",
           email = "",
@@ -101,16 +101,16 @@ final case class User(
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.Short =>
+      case UserInformationType.Short =>
         self.copy(
           password = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.Restricted =>
+      case UserInformationType.Restricted =>
         self.copy(password = None)
-      case UserInformationTypeADM.Full =>
+      case UserInformationType.Full =>
         self
     }
 
@@ -129,6 +129,11 @@ final case class User(
   def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
 
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
+
+  def filterUserInformation(requestingUser: User, infoType: UserInformationType): User =
+    if (requestingUser.permissions.isSystemAdmin || requestingUser.id == this.id || requestingUser.isSystemUser)
+      this.ofType(infoType)
+    else this.ofType(UserInformationType.Public)
 }
 
 final case class UserIri private (value: String) extends AnyVal with StringValue

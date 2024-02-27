@@ -22,7 +22,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIriADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceClearCache
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -289,7 +289,7 @@ final case class ProjectsResponderADMLive(
             .ask[Option[User]](
               UserGetByIriADM(
                 identifier = UserIri.unsafeFrom(userIri),
-                userInformationTypeADM = UserInformationTypeADM.Restricted,
+                userInformationTypeADM = UserInformationType.Restricted,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
             )
@@ -343,7 +343,7 @@ final case class ProjectsResponderADMLive(
                                                     .ask[Option[User]](
                                                       UserGetByIriADM(
                                                         identifier = UserIri.unsafeFrom(userIri),
-                                                        userInformationTypeADM = UserInformationTypeADM.Restricted,
+                                                        userInformationTypeADM = UserInformationType.Restricted,
                                                         requestingUser = KnoraSystemInstances.Users.SystemUser
                                                       )
                                                     )

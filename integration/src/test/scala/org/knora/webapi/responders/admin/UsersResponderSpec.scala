@@ -13,6 +13,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
@@ -30,13 +31,11 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInforma
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * This spec is used to test the messages received by the [[UsersResponder]] actor.
- */
 class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser   = SharedTestDataADM.rootUser
@@ -67,6 +66,51 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         assertFailsWithA[ForbiddenException](exit)
       }
     }
+
+    "calling getUserByEmail" should {
+
+      def getUserByEmail(email: Email, requestingUser: User): ZIO[UsersRestService, Throwable, UserResponseADM] =
+        ZIO.serviceWithZIO[UsersRestService](_.getUserByEmail(requestingUser, email))
+
+      "return a profile if the user (root user) is known" in {
+        val actual = UnsafeZioRun.runOrThrow(
+          getUserByEmail(Email.unsafeFrom(rootUser.email), KnoraSystemInstances.Users.SystemUser)
+        )
+        actual.user shouldBe rootUser.ofType(UserInformationType.Restricted)
+      }
+
+      "return 'None' when the user is unknown" in {
+        val exit = UnsafeZioRun.run(
+          getUserByEmail(Email.unsafeFrom("userwrong@example.com"), KnoraSystemInstances.Users.SystemUser)
+        )
+        assertFailsWithA[NotFoundException](exit)
+      }
+    }
+
+    "calling getUserByUsername" should {
+
+      def getUserByUsername(requestingUser: User, username: Username) =
+        ZIO.serviceWithZIO[UsersRestService](_.getUserByUsername(requestingUser, username))
+
+      "return a profile if the user (root user) is known" in {
+        val actual = UnsafeZioRun.runOrThrow(
+          getUserByUsername(KnoraSystemInstances.Users.SystemUser, rootUser.getUsername)
+        )
+
+        actual.user shouldBe rootUser.ofType(UserInformationType.Restricted)
+      }
+
+      "return 'None' when the user is unknown" in {
+        val exit = UnsafeZioRun.run(
+          getUserByUsername(
+            KnoraSystemInstances.Users.SystemUser,
+            Username.unsafeFrom("userwrong")
+          )
+        )
+        assertFailsWithA[NotFoundException](exit)
+      }
+    }
+
   }
 
   "The UsersResponder " when {
@@ -75,66 +119,18 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           UsersResponder.findUserByIri(
             UserIri.unsafeFrom(rootUser.id),
-            UserInformationTypeADM.Full,
+            UserInformationType.Full,
             KnoraSystemInstances.Users.SystemUser
           )
         )
-        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
+        actual shouldBe Some(rootUser.ofType(UserInformationType.Full))
       }
 
       "return 'None' when the user is unknown" in {
         val actual = UnsafeZioRun.runOrThrow(
           UsersResponder.findUserByIri(
             UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
-            UserInformationTypeADM.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
-        actual shouldBe None
-      }
-    }
-
-    "asked about an user identified by 'email'" should {
-      "return a profile if the user (root user) is known" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByEmail(
-            Email.unsafeFrom(rootUser.email),
-            UserInformationTypeADM.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
-        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
-      }
-
-      "return 'None' when the user is unknown" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByEmail(
-            Email.unsafeFrom("userwrong@example.com"),
-            UserInformationTypeADM.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
-        actual shouldBe None
-      }
-    }
-
-    "asked about an user identified by 'username'" should {
-      "return a profile if the user (root user) is known" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByUsername(
-            Username.unsafeFrom(rootUser.username),
-            UserInformationTypeADM.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
-        actual shouldBe Some(rootUser.ofType(UserInformationTypeADM.Full))
-      }
-
-      "return 'None' when the user is unknown" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByUsername(
-            Username.unsafeFrom("userwrong"),
-            UserInformationTypeADM.Full,
+            UserInformationType.Full,
             KnoraSystemInstances.Users.SystemUser
           )
         )
@@ -461,7 +457,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
         )
-        received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
+        received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
     }
 
@@ -538,7 +534,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
         )
-        received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
+        received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
     }
 

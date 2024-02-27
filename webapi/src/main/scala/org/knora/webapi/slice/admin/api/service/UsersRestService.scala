@@ -11,7 +11,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
@@ -58,10 +58,10 @@ final case class UsersRestService(
   } yield external
 
   def getUserByEmail(requestingUser: User, email: Email): Task[UserResponseADM] = for {
-    internal <- responder
-                  .findUserByEmail(email, UserInformationTypeADM.Restricted, requestingUser)
-                  .someOrFail(NotFoundException(s"User with email '${email.value}' not found"))
-                  .map(UserResponseADM.apply)
+    user <- userService
+              .findUserByEmail(email)
+              .someOrFail(NotFoundException(s"User with email '${email.value}' not found"))
+    internal  = UserResponseADM(user.filterUserInformation(requestingUser, UserInformationType.Restricted))
     external <- format.toExternal(internal)
   } yield external
 
@@ -87,16 +87,16 @@ final case class UsersRestService(
     responder.findUserProjectAdminMemberships(userIri).flatMap(format.toExternal)
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
-    internal <- responder
-                  .findUserByUsername(username, UserInformationTypeADM.Restricted, requestingUser)
-                  .someOrFail(NotFoundException(s"User with username '${username.value}' not found"))
-                  .map(UserResponseADM.apply)
+    user <- userService
+              .findUserByUsername(username)
+              .someOrFail(NotFoundException(s"User with username '${username.value}' not found"))
+    internal  = UserResponseADM(user.filterUserInformation(requestingUser, UserInformationType.Restricted))
     external <- format.toExternal(internal)
   } yield external
 
   def getUserByIri(requestingUser: User, userIri: UserIri): Task[UserResponseADM] = for {
     internal <- responder
-                  .findUserByIri(userIri, UserInformationTypeADM.Restricted, requestingUser)
+                  .findUserByIri(userIri, UserInformationType.Restricted, requestingUser)
                   .someOrFail(NotFoundException(s"User '${userIri.value}' not found"))
                   .map(UserResponseADM.apply)
     external <- format.toExternal(internal)
