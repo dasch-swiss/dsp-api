@@ -364,15 +364,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Returns the user's group memberships as a sequence of [[GroupADM]]
-   *
-   * @param userIri              the IRI of the user.
-   * @return a sequence of [[GroupADM]].
-   */
-  private def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
-    userService.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty))
-
-  /**
    * Adds a user to a group.
    *
    * @param userIri              the user's IRI.
@@ -569,9 +560,6 @@ object UsersResponder {
     userIri: UserIri
   ): ZIO[UsersResponder, Throwable, UserProjectAdminMembershipsGetResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.findUserProjectAdminMemberships(userIri))
-
-  def findGroupMembershipsByIri(userIri: UserIri): ZIO[UsersResponder, Throwable, Seq[GroupADM]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findGroupMembershipsByIri(userIri))
 
   def createNewUserADM(
     req: UserCreateRequest,
