@@ -119,7 +119,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .description("Add a user as an admin to a project identified by IRI.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.post
-      .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIri)
+      .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Add a user to a group identified by IRI.")
   }
@@ -168,7 +168,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .description("Remove a user form an admin project membership identified by IRI.")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
-      .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIri)
+      .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(sprayJsonBody[UserOperationResponseADM])
       .description("Remove a user form an group membership identified by IRI.")
   }

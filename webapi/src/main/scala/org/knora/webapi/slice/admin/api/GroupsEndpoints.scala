@@ -14,7 +14,7 @@ import zio.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -31,12 +31,12 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Returns all groups.")
 
   val getGroupByIri = baseEndpoints.publicEndpoint.get
-    .in(base / groupIri)
+    .in(base / groupIriPathVar)
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Returns a single group identified by IRI.")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
-    .in(base / groupIri / "members")
+    .in(base / groupIriPathVar / "members")
     .out(sprayJsonBody[GroupMembersGetResponseADM])
     .description("Returns all members of a single group.")
 
@@ -64,12 +64,10 @@ object GroupsRequests {
   )
 
   object GroupCreateRequest {
-    import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
     implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
   }
 }
 
 object GroupsEndpoints {
-
   val layer = ZLayer.derive[GroupsEndpoints]
 }
