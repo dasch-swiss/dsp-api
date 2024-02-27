@@ -20,7 +20,6 @@ import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.WithFrom
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
   id: ProjectIri,
@@ -31,8 +30,7 @@ case class KnoraProject(
   keywords: List[Keyword],
   logo: Option[Logo],
   status: Status,
-  selfjoin: SelfJoin,
-  ontologies: List[InternalIri]
+  selfjoin: SelfJoin
 )
 
 object KnoraProject {
@@ -98,6 +96,9 @@ object KnoraProject {
       with Value[V2.StringLiteralV2]
 
   object Description extends WithFrom[V2.StringLiteralV2, Description] {
+
+    def unsafeFrom(text: String, lang: Option[String]): Description =
+      Description.from(V2.StringLiteralV2(text, lang)).fold(e => throw new IllegalArgumentException(e), identity)
 
     def from(literal: V2.StringLiteralV2): Either[String, Description] =
       if (literal.value.length >= 3 && literal.value.length <= 40960) Right(Description(literal))

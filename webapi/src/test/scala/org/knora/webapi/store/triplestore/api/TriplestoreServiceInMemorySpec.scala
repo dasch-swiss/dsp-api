@@ -253,7 +253,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         }
       ),
       suite("insertDataIntoTriplestore")(
-        test("given an empty list insertDataIntoTriplestore will insert the defauls") {
+        test("given an empty list insertDataIntoTriplestore will insert the defaults") {
           for {
             _       <- TriplestoreService.insertDataIntoTriplestore(List.empty, prependDefaults = true)
             ds      <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)

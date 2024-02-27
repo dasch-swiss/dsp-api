@@ -17,10 +17,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.cache.api.CacheService
 
 final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,
-  private val projectRepo: KnoraProjectRepo
+  private val projectRepo: KnoraProjectRepo,
+  private val cacheService: CacheService
 ) {
 
   def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
@@ -29,23 +31,32 @@ final case class ProjectADMService(
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
 
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
+    cacheService.getProjectADM(projectId).flatMap {
+      case Some(project) => ZIO.some(project)
+      case None =>
+        projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM)).tap {
+          case Some(prj) => cacheService.putProjectADM(prj)
+          case None      => ZIO.unit
+        }
+    }
 
-  private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] =
-    ZIO.attempt(
-      ProjectADM(
-        id = knoraProject.id.value,
-        shortname = knoraProject.shortname.value,
-        shortcode = knoraProject.shortcode.value,
-        longname = knoraProject.longname.map(_.value),
-        description = knoraProject.description.map(_.value),
-        keywords = knoraProject.keywords.map(_.value),
-        logo = knoraProject.logo.map(_.value),
-        status = knoraProject.status.value,
-        selfjoin = knoraProject.selfjoin.value,
-        ontologies = knoraProject.ontologies.map(_.value)
-      ).unescape
-    )
+  private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
+    ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
+    prj <- ZIO.attempt(
+             ProjectADM(
+               id = knoraProject.id.value,
+               shortname = knoraProject.shortname.value,
+               shortcode = knoraProject.shortcode.value,
+               longname = knoraProject.longname.map(_.value),
+               description = knoraProject.description.map(_.value),
+               keywords = knoraProject.keywords.map(_.value),
+               logo = knoraProject.logo.map(_.value),
+               status = knoraProject.status.value,
+               selfjoin = knoraProject.selfjoin.value,
+               ontologies = ontologies
+             ).unescape
+           )
+  } yield prj
 
   private def toKnoraProject(project: ProjectADM): KnoraProject =
     KnoraProject(
@@ -59,8 +70,7 @@ final case class ProjectADMService(
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
       status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin),
-      ontologies = project.ontologies.map(InternalIri.apply).toList
+      selfjoin = SelfJoin.from(project.selfjoin)
     )
 
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =

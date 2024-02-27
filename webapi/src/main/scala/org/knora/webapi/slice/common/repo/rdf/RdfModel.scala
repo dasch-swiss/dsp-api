@@ -32,7 +32,7 @@ final case class LangString(value: String, lang: Option[String])
 /**
  * A wrapper around Jena's [[Resource]].
  * Exposes access to the resource's properties.
- * Should be created via [[RdfModel.getResource]].
+ * Should be created via [[RdfModel.getResourceOrFail]].
  */
 final case class RdfResource(private val res: Resource) {
 
@@ -354,6 +354,7 @@ final case class RdfResource(private val res: Resource) {
       nonEmptyChunk <- ZIO.fromOption(NonEmptyChunk.fromChunk(chunk)).orElseFail(ObjectNotPresent(propertyIri))
     } yield nonEmptyChunk
 
+  def getSubjectIri: UIO[InternalIri] = ZIO.succeed(InternalIri(res.getURI))
 }
 
 /**
@@ -364,21 +365,60 @@ final case class RdfModel private (private val model: Model) {
 
   /**
    * Returns a [[RdfResource]] for the given subject IRI.
+   *
+   * @param subjectIri the IRI of the resource.
+   * @return           the [[RdfResource]] or None if the resource is not present.
+   */
+  def getResource(subjectIri: String): UIO[Option[RdfResource]] =
+    for {
+      resource   <- ZIO.attempt(model.createResource(subjectIri)).orDie
+      rdfResource = Option.when(resource.listProperties().hasNext)(RdfResource(resource))
+    } yield rdfResource
+
+  /**
+   * Returns a [[RdfResource]] for the given subject IRI.
    * Fails if no resource with the given IRI is present in the model.
    *
    * @param subjectIri the IRI of the resource.
    * @return the [[RdfResource]] or an [[RdfError]] if the resource is not present.
    */
-  def getResource(subjectIri: String): IO[RdfError, RdfResource] =
+  def getResourceOrFail(subjectIri: String): IO[RdfError, RdfResource] =
+    getResource(subjectIri).someOrFail(ResourceNotPresent(subjectIri))
+
+  /**
+   * Returns a [[RdfResource]] for a given property IRI and value.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param value       the value of the object.
+   * @return            the [[RdfResource]] or None if the resource is not present.
+   */
+  def getResourceByPropertyStringValue(propertyIri: String, value: String): UIO[Option[RdfResource]] =
+    getResourceByPropertyStringValueOrFail(propertyIri, value).option
+
+  /**
+   * Returns a [[RdfResource]] for a given property IRI and value.
+   * Fails if no resource with the given property IRI and value is present in the model.
+   *
+   * @param propertyIri the IRI of the predicate.
+   * @param value       the value of the object.
+   * @return            the [[RdfResource]] or an [[RdfError]] if the resource is not present.
+   */
+  def getResourceByPropertyStringValueOrFail(propertyIri: String, value: String): IO[RdfError, RdfResource] = {
+    val iter = model.listStatements(null, model.createProperty(propertyIri), value)
+    val iri  = Option.when(iter.hasNext)(iter.nextStatement().getSubject.getURI)
     for {
-      resource <- ZIO.attempt(model.createResource(subjectIri)).orDie
-      _        <- ZIO.fail(ResourceNotPresent(subjectIri)).unless(resource.listProperties().hasNext)
-    } yield RdfResource(resource)
+      iri <- ZIO.fromOption(iri).orElseFail(ResourceNotPresent(s"No resource with: $propertyIri -> $value"))
+      res <- getResourceOrFail(iri)
+    } yield res
+  }
 
   def getResourcesRdfType(objectClass: String): IO[RdfError, Iterator[RdfResource]] = for {
     objClassProp  <- ZIO.attempt(model.createProperty(objectClass)).orDie
     resourcesJIter = model.listResourcesWithProperty(RDF.`type`, objClassProp)
   } yield resourcesJIter.asScala.map(RdfResource)
+
+  def getSubjectResources: UIO[Chunk[RdfResource]] =
+    ZIO.succeed(Chunk.fromIterator(model.listSubjects().asScala).map(RdfResource))
 }
 
 object RdfModel {

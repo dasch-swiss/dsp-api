@@ -34,7 +34,7 @@ sealed abstract case class CreatePropertyCommand private (
 
 object CreatePropertyCommand {
   def make(
-    ontologyIri: SmartIri, // TODO: should eventally be schemaId value object, etc.
+    ontologyIri: SmartIri,
     lastModificationDate: Instant,
     propertyIri: SmartIri,
     subjectType: Option[SmartIri],

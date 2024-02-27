@@ -28,7 +28,6 @@ object LanguageCode { self =>
   val FR: String = "fr"
   val IT: String = "it"
   val RM: String = "rm"
-  // TODO-BL: with NewTypes we shouldn't need the strings separately anymore, as the valueobject can be used just like a string value
 
   val SupportedLanguageCodes: Set[String] = Set(
     DE,

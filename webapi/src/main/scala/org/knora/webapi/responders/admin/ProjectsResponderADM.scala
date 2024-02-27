@@ -14,7 +14,6 @@ import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
@@ -25,8 +24,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIriADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -43,7 +40,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -79,7 +75,7 @@ trait ProjectsResponderADM {
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
    * If project is not found in cache but in triplestore, then project is written to cache.
    */
-  def getProjectFromCacheOrTriplestore(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
+  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -175,7 +171,6 @@ trait ProjectsResponderADM {
 }
 
 final case class ProjectsResponderADMLive(
-  private val cacheServiceSettings: CacheServiceSettings,
   private val iriService: IriService,
   private val messageRelay: MessageRelay,
   private val permissionsResponderADM: PermissionsResponderADM,
@@ -196,7 +191,7 @@ final case class ProjectsResponderADMLive(
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectGetADM(identifier)        => getProjectFromCacheOrTriplestore(identifier)
+    case ProjectGetADM(identifier)        => findByProjectIdentifier(identifier)
     case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
@@ -238,9 +233,10 @@ final case class ProjectsResponderADMLive(
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
   override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
-    getProjectFromCacheOrTriplestore(id)
-      .flatMap(ZIO.fromOption(_))
-      .mapBoth(_ => NotFoundException(s"Project '${getId(id)}' not found"), ProjectGetResponseADM)
+    projectService
+      .findByProjectIdentifier(id)
+      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
+      .map(ProjectGetResponseADM.apply)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -256,9 +252,9 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getProjectFromCacheOrTriplestore(id)
-                   .flatMap(ZIO.fromOption(_))
-                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project <- projectService
+                   .findByProjectIdentifier(id)
+                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
              .when {
@@ -317,9 +313,9 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
-      project <- getProjectFromCacheOrTriplestore(id)
-                   .flatMap(ZIO.fromOption(_))
-                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project <- projectService
+                   .findByProjectIdentifier(id)
+                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
              .when {
@@ -499,8 +495,7 @@ final case class ProjectsResponderADMLive(
       for {
         _ <- projectService
                .findByProjectIdentifier(projectId)
-               .flatMap(ZIO.fromOption(_))
-               .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
+               .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
 
         // we are changing the project, so lets get rid of the cached copy
         _ <- messageRelay.ask[Any](CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
@@ -523,8 +518,7 @@ final case class ProjectsResponderADMLive(
         updatedProject <-
           projectService
             .findByProjectIdentifier(projectId)
-            .flatMap(ZIO.fromOption(_))
-            .orElseFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+            .someOrFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
         _ <- ZIO.logDebug(
                s"updateProjectADM - projectUpdatePayload: $projectUpdatePayload /  updatedProject: $updatedProject"
@@ -794,46 +788,8 @@ final case class ProjectsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
-  ////////////////////
-  // Helper Methods //
-  ////////////////////
-
-  /**
-   * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
-   * If project is not found in cache but in triplestore, then project is written to cache.
-   */
-  override def getProjectFromCacheOrTriplestore(
-    identifier: ProjectIdentifierADM
-  ): Task[Option[ProjectADM]] =
-    if (cacheServiceSettings.cacheServiceEnabled) {
-      // caching enabled
-      getProjectFromCache(identifier).flatMap {
-        case None =>
-          // none found in cache. getting from triplestore.
-          projectService.findByProjectIdentifier(identifier).flatMap {
-            case None =>
-              // also none found in triplestore. finally returning none.
-              logger.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.succeed(None)
-            case Some(project) =>
-              // found a project in the triplestore. need to write to cache.
-              logger.debug(
-                "getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
-              )
-              // writing project to cache and afterwards returning the project found in the triplestore
-              messageRelay
-                .ask[Unit](CacheServicePutProjectADM(project))
-                .as(Some(project))
-          }
-        case Some(project) =>
-          logger.debug("getProjectFromCacheOrTriplestore - found in cache. returning project.")
-          ZIO.succeed(Some(project))
-      }
-    } else {
-      // caching disabled
-      logger.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      projectService.findByProjectIdentifier(identifier)
-    }
+  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+    projectService.findByProjectIdentifier(identifier)
 
   /**
    * Helper method for checking if a project identified by shortname exists.
@@ -852,18 +808,15 @@ final case class ProjectsResponderADMLive(
    */
   private def projectByShortcodeExists(shortcode: String): Task[Boolean] =
     triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByShortcode(shortcode)))
-
-  private def getProjectFromCache(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    messageRelay.ask[Option[ProjectADM]](CacheServiceGetProjectADM(identifier)).map(_.map(_.unescape))
 }
 
 object ProjectsResponderADMLive {
-  val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionsResponderADM & PredicateObjectMapper & ProjectADMService & StringFormatter & TriplestoreService,
+  val layer: ZLayer[
+    IriService & MessageRelay & PermissionsResponderADM & PredicateObjectMapper & ProjectADMService & StringFormatter & TriplestoreService,
+    Nothing,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
-      c       <- ZIO.service[AppConfig].map(new CacheServiceSettings(_))
       iris    <- ZIO.service[IriService]
       ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
@@ -871,7 +824,7 @@ object ProjectsResponderADMLive {
       po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      handler <- mr.subscribe(ProjectsResponderADMLive(c, iris, mr, pr, po, ps, ts, sf))
+      handler <- mr.subscribe(ProjectsResponderADMLive(iris, mr, pr, po, ps, ts, sf))
     } yield handler
   }
 }

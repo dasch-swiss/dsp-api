@@ -12,6 +12,7 @@ import org.apache.jena.tdb.TDB
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
+import zio.Console
 import zio.RIO
 import zio.Ref
 import zio.Scope
@@ -247,7 +248,12 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     datasetRef.get
 
   override def printDataset: UIO[Unit] =
-    getDataset.flatMap(ds => ZIO.logInfo(s"TriplestoreServiceInMemory.printDataset: ${printDatasetContents(ds)}"))
+    for {
+      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+      ds <- getDataset
+      _  <- Console.printLine(s"TriplestoreServiceInMemory.printDataset:").orDie
+      _   = printDatasetContents(ds)
+    } yield ()
 
   def printDatasetContents(dataset: Dataset): Unit = {
     // Iterate over the named models
@@ -262,10 +268,6 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       // Write the model in Turtle format
       RDFDataMgr.write(System.out, model, org.apache.jena.riot.Lang.TURTLE)
     }
-
-    // Print the default model
-    println("Default Graph:\n")
-    RDFDataMgr.write(System.out, dataset.getDefaultModel, org.apache.jena.riot.Lang.TURTLE)
     dataset.end()
   }
 
