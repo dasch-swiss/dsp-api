@@ -58,7 +58,7 @@ import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -84,7 +84,7 @@ object LayersLive {
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2
+      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2 & UsersRestService
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -102,7 +102,7 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheServiceInMemImpl.layer,
+      CacheServiceLive.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,

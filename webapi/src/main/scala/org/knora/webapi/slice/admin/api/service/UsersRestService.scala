@@ -29,18 +29,23 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
+  userService: UserService,
   responder: UsersResponder,
   format: KnoraResponseRenderer
 ) {
 
-  def listAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
-    _        <- auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser)
-    internal <- responder.findAllUsers()
+  def getAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
+    _ <- auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser)
+    internal <- userService.findAll
+                  .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
+                  .map(_.sorted)
+                  .map(UsersGetResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
 

@@ -21,12 +21,6 @@ trait CacheServiceRequestMessageHandler extends MessageHandler
 final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheService)
     extends CacheServiceRequestMessageHandler {
 
-  private val cacheServiceWriteUserTimer = Metric
-    .timer(
-      name = "cache-service-write-user",
-      chronoUnit = ChronoUnit.NANOS
-    )
-
   private val cacheServiceWriteProjectTimer = Metric
     .timer(
       name = "cache-service-write-project",
@@ -41,20 +35,13 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[CacheServiceRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case CacheServicePutUserADM(value)              => cacheService.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
-    case CacheServiceGetUserByIriADM(iri)           => cacheService.getUserByIriADM(iri)
-    case CacheServiceGetUserByEmailADM(email)       => cacheService.getUserByEmailADM(email)
-    case CacheServiceGetUserByUsernameADM(username) => cacheService.getUserByUsernameADM(username)
     case CacheServicePutProjectADM(value) =>
       cacheService.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
     case CacheServiceGetProjectADM(identifier) =>
       cacheService.getProjectADM(identifier) @@ cacheServiceReadProjectTimer.trackDuration
-    case CacheServicePutString(key, value)   => cacheService.putStringValue(key, value)
-    case CacheServiceGetString(key)          => cacheService.getStringValue(key)
-    case CacheServiceRemoveValues(keys)      => cacheService.removeValues(keys)
-    case CacheServiceFlushDB(requestingUser) => cacheService.flushDB(requestingUser)
-    case CacheServiceGetStatus               => cacheService.getStatus
-    case other                               => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
+    case CacheServiceClearCache => cacheService.clearCache()
+    case CacheServiceGetStatus  => cacheService.getStatus
+    case other                  => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
   }
 }
 
