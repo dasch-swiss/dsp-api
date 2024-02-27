@@ -33,7 +33,7 @@ case class UsersEndpointsHandler(
 
   private val getUsersHandler = SecuredEndpointHandler[Unit, UsersGetResponseADM](
     usersEndpoints.get.users,
-    requestingUser => _ => restService.listAllUsers(requestingUser)
+    requestingUser => _ => restService.getAllUsers(requestingUser)
   )
 
   private val getUserByIriHandler = SecuredEndpointHandler[UserIri, UserResponseADM](

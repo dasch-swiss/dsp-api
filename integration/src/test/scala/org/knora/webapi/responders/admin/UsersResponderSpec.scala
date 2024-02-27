@@ -6,11 +6,13 @@
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.ImplicitSender
+import zio.ZIO
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
@@ -26,6 +28,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -43,29 +46,28 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  "The UsersResponder " when {
-    "asked about all users" should {
-      "return a list if asked by SystemAdmin" in {
-        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
-        response.users.nonEmpty should be(true)
-        response.users.size should be(18)
-      }
+  "The UsersRestService" when {
+    "calling getAllUsers" should {
 
-      "return a list if asked by ProjectAdmin" in {
-        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
-        response.users.nonEmpty should be(true)
-        response.users.size should be(18)
-      }
+      def getAllUsers(requestingUser: User): ZIO[UsersRestService, Throwable, UsersGetResponseADM] =
+        ZIO.serviceWithZIO[UsersRestService](_.getAllUsers(requestingUser))
 
-      "not return the system and anonymous users" in {
-        val response = UnsafeZioRun.runOrThrow(UsersResponder.findAllUsers())
+      "with a SystemAdmin should return all real users" in {
+        val response = UnsafeZioRun.runOrThrow(getAllUsers(rootUser))
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
         response.users.count(_.id == KnoraSystemInstances.Users.AnonymousUser.id) should be(0)
         response.users.count(_.id == KnoraSystemInstances.Users.SystemUser.id) should be(0)
       }
-    }
 
+      "fail with unauthorized when asked by an anonymous user" in {
+        val exit = UnsafeZioRun.run(getAllUsers(SharedTestDataADM.anonymousUser))
+        assertFailsWithA[ForbiddenException](exit)
+      }
+    }
+  }
+
+  "The UsersResponder " when {
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(

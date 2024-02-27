@@ -84,7 +84,7 @@ object LayersLive {
       ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2
+      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2 & UsersRestService
 
   /**
    * All effect layers needed to provide the `Environment`

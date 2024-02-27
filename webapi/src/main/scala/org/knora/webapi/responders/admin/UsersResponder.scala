@@ -79,17 +79,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Gets all the users and returns them as a [[UsersGetResponseADM]].
-   *
-   * @return all the users as a [[UsersGetResponseADM]].
-   *         [[NotFoundException]] if no users are found.
-   */
-  def findAllUsers(): Task[UsersGetResponseADM] =
-    userService.findAll
-      .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
-      .map(users => UsersGetResponseADM(users.sorted))
-
-  /**
    * ~ CACHED ~
    * Gets information about a Knora user, and returns it as a [[User]].
    * If possible, tries to retrieve it from the cache. If not, it retrieves
@@ -722,10 +711,6 @@ final case class UsersResponder(
 }
 
 object UsersResponder {
-
-  def findAllUsers(): ZIO[UsersResponder, Throwable, UsersGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.findAllUsers())
-
   def changeUserStatus(
     userIri: UserIri,
     status: UserStatus,
