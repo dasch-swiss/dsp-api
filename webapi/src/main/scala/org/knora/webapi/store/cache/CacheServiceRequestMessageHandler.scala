@@ -39,12 +39,9 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
       cacheService.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
     case CacheServiceGetProjectADM(identifier) =>
       cacheService.getProjectADM(identifier) @@ cacheServiceReadProjectTimer.trackDuration
-    case CacheServicePutString(key, value)   => cacheService.putStringValue(key, value)
-    case CacheServiceGetString(key)          => cacheService.getStringValue(key)
-    case CacheServiceRemoveValues(keys)      => cacheService.removeValues(keys)
-    case CacheServiceFlushDB(requestingUser) => cacheService.flushDB(requestingUser)
-    case CacheServiceGetStatus               => cacheService.getStatus
-    case other                               => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
+    case CacheServiceClearCache => cacheService.clearCache()
+    case CacheServiceGetStatus  => cacheService.getStatus
+    case other                  => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
   }
 }
 

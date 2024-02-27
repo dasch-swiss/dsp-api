@@ -23,7 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIriADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceClearCache
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -498,7 +498,7 @@ final case class ProjectsResponderADMLive(
                .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
 
         // we are changing the project, so lets get rid of the cached copy
-        _ <- messageRelay.ask[Any](CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
+        _ <- messageRelay.ask[Any](CacheServiceClearCache)
 
         /* Update project */
         updateQuery = sparql.admin.txt.updateProject(

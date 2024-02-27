@@ -101,23 +101,7 @@ object CacheServiceLiveSpec extends ZIOSpecDefault {
     )
   )
 
-  private val otherTests = suite("Other")(
-    test("successfully store string value")(
-      for {
-        _              <- CacheService.putStringValue("my-new-key", "my-new-value")
-        retrievedValue <- CacheService.getStringValue("my-new-key")
-      } yield assertTrue(retrievedValue.contains("my-new-value"))
-    ),
-    test("successfully delete stored value")(
-      for {
-        _              <- CacheService.putStringValue("my-new-key", "my-new-value")
-        _              <- CacheService.removeValues(Set("my-new-key"))
-        retrievedValue <- CacheService.getStringValue("my-new-key")
-      } yield assertTrue(retrievedValue.isEmpty)
-    )
-  )
-
   def spec: Spec[Any, Throwable] =
-    suite("CacheServiceLive")(userTests, projectTests, otherTests).provide(CacheServiceLive.layer)
+    suite("CacheServiceLive")(userTests, projectTests).provide(CacheServiceLive.layer)
 
 }

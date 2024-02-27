@@ -206,6 +206,9 @@ case class ProjectADM(
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
 
+  def getShortname: Shortname = Shortname.unsafeFrom(shortname)
+  def getShortcode: Shortcode = Shortcode.unsafeFrom(shortcode)
+
   if (description.isEmpty) {
     throw OntologyConstraintException("Project description is a required property.")
   }

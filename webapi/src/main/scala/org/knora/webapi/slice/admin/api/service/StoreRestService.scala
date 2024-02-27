@@ -43,7 +43,7 @@ final case class StoreRestService(
       _ <- ZIO.logWarning(s"Resetting triplestore content with ${rdfDataObjects.map(_.name).mkString(", ")}")
       _ <- triplestoreService.resetTripleStoreContent(rdfDataObjects, prependDefaults).logError
       _ <- ontologyCache.loadOntologies(SystemUser).logError
-      _ <- cacheService.flushDB(SystemUser).logError
+      _ <- cacheService.clearCache().logError
     } yield MessageResponse("success")
 }
 

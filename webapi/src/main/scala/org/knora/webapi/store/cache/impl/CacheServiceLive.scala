@@ -14,14 +14,13 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.api.EmptyKey
-import org.knora.webapi.store.cache.api.EmptyValue
 
 /**
  * In-Memory Cache implementation
@@ -30,42 +29,42 @@ import org.knora.webapi.store.cache.api.EmptyValue
  * A ref in itself is fiber (thread) safe, but to keep the cumulative state
  * consistent, all Refs need to be updated in a single transaction. This
  * requires STM (Software Transactional Memory) to be used.
- *
- * @param users a map of users.
- * @param projects a map of projects.
- * @param lut   a lookup table of username/email to IRI.
  */
 case class CacheServiceLive(
-  users: TMap[String, User],
-  projects: TMap[String, ProjectADM],
-  lut: TMap[String, String]
+  users: TMap[UserIri, User],
+  projects: TMap[ProjectIri, ProjectADM],
+  mappingUsernameUserIri: TMap[Username, UserIri],
+  mappingEmailUserIri: TMap[Email, UserIri],
+  mappingShortcodeProjectIri: TMap[Shortcode, ProjectIri],
+  mappingShortnameProjectIri: TMap[Shortname, ProjectIri]
 ) extends CacheService {
 
   /**
-   * Stores the user under the IRI (inside 'users') and additionally the IRI
-   * under the keys of USERNAME and EMAIL (inside the 'lut'):
+   * Stores the user under the IRI  and additionally the IRI
    *
-   * IRI -> byte array
-   * username -> IRI
-   * email -> IRI
+   * users:
+   *   IRI -> byte array
+   *
+   * lookupTableUsers:
+   *   username -> IRI
+   *   email -> IRI
    *
    * @param value the value to be stored
    */
   def putUser(value: User): Task[Unit] =
     (for {
-      _ <- users.put(value.id, value)
-      _ <- lut.put(value.username, value.id)
-      _ <- lut.put(value.email, value.id)
+      _ <- users.put(value.userIri, value)
+      _ <- mappingUsernameUserIri.put(value.getUsername, value.userIri)
+      _ <- mappingEmailUserIri.put(value.getEmail, value.userIri)
     } yield ()).commit
 
-  override def getUserByIri(iri: UserIri): Task[Option[User]] = users.get(iri.value).commit
+  override def getUserByIri(iri: UserIri): Task[Option[User]] = users.get(iri).commit
 
-  override def getUserByUsername(username: Username): Task[Option[User]] = getUserByLookupKey(username.value)
+  override def getUserByUsername(username: Username): Task[Option[User]] =
+    mappingUsernameUserIri.get(username).some.flatMap(users.get(_).some).commit.unsome
 
-  override def getUserByEmail(email: Email): Task[Option[User]] = getUserByLookupKey(email.value)
-
-  private def getUserByLookupKey(key: String): UIO[Option[User]] =
-    lut.get(key).some.flatMap(users.get(_).some).commit.unsome
+  override def getUserByEmail(email: Email): Task[Option[User]] =
+    mappingEmailUserIri.get(email).some.flatMap(users.get(_).some).commit.unsome
 
   /**
    * Invalidates the user stored under the IRI.
@@ -73,48 +72,50 @@ case class CacheServiceLive(
    */
   override def invalidateUser(iri: UserIri): UIO[Unit] =
     (for {
-      user <- users.get(iri.value).some
-      _    <- users.delete(iri.value)
-      _    <- users.delete(user.username)
-      _    <- users.delete(user.email)
-      _    <- lut.delete(iri.value)
-      _    <- lut.delete(user.username)
-      _    <- lut.delete(user.email)
+      user <- users.get(iri).some
+      _    <- users.delete(iri)
+      _    <- mappingUsernameUserIri.delete(user.getUsername)
+      _    <- mappingEmailUserIri.delete(user.getEmail)
     } yield ()).commit.ignore
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
-   * of SHORTCODE and SHORTNAME:
+   * of Shortcode and Shortname:
    *
-   * IRI -> byte array
-   * shortname -> IRI
-   * shortcode -> IRI
+   * projects:
+   *  IRI -> byte array
+   *
+   * lookupTableProjects:
+   *  shortname -> IRI
+   *  shortcode -> IRI
    *
    * @param value the stored value
    * @return [[Unit]]
    */
   def putProjectADM(value: ProjectADM): Task[Unit] =
     (for {
-      _ <- projects.put(value.id, value)
-      _ <- lut.put(value.shortname, value.id)
-      _ <- lut.put(value.shortcode, value.id)
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored ProjectADM to Cache: ${value.id}"))
+      _ <- projects.put(value.projectIri, value)
+      _ <- mappingShortcodeProjectIri.put(value.getShortcode, value.projectIri)
+      _ <- mappingShortnameProjectIri.put(value.getShortname, value.projectIri)
+    } yield ()).commit
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
    *
    * The data is stored under the IRI key.
-   * Additionally, the SHORTCODE and SHORTNAME keys point to the IRI key
+   * Additionally, the Shortcode and Shortname keys point to the IRI key
    *
    * @param identifier the project identifier.
    * @return an optional [[ProjectADM]]
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    (identifier match {
-      case IriIdentifier(value)       => getProjectByIri(value)
-      case ShortcodeIdentifier(value) => getProjectByShortcode(value)
-      case ShortnameIdentifier(value) => getProjectByShortname(value)
-    }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
+    identifier match {
+      case IriIdentifier(projectIri) => projects.get(projectIri).commit
+      case ShortcodeIdentifier(code) =>
+        mappingShortcodeProjectIri.get(code).some.flatMap(projects.get(_).some).commit.unsome
+      case ShortnameIdentifier(name) =>
+        mappingShortnameProjectIri.get(name).some.flatMap(projects.get(_).some).commit.unsome
+    }
 
   /**
    * Invalidates the project stored under the IRI.
@@ -123,95 +124,24 @@ case class CacheServiceLive(
    */
   def invalidateProjectADM(iri: ProjectIri): UIO[Unit] =
     (for {
-      project  <- projects.get(iri.value).some
-      shortcode = project.shortcode
-      shortname = project.shortname
-      _        <- projects.delete(iri.value)
-      _        <- projects.delete(shortcode)
-      _        <- projects.delete(shortname)
-      _        <- lut.delete(iri.value)
-      _        <- lut.delete(shortcode)
-      _        <- lut.delete(shortname)
+      project <- projects.get(iri).some
+      _       <- projects.delete(iri)
+      _       <- mappingShortcodeProjectIri.delete(project.getShortcode)
+      _       <- mappingShortnameProjectIri.delete(project.getShortname)
     } yield ()).commit.ignore
-
-  /**
-   * Retrieves the project by the IRI.
-   *
-   * @param iri the project's IRI
-   * @return an optional [[ProjectADM]].
-   */
-  def getProjectByIri(iri: ProjectIri) = projects.get(iri.value).commit
-
-  /**
-   * Retrieves the project by the SHORTNAME.
-   *
-   * @param shortname of the project.
-   * @return an optional [[ProjectADM]]
-   */
-  def getProjectByShortname(shortname: KnoraProject.Shortname): UIO[Option[ProjectADM]] =
-    (for {
-      iri     <- lut.get(shortname.value).some
-      project <- projects.get(iri).some
-    } yield project).commit.unsome
-
-  /**
-   * Retrieves the project by the SHORTCODE.
-   *
-   * @param shortcode of the project.
-   * @return an optional [[ProjectADM]]
-   */
-  def getProjectByShortcode(shortcode: KnoraProject.Shortcode): UIO[Option[ProjectADM]] =
-    (for {
-      iri     <- lut.get(shortcode.value).some
-      project <- projects.get(iri).some
-    } yield project).commit.unsome
-
-  /**
-   * Store string or byte array value under key.
-   *
-   * @param key   the key.
-   * @param value the value.
-   */
-  def putStringValue(key: String, value: String): Task[Unit] = {
-
-    val emptyKeyError   = EmptyKey("The key under which the value should be written is empty. Aborting write to cache.")
-    val emptyValueError = EmptyValue("The string value is empty. Aborting write to cache.")
-
-    (for {
-      key   <- if (key.isEmpty()) ZIO.fail(emptyKeyError) else ZIO.succeed(key)
-      value <- if (value.isEmpty()) ZIO.fail(emptyValueError) else ZIO.succeed(value)
-      _     <- lut.put(key, value).commit
-    } yield ()).tap(_ => ZIO.logDebug(s"Wrote key: $key with value: $value to cache."))
-  }
-
-  /**
-   * Get value stored under the key as a string.
-   *
-   * @param maybeKey the key.
-   * @return an optional [[String]].
-   */
-  def getStringValue(key: String): Task[Option[String]] =
-    lut.get(key).commit.tap(value => ZIO.logDebug(s"Retrieved key: $key with value: $value from cache."))
-
-  /**
-   * Removes values for the provided keys. Any invalid keys are ignored.
-   *
-   * @param keys the keys.
-   */
-  def removeValues(keys: Set[String]): Task[Unit] =
-    (for {
-      _ <- ZIO.foreach(keys)(key => lut.delete(key).commit) // FIXME: is this realy thread safe?
-    } yield ()).tap(_ => ZIO.logDebug(s"Removed keys from cache: $keys"))
 
   /**
    * Flushes (removes) all stored content from the in-memory cache.
    */
-  def flushDB(requestingUser: User): Task[Unit] =
+  def clearCache(): Task[Unit] =
     (for {
       _ <- users.foreach((k, _) => users.delete(k))
       _ <- projects.foreach((k, _) => projects.delete(k))
-      _ <- lut.foreach((k, _) => lut.delete(k))
-    } yield ()).commit.tap(_ => ZIO.logDebug("Flushed in-memory cache"))
+      _ <- mappingUsernameUserIri.foreach((k, _) => mappingUsernameUserIri.delete(k))
+      _ <- mappingEmailUserIri.foreach((k, _) => mappingEmailUserIri.delete(k))
+      _ <- mappingShortcodeProjectIri.foreach((k, _) => mappingShortcodeProjectIri.delete(k))
+      _ <- mappingShortnameProjectIri.foreach((k, _) => mappingShortnameProjectIri.delete(k))
+    } yield ()).commit
 
   /**
    * Pings the in-memory cache to see if it is available.
@@ -224,9 +154,12 @@ object CacheServiceLive {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {
       for {
-        users    <- TMap.empty[String, User].commit
-        projects <- TMap.empty[String, ProjectADM].commit
-        lut      <- TMap.empty[String, String].commit
-      } yield CacheServiceLive(users, projects, lut)
+        users            <- TMap.empty[UserIri, User].commit
+        projects         <- TMap.empty[ProjectIri, ProjectADM].commit
+        usernameMapping  <- TMap.empty[Username, UserIri].commit
+        emailMapping     <- TMap.empty[Email, UserIri].commit
+        shortcodeMapping <- TMap.empty[Shortcode, ProjectIri].commit
+        shortnameMapping <- TMap.empty[Shortname, ProjectIri].commit
+      } yield CacheServiceLive(users, projects, usernameMapping, emailMapping, shortcodeMapping, shortnameMapping)
     }.tap(_ => ZIO.logInfo(">>> In-Memory Cache Service Initialized <<<"))
 }
