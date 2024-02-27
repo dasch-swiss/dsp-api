@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.macros.accessible
+
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
@@ -14,7 +15,8 @@ import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.{AuthorizationRestService, KnoraResponseRenderer}
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 @accessible
 trait GroupsRestService {
