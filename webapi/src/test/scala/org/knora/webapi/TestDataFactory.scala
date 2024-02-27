@@ -72,8 +72,7 @@ object TestDataFactory {
     List.empty,
     None,
     Status.Active,
-    SelfJoin.CannotJoin,
-    List.empty
+    SelfJoin.CannotJoin
   )
 
   def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =

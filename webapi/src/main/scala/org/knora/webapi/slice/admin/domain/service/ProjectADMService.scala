@@ -40,21 +40,23 @@ final case class ProjectADMService(
         }
     }
 
-  private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] =
-    ZIO.attempt(
-      ProjectADM(
-        id = knoraProject.id.value,
-        shortname = knoraProject.shortname.value,
-        shortcode = knoraProject.shortcode.value,
-        longname = knoraProject.longname.map(_.value),
-        description = knoraProject.description.map(_.value),
-        keywords = knoraProject.keywords.map(_.value),
-        logo = knoraProject.logo.map(_.value),
-        status = knoraProject.status.value,
-        selfjoin = knoraProject.selfjoin.value,
-        ontologies = knoraProject.ontologies.map(_.value)
-      ).unescape
-    )
+  private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
+    ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
+    prj <- ZIO.attempt(
+             ProjectADM(
+               id = knoraProject.id.value,
+               shortname = knoraProject.shortname.value,
+               shortcode = knoraProject.shortcode.value,
+               longname = knoraProject.longname.map(_.value),
+               description = knoraProject.description.map(_.value),
+               keywords = knoraProject.keywords.map(_.value),
+               logo = knoraProject.logo.map(_.value),
+               status = knoraProject.status.value,
+               selfjoin = knoraProject.selfjoin.value,
+               ontologies = ontologies
+             ).unescape
+           )
+  } yield prj
 
   private def toKnoraProject(project: ProjectADM): KnoraProject =
     KnoraProject(
@@ -68,8 +70,7 @@ final case class ProjectADMService(
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
       status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin),
-      ontologies = project.ontologies.map(InternalIri.apply).toList
+      selfjoin = SelfJoin.from(project.selfjoin)
     )
 
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
