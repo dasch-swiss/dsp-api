@@ -75,9 +75,6 @@ final case class UsersResponder(
 
   /**
    * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
    *
    * @param identifier          the IRI of the user.
    * @param userInformationType the type of the requested profile (restricted
@@ -107,9 +104,6 @@ final case class UsersResponder(
 
   /**
    * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
    *
    * @param email                the email of the user.
    * @param userInformationType  the type of the requested profile (restricted
@@ -126,9 +120,6 @@ final case class UsersResponder(
 
   /**
    * Gets information about a Knora user, and returns it as a [[User]].
-   * If possible, tries to retrieve it from the cache. If not, it retrieves
-   * it from the triplestore, and then writes it to the cache. Writes to the
-   * cache are always `UserInformationTypeADM.FULL`.
    *
    * @param username             the username of the user.
    * @param userInformationType  the type of the requested profile (restricted
@@ -559,7 +550,6 @@ final case class UsersResponder(
                   )
         _ <- userRepo.save(newUser)
 
-        // try to retrieve newly created user (will also add to cache)
         createdUser <-
           findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser).someOrFail {
             val msg = s"User ${userIri.value} was not created. Please report this as a possible bug."
