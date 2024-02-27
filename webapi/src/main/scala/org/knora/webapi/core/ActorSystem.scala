@@ -11,15 +11,11 @@ import zio.macros.accessible
 
 import scala.concurrent.ExecutionContext
 
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-
 import pekko.actor
 
 @accessible
 trait ActorSystem {
   val system: pekko.actor.ActorSystem
-  val cacheServiceSettings: CacheServiceSettings
 }
 
 object ActorSystem {
@@ -43,15 +39,13 @@ object ActorSystem {
       .zipLeft(ZIO.logInfo(">>> Release Actor System <<<"))
       .orDie
 
-  val layer: ZLayer[AppConfig, Nothing, ActorSystem] =
+  val layer: ZLayer[Any, Nothing, ActorSystem] =
     ZLayer.scoped {
       for {
-        config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
         actorSystem <- ZIO.acquireRelease(acquire(context))(release)
       } yield new ActorSystem {
-        override val system: pekko.actor.ActorSystem            = actorSystem
-        override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)
+        override val system: pekko.actor.ActorSystem = actorSystem
       }
     }
 }
