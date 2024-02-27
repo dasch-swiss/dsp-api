@@ -16,7 +16,6 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -28,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -256,16 +254,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Returns user's project memberships as a sequence of [[ProjectADM]].
-   *
-   * @param userIri        the IRI of the user.
-   * @return a sequence of [[ProjectADM]]
-   */
-  private def userProjectMembershipsGetADM(userIri: IRI) =
-    findUserByIri(UserIri.unsafeFrom(userIri), UserInformationTypeADM.Full, Users.SystemUser)
-      .map(_.map(_.projects).getOrElse(Seq.empty))
-
-  /**
    * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
    *
    * @param userIri        the user's IRI.
@@ -277,7 +265,8 @@ final case class UsersResponder(
         ZIO.whenZIO(userRepo.existsById(userIri).negate)(
           ZIO.fail(BadRequestException(s"User $userIri does not exist."))
         )
-      projects <- userProjectMembershipsGetADM(userIri.value)
+      projects <-
+        userService.findUserByIri(UserIri.unsafeFrom(userIri.value)).map(_.map(_.projects).getOrElse(Seq.empty))
     } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
@@ -425,9 +414,8 @@ final case class UsersResponder(
    * @param userIri              the IRI of the user.
    * @return a sequence of [[GroupADM]].
    */
-  def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
-    findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
-      .map(_.map(_.groups).getOrElse(Seq.empty))
+  private def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
+    userService.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
    * Adds a user to a group.
@@ -489,20 +477,22 @@ final case class UsersResponder(
    * Updates an existing user. Should not be directly used from the receive method.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param req    the updated information.
+   * @param theUpdate    the updated information.
    * @return a [[UserOperationResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: UserIri, req: UserChangeRequest): ZIO[Any, Throwable, UserOperationResponseADM] =
+  private def updateUserADM(
+    userIri: UserIri,
+    theUpdate: UserChangeRequest
+  ): ZIO[Any, Throwable, UserOperationResponseADM] =
     for {
-      _ <- ensureNotABuiltInUser(userIri)
-      currentUser <- userRepo
-                       .findById(userIri)
-                       .someOrFail(NotFoundException(s"User '$userIri' not found."))
-      _ <- userService.updateUser(currentUser, req)
+      _           <- ensureNotABuiltInUser(userIri)
+      currentUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User '$userIri' not found."))
+      _           <- userService.updateUser(currentUser, theUpdate)
       updatedUserADM <-
-        findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
+        userService
+          .findUserByIri(userIri)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
 
@@ -551,10 +541,10 @@ final case class UsersResponder(
         _ <- userRepo.save(newUser)
 
         createdUser <-
-          findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser).someOrFail {
-            val msg = s"User ${userIri.value} was not created. Please report this as a possible bug."
-            UpdateNotPerformedException(msg)
+          userService.findUserByIri(userIri).someOrFail {
+            UpdateNotPerformedException(s"User ${userIri.value} was not created. Please report this as a possible bug.")
           }
+
       } yield UserOperationResponseADM(createdUser.ofType(UserInformationTypeADM.Restricted))
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)

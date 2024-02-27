@@ -66,7 +66,11 @@ final case class UsersRestService(
   } yield external
 
   def getGroupMemberShipsByIri(userIri: UserIri): Task[UserGroupMembershipsGetResponseADM] =
-    responder.findGroupMembershipsByIri(userIri).map(UserGroupMembershipsGetResponseADM).flatMap(format.toExternal)
+    userService
+      .findUserByIri(userIri)
+      .map(_.map(_.groups).getOrElse(Seq.empty))
+      .map(UserGroupMembershipsGetResponseADM)
+      .flatMap(format.toExternal)
 
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserOperationResponseADM] =
     for {

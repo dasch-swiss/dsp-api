@@ -145,6 +145,7 @@ object LayersTest {
       with TriplestoreService
       with UsersResponder
       with UsersRestService
+      with UserService
       with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =

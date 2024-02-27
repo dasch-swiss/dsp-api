@@ -16,6 +16,7 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
@@ -30,6 +31,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
@@ -541,17 +543,20 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     }
 
     "asked to update the user's group membership" should {
+      def findGroupMembershipsByIri(userIri: UserIri): Seq[GroupADM] =
+        UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[UserService](_.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty)))
+        )
+
       "ADD user to group" in {
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
+        val membershipsBeforeUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsBeforeUpdate should equal(Seq())
 
         UnsafeZioRun.runOrThrow(
           UsersResponder.addGroupToUserIsInGroup(normalUser.userIri, imagesReviewerGroup.groupIri, UUID.randomUUID())
         )
 
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
+        val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! GroupMembersGetRequestADM(
@@ -564,8 +569,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       }
 
       "DELETE user from group" in {
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
+        val membershipsBeforeUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         UnsafeZioRun.runOrThrow(
@@ -576,8 +580,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findGroupMembershipsByIri(normalUser.userIri))
+        val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate should equal(Seq())
 
         appActor ! GroupMembersGetRequestADM(
