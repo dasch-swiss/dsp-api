@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.store.cache.api.CacheService
 
 final case class UserChangeRequest(
   username: Option[Username] = None,
@@ -44,17 +45,32 @@ case class UserService(
   private val userRepo: KnoraUserRepo,
   private val projectsService: ProjectADMService,
   private val groupsService: GroupsResponderADM,
-  private val permissionService: PermissionsResponderADM
+  private val permissionService: PermissionsResponderADM,
+  private val cacheService: CacheService
 ) {
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
-    userRepo.findById(iri).flatMap(ZIO.foreach(_)(toUser))
+    fromCacheOrRepo(iri, cacheService.getUserByIri, userRepo.findById)
 
   def findUserByEmail(email: Email): Task[Option[User]] =
-    userRepo.findByEmail(email).flatMap(ZIO.foreach(_)(toUser))
+    fromCacheOrRepo(email, cacheService.getUserByEmail, userRepo.findByEmail)
 
   def findUserByUsername(username: Username): Task[Option[User]] =
-    userRepo.findByUsername(username).flatMap(ZIO.foreach(_)(toUser))
+    fromCacheOrRepo(username, cacheService.getUserByUsername, userRepo.findByUsername)
+
+  private def fromCacheOrRepo[A](
+    id: A,
+    fromCache: A => Task[Option[User]],
+    fromRepo: A => Task[Option[KnoraUser]]
+  ): Task[Option[User]] =
+    fromCache(id).flatMap {
+      case Some(user) => ZIO.some(user)
+      case None =>
+        fromRepo(id).flatMap(ZIO.foreach(_)(toUser)).tap {
+          case Some(user) => cacheService.putUser(user)
+          case None       => ZIO.unit
+        }
+    }
 
   def findAll: Task[Seq[User]] =
     userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))

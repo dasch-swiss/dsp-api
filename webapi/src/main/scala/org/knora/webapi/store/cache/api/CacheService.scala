@@ -22,16 +22,36 @@ import org.knora.webapi.slice.admin.domain.model.Username
  */
 @accessible
 trait CacheService {
-  def putUserADM(value: User): Task[Unit]
-  def getUserByIriADM(iri: UserIri): Task[Option[User]]
-  def getUserByUsernameADM(username: Username): Task[Option[User]]
-  def getUserByEmailADM(email: Email): Task[Option[User]]
+
+  def putUser(value: User): Task[Unit]
+
+  def getUserByIri(iri: UserIri): Task[Option[User]]
+
+  def getUserByUsername(username: Username): Task[Option[User]]
+
+  def getUserByEmail(email: Email): Task[Option[User]]
+
+  /**
+   * Invalidates the user stored under the IRI.
+   *
+   * @param iri the user's IRI.
+   */
+  def invalidateUser(iri: UserIri): UIO[Unit]
+
   def putProjectADM(value: ProjectADM): Task[Unit]
+
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
+
   def invalidateProjectADM(identifier: KnoraProject.ProjectIri): UIO[Unit]
+
   def putStringValue(key: String, value: String): Task[Unit]
+
   def getStringValue(key: String): Task[Option[String]]
+
   def removeValues(keys: Set[String]): Task[Unit]
+
   def flushDB(requestingUser: User): Task[Unit]
+
   val getStatus: UIO[CacheServiceStatusResponse]
+
 }

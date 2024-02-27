@@ -5,27 +5,20 @@
 
 package org.knora.webapi.store.cache.impl
 
-import zio.ZLayer
-import zio.test.Assertion.*
 import zio.test.*
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.cache.api.CacheService
 
-/**
- * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
- */
-object CacheInMemImplZSpec extends ZIOSpecDefault {
+object CacheServiceLiveSpec extends ZIOSpecDefault {
 
-  implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
+  private val user: User = SharedTestDataADM.imagesUser01
 
-  val user: User = SharedTestDataADM.imagesUser01
-  val userWithApostrophe = User(
+  private val userWithApostrophe = User(
     id = "http://rdfh.ch/users/aaaaaab71e7b0e01",
     username = "user_with_apostrophe",
     email = "userWithApostrophe@example.org",
@@ -37,43 +30,43 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
 
   val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  /**
-   * Defines a layer which encompases all dependencies that are needed for
-   * running the tests.
-   */
-  val testLayers = ZLayer.make[CacheService](CacheServiceInMemImpl.layer)
-
-  def spec: Spec[Any, Throwable] =
-    (userTests + projectTests + otherTests).provideLayerShared(testLayers) @@ TestAspect.sequential
-
-  val userTests = suite("CacheInMemImplZSpec - user")(
-    test("successfully store a user and retrieve by IRI") {
+  private val userTests = suite("User")(
+    test("successfully store a user and retrieve by UserIri") {
       for {
-        _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserByIriADM(UserIri.unsafeFrom(user.id))
-      } yield assertTrue(retrievedUser == Some(user))
+        _             <- CacheService.putUser(user)
+        retrievedUser <- CacheService.getUserByIri(UserIri.unsafeFrom(user.id))
+      } yield assertTrue(retrievedUser.contains(user))
     },
-    test("successfully store a user and retrieve by USERNAME")(
+    test("successfully store a user and retrieve by Username")(
       for {
-        _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserByUsernameADM(Username.unsafeFrom(user.username))
-      } yield assert(retrievedUser)(equalTo(Some(user)))
+        _             <- CacheService.putUser(user)
+        retrievedUser <- CacheService.getUserByUsername(Username.unsafeFrom(user.username))
+      } yield assertTrue(retrievedUser.contains(user))
     ),
-    test("successfully store a user and retrieve by EMAIL")(
+    test("successfully store a user and retrieve by Email")(
       for {
-        _             <- CacheService.putUserADM(user)
-        retrievedUser <- CacheService.getUserByEmailADM(Email.unsafeFrom(user.email))
-      } yield assert(retrievedUser)(equalTo(Some(user)))
+        _             <- CacheService.putUser(user)
+        retrievedUser <- CacheService.getUserByEmail(Email.unsafeFrom(user.email))
+      } yield assertTrue(retrievedUser.contains(user))
     ),
-    test("successfully store and retrieve a user with special characters in his name")(
+    test("successfully store and retrieve a user with special characters in their name")(
       for {
-        _             <- CacheService.putUserADM(userWithApostrophe)
-        retrievedUser <- CacheService.getUserByIriADM(UserIri.unsafeFrom(userWithApostrophe.id))
-      } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
+        _             <- CacheService.putUser(userWithApostrophe)
+        retrievedUser <- CacheService.getUserByIri(userWithApostrophe.userIri)
+      } yield assertTrue(retrievedUser.contains(userWithApostrophe))
+    ),
+    test("given when successfully stored and invalidated a user then the cache should not contain the user")(
+      for {
+        _              <- CacheService.putUser(userWithApostrophe)
+        _              <- CacheService.invalidateUser(userWithApostrophe.userIri)
+        userByIri      <- CacheService.getUserByIri(userWithApostrophe.userIri)
+        userByEmail    <- CacheService.getUserByEmail(Email.unsafeFrom(userWithApostrophe.email))
+        userByUsername <- CacheService.getUserByUsername(Username.unsafeFrom(userWithApostrophe.username))
+      } yield assertTrue(userByIri.isEmpty, userByEmail.isEmpty, userByUsername.isEmpty)
     )
   )
 
-  val projectTests = suite("CacheInMemImplZSpec - project")(
+  private val projectTests = suite("ProjectADM")(
     test("successfully store a project and retrieve by IRI")(
       for {
         _ <- CacheService.putProjectADM(project)
@@ -82,7 +75,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
                                 .fromString(project.id)
                                 .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
                             )
-      } yield assert(retrievedProject)(equalTo(Some(project)))
+      } yield assertTrue(retrievedProject.contains(project))
     ),
     test("successfully store a project and retrieve by SHORTCODE")(
       for {
@@ -93,7 +86,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
               .fromString(project.shortcode)
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
           )
-      } yield assert(retrievedProject)(equalTo(Some(project)))
+      } yield assertTrue(retrievedProject.contains(project))
     ),
     test("successfully store a project and retrieve by SHORTNAME")(
       for {
@@ -104,23 +97,27 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
               .fromString(project.shortname)
               .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
           )
-      } yield assert(retrievedProject)(equalTo(Some(project)))
+      } yield assertTrue(retrievedProject.contains(project))
     )
   )
 
-  val otherTests = suite("CacheInMemImplZSpec - other")(
+  private val otherTests = suite("Other")(
     test("successfully store string value")(
       for {
         _              <- CacheService.putStringValue("my-new-key", "my-new-value")
         retrievedValue <- CacheService.getStringValue("my-new-key")
-      } yield assert(retrievedValue)(equalTo(Some("my-new-value")))
+      } yield assertTrue(retrievedValue.contains("my-new-value"))
     ),
     test("successfully delete stored value")(
       for {
         _              <- CacheService.putStringValue("my-new-key", "my-new-value")
         _              <- CacheService.removeValues(Set("my-new-key"))
         retrievedValue <- CacheService.getStringValue("my-new-key")
-      } yield assert(retrievedValue)(equalTo(None))
+      } yield assertTrue(retrievedValue.isEmpty)
     )
   )
+
+  def spec: Spec[Any, Throwable] =
+    suite("CacheServiceLive")(userTests, projectTests, otherTests).provide(CacheServiceLive.layer)
+
 }

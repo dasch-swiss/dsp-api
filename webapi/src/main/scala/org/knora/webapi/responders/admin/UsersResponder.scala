@@ -28,11 +28,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByEmailADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByIriADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserByUsernameADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -79,7 +74,6 @@ final case class UsersResponder(
   }
 
   /**
-   * ~ CACHED ~
    * Gets information about a Knora user, and returns it as a [[User]].
    * If possible, tries to retrieve it from the cache. If not, it retrieves
    * it from the triplestore, and then writes it to the cache. Writes to the
@@ -89,20 +83,14 @@ final case class UsersResponder(
    * @param userInformationType the type of the requested profile (restricted
    *                            of full).
    * @param requestingUser      the user initiating the request.
-   * @param skipCache           the flag denotes to skip the cache and instead
-   *                            get data from the triplestore
    * @return a [[User]] describing the user.
    */
   def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): Task[Option[User]] =
-    for {
-      maybeUserADM <- if (skipCache) userService.findUserByIri(identifier)
-                      else getUserFromCacheOrTriplestoreByIri(identifier)
-    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+    userService.findUserByIri(identifier).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
 
   /**
    * If the requesting user is a system admin, or is requesting themselves, or is a system user,
@@ -118,7 +106,6 @@ final case class UsersResponder(
     else user.ofType(UserInformationTypeADM.Public)
 
   /**
-   * ~ CACHED ~
    * Gets information about a Knora user, and returns it as a [[User]].
    * If possible, tries to retrieve it from the cache. If not, it retrieves
    * it from the triplestore, and then writes it to the cache. Writes to the
@@ -128,23 +115,16 @@ final case class UsersResponder(
    * @param userInformationType  the type of the requested profile (restricted
    *                             of full).
    * @param requestingUser       the user initiating the request.
-   * @param skipCache            the flag denotes to skip the cache and instead
-   *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
   def findUserByEmail(
     email: Email,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): Task[Option[User]] =
-    for {
-      maybeUserADM <- if (skipCache) userService.findUserByEmail(email)
-                      else getUserFromCacheOrTriplestoreByEmail(email)
-    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+    userService.findUserByEmail(email).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
 
   /**
-   * ~ CACHED ~
    * Gets information about a Knora user, and returns it as a [[User]].
    * If possible, tries to retrieve it from the cache. If not, it retrieves
    * it from the triplestore, and then writes it to the cache. Writes to the
@@ -154,21 +134,14 @@ final case class UsersResponder(
    * @param userInformationType  the type of the requested profile (restricted
    *                             of full).
    * @param requestingUser       the user initiating the request.
-   * @param skipCache            the flag denotes to skip the cache and instead
-   *                             get data from the triplestore
    * @return a [[User]] describing the user.
    */
   def findUserByUsername(
     username: Username,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): Task[Option[User]] =
-    for {
-      maybeUserADM <-
-        if (skipCache) userService.findUserByUsername(username)
-        else getUserFromCacheOrTriplestoreByUsername(username)
-    } yield maybeUserADM.map(filterUserInformation(_, requestingUser, userInformationType))
+    userService.findUserByUsername(username).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
 
   /**
    * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
@@ -298,11 +271,8 @@ final case class UsersResponder(
    * @return a sequence of [[ProjectADM]]
    */
   private def userProjectMembershipsGetADM(userIri: IRI) =
-    findUserByIri(
-      UserIri.unsafeFrom(userIri),
-      UserInformationTypeADM.Full,
-      Users.SystemUser
-    ).map(_.map(_.projects).getOrElse(Seq.empty))
+    findUserByIri(UserIri.unsafeFrom(userIri), UserInformationTypeADM.Full, Users.SystemUser)
+      .map(_.map(_.projects).getOrElse(Seq.empty))
 
   /**
    * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
@@ -540,13 +510,9 @@ final case class UsersResponder(
                        .findById(userIri)
                        .someOrFail(NotFoundException(s"User '$userIri' not found."))
       _ <- userService.updateUser(currentUser, req)
-      _ <- messageRelay.ask[Unit](
-             CacheServiceRemoveValues(Set(currentUser.id.value, currentUser.email.value, currentUser.username.value))
-           )
       updatedUserADM <-
-        findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true)
+        findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-      _ <- messageRelay.ask[Unit](CacheServicePutUserADM(updatedUserADM))
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
 
   /**
@@ -595,7 +561,7 @@ final case class UsersResponder(
 
         // try to retrieve newly created user (will also add to cache)
         createdUser <-
-          findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser, skipCache = true).someOrFail {
+          findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser).someOrFail {
             val msg = s"User ${userIri.value} was not created. Please report this as a possible bug."
             UpdateNotPerformedException(msg)
           }
@@ -603,111 +569,6 @@ final case class UsersResponder(
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
-
-  /**
-   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
-   * If user is not found in cache but in triplestore, then user is written to cache.
-   */
-  private def getUserFromCacheOrTriplestoreByIri(
-    userIri: UserIri
-  ): Task[Option[User]] =
-    if (appConfig.cacheService.enabled) {
-      // caching enabled
-      messageRelay.ask[Option[User]](CacheServiceGetUserByIriADM(userIri)).flatMap {
-        case None =>
-          // none found in cache. getting from triplestore.
-          userService.findUserByIri(userIri).flatMap {
-            case None =>
-              // also none found in triplestore. finally returning none.
-              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.none
-            case Some(user) =>
-              // found a user in the triplestore. need to write to cache.
-              logger.debug(
-                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
-              )
-              // writing user to cache and afterwards returning the user found in the triplestore
-              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
-          }
-        case Some(user) =>
-          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
-          ZIO.some(user)
-      }
-    } else {
-      // caching disabled
-      logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      userService.findUserByIri(userIri)
-    }
-
-  /**
-   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
-   * If user is not found in cache but in triplestore, then user is written to cache.
-   */
-  private def getUserFromCacheOrTriplestoreByUsername(
-    username: Username
-  ): Task[Option[User]] =
-    if (appConfig.cacheService.enabled) {
-      // caching enabled
-      messageRelay.ask[Option[User]](CacheServiceGetUserByUsernameADM(username)).flatMap {
-        case None =>
-          // none found in cache. getting from triplestore.
-          userService.findUserByUsername(username).flatMap {
-            case None =>
-              // also none found in triplestore. finally returning none.
-              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.none
-            case Some(user) =>
-              // found a user in the triplestore. need to write to cache.
-              logger.debug(
-                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
-              )
-              // writing user to cache and afterwards returning the user found in the triplestore
-              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
-          }
-        case Some(user) =>
-          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
-          ZIO.some(user)
-      }
-    } else {
-      // caching disabled
-      logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      userService.findUserByUsername(username)
-    }
-
-  /**
-   * Tries to retrieve a [[User]] either from triplestore or cache if caching is enabled.
-   * If user is not found in cache but in triplestore, then user is written to cache.
-   */
-  private def getUserFromCacheOrTriplestoreByEmail(
-    email: Email
-  ): Task[Option[User]] =
-    if (appConfig.cacheService.enabled) {
-      // caching enabled
-      messageRelay.ask[Option[User]](CacheServiceGetUserByEmailADM(email)).flatMap {
-        case None =>
-          // none found in cache. getting from triplestore.
-          userService.findUserByEmail(email).flatMap {
-            case None =>
-              // also none found in triplestore. finally returning none.
-              logger.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
-              ZIO.none
-            case Some(user) =>
-              // found a user in the triplestore. need to write to cache.
-              logger.debug(
-                "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
-              )
-              // writing user to cache and afterwards returning the user found in the triplestore
-              messageRelay.ask[Unit](CacheServicePutUserADM(user)).as(Some(user))
-          }
-        case Some(user) =>
-          logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
-          ZIO.some(user)
-      }
-    } else {
-      // caching disabled
-      logger.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      userService.findUserByEmail(email)
-    }
 }
 
 object UsersResponder {
@@ -728,26 +589,23 @@ object UsersResponder {
   def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): ZIO[UsersResponder, Throwable, Option[User]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser, skipCache))
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser))
 
   def findUserByEmail(
     email: Email,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): ZIO[UsersResponder, Throwable, Option[User]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserByEmail(email, userInformationType, requestingUser, skipCache))
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByEmail(email, userInformationType, requestingUser))
 
   def findUserByUsername(
     username: Username,
     userInformationType: UserInformationTypeADM,
-    requestingUser: User,
-    skipCache: Boolean = false
+    requestingUser: User
   ): ZIO[UsersResponder, Throwable, Option[User]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserByUsername(username, userInformationType, requestingUser, skipCache))
+    ZIO.serviceWithZIO[UsersResponder](_.findUserByUsername(username, userInformationType, requestingUser))
 
   def findProjectMemberShipsByIri(
     userIri: UserIri
@@ -766,9 +624,7 @@ object UsersResponder {
     projectIri: ProjectIri,
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](
-      _.addProjectToUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
-    )
+    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID))
 
   def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
     userIri: UserIri,

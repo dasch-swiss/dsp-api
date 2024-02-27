@@ -35,10 +35,10 @@ import org.knora.webapi.store.cache.api.EmptyValue
  * @param projects a map of projects.
  * @param lut   a lookup table of username/email to IRI.
  */
-case class CacheServiceInMemImpl(
+case class CacheServiceLive(
   users: TMap[String, User],
   projects: TMap[String, ProjectADM],
-  lut: TMap[String, String] // sealed trait for key type
+  lut: TMap[String, String]
 ) extends CacheService {
 
   /**
@@ -51,39 +51,36 @@ case class CacheServiceInMemImpl(
    *
    * @param value the value to be stored
    */
-  def putUserADM(value: User): Task[Unit] =
+  def putUser(value: User): Task[Unit] =
     (for {
       _ <- users.put(value.id, value)
       _ <- lut.put(value.username, value.id)
       _ <- lut.put(value.email, value.id)
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored UserADM to Cache: ${value.id}"))
+    } yield ()).commit
 
-  override def getUserByIriADM(iri: UserIri): Task[Option[User]] = getUserByIri(iri.value)
+  override def getUserByIri(iri: UserIri): Task[Option[User]] = users.get(iri.value).commit
 
-  override def getUserByUsernameADM(username: Username): Task[Option[User]] = getUserByUsernameOrEmail(username.value)
+  override def getUserByUsername(username: Username): Task[Option[User]] = getUserByLookupKey(username.value)
 
-  override def getUserByEmailADM(email: Email): Task[Option[User]] = getUserByUsernameOrEmail(email.value)
+  override def getUserByEmail(email: Email): Task[Option[User]] = getUserByLookupKey(email.value)
 
-  /**
-   * Retrieves the user stored under the IRI.
-   *
-   * @param id the user's IRI.
-   * @return an optional [[User]].
-   */
-  def getUserByIri(id: String): UIO[Option[User]] =
-    users.get(id).commit
+  private def getUserByLookupKey(key: String): UIO[Option[User]] =
+    lut.get(key).some.flatMap(users.get(_).some).commit.unsome
 
   /**
-   * Retrieves the user stored under the username or email.
-   *
-   * @param usernameOrEmail of the user.
-   * @return an optional [[User]].
+   * Invalidates the user stored under the IRI.
+   * @param iri the user's IRI.
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]] =
+  override def invalidateUser(iri: UserIri): UIO[Unit] =
     (for {
-      iri  <- lut.get(usernameOrEmail).some
-      user <- users.get(iri).some
-    } yield user).commit.unsome // watch Spartan session about error. post example on Spartan channel
+      user <- users.get(iri.value).some
+      _    <- users.delete(iri.value)
+      _    <- users.delete(user.username)
+      _    <- users.delete(user.email)
+      _    <- lut.delete(iri.value)
+      _    <- lut.delete(user.username)
+      _    <- lut.delete(user.email)
+    } yield ()).commit.ignore
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -223,13 +220,13 @@ case class CacheServiceInMemImpl(
     ZIO.succeed(CacheServiceStatusOK)
 }
 
-object CacheServiceInMemImpl {
+object CacheServiceLive {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {
       for {
         users    <- TMap.empty[String, User].commit
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
-      } yield CacheServiceInMemImpl(users, projects, lut)
+      } yield CacheServiceLive(users, projects, lut)
     }.tap(_ => ZIO.logInfo(">>> In-Memory Cache Service Initialized <<<"))
 }

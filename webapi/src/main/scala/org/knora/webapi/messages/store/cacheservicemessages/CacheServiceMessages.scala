@@ -9,10 +9,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
 
 sealed trait CacheServiceRequest extends StoreRequest with RelayedMessage
 
@@ -25,26 +22,6 @@ case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequ
  * Message requesting to retrieve project from cache.
  */
 case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends CacheServiceRequest
-
-/**
- * Message requesting to write user to cache.
- */
-case class CacheServicePutUserADM(value: User) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByIriADM(userIri: UserIri) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByEmailADM(email: Email) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByUsernameADM(username: Username) extends CacheServiceRequest
 
 /**
  * Message requesting to store a simple string under the supplied key.

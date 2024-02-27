@@ -58,7 +58,7 @@ import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -158,7 +158,7 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheServiceInMemImpl.layer,
+      CacheServiceLive.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,

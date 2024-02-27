@@ -39,12 +39,13 @@ import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends KnoraUserRepo {
+final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService: CacheService) extends KnoraUserRepo {
 
   override def findById(id: UserIri): Task[Option[KnoraUser]] = {
     val construct = UserQueries.findById(id)
@@ -120,7 +121,7 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService) extends Knor
     } yield users.toList
 
   override def save(user: KnoraUser): Task[KnoraUser] =
-    triplestore.query(UserQueries.save(user)).as(user)
+    cacheService.invalidateUser(user.id) *> triplestore.query(UserQueries.save(user)).as(user)
 }
 
 object KnoraUserRepoLive {
