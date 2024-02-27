@@ -6,20 +6,6 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import dsp.valueobjects.Group.*
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-
-/**
- * Group create payload
- */
-final case class GroupCreatePayloadADM(
-  id: Option[GroupIri] = None,
-  name: GroupName,
-  descriptions: GroupDescriptions,
-  project: ProjectIri,
-  status: GroupStatus,
-  selfjoin: GroupSelfJoin
-)
 
 /**
  * Payload used for updating of an existing group.

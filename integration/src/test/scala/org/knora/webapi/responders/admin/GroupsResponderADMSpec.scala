@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
@@ -18,9 +17,11 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
@@ -53,30 +54,30 @@ class GroupsResponderADMSpec extends CoreSpec {
       val newGroupIri = new MutableTestIri
 
       "CREATE the group and return the group's info if the supplied group name is unique" in {
-        appActor ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM(
-            id = None,
-            name = GroupName.unsafeFrom("NewGroup"),
-            descriptions = GroupDescriptions
-              .unsafeFrom(
-                Seq(
-                  V2.StringLiteralV2(
-                    value = """NewGroupDescription with "quotes" and <html tag>""",
-                    language = Some("en")
+        val response = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.createGroupADM(
+            GroupCreateRequest(
+              id = None,
+              name = GroupName.unsafeFrom("NewGroup"),
+              descriptions = GroupDescriptions
+                .unsafeFrom(
+                  Seq(
+                    V2.StringLiteralV2(
+                      value = """NewGroupDescription with "quotes" and <html tag>""",
+                      language = Some("en")
+                    )
                   )
-                )
-              ),
-            project = ProjectIri.unsafeFrom(imagesProjectIri),
-            status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.impossible
-          ),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+                ),
+              project = ProjectIri.unsafeFrom(imagesProjectIri),
+              status = GroupStatus.active,
+              selfjoin = GroupSelfJoin.impossible
+            ),
+            imagesUser01,
+            UUID.randomUUID
+          )
         )
 
-        val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
-        val newGroupInfo                  = received.group
-
+        val newGroupInfo = response.group
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
@@ -90,23 +91,26 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
-        appActor ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM(
-            id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
-            name = GroupName.unsafeFrom("NewGroup"),
-            descriptions = GroupDescriptions
-              .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
-            project = ProjectIri.unsafeFrom(imagesProjectIri),
-            status = GroupStatus.active,
-            selfjoin = GroupSelfJoin.impossible
-          ),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val groupName = GroupName.unsafeFrom("NewGroup")
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.createGroupADM(
+            GroupCreateRequest(
+              id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
+              name = groupName,
+              descriptions = GroupDescriptions
+                .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
+              project = ProjectIri.unsafeFrom(imagesProjectIri),
+              status = GroupStatus.active,
+              selfjoin = GroupSelfJoin.impossible
+            ),
+            imagesUser01,
+            UUID.randomUUID
+          )
         )
-
-        expectMsgPF(timeout) { case msg: Failure =>
-          msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-        }
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"Group with the name '${groupName.value}' already exists"
+        )
       }
 
       "UPDATE a group" in {

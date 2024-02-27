@@ -131,19 +131,6 @@ case class MultipleGroupsGetRequestADM(
 case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
 
 /**
- * Requests the creation of a new group.
- *
- * @param createRequest        the [[GroupCreatePayloadADM]] information for creating the new group.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class GroupCreateRequestADM(
-  createRequest: GroupCreatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends GroupsResponderRequestADM
-
-/**
  * Request updating of an existing group.
  *
  * @param groupIri             the IRI of the group to be updated.
