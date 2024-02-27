@@ -55,7 +55,7 @@ final case class GroupsRestServiceLive(
     for {
       _        <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
       uuid     <- Random.nextUUID
-      internal <- responder.createGroupADM(request, user, uuid)
+      internal <- responder.createGroupADM(request, uuid)
       external <- format.toExternal(internal)
     } yield external
 }

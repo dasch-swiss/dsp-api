@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.actor.Status.Failure
 
 import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
@@ -72,7 +73,6 @@ class GroupsResponderADMSpec extends CoreSpec {
               status = GroupStatus.active,
               selfjoin = GroupSelfJoin.impossible
             ),
-            imagesUser01,
             UUID.randomUUID
           )
         )
@@ -103,7 +103,6 @@ class GroupsResponderADMSpec extends CoreSpec {
               status = GroupStatus.active,
               selfjoin = GroupSelfJoin.impossible
             ),
-            imagesUser01,
             UUID.randomUUID
           )
         )
