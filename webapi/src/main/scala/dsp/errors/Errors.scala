@@ -11,6 +11,8 @@ import org.apache.commons.lang3.SerializationUtils
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
+
 /*
 
     How to use and extend these exceptions
@@ -86,8 +88,9 @@ object RequestRejectedException {
  *
  * @param message a description of the error.
  */
-case class BadRequestException(message: String) extends RequestRejectedException(message)
+final case class BadRequestException(message: String) extends RequestRejectedException(message)
 object BadRequestException {
+  def apply(e: UserServiceError): BadRequestException = BadRequestException(e.message)
   def invalidQueryParamValue(key: String): BadRequestException =
     BadRequestException(s"Invalid value for query parameter '$key'")
   def missingQueryParamValue(key: String): BadRequestException =

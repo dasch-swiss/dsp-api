@@ -576,10 +576,10 @@ final case class GroupsResponderADMLive(
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
 
-        seqOfFutures: Seq[Task[UserOperationResponseADM]] =
+        seqOfFutures: Seq[Task[UserResponseADM]] =
           members.map { (user: User) =>
             messageRelay
-              .ask[UserOperationResponseADM](
+              .ask[UserResponseADM](
                 UserGroupMembershipRemoveRequestADM(user.userIri, changedGroup.groupIri, apiRequestID)
               )
           }
