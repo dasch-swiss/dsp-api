@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -34,6 +32,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
@@ -86,18 +85,17 @@ final case class UsersRestService(
 
   def getProjectMemberShipsByUserIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
     for {
-      kUser <- userRepo
-                 .findById(userIri)
-                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProject)
       external <- format.toExternal(UserProjectMembershipsGetResponseADM(projects))
     } yield external
 
+  private def getKnoraUserOrNotFound(userIri: UserIri) =
+    userRepo.findById(userIri).someOrFail(NotFoundException(s"The user ${userIri.value} does not exist."))
+
   def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     for {
-      kUser <- userRepo
-                 .findById(userIri)
-                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProjectAdminGroup)
       external <- format.toExternal(UserProjectAdminMembershipsGetResponseADM(projects))
     } yield external
