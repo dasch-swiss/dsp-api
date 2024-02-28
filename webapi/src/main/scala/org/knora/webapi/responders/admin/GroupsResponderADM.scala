@@ -563,22 +563,10 @@ final case class GroupsResponderADMLive(
       // group deactivated. need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
       for {
-        members <-
-          groupMembersGetADM(
-            groupIri = changedGroup.id,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
-
-        seqOfFutures: Seq[Task[UserResponseADM]] =
-          members.map { (user: User) =>
-            messageRelay
-              .ask[UserResponseADM](
-                UserGroupMembershipRemoveRequestADM(user, changedGroup)
-              )
-          }
-
-        _ <- ZioHelper.sequence(seqOfFutures)
-
+        members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
+        _ <- ZIO.foreachDiscard(members)(user =>
+               messageRelay.ask[UserResponseADM](UserGroupMembershipRemoveRequestADM(user, changedGroup))
+             )
       } yield GroupGetResponseADM(group = changedGroup)
     }
 }
