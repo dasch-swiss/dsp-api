@@ -65,9 +65,10 @@ final case class IriService(
     for {
       // check the custom IRI; if not given, create an unused IRI
       customUserIri <- ZIO.foreach(entityIri.map(_.value))(iriConverter.asSmartIri)
-      userIri <-
-        checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
-          .flatMap(iri => ZIO.fromEither(UserIri.from(iri)).orElseFail(BadRequestException(s"Invalid User IRI: $iri")))
+      userIriStr    <- checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
+      userIri <- ZIO
+                   .fromEither(UserIri.from(userIriStr))
+                   .orElseFail(BadRequestException(s"Invalid User IRI: $userIriStr"))
     } yield userIri
 
   /**
