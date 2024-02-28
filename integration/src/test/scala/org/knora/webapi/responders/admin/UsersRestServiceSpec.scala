@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.testkit.ImplicitSender
 import zio.Chunk
 import zio.ZIO
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException

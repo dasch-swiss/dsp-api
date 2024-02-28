@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -36,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -44,6 +44,7 @@ final case class UsersRestService(
   auth: AuthorizationRestService,
   groupsResponder: GroupsResponderADM,
   userService: UserService,
+  knoraUserService: KnoraUserService,
   knoraUserToUserConverter: KnoraUserToUserConverter,
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
@@ -65,7 +66,7 @@ final case class UsersRestService(
     _        <- ensureNotABuiltInUser(deleteIri)
     _        <- ensureSelfUpdateOrSystemAdmin(deleteIri, requestingUser)
     user     <- getKnoraUserOrNotFound(deleteIri)
-    updated  <- userService.deleteUser(user)
+    updated  <- knoraUserService.deleteUser(user)
     external <- asExternalUserResponseADM(requestingUser, updated)
   } yield external
 
@@ -86,7 +87,7 @@ final case class UsersRestService(
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserResponseADM] =
     for {
       _        <- auth.ensureSystemAdmin(requestingUser)
-      internal <- userService.createNewUser(userCreateRequest)
+      internal <- knoraUserService.createNewUser(userCreateRequest)
       external <- asExternalUserResponseADM(requestingUser, internal)
     } yield external
 
@@ -139,7 +140,7 @@ final case class UsersRestService(
                   familyName = changeRequest.familyName,
                   lang = changeRequest.lang
                 )
-    updated  <- userService.updateUser(user, theChange)
+    updated  <- knoraUserService.updateUser(user, theChange)
     response <- asExternalUserResponseADM(requestingUser, updated)
   } yield response
 
@@ -160,10 +161,9 @@ final case class UsersRestService(
                )
              )
       user <- getKnoraUserOrNotFound(userIri)
-      response <-
-        userService
-          .changePassword(user, changeRequest.newPassword)
-          .flatMap(asExternalUserResponseADM(requestingUser, _))
+      response <- knoraUserService
+                    .changePassword(user, changeRequest.newPassword)
+                    .flatMap(asExternalUserResponseADM(requestingUser, _))
     } yield response
 
   def changeStatus(
@@ -175,7 +175,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
-      updated  <- userService.updateUser(user, UserChangeRequest(status = Some(changeRequest.status)))
+      updated  <- knoraUserService.updateUser(user, UserChangeRequest(status = Some(changeRequest.status)))
       response <- asExternalUserResponseADM(requestingUser, updated)
     } yield response
 
@@ -189,7 +189,7 @@ final case class UsersRestService(
       _        <- auth.ensureSystemAdmin(requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
       theUpdate = UserChangeRequest(systemAdmin = Some(changeRequest.systemAdmin))
-      updated  <- userService.updateUser(user, theUpdate)
+      updated  <- knoraUserService.updateUser(user, theUpdate)
       response <- asExternalUserResponseADM(requestingUser, updated)
     } yield response
 
@@ -203,7 +203,7 @@ final case class UsersRestService(
       _           <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
       kUser       <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
-      updatedUser <- userService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
+      updatedUser <- knoraUserService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
       external    <- asExternalUserResponseADM(requestingUser, updatedUser)
     } yield external
 
@@ -230,8 +230,7 @@ final case class UsersRestService(
       _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
       user    <- getKnoraUserOrNotFound(userIri)
       project <- getProjectADMOrBadRequest(projectIri)
-      updatedUser <-
-        userService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
+      updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
       external <- asExternalUserResponseADM(requestingUser, updatedUser)
     } yield external
 
@@ -245,7 +244,7 @@ final case class UsersRestService(
       _          <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
       user       <- getKnoraUserOrNotFound(userIri)
       project    <- getProjectADMOrBadRequest(projectIri)
-      updateUser <- userService.removeUserFromProject(user, project).mapError(BadRequestException.apply)
+      updateUser <- knoraUserService.removeUserFromProject(user, project).mapError(BadRequestException.apply)
       response   <- asExternalUserResponseADM(requestingUser, updateUser)
     } yield response
 
@@ -259,7 +258,7 @@ final case class UsersRestService(
       _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
       user    <- getKnoraUserOrNotFound(userIri)
       project <- getProjectADMOrBadRequest(projectIri)
-      updatedUser <- userService
+      updatedUser <- knoraUserService
                        .removeUserFromProjectAsAdmin(user, project)
                        .mapError(BadRequestException.apply)
       response <- asExternalUserResponseADM(requestingUser, updatedUser)
@@ -277,7 +276,7 @@ final case class UsersRestService(
       group <- groupsResponder
                  .groupGetADM(groupIri.value)
                  .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
-      updatedKUser <- userService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
+      updatedKUser <- knoraUserService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
       external     <- asExternalUserResponseADM(requestingUser, updatedKUser)
     } yield external
 
@@ -293,7 +292,7 @@ final case class UsersRestService(
       group <- groupsResponder
                  .groupGetADM(groupIri.value)
                  .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
-      updateUser <- userService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
+      updateUser <- knoraUserService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
       response   <- asExternalUserResponseADM(requestingUser, updateUser)
     } yield response
 }

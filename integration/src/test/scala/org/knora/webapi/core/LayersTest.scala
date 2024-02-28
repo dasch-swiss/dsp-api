@@ -144,6 +144,7 @@ object LayersTest {
       with TriplestoreService
       with UsersResponder
       with UsersRestService
+      with KnoraUserService
       with UserService
       with ValuesResponderV2
 
@@ -232,6 +233,7 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
+      KnoraUserService.layer,
       UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,

@@ -5,6 +5,8 @@
 
 package org.knora.webapi.routing
 
+import dsp.errors.AuthenticationException
+import dsp.errors.BadCredentialsException
 import org.apache.commons.codec.binary.Base32
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers
@@ -12,22 +14,14 @@ import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
 import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
-import spray.json.*
-import zio.*
-import zio.macros.accessible
-
-import java.util.Base64
-
-import dsp.errors.AuthenticationException
-import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
@@ -38,6 +32,11 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.cache.CacheUtil
+import spray.json.*
+import zio.*
+import zio.macros.accessible
+
+import java.util.Base64
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -131,18 +130,6 @@ trait Authenticator {
    *         when the password does not match; when the supplied token is not valid.
    */
   def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[Boolean]
-
-  /**
-   * Tries to get a [[User]].
-   *
-   * @param identifier           the IRI, email, or username of the user to be queried
-   * @return a [[User]]
-   *
-   *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
-   */
-  def getUserByIri(identifier: UserIri): Task[User]
-  def getUserByEmail(identifier: Email): Task[User]
-  def getUserByUsername(identifier: Username): Task[User]
 }
 
 object Authenticator {
@@ -648,7 +635,7 @@ final case class AuthenticatorLive(
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  override def getUserByIri(iri: UserIri): Task[User] =
+  private def getUserByIri(iri: UserIri): Task[User] =
     userService.findUserByIri(iri).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
@@ -659,7 +646,7 @@ final case class AuthenticatorLive(
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  override def getUserByEmail(email: Email): Task[User] =
+  private def getUserByEmail(email: Email): Task[User] =
     userService.findUserByEmail(email).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
@@ -670,7 +657,7 @@ final case class AuthenticatorLive(
    *
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
-  override def getUserByUsername(username: Username): Task[User] =
+  private def getUserByUsername(username: Username): Task[User] =
     userService.findUserByUsername(username).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
