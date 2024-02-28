@@ -28,27 +28,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new group.
- *
- * @param id            the optional IRI of the group to be created (unique).
- * @param name          the name of the group to be created (unique).
- * @param descriptions  the descriptions of the group to be created.
- * @param project       the project inside which the group will be created.
- * @param status        the status of the group to be created (active = true, inactive = false).
- * @param selfjoin      the status of self-join of the group to be created.
- */
-case class CreateGroupApiRequestADM(
-  id: Option[IRI] = None,
-  name: String,
-  descriptions: Seq[V2.StringLiteralV2],
-  project: IRI,
-  status: Boolean,
-  selfjoin: Boolean
-) extends GroupsADMJsonProtocol {
-  def toJsValue: JsValue = createGroupApiRequestADMFormat.write(this)
-}
-
-/**
  * Represents an API request payload that asks the Knora API server to update
  * an existing group. There are two change cases that are covered with this
  * data structure:
@@ -205,8 +184,6 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
     jsonFormat(GroupsGetResponseADM, "groups")
   implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
-  implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] =
-    jsonFormat(CreateGroupApiRequestADM, "id", "name", "descriptions", "project", "status", "selfjoin")
   implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] =
     jsonFormat(ChangeGroupApiRequestADM, "name", "descriptions", "status", "selfjoin")
 }
