@@ -11,7 +11,7 @@ import sttp.tapir.json.spray.jsonBody as sprayJsonBody
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -32,7 +32,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .out(sprayJsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
   val getPermissionsApByProjectAndGroupIri = base.securedEndpoint.get
-    .in(permissionsBase / "ap" / projectIri / groupIri)
+    .in(permissionsBase / "ap" / projectIri / groupIriPathVar)
     .description("Get all administrative permissions for a project and a group.")
     .out(sprayJsonBody[AdministrativePermissionGetResponseADM])
 

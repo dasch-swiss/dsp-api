@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 object AdminPathVariables {
 
-  val groupIri: EndpointInput.PathCapture[GroupIri] =
+  val groupIriPathVar: EndpointInput.PathCapture[GroupIri] =
     path[GroupIri]
       .name("groupIri")
       .description("The IRI of a group. Must be URL-encoded.")

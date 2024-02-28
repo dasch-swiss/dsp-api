@@ -12,7 +12,6 @@ import zio.*
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
@@ -23,8 +22,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
@@ -40,41 +37,9 @@ final case class GroupsRouteADM(
   private val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute: Route =
-    createGroup() ~
-      updateGroup() ~
+    updateGroup() ~
       changeGroupStatus() ~
       deleteGroup()
-
-  /**
-   * Creates a group.
-   */
-  private def createGroup(): Route = path(groupsBasePath) {
-    post {
-      entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val id: Validation[Throwable, Option[GroupIri]] = apiRequest.id
-          .map(id => Validation.fromEither(GroupIri.from(id).map(Some(_))).mapError(BadRequestException(_)))
-          .getOrElse(Validation.succeed(None))
-        val name: Validation[Throwable, GroupName] =
-          Validation.fromEither(GroupName.from(apiRequest.name)).mapError(ValidationException.apply)
-        val descriptions: Validation[Throwable, GroupDescriptions] =
-          Validation.fromEither(GroupDescriptions.from(apiRequest.descriptions)).mapError(ValidationException.apply)
-        val project: Validation[Throwable, ProjectIri] = Validation
-          .fromEither(ProjectIri.from(apiRequest.project))
-          .mapError(ValidationException.apply)
-        val status: Validation[Throwable, GroupStatus]     = Validation.succeed(GroupStatus.from(apiRequest.status))
-        val selfjoin: Validation[Throwable, GroupSelfJoin] = Validation.succeed(GroupSelfJoin.from(apiRequest.selfjoin))
-        val payloadValidation: Validation[Throwable, GroupCreatePayloadADM] =
-          Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
-
-        val requestTask = for {
-          payload        <- payloadValidation.toZIO
-          requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- RouteUtilZ.randomUuid()
-        } yield GroupCreateRequestADM(payload, requestingUser, uuid)
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-  }
 
   /**
    * Updates basic group information.

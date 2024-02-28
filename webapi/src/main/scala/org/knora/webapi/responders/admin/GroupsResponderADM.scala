@@ -36,6 +36,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -88,14 +89,12 @@ trait GroupsResponderADM {
   /**
    * Create a new group.
    *
-   * @param createRequest  the create request information.
-   * @param requestingUser the user making the request.
+   * @param request  the create request information.
    * @param apiRequestID   the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
   def createGroupADM(
-    createRequest: GroupCreatePayloadADM,
-    requestingUser: User,
+    request: GroupCreateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
 
@@ -142,9 +141,6 @@ final case class GroupsResponderADMLive(
     with GroupsADMJsonProtocol
     with LazyLogging {
 
-  // Global lock IRI used for group creation and updating
-  private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
-
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[GroupsResponderRequestADM]
 
   /**
@@ -155,7 +151,6 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupCreateRequestADM       => createGroupADM(r.createRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeRequestADM =>
       changeGroupBasicInformationRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeStatusRequestADM =>
@@ -304,79 +299,58 @@ final case class GroupsResponderADMLive(
   /**
    * Create a new group.
    *
-   * @param createRequest        the create request information.
-   * @param requestingUser       the user making the request.
+   * @param request              the create request information.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
   override def createGroupADM(
-    createRequest: GroupCreatePayloadADM,
-    requestingUser: User,
+    request: GroupCreateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
-    def createGroupTask(
-      createRequest: GroupCreatePayloadADM,
-      requestingUser: User
-    ): Task[GroupGetResponseADM] =
-      for {
-        /* check if the requesting user is allowed to create group */
-        _ <- ZIO
-               .fail(ForbiddenException("A new group can only be created by a project or system admin."))
-               .when {
-                 val userPermissions = requestingUser.permissions
-                 !userPermissions.isProjectAdmin(createRequest.project.value) &&
-                 !userPermissions.isSystemAdmin
-               }
+    val task = for {
+      nameExists <- groupByNameAndProjectExists(request.name.value, request.project.value)
+      _ <- ZIO
+             .fail(DuplicateValueException(s"Group with the name '${request.name.value}' already exists"))
+             .when(nameExists)
 
-        iri = createRequest.project.value
-        nameExists <- groupByNameAndProjectExists(
-                        name = createRequest.name.value,
-                        projectIri = iri
+      projectADM <- findProjectByIriOrFail(
+                      request.project.value,
+                      NotFoundException(
+                        s"Cannot create group inside project <${request.project}>. The project was not found."
                       )
-        _ <- ZIO
-               .fail(DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists"))
-               .when(nameExists)
-
-        projectADM <- findProjectByIriOrFail(
-                        iri,
-                        NotFoundException(
-                          s"Cannot create group inside project <${createRequest.project}>. The project was not found."
-                        )
-                      )
-
-        // check the custom IRI; if not given, create an unused IRI
-        customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
-        groupIri <- iriService.checkOrCreateEntityIri(
-                      customGroupIri,
-                      GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value
                     )
 
-        /* create the group */
-        createNewGroupSparqlString =
-          sparql.admin.txt
-            .createNewGroup(
-              AdminConstants.adminDataNamedGraph.value,
-              groupIri,
-              groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
-              name = createRequest.name.value,
-              descriptions = createRequest.descriptions.value,
-              projectIri = createRequest.project.value,
-              status = createRequest.status.value,
-              hasSelfJoinEnabled = createRequest.selfjoin.value
-            )
+      // check the custom IRI; if not given, create an unused IRI
+      customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
+      groupIri <- iriService.checkOrCreateEntityIri(
+                    customGroupIri,
+                    GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value
+                  )
 
-        _ <- triplestore.query(Update(createNewGroupSparqlString))
+      /* create the group */
+      createNewGroupSparqlString =
+        sparql.admin.txt
+          .createNewGroup(
+            AdminConstants.adminDataNamedGraph.value,
+            groupIri,
+            groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
+            name = request.name.value,
+            descriptions = request.descriptions.value,
+            projectIri = request.project.value,
+            status = request.status.value,
+            hasSelfJoinEnabled = request.selfjoin.value
+          )
 
-        /* Verify that the group was created and updated  */
-        createdGroup <-
-          groupGetADM(groupIri)
-            .flatMap(ZIO.fromOption(_))
-            .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
+      _ <- triplestore.query(Update(createNewGroupSparqlString))
 
-      } yield GroupGetResponseADM(createdGroup)
+      /* Verify that the group was created and updated  */
+      createdGroup <-
+        groupGetADM(groupIri)
+          .flatMap(ZIO.fromOption(_))
+          .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
 
-    val task = createGroupTask(createRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, GROUPS_GLOBAL_LOCK_IRI, task)
+    } yield GroupGetResponseADM(createdGroup)
+    IriLocker.runWithIriLock(apiRequestID, "http://rdfh.ch/groups", task)
   }
 
   /**
