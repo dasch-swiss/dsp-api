@@ -115,7 +115,7 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "UPDATE a group" in {
         val response = UnsafeZioRun.runOrThrow(
-          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+          GroupsResponderADM.updateGroup(
             groupIri = GroupIri.unsafeFrom(newGroupIri.get),
             GroupUpdateRequest(
               name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
@@ -143,7 +143,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return 'NotFound' if a not-existing group IRI is submitted during update" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
-          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+          GroupsResponderADM.updateGroup(
             groupIri = GroupIri.unsafeFrom(groupIri),
             GroupUpdateRequest(
               name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
@@ -183,7 +183,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       "return 'BadRequest' if the new group name already exists inside the project" in {
         val groupName = GroupName.unsafeFrom("Image reviewer")
         val exit = UnsafeZioRun.run(
-          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+          GroupsResponderADM.updateGroup(
             GroupIri.unsafeFrom(newGroupIri.get),
             GroupUpdateRequest(
               name = Some(groupName),

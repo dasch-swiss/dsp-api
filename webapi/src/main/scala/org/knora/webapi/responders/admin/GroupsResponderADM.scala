@@ -108,7 +108,7 @@ trait GroupsResponderADM {
    * @param apiRequestID  the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
-  def changeGroupBasicInformationRequestADM(
+  def updateGroup(
     groupIri: GroupIri,
     request: GroupUpdateRequest,
     apiRequestID: UUID
@@ -357,7 +357,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
-  override def changeGroupBasicInformationRequestADM(
+  override def updateGroup(
     groupIri: GroupIri,
     request: GroupUpdateRequest,
     apiRequestID: UUID
@@ -382,7 +382,7 @@ final case class GroupsResponderADMLive(
           status = request.status,
           selfjoin = request.selfjoin
         )
-      result <- updateGroupADM(groupIri.value, groupUpdatePayload)
+      result <- updateGroupHelper(groupIri.value, groupUpdatePayload)
     } yield result
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
@@ -438,7 +438,7 @@ final case class GroupsResponderADMLive(
         groupUpdatePayload = GroupUpdateRequest(status = maybeStatus)
 
         // update group status
-        updateGroupResult <- updateGroupADM(groupIri, groupUpdatePayload)
+        updateGroupResult <- updateGroupHelper(groupIri, groupUpdatePayload)
 
         // remove all members from group if status is false
         operationResponse <-
@@ -460,7 +460,7 @@ final case class GroupsResponderADMLive(
    * @param request   the payload holding the information which we want to update.
    * @return a [[GroupGetResponseADM]]
    */
-  private def updateGroupADM(groupIri: IRI, request: GroupUpdateRequest) =
+  private def updateGroupHelper(groupIri: IRI, request: GroupUpdateRequest) =
     for {
       _ <- ZIO
              .fail(BadRequestException("No data would be changed. Aborting update request."))
