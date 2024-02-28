@@ -10,7 +10,6 @@ import zio.Chunk
 import zio.ZIO
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
@@ -30,6 +29,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -89,6 +89,13 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     passwordChangeRequest: PasswordChangeRequest
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changePassword(requestingUser, userIri, passwordChangeRequest))
+
+  def changeSystemAdmin(
+    requestingUser: User,
+    userIri: UserIri,
+    changeRequest: SystemAdminChangeRequest
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.changeSystemAdmin(requestingUser, userIri, changeRequest))
 
   "The UsersRestService" when {
     "calling getAllUsers" should {
@@ -370,19 +377,19 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "UPDATE the user's system admin membership" in {
         val response1 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeSystemAdmin(
+          changeSystemAdmin(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            SystemAdmin.IsSystemAdmin,
-            UUID.randomUUID()
+            SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin)
           )
         )
         response1.user.isSystemAdmin should equal(true)
 
         val response2 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeSystemAdmin(
+          changeSystemAdmin(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            SystemAdmin.IsNotSystemAdmin,
-            UUID.randomUUID()
+            SystemAdminChangeRequest(SystemAdmin.IsNotSystemAdmin)
           )
         )
         response2.user.permissions.isSystemAdmin should equal(false)

@@ -142,26 +142,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Change the user's system admin membership status (active / inactive).
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param systemAdmin    the new status.
-   *
-   * @param apiRequestId         the unique api request ID.
-   * @return a future containing a [[UserResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
-   */
-  def changeSystemAdmin(
-    userIri: UserIri,
-    systemAdmin: SystemAdmin,
-    apiRequestId: UUID
-  ): Task[UserResponseADM] = {
-    val updateTask = updateUserADM(userIri, UserChangeRequest(systemAdmin = Some(systemAdmin)))
-    IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
-  }
-
-  /**
    * Removes a project from the user's projects.
    * If the project is not in the user's projects, a BadRequestException is returned.
    * If the project is in the user's admin projects, it is removed.
@@ -334,13 +314,6 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeUserStatus(userIri, status, apiRequestID))
-
-  def changeSystemAdmin(
-    userIri: UserIri,
-    systemAdmin: SystemAdmin,
-    apiRequestId: UUID
-  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.changeSystemAdmin(userIri, systemAdmin, apiRequestId))
 
   def findUserByIri(
     identifier: UserIri,

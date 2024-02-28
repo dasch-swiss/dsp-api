@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -36,9 +34,11 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
@@ -181,8 +181,10 @@ final case class UsersRestService(
     for {
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdmin(requestingUser)
-      uuid     <- Random.nextUUID
-      response <- responder.changeSystemAdmin(userIri, changeRequest.systemAdmin, uuid)
+      user     <- getKnoraUserOrNotFound(userIri)
+      theUpdate = UserChangeRequest(systemAdmin = Some(changeRequest.systemAdmin))
+      updated  <- userService.updateUser(user, theUpdate)
+      response <- asExternalUserResponse(requestingUser, updated)
     } yield response
 
   def addProjectToUserIsInProject(
