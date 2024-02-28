@@ -89,9 +89,8 @@ final case class UsersRestService(
       kUser <- userRepo
                  .findById(userIri)
                  .someOrFail(NotFoundException(s"The user $userIri does not exist."))
-      projects <- ZIO.foreach(kUser.isInProject)(projectService.findById)
-      internal  = UserProjectMembershipsGetResponseADM(projects.flatten)
-      external <- format.toExternal(internal)
+      projects <- projectService.findByIds(kUser.isInProject)
+      external <- format.toExternal(UserProjectMembershipsGetResponseADM(projects))
     } yield external
 
   def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
@@ -99,9 +98,8 @@ final case class UsersRestService(
       kUser <- userRepo
                  .findById(userIri)
                  .someOrFail(NotFoundException(s"The user $userIri does not exist."))
-      projects <- ZIO.foreach(kUser.isInProjectAdminGroup)(projectService.findById)
-      internal  = UserProjectAdminMembershipsGetResponseADM(projects.flatten)
-      external <- format.toExternal(internal)
+      projects <- projectService.findByIds(kUser.isInProjectAdminGroup)
+      external <- format.toExternal(UserProjectAdminMembershipsGetResponseADM(projects))
     } yield external
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
