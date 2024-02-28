@@ -11,6 +11,8 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.valueobjects.LanguageCode
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -84,15 +86,24 @@ case class UserService(
       status = update.status.getOrElse(kUser.status),
       password = update.passwordHash.getOrElse(kUser.password),
       preferredLanguage = update.lang.getOrElse(kUser.preferredLanguage),
-      isInProject = update.projects.getOrElse(kUser.isInProject),
-      isInProjectAdminGroup = update.projectsAdmin.getOrElse(kUser.isInProjectAdminGroup),
-      isInGroup = update.groups.getOrElse(kUser.isInGroup),
+      isInProject = update.projects.getOrElse(kUser.isInProject).distinct,
+      isInProjectAdminGroup = update.projectsAdmin.getOrElse(kUser.isInProjectAdminGroup).distinct,
+      isInGroup = update.groups.getOrElse(kUser.isInGroup).distinct,
       isInSystemAdminGroup = update.systemAdmin.getOrElse(kUser.isInSystemAdminGroup)
     )
     userRepo.save(updatedUser)
   }
 
-  private def toUser(kUser: KnoraUser): Task[User] = for {
+  def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): Task[KnoraUser] =
+    updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri)))
+
+  def addProjectToUserIsInProject(user: KnoraUser, project: ProjectADM): Task[KnoraUser] =
+    updateUser(user, UserChangeRequest(projects = Some(user.isInProject :+ project.projectIri)))
+
+  def addProjectToUserIsInProjectAdminGroup(user: KnoraUser, project: ProjectADM): Task[KnoraUser] =
+    updateUser(user, UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ project.projectIri)))
+
+  def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
     groups   <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
     permissionData <-

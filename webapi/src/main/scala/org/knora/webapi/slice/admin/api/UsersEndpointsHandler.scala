@@ -76,7 +76,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
       usersEndpoints.post.usersByIriProjectMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addProjectToUserIsInProject(requestingUser, userIri, projectIri)
+        restService.addProjectToUserIsInProject(requestingUser, userIri, projectIri.value)
       }
     )
 
@@ -84,7 +84,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
       usersEndpoints.post.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri)
+        restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri.value)
       }
     )
 

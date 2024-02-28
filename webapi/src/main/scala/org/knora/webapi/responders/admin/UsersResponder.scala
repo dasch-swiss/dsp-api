@@ -205,33 +205,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Adds a user to a project.
-   *
-   * @param userIri              the user's IRI.
-   * @param projectIri           the project's IRI.
-   * @param apiRequestID         the unique api request ID.
-   * @return
-   */
-  def addProjectToUserIsInProject(
-    userIri: UserIri,
-    projectIri: ProjectIri,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
-    val updateTask =
-      for {
-        kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
-        currentIsInProject = kUser.isInProject
-        _ <- ZIO.when(currentIsInProject.contains(projectIri))(
-               ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
-             )
-        newIsInProject    = currentIsInProject :+ projectIri
-        theChange         = UserChangeRequest(projects = Some(newIsInProject))
-        updateUserResult <- updateUserADM(userIri, theChange)
-      } yield updateUserResult
-    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
-  }
-
-  /**
    * Removes a project from the user's projects.
    * If the project is not in the user's projects, a BadRequestException is returned.
    * If the project is in the user's admin projects, it is removed.
@@ -263,42 +236,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Adds a user to the project admin group of a project.
-   *
-   * @param userIri              the user's IRI.
-   * @param projectIri           the project's IRI.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]].
-   */
-  def addProjectToUserIsInProjectAdminGroup(
-    userIri: UserIri,
-    projectIri: ProjectIri,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
-    val updateTask =
-      for {
-        kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
-        currentIsInProject = kUser.isInProject
-        _ <-
-          ZIO.when(!currentIsInProject.contains(projectIri))(
-            ZIO.fail(
-              BadRequestException(
-                s"User ${userIri.value} is not a member of project ${projectIri.value}. A user needs to be a member of the project to be added as project admin."
-              )
-            )
-          )
-        currentIsInProjectAdminGroup = kUser.isInProjectAdminGroup
-        _ <- ZIO.when(currentIsInProjectAdminGroup.contains(projectIri))(
-               ZIO.fail(BadRequestException(s"User $userIri is already a project admin for project $projectIri."))
-             )
-        newIsInProjectAdminGroup = currentIsInProjectAdminGroup :+ projectIri
-        theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
-        updateUserResult        <- updateUserADM(userIri, theChange)
-      } yield updateUserResult
-    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
-  }
-
-  /**
    * Removes a user from project admin group of a project.
    *
    * @param userIri              the user's IRI.
@@ -322,32 +259,6 @@ final case class UsersResponder(
         theChange                = UserChangeRequest(projectsAdmin = Some(newIsInProjectAdminGroup))
         updateUserResult        <- updateUserADM(userIri, theChange)
       } yield updateUserResult
-    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
-  }
-
-  /**
-   * Adds a user to a group.
-   *
-   * @param userIri              the user's IRI.
-   * @param groupIri             the group IRI.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]].
-   */
-  def addGroupToUserIsInGroup(
-    userIri: UserIri,
-    groupIri: GroupIri,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
-    val updateTask =
-      for {
-        kUser           <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
-        currentIsInGroup = kUser.isInGroup
-        _ <- ZIO.when(currentIsInGroup.contains(groupIri))(
-               ZIO.fail(BadRequestException(s"User $userIri is already member of group $groupIri."))
-             )
-        theChange = UserChangeRequest(groups = Some(currentIsInGroup :+ groupIri))
-        result   <- updateUserADM(userIri, theChange)
-      } yield result
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
 
@@ -481,20 +392,6 @@ object UsersResponder {
   ): ZIO[UsersResponder, Throwable, Option[User]] =
     ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser))
 
-  def addProjectToUserIsInProject(
-    userIri: UserIri,
-    projectIri: ProjectIri,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProject(userIri, projectIri, apiRequestID))
-
-  def addProjectToUserIsInProjectAdminGroup(
-    userIri: UserIri,
-    projectIri: ProjectIri,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.addProjectToUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID))
-
   def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
@@ -533,13 +430,6 @@ object UsersResponder {
     apiRequestID: UUID
   ): RIO[UsersResponder, UserOperationResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
-
-  def addGroupToUserIsInGroup(
-    userIri: UserIri,
-    groupIri: GroupIri,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.addGroupToUserIsInGroup(userIri, groupIri, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,

@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
@@ -25,6 +26,8 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequ
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
@@ -37,6 +40,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
+  groupsResponder: GroupsResponderADM,
   userService: UserService,
   userRepo: KnoraUserRepo,
   projectService: ProjectADMService,
@@ -173,26 +177,56 @@ final case class UsersRestService(
   def addProjectToUserIsInProject(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIdentifierADM.IriIdentifier
+    projectIri: ProjectIri
   ): Task[UserOperationResponseADM] =
     for {
-      _        <- ensureNotABuiltInUser(userIri)
-      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
-      uuid     <- Random.nextUUID
-      response <- responder.addProjectToUserIsInProject(userIri, projectIri.value, uuid)
-    } yield response
+      _       <- ensureNotABuiltInUser(userIri)
+      _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      kUser   <- getKnoraUserOrNotFound(userIri)
+      project <- getProjectOrBadRequest(projectIri)
+      _ <- ZIO
+             .fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
+             .when(kUser.isInProject.contains(projectIri))
+      updatedUser <- userService.addProjectToUserIsInProject(kUser, project)
+      external    <- asExternalUserOperationResponse(updatedUser)
+    } yield external
+
+  private def getProjectOrBadRequest(projectIri: ProjectIri) =
+    projectService
+      .findById(projectIri)
+      .someOrFail(BadRequestException(s"Project with iri ${projectIri.value} not found."))
+
+  private def asExternalUserOperationResponse(kUser: KnoraUser) =
+    for {
+      response <- userService.toUser(kUser).map(UserOperationResponseADM.apply)
+      external <- format.toExternal(response)
+    } yield external
 
   def addProjectToUserIsInProjectAdminGroup(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIdentifierADM.IriIdentifier
+    projectIri: ProjectIri
   ): Task[UserOperationResponseADM] =
     for {
-      _        <- ensureNotABuiltInUser(userIri)
-      _        <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri.value)
-      uuid     <- Random.nextUUID
-      response <- responder.addProjectToUserIsInProjectAdminGroup(userIri, projectIri.value, uuid)
-    } yield response
+      _       <- ensureNotABuiltInUser(userIri)
+      _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      kUser   <- getKnoraUserOrNotFound(userIri)
+      project <- getProjectOrBadRequest(projectIri)
+      _ <-
+        ZIO
+          .fail(BadRequestException(s"User ${userIri.value} is already admin member of project ${projectIri.value}."))
+          .when(kUser.isInProjectAdminGroup.contains(projectIri))
+      _ <-
+        ZIO
+          .fail(
+            BadRequestException(
+              s"User ${userIri.value} is not a member of project ${projectIri.value}. A user needs to be a member of the project to be added as project admin."
+            )
+          )
+          .when(!kUser.isInProject.contains(projectIri))
+      updatedUser <- userService.addProjectToUserIsInProjectAdminGroup(kUser, project)
+      external    <- asExternalUserOperationResponse(updatedUser)
+    } yield external
 
   def removeProjectToUserIsInProject(
     requestingUser: User,
@@ -224,11 +258,18 @@ final case class UsersRestService(
     groupIri: GroupIri
   ): Task[UserOperationResponseADM] =
     for {
-      _        <- ensureNotABuiltInUser(userIri)
-      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
-      uuid     <- Random.nextUUID
-      response <- responder.addGroupToUserIsInGroup(userIri, groupIri, uuid)
-    } yield response
+      _     <- ensureNotABuiltInUser(userIri)
+      _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
+      kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
+      group <- groupsResponder
+                 .groupGetADM(groupIri.value)
+                 .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
+      _ <- ZIO.when(kUser.isInGroup.contains(groupIri))(
+             ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of group ${groupIri.value}."))
+           )
+      updatedKUser <- userService.addGroupToUserIsInGroup(kUser, group)
+      external     <- asExternalUserOperationResponse(updatedKUser)
+    } yield external
 
   def removeGroupFromUserIsInGroup(
     requestingUser: User,
