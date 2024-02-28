@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
+import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -190,5 +191,10 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(updatedUser.isInGroup.isEmpty)
       }
     )
-  ).provide(KnoraUserRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
+  ).provide(
+    KnoraUserRepoLive.layer,
+    TriplestoreServiceInMemory.emptyLayer,
+    StringFormatter.test,
+    CacheServiceLive.layer
+  )
 }

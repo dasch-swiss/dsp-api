@@ -58,7 +58,7 @@ import org.knora.webapi.slice.search.api.SearchEndpoints
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -87,9 +87,10 @@ object LayersTest {
   type CommonR0 = ActorSystem with AppConfigurationsTest with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
-      with ApiV2Endpoints
       with AdminApiEndpoints
+      with ApiV2Endpoints
       with AppRouter
+      with AssetPermissionsResponder
       with Authenticator
       with AuthorizationRestService
       with CacheService
@@ -136,7 +137,6 @@ object LayersTest {
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
-      with AssetPermissionsResponder
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -144,6 +144,7 @@ object LayersTest {
       with TestClientService
       with TriplestoreService
       with UsersResponder
+      with UsersRestService
       with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
@@ -157,7 +158,7 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheServiceInMemImpl.layer,
+      CacheServiceLive.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
@@ -179,8 +180,8 @@ object LayersTest {
       IriService.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserRepoLive.layer,
       KnoraUserGroupRepoLive.layer,
+      KnoraUserRepoLive.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,

@@ -9,10 +9,6 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
 
 sealed trait CacheServiceRequest extends StoreRequest with RelayedMessage
 
@@ -27,44 +23,9 @@ case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequ
 case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends CacheServiceRequest
 
 /**
- * Message requesting to write user to cache.
- */
-case class CacheServicePutUserADM(value: User) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByIriADM(userIri: UserIri) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByEmailADM(email: Email) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve user from cache.
- */
-case class CacheServiceGetUserByUsernameADM(username: Username) extends CacheServiceRequest
-
-/**
- * Message requesting to store a simple string under the supplied key.
- */
-case class CacheServicePutString(key: String, value: String) extends CacheServiceRequest
-
-/**
- * Message requesting to retrieve simple string stored under the key.
- */
-case class CacheServiceGetString(key: String) extends CacheServiceRequest
-
-/**
- * Message requesting to remove anything stored under the keys.
- */
-case class CacheServiceRemoveValues(keys: Set[String]) extends CacheServiceRequest
-
-/**
  * Message requesting to completely empty the cache (wipe everything).
  */
-case class CacheServiceFlushDB(requestingUser: User) extends CacheServiceRequest
+case object CacheServiceClearCache extends CacheServiceRequest
 
 /**
  * Queries Cache Service status.
