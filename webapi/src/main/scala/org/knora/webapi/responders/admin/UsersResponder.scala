@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Chunk
 import zio.Task
 import zio.URLayer
 import zio.ZIO
@@ -25,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
@@ -46,9 +44,6 @@ final case class UsersResponder(
   implicit val stringFormatter: StringFormatter
 ) extends MessageHandler
     with LazyLogging {
-
-  // The IRI used to lock user creation and update
-  private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[UsersResponderRequestADM]
@@ -80,24 +75,14 @@ final case class UsersResponder(
   ): Task[Option[User]] =
     userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationType)))
 
-  private def ensureEmailDoesNotExist(email: Email) =
-    ZIO.whenZIO(userRepo.existsByEmail(email))(
-      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
-    )
-
-  private def ensureUsernameDoesNotExist(username: Username) =
-    ZIO.whenZIO(userRepo.existsByUsername(username))(
-      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
-    )
-
   /**
    * Removes a project from the user's projects.
    * If the project is not in the user's projects, a BadRequestException is returned.
    * If the project is in the user's admin projects, it is removed.
    *
-   * @param userIri              the user's IRI.
-   * @param projectIri           the project's IRI.
-   * @param apiRequestID         the unique api request ID.
+   * @param userIri      the user's IRI.
+   * @param projectIri   the project's IRI.
+   * @param apiRequestID the unique api request ID.
    * @return
    */
   def removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
@@ -124,9 +109,9 @@ final case class UsersResponder(
   /**
    * Removes a user from project admin group of a project.
    *
-   * @param userIri              the user's IRI.
-   * @param projectIri           the project's IRI.
-   * @param apiRequestID         the unique api request ID.
+   * @param userIri      the user's IRI.
+   * @param projectIri   the project's IRI.
+   * @param apiRequestID the unique api request ID.
    * @return a [[UserResponseADM]]
    */
   def removeProjectFromUserIsInProjectAdminGroup(
@@ -151,9 +136,9 @@ final case class UsersResponder(
   /**
    * Removes a user from a group.
    *
-   * @param userIri              the user's IRI.
-   * @param groupIri             the group IRI.
-   * @param apiRequestID         the unique api request ID.
+   * @param userIri      the user's IRI.
+   * @param groupIri     the group IRI.
+   * @param apiRequestID the unique api request ID.
    * @return a [[UserResponseADM]].
    */
   def removeGroupFromUserIsInGroup(
@@ -181,8 +166,8 @@ final case class UsersResponder(
   /**
    * Updates an existing user. Should not be directly used from the receive method.
    *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param theUpdate    the updated information.
+   * @param userIri   the IRI of the existing user that we want to update.
+   * @param theUpdate the updated information.
    * @return a [[UserResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
@@ -200,60 +185,6 @@ final case class UsersResponder(
           .findUserByIri(userIri)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
     } yield UserResponseADM(updatedUserADM.ofType(UserInformationType.Restricted))
-
-  /**
-   * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
-   * is allowed to create a new user.
-   *
-   * Referenced Websites:
-   *                     - https://crackstation.net/hashing-security.htm
-   *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
-   *
-   * @param req    a [[UserCreateRequest]] object containing information about the new user to be created.
-   * @param apiRequestID         the unique api request ID.
-   * @return a [[UserResponseADM]].
-   */
-  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserResponseADM] = {
-    val createNewUserTask =
-      for {
-        _ <- ensureUsernameDoesNotExist(req.username)
-        _ <- ensureEmailDoesNotExist(req.email)
-
-        // check the custom IRI; if not given, create an unused IRI
-        customUserIri <- ZIO.foreach(req.id.map(_.value))(iriConverter.asSmartIri)
-        userIri <- iriService
-                     .checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
-                     .flatMap(iri =>
-                       ZIO.fromEither(UserIri.from(iri)).orElseFail(BadRequestException(s"Invalid User IRI: $iri"))
-                     )
-
-        // Create the new user.
-        passwordHash = passwordService.hashPassword(req.password)
-        newUser = KnoraUser(
-                    userIri,
-                    req.username,
-                    req.email,
-                    req.familyName,
-                    req.givenName,
-                    passwordHash,
-                    req.lang,
-                    req.status,
-                    Chunk.empty,
-                    Chunk.empty,
-                    req.systemAdmin,
-                    Chunk.empty
-                  )
-        _ <- userRepo.save(newUser)
-
-        createdUser <-
-          userService.findUserByIri(userIri).someOrFail {
-            UpdateNotPerformedException(s"User ${userIri.value} was not created. Please report this as a possible bug.")
-          }
-
-      } yield UserResponseADM(createdUser.ofType(UserInformationType.Restricted))
-
-    IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
-  }
 }
 
 object UsersResponder {
@@ -281,12 +212,6 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](
       _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
-
-  def createNewUserADM(
-    req: UserCreateRequest,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,

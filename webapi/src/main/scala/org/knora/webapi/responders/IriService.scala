@@ -15,6 +15,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -29,6 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
  * will be subject to further refactoring once we extract more services.
  */
 final case class IriService(
+  private val iriConverter: IriConverter,
   private val triplestore: TriplestoreService,
   private val stringFormatter: StringFormatter
 ) extends LazyLogging {
@@ -57,6 +60,15 @@ final case class IriService(
    */
   def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
     triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.results.bindings.nonEmpty)
+
+  def checkOrCreateNewUserIri(entityIri: Option[UserIri]): Task[UserIri] =
+    for {
+      // check the custom IRI; if not given, create an unused IRI
+      customUserIri <- ZIO.foreach(entityIri.map(_.value))(iriConverter.asSmartIri)
+      userIri <-
+        checkOrCreateEntityIri(customUserIri, UserIri.makeNew.value)
+          .flatMap(iri => ZIO.fromEither(UserIri.from(iri)).orElseFail(BadRequestException(s"Invalid User IRI: $iri")))
+    } yield userIri
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
@@ -108,6 +120,5 @@ final case class IriService(
 }
 
 object IriService {
-  val layer: ZLayer[TriplestoreService & StringFormatter, Nothing, IriService] =
-    ZLayer.fromFunction(IriService.apply _)
+  val layer = ZLayer.derive[IriService]
 }

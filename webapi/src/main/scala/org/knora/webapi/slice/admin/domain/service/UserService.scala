@@ -16,8 +16,10 @@ import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -32,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.cache.api.CacheService
 
 final case class UserChangeRequest(
@@ -52,6 +55,8 @@ case class UserService(
   private val userRepo: KnoraUserRepo,
   private val projectsService: ProjectADMService,
   private val groupsService: GroupsResponderADM,
+  private val iriService: IriService,
+  private val iriConverter: IriConverter,
   private val passwordService: PasswordService,
   private val permissionService: PermissionsResponderADM,
   private val cacheService: CacheService
@@ -113,6 +118,29 @@ case class UserService(
 
   def deleteUser(user: KnoraUser): UIO[KnoraUser] =
     updateUser(user, UserChangeRequest(status = Some(UserStatus.Inactive))).orDie
+
+  def createNewUser(req: UserCreateRequest): ZIO[Any, Throwable, KnoraUser] =
+    for {
+      _           <- ensureUsernameDoesNotExist(req.username)
+      _           <- ensureEmailDoesNotExist(req.email)
+      userIri     <- iriService.checkOrCreateNewUserIri(req.id)
+      passwordHash = passwordService.hashPassword(req.password)
+      newUser = KnoraUser(
+                  userIri,
+                  req.username,
+                  req.email,
+                  req.familyName,
+                  req.givenName,
+                  passwordHash,
+                  req.lang,
+                  req.status,
+                  Chunk.empty,
+                  Chunk.empty,
+                  req.systemAdmin,
+                  Chunk.empty
+                )
+      userCreated <- userRepo.save(newUser)
+    } yield userCreated
 
   def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(

@@ -85,9 +85,8 @@ final case class UsersRestService(
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserResponseADM] =
     for {
       _        <- auth.ensureSystemAdmin(requestingUser)
-      uuid     <- Random.nextUUID
-      internal <- responder.createNewUserADM(userCreateRequest, uuid)
-      external <- format.toExternal(internal)
+      internal <- userService.createNewUser(userCreateRequest)
+      external <- asExternalUserResponseADM(requestingUser, internal)
     } yield external
 
   def getProjectMemberShipsByUserIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =

@@ -110,6 +110,12 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.updateUser(requestingUser, userIri, basicUserInformationChangeRequest))
 
+  def createUser(
+    requestingUser: User,
+    userCreateRequest: UserCreateRequest
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.createUser(requestingUser, userCreateRequest))
+
   "The UsersRestService" when {
     "calling getAllUsers" should {
       "with a SystemAdmin should return all real users" in {
@@ -199,7 +205,8 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     "asked to create a new user" should {
       "CREATE the user and return it's profile if the supplied email is unique " in {
         val response = UnsafeZioRun.runOrThrow(
-          UsersResponder.createNewUserADM(
+          createUser(
+            rootUser,
             UserCreateRequest(
               username = Username.unsafeFrom("donald.duck"),
               email = Email.unsafeFrom("donald.duck@example.com"),
@@ -209,8 +216,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               status = UserStatus.from(true),
               lang = LanguageCode.en,
               systemAdmin = SystemAdmin.IsNotSystemAdmin
-            ),
-            apiRequestID = UUID.randomUUID
+            )
           )
         )
         val u = response.user
@@ -224,7 +230,8 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         val exit = UnsafeZioRun.run(
-          UsersResponder.createNewUserADM(
+          createUser(
+            rootUser,
             UserCreateRequest(
               username = Username.unsafeFrom("root"),
               email = Email.unsafeFrom("root2@example.com"),
@@ -234,8 +241,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               status = UserStatus.from(true),
               lang = LanguageCode.en,
               systemAdmin = SystemAdmin.IsNotSystemAdmin
-            ),
-            UUID.randomUUID
+            )
           )
         )
         assertFailsWithA[DuplicateValueException](exit, s"User with the username 'root' already exists")
@@ -243,7 +249,8 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         val exit = UnsafeZioRun.run(
-          UsersResponder.createNewUserADM(
+          createUser(
+            rootUser,
             UserCreateRequest(
               username = Username.unsafeFrom("root2"),
               email = Email.unsafeFrom("root@example.com"),
@@ -253,8 +260,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
               status = UserStatus.from(true),
               lang = LanguageCode.en,
               systemAdmin = SystemAdmin.IsNotSystemAdmin
-            ),
-            UUID.randomUUID
+            )
           )
         )
         assertFailsWithA[DuplicateValueException](exit, s"User with the email 'root@example.com' already exists")
