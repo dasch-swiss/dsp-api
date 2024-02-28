@@ -5,7 +5,6 @@
 
 package org.knora.webapi.routing
 
-import com.typesafe.scalalogging.Logger
 import org.apache.commons.codec.binary.Base32
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers
@@ -13,7 +12,6 @@ import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
 import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
-import org.slf4j.LoggerFactory
 import spray.json.*
 import zio.*
 import zio.macros.accessible
@@ -30,7 +28,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.*
-import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
@@ -39,6 +36,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -156,13 +154,11 @@ object Authenticator {
 
 final case class AuthenticatorLive(
   private val appConfig: AppConfig,
-  private val usersResponder: UsersResponder,
+  private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
   private implicit val stringFormatter: StringFormatter
 ) extends Authenticator {
-
-  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
@@ -375,7 +371,7 @@ final case class AuthenticatorLive(
     if (credentials.isEmpty) {
       ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser)
     } else {
-      getUserADMThroughCredentialsV2(credentials).map(_.ofType(UserInformationTypeADM.Full))
+      getUserADMThroughCredentialsV2(credentials).map(_.ofType(UserInformationType.Full))
     }
   }
 
@@ -441,10 +437,8 @@ final case class AuthenticatorLive(
   private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
 
     val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
-    logger.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)
 
     val credentialsFromHeaders: Option[KnoraCredentialsV2] = extractCredentialsFromHeaderV2(requestContext)
-    logger.debug("extractCredentialsV2 - credentialsFromHeader: {}", credentialsFromHeaders)
 
     // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, token)
     val credentials = if (credentialsFromParameters.nonEmpty) {
@@ -453,7 +447,6 @@ final case class AuthenticatorLive(
       credentialsFromHeaders
     }
 
-    logger.debug("extractCredentialsV2 - returned credentials: '{}'", credentials)
     credentials
   }
 
@@ -656,9 +649,7 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByIri(iri: UserIri): Task[User] =
-    usersResponder
-      .findUserByIri(iri, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
-      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    userService.findUserByIri(iri).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -669,9 +660,7 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByEmail(email: Email): Task[User] =
-    usersResponder
-      .findUserByEmail(email, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
-      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    userService.findUserByEmail(email).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Tries to get a [[User]].
@@ -682,9 +671,7 @@ final case class AuthenticatorLive(
    *         [[BadCredentialsException]] when either the supplied email is empty or no user with such an email could be found.
    */
   override def getUserByUsername(username: Username): Task[User] =
-    usersResponder
-      .findUserByUsername(username, UserInformationTypeADM.Full, KnoraSystemInstances.Users.SystemUser)
-      .someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
+    userService.findUserByUsername(username).someOrFail(BadCredentialsException(BAD_CRED_NOT_VALID))
 
   /**
    * Calculates the cookie name, where the external host and port are encoded as a base32 string

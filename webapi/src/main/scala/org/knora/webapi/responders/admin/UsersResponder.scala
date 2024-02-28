@@ -16,19 +16,13 @@ import zio.ZLayer
 import java.util.UUID
 
 import dsp.errors.*
-import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -84,55 +78,10 @@ final case class UsersResponder(
    */
   def findUserByIri(
     identifier: UserIri,
-    userInformationType: UserInformationTypeADM,
+    userInformationType: UserInformationType,
     requestingUser: User
   ): Task[Option[User]] =
-    userService.findUserByIri(identifier).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
-
-  /**
-   * If the requesting user is a system admin, or is requesting themselves, or is a system user,
-   * returns the user in the requested format. Otherwise, returns only public information.
-   * @param user           the user to be returned
-   * @param requestingUser the user requesting the information
-   * @param infoType       the type of information requested
-   * @return
-   */
-  private def filterUserInformation(user: User, requestingUser: User, infoType: UserInformationTypeADM): User =
-    if (requestingUser.permissions.isSystemAdmin || requestingUser.id == user.id || requestingUser.isSystemUser)
-      user.ofType(infoType)
-    else user.ofType(UserInformationTypeADM.Public)
-
-  /**
-   * Gets information about a Knora user, and returns it as a [[User]].
-   *
-   * @param email                the email of the user.
-   * @param userInformationType  the type of the requested profile (restricted
-   *                             of full).
-   * @param requestingUser       the user initiating the request.
-   * @return a [[User]] describing the user.
-   */
-  def findUserByEmail(
-    email: Email,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): Task[Option[User]] =
-    userService.findUserByEmail(email).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
-
-  /**
-   * Gets information about a Knora user, and returns it as a [[User]].
-   *
-   * @param username             the username of the user.
-   * @param userInformationType  the type of the requested profile (restricted
-   *                             of full).
-   * @param requestingUser       the user initiating the request.
-   * @return a [[User]] describing the user.
-   */
-  def findUserByUsername(
-    username: Username,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): Task[Option[User]] =
-    userService.findUserByUsername(username).map(_.map(filterUserInformation(_, requestingUser, userInformationType)))
+    userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationType)))
 
   /**
    * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
@@ -206,7 +155,7 @@ final case class UsersResponder(
             .map(PasswordHash.unsafeFrom)
             .mapBoth(
               _ => ForbiddenException("The requesting user has no password."),
-              pwHash => passwordService.matches(changeRequest.requesterPassword, pwHash)
+              passwordService.matches(changeRequest.requesterPassword, _)
             )
             .filterOrFail(identity)(
               ForbiddenException("The supplied password does not match the requesting user's password.")
@@ -254,31 +203,6 @@ final case class UsersResponder(
     val updateTask = updateUserADM(userIri, UserChangeRequest(systemAdmin = Some(systemAdmin)))
     IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
   }
-
-  /**
-   * Returns user's project memberships as a sequence of [[ProjectADM]].
-   *
-   * @param userIri        the IRI of the user.
-   * @return a sequence of [[ProjectADM]]
-   */
-  private def userProjectMembershipsGetADM(userIri: IRI) =
-    findUserByIri(UserIri.unsafeFrom(userIri), UserInformationTypeADM.Full, Users.SystemUser)
-      .map(_.map(_.projects).getOrElse(Seq.empty))
-
-  /**
-   * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
-   *
-   * @param userIri        the user's IRI.
-   * @return a [[UserProjectMembershipsGetResponseADM]].
-   */
-  def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
-    for {
-      _ <-
-        ZIO.whenZIO(userRepo.existsById(userIri).negate)(
-          ZIO.fail(BadRequestException(s"User $userIri does not exist."))
-        )
-      projects <- userProjectMembershipsGetADM(userIri.value)
-    } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
    * Adds a user to a project.
@@ -337,24 +261,6 @@ final case class UsersResponder(
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
-
-  /**
-   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
-   * is a member of the project admin group.
-   *
-   * @param userIri              the user's IRI.
-   * @return a [[UserProjectAdminMembershipsGetResponseADM]].
-   */
-  def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.whenZIO(userRepo.existsById(userIri).negate)(
-      ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
-    ) *> (for {
-      kUser <- userRepo
-                 .findById(userIri)
-                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
-      requests  = kUser.isInProjectAdminGroup.map(IriIdentifier.from).map(ProjectGetADM.apply)
-      projects <- ZIO.foreach(requests)(messageRelay.ask[Option[ProjectADM]](_))
-    } yield projects.flatten).map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -420,16 +326,6 @@ final case class UsersResponder(
   }
 
   /**
-   * Returns the user's group memberships as a sequence of [[GroupADM]]
-   *
-   * @param userIri              the IRI of the user.
-   * @return a sequence of [[GroupADM]].
-   */
-  def findGroupMembershipsByIri(userIri: UserIri): Task[Seq[GroupADM]] =
-    findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
-      .map(_.map(_.groups).getOrElse(Seq.empty))
-
-  /**
    * Adds a user to a group.
    *
    * @param userIri              the user's IRI.
@@ -489,22 +385,24 @@ final case class UsersResponder(
    * Updates an existing user. Should not be directly used from the receive method.
    *
    * @param userIri              the IRI of the existing user that we want to update.
-   * @param req    the updated information.
+   * @param theUpdate    the updated information.
    * @return a [[UserOperationResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(userIri: UserIri, req: UserChangeRequest): ZIO[Any, Throwable, UserOperationResponseADM] =
+  private def updateUserADM(
+    userIri: UserIri,
+    theUpdate: UserChangeRequest
+  ): ZIO[Any, Throwable, UserOperationResponseADM] =
     for {
-      _ <- ensureNotABuiltInUser(userIri)
-      currentUser <- userRepo
-                       .findById(userIri)
-                       .someOrFail(NotFoundException(s"User '$userIri' not found."))
-      _ <- userService.updateUser(currentUser, req)
+      _           <- ensureNotABuiltInUser(userIri)
+      currentUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User '$userIri' not found."))
+      _           <- userService.updateUser(currentUser, theUpdate)
       updatedUserADM <-
-        findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser)
+        userService
+          .findUserByIri(userIri)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
+    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationType.Restricted))
 
   /**
    * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
@@ -538,10 +436,10 @@ final case class UsersResponder(
                     userIri,
                     req.username,
                     req.email,
-                    familyName = req.familyName,
+                    req.familyName,
                     req.givenName,
                     passwordHash,
-                    preferredLanguage = req.lang,
+                    req.lang,
                     req.status,
                     Chunk.empty,
                     Chunk.empty,
@@ -551,11 +449,11 @@ final case class UsersResponder(
         _ <- userRepo.save(newUser)
 
         createdUser <-
-          findUserByIri(userIri, UserInformationTypeADM.Full, Users.SystemUser).someOrFail {
-            val msg = s"User ${userIri.value} was not created. Please report this as a possible bug."
-            UpdateNotPerformedException(msg)
+          userService.findUserByIri(userIri).someOrFail {
+            UpdateNotPerformedException(s"User ${userIri.value} was not created. Please report this as a possible bug.")
           }
-      } yield UserOperationResponseADM(createdUser.ofType(UserInformationTypeADM.Restricted))
+
+      } yield UserOperationResponseADM(createdUser.ofType(UserInformationType.Restricted))
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
@@ -578,29 +476,10 @@ object UsersResponder {
 
   def findUserByIri(
     identifier: UserIri,
-    userInformationType: UserInformationTypeADM,
+    userInformationType: UserInformationType,
     requestingUser: User
   ): ZIO[UsersResponder, Throwable, Option[User]] =
     ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser))
-
-  def findUserByEmail(
-    email: Email,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): ZIO[UsersResponder, Throwable, Option[User]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserByEmail(email, userInformationType, requestingUser))
-
-  def findUserByUsername(
-    username: Username,
-    userInformationType: UserInformationTypeADM,
-    requestingUser: User
-  ): ZIO[UsersResponder, Throwable, Option[User]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserByUsername(username, userInformationType, requestingUser))
-
-  def findProjectMemberShipsByIri(
-    userIri: UserIri
-  ): ZIO[UsersResponder, Throwable, UserProjectMembershipsGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.findProjectMemberShipsByIri(userIri))
 
   def addProjectToUserIsInProject(
     userIri: UserIri,
@@ -633,14 +512,6 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](
       _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
-
-  def findUserProjectAdminMemberships(
-    userIri: UserIri
-  ): ZIO[UsersResponder, Throwable, UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserProjectAdminMemberships(userIri))
-
-  def findGroupMembershipsByIri(userIri: UserIri): ZIO[UsersResponder, Throwable, Seq[GroupADM]] =
-    ZIO.serviceWithZIO[UsersResponder](_.findGroupMembershipsByIri(userIri))
 
   def createNewUserADM(
     req: UserCreateRequest,

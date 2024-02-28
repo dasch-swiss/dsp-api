@@ -30,6 +30,8 @@ final case class ProjectADMService(
   def findById(id: ProjectIri): Task[Option[ProjectADM]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
 
+  def findByIds(id: Seq[ProjectIri]): Task[Seq[ProjectADM]] = ZIO.foreach(id)(findById).map(_.flatten)
+
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     cacheService.getProjectADM(projectId).flatMap {
       case Some(project) => ZIO.some(project)

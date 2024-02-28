@@ -277,7 +277,7 @@ final case class GroupsResponderADMLive(
             .ask[Option[User]](
               UserGetByIriADM(
                 UserIri.unsafeFrom(userIri),
-                UserInformationTypeADM.Restricted,
+                UserInformationType.Restricted,
                 KnoraSystemInstances.Users.SystemUser
               )
             )

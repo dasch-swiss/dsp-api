@@ -56,7 +56,7 @@ class UsersMessagesADMSpec extends CoreSpec {
         permissions = permissions.ofType(PermissionProfileType.Restricted)
       )
 
-      assert(rootUser.ofType(UserInformationTypeADM.Restricted) === rootUserRestricted)
+      assert(rootUser.ofType(UserInformationType.Restricted) === rootUserRestricted)
     }
 
     "return true if user is ProjectAdmin in any project " in {

@@ -190,8 +190,8 @@ class GroupsResponderADMSpec extends CoreSpec {
           UnsafeZioRun.runOrThrow(GroupsResponderADM.groupMembersGetRequest(iri, rootUser))
 
         received.members.map(_.id) should contain allElementsOf Seq(
-          multiuserUser.ofType(UserInformationTypeADM.Restricted),
-          imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
+          multiuserUser.ofType(UserInformationType.Restricted),
+          imagesReviewerUser.ofType(UserInformationType.Restricted)
         ).map(_.id)
       }
 
