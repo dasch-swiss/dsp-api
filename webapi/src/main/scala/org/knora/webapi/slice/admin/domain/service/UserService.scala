@@ -5,13 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import dsp.errors.DuplicateValueException
 import zio.Chunk
 import zio.IO
 import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
+
+import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM

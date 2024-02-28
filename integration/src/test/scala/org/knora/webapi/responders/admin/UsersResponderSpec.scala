@@ -308,7 +308,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(username = duplicateUsername),
+            BasicUserInformationChangeRequest(username = duplicateUsername)
           )
         )
         assertFailsWithA[DuplicateValueException](
@@ -323,7 +323,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(email = duplicateEmail),
+            BasicUserInformationChangeRequest(email = duplicateEmail)
           )
         )
         assertFailsWithA[DuplicateValueException](
