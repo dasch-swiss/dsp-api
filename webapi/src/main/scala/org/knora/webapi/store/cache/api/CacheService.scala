@@ -10,7 +10,6 @@ import zio.macros.accessible
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
@@ -45,7 +44,4 @@ trait CacheService {
   def invalidateProjectADM(identifier: ProjectIri): UIO[Unit]
 
   def clearCache(): Task[Unit]
-
-  val getStatus: UIO[CacheServiceStatusResponse]
-
 }

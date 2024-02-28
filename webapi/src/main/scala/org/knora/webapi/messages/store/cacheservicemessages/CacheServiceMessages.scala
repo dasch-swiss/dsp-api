@@ -21,23 +21,3 @@ case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequ
  * Message requesting to retrieve project from cache.
  */
 case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends CacheServiceRequest
-
-/**
- * Queries Cache Service status.
- */
-case object CacheServiceGetStatus extends CacheServiceRequest
-
-/**
- * Represents a response for [[CacheServiceGetStatus]].
- */
-sealed trait CacheServiceStatusResponse
-
-/**
- * Represents a positive response for [[CacheServiceGetStatus]].
- */
-case object CacheServiceStatusOK extends CacheServiceStatusResponse
-
-/**
- * Represents a negative response for [[CacheServiceGetStatus]].
- */
-case object CacheServiceStatusNOK extends CacheServiceStatusResponse

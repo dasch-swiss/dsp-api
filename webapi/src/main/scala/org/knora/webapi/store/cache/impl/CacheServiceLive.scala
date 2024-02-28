@@ -11,8 +11,6 @@ import zio.stm.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -143,11 +141,6 @@ case class CacheServiceLive(
       _ <- mappingShortnameProjectIri.foreach((k, _) => mappingShortnameProjectIri.delete(k))
     } yield ()).commit
 
-  /**
-   * Pings the in-memory cache to see if it is available.
-   */
-  val getStatus: UIO[CacheServiceStatusResponse] =
-    ZIO.succeed(CacheServiceStatusOK)
 }
 
 object CacheServiceLive {
