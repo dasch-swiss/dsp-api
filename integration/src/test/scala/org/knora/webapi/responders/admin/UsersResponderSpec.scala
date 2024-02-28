@@ -5,12 +5,17 @@
 
 package org.knora.webapi.responders.admin
 
+import org.apache.pekko.testkit.ImplicitSender
+import zio.Chunk
+import zio.ZIO
+
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
-import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -27,15 +32,11 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInforma
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-import zio.Chunk
-import zio.ZIO
-
-import java.util.UUID
 
 class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
