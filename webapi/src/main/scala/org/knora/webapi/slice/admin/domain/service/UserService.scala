@@ -17,8 +17,6 @@ import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -34,7 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.cache.api.CacheService
 
 final case class UserChangeRequest(
@@ -53,12 +50,9 @@ final case class UserChangeRequest(
 
 case class UserService(
   private val userRepo: KnoraUserRepo,
-  private val projectsService: ProjectADMService,
-  private val groupsService: GroupsResponderADM,
+  private val userToKnoraUserConverter: KnoraUserToUserConverter,
   private val iriService: IriService,
-  private val iriConverter: IriConverter,
   private val passwordService: PasswordService,
-  private val permissionService: PermissionsResponderADM,
   private val cacheService: CacheService
 ) {
 
@@ -79,14 +73,14 @@ case class UserService(
     fromCache(id).flatMap {
       case Some(user) => ZIO.some(user)
       case None =>
-        fromRepo(id).flatMap(ZIO.foreach(_)(toUser)).tap {
+        fromRepo(id).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser)).tap {
           case Some(user) => cacheService.putUser(user)
           case None       => ZIO.unit
         }
     }
 
   def findAll: Task[Seq[User]] =
-    userRepo.findAll().flatMap(ZIO.foreach(_)(toUser))
+    userRepo.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
   def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
     val updatedUser = kUser.copy(
@@ -106,6 +100,7 @@ case class UserService(
       ZIO.foreachDiscard(update.username)(ensureUsernameDoesNotExist) *>
       userRepo.save(updatedUser)
   }
+
   private def ensureEmailDoesNotExist(email: Email) =
     ZIO.whenZIO(userRepo.existsByEmail(email))(
       ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
@@ -119,7 +114,7 @@ case class UserService(
   def deleteUser(user: KnoraUser): UIO[KnoraUser] =
     updateUser(user, UserChangeRequest(status = Some(UserStatus.Inactive))).orDie
 
-  def createNewUser(req: UserCreateRequest): ZIO[Any, Throwable, KnoraUser] =
+  def createNewUser(req: UserCreateRequest): Task[KnoraUser] =
     for {
       _           <- ensureUsernameDoesNotExist(req.username)
       _           <- ensureEmailDoesNotExist(req.email)
@@ -142,21 +137,65 @@ case class UserService(
       userCreated <- userRepo.save(newUser)
     } yield userCreated
 
-  def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+  def addUserToGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
            ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}."))
          )
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
   } yield user
 
-  def addProjectToUserIsInProject(user: KnoraUser, project: ProjectADM): IO[UserServiceError, KnoraUser] = for {
+  def removeGroupFromUserIsInGroup(user: User, group: GroupADM): IO[UserServiceError, KnoraUser] =
+    userRepo
+      .findById(user.userIri)
+      .someOrFail(new IllegalStateException("this should not happen"))
+      .orDie
+      .flatMap(removeUserFromGroup(_, group))
+
+  def removeUserFromGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO
+           .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.groupIri.value}."))
+           .when(!user.isInGroup.contains(group.groupIri))
+    user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
+  } yield user
+
+  def addUserToProject(user: KnoraUser, project: ProjectADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is already member of project ${project.projectIri.value}."))
            .when(user.isInProject.contains(project.projectIri))
     user <- updateUser(user, UserChangeRequest(projects = Some(user.isInProject :+ project.projectIri))).orDie
   } yield user
 
-  def addProjectToUserIsInProjectAdminGroup(
+  /**
+   * Removes a user from a project.
+   * If the user is a member of the project admin group, the user is also removed from the project admin group.
+   *
+   * @param user    The user to remove from the project
+   * @param project The project to remove the user from
+   * @return        The updated user. If the user is not a member of the project, an error is returned.
+   */
+  def removeUserFromProject(
+    user: KnoraUser,
+    project: ProjectADM
+  ): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO
+           .fail(UserServiceError(s"User ${user.id.value} is not member of project ${project.projectIri.value}."))
+           .when(!user.isInProject.contains(project.projectIri))
+    projectIri               = project.projectIri
+    newIsInProject           = user.isInProject.filterNot(_ == projectIri)
+    newIsInProjectAdminGroup = user.isInProjectAdminGroup.filterNot(_ == projectIri)
+    theChange                = UserChangeRequest(projects = Some(newIsInProject), projectsAdmin = Some(newIsInProjectAdminGroup))
+    user                    <- updateUser(user, theChange).orDie
+  } yield user
+
+  /**
+   * Adds a user to the project admin group of a project.
+   * The user must already be a regular member of the project.
+   *
+   * @param user    The user to add to the project admin group.
+   * @param project The project to which the user is to be added as project admin.
+   * @return        The updated user. If the user is not a regular member of the project, an error is returned.
+   */
+  def addUserToProjectAsAdmin(
     user: KnoraUser,
     project: ProjectADM
   ): IO[UserServiceError, KnoraUser] = for {
@@ -176,35 +215,30 @@ case class UserService(
     user     <- updateUser(user, theChange).orDie
   } yield user
 
+  /**
+   * Removes a user from the project admin group of a project.
+   * The user must already be an admin member of the project.
+   *
+   * @param user    The user to remove from the project admin group.
+   * @param project The project from which the user is to be removed as project admin.
+   * @return        The updated user. If the user is not an admin member of the project, an error is returned.
+   */
+  def removeUserFromProjectAsAdmin(
+    user: KnoraUser,
+    project: ProjectADM
+  ): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO
+           .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${project.projectIri.value}."))
+           .when(!user.isInProjectAdminGroup.contains(project.projectIri))
+    theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup.filterNot(_ == project.projectIri)))
+    user     <- updateUser(user, theChange).orDie
+  } yield user
+
   def changePassword(knoraUser: KnoraUser, newPassword: Password): UIO[KnoraUser] = {
     val newPasswordHash = passwordService.hashPassword(newPassword)
     val theChange       = UserChangeRequest(passwordHash = Some(newPasswordHash))
     updateUser(knoraUser, theChange).orDie
   }
-
-  def toUser(kUser: KnoraUser): Task[User] = for {
-    projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
-    groups   <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsService.groupGetADM).map(_.flatten)
-    permissionData <-
-      permissionService.permissionsDataGetADM(
-        kUser.isInProject.map(_.value),
-        kUser.isInGroup.map(_.value),
-        kUser.isInProjectAdminGroup.map(_.value),
-        kUser.isInSystemAdminGroup.value
-      )
-  } yield User(
-    kUser.id.value,
-    kUser.username.value,
-    kUser.email.value,
-    kUser.givenName.value,
-    kUser.familyName.value,
-    kUser.status.value,
-    kUser.preferredLanguage.value,
-    Some(kUser.password.value),
-    groups,
-    projects,
-    permissionData
-  )
 }
 
 object UserService {

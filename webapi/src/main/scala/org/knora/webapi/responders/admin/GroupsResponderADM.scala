@@ -466,10 +466,7 @@ final case class GroupsResponderADMLive(
 
         // remove all members from group if status is false
         operationResponse <-
-          removeGroupMembersIfNecessary(
-            changedGroup = updateGroupResult.group,
-            apiRequestID = apiRequestID
-          )
+          removeGroupMembersIfNecessary(changedGroup = updateGroupResult.group)
 
       } yield operationResponse
 
@@ -555,13 +552,9 @@ final case class GroupsResponderADMLive(
    * group members need to be removed from the group.
    *
    * @param changedGroup         the group with the new status.
-   * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
-  private def removeGroupMembersIfNecessary(
-    changedGroup: GroupADM,
-    apiRequestID: UUID
-  ): Task[GroupGetResponseADM] =
+  private def removeGroupMembersIfNecessary(changedGroup: GroupADM) =
     if (changedGroup.status) {
       // group active. no need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
@@ -580,7 +573,7 @@ final case class GroupsResponderADMLive(
           members.map { (user: User) =>
             messageRelay
               .ask[UserResponseADM](
-                UserGroupMembershipRemoveRequestADM(user.userIri, changedGroup.groupIri, apiRequestID)
+                UserGroupMembershipRemoveRequestADM(user, changedGroup)
               )
           }
 

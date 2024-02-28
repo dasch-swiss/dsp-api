@@ -75,7 +75,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.post.usersByIriProjectMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addProjectToUserIsInProject(requestingUser, userIri, projectIri.value)
+        restService.addUserToProject(requestingUser, userIri, projectIri.value)
       }
     )
 
@@ -83,7 +83,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.post.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri.value)
+        restService.addUserToProjectAsAdmin(requestingUser, userIri, projectIri.value)
       }
     )
 
@@ -91,7 +91,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, GroupIri), UserResponseADM](
       usersEndpoints.post.usersByIriGroupMemberShips,
       requestingUser => { case (userIri: UserIri, groupIri: GroupIri) =>
-        restService.addGroupToUserIsInGroup(requestingUser, userIri, groupIri)
+        restService.addUserToGroup(requestingUser, userIri, groupIri)
       }
     )
 
@@ -138,7 +138,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.removeProjectToUserIsInProject(requestingUser, userIri, projectIri)
+        restService.removeUserFromProject(requestingUser, userIri, projectIri.value)
       }
     )
 
@@ -146,7 +146,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
-        restService.removeProjectFromUserIsInProjectAdminGroup(requestingUser, userIri, projectIri)
+        restService.removeUserFromProjectAsAdmin(requestingUser, userIri, projectIri.value)
       }
     )
 
@@ -154,7 +154,7 @@ case class UsersEndpointsHandler(
     SecuredEndpointHandler[(UserIri, GroupIri), UserResponseADM](
       usersEndpoints.delete.usersByIriGroupMemberShips,
       requestingUser => { case (userIri: UserIri, groupIri: GroupIri) =>
-        restService.removeGroupFromUserIsInGroup(requestingUser, userIri, groupIri)
+        restService.removeUserFromGroup(requestingUser, userIri, groupIri)
       }
     )
 

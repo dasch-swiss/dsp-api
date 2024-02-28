@@ -9,8 +9,6 @@ import org.apache.pekko.testkit.ImplicitSender
 import zio.Chunk
 import zio.ZIO
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
@@ -39,7 +37,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-class UsersResponderSpec extends CoreSpec with ImplicitSender {
+class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser   = SharedTestDataADM.rootUser
   private val normalUser = SharedTestDataADM.normalUser
@@ -66,21 +64,21 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     userIri: UserIri,
     groupIri: GroupIri
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersRestService](_.addGroupToUserIsInGroup(requestingUser, userIri, groupIri))
+    ZIO.serviceWithZIO[UsersRestService](_.addUserToGroup(requestingUser, userIri, groupIri))
 
-  def addProjectToUserIsInProject(
+  def addUserToProject(
     requestingUser: User,
     userIri: UserIri,
     projectIri: ProjectIri
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersRestService](_.addProjectToUserIsInProject(requestingUser, userIri, projectIri))
+    ZIO.serviceWithZIO[UsersRestService](_.addUserToProject(requestingUser, userIri, projectIri))
 
-  def addProjectToUserIsInProjectAdminGroup(
+  def addUserToProjectAsAdmin(
     requestingUser: User,
     userIri: UserIri,
     projectIri: ProjectIri
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersRestService](_.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri))
+    ZIO.serviceWithZIO[UsersRestService](_.addUserToProjectAsAdmin(requestingUser, userIri, projectIri))
 
   def changePassword(
     requestingUser: User,
@@ -109,6 +107,30 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     basicUserInformationChangeRequest: BasicUserInformationChangeRequest
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.updateUser(requestingUser, userIri, basicUserInformationChangeRequest))
+
+  def findUserByIri(userIri: UserIri): ZIO[UserService, Throwable, Option[User]] =
+    ZIO.serviceWithZIO[UserService](_.findUserByIri(userIri))
+
+  def removeUserFromProject(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIri
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.removeUserFromProject(requestingUser, userIri, projectIri))
+
+  def removeUserFromProjectAsAdmin(
+    requestingUser: User,
+    userIri: UserIri,
+    projectIri: ProjectIri
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.removeUserFromProjectAsAdmin(requestingUser, userIri, projectIri))
+
+  def removeUserFromGroup(
+    requestingUser: User,
+    userIri: UserIri,
+    groupIri: GroupIri
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.removeUserFromGroup(requestingUser, userIri, groupIri))
 
   def createUser(
     requestingUser: User,
@@ -175,29 +197,15 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         assertFailsWithA[NotFoundException](exit)
       }
     }
-  }
 
-  "The UsersResponder " when {
     "asked about an user identified by 'iri' " should {
       "return a profile if the user (root user) is known" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByIri(
-            UserIri.unsafeFrom(rootUser.id),
-            UserInformationType.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
+        val actual = UnsafeZioRun.runOrThrow(findUserByIri(UserIri.unsafeFrom(rootUser.id)))
         actual shouldBe Some(rootUser.ofType(UserInformationType.Full))
       }
 
       "return 'None' when the user is unknown" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          UsersResponder.findUserByIri(
-            UserIri.unsafeFrom("http://rdfh.ch/users/notexisting"),
-            UserInformationType.Full,
-            KnoraSystemInstances.Users.SystemUser
-          )
-        )
+        val actual = UnsafeZioRun.runOrThrow(findUserByIri(UserIri.unsafeFrom("http://rdfh.ch/users/notexisting")))
         actual shouldBe None
       }
     }
@@ -423,7 +431,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Chunk.empty)
 
         // add user to images project (00FF)
-        UnsafeZioRun.runOrThrow(addProjectToUserIsInProject(rootUser, normalUser.userIri, imagesProject.projectIri))
+        UnsafeZioRun.runOrThrow(addUserToProject(rootUser, normalUser.userIri, imagesProject.projectIri))
 
         val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
@@ -443,7 +451,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // add user to images project (00FF)
-        UnsafeZioRun.runOrThrow(addProjectToUserIsInProject(rootUser, normalUser.userIri, incunabulaProject.projectIri))
+        UnsafeZioRun.runOrThrow(addUserToProject(rootUser, normalUser.userIri, incunabulaProject.projectIri))
 
         val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
@@ -468,7 +476,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          addProjectToUserIsInProjectAdminGroup(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
         )
 
         // verify that the user has been added as project admin to the images project
@@ -477,13 +485,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         projectAdminMembershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // remove the user as member of the images project
-        UnsafeZioRun.runOrThrow(
-          UsersResponder.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(
-            normalUser.userIri,
-            imagesProject.projectIri,
-            UUID.randomUUID()
-          )
-        )
+        UnsafeZioRun.runOrThrow(removeUserFromProject(rootUser, normalUser.userIri, imagesProject.projectIri))
 
         // verify that the user has been removed as project member of the images project
         val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
@@ -511,7 +513,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
         val exit = UnsafeZioRun.run(
-          addProjectToUserIsInProjectAdminGroup(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -526,11 +528,11 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects should equal(Seq())
 
         // add user as project member to images project
-        UnsafeZioRun.runOrThrow(addProjectToUserIsInProject(rootUser, normalUser.userIri, imagesProject.projectIri))
+        UnsafeZioRun.runOrThrow(addUserToProject(rootUser, normalUser.userIri, imagesProject.projectIri))
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          addProjectToUserIsInProjectAdminGroup(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
         )
 
         // get the updated project admin memberships (should contain images project)
@@ -551,10 +553,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.projects.map(_.id) should equal(Seq(imagesProject.id))
 
         UnsafeZioRun.runOrThrow(
-          UsersResponder.removeProjectFromUserIsInProjectAdminGroup(
+          removeUserFromProjectAsAdmin(
+            rootUser,
             normalUser.userIri,
-            imagesProject.projectIri,
-            UUID.randomUUID()
+            imagesProject.projectIri
           )
         )
 
@@ -598,10 +600,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         membershipsBeforeUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         UnsafeZioRun.runOrThrow(
-          UsersResponder.removeGroupFromUserIsInGroup(
+          removeUserFromGroup(
+            rootUser,
             normalUser.userIri,
-            imagesReviewerGroup.groupIri,
-            UUID.randomUUID()
+            imagesReviewerGroup.groupIri
           )
         )
 
