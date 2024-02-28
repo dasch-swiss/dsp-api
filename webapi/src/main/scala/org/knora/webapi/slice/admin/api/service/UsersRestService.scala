@@ -80,8 +80,12 @@ final case class UsersRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def getProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
-    responder.findProjectMemberShipsByIri(userIri).flatMap(format.toExternal)
+  def getProjectMemberShipsByUserIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
+    userService
+      .findUserByIri(userIri)
+      .someOrFail(NotFoundException(s"User $userIri does not exist."))
+      .map(user => UserProjectMembershipsGetResponseADM(user.projects))
+      .flatMap(format.toExternal)
 
   def getProjectAdminMemberShipsByIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     responder.findUserProjectAdminMemberships(userIri).flatMap(format.toExternal)

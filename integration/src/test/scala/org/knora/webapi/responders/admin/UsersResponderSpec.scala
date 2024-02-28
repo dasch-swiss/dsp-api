@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import org.apache.pekko.testkit.ImplicitSender
+import zio.Chunk
 import zio.ZIO
 
 import java.util.UUID
@@ -357,21 +358,25 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     }
 
     "asked to update the user's project membership" should {
+
+      def getProjectMemberShipsByUserIri(
+        userIri: UserIri
+      ): ZIO[UsersRestService, Throwable, UserProjectMembershipsGetResponseADM] =
+        ZIO.serviceWithZIO[UsersRestService](_.getProjectMemberShipsByUserIri(userIri))
+
       "ADD user to project" in {
 
         // get current project memberships
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
-        membershipsBeforeUpdate.projects should equal(Seq())
+        val membershipsBeforeUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
+        membershipsBeforeUpdate.projects should equal(Chunk.empty)
 
         // add user to images project (00FF)
         UnsafeZioRun.runOrThrow(
           UsersResponder.addProjectToUserIsInProject(normalUser.userIri, imagesProject.projectIri, UUID.randomUUID())
         )
 
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
-        membershipsAfterUpdate.projects should equal(Seq(imagesProject))
+        val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
+        membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
 
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectMembersGetRequestADM(
@@ -384,8 +389,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "ADD user to project as project admin" in {
         // get current project memberships
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
+        val membershipsBeforeUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(Seq(imagesProject.id).sorted)
 
         // add user to images project (00FF)
@@ -397,8 +401,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
+        val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -414,8 +417,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "DELETE user from project and also as project admin" in {
         // check project memberships (user should be member of images and incunabula projects)
-        val membershipsBeforeUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
+        val membershipsBeforeUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
           Seq(imagesProject.id, incunabulaProject.id).sorted
         )
@@ -444,9 +446,8 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         )
 
         // verify that the user has been removed as project member of the images project
-        val membershipsAfterUpdate =
-          UnsafeZioRun.runOrThrow(UsersResponder.findProjectMemberShipsByIri(normalUser.userIri))
-        membershipsAfterUpdate.projects should equal(Seq(incunabulaProject))
+        val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
+        membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(incunabulaProject.id))
 
         // this should also have removed him as project admin from images project
         val projectAdminMembershipsAfterUpdate =

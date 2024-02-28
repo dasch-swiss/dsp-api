@@ -53,7 +53,7 @@ case class UsersEndpointsHandler(
 
   private val getUsersByIriProjectMemberShipsHandler = PublicEndpointHandler(
     usersEndpoints.get.usersByIriProjectMemberShips,
-    restService.getProjectMemberShipsByIri
+    restService.getProjectMemberShipsByUserIri
   )
 
   private val getUsersByIriProjectAdminMemberShipsHandler = PublicEndpointHandler(

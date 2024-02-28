@@ -21,7 +21,6 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -207,22 +206,6 @@ final case class UsersResponder(
     val updateTask = updateUserADM(userIri, UserChangeRequest(systemAdmin = Some(systemAdmin)))
     IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
   }
-
-  /**
-   * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
-   *
-   * @param userIri        the user's IRI.
-   * @return a [[UserProjectMembershipsGetResponseADM]].
-   */
-  def findProjectMemberShipsByIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
-    for {
-      _ <-
-        ZIO.whenZIO(userRepo.existsById(userIri).negate)(
-          ZIO.fail(BadRequestException(s"User $userIri does not exist."))
-        )
-      projects <-
-        userService.findUserByIri(UserIri.unsafeFrom(userIri.value)).map(_.map(_.projects).getOrElse(Seq.empty))
-    } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
    * Adds a user to a project.
@@ -518,11 +501,6 @@ object UsersResponder {
     requestingUser: User
   ): ZIO[UsersResponder, Throwable, Option[User]] =
     ZIO.serviceWithZIO[UsersResponder](_.findUserByIri(identifier, userInformationType, requestingUser))
-
-  def findProjectMemberShipsByIri(
-    userIri: UserIri
-  ): ZIO[UsersResponder, Throwable, UserProjectMembershipsGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.findProjectMemberShipsByIri(userIri))
 
   def addProjectToUserIsInProject(
     userIri: UserIri,
