@@ -10,9 +10,6 @@ import spray.json.*
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.LanguageCode
-import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
@@ -102,15 +99,6 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Adm
   def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
 }
 
-/**
- * Represents an answer to a user creating/modifying operation.
- *
- * @param user the new user profile of the created/modified user.
- */
-case class UserOperationResponseADM(user: User) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -133,85 +121,6 @@ object UserInformationType {
   case object Restricted extends UserInformationType
   case object Full       extends UserInformationType
 
-}
-
-/**
- * Payload used for updating an existing user.
- *
- * @param username      the new username.
- * @param email         the new email address. Needs to be unique on the server.
- * @param givenName     the new given name.
- * @param familyName    the new family name.
- * @param status        the new status.
- * @param lang          the new language.
- * @param projects      the new project memberships list.
- * @param projectsAdmin the new projects admin membership list.
- * @param groups        the new group memberships list.
- * @param systemAdmin   the new system admin membership
- */
-case class UserChangeRequestADM(
-  username: Option[Username] = None,
-  email: Option[Email] = None,
-  givenName: Option[GivenName] = None,
-  familyName: Option[FamilyName] = None,
-  status: Option[UserStatus] = None,
-  lang: Option[LanguageCode] = None,
-  projects: Option[Seq[IRI]] = None,
-  projectsAdmin: Option[Seq[IRI]] = None,
-  groups: Option[Seq[IRI]] = None,
-  systemAdmin: Option[SystemAdmin] = None
-) {
-
-  val parametersCount: Int = List(
-    username,
-    email,
-    givenName,
-    familyName,
-    status,
-    lang,
-    projects,
-    projectsAdmin,
-    groups,
-    systemAdmin
-  ).flatten.size
-
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) {
-    throw BadRequestException("No data sent in API request.")
-  }
-
-  // change status case
-  if (status.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for user status change.")
-  }
-
-  // change system admin membership case
-  if (systemAdmin.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for system admin membership change.")
-  }
-
-  // change project memberships (could also involve changing projectAdmin memberships)
-  if (
-    projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 ||
-    projects.isDefined && projectsAdmin.isEmpty && parametersCount > 1
-  ) {
-    throw BadRequestException("Too many parameters sent for project membership change.")
-  }
-
-  // change projectAdmin memberships only (without changing project memberships)
-  if (projectsAdmin.isDefined && projects.isEmpty && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
-  }
-
-  // change group memberships
-  if (groups.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for group membership change.")
-  }
-
-  // change basic user information case
-  if (parametersCount > 5) {
-    throw BadRequestException("Too many parameters sent for basic user information change.")
-  }
 }
 
 /**
@@ -247,7 +156,4 @@ object UsersADMJsonProtocol
     : RootJsonFormat[UserProjectAdminMembershipsGetResponseADM] = jsonFormat1(UserProjectAdminMembershipsGetResponseADM)
   implicit val userGroupMembershipsGetResponseADMFormat: RootJsonFormat[UserGroupMembershipsGetResponseADM] =
     jsonFormat1(UserGroupMembershipsGetResponseADM)
-  implicit val userOperationResponseADMFormat: RootJsonFormat[UserOperationResponseADM] = jsonFormat1(
-    UserOperationResponseADM
-  )
 }
