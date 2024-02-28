@@ -155,7 +155,7 @@ final case class UsersResponder(
             .map(PasswordHash.unsafeFrom)
             .mapBoth(
               _ => ForbiddenException("The requesting user has no password."),
-              pwHash => passwordService.matches(changeRequest.requesterPassword, pwHash)
+              passwordService.matches(changeRequest.requesterPassword, _)
             )
             .filterOrFail(identity)(
               ForbiddenException("The supplied password does not match the requesting user's password.")
@@ -436,10 +436,10 @@ final case class UsersResponder(
                     userIri,
                     req.username,
                     req.email,
-                    familyName = req.familyName,
+                    req.familyName,
                     req.givenName,
                     passwordHash,
-                    preferredLanguage = req.lang,
+                    req.lang,
                     req.status,
                     Chunk.empty,
                     Chunk.empty,
