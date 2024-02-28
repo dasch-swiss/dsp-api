@@ -9,11 +9,16 @@ import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
 
+import dsp.valueobjects.Group.GroupDescriptions
+import dsp.valueobjects.Group.GroupName
+import dsp.valueobjects.Group.GroupSelfJoin
+import dsp.valueobjects.Group.GroupStatus
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
@@ -118,5 +123,12 @@ object Codecs {
     implicit val userStatus: StringCodec[UserStatus]   = booleanCodec(UserStatus.from)
     implicit val systemAdmin: StringCodec[SystemAdmin] = booleanCodec(SystemAdmin.from)
 
+    // group
+    implicit val groupIri: StringCodec[GroupIri]   = stringCodec(GroupIri.from)
+    implicit val groupName: StringCodec[GroupName] = stringCodec(GroupName.from)
+    implicit val groupDescriptions: StringCodec[GroupDescriptions] =
+      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)
+    implicit val groupStatus: StringCodec[GroupStatus]     = booleanCodec(GroupStatus.from)
+    implicit val groupSelfJoin: StringCodec[GroupSelfJoin] = booleanCodec(GroupSelfJoin.from)
   }
 }

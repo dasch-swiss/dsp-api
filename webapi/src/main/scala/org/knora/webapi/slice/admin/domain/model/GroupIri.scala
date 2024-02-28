@@ -13,12 +13,14 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
 
 final case class KnoraUserGroup(id: GroupIri, belongsToProject: ProjectIri)
 
-final case class GroupIri private (value: String) extends AnyVal
+final case class GroupIri private (override val value: String) extends AnyVal with StringValue
 
-object GroupIri {
+object GroupIri extends StringValueCompanion[GroupIri] {
 
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
@@ -42,9 +44,6 @@ object GroupIri {
     case _ if isGroupIriValid(value) => Right(GroupIri(value))
     case _                           => Left("Group IRI is invalid.")
   }
-
-  def unsafeFrom(value: String): GroupIri =
-    from(value).fold(e => throw new IllegalArgumentException(e), identity)
 
   /**
    * Creates a new group IRI based on a UUID.

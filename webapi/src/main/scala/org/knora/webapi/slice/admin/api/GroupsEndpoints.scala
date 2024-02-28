@@ -8,12 +8,22 @@ package org.knora.webapi.slice.admin.api
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.spray.jsonBody as sprayJsonBody
+import sttp.tapir.json.zio.jsonBody as zioJsonBody
 import zio.*
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
+import dsp.valueobjects.Group.GroupDescriptions
+import dsp.valueobjects.Group.GroupName
+import dsp.valueobjects.Group.GroupSelfJoin
+import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
-import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
@@ -26,19 +36,41 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Returns all groups.")
 
   val getGroupByIri = baseEndpoints.publicEndpoint.get
-    .in(base / groupIri)
+    .in(base / groupIriPathVar)
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Returns a single group identified by IRI.")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
-    .in(base / groupIri / "members")
+    .in(base / groupIriPathVar / "members")
     .out(sprayJsonBody[GroupMembersGetResponseADM])
     .description("Returns all members of a single group.")
 
-  private val securedEndpoins = Seq(getGroupMembers).map(_.endpoint)
+  val postGroup = baseEndpoints.securedEndpoint.post
+    .in(base)
+    .in(zioJsonBody[GroupCreateRequest])
+    .out(sprayJsonBody[GroupGetResponseADM])
+    .description("Creates a new group.")
+
+  private val securedEndpoins = Seq(getGroupMembers, postGroup).map(_.endpoint)
 
   val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
     .map(_.tag("Admin Groups"))
+}
+
+object GroupsRequests {
+  import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+  final case class GroupCreateRequest(
+    id: Option[GroupIri] = None,
+    name: GroupName,
+    descriptions: GroupDescriptions,
+    project: ProjectIri,
+    status: GroupStatus,
+    selfjoin: GroupSelfJoin
+  )
+
+  object GroupCreateRequest {
+    implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
+  }
 }
 
 object GroupsEndpoints {

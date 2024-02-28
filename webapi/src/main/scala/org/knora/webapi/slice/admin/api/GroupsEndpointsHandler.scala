@@ -36,7 +36,13 @@ case class GroupsEndpointsHandler(
       user => iri => restService.getGroupMembers(iri, user)
     )
 
-  private val securedHandlers = List(getGroupMembersHandler).map(mapper.mapSecuredEndpointHandler(_))
+  private val postGroupHandler =
+    SecuredEndpointHandler(
+      endpoints.postGroup,
+      user => request => restService.postGroup(request, user)
+    )
+
+  private val securedHandlers = List(getGroupMembersHandler, postGroupHandler).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = List(getGroupsHandler, getGroupByIriHandler).map(mapper.mapPublicEndpointHandler(_))
     ++ securedHandlers
