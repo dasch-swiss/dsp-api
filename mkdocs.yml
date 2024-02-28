@@ -2,6 +2,7 @@ site_name: DSP-API
 
 nav:
   - Introduction:
+      - Overview: index.md
       - What is DSP?: 01-introduction/what-is-dsp.md
       - File Formats in DSP-API: 01-introduction/file-formats.md
       - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
