@@ -91,7 +91,7 @@ final case class UsersRestService(
     } yield external
 
   private def getKnoraUserOrNotFound(userIri: UserIri) =
-    userRepo.findById(userIri).someOrFail(NotFoundException(s"The user ${userIri.value} does not exist."))
+    userRepo.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
 
   def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     for {
