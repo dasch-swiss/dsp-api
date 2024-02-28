@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -37,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
@@ -180,18 +179,15 @@ final case class UsersRestService(
     projectIri: ProjectIri
   ): Task[UserOperationResponseADM] =
     for {
-      _       <- ensureNotABuiltInUser(userIri)
-      _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
-      kUser   <- getKnoraUserOrNotFound(userIri)
-      project <- getProjectOrBadRequest(projectIri)
-      _ <- ZIO
-             .fail(BadRequestException(s"User ${userIri.value} is already member of project ${projectIri.value}."))
-             .when(kUser.isInProject.contains(projectIri))
-      updatedUser <- userService.addProjectToUserIsInProject(kUser, project)
+      _           <- ensureNotABuiltInUser(userIri)
+      _           <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      kUser       <- getKnoraUserOrNotFound(userIri)
+      project     <- getProjectADMOrBadRequest(projectIri)
+      updatedUser <- userService.addProjectToUserIsInProject(kUser, project).mapError(BadRequestException.apply)
       external    <- asExternalUserOperationResponse(updatedUser)
     } yield external
 
-  private def getProjectOrBadRequest(projectIri: ProjectIri) =
+  private def getProjectADMOrBadRequest(projectIri: ProjectIri) =
     projectService
       .findById(projectIri)
       .someOrFail(BadRequestException(s"Project with iri ${projectIri.value} not found."))
@@ -210,22 +206,11 @@ final case class UsersRestService(
     for {
       _       <- ensureNotABuiltInUser(userIri)
       _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
-      kUser   <- getKnoraUserOrNotFound(userIri)
-      project <- getProjectOrBadRequest(projectIri)
-      _ <-
-        ZIO
-          .fail(BadRequestException(s"User ${userIri.value} is already admin member of project ${projectIri.value}."))
-          .when(kUser.isInProjectAdminGroup.contains(projectIri))
-      _ <-
-        ZIO
-          .fail(
-            BadRequestException(
-              s"User ${userIri.value} is not a member of project ${projectIri.value}. A user needs to be a member of the project to be added as project admin."
-            )
-          )
-          .when(!kUser.isInProject.contains(projectIri))
-      updatedUser <- userService.addProjectToUserIsInProjectAdminGroup(kUser, project)
-      external    <- asExternalUserOperationResponse(updatedUser)
+      user    <- getKnoraUserOrNotFound(userIri)
+      project <- getProjectADMOrBadRequest(projectIri)
+      updatedUser <-
+        userService.addProjectToUserIsInProjectAdminGroup(user, project).mapError(BadRequestException.apply)
+      external <- asExternalUserOperationResponse(updatedUser)
     } yield external
 
   def removeProjectToUserIsInProject(
@@ -260,14 +245,11 @@ final case class UsersRestService(
     for {
       _     <- ensureNotABuiltInUser(userIri)
       _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
-      kUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
+      kUser <- getKnoraUserOrNotFound(userIri)
       group <- groupsResponder
                  .groupGetADM(groupIri.value)
                  .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
-      _ <- ZIO.when(kUser.isInGroup.contains(groupIri))(
-             ZIO.fail(BadRequestException(s"User ${userIri.value} is already member of group ${groupIri.value}."))
-           )
-      updatedKUser <- userService.addGroupToUserIsInGroup(kUser, group)
+      updatedKUser <- userService.addGroupToUserIsInGroup(kUser, group).mapError(BadRequestException.apply)
       external     <- asExternalUserOperationResponse(updatedKUser)
     } yield external
 

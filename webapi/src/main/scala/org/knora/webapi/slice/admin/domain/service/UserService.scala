@@ -5,11 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.Chunk
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -27,7 +22,13 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 import org.knora.webapi.store.cache.api.CacheService
+import zio.Chunk
+import zio.IO
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 
 final case class UserChangeRequest(
   username: Option[Username] = None,
@@ -94,14 +95,39 @@ case class UserService(
     userRepo.save(updatedUser)
   }
 
-  def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): Task[KnoraUser] =
-    updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri)))
+  def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
+           ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}."))
+         )
+    user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
+  } yield user
 
-  def addProjectToUserIsInProject(user: KnoraUser, project: ProjectADM): Task[KnoraUser] =
-    updateUser(user, UserChangeRequest(projects = Some(user.isInProject :+ project.projectIri)))
+  def addProjectToUserIsInProject(user: KnoraUser, project: ProjectADM): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO
+           .fail(UserServiceError(s"User ${user.id.value} is already member of project ${project.projectIri.value}."))
+           .when(user.isInProject.contains(project.projectIri))
+    user <- updateUser(user, UserChangeRequest(projects = Some(user.isInProject :+ project.projectIri))).orDie
+  } yield user
 
-  def addProjectToUserIsInProjectAdminGroup(user: KnoraUser, project: ProjectADM): Task[KnoraUser] =
-    updateUser(user, UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ project.projectIri)))
+  def addProjectToUserIsInProjectAdminGroup(
+    user: KnoraUser,
+    project: ProjectADM
+  ): IO[UserServiceError, KnoraUser] = for {
+    _ <-
+      ZIO
+        .fail(
+          UserServiceError(s"User ${user.id.value} is already admin member of project ${project.projectIri.value}.")
+        )
+        .when(user.isInProjectAdminGroup.contains(project.projectIri))
+    _ <-
+      ZIO.fail {
+        val msg =
+          s"User ${user.id.value} is not a member of project ${project.projectIri.value}. A user needs to be a member of the project to be added as project admin."
+        UserServiceError(msg)
+      }.when(!user.isInProject.contains(project.projectIri))
+    theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ project.projectIri))
+    user     <- updateUser(user, theChange).orDie
+  } yield user
 
   def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
@@ -129,5 +155,9 @@ case class UserService(
 }
 
 object UserService {
+  object Errors {
+    final case class UserServiceError(message: String)
+  }
+
   val layer = ZLayer.derive[UserService]
 }
