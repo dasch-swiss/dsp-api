@@ -32,7 +32,7 @@ final case class UsersResponder(userService: UserService) extends MessageHandler
       userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationTypeADM)))
     case UserGroupMembershipRemoveRequestADM(user, project) =>
       userService
-        .removeGroupFromUserIsInGroup(user, project)
+        .removeUserFromGroup(user, project)
         .mapError(BadRequestException.apply)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }

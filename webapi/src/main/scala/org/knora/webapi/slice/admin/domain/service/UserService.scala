@@ -144,12 +144,8 @@ case class UserService(
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
   } yield user
 
-  def removeGroupFromUserIsInGroup(user: User, group: GroupADM): IO[UserServiceError, KnoraUser] =
-    userRepo
-      .findById(user.userIri)
-      .someOrFail(new IllegalStateException("this should not happen"))
-      .orDie
-      .flatMap(removeUserFromGroup(_, group))
+  def removeUserFromGroup(user: User, group: GroupADM): IO[UserServiceError, KnoraUser] =
+    userRepo.findById(user.userIri).someOrFailException.orDie.flatMap(removeUserFromGroup(_, group))
 
   def removeUserFromGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
