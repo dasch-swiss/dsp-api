@@ -353,13 +353,13 @@ final case class GroupsResponderADMLive(
    * Change group's basic information.
    *
    * @param groupIri             the IRI of the group we want to change.
-   * @param changeGroupRequest   the change request.
+   * @param request              the change request.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
   override def changeGroupBasicInformationRequestADM(
     groupIri: GroupIri,
-    changeGroupRequest: GroupUpdateRequest,
+    request: GroupUpdateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
     val task = for {
@@ -372,15 +372,16 @@ final case class GroupsResponderADMLive(
       groupADMOpt <- groupGetADM(groupIri.value)
       _ <- ZIO
              .fromOption(groupADMOpt)
-             .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+             .orElseFail(NotFoundException(s"Group <${groupIri.value}> not found. Aborting update request."))
 
       /* create the update request */
-      groupUpdatePayload = GroupUpdatePayloadADM(
-                             name = changeGroupRequest.name,
-                             descriptions = changeGroupRequest.descriptions,
-                             status = changeGroupRequest.status,
-                             selfjoin = changeGroupRequest.selfjoin
-                           )
+      groupUpdatePayload =
+        GroupUpdateRequest(
+          name = request.name,
+          descriptions = request.descriptions,
+          status = request.status,
+          selfjoin = request.selfjoin
+        )
       result <- updateGroupADM(groupIri.value, groupUpdatePayload)
     } yield result
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
@@ -434,7 +435,7 @@ final case class GroupsResponderADMLive(
         maybeStatus = changeGroupRequest.status.map(GroupStatus.from)
 
         /* create the update request */
-        groupUpdatePayload = GroupUpdatePayloadADM(status = maybeStatus)
+        groupUpdatePayload = GroupUpdateRequest(status = maybeStatus)
 
         // update group status
         updateGroupResult <- updateGroupADM(groupIri, groupUpdatePayload)
@@ -455,21 +456,21 @@ final case class GroupsResponderADMLive(
   /**
    * Main group update method.
    *
-   * @param groupIri             the IRI of the group we are updating.
-   * @param groupUpdatePayload   the payload holding the information which we want to update.
+   * @param groupIri  the IRI of the group we are updating.
+   * @param request   the payload holding the information which we want to update.
    * @return a [[GroupGetResponseADM]]
    */
-  private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM) =
+  private def updateGroupADM(groupIri: IRI, request: GroupUpdateRequest) =
     for {
       _ <- ZIO
              .fail(BadRequestException("No data would be changed. Aborting update request."))
              .when(
                // parameter list is empty
                List(
-                 groupUpdatePayload.name,
-                 groupUpdatePayload.descriptions,
-                 groupUpdatePayload.status,
-                 groupUpdatePayload.selfjoin
+                 request.name,
+                 request.descriptions,
+                 request.status,
+                 request.selfjoin
                ).flatten.isEmpty
              )
 
@@ -479,28 +480,25 @@ final case class GroupsResponderADMLive(
 
       /* Verify that the potentially new name is unique */
       groupByNameAlreadyExists <-
-        if (groupUpdatePayload.name.nonEmpty) {
-          val newName = groupUpdatePayload.name.get
-          groupByNameAndProjectExists(newName.value, groupADM.project.id)
-        } else {
-          ZIO.succeed(false)
-        }
+        if (request.name.nonEmpty)
+          groupByNameAndProjectExists(request.name.get.value, groupADM.project.id)
+        else ZIO.succeed(false)
       _ <- ZIO
-             .fail(BadRequestException(s"Group with the name '${groupUpdatePayload.name.get}' already exists."))
+             .fail(BadRequestException(s"Group with the name '${request.name.get.value}' already exists."))
              .when(groupByNameAlreadyExists)
 
       /* Update group */
-      updateGroupSparqlString = sparql.admin.txt
-                                  .updateGroup(
-                                    adminNamedGraphIri = "http://www.knora.org/data/admin",
-                                    groupIri,
-                                    maybeName = groupUpdatePayload.name.map(_.value),
-                                    maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
-                                    maybeProject =
-                                      None, // maybe later we want to allow moving of a group to another project
-                                    maybeStatus = groupUpdatePayload.status.map(_.value),
-                                    maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
-                                  )
+      updateGroupSparqlString =
+        sparql.admin.txt
+          .updateGroup(
+            adminNamedGraphIri = "http://www.knora.org/data/admin",
+            groupIri,
+            maybeName = request.name.map(_.value),
+            maybeDescriptions = request.descriptions.map(_.value),
+            maybeProject = None, // maybe later we want to allow moving of a group to another project
+            maybeStatus = request.status.map(_.value),
+            maybeSelfjoin = request.selfjoin.map(_.value)
+          )
       _ <- triplestore.query(Update(updateGroupSparqlString))
 
       /* Verify that the project was updated. */

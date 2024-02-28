@@ -19,6 +19,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
@@ -113,24 +114,23 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "UPDATE a group" in {
-        appActor ! GroupChangeRequestADM(
-          groupIri = newGroupIri.get,
-          changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.unsafeFrom("UpdatedGroupName")),
-            Some(
-              GroupDescriptions
-                .unsafeFrom(
+        val response = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+            groupIri = GroupIri.unsafeFrom(newGroupIri.get),
+            GroupUpdateRequest(
+              name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
+              descriptions = Some(
+                GroupDescriptions.unsafeFrom(
                   Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
                 )
-            )
-          ),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+              ),
+              status = Some(GroupStatus.active),
+              selfjoin = Some(GroupSelfJoin.impossible)
+            ),
+            UUID.randomUUID
+          )
         )
-
-        val received: GroupGetResponseADM = expectMsgType[GroupGetResponseADM](timeout)
-        val updatedGroupInfo              = received.group
-
+        val updatedGroupInfo = response.group
         updatedGroupInfo.name should equal("UpdatedGroupName")
         updatedGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en")))
@@ -141,41 +141,66 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "return 'NotFound' if a not-existing group IRI is submitted during update" in {
-        appActor ! GroupChangeRequestADM(
-          groupIri = "http://rdfh.ch/groups/notexisting",
-          GroupUpdatePayloadADM(
-            Some(GroupName.unsafeFrom("UpdatedGroupName")),
-            Some(
-              GroupDescriptions
-                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-            )
-          ),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val groupIri = "http://rdfh.ch/groups/0000/notexisting"
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+            groupIri = GroupIri.unsafeFrom(groupIri),
+            GroupUpdateRequest(
+              name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
+              descriptions = Some(
+                GroupDescriptions
+                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+              ),
+              status = Some(GroupStatus.active),
+              selfjoin = Some(GroupSelfJoin.impossible)
+            ),
+            UUID.randomUUID
+          )
         )
-
-        expectMsgPF(timeout) { case msg: Failure =>
-          msg.cause.isInstanceOf[NotFoundException] should ===(true)
-        }
+        assertFailsWithA[NotFoundException](
+          exit,
+          s"Group <$groupIri> not found. Aborting update request."
+        )
       }
+//        appActor ! GroupChangeRequestADM(
+//          groupIri = "http://rdfh.ch/groups/notexisting",
+//          GroupUpdatePayloadADM(
+//            Some(GroupName.unsafeFrom("UpdatedGroupName")),
+//            Some(
+//              GroupDescriptions
+//                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+//            )
+//          ),
+//          requestingUser = imagesUser01,
+//          apiRequestID = UUID.randomUUID
+//        )
+
+//        expectMsgPF(timeout) { case msg: Failure =>
+//          msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//        }
+//      }
 
       "return 'BadRequest' if the new group name already exists inside the project" in {
-        appActor ! GroupChangeRequestADM(
-          groupIri = newGroupIri.get,
-          changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.unsafeFrom("Image reviewer")),
-            Some(
-              GroupDescriptions
-                .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
-            )
-          ),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val groupName = GroupName.unsafeFrom("Image reviewer")
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.changeGroupBasicInformationRequestADM(
+            GroupIri.unsafeFrom(newGroupIri.get),
+            GroupUpdateRequest(
+              name = Some(groupName),
+              descriptions = Some(
+                GroupDescriptions
+                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+              ),
+              status = Some(GroupStatus.active),
+              selfjoin = Some(GroupSelfJoin.impossible)
+            ),
+            UUID.randomUUID
+          )
         )
-
-        expectMsgPF(timeout) { case msg: Failure =>
-          msg.cause.isInstanceOf[BadRequestException] should ===(true)
-        }
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Group with the name '${groupName.value}' already exists."
+        )
       }
 
       "return 'BadRequest' if nothing would be changed during the update" in {

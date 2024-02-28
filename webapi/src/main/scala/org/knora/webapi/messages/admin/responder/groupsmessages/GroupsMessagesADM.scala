@@ -131,21 +131,6 @@ case class MultipleGroupsGetRequestADM(
 case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
 
 /**
- * Request updating of an existing group.
- *
- * @param groupIri             the IRI of the group to be updated.
- * @param changeGroupRequest   the data which needs to be update.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class GroupChangeRequestADM(
-  groupIri: IRI,
-  changeGroupRequest: GroupUpdatePayloadADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends GroupsResponderRequestADM
-
-/**
  * Request changing the status (active/inactive) of an existing group.
  *
  * @param groupIri             the IRI of the group to be deleted.
