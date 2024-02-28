@@ -29,6 +29,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -36,6 +38,8 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 final case class UsersRestService(
   auth: AuthorizationRestService,
   userService: UserService,
+  userRepo: KnoraUserRepo,
+  projectService: ProjectADMService,
   responder: UsersResponder,
   format: KnoraResponseRenderer
 ) {
@@ -81,14 +85,24 @@ final case class UsersRestService(
     } yield external
 
   def getProjectMemberShipsByUserIri(userIri: UserIri): Task[UserProjectMembershipsGetResponseADM] =
-    userService
-      .findUserByIri(userIri)
-      .someOrFail(NotFoundException(s"User $userIri does not exist."))
-      .map(user => UserProjectMembershipsGetResponseADM(user.projects))
-      .flatMap(format.toExternal)
+    for {
+      kUser <- userRepo
+                 .findById(userIri)
+                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      projects <- ZIO.foreach(kUser.isInProject)(projectService.findById)
+      internal  = UserProjectMembershipsGetResponseADM(projects.flatten)
+      external <- format.toExternal(internal)
+    } yield external
 
-  def getProjectAdminMemberShipsByIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    responder.findUserProjectAdminMemberships(userIri).flatMap(format.toExternal)
+  def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
+    for {
+      kUser <- userRepo
+                 .findById(userIri)
+                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
+      projects <- ZIO.foreach(kUser.isInProjectAdminGroup)(projectService.findById)
+      internal  = UserProjectAdminMembershipsGetResponseADM(projects.flatten)
+      external <- format.toExternal(internal)
+    } yield external
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
     user <- userService

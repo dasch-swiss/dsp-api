@@ -21,9 +21,6 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.IriLocker
@@ -264,24 +261,6 @@ final case class UsersResponder(
       } yield updateUserResult
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
-
-  /**
-   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
-   * is a member of the project admin group.
-   *
-   * @param userIri              the user's IRI.
-   * @return a [[UserProjectAdminMembershipsGetResponseADM]].
-   */
-  def findUserProjectAdminMemberships(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.whenZIO(userRepo.existsById(userIri).negate)(
-      ZIO.fail(BadRequestException(s"User ${userIri.value} does not exist."))
-    ) *> (for {
-      kUser <- userRepo
-                 .findById(userIri)
-                 .someOrFail(NotFoundException(s"The user $userIri does not exist."))
-      requests  = kUser.isInProjectAdminGroup.map(IriIdentifier.from).map(ProjectGetADM.apply)
-      projects <- ZIO.foreach(requests)(messageRelay.ask[Option[ProjectADM]](_))
-    } yield projects.flatten).map(UserProjectAdminMembershipsGetResponseADM)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -533,11 +512,6 @@ object UsersResponder {
     ZIO.serviceWithZIO[UsersResponder](
       _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
-
-  def findUserProjectAdminMemberships(
-    userIri: UserIri
-  ): ZIO[UsersResponder, Throwable, UserProjectAdminMembershipsGetResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.findUserProjectAdminMemberships(userIri))
 
   def createNewUserADM(
     req: UserCreateRequest,
