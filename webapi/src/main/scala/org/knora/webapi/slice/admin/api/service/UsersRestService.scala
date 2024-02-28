@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api.service
 import zio.*
 
 import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembershipsGetResponseADM
@@ -27,11 +28,13 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -42,6 +45,7 @@ final case class UsersRestService(
   groupsResponder: GroupsResponderADM,
   userService: UserService,
   userRepo: KnoraUserRepo,
+  passwordService: PasswordService,
   projectService: ProjectADMService,
   responder: UsersResponder,
   format: KnoraResponseRenderer
@@ -142,10 +146,19 @@ final case class UsersRestService(
     changeRequest: PasswordChangeRequest
   ): Task[UserResponseADM] =
     for {
-      _        <- ensureNotABuiltInUser(userIri)
-      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
-      uuid     <- Random.nextUUID
-      response <- responder.changePassword(userIri, changeRequest, requestingUser, uuid).flatMap(format.toExternal)
+      _ <- ensureNotABuiltInUser(userIri)
+      _ <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      _ <- ZIO // check if supplied password matches requesting user's password
+             .fail(ForbiddenException("The supplied password does not match the requesting user's password."))
+             .unless(
+               passwordService.matches(
+                 changeRequest.requesterPassword,
+                 PasswordHash.unsafeFrom(requestingUser.password.getOrElse(""))
+               )
+             )
+      user <- getKnoraUserOrNotFound(userIri)
+      response <-
+        userService.changePassword(user, changeRequest.newPassword).flatMap(asExternalUserResponse(requestingUser, _))
     } yield response
 
   def changeStatus(
@@ -183,7 +196,7 @@ final case class UsersRestService(
       kUser       <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- userService.addProjectToUserIsInProject(kUser, project).mapError(BadRequestException.apply)
-      external    <- asExternalUserOperationResponse(requestingUser, updatedUser)
+      external    <- asExternalUserResponse(requestingUser, updatedUser)
     } yield external
 
   private def getProjectADMOrBadRequest(projectIri: ProjectIri) =
@@ -191,7 +204,7 @@ final case class UsersRestService(
       .findById(projectIri)
       .someOrFail(BadRequestException(s"Project with iri ${projectIri.value} not found."))
 
-  private def asExternalUserOperationResponse(requestingUser: User, kUser: KnoraUser): Task[UserResponseADM] =
+  private def asExternalUserResponse(requestingUser: User, kUser: KnoraUser): Task[UserResponseADM] =
     userService.toUser(kUser).flatMap(asExternalUserOperationResponse(requestingUser, _))
 
   private def asExternalUserOperationResponse(requestingUser: User, user: User): Task[UserResponseADM] = {
@@ -211,7 +224,7 @@ final case class UsersRestService(
       project <- getProjectADMOrBadRequest(projectIri)
       updatedUser <-
         userService.addProjectToUserIsInProjectAdminGroup(user, project).mapError(BadRequestException.apply)
-      external <- asExternalUserOperationResponse(requestingUser, updatedUser)
+      external <- asExternalUserResponse(requestingUser, updatedUser)
     } yield external
 
   def removeProjectToUserIsInProject(
@@ -251,7 +264,7 @@ final case class UsersRestService(
                  .groupGetADM(groupIri.value)
                  .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
       updatedKUser <- userService.addGroupToUserIsInGroup(kUser, group).mapError(BadRequestException.apply)
-      external     <- asExternalUserOperationResponse(requestingUser, updatedKUser)
+      external     <- asExternalUserResponse(requestingUser, updatedKUser)
     } yield external
 
   def removeGroupFromUserIsInGroup(

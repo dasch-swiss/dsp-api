@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Chunk
 import zio.IO
 import zio.Task
+import zio.UIO
 import zio.ZIO
 import zio.ZLayer
 
@@ -22,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.Password
 import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
@@ -49,6 +51,7 @@ case class UserService(
   private val userRepo: KnoraUserRepo,
   private val projectsService: ProjectADMService,
   private val groupsService: GroupsResponderADM,
+  private val passwordService: PasswordService,
   private val permissionService: PermissionsResponderADM,
   private val cacheService: CacheService
 ) {
@@ -129,6 +132,12 @@ case class UserService(
     theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ project.projectIri))
     user     <- updateUser(user, theChange).orDie
   } yield user
+
+  def changePassword(knoraUser: KnoraUser, newPassword: Password): UIO[KnoraUser] = {
+    val newPasswordHash = passwordService.hashPassword(newPassword)
+    val theChange       = UserChangeRequest(passwordHash = Some(newPasswordHash))
+    updateUser(knoraUser, theChange).orDie
+  }
 
   def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)

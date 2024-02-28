@@ -83,6 +83,13 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri))
 
+  def changePassword(
+    requestingUser: User,
+    userIri: UserIri,
+    passwordChangeRequest: PasswordChangeRequest
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.changePassword(requestingUser, userIri, passwordChangeRequest))
+
   "The UsersRestService" when {
     "calling getAllUsers" should {
       "with a SystemAdmin should return all real users" in {
@@ -310,12 +317,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test123456")
         UnsafeZioRun.runOrThrow(
-          UsersResponder.changePassword(
-            SharedTestDataADM.normalUser.userIri,
-            PasswordChangeRequest(requesterPassword, newPassword),
-            SharedTestDataADM.normalUser,
-            UUID.randomUUID
-          )
+          changePassword(normalUser, normalUser.userIri, PasswordChangeRequest(requesterPassword, newPassword))
         )
 
         // need to be able to authenticate credentials with new password
@@ -331,11 +333,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val newPassword       = Password.unsafeFrom("test654321")
 
         UnsafeZioRun.runOrThrow(
-          UsersResponder.changePassword(
-            SharedTestDataADM.normalUser.userIri,
-            PasswordChangeRequest(requesterPassword, newPassword),
+          changePassword(
             SharedTestDataADM.rootUser,
-            UUID.randomUUID()
+            SharedTestDataADM.normalUser.userIri,
+            PasswordChangeRequest(requesterPassword, newPassword)
           )
         )
 

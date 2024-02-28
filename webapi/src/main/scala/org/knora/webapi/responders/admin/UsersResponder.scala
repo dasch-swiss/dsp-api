@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.Chunk
-import zio.RIO
 import zio.Task
 import zio.URLayer
 import zio.ZIO
@@ -27,7 +26,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.*
@@ -127,47 +125,6 @@ final case class UsersResponder(
     ZIO.whenZIO(userRepo.existsByUsername(username))(
       ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
     )
-
-  /**
-   * Change the users password. The old password needs to be supplied for security purposes.
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param changeRequest    the current password of the requesting user and the new password.
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
-   *         fails with a [[ForbiddenException]] if the supplied old password doesn't match with the user's current password.
-   *         fails with a [[NotFoundException]] if the user is not found.
-   */
-  def changePassword(
-    userIri: UserIri,
-    changeRequest: PasswordChangeRequest,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): Task[UserResponseADM] = {
-    val updateTask =
-      for {
-        _ <- // check if supplied password matches requesting user's password
-          ZIO
-            .fromOption(requestingUser.password)
-            .map(PasswordHash.unsafeFrom)
-            .mapBoth(
-              _ => ForbiddenException("The requesting user has no password."),
-              passwordService.matches(changeRequest.requesterPassword, _)
-            )
-            .filterOrFail(identity)(
-              ForbiddenException("The supplied password does not match the requesting user's password.")
-            )
-
-        newPasswordHash = passwordService.hashPassword(changeRequest.newPassword)
-        theChange       = UserChangeRequest(passwordHash = Some(newPasswordHash))
-        result         <- updateUserADM(userIri, theChange)
-      } yield result
-
-    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
-  }
 
   /**
    * Change the user's status (active / inactive).
@@ -422,14 +379,6 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeBasicUserInformationADM(userIri, changeRequest, apiRequestID))
-
-  def changePassword(
-    userIri: UserIri,
-    changeRequest: PasswordChangeRequest,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): RIO[UsersResponder, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,
