@@ -8,9 +8,10 @@ package dsp.errors
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.SerializationException
 import org.apache.commons.lang3.SerializationUtils
-import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+
+import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 
 /*
 

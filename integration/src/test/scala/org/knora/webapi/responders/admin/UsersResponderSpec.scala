@@ -66,21 +66,21 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     requestingUser: User,
     userIri: UserIri,
     groupIri: GroupIri
-  ): ZIO[UsersRestService, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addGroupToUserIsInGroup(requestingUser, userIri, groupIri))
 
   def addProjectToUserIsInProject(
     requestingUser: User,
     userIri: UserIri,
     projectIri: ProjectIri
-  ): ZIO[UsersRestService, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addProjectToUserIsInProject(requestingUser, userIri, projectIri))
 
   def addProjectToUserIsInProjectAdminGroup(
     requestingUser: User,
     userIri: UserIri,
     projectIri: ProjectIri
-  ): ZIO[UsersRestService, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri))
 
   "The UsersRestService" when {
@@ -238,7 +238,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     "asked to update a user" should {
       "UPDATE the user's basic information" in {
         /* User information is updated by the user */
-        val response1: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+        val response1 = UnsafeZioRun.runOrThrow(
           UsersResponder.changeBasicUserInformationADM(
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald"))),
@@ -249,7 +249,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         response1.user.givenName should equal("Donald")
 
         /* User information is updated by a system admin */
-        val response2: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+        val response2 = UnsafeZioRun.runOrThrow(
           UsersResponder.changeBasicUserInformationADM(
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck"))),
@@ -260,7 +260,7 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         response2.user.familyName should equal("Duck")
 
         /* User information is updated by a system admin */
-        val response3: UserOperationResponseADM = UnsafeZioRun.runOrThrow(
+        val response3 = UnsafeZioRun.runOrThrow(
           UsersResponder.changeBasicUserInformationADM(
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(

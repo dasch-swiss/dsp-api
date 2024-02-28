@@ -5,6 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
+import zio.IO
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -24,11 +30,6 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 import org.knora.webapi.store.cache.api.CacheService
-import zio.Chunk
-import zio.IO
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class UserChangeRequest(
   username: Option[Username] = None,

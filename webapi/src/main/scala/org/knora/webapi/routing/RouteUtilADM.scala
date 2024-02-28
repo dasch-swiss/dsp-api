@@ -84,7 +84,6 @@ object RouteUtilADM {
           UserProjectAdminMembershipsGetResponseADM(projects.map(projectAsExternalRepresentation))
         case UserGroupMembershipsGetResponseADM(groups) =>
           UserGroupMembershipsGetResponseADM(groups.map(groupAsExternalRepresentation))
-        case UserOperationResponseADM(user) => UserOperationResponseADM(userAsExternalRepresentation(user))
 
         case _ => response
       }

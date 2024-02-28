@@ -21,7 +21,7 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -91,7 +91,7 @@ final case class UsersResponder(
    * @param changeRequest        the updated information stored as [[BasicUserInformationChangeRequest]].
    *
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
+   * @return a future containing a [[UserResponseADM]].
    *               with a [[BadRequestException]] if the necessary parameters are not supplied.
    *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
@@ -99,7 +99,7 @@ final case class UsersResponder(
     userIri: UserIri,
     changeRequest: BasicUserInformationChangeRequest,
     apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask =
       for {
         _ <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with IRI $userIri not found"))
@@ -135,7 +135,7 @@ final case class UsersResponder(
    * @param changeRequest    the current password of the requesting user and the new password.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
+   * @return a future containing a [[UserResponseADM]].
    *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
    *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    *         fails with a [[ForbiddenException]] if the supplied old password doesn't match with the user's current password.
@@ -146,7 +146,7 @@ final case class UsersResponder(
     changeRequest: PasswordChangeRequest,
     requestingUser: User,
     apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask =
       for {
         _ <- // check if supplied password matches requesting user's password
@@ -175,11 +175,11 @@ final case class UsersResponder(
    * @param userIri        the IRI of the existing user that we want to update.
    * @param status         the new status.
    * @param apiRequestID   the unique api request ID.
-   * @return a task containing a [[UserOperationResponseADM]].
+   * @return a task containing a [[UserResponseADM]].
    *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
    *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
    */
-  def changeUserStatus(userIri: UserIri, status: UserStatus, apiRequestID: UUID): Task[UserOperationResponseADM] = {
+  def changeUserStatus(userIri: UserIri, status: UserStatus, apiRequestID: UUID): Task[UserResponseADM] = {
     val updateTask = updateUserADM(userIri, UserChangeRequest(status = Some(status)))
     IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
   }
@@ -191,7 +191,7 @@ final case class UsersResponder(
    * @param systemAdmin    the new status.
    *
    * @param apiRequestId         the unique api request ID.
-   * @return a future containing a [[UserOperationResponseADM]].
+   * @return a future containing a [[UserResponseADM]].
    *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
    *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
@@ -199,7 +199,7 @@ final case class UsersResponder(
     userIri: UserIri,
     systemAdmin: SystemAdmin,
     apiRequestId: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask = updateUserADM(userIri, UserChangeRequest(systemAdmin = Some(systemAdmin)))
     IriLocker.runWithIriLock(apiRequestId, userIri.value, updateTask)
   }
@@ -218,7 +218,7 @@ final case class UsersResponder(
     userIri: UserIri,
     projectIri: ProjectIri,
     apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask =
       for {
         kUser             <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
@@ -241,13 +241,13 @@ final case class UsersResponder(
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]]
+   * @return a [[UserResponseADM]]
    */
   def removeProjectFromUserIsInProjectAdminGroup(
     userIri: UserIri,
     projectIri: ProjectIri,
     apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask =
       for {
         kUser                       <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
@@ -268,13 +268,13 @@ final case class UsersResponder(
    * @param userIri              the user's IRI.
    * @param groupIri             the group IRI.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]].
+   * @return a [[UserResponseADM]].
    */
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
     apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  ): Task[UserResponseADM] = {
     val updateTask =
       for {
         kUser           <- userRepo.findById(userIri).someOrFail(NotFoundException(s"The user $userIri does not exist."))
@@ -297,14 +297,14 @@ final case class UsersResponder(
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param theUpdate    the updated information.
-   * @return a [[UserOperationResponseADM]].
+   * @return a [[UserResponseADM]].
    *         fails with a BadRequestException         if necessary parameters are not supplied.
    *         fails with a UpdateNotPerformedException if the update was not performed.
    */
   private def updateUserADM(
     userIri: UserIri,
     theUpdate: UserChangeRequest
-  ): ZIO[Any, Throwable, UserOperationResponseADM] =
+  ): ZIO[Any, Throwable, UserResponseADM] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
       currentUser <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User '$userIri' not found."))
@@ -313,7 +313,7 @@ final case class UsersResponder(
         userService
           .findUserByIri(userIri)
           .someOrFail(UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationType.Restricted))
+    } yield UserResponseADM(updatedUserADM.ofType(UserInformationType.Restricted))
 
   /**
    * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
@@ -325,9 +325,9 @@ final case class UsersResponder(
    *
    * @param req    a [[UserCreateRequest]] object containing information about the new user to be created.
    * @param apiRequestID         the unique api request ID.
-   * @return a [[UserOperationResponseADM]].
+   * @return a [[UserResponseADM]].
    */
-  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserOperationResponseADM] = {
+  def createNewUserADM(req: UserCreateRequest, apiRequestID: UUID): Task[UserResponseADM] = {
     val createNewUserTask =
       for {
         _ <- ensureUsernameDoesNotExist(req.username)
@@ -364,7 +364,7 @@ final case class UsersResponder(
             UpdateNotPerformedException(s"User ${userIri.value} was not created. Please report this as a possible bug.")
           }
 
-      } yield UserOperationResponseADM(createdUser.ofType(UserInformationType.Restricted))
+      } yield UserResponseADM(createdUser.ofType(UserInformationType.Restricted))
 
     IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, createNewUserTask)
   }
@@ -375,14 +375,14 @@ object UsersResponder {
     userIri: UserIri,
     status: UserStatus,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeUserStatus(userIri, status, apiRequestID))
 
   def changeSystemAdmin(
     userIri: UserIri,
     systemAdmin: SystemAdmin,
     apiRequestId: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeSystemAdmin(userIri, systemAdmin, apiRequestId))
 
   def findUserByIri(
@@ -396,7 +396,7 @@ object UsersResponder {
     userIri: UserIri,
     projectIri: ProjectIri,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](
       _.removeProjectFromUserIsInProjectAndIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
@@ -405,7 +405,7 @@ object UsersResponder {
     userIri: UserIri,
     projectIri: ProjectIri,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](
       _.removeProjectFromUserIsInProjectAdminGroup(userIri, projectIri, apiRequestID)
     )
@@ -413,14 +413,14 @@ object UsersResponder {
   def createNewUserADM(
     req: UserCreateRequest,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
 
   def changeBasicUserInformationADM(
     userIri: UserIri,
     changeRequest: BasicUserInformationChangeRequest,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changeBasicUserInformationADM(userIri, changeRequest, apiRequestID))
 
   def changePassword(
@@ -428,14 +428,14 @@ object UsersResponder {
     changeRequest: PasswordChangeRequest,
     requestingUser: User,
     apiRequestID: UUID
-  ): RIO[UsersResponder, UserOperationResponseADM] =
+  ): RIO[UsersResponder, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.changePassword(userIri, changeRequest, requestingUser, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,
     groupIri: GroupIri,
     apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserOperationResponseADM] =
+  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.removeGroupFromUserIsInGroup(userIri, groupIri, apiRequestID))
 
   val layer: URLayer[

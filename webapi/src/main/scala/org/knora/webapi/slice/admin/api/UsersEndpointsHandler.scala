@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.usersmessages.UserOperationResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
@@ -67,13 +66,13 @@ case class UsersEndpointsHandler(
   )
 
   // Create
-  private val createUserHandler = SecuredEndpointHandler[UserCreateRequest, UserOperationResponseADM](
+  private val createUserHandler = SecuredEndpointHandler[UserCreateRequest, UserResponseADM](
     usersEndpoints.post.users,
     requestingUser => userCreateRequest => restService.createUser(requestingUser, userCreateRequest)
   )
 
   private val postUsersByIriProjectMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.post.usersByIriProjectMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
         restService.addProjectToUserIsInProject(requestingUser, userIri, projectIri.value)
@@ -81,7 +80,7 @@ case class UsersEndpointsHandler(
     )
 
   private val postUsersByIriProjectAdminMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.post.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
         restService.addProjectToUserIsInProjectAdminGroup(requestingUser, userIri, projectIri.value)
@@ -89,7 +88,7 @@ case class UsersEndpointsHandler(
     )
 
   private val postUsersByIriGroupMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, GroupIri), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, GroupIri), UserResponseADM](
       usersEndpoints.post.usersByIriGroupMemberShips,
       requestingUser => { case (userIri: UserIri, groupIri: GroupIri) =>
         restService.addGroupToUserIsInGroup(requestingUser, userIri, groupIri)
@@ -98,7 +97,7 @@ case class UsersEndpointsHandler(
 
   // Update
   private val putUsersIriBasicInformationHandler =
-    SecuredEndpointHandler[(UserIri, BasicUserInformationChangeRequest), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, BasicUserInformationChangeRequest), UserResponseADM](
       usersEndpoints.put.usersIriBasicInformation,
       requestingUser => { case (userIri: UserIri, changeRequest: BasicUserInformationChangeRequest) =>
         restService.updateUser(requestingUser, userIri, changeRequest)
@@ -106,7 +105,7 @@ case class UsersEndpointsHandler(
     )
 
   private val putUsersIriPasswordHandler =
-    SecuredEndpointHandler[(UserIri, PasswordChangeRequest), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, PasswordChangeRequest), UserResponseADM](
       usersEndpoints.put.usersIriPassword,
       requestingUser => { case (userIri: UserIri, changeRequest: PasswordChangeRequest) =>
         restService.changePassword(requestingUser, userIri, changeRequest)
@@ -114,7 +113,7 @@ case class UsersEndpointsHandler(
     )
 
   private val putUsersIriStatusHandler =
-    SecuredEndpointHandler[(UserIri, StatusChangeRequest), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, StatusChangeRequest), UserResponseADM](
       usersEndpoints.put.usersIriStatus,
       requestingUser => { case (userIri: UserIri, changeRequest: StatusChangeRequest) =>
         restService.changeStatus(requestingUser, userIri, changeRequest)
@@ -122,7 +121,7 @@ case class UsersEndpointsHandler(
     )
 
   private val putUsersIriSystemAdminHandler =
-    SecuredEndpointHandler[(UserIri, SystemAdminChangeRequest), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, SystemAdminChangeRequest), UserResponseADM](
       usersEndpoints.put.usersIriSystemAdmin,
       requestingUser => { case (userIri: UserIri, changeRequest: SystemAdminChangeRequest) =>
         restService.changeSystemAdmin(requestingUser, userIri, changeRequest)
@@ -130,13 +129,13 @@ case class UsersEndpointsHandler(
     )
 
   // Deletes
-  private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserOperationResponseADM](
+  private val deleteUserByIriHandler = SecuredEndpointHandler[UserIri, UserResponseADM](
     usersEndpoints.delete.deleteUser,
     requestingUser => userIri => restService.deleteUser(requestingUser, userIri)
   )
 
   private val deleteUsersByIriProjectMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
         restService.removeProjectToUserIsInProject(requestingUser, userIri, projectIri)
@@ -144,7 +143,7 @@ case class UsersEndpointsHandler(
     )
 
   private val deleteUsersByIriProjectAdminMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, IriIdentifier), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, IriIdentifier), UserResponseADM](
       usersEndpoints.delete.usersByIriProjectAdminMemberShips,
       requestingUser => { case (userIri: UserIri, projectIri: IriIdentifier) =>
         restService.removeProjectFromUserIsInProjectAdminGroup(requestingUser, userIri, projectIri)
@@ -152,7 +151,7 @@ case class UsersEndpointsHandler(
     )
 
   private val deleteUsersByIriGroupMemberShipsHandler =
-    SecuredEndpointHandler[(UserIri, GroupIri), UserOperationResponseADM](
+    SecuredEndpointHandler[(UserIri, GroupIri), UserResponseADM](
       usersEndpoints.delete.usersByIriGroupMemberShips,
       requestingUser => { case (userIri: UserIri, groupIri: GroupIri) =>
         restService.removeGroupFromUserIsInGroup(requestingUser, userIri, groupIri)
