@@ -23,11 +23,6 @@ case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequ
 case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends CacheServiceRequest
 
 /**
- * Message requesting to completely empty the cache (wipe everything).
- */
-case object CacheServiceClearCache extends CacheServiceRequest
-
-/**
  * Queries Cache Service status.
  */
 case object CacheServiceGetStatus extends CacheServiceRequest
