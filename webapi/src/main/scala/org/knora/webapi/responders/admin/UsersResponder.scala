@@ -25,7 +25,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.*
@@ -80,41 +79,6 @@ final case class UsersResponder(
     requestingUser: User
   ): Task[Option[User]] =
     userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationType)))
-
-  /**
-   * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
-   * can be changed. For changing the password or user status, use the separate methods.
-   *
-   * @param userIri              the IRI of the existing user that we want to update.
-   * @param changeRequest        the updated information stored as [[BasicUserInformationChangeRequest]].
-   *
-   * @param apiRequestID         the unique api request ID.
-   * @return a future containing a [[UserResponseADM]].
-   *               with a [[BadRequestException]] if the necessary parameters are not supplied.
-   *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
-   */
-  def changeBasicUserInformationADM(
-    userIri: UserIri,
-    changeRequest: BasicUserInformationChangeRequest,
-    apiRequestID: UUID
-  ): Task[UserResponseADM] = {
-    val updateTask =
-      for {
-        _ <- userRepo.findById(userIri).someOrFail(NotFoundException(s"User with IRI $userIri not found"))
-        _ <- ZIO.foreachDiscard(changeRequest.email)(ensureEmailDoesNotExist)
-        _ <- ZIO.foreachDiscard(changeRequest.username)(ensureUsernameDoesNotExist)
-        theChange = UserChangeRequest(
-                      username = changeRequest.username,
-                      email = changeRequest.email,
-                      givenName = changeRequest.givenName,
-                      familyName = changeRequest.familyName,
-                      lang = changeRequest.lang
-                    )
-        result <- updateUserADM(userIri, theChange)
-      } yield result
-
-    IriLocker.runWithIriLock(apiRequestID, USERS_GLOBAL_LOCK_IRI, updateTask)
-  }
 
   private def ensureEmailDoesNotExist(email: Email) =
     ZIO.whenZIO(userRepo.existsByEmail(email))(
@@ -323,13 +287,6 @@ object UsersResponder {
     apiRequestID: UUID
   ): ZIO[UsersResponder, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersResponder](_.createNewUserADM(req, apiRequestID))
-
-  def changeBasicUserInformationADM(
-    userIri: UserIri,
-    changeRequest: BasicUserInformationChangeRequest,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.changeBasicUserInformationADM(userIri, changeRequest, apiRequestID))
 
   def removeGroupFromUserIsInGroup(
     userIri: UserIri,

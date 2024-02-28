@@ -5,6 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import dsp.errors.DuplicateValueException
+import zio.Chunk
+import zio.IO
+import zio.Task
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -25,12 +32,6 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 import org.knora.webapi.store.cache.api.CacheService
-import zio.Chunk
-import zio.IO
-import zio.Task
-import zio.UIO
-import zio.ZIO
-import zio.ZLayer
 
 final case class UserChangeRequest(
   username: Option[Username] = None,
@@ -95,8 +96,19 @@ case class UserService(
       isInGroup = update.groups.getOrElse(kUser.isInGroup).distinct,
       isInSystemAdminGroup = update.systemAdmin.getOrElse(kUser.isInSystemAdminGroup)
     )
-    userRepo.save(updatedUser)
+    ZIO.foreachDiscard(update.email)(ensureEmailDoesNotExist) *>
+      ZIO.foreachDiscard(update.username)(ensureUsernameDoesNotExist) *>
+      userRepo.save(updatedUser)
   }
+  private def ensureEmailDoesNotExist(email: Email) =
+    ZIO.whenZIO(userRepo.existsByEmail(email))(
+      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
+    )
+
+  private def ensureUsernameDoesNotExist(username: Username) =
+    ZIO.whenZIO(userRepo.existsByUsername(username))(
+      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
+    )
 
   def deleteUser(user: KnoraUser): UIO[KnoraUser] =
     updateUser(user, UserChangeRequest(status = Some(UserStatus.Inactive))).orDie

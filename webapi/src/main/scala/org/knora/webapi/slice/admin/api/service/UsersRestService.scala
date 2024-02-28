@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -37,7 +39,6 @@ import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import zio.*
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
@@ -133,9 +134,16 @@ final case class UsersRestService(
   ): Task[UserResponseADM] = for {
     _    <- ensureNotABuiltInUser(userIri)
     _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
-    uuid <- Random.nextUUID
-    response <-
-      responder.changeBasicUserInformationADM(userIri, changeRequest, uuid).flatMap(format.toExternal)
+    user <- getKnoraUserOrNotFound(userIri)
+    theChange = UserChangeRequest(
+                  username = changeRequest.username,
+                  email = changeRequest.email,
+                  givenName = changeRequest.givenName,
+                  familyName = changeRequest.familyName,
+                  lang = changeRequest.lang
+                )
+    updated  <- userService.updateUser(user, theChange)
+    response <- asExternalUserResponseADM(requestingUser, updated)
   } yield response
 
   def changePassword(

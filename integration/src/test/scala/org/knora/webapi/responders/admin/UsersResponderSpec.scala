@@ -5,12 +5,17 @@
 
 package org.knora.webapi.responders.admin
 
+import org.apache.pekko.testkit.ImplicitSender
+import zio.Chunk
+import zio.ZIO
+
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
-import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
@@ -28,15 +33,11 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequ
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-import zio.Chunk
-import zio.ZIO
-
-import java.util.UUID
 
 class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
@@ -101,6 +102,13 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     statusChangeRequest: StatusChangeRequest
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changeStatus(requestingUser, userIri, statusChangeRequest))
+
+  def updateUser(
+    requestingUser: User,
+    userIri: UserIri,
+    basicUserInformationChangeRequest: BasicUserInformationChangeRequest
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.updateUser(requestingUser, userIri, basicUserInformationChangeRequest))
 
   "The UsersRestService" when {
     "calling getAllUsers" should {
@@ -257,10 +265,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       "UPDATE the user's basic information" in {
         /* User information is updated by the user */
         val response1 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeBasicUserInformationADM(
+          updateUser(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald"))),
-            UUID.randomUUID
+            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald")))
           )
         )
 
@@ -268,10 +276,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         /* User information is updated by a system admin */
         val response2 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeBasicUserInformationADM(
+          updateUser(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck"))),
-            UUID.randomUUID
+            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck")))
           )
         )
 
@@ -279,13 +287,13 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
         /* User information is updated by a system admin */
         val response3 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeBasicUserInformationADM(
+          updateUser(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(
               givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
               familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
-            ),
-            apiRequestID = UUID.randomUUID
+            )
           )
         )
 
@@ -297,10 +305,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         val duplicateUsername =
           Some(Username.unsafeFrom(SharedTestDataADM.anythingUser1.username))
         val exit = UnsafeZioRun.run(
-          UsersResponder.changeBasicUserInformationADM(
+          updateUser(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(username = duplicateUsername),
-            UUID.randomUUID
           )
         )
         assertFailsWithA[DuplicateValueException](
@@ -312,10 +320,10 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         val duplicateEmail = Some(Email.unsafeFrom(SharedTestDataADM.anythingUser1.email))
         val exit = UnsafeZioRun.run(
-          UsersResponder.changeBasicUserInformationADM(
+          updateUser(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(email = duplicateEmail),
-            UUID.randomUUID
           )
         )
         assertFailsWithA[DuplicateValueException](
