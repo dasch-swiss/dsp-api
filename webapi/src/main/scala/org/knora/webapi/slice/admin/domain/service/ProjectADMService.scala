@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -17,7 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 
 final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,

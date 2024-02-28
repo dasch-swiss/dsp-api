@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cache.impl
-
-import zio.*
-import zio.stm.*
+package org.knora.webapi.store.cache
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -18,7 +15,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.store.cache.api.CacheService
+import zio.*
+import zio.stm.*
 
 /**
  * In-Memory Cache implementation
@@ -28,14 +26,14 @@ import org.knora.webapi.store.cache.api.CacheService
  * consistent, all Refs need to be updated in a single transaction. This
  * requires STM (Software Transactional Memory) to be used.
  */
-case class CacheServiceLive(
+case class CacheService(
   users: TMap[UserIri, User],
   projects: TMap[ProjectIri, ProjectADM],
   mappingUsernameUserIri: TMap[Username, UserIri],
   mappingEmailUserIri: TMap[Email, UserIri],
   mappingShortcodeProjectIri: TMap[Shortcode, ProjectIri],
   mappingShortnameProjectIri: TMap[Shortname, ProjectIri]
-) extends CacheService {
+) {
 
   /**
    * Stores the user under the IRI  and additionally the IRI
@@ -56,19 +54,19 @@ case class CacheServiceLive(
       _ <- mappingEmailUserIri.put(value.getEmail, value.userIri)
     } yield ()).commit
 
-  override def getUserByIri(iri: UserIri): Task[Option[User]] = users.get(iri).commit
+  def getUserByIri(iri: UserIri): Task[Option[User]] = users.get(iri).commit
 
-  override def getUserByUsername(username: Username): Task[Option[User]] =
+  def getUserByUsername(username: Username): Task[Option[User]] =
     mappingUsernameUserIri.get(username).some.flatMap(users.get(_).some).commit.unsome
 
-  override def getUserByEmail(email: Email): Task[Option[User]] =
+  def getUserByEmail(email: Email): Task[Option[User]] =
     mappingEmailUserIri.get(email).some.flatMap(users.get(_).some).commit.unsome
 
   /**
    * Invalidates the user stored under the IRI.
    * @param iri the user's IRI.
    */
-  override def invalidateUser(iri: UserIri): UIO[Unit] =
+  def invalidateUser(iri: UserIri): UIO[Unit] =
     (for {
       user <- users.get(iri).some
       _    <- users.delete(iri)
@@ -143,7 +141,7 @@ case class CacheServiceLive(
 
 }
 
-object CacheServiceLive {
+object CacheService {
   val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {
       for {
@@ -153,6 +151,6 @@ object CacheServiceLive {
         emailMapping     <- TMap.empty[Email, UserIri].commit
         shortcodeMapping <- TMap.empty[Shortcode, ProjectIri].commit
         shortnameMapping <- TMap.empty[Shortname, ProjectIri].commit
-      } yield CacheServiceLive(users, projects, usernameMapping, emailMapping, shortcodeMapping, shortnameMapping)
+      } yield CacheService(users, projects, usernameMapping, emailMapping, shortcodeMapping, shortnameMapping)
     }.tap(_ => ZIO.logInfo(">>> In-Memory Cache Service Initialized <<<"))
 }

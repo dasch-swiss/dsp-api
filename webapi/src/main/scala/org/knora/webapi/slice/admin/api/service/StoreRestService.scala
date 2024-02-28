@@ -6,14 +6,13 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.api.MessageResponse
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class StoreRestService(

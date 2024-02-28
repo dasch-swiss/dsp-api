@@ -55,10 +55,9 @@ import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
-import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -159,7 +158,7 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheServiceLive.layer,
+      CacheService.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,

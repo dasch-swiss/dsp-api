@@ -11,7 +11,6 @@ import zio.Task
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -32,7 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 
 final case class UserChangeRequest(
   username: Option[Username] = None,

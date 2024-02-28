@@ -18,7 +18,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
-
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -39,7 +38,7 @@ import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update

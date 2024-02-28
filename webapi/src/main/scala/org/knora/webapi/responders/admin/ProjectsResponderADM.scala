@@ -9,7 +9,6 @@ import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
@@ -37,7 +36,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
