@@ -13,6 +13,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -24,6 +25,7 @@ trait GroupsRestService {
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM]
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
   def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM]
+  def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
@@ -56,6 +58,14 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
       uuid     <- Random.nextUUID
       internal <- responder.createGroupADM(request, uuid)
+      external <- format.toExternal(internal)
+    } yield external
+
+  override def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      uuid     <- Random.nextUUID
+      internal <- responder.changeGroupBasicInformationRequestADM(iri, request, uuid)
       external <- format.toExternal(internal)
     } yield external
 }

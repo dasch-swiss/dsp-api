@@ -37,6 +37,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
@@ -94,6 +95,7 @@ trait GroupsResponderADM {
    * @return a [[GroupGetResponseADM]]
    */
   def createGroupADM(
+//    TODO: remove ADM suffix from the method name
     request: GroupCreateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
@@ -101,16 +103,14 @@ trait GroupsResponderADM {
   /**
    * Change group's basic information.
    *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param changeGroupRequest the change request.
-   * @param requestingUser     the user making the request.
-   * @param apiRequestID       the unique request ID.
+   * @param groupIri      the IRI of the group we want to change.
+   * @param request       the change request.
+   * @param apiRequestID  the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
   def changeGroupBasicInformationRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: GroupUpdatePayloadADM,
-    requestingUser: User,
+    groupIri: GroupIri,
+    request: GroupUpdateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
 
@@ -151,8 +151,6 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupChangeRequestADM =>
-      changeGroupBasicInformationRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
     case r: GroupChangeStatusRequestADM =>
       changeGroupStatusRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -313,12 +311,11 @@ final case class GroupsResponderADMLive(
              .fail(DuplicateValueException(s"Group with the name '${request.name.value}' already exists"))
              .when(nameExists)
 
-      projectADM <- findProjectByIriOrFail(
-                      request.project.value,
-                      NotFoundException(
-                        s"Cannot create group inside project <${request.project}>. The project was not found."
-                      )
-                    )
+      projectADM <-
+        findProjectByIriOrFail(
+          request.project.value,
+          NotFoundException(s"Cannot create group inside project <${request.project}>. The project was not found.")
+        )
 
       // check the custom IRI; if not given, create an unused IRI
       customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
@@ -346,8 +343,7 @@ final case class GroupsResponderADMLive(
       /* Verify that the group was created and updated  */
       createdGroup <-
         groupGetADM(groupIri)
-          .flatMap(ZIO.fromOption(_))
-          .orElseFail(UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
+          .someOrFail(UpdateNotPerformedException("Group was not created. Please report this as a possible bug."))
 
     } yield GroupGetResponseADM(createdGroup)
     IriLocker.runWithIriLock(apiRequestID, "http://rdfh.ch/groups", task)
@@ -358,57 +354,36 @@ final case class GroupsResponderADMLive(
    *
    * @param groupIri             the IRI of the group we want to change.
    * @param changeGroupRequest   the change request.
-   * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
   override def changeGroupBasicInformationRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: GroupUpdatePayloadADM,
-    requestingUser: User,
+    groupIri: GroupIri,
+    changeGroupRequest: GroupUpdateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
+    val task = for {
+      // check if necessary information is present
+      _ <- ZIO
+             .fail(BadRequestException("Group IRI cannot be empty"))
+             .when(groupIri.value.isEmpty)
 
-    /**
-     * The actual change group task run with an IRI lock.
-     */
-    def changeGroupTask(
-      groupIri: IRI,
-      changeGroupRequest: GroupUpdatePayloadADM,
-      requestingUser: User
-    ): Task[GroupGetResponseADM] =
-      for {
-        // check if necessary information is present
-        _ <- ZIO
-               .fail(BadRequestException("Group IRI cannot be empty"))
-               .when(groupIri.isEmpty)
+      /* Get the project IRI which also verifies that the group exists. */
+      groupADMOpt <- groupGetADM(groupIri.value)
+      _ <- ZIO
+             .fromOption(groupADMOpt)
+             .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
-        /* Get the project IRI which also verifies that the group exists. */
-        groupADMOpt <- groupGetADM(groupIri)
-        groupADM <- ZIO
-                      .fromOption(groupADMOpt)
-                      .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
-
-        /* check if the requesting user is allowed to perform updates */
-        _ <- ZIO
-               .fail(ForbiddenException("Group's information can only be changed by a project or system admin."))
-               .when {
-                 val userPermissions = requestingUser.permissions
-                 !userPermissions.isProjectAdmin(groupADM.project.id) && !userPermissions.isSystemAdmin
-               }
-
-        /* create the update request */
-        groupUpdatePayload = GroupUpdatePayloadADM(
-                               name = changeGroupRequest.name,
-                               descriptions = changeGroupRequest.descriptions,
-                               status = changeGroupRequest.status,
-                               selfjoin = changeGroupRequest.selfjoin
-                             )
-        result <- updateGroupADM(groupIri, groupUpdatePayload)
-      } yield result
-
-    val task = changeGroupTask(groupIri, changeGroupRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, groupIri, task)
+      /* create the update request */
+      groupUpdatePayload = GroupUpdatePayloadADM(
+                             name = changeGroupRequest.name,
+                             descriptions = changeGroupRequest.descriptions,
+                             status = changeGroupRequest.status,
+                             selfjoin = changeGroupRequest.selfjoin
+                           )
+      result <- updateGroupADM(groupIri.value, groupUpdatePayload)
+    } yield result
+    IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
 
   /**
@@ -500,8 +475,7 @@ final case class GroupsResponderADMLive(
 
       /* Verify that the group exists. */
       groupADM <- groupGetADM(groupIri)
-                    .flatMap(ZIO.fromOption(_))
-                    .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+                    .someOrFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
       /* Verify that the potentially new name is unique */
       groupByNameAlreadyExists <-
@@ -532,8 +506,7 @@ final case class GroupsResponderADMLive(
       /* Verify that the project was updated. */
       updatedGroup <-
         groupGetADM(groupIri)
-          .flatMap(ZIO.fromOption(_))
-          .orElseFail(UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
+          .someOrFail(UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
     } yield GroupGetResponseADM(updatedGroup)
 
   ////////////////////
