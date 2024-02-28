@@ -94,8 +94,7 @@ trait GroupsResponderADM {
    * @param apiRequestID   the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
-  def createGroupADM(
-//    TODO: remove ADM suffix from the method name
+  def createGroup(
     request: GroupCreateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
@@ -301,7 +300,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
-  override def createGroupADM(
+  override def createGroup(
     request: GroupCreateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
