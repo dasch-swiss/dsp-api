@@ -132,8 +132,8 @@ final case class User(
 
   def filterUserInformation(requestingUser: User, infoType: UserInformationType): User =
     if (requestingUser.permissions.isSystemAdmin || requestingUser.id == this.id || requestingUser.isSystemUser)
-      this.ofType(infoType)
-    else this.ofType(UserInformationType.Public)
+      self.ofType(infoType)
+    else self.ofType(UserInformationType.Public)
 }
 
 final case class UserIri private (value: String) extends AnyVal with StringValue
