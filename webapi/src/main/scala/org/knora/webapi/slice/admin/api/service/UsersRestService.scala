@@ -112,7 +112,7 @@ final case class UsersRestService(
     user <- userService
               .findUserByUsername(username)
               .someOrFail(NotFoundException(s"User with username '${username.value}' not found"))
-    external <- asExternalUserOperationResponse(requestingUser, user)
+    external <- asExternalUserResponseADM(requestingUser, user)
   } yield external
 
   def getUserByIri(requestingUser: User, userIri: UserIri): Task[UserResponseADM] = for {
@@ -158,7 +158,7 @@ final case class UsersRestService(
              )
       user <- getKnoraUserOrNotFound(userIri)
       response <-
-        userService.changePassword(user, changeRequest.newPassword).flatMap(asExternalUserResponse(requestingUser, _))
+        userService.changePassword(user, changeRequest.newPassword).flatMap(asExternalUserResponseAMD(requestingUser, _))
     } yield response
 
   def changeStatus(
@@ -184,7 +184,7 @@ final case class UsersRestService(
       user     <- getKnoraUserOrNotFound(userIri)
       theUpdate = UserChangeRequest(systemAdmin = Some(changeRequest.systemAdmin))
       updated  <- userService.updateUser(user, theUpdate)
-      response <- asExternalUserResponse(requestingUser, updated)
+      response <- asExternalUserResponseAMD(requestingUser, updated)
     } yield response
 
   def addProjectToUserIsInProject(
@@ -198,7 +198,7 @@ final case class UsersRestService(
       kUser       <- getKnoraUserOrNotFound(userIri)
       project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- userService.addProjectToUserIsInProject(kUser, project).mapError(BadRequestException.apply)
-      external    <- asExternalUserResponse(requestingUser, updatedUser)
+      external    <- asExternalUserResponseAMD(requestingUser, updatedUser)
     } yield external
 
   private def getProjectADMOrBadRequest(projectIri: ProjectIri) =
@@ -206,10 +206,10 @@ final case class UsersRestService(
       .findById(projectIri)
       .someOrFail(BadRequestException(s"Project with iri ${projectIri.value} not found."))
 
-  private def asExternalUserResponse(requestingUser: User, kUser: KnoraUser): Task[UserResponseADM] =
-    userService.toUser(kUser).flatMap(asExternalUserOperationResponse(requestingUser, _))
+  private def asExternalUserResponseAMD(requestingUser: User, kUser: KnoraUser): Task[UserResponseADM] =
+    userService.toUser(kUser).flatMap(asExternalUserResponseADM(requestingUser, _))
 
-  private def asExternalUserOperationResponse(requestingUser: User, user: User): Task[UserResponseADM] = {
+  private def asExternalUserResponseADM(requestingUser: User, user: User): Task[UserResponseADM] = {
     val userFiltered = user.filterUserInformation(requestingUser, UserInformationType.Restricted)
     format.toExternal(UserResponseADM(userFiltered))
   }
@@ -226,7 +226,7 @@ final case class UsersRestService(
       project <- getProjectADMOrBadRequest(projectIri)
       updatedUser <-
         userService.addProjectToUserIsInProjectAdminGroup(user, project).mapError(BadRequestException.apply)
-      external <- asExternalUserResponse(requestingUser, updatedUser)
+      external <- asExternalUserResponseAMD(requestingUser, updatedUser)
     } yield external
 
   def removeProjectToUserIsInProject(
@@ -266,7 +266,7 @@ final case class UsersRestService(
                  .groupGetADM(groupIri.value)
                  .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
       updatedKUser <- userService.addGroupToUserIsInGroup(kUser, group).mapError(BadRequestException.apply)
-      external     <- asExternalUserResponse(requestingUser, updatedKUser)
+      external     <- asExternalUserResponseAMD(requestingUser, updatedKUser)
     } yield external
 
   def removeGroupFromUserIsInGroup(
