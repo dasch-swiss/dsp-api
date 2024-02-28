@@ -5,14 +5,13 @@
 
 package org.knora.webapi.store.cache.impl
 
-import zio.test.*
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.store.cache.api.CacheService
+import zio.test.*
 
 object CacheServiceLiveSpec extends ZIOSpecDefault {
 
@@ -101,7 +100,30 @@ object CacheServiceLiveSpec extends ZIOSpecDefault {
     )
   )
 
+  val clearCacheSuite = suite("clearCache")(
+    test("successfully clears the cache")(
+      for {
+        _                  <- CacheService.putUser(user)
+        _                  <- CacheService.putProjectADM(project)
+        _                  <- CacheService.clearCache()
+        userByIri          <- CacheService.getUserByIri(user.userIri)
+        userByUsername     <- CacheService.getUserByUsername(user.getUsername)
+        userByEmail        <- CacheService.getUserByEmail(user.getEmail)
+        projectByIri       <- CacheService.getProjectADM(IriIdentifier.from(project.projectIri))
+        projectByShortcode <- CacheService.getProjectADM(ShortcodeIdentifier.from(project.getShortcode))
+        projectByShortname <- CacheService.getProjectADM(ShortnameIdentifier.from(project.getShortname))
+      } yield assertTrue(
+        userByIri.isEmpty,
+        userByUsername.isEmpty,
+        userByEmail.isEmpty,
+        projectByIri.isEmpty,
+        projectByShortcode.isEmpty,
+        projectByShortname.isEmpty
+      )
+    )
+  )
+
   def spec: Spec[Any, Throwable] =
-    suite("CacheServiceLive")(userTests, projectTests).provide(CacheServiceLive.layer)
+    suite("CacheServiceLive")(userTests, projectTests, clearCacheSuite).provide(CacheServiceLive.layer)
 
 }
