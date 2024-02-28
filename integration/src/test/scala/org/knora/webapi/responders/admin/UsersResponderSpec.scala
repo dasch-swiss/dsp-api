@@ -5,18 +5,13 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit.ImplicitSender
-import zio.Chunk
-import zio.ZIO
-
-import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
+import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi.*
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -29,14 +24,19 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRequest
+import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
+import zio.Chunk
+import zio.ZIO
+
+import java.util.UUID
 
 class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
@@ -46,8 +46,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val incunabulaProject   = SharedTestDataADM.incunabulaProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-
-  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def getProjectMemberShipsByUserIri(
     userIri: UserIri
@@ -96,6 +94,13 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
     changeRequest: SystemAdminChangeRequest
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changeSystemAdmin(requestingUser, userIri, changeRequest))
+
+  def changeUserStatus(
+    requestingUser: User,
+    userIri: UserIri,
+    statusChangeRequest: StatusChangeRequest
+  ): ZIO[UsersRestService, Throwable, UserResponseADM] =
+    ZIO.serviceWithZIO[UsersRestService](_.changeStatus(requestingUser, userIri, statusChangeRequest))
 
   "The UsersRestService" when {
     "calling getAllUsers" should {
@@ -156,7 +161,6 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
         assertFailsWithA[NotFoundException](exit)
       }
     }
-
   }
 
   "The UsersResponder " when {
@@ -357,19 +361,19 @@ class UsersResponderSpec extends CoreSpec with ImplicitSender {
 
       "UPDATE the user's status, making them inactive " in {
         val response1 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeUserStatus(
+          changeUserStatus(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            UserStatus.from(false),
-            UUID.randomUUID
+            StatusChangeRequest(UserStatus.Inactive)
           )
         )
         response1.user.status should equal(false)
 
         val response2 = UnsafeZioRun.runOrThrow(
-          UsersResponder.changeUserStatus(
+          changeUserStatus(
+            rootUser,
             SharedTestDataADM.normalUser.userIri,
-            UserStatus.from(true),
-            UUID.randomUUID()
+            StatusChangeRequest(UserStatus.Active)
           )
         )
         response2.user.status should equal(true)

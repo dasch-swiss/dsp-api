@@ -127,21 +127,6 @@ final case class UsersResponder(
     )
 
   /**
-   * Change the user's status (active / inactive).
-   *
-   * @param userIri        the IRI of the existing user that we want to update.
-   * @param status         the new status.
-   * @param apiRequestID   the unique api request ID.
-   * @return a task containing a [[UserResponseADM]].
-   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
-   *         fails with a [[ForbiddenException]] if the requestingUser doesn't hold the necessary permission for the operation.
-   */
-  def changeUserStatus(userIri: UserIri, status: UserStatus, apiRequestID: UUID): Task[UserResponseADM] = {
-    val updateTask = updateUserADM(userIri, UserChangeRequest(status = Some(status)))
-    IriLocker.runWithIriLock(apiRequestID, userIri.value, updateTask)
-  }
-
-  /**
    * Removes a project from the user's projects.
    * If the project is not in the user's projects, a BadRequestException is returned.
    * If the project is in the user's admin projects, it is removed.
@@ -308,13 +293,6 @@ final case class UsersResponder(
 }
 
 object UsersResponder {
-  def changeUserStatus(
-    userIri: UserIri,
-    status: UserStatus,
-    apiRequestID: UUID
-  ): ZIO[UsersResponder, Throwable, UserResponseADM] =
-    ZIO.serviceWithZIO[UsersResponder](_.changeUserStatus(userIri, status, apiRequestID))
-
   def findUserByIri(
     identifier: UserIri,
     userInformationType: UserInformationType,

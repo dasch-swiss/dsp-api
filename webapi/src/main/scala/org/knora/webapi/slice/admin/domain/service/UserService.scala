@@ -5,13 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.Chunk
-import zio.IO
-import zio.Task
-import zio.UIO
-import zio.ZIO
-import zio.ZLayer
-
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -32,6 +25,12 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
 import org.knora.webapi.store.cache.api.CacheService
+import zio.Chunk
+import zio.IO
+import zio.Task
+import zio.UIO
+import zio.ZIO
+import zio.ZLayer
 
 final case class UserChangeRequest(
   username: Option[Username] = None,
@@ -98,6 +97,9 @@ case class UserService(
     )
     userRepo.save(updatedUser)
   }
+
+  def deleteUser(user: KnoraUser): UIO[KnoraUser] =
+    updateUser(user, UserChangeRequest(status = Some(UserStatus.Inactive))).orDie
 
   def addGroupToUserIsInGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
