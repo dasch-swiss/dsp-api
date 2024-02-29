@@ -9,10 +9,8 @@ import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
-import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Group.*
 import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -22,7 +20,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.common.ToValidation.validateOptionWithFrom
 
 /**
  * Provides a routing function for API routes that deal with groups.
@@ -37,42 +34,8 @@ final case class GroupsRouteADM(
   private val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute: Route =
-    updateGroup() ~
-      changeGroupStatus() ~
+    changeGroupStatus() ~
       deleteGroup()
-
-  /**
-   * Updates basic group information.
-   */
-  private def updateGroup(): Route = path(groupsBasePath / Segment) { value =>
-    put {
-      entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
-        val requestTask = for {
-          _ <- ZIO
-                 .fail(
-                   BadRequestException(
-                     "The status property is not allowed to be set for this route. Please use the change status route."
-                   )
-                 )
-                 .when(apiRequest.status.nonEmpty)
-          name = validateOptionWithFrom(apiRequest.name, GroupName.from, BadRequestException.apply)
-          descriptions =
-            validateOptionWithFrom(apiRequest.descriptions, GroupDescriptions.from, BadRequestException.apply)
-          status           = Validation.succeed(apiRequest.status.map(GroupStatus.from))
-          selfjoin         = Validation.succeed(apiRequest.selfjoin.map(GroupSelfJoin.from))
-          validatedPayload = Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
-          iri <- Iri
-                   .validateAndEscapeIri(value)
-                   .toZIO
-                   .orElseFail(BadRequestException(s"Invalid group IRI $value"))
-          payload        <- validatedPayload.toZIO
-          requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- RouteUtilZ.randomUuid()
-        } yield GroupChangeRequestADM(iri, payload, requestingUser, uuid)
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-  }
 
   /**
    * Updates the group's status.
