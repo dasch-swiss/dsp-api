@@ -368,10 +368,8 @@ final case class GroupsResponderADMLive(
              .when(groupIri.value.isEmpty)
 
       /* Get the project IRI which also verifies that the group exists. */
-      groupADMOpt <- groupGetADM(groupIri.value)
-      _ <- ZIO
-             .fromOption(groupADMOpt)
-             .orElseFail(NotFoundException(s"Group <${groupIri.value}> not found. Aborting update request."))
+      _ <- ZIO.fail(NotFoundException(s"Group <${groupIri.value}> not found. Aborting update request."))
+             .whenZIO(groupGetADM(groupIri.value).map(_.isEmpty))
 
       /* create the update request */
       groupUpdatePayload =
