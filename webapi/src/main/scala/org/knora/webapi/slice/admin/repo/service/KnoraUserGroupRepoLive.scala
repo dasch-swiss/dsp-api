@@ -53,7 +53,7 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
   def save(userGroup: KnoraUserGroup): Task[KnoraUserGroup] =
     for {
       query <- findById(userGroup.id).map {
-                 case Some(_) => throw new TriplestoreUnsupportedFeatureException("updating users not supported")
+                 case Some(_) => throw new TriplestoreUnsupportedFeatureException("Updating users is not supported.")
                  case None    => KnoraUserGroupQueries.create(userGroup)
                }
       _ <- triplestore.query(query)

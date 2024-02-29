@@ -111,9 +111,9 @@ object GroupStatus {
 
 final case class GroupSelfJoin private (value: Boolean) extends AnyVal with BooleanValue
 object GroupSelfJoin {
-  val possible: GroupSelfJoin                = GroupSelfJoin(true)
-  val impossible: GroupSelfJoin              = GroupSelfJoin(false)
-  def from(possible: Boolean): GroupSelfJoin = GroupSelfJoin(possible)
+  val enabled: GroupSelfJoin                = GroupSelfJoin(true)
+  val disabled: GroupSelfJoin               = GroupSelfJoin(false)
+  def from(enabled: Boolean): GroupSelfJoin = GroupSelfJoin(enabled)
 }
 
 object KnoraUserGroup {
