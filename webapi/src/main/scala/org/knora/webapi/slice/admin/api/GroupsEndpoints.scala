@@ -58,6 +58,12 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Updates a group.")
 
+  val putGroupStatus = baseEndpoints.securedEndpoint.put
+    .in(base / groupIriPathVar / "status")
+    .in(zioJsonBody[GroupUpdateRequest])
+    .out(sprayJsonBody[GroupGetResponseADM])
+    .description("Updates a group's status.")
+
   private val securedEndpoins = Seq(getGroupMembers, postGroup, putGroup).map(_.endpoint)
 
   val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
@@ -86,6 +92,13 @@ object GroupsRequests {
   )
   object GroupUpdateRequest {
     implicit val jsonCodec: JsonCodec[GroupUpdateRequest] = DeriveJsonCodec.gen[GroupUpdateRequest]
+  }
+
+  final case class GroupStatusUpdateRequest(
+    status: GroupStatus
+  )
+  object GroupStatusUpdateRequest {
+    implicit val jsonCodec: JsonCodec[GroupStatusUpdateRequest] = DeriveJsonCodec.gen[GroupStatusUpdateRequest]
   }
 }
 

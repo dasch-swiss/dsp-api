@@ -12,7 +12,6 @@ import zio.macros.accessible
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -123,8 +122,8 @@ trait GroupsResponderADM {
    * @return a [[GroupGetResponseADM]].
    */
   def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
+    groupIri: GroupIri,
+    changeGroupRequest: GroupUpdateRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
@@ -150,9 +149,7 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupChangeStatusRequestADM =>
-      changeGroupStatusRequestADM(r.groupIri, r.changeGroupRequest, r.requestingUser, r.apiRequestID)
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -395,8 +392,8 @@ final case class GroupsResponderADMLive(
    * @return a [[GroupGetResponseADM]].
    */
   override def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
+    groupIri: GroupIri,
+    changeGroupRequest: GroupUpdateRequest,
     requestingUser: User,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
@@ -405,8 +402,8 @@ final case class GroupsResponderADMLive(
      * The actual change group task run with an IRI lock.
      */
     def changeGroupStatusTask(
-      groupIri: IRI,
-      changeGroupRequest: ChangeGroupApiRequestADM,
+      groupIri: GroupIri,
+      changeGroupRequest: GroupUpdateRequest,
       requestingUser: User
     ): Task[GroupGetResponseADM] =
       for {
@@ -414,10 +411,10 @@ final case class GroupsResponderADMLive(
         // check if necessary information is present
         _ <- ZIO
                .fail(BadRequestException("Group IRI cannot be empty"))
-               .when(groupIri.isEmpty)
+               .when(groupIri.value.isEmpty)
 
         /* Get the project IRI which also verifies that the group exists. */
-        groupADM <- groupGetADM(groupIri)
+        groupADM <- groupGetADM(groupIri.value)
                       .flatMap(ZIO.fromOption(_))
                       .orElseFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
@@ -430,13 +427,11 @@ final case class GroupsResponderADMLive(
                  !userPermissions.isSystemAdmin
                }
 
-        maybeStatus = changeGroupRequest.status.map(GroupStatus.from)
-
         /* create the update request */
-        groupUpdatePayload = GroupUpdateRequest(status = maybeStatus)
+        groupUpdatePayload = GroupUpdateRequest(status = changeGroupRequest.status)
 
         // update group status
-        updateGroupResult <- updateGroupHelper(groupIri, groupUpdatePayload)
+        updateGroupResult <- updateGroupHelper(groupIri.value, groupUpdatePayload)
 
         // remove all members from group if status is false
         operationResponse <-
@@ -448,7 +443,7 @@ final case class GroupsResponderADMLive(
       } yield operationResponse
 
     val task = changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, groupIri, task)
+    IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
 
   /**

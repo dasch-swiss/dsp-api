@@ -26,6 +26,7 @@ trait GroupsRestService {
   def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
   def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM]
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM]
+  def putGroupStatus(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
@@ -68,6 +69,15 @@ final case class GroupsRestServiceLive(
       internal <- responder.updateGroup(iri, request, uuid)
       external <- format.toExternal(internal)
     } yield external
+
+  override def putGroupStatus(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      uuid     <- Random.nextUUID
+      internal <- responder.changeGroupStatusRequestADM(iri, request, user, uuid)
+      external <- format.toExternal(internal)
+    } yield external
+
 }
 
 object GroupsRestServiceLive {
