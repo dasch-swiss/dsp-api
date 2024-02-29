@@ -5,6 +5,11 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
+import zio.*
+
+import java.time.Instant
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -22,8 +27,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
@@ -37,10 +42,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.*
-import zio.*
-
-import java.time.Instant
-import java.util.UUID
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

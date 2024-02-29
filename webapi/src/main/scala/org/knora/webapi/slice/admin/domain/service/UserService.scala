@@ -1,14 +1,15 @@
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.store.cache.CacheService
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class UserService(
   private val userRepo: KnoraUserRepo,

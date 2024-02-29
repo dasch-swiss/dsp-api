@@ -6,6 +6,10 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -14,9 +18,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class UsersResponder(userService: UserService, knoraUserService: KnoraUserService)
     extends MessageHandler

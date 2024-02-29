@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
@@ -31,11 +32,11 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -226,12 +227,12 @@ final case class UsersRestService(
     projectIri: ProjectIri
   ): Task[UserResponseADM] =
     for {
-      _       <- ensureNotABuiltInUser(userIri)
-      _       <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
-      user    <- getKnoraUserOrNotFound(userIri)
-      project <- getProjectADMOrBadRequest(projectIri)
+      _           <- ensureNotABuiltInUser(userIri)
+      _           <- auth.ensureSystemAdminOrProjectAdmin(requestingUser, projectIri)
+      user        <- getKnoraUserOrNotFound(userIri)
+      project     <- getProjectADMOrBadRequest(projectIri)
       updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
-      external <- asExternalUserResponseADM(requestingUser, updatedUser)
+      external    <- asExternalUserResponseADM(requestingUser, updatedUser)
     } yield external
 
   def removeUserFromProject(

@@ -5,6 +5,9 @@
 
 package org.knora.webapi.core
 
+import zio.ULayer
+import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -62,8 +65,6 @@ import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import zio.ULayer
-import zio.ZLayer
 
 object LayersLive {
 
