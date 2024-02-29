@@ -33,11 +33,8 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessag
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetByIriADM(
-  identifier: UserIri,
-  userInformationTypeADM: UserInformationType = UserInformationType.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
+case class UserGetByIriADM(identifier: UserIri, userInformationTypeADM: UserInformationType, requestingUser: User)
+    extends UsersResponderRequestADM
 
 // Responses
 

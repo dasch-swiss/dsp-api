@@ -6,15 +6,16 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.UserService
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class UsersResponder(userService: UserService) extends MessageHandler with LazyLogging {
 

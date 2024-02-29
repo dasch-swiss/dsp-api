@@ -6,6 +6,11 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.*
+import zio.macros.accessible
+
+import java.util.UUID
+
 import dsp.errors.*
 import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.*
@@ -22,8 +27,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
@@ -40,10 +45,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
-import zio.*
-import zio.macros.accessible
-
-import java.util.UUID
 
 /**
  * Returns information about groups.
