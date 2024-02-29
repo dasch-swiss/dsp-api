@@ -74,10 +74,9 @@ final case class GroupsRestServiceLive(
     for {
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
-      internal <- responder.changeGroupStatusRequestADM(iri, request, user, uuid)
+      internal <- responder.updateGroupStatus(iri, request, uuid)
       external <- format.toExternal(internal)
     } yield external
-
 }
 
 object GroupsRestServiceLive {
