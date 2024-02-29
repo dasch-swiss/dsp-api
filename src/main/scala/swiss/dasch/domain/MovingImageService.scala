@@ -56,7 +56,16 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
     cmd <-
       executor.buildCommand(
         "ffprobe",
-        s"-v error -select_streams v:0 -show_entries stream=width,height,duration,r_frame_rate -print_format json -i $absPath"
+        s"-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=width,height,duration,r_frame_rate",
+        "-print_format",
+        "json",
+        "-i",
+        absPath.toString
       )
     outStr <- executor.executeOrFail(cmd).map(_.stdout)
     ffprobeOut <- ZIO
