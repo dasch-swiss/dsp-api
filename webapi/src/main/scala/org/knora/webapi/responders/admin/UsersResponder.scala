@@ -6,22 +6,17 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-
-import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 
-final case class UsersResponder(userService: UserService, knoraUserService: KnoraUserService)
-    extends MessageHandler
-    with LazyLogging {
+final case class UsersResponder(userService: UserService) extends MessageHandler with LazyLogging {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[UsersResponderRequestADM]
@@ -32,10 +27,6 @@ final case class UsersResponder(userService: UserService, knoraUserService: Knor
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationTypeADM)))
-    case UserGroupMembershipRemoveRequestADM(user, project) =>
-      knoraUserService
-        .removeUserFromGroup(user, project)
-        .mapError(BadRequestException.apply)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 }
@@ -44,9 +35,8 @@ object UsersResponder {
   val layer = ZLayer.fromZIO {
     for {
       us      <- ZIO.service[UserService]
-      kus     <- ZIO.service[KnoraUserService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(UsersResponder(us, kus))
+      handler <- mr.subscribe(UsersResponder(us))
     } yield handler
   }
 }

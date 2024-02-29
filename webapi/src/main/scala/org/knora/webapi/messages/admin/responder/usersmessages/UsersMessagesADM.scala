@@ -39,14 +39,6 @@ case class UserGetByIriADM(
   requestingUser: User
 ) extends UsersResponderRequestADM
 
-/**
- * Requests removing the user from a group.
- *
- * @param user  the user to be updated.
- * @param group the group.
- */
-case class UserGroupMembershipRemoveRequestADM(user: User, group: GroupADM) extends UsersResponderRequestADM
-
 // Responses
 
 /**
