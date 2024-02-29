@@ -41,7 +41,7 @@ final case class GroupsRouteADM(
       val task = for {
         r           <- getIriUserUuid(groupIri, ctx)
         changeStatus = ChangeGroupApiRequestADM(status = Some(false))
-      } yield   GroupChangeStatusRequestADM(r.iri, changeStatus, r.user, r.uuid)
+      } yield GroupChangeStatusRequestADM(r.iri, changeStatus, r.user, r.uuid)
       runJsonRouteZ(task, ctx)
     }
   }
