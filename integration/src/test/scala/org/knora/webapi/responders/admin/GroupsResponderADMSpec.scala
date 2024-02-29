@@ -75,7 +75,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 ),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.impossible
+              selfjoin = GroupSelfJoin.disabled
             ),
             UUID.randomUUID
           )
@@ -105,7 +105,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.impossible
+              selfjoin = GroupSelfJoin.disabled
             ),
             UUID.randomUUID
           )
@@ -128,7 +128,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 )
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )
@@ -155,7 +155,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                   .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )
@@ -178,7 +178,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                   .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )

@@ -54,8 +54,8 @@ object KnoraUserGroupSpec extends ZIOSpecDefault {
   private val groupSelfJoinTest = suite("GroupSelfJoin")(
     test("should be created from a valid value") {
       assertTrue(
-        GroupSelfJoin.from(true) == GroupSelfJoin.possible,
-        GroupSelfJoin.from(false) == GroupSelfJoin.impossible
+        GroupSelfJoin.from(true) == GroupSelfJoin.enabled,
+        GroupSelfJoin.from(false) == GroupSelfJoin.disabled
       )
     }
   )

@@ -11,7 +11,7 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
         enterprise "DSP - DaSCH Service Platform" {
             # softwareSystem <name> [description] [tags]
             dspJsLib        = softwaresystem "JS-LIB"               "Layer between DSP-API and DSP-APP"
-            dspApp          = softwaresystem "DSP-APP"              "admin.dasch.swiss"
+            dspApp          = softwaresystem "DSP-APP"              "app.dasch.swiss"
             dspTools        = softwaresystem "DSP-TOOLS"            "CLI for DSP-API"
             fuseki          = softwaresystem "Fuseki Triplestore"   "RDF database"                          "Database"
             sipi            = softwaresystem "SIPI"                 "IIIF image server"
