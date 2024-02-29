@@ -1,4 +1,4 @@
-<!-- Important! Please follow the guidelines for naming Pull Requests: https://docs.dasch.swiss/latest/developers/dsp/contribution/ -->
+<!-- Important! Please follow the guidelines for naming Pull Requests: https://docs.dasch.swiss/latest/developers/contribution/ -->
 
 ## Pull Request Checklist
 
