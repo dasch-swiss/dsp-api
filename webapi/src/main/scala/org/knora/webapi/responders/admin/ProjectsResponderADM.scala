@@ -5,22 +5,17 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
-import zio.macros.accessible
-
-import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
@@ -42,6 +37,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import zio.*
+import zio.macros.accessible
+
+import java.util.UUID
 
 /**
  * Returns information about projects.
@@ -277,7 +276,7 @@ final case class ProjectsResponderADMLive(
                       .map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris = statements.map(_._1.toString).map(UserIri.unsafeFrom)
+      userIris = statements.map { case (s: SubjectV2, _) => s.value }.map(UserIri.unsafeFrom)
 
       users <- ZIO.foreach(userIris)(userService.findUserByIri).map(_.flatten)
     } yield ProjectMembersGetResponseADM(users)
