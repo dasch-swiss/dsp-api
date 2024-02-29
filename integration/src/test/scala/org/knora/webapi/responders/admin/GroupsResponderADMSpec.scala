@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
-
 import java.util.UUID
 
 import dsp.errors.*
@@ -193,7 +191,7 @@ class GroupsResponderADMSpec extends CoreSpec {
 
     "used to query members" should {
       "return all members of a group identified by IRI" in {
-        val iri = (GroupIri.unsafeFrom(imagesReviewerGroup.id))
+        val iri = GroupIri.unsafeFrom(imagesReviewerGroup.id)
         val received =
           UnsafeZioRun.runOrThrow(GroupsResponderADM.groupMembersGetRequest(iri, rootUser))
 
@@ -204,42 +202,44 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "remove all members when group is deactivated" in {
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser
+        val group = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequestADM(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id).value,
+            rootUser
+          )
         )
+        group.members.size shouldBe 2
 
-        val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-        membersBeforeStatusChange.members.size shouldBe 2
-
-        appActor ! GroupChangeStatusRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-          requestingUser = imagesUser01,
-          apiRequestID = UUID.randomUUID
+        val statusChangeResponse = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.updateGroupStatus(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            GroupUpdateRequest(status = Some(GroupStatus.inactive)),
+            UUID.randomUUID()
+          )
         )
-
-        val statusChangeResponse = expectMsgType[GroupGetResponseADM](timeout)
         statusChangeResponse.group.status shouldBe false
 
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser
+        val anotherGroup = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            rootUser
+          )
         )
-
-        val noMembers: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-        noMembers.members.size shouldBe 0
+        anotherGroup.members.size shouldBe 0
       }
 
       "return 'NotFound' when the group IRI is unknown" in {
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = "http://rdfh.ch/groups/notexisting",
-          requestingUser = rootUser
+        val groupIri = "http://rdfh.ch/groups/0000/notexisting"
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(groupIri),
+            rootUser
+          )
         )
-
-        expectMsgPF(timeout) { case msg: Failure =>
-          msg.cause.isInstanceOf[NotFoundException] should ===(true)
-        }
+        assertFailsWithA[NotFoundException](
+          exit,
+          s"Group <$groupIri> not found"
+        )
       }
     }
   }

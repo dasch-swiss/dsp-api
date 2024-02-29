@@ -236,6 +236,7 @@ final case class GroupsResponderADMLive(
    * @return A sequence of [[User]]
    */
   private def groupMembersGetADM(
+    // TODO: change to GroupIri, refactor name and simplify
     groupIri: IRI,
     requestingUser: User
   ): Task[Seq[User]] =
