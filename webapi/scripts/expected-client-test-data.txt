@@ -7,7 +7,6 @@ test-data/admin/groups/create-group-request.json
 test-data/admin/groups/create-group-response.json
 test-data/admin/groups/create-group-with-custom-Iri-request.json
 test-data/admin/groups/create-group-with-custom-Iri-response.json
-test-data/admin/groups/delete-group-response.json
 test-data/admin/groups/get-group-members-response.json
 test-data/admin/groups/get-group-response.json
 test-data/admin/groups/get-groups-response.json
