@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.2...v0.6.3) (2024-02-29)
+
+
+### Bug Fixes
+
+* Fix extracting moving image metadata ([#174](https://github.com/dasch-swiss/dsp-ingest/issues/174)) ([fd4765c](https://github.com/dasch-swiss/dsp-ingest/commit/fd4765ca051fcfc4b8d40e3f14ee035966c1a654))
+* **sipi:** Fix creating a valid JPX from grey scale JPEG (DEV-3259) ([#172](https://github.com/dasch-swiss/dsp-ingest/issues/172)) ([a734a3c](https://github.com/dasch-swiss/dsp-ingest/commit/a734a3cb23c3943be2f4523d35a8770f11e7ae03))
+
 ## [0.6.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.1...v0.6.2) (2024-02-15)
 
 
