@@ -5,9 +5,6 @@
 
 package org.knora.webapi.store.cache
 
-import zio.*
-import zio.stm.*
-
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -18,6 +15,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import zio.*
+import zio.stm.*
 
 /**
  * In-Memory Cache implementation
@@ -132,12 +131,12 @@ case class CacheService(
    */
   def clearCache(): Task[Unit] =
     (for {
-      _ <- users.foreach((k, _) => users.delete(k))
-      _ <- projects.foreach((k, _) => projects.delete(k))
-      _ <- mappingUsernameUserIri.foreach((k, _) => mappingUsernameUserIri.delete(k))
-      _ <- mappingEmailUserIri.foreach((k, _) => mappingEmailUserIri.delete(k))
-      _ <- mappingShortcodeProjectIri.foreach((k, _) => mappingShortcodeProjectIri.delete(k))
-      _ <- mappingShortnameProjectIri.foreach((k, _) => mappingShortnameProjectIri.delete(k))
+      _ <- users.removeIf((_, _) => true)
+      _ <- projects.removeIf((_, _) => true)
+      _ <- mappingUsernameUserIri.removeIf((_, _) => true)
+      _ <- mappingEmailUserIri.removeIf((_, _) => true)
+      _ <- mappingShortcodeProjectIri.removeIf((_, _) => true)
+      _ <- mappingShortnameProjectIri.removeIf((_, _) => true)
     } yield ()).commit
 
 }
