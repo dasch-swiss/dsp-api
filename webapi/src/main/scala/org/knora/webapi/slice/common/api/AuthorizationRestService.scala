@@ -97,31 +97,6 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
     checkActiveUser(user, isSystemAdmin, msg)
   }
-
-  private def checkActiveUser(
-    user: User,
-    condition: User => Boolean,
-    errorMsg: String
-  ): IO[ForbiddenException, Unit] =
-    ensureIsActive(user) *> ZIO.fail(ForbiddenException(errorMsg)).unless(condition(user)).unit
-
-  private def ensureIsActive(user: User): IO[ForbiddenException, Unit] = {
-    lazy val msg = s"The account with username '${user.username}' is not active."
-    ZIO.fail(ForbiddenException(msg)).unless(isActive(user)).unit
-  }
-
-  override def ensureSystemAdminOrProjectAdmin(
-    user: User,
-    projectIri: ProjectIri
-  ): IO[ForbiddenException, KnoraProject] =
-    for {
-      project <- projectRepo
-                   .findById(projectIri)
-                   .orDie
-                   .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))
-      _ <- ensureSystemAdminOrProjectAdmin(user, project)
-    } yield project
-
   override def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
     groupIri: GroupIri
@@ -131,8 +106,21 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
                  .findById(groupIri)
                  .orDie
                  .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
-      project <- ensureSystemAdminOrProjectAdmin(user, group.belongsToProject)
+      projectIri <- ZIO
+                      .succeed(group.belongsToProject)
+                      .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
+      project <- ensureSystemAdminOrProjectAdmin(user, projectIri)
     } yield project
+
+  override def ensureSystemAdminOrProjectAdmin(
+    user: User,
+    projectIri: ProjectIri
+  ): IO[ForbiddenException, KnoraProject] =
+    projectRepo
+      .findById(projectIri)
+      .orDie
+      .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))
+      .tap(ensureSystemAdminOrProjectAdmin(user, _))
 
   override def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
     lazy val msg =
@@ -156,6 +144,18 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
   override def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit] = {
     val msg = "ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(user, isSystemAdminSystemUserOrProjectAdminInAnyProject, msg)
+  }
+
+  private def checkActiveUser(
+    user: User,
+    condition: User => Boolean,
+    errorMsg: String
+  ): IO[ForbiddenException, Unit] =
+    ensureIsActive(user) *> ZIO.fail(ForbiddenException(errorMsg)).unless(condition(user)).unit
+
+  private def ensureIsActive(user: User): IO[ForbiddenException, Unit] = {
+    lazy val msg = s"The account with username '${user.username}' is not active."
+    ZIO.fail(ForbiddenException(msg)).unless(isActive(user)).unit
   }
 }
 

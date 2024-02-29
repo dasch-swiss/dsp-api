@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.*
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
@@ -17,48 +18,72 @@ import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
 
-import org.knora.webapi.messages.OntologyConstants
+import dsp.valueobjects.V2
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraUserGroup
+import org.knora.webapi.slice.admin.domain.model.KnoraUserGroup.Conversions.*
+import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.KnoraUserGroupRepo
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 
 final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends KnoraUserGroupRepo {
-
   override def findById(id: GroupIri): Task[Option[KnoraUserGroup]] = for {
-    model    <- triplestore.queryRdfModel(UserGroupQueries.findById(id))
-    resource <- model.getResource(id.value)
-    user     <- ZIO.foreach(resource)(toGroup)
-  } yield user
+    model     <- triplestore.queryRdfModel(KnoraUserGroupQueries.findById(id))
+    resource  <- model.getResource(id.value)
+    userGroup <- ZIO.foreach(resource)(toGroup)
+  } yield userGroup
 
   override def findAll(): Task[List[KnoraUserGroup]] = for {
-    model <- triplestore.queryRdfModel(UserGroupQueries.findAll)
+    model <- triplestore.queryRdfModel(KnoraUserGroupQueries.findAll)
     resources <-
-      model.getResourcesRdfType(OntologyConstants.KnoraAdmin.UserGroup).option.map(_.getOrElse(Iterator.empty))
+      model.getResourcesRdfType(KnoraAdmin.UserGroup).option.map(_.getOrElse(Iterator.empty))
     groups <- ZStream.fromIterator(resources).mapZIO(toGroup).runCollect
   } yield groups.toList
 
-  private def toGroup(resource: RdfResource): Task[KnoraUserGroup] = for {
-    id <-
-      resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-    belongsToProject <- resource
-                          .getObjectIriOrFail(OntologyConstants.KnoraAdmin.BelongsToProject)
-                          .flatMap(it => ZIO.fromEither(ProjectIri.from(it.value)))
-                          .mapError(it => TriplestoreResponseException(it.toString))
-  } yield KnoraUserGroup(id, belongsToProject)
+  def save(userGroup: KnoraUserGroup): Task[KnoraUserGroup] =
+    for {
+      query <- findById(userGroup.id).map {
+                 case Some(_) => throw new TriplestoreUnsupportedFeatureException("updating users not supported")
+                 case None    => KnoraUserGroupQueries.create(userGroup)
+               }
+      _ <- triplestore.query(query)
+    } yield (userGroup)
+
+  private def toGroup(resource: RdfResource): Task[KnoraUserGroup] = {
+    for {
+      id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value)))
+      groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
+      groupDescriptions  <- resource.getLangStringLiteralsOrFail[V2.StringLiteralV2](KnoraAdmin.GroupDescriptions)
+      groupDescriptions  <- ZIO.fromEither(GroupDescriptions.from(groupDescriptions))
+      groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
+      belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)
+      hasSelfJoinEnabled <- resource.getBooleanLiteralOrFail[GroupSelfJoin](KnoraAdmin.HasSelfJoinEnabled)
+    } yield KnoraUserGroup(
+      id,
+      groupName,
+      groupDescriptions,
+      groupStatus,
+      belongsToProject,
+      hasSelfJoinEnabled
+    )
+  }.mapError(it => TriplestoreResponseException(it.toString))
 }
 
 object KnoraUserGroupRepoLive {
   val layer = ZLayer.derive[KnoraUserGroupRepoLive]
 }
 
-object UserGroupQueries {
-
+object KnoraUserGroupQueries {
   def findAll: Construct = {
     val (s, p, o) = (variable("s"), variable("p"), variable("o"))
     val query = Queries
@@ -70,7 +95,6 @@ object UserGroupQueries {
           .and(s.has(p, o))
           .from(Vocabulary.NamedGraphs.knoraAdminIri)
       )
-    println(query.getQueryString)
     Construct(query.getQueryString)
   }
 
@@ -86,7 +110,26 @@ object UserGroupQueries {
           .and(tp(s, p, o))
           .from(Vocabulary.NamedGraphs.knoraAdminIri)
       )
-    println(query.getQueryString)
     Construct(query)
+  }
+
+  def create(group: KnoraUserGroup): Update = {
+    val query = Queries
+      .INSERT_DATA(toTriples(group))
+      .into(Rdf.iri(adminDataNamedGraph.value))
+      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+    Update(query)
+  }
+
+  private def toTriples(group: KnoraUserGroup) = {
+    import Vocabulary.KnoraAdmin.*
+    Rdf
+      .iri(group.id.value)
+      .has(RDF.TYPE, UserGroup)
+      .andHas(groupName, Rdf.literalOf(group.groupName.value))
+      .andHas(groupDescriptions, group.groupDescriptions.toRdfLiterals: _*)
+      .andHas(status, Rdf.literalOf(group.status.value))
+      .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList: _*)
+      .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
   }
 }

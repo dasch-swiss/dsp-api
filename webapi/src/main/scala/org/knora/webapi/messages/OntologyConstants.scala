@@ -465,7 +465,7 @@ object OntologyConstants {
     val IsInGroup: IRI             = KnoraAdminPrefixExpansion + "isInGroup"
     val IsInSystemAdminGroup: IRI  = KnoraAdminPrefixExpansion + "isInSystemAdminGroup"
 
-    /* Status used for User and Project*/
+    /* Status used for User, Group and Project */
     val StatusProp: IRI = KnoraAdminPrefixExpansion + "status"
 
     /* Project */

@@ -37,7 +37,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
-import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -71,13 +70,6 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService
     } yield user
 
   private def toUser(resource: RdfResource) = {
-    def getObjectIrisConvert[A](r: RdfResource, prop: String)(implicit f: String => Either[String, A]) = for {
-      iris <- r.getObjectIris(prop)
-      as <- ZIO.foreach(iris)(it =>
-              ZIO.fromEither(f(it.value)).mapError(err => ConversionError(s"Unable to parse $it: $err"))
-            )
-    } yield as
-
     for {
       userIri <-
         resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
@@ -88,10 +80,10 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService
       passwordHash              <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
       preferredLanguage         <- resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
       status                    <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
-      isInProjectIris           <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProject)
-      isInGroupIris             <- getObjectIrisConvert[GroupIri](resource, KnoraAdmin.IsInGroup)
+      isInProjectIris           <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProject)
+      isInGroupIris             <- resource.getObjectIrisConvert[GroupIri](KnoraAdmin.IsInGroup)
       isInSystemAdminGroup      <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
-      isInProjectAdminGroupIris <- getObjectIrisConvert[ProjectIri](resource, KnoraAdmin.IsInProjectAdminGroup)
+      isInProjectAdminGroupIris <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProjectAdminGroup)
     } yield KnoraUser(
       userIri,
       username,

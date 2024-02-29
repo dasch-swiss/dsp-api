@@ -10,7 +10,6 @@ import org.apache.pekko.actor.Status.Failure
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
@@ -20,7 +19,11 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
