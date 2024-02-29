@@ -6,7 +6,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4c8f6736facf4e3ab6b0436c0c1ff197)](https://www.codacy.com/gh/dasch-swiss/dsp-api/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dasch-swiss/dsp-api&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/4c8f6736facf4e3ab6b0436c0c1ff197)](https://www.codacy.com/gh/dasch-swiss/dsp-api/dashboard?utm_source=github.com&utm_medium=referral&utm_content=dasch-swiss/dsp-api&utm_campaign=Badge_Coverage)
 
-[DSP](https://admin.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
+[DSP](https://app.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 
 It is developed by the [Swiss National Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the
