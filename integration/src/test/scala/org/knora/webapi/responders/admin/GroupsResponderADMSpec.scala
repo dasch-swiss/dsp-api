@@ -17,6 +17,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -213,7 +214,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         val statusChangeResponse = UnsafeZioRun.runOrThrow(
           GroupsResponderADM.updateGroupStatus(
             GroupIri.unsafeFrom(imagesReviewerGroup.id),
-            GroupUpdateRequest(status = Some(GroupStatus.inactive)),
+            GroupStatusUpdateRequest(GroupStatus.inactive),
             UUID.randomUUID()
           )
         )

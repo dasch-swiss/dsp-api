@@ -36,6 +36,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -122,7 +123,7 @@ trait GroupsResponderADM {
    */
   def updateGroupStatus(
     groupIri: GroupIri,
-    request: GroupUpdateRequest,
+    request: GroupStatusUpdateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
 }
@@ -386,7 +387,7 @@ final case class GroupsResponderADMLive(
    */
   override def updateGroupStatus(
     groupIri: GroupIri,
-    request: GroupUpdateRequest,
+    request: GroupStatusUpdateRequest,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
     val task = for {
@@ -396,7 +397,7 @@ final case class GroupsResponderADMLive(
              .when(groupIri.value.isEmpty)
 
       /* create the update request */
-      groupUpdatePayload = GroupUpdateRequest(status = request.status)
+      groupUpdatePayload = GroupUpdateRequest(None, None, Some(request.status), None)
 
       // update group status
       updateGroupResult <- updateGroupHelper(groupIri, groupUpdatePayload)

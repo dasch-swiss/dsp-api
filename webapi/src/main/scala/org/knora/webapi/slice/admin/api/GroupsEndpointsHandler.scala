@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -53,7 +54,7 @@ case class GroupsEndpointsHandler(
     )
 
   private val putGroupStatusHandler =
-    SecuredEndpointHandler[(GroupIri, GroupUpdateRequest), GroupGetResponseADM](
+    SecuredEndpointHandler[(GroupIri, GroupStatusUpdateRequest), GroupGetResponseADM](
       endpoints.putGroupStatus,
       user => { case (iri, request) =>
         restService.putGroupStatus(iri, request, user)

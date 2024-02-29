@@ -22,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -60,7 +61,7 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   val putGroupStatus = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar / "status")
-    .in(zioJsonBody[GroupUpdateRequest])
+    .in(zioJsonBody[GroupStatusUpdateRequest])
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Updates a group's status.")
 
