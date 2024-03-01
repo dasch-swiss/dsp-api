@@ -9,12 +9,12 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val sipiVersion                 = "v30.8.2"
-val tapirVersion                = "1.9.9"
+val tapirVersion                = "1.9.10"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.1"
 val zioHttpVersion              = "3.0.0-RC4"
 val zioJsonVersion              = "0.6.2"
-val zioLoggingVersion           = "2.2.0"
+val zioLoggingVersion           = "2.2.2"
 val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
@@ -26,7 +26,7 @@ val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
 
 ThisBuild / organization      := "dasch.swiss"
 ThisBuild / version           := gitVersion
-ThisBuild / scalaVersion      := "3.3.1"
+ThisBuild / scalaVersion      := "3.3.3"
 ThisBuild / fork              := true
 ThisBuild / semanticdbEnabled := true
 
@@ -102,7 +102,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.10"       % Test
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.11"       % Test
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),

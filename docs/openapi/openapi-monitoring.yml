@@ -23,7 +23,7 @@ paths:
               example:
                 name: dsp-ingest
                 version: v0.5.0-23-gcbbe7a6-dirty
-                scalaVersion: 3.3.1
+                scalaVersion: 3.3.3
                 sbtVersion: 1.9.8
                 buildTime: 2024-01-10 19:39:26.411+0100
                 gitCommit: cbbe7a6a06ba9dc64a6939ceb7880015a4c3fa9b
