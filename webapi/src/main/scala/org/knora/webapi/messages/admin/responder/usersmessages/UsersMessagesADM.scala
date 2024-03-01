@@ -8,8 +8,6 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 
-import java.util.UUID
-
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
@@ -44,13 +42,10 @@ case class UserGetByIriADM(
 /**
  * Requests removing the user from a group.
  *
- * @param userIri              the IRI of the user to be updated.
- * @param groupIri             the IRI of the group.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
+ * @param user  the user to be updated.
+ * @param group the group.
  */
-case class UserGroupMembershipRemoveRequestADM(userIri: UserIri, groupIri: GroupIri, apiRequestID: UUID)
-    extends UsersResponderRequestADM
+case class UserGroupMembershipRemoveRequestADM(user: User, group: GroupADM) extends UsersResponderRequestADM
 
 // Responses
 
