@@ -256,6 +256,36 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         )
       }
 
+      "DELETE a group" in {
+        val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
+        val request = Delete(baseApiUrl + "/admin/groups/" + groupIriEnc) ~> addCredentials(
+          BasicHttpCredentials(imagesUser01Email, testPass)
+        )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        logger.debug(s"response: {}", response)
+        response.status should be(StatusCodes.OK)
+
+        val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+
+        groupInfo.name should be("UpdatedGroupName")
+        groupInfo.descriptions should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
+        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.status should be(false)
+        groupInfo.selfjoin should be(false)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-group-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+
+      }
+
       "CHANGE status of a group" in {
         val changeGroupStatusRequest: String =
           s"""{
