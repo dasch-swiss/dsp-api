@@ -403,15 +403,11 @@ final case class GroupsResponderADMLive(
   ): Task[GroupGetResponseADM] = {
     val task = for {
       // update group status
-      updateGroupResult <- updateGroupHelper(groupIri, GroupUpdateRequest(None, None, Some(request.status), None))
+      updated <- updateGroupHelper(groupIri, GroupUpdateRequest(None, None, Some(request.status), None))
 
       // remove all members from group if status is false
-      operationResponse <-
-        removeGroupMembersIfNecessary(
-          changedGroup = updateGroupResult.group,
-          apiRequestID = apiRequestID
-        )
-    } yield operationResponse
+      result <- removeGroupMembersIfNecessary(updated.group)
+    } yield result
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
 
