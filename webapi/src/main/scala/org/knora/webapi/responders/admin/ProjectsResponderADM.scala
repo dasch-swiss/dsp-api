@@ -277,9 +277,8 @@ final case class ProjectsResponderADMLive(
                       .map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris = statements.map { case (s: SubjectV2, _) => s.value }.map(UserIri.unsafeFrom)
-
-      users <- ZIO.foreach(userIris)(userService.findUserByIri).map(_.flatten)
+      userIris = statements.map { case (s: SubjectV2, _) => UserIri.unsafeFrom(s.value) }
+      users   <- userService.findUsersByIris(userIris)
     } yield ProjectMembersGetResponseADM(users)
 
   /**
@@ -318,8 +317,8 @@ final case class ProjectsResponderADMLive(
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris = statements.map(_._1.toString).map(UserIri.unsafeFrom)
-      users   <- ZIO.foreach(userIris)(userService.findUserByIri).map(_.flatten)
+      userIris = statements.map { case (subject, _) => UserIri.unsafeFrom(subject.value) }
+      users   <- userService.findUsersByIris(userIris)
     } yield ProjectAdminMembersGetResponseADM(users)
 
   /**

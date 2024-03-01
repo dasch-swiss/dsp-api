@@ -25,6 +25,9 @@ final case class UserService(
   def findUserByIri(iri: UserIri): Task[Option[User]] =
     fromCacheOrRepo(iri, cacheService.getUserByIri, userRepo.findById)
 
+  def findUsersByIris(iris: Seq[UserIri]): Task[Seq[User]] =
+    ZIO.foreach(iris)(findUserByIri).map(_.flatten)
+
   def findUserByEmail(email: Email): Task[Option[User]] =
     fromCacheOrRepo(email, cacheService.getUserByEmail, userRepo.findByEmail)
 
