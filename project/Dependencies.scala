@@ -95,7 +95,7 @@ object Dependencies {
   val rdf4jSparql    = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.3.3"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.4.0"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.9.1"
 
   // test
@@ -108,9 +108,9 @@ object Dependencies {
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
+  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.1.0"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.5"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.4.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
