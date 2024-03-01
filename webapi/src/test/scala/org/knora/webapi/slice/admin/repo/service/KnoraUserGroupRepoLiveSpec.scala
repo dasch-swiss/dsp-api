@@ -15,6 +15,7 @@ import zio.test.assertTrue
 import org.knora.webapi.TestDataFactory.UserGroup.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraUserGroup
 import org.knora.webapi.slice.admin.domain.service.KnoraUserGroupRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
@@ -45,6 +46,20 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
             _         <- userGroupRepo.save(testUserGroup)
             userGroup <- userGroupRepo.findById(testUserGroup.id)
           } yield assertTrue(userGroup.contains(testUserGroup))
+        )
+      },
+      test("save should update fields") {
+        ZIO.serviceWithZIO[KnoraUserGroupRepo](userGroupRepo =>
+          for {
+            _ <- userGroupRepo.save(testUserGroup)
+            testUserGroupModified =
+              testUserGroup.copy(
+                groupName = GroupName.unsafeFrom("another"),
+                belongsToProject = None
+              )
+            _         <- userGroupRepo.save(testUserGroupModified)
+            userGroup <- userGroupRepo.findById(testUserGroup.id)
+          } yield assertTrue(userGroup.contains(testUserGroupModified))
         )
       }
     )

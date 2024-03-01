@@ -10,8 +10,10 @@ import org.eclipse.rdf4j.model.vocabulary.*
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
+import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Task
 import zio.ZIO
@@ -34,7 +36,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
-import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 
 final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends KnoraUserGroupRepo {
   override def findById(id: GroupIri): Task[Option[KnoraUserGroup]] = for {
@@ -51,13 +52,7 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
   } yield groups.toList
 
   def save(userGroup: KnoraUserGroup): Task[KnoraUserGroup] =
-    for {
-      query <- findById(userGroup.id).map {
-                 case Some(_) => throw new TriplestoreUnsupportedFeatureException("Updating users is not supported.")
-                 case None    => KnoraUserGroupQueries.create(userGroup)
-               }
-      _ <- triplestore.query(query)
-    } yield (userGroup)
+    triplestore.query(KnoraUserGroupQueries.save(userGroup)).as(userGroup)
 
   private def toGroup(resource: RdfResource): Task[KnoraUserGroup] = {
     for {
@@ -83,7 +78,7 @@ object KnoraUserGroupRepoLive {
   val layer = ZLayer.derive[KnoraUserGroupRepoLive]
 }
 
-object KnoraUserGroupQueries {
+private object KnoraUserGroupQueries {
   def findAll: Construct = {
     val (s, p, o) = (variable("s"), variable("p"), variable("o"))
     val query = Queries
@@ -113,13 +108,38 @@ object KnoraUserGroupQueries {
     Construct(query)
   }
 
-  def create(group: KnoraUserGroup): Update = {
-    val query = Queries
-      .INSERT_DATA(toTriples(group))
-      .into(Rdf.iri(adminDataNamedGraph.value))
-      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-    Update(query)
+  private def deleteWhere(
+    id: Iri,
+    rdfType: Iri,
+    query: ModifyQuery,
+    iris: List[Iri]
+  ): ModifyQuery =
+    query
+      .delete(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType)) { case (p, (iri, index)) =>
+        p.andHas(iri, variable(s"n${index}"))
+      })
+      .where(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType).optional()) { case (p, (iri, index)) =>
+        p.and(id.has(iri, variable(s"n${index}")).optional())
+      })
+
+  def save(group: KnoraUserGroup): Update = {
+    val query: ModifyQuery =
+      Queries
+        .MODIFY()
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+        .`with`(Rdf.iri(adminDataNamedGraph.value))
+        .insert(toTriples(group))
+
+    Update(deleteWhere(Rdf.iri(group.id.value), Vocabulary.KnoraAdmin.UserGroup, query, deletionFields))
   }
+
+  private val deletionFields: List[Iri] = List(
+    Vocabulary.KnoraAdmin.groupName,
+    Vocabulary.KnoraAdmin.groupDescriptions,
+    Vocabulary.KnoraAdmin.status,
+    Vocabulary.KnoraAdmin.belongsToProject,
+    Vocabulary.KnoraAdmin.hasSelfJoinEnabled
+  )
 
   private def toTriples(group: KnoraUserGroup) = {
     import Vocabulary.KnoraAdmin.*
