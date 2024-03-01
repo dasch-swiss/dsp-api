@@ -440,10 +440,7 @@ final case class GroupsResponderADMLive(
 
         // remove all members from group if status is false
         operationResponse <-
-          removeGroupMembersIfNecessary(
-            changedGroup = updateGroupResult.group,
-            apiRequestID = apiRequestID
-          )
+          removeGroupMembersIfNecessary(changedGroup = updateGroupResult.group)
 
       } yield operationResponse
 
@@ -524,13 +521,9 @@ final case class GroupsResponderADMLive(
    * group members need to be removed from the group.
    *
    * @param changedGroup         the group with the new status.
-   * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
-  private def removeGroupMembersIfNecessary(
-    changedGroup: GroupADM,
-    apiRequestID: UUID
-  ): Task[GroupGetResponseADM] =
+  private def removeGroupMembersIfNecessary(changedGroup: GroupADM) =
     if (changedGroup.status) {
       // group active. no need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
@@ -539,22 +532,10 @@ final case class GroupsResponderADMLive(
       // group deactivated. need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
       for {
-        members <-
-          groupMembersGetADM(
-            groupIri = changedGroup.id,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
-
-        seqOfFutures: Seq[Task[UserResponseADM]] =
-          members.map { (user: User) =>
-            messageRelay
-              .ask[UserResponseADM](
-                UserGroupMembershipRemoveRequestADM(user.userIri, changedGroup.groupIri, apiRequestID)
-              )
-          }
-
-        _ <- ZioHelper.sequence(seqOfFutures)
-
+        members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
+        _ <- ZIO.foreachDiscard(members)(user =>
+               messageRelay.ask[UserResponseADM](UserGroupMembershipRemoveRequestADM(user, changedGroup))
+             )
       } yield GroupGetResponseADM(group = changedGroup)
     }
 }
