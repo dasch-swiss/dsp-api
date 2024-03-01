@@ -126,6 +126,7 @@ object LayersLive {
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
       KnoraUserRepoLive.layer,
+      KnoraUserToUserConverter.layer,
       KnoraUserGroupRepoLive.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
