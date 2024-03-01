@@ -984,13 +984,14 @@ final case class StandoffResponderV2Live(
         standoffPropertyEntities.standoffPropertyInfoMap.keySet
           .intersect(standoffPropertyIrisFromMapping.map(_.toSmartIri))
 
-      _ <- ZIO.fail {
-             NotFoundException(
-               s"the ontology responder could not find information about these standoff properties: " +
-                 s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
-                     .mkString(", ")}"
-             )
-           }.when(standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology)
+      _ <-
+        ZIO.fail {
+          NotFoundException(
+            s"the ontology responder could not find information about these standoff properties: " +
+              s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
+                  .mkString(", ")}"
+          )
+        }.when(standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology)
 
       // check that for each standoff property defined in the mapping element for a standoff class, a corresponding cardinality exists in the ontology
       _ <- ZIO.attempt {

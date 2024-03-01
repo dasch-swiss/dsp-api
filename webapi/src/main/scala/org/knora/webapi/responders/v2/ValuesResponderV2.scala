@@ -1518,13 +1518,14 @@ final case class ValuesResponderV2Live(
           )
 
         // Don't accept link properties.
-        _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp) {
-               ZIO.fail(
-                 BadRequestException(
-                   s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-                 )
-               )
-             }
+        _ <-
+          ZIO.when(propertyInfoForSubmittedProperty.isLinkProp) {
+            ZIO.fail(
+              BadRequestException(
+                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+              )
+            )
+          }
 
         // Don't accept knora-api:hasStandoffLinkToValue.
         _ <- ZIO.when(deleteValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
@@ -2057,13 +2058,14 @@ final case class ValuesResponderV2Live(
           subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
           // If it isn't, fail with an exception.
-          _ <- ZIO.when(!subClassResponse.isSubClass) {
-                 ZIO.fail(
-                   OntologyConstraintException(
-                     s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
-                   )
-                 )
-               }
+          _ <-
+            ZIO.when(!subClassResponse.isSubClass) {
+              ZIO.fail(
+                OntologyConstraintException(
+                  s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
+                )
+              )
+            }
 
         } yield ()
       }
