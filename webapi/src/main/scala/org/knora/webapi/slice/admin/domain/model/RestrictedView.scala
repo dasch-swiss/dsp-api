@@ -22,7 +22,7 @@ object RestrictedViewSize extends StringValueCompanion[RestrictedViewSize] {
   // matches strings "!x,x" where x is a positive integer and represents the dimensions of the restricted view
   private val dimensionsPattern: Regex = "!(\\d+),(\\1)$".r
 
-  val default: RestrictedViewSize = RestrictedViewSize.unsafeFrom("!512,512")
+  val default: RestrictedViewSize = RestrictedViewSize.unsafeFrom("!128,128")
 
   def from(value: String): Either[String, RestrictedViewSize] =
     value match {
