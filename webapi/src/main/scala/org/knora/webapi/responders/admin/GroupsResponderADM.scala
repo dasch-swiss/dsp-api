@@ -402,16 +402,8 @@ final case class GroupsResponderADMLive(
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
     val task = for {
-      // check if necessary information is present
-      _ <- ZIO
-             .fail(BadRequestException("Group IRI cannot be empty"))
-             .when(groupIri.value.isEmpty)
-
-      /* create the update request */
-      groupUpdatePayload = GroupUpdateRequest(None, None, Some(request.status), None)
-
       // update group status
-      updateGroupResult <- updateGroupHelper(groupIri, groupUpdatePayload)
+      updateGroupResult <- updateGroupHelper(groupIri, GroupUpdateRequest(None, None, Some(request.status), None))
 
       // remove all members from group if status is false
       operationResponse <-
