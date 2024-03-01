@@ -5,6 +5,9 @@
 
 package org.knora.webapi.store.cache
 
+import zio.*
+import zio.stm.*
+
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -15,8 +18,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import zio.*
-import zio.stm.*
 
 /**
  * In-Memory Cache implementation
