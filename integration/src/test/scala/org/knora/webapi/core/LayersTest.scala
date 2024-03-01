@@ -183,6 +183,7 @@ object LayersTest {
       KnoraResponseRenderer.layer,
       KnoraUserGroupRepoLive.layer,
       KnoraUserRepoLive.layer,
+      KnoraUserToUserConverter.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
