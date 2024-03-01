@@ -50,7 +50,9 @@ object Main extends ZIOAppDefault {
         ProjectService.layer,
         ProjectsEndpoints.layer,
         ProjectsEndpointsHandler.layer,
-        ReportServiceLive.layer,
+        ReportEndpoints.layer,
+        ReportEndpointsHandler.layer,
+        ReportService.layer,
         SipiClientLive.layer,
         StillImageService.layer,
         StorageServiceLive.layer

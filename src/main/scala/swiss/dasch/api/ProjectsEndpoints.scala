@@ -86,7 +86,7 @@ object ProjectsEndpointsResponses {
 
     given schema: Schema[AssetCheckResultResponse] = DeriveSchema.gen[AssetCheckResultResponse]
 
-    def from(report: Report): AssetCheckResultResponse = {
+    def from(report: ChecksumReport): AssetCheckResultResponse = {
       val reportResults = report.results
       val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.from(info, checksum) }.toList
       val summary = AssetCheckResultSummary(

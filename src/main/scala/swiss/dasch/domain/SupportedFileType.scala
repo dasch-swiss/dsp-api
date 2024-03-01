@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import swiss.dasch.domain.PathOps.fileExtension
+import zio.json.JsonCodec
 import zio.nio.file.Path
 
 private val archive = Map(
@@ -69,7 +70,7 @@ private val stillImages = Map(
  *
  * @param extensions the file extensions of the supported file types.
  */
-enum SupportedFileType(val mappings: Map[String, MimeType]) {
+enum SupportedFileType(val mappings: Map[String, MimeType]) derives JsonCodec {
   case StillImage  extends SupportedFileType(stillImages)
   case MovingImage extends SupportedFileType(movingImages)
   case OtherFiles  extends SupportedFileType(other)

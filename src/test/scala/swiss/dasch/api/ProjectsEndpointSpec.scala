@@ -303,7 +303,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     ProjectService.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
-    ReportServiceLive.layer,
+    ReportService.layer,
     SipiClientMock.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.jwtConfigDisableAuthLayer,
