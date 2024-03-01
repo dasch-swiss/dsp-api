@@ -11,7 +11,7 @@ addSbtPlugin("org.playframework.twirl" % "sbt-twirl"           % "2.0.4")
 addSbtPlugin("com.eed3si9n"            % "sbt-assembly"        % "2.1.5")
 addSbtPlugin("com.github.sbt"          % "sbt-javaagent"       % "0.1.8")
 // also update the scalac-scoverage-runtime version in build.sbt
-addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.10")
+addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.11")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.11.0")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"  % "2.5.2")
 addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"  % "0.11.1")
