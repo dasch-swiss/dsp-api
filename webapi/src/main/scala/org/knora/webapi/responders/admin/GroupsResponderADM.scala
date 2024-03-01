@@ -237,7 +237,6 @@ final case class GroupsResponderADMLive(
    * @return A sequence of [[User]]
    */
   private def groupMembersGetADM(
-    // TODO: change to GroupIri, refactor name and simplify
     groupIri: IRI,
     requestingUser: User
   ): Task[Seq[User]] =
@@ -359,20 +358,7 @@ final case class GroupsResponderADMLive(
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
     val task = for {
-      // check if necessary information is present
-      _ <- ZIO
-             .fail(BadRequestException("Group IRI cannot be empty"))
-             .when(groupIri.value.isEmpty)
-
-      /* create the update request */
-      groupUpdatePayload =
-        GroupUpdateRequest(
-          name = request.name,
-          descriptions = request.descriptions,
-          status = request.status,
-          selfjoin = request.selfjoin
-        )
-      result <- updateGroupHelper(groupIri, groupUpdatePayload)
+      result <- updateGroupHelper(groupIri, request)
     } yield result
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
