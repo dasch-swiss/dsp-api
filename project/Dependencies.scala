@@ -109,7 +109,7 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.1.0"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.5"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.7"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.4.2"
 
   // found/added by the plugin but deleted anyway
@@ -123,7 +123,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.10"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.10",
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
