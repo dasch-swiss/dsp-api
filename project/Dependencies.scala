@@ -95,7 +95,7 @@ object Dependencies {
   val rdf4jSparql    = "org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % Rdf4jVersion
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"            % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"          % "2.0.1" // Should be Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.3.3"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld"    % "1.4.0"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"        % "2.9.1"
 
   // test
