@@ -53,7 +53,7 @@ object ProjectsEndpointsRequestsAndResponses {
       (size, watermark) match {
         case (Some(size), None)      => ZIO.succeed(size)
         case (None, Some(watermark)) => ZIO.succeed(RestrictedView.Watermark.from(watermark.value))
-        case _                       => ZIO.fail(BadRequestException("Exactly one one of size or watermark must be provided."))
+        case _                       => ZIO.fail(BadRequestException("Specify either the size or the watermark; if none was provided, include one."))
       }
   }
 
