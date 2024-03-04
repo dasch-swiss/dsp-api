@@ -28,6 +28,7 @@ trait GroupsRestService {
   def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM]
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM]
   def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM]
+  def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM]
 }
 
 final case class GroupsRestServiceLive(
@@ -76,6 +77,14 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
       internal <- responder.updateGroupStatus(iri, request, uuid)
+      external <- format.toExternal(internal)
+    } yield external
+
+  override def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      uuid     <- Random.nextUUID
+      internal <- responder.deleteGroup(iri, uuid)
       external <- format.toExternal(internal)
     } yield external
 }
