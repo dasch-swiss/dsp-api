@@ -75,7 +75,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Any] = suite("UserRepoLiveSpec")(
     suite("findById")(
-      test("findById given an  existing user should return that user") {
+      test("findById given an existing user should return that user") {
         for {
           _    <- storeUsersInTripleStore(testUser)
           user <- findById(testUser.id)
@@ -158,7 +158,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
         } yield assertTrue(updatedUser.isInProject.isEmpty)
       },
-      test("should update an existing user isInProjectAdminGroup ") {
+      test("should update an existing user isInProjectAdminGroup") {
         for {
           _           <- save(testUserWithoutAnyGroups) // create the user
           _           <- save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id)))
