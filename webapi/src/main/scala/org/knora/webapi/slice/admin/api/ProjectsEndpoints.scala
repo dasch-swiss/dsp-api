@@ -95,7 +95,7 @@ final case class ProjectsEndpoints(
     private val bodyProjectSetRestrictedViewSizeRequest =
       zioJsonBody[SetRestrictedViewRequest]
         .description(
-          "Set on a how all still image resources of a projects should be displayed when viewed as restricted.\n" +
+          "Set how all still image resources of a projects should be displayed when viewed as restricted.\n" +
             "This can be either a size restriction or a watermark.\n" +
             "For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
             "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
