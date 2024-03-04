@@ -98,7 +98,7 @@ final case class ProjectADMService(
 
   def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] = {
     val newSettings = settings match {
-      case RestrictedView.Watermark(false) => RestrictedView.Size.default
+      case RestrictedView.Watermark(false) => RestrictedView.default
       case s                               => s
     }
     projectRepo.setProjectRestrictedView(project, newSettings)

@@ -12,12 +12,17 @@ import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 
 sealed trait RestrictedView
+
 object RestrictedView {
+
+  val default: RestrictedView = Size.default
 
   final case class Watermark private (value: Boolean) extends RestrictedView with BooleanValue
   object Watermark {
-    val On                              = Watermark(true)
-    val Off                             = Watermark(false)
+
+    val On: Watermark  = Watermark(true)
+    val Off: Watermark = Watermark(false)
+
     def from(value: Boolean): Watermark = if (value) On else Off
   }
 
@@ -41,5 +46,4 @@ object RestrictedView {
         case _                                     => Left(s"Invalid RestrictedViewSize: $value")
       }
   }
-
 }

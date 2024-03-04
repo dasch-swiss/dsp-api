@@ -776,7 +776,7 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- projectService.setProjectRestrictedView(newProjectADM, RestrictedView.Size.default)
+        _ <- projectService.setProjectRestrictedView(newProjectADM, RestrictedView.default)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
