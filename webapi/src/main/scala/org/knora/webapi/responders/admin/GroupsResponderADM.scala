@@ -129,6 +129,18 @@ trait GroupsResponderADM {
   ): Task[GroupGetResponseADM]
 
   /**
+   * Delete a group by changing its status to 'false'.
+   *
+   * @param iri                the IRI of the group to be deleted.
+   * @param apiRequestID       the unique request ID.
+   * @return a [[GroupGetResponseADM]].
+   */
+  def deleteGroup(
+    iri: GroupIri,
+    apiRequestID: UUID
+  ): Task[GroupGetResponseADM]
+
+  /**
    * Change group's basic information.
    *
    * @param groupIri           the IRI of the group we want to change.
@@ -409,6 +421,17 @@ final case class GroupsResponderADMLive(
       result <- removeGroupMembersIfNecessary(updated.group)
     } yield result
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
+  }
+
+  override def deleteGroup(
+    iri: GroupIri,
+    apiRequestID: UUID
+  ): Task[GroupGetResponseADM] = {
+    val task = for {
+      updated <- updateGroupHelper(iri, GroupUpdateRequest(None, None, Some(GroupStatus.inactive), None))
+      result  <- removeGroupMembersIfNecessary(updated.group)
+    } yield result
+    IriLocker.runWithIriLock(apiRequestID, iri.value, task)
   }
 
   /**
