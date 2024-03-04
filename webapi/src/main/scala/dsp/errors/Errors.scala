@@ -11,7 +11,7 @@ import org.apache.commons.lang3.SerializationUtils
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import org.knora.webapi.slice.admin.domain.service.UserService.Errors.UserServiceError
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 
 /*
 

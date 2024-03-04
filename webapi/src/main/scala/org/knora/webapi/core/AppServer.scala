@@ -9,13 +9,10 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
@@ -32,7 +29,6 @@ final case class AppServer(
   as: ActorSystem,
   ontologyCache: OntologyCache,
   sipiService: SipiService,
-  cs: CacheService,
   hs: HttpServer,
   appConfig: AppConfig
 ) {
@@ -113,21 +109,6 @@ final case class AppServer(
     } yield ()
 
   /**
-   * Checks if the Cache service is running
-   */
-  private val checkCacheService: UIO[Unit] =
-    for {
-      _ <- state.set(AppState.WaitingForCacheService)
-      _ <- cs.getStatus.flatMap {
-             case CacheServiceStatusNOK =>
-               ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
-             case CacheServiceStatusOK =>
-               ZIO.unit
-           }
-      _ <- state.set(AppState.CacheServiceReady)
-    } yield ()
-
-  /**
    * Initiates the startup of the DSP-API server.
    *
    * @param requiresAdditionalRepositoryChecks  If `true`, checks if repository service is running, updates data if necessary and loads ontology cache.
@@ -145,7 +126,6 @@ final case class AppServer(
       _ <- buildAllCaches
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- checkIIIFService(requiresIIIFService)
-      _ <- checkCacheService
       _ <- ZIO.logInfo("=> Startup checks finished")
       _ <- ZIO.logInfo(s"DSP-API Server started: ${appConfig.knoraApi.internalKnoraApiBaseUrl}")
       _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
@@ -156,8 +136,7 @@ final case class AppServer(
 object AppServer {
 
   private type AppServerEnvironment =
-    State & TriplestoreService & RepositoryUpdater & ActorSystem & OntologyCache & SipiService & CacheService &
-      HttpServer & AppConfig
+    State & TriplestoreService & RepositoryUpdater & ActorSystem & OntologyCache & SipiService & HttpServer & AppConfig
 
   /**
    * Initializes the AppServer instance with the required services
@@ -170,10 +149,9 @@ object AppServer {
       as       <- ZIO.service[ActorSystem]
       oc       <- ZIO.service[OntologyCache]
       iiifs    <- ZIO.service[SipiService]
-      cs       <- ZIO.service[CacheService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, oc, iiifs, cs, hs, c)
+      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c)
     } yield appServer
 
   /**

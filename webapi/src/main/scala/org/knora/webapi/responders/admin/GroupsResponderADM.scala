@@ -24,7 +24,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
@@ -43,6 +42,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
@@ -150,6 +150,7 @@ final case class GroupsResponderADMLive(
   triplestore: TriplestoreService,
   messageRelay: MessageRelay,
   iriService: IriService,
+  knoraUserService: KnoraUserService,
   implicit val stringFormatter: StringFormatter
 ) extends GroupsResponderADM
     with MessageHandler
@@ -218,14 +219,8 @@ final case class GroupsResponderADMLive(
   private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[ProjectADM] =
     for {
       id     <- IriIdentifier.fromString(iri).toZIO.mapError(e => BadRequestException(e.getMessage))
-      result <- findProjectByIdOrFail(id, failReason)
+      result <- messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id)).someOrFail(failReason)
     } yield result
-
-  private def findProjectByIdOrFail(id: ProjectIdentifierADM, failReason: Throwable): Task[ProjectADM] =
-    findProjectById(id).flatMap(ZIO.fromOption(_)).orElseFail(failReason)
-
-  private def findProjectById(id: ProjectIdentifierADM) =
-    messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id))
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
@@ -556,23 +551,21 @@ final case class GroupsResponderADMLive(
       for {
         members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
         _ <- ZIO.foreachDiscard(members)(user =>
-               messageRelay.ask[UserResponseADM](UserGroupMembershipRemoveRequestADM(user, changedGroup))
+               knoraUserService.removeUserFromGroup(user, changedGroup).mapError(BadRequestException.apply)
              )
       } yield GroupGetResponseADM(group = changedGroup)
     }
 }
 
 object GroupsResponderADMLive {
-  val layer: URLayer[
-    MessageRelay & StringFormatter & IriService & TriplestoreService,
-    GroupsResponderADM
-  ] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       ts      <- ZIO.service[TriplestoreService]
       iris    <- ZIO.service[IriService]
       sf      <- ZIO.service[StringFormatter]
+      kus     <- ZIO.service[KnoraUserService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, sf))
+      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, sf))
     } yield handler
   }
 }

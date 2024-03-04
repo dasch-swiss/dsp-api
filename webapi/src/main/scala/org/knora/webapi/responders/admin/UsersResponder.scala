@@ -7,11 +7,9 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
@@ -30,16 +28,12 @@ final case class UsersResponder(userService: UserService) extends MessageHandler
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case UserGetByIriADM(identifier, userInformationTypeADM, requestingUser) =>
       userService.findUserByIri(identifier).map(_.map(_.filterUserInformation(requestingUser, userInformationTypeADM)))
-    case UserGroupMembershipRemoveRequestADM(user, project) =>
-      userService
-        .removeUserFromGroup(user, project)
-        .mapError(BadRequestException.apply)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 }
 
 object UsersResponder {
-  val layer: URLayer[MessageRelay & UserService, UsersResponder] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       us      <- ZIO.service[UserService]
       mr      <- ZIO.service[MessageRelay]
