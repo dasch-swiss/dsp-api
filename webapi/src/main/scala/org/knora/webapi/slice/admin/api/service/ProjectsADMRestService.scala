@@ -5,13 +5,10 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
-import zio.macros.accessible
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -30,6 +27,8 @@ import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import zio.*
+import zio.macros.accessible
 
 @accessible
 trait ProjectADMRestService {
@@ -284,8 +283,8 @@ final case class ProjectsADMRestServiceLive(
       project        <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _              <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       restrictedView <- req.toRestrictedView
-      _              <- projectService.setProjectRestrictedView(project, restrictedView)
-    } yield RestrictedViewResponse.from(restrictedView)
+      newSettings    <- projectService.setProjectRestrictedView(project, restrictedView)
+    } yield RestrictedViewResponse.from(newSettings)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
