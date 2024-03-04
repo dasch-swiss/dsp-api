@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.*
+import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
@@ -28,8 +29,8 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
+import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
@@ -59,6 +60,7 @@ trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
   def getDataset: UIO[Dataset]
   def printDataset: UIO[Unit]
+  def datasetStatements: RIO[Scope, List[model.Statement]]
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
@@ -254,6 +256,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       _  <- Console.printLine(s"TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
     } yield ()
+
+  override def datasetStatements: RIO[Scope, List[model.Statement]] =
+    getDataSetWithTransaction(ReadWrite.READ).map(_.getUnionModel.listStatements.toList.asScala.toList)
 
   def printDatasetContents(dataset: Dataset): Unit = {
     // Iterate over the named models

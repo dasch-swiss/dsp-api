@@ -13,10 +13,6 @@ import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-import dsp.valueobjects.Group.GroupDescriptions
-import dsp.valueobjects.Group.GroupName
-import dsp.valueobjects.Group.GroupSelfJoin
-import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
@@ -24,7 +20,11 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
