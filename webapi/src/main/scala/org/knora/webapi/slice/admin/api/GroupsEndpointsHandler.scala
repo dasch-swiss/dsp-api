@@ -61,8 +61,14 @@ case class GroupsEndpointsHandler(
       }
     )
 
+  private val deleteGroupHandler =
+    SecuredEndpointHandler(
+      endpoints.deleteGroup,
+      user => iri => restService.deleteGroup(iri, user)
+    )
+
   private val securedHandlers =
-    List(getGroupMembersHandler, postGroupHandler, putGroupHandler, putGroupStatusHandler)
+    List(getGroupMembersHandler, postGroupHandler, putGroupHandler, putGroupStatusHandler, deleteGroupHandler)
       .map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = List(getGroupsHandler, getGroupByIriHandler).map(mapper.mapPublicEndpointHandler(_))

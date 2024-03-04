@@ -65,7 +65,12 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Updates a group's status.")
 
-  private val securedEndpoins = Seq(getGroupMembers, postGroup, putGroup).map(_.endpoint)
+  val deleteGroup = baseEndpoints.securedEndpoint.delete
+    .in(base / groupIriPathVar)
+    .out(sprayJsonBody[GroupGetResponseADM])
+    .description("Deletes a group by changing its status to 'false'.")
+
+  private val securedEndpoins = Seq(getGroupMembers, postGroup, putGroup, deleteGroup).map(_.endpoint)
 
   val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
     .map(_.tag("Admin Groups"))
