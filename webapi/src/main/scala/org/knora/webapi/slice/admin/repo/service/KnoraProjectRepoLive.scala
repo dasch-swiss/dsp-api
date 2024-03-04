@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
@@ -16,7 +18,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
@@ -99,7 +100,7 @@ final case class KnoraProjectRepoLive(
     project: KnoraProject,
     settings: RestrictedView
   ): Task[Unit] =
-    triplestore.query(Update(ProjectQueries.setProjectRestrictedView(project.id, settings.size, settings.watermark)))
+    triplestore.query(ProjectQueries.setProjectRestrictedView(project.id, settings))
 
 }
 
@@ -160,31 +161,32 @@ object KnoraProjectRepoLive {
       Construct(query.getQueryString)
     }
 
-    def setProjectRestrictedView(projectIri: ProjectIri, size: RestrictedViewSize, watermark: Boolean): String =
-      s"""
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-         |
-         |WITH <http://www.knora.org/data/admin>
-         |DELETE {
-         |	<${projectIri.value}> knora-admin:projectRestrictedViewSize ?prevSize .
-         |	<${projectIri.value}> knora-admin:projectRestrictedViewWatermark ?prevWatermark.
-         |}
-         |INSERT {
-         |	<${projectIri.value}> knora-admin:projectRestrictedViewSize "${size.value}"^^xsd:string .
-         |	<${projectIri.value}> knora-admin:projectRestrictedViewWatermark "$watermark"^^xsd:boolean.
-         |}
-         |WHERE {
-         |    <${projectIri.value}> a knora-admin:knoraProject .
-         |    OPTIONAL {
-         |        <${projectIri.value}> knora-admin:projectRestrictedViewSize ?prevSize .
-         |    }
-         |    OPTIONAL {
-         |        <${projectIri.value}> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
-         |    }
-         |}
-         |""".stripMargin
+    def setProjectRestrictedView(projectIri: ProjectIri, restriction: RestrictedView): Update = {
+      val project                   = Rdf.iri(projectIri.value)
+      val (prevSize, prevWatermark) = (variable("p"), variable("o"))
+      val query = Queries
+        .MODIFY()
+        .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
+        .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
+        .delete(
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize),
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark)
+        )
+        .insert(
+          restriction match {
+            case RestrictedView.Watermark(value) =>
+              project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, value)
+            case RestrictedView.Size(value) =>
+              project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, value)
+          }
+        )
+        .where(
+          project.isA(Vocabulary.KnoraAdmin.KnoraProject),
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize).optional(),
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark).optional()
+        )
+      Update(query.getQueryString)
+    }
   }
 
   val layer = ZLayer.derive[KnoraProjectRepoLive]

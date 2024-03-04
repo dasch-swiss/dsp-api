@@ -8,27 +8,38 @@ package org.knora.webapi.slice.admin.domain.model
 import scala.util.matching.Regex
 
 import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.StringValue
 
-final case class RestrictedView(size: RestrictedViewSize, watermark: Boolean)
+sealed trait RestrictedView
+object RestrictedView {
 
-final case class RestrictedViewSize private (value: String) extends AnyVal with StringValue
+  final case class Watermark private (value: Boolean) extends RestrictedView with BooleanValue
+  object Watermark {
+    val On                              = Watermark(true)
+    val Off                             = Watermark(false)
+    def from(value: Boolean): Watermark = if (value) On else Off
+  }
 
-object RestrictedViewSize extends StringValueCompanion[RestrictedViewSize] {
+  final case class Size private (value: String) extends RestrictedView with StringValue
 
-  // matches strings "pct:n" with n between 1 and 100
-  private val percentagePattern: Regex = "pct:(?:100|[1-9][0-9]?)$".r
+  object Size extends StringValueCompanion[Size] {
 
-  // matches strings "!x,x" where x is a positive integer and represents the dimensions of the restricted view
-  private val dimensionsPattern: Regex = "!(\\d+),(\\1)$".r
+    // matches strings "pct:n" with n between 1 and 100
+    private val percentagePattern: Regex = "pct:(?:100|[1-9][0-9]?)$".r
 
-  val default: RestrictedViewSize = RestrictedViewSize.unsafeFrom("!128,128")
+    // matches strings "!x,x" where x is a positive integer and represents the dimensions of the restricted view
+    private val dimensionsPattern: Regex = "!(\\d+),(\\1)$".r
 
-  def from(value: String): Either[String, RestrictedViewSize] =
-    value match {
-      case _ if value.isEmpty                    => Left("RestrictedViewSize cannot be empty.")
-      case _ if percentagePattern.matches(value) => Right(RestrictedViewSize(value))
-      case _ if dimensionsPattern.matches(value) => Right(RestrictedViewSize(value))
-      case _                                     => Left(s"Invalid RestrictedViewSize: $value")
-    }
+    val default: Size = Size.unsafeFrom("!128,128")
+
+    def from(value: String): Either[String, Size] =
+      value match {
+        case _ if value.isEmpty                    => Left("RestrictedViewSize cannot be empty.")
+        case _ if percentagePattern.matches(value) => Right(Size(value))
+        case _ if dimensionsPattern.matches(value) => Right(Size(value))
+        case _                                     => Left(s"Invalid RestrictedViewSize: $value")
+      }
+  }
+
 }

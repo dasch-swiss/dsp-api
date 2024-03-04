@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.admin.api.model
 
+import zio.IO
+import zio.ZIO
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 object ProjectsEndpointsRequestsAndResponses {
 
@@ -42,13 +45,33 @@ object ProjectsEndpointsRequestsAndResponses {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
   }
 
-  final case class SetRestrictedViewRequest(size: RestrictedViewSize, watermark: Option[Boolean])
+  final case class SetRestrictedViewRequest(
+    size: Option[RestrictedView.Size],
+    watermark: Option[RestrictedView.Watermark]
+  ) {
+    def toRestrictedView: IO[BadRequestException, RestrictedView] =
+      (size, watermark) match {
+        case (Some(size), None)      => ZIO.succeed(size)
+        case (None, Some(watermark)) => ZIO.succeed(RestrictedView.Watermark.from(watermark.value))
+        case _                       => ZIO.fail(BadRequestException("Exactly one one of size or watermark must be provided."))
+      }
+  }
+
   object SetRestrictedViewRequest {
     implicit val codec: JsonCodec[SetRestrictedViewRequest] = DeriveJsonCodec.gen[SetRestrictedViewRequest]
   }
 
-  final case class RestrictedViewResponse(size: RestrictedViewSize, watermark: Boolean)
+  final case class RestrictedViewResponse(
+    size: Option[RestrictedView.Size],
+    watermark: Option[RestrictedView.Watermark]
+  )
   object RestrictedViewResponse {
     implicit val codec: JsonCodec[RestrictedViewResponse] = DeriveJsonCodec.gen[RestrictedViewResponse]
+
+    def from(restrictedView: RestrictedView): RestrictedViewResponse =
+      restrictedView match {
+        case size: RestrictedView.Size           => RestrictedViewResponse(Some(size), None)
+        case watermark: RestrictedView.Watermark => RestrictedViewResponse(None, Some(watermark))
+      }
   }
 }

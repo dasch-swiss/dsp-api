@@ -35,7 +35,6 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
@@ -777,10 +776,7 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- projectService.setProjectRestrictedView(
-               newProjectADM,
-               RestrictedView(RestrictedViewSize.default, watermark = false)
-             )
+        _ <- projectService.setProjectRestrictedView(newProjectADM, RestrictedView.Size.default)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

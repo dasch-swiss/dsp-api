@@ -96,8 +96,13 @@ final case class ProjectADMService(
       .map(_ :+ projectGraph)
   }
 
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
-    projectRepo.setProjectRestrictedView(project, settings)
+  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] = {
+    val newSettings = settings match {
+      case RestrictedView.Watermark(false) => RestrictedView.Size.default
+      case s                               => s
+    }
+    projectRepo.setProjectRestrictedView(project, newSettings)
+  }
 
   def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit] =
     setProjectRestrictedView(toKnoraProject(project), settings)
