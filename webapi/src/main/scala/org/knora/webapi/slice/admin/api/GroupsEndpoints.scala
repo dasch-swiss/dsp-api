@@ -18,6 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetRe
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -58,6 +59,12 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(sprayJsonBody[GroupGetResponseADM])
     .description("Updates a group.")
 
+  val putGroupStatus = baseEndpoints.securedEndpoint.put
+    .in(base / groupIriPathVar / "status")
+    .in(zioJsonBody[GroupStatusUpdateRequest])
+    .out(sprayJsonBody[GroupGetResponseADM])
+    .description("Updates a group's status.")
+
   private val securedEndpoins = Seq(getGroupMembers, postGroup, putGroup).map(_.endpoint)
 
   val endpoints: Seq[AnyEndpoint] = (Seq(getGroups, getGroupByIri) ++ securedEndpoins)
@@ -86,6 +93,13 @@ object GroupsRequests {
   )
   object GroupUpdateRequest {
     implicit val jsonCodec: JsonCodec[GroupUpdateRequest] = DeriveJsonCodec.gen[GroupUpdateRequest]
+  }
+
+  final case class GroupStatusUpdateRequest(
+    status: GroupStatus
+  )
+  object GroupStatusUpdateRequest {
+    implicit val jsonCodec: JsonCodec[GroupStatusUpdateRequest] = DeriveJsonCodec.gen[GroupStatusUpdateRequest]
   }
 }
 
