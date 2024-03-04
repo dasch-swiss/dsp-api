@@ -14,7 +14,6 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.cacheservicemessages.*
-import org.knora.webapi.store.cache.api.CacheService
 
 trait CacheServiceRequestMessageHandler extends MessageHandler
 
@@ -39,9 +38,7 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
       cacheService.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
     case CacheServiceGetProjectADM(identifier) =>
       cacheService.getProjectADM(identifier) @@ cacheServiceReadProjectTimer.trackDuration
-    case CacheServiceClearCache => cacheService.clearCache()
-    case CacheServiceGetStatus  => cacheService.getStatus
-    case other                  => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
+    case other => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
   }
 }
 

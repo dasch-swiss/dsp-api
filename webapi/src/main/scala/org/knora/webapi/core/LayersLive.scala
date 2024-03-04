@@ -55,10 +55,9 @@ import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
-import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -73,18 +72,19 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
-    ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter & Authenticator &
-      AuthorizationRestService & CacheService & CacheServiceRequestMessageHandler & CardinalityHandler &
-      CardinalityService & ConstructResponseUtilV2 & ConstructTransformer & GravsearchTypeInspectionRunner &
-      GroupsResponderADM & HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService &
-      InstrumentationServerConfig & IriConverter & IriService & JwtService & KnoraProjectRepo & ListsResponder &
-      ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM &
-      PredicateObjectMapper & ProjectADMRestService & ProjectADMService & ProjectExportService &
-      ProjectExportStorageService & ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
-      ResourcesResponderV2 & ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
-      SearchApiRoutes & SearchResponderV2 & AssetPermissionsResponder & SipiService & StandoffResponderV2 & StandoffTagUtilV2 &
-      State & StoreRestService & StringFormatter & TriplestoreService & UsersResponder & ValuesResponderV2 & UsersRestService & UserService
+    ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
+      AssetPermissionsResponder & Authenticator & AuthorizationRestService & CacheService &
+      CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
+      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
+      IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
+      IriService & JwtService & KnoraProjectRepo & KnoraUserService & ListsResponder & ListsResponderV2 &
+      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
+      PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
+      ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
+      ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
+      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
+      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StoreRestService &
+      StringFormatter & TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
@@ -102,7 +102,7 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheServiceLive.layer,
+      CacheService.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
@@ -125,9 +125,10 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserRepoLive.layer,
-      KnoraUserToUserConverter.layer,
       KnoraUserGroupRepoLive.layer,
+      KnoraUserRepoLive.layer,
+      KnoraUserService.layer,
+      KnoraUserToUserConverter.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
       ListsEndpointsHandlers.layer,
