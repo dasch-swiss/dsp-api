@@ -575,31 +575,6 @@
     rdfs:subPropertyOf      :hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/knora-base#isSequenceOf
-
-:isSequenceOf
-    rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Sequenz von"@de,
-                            "is sequence of"@en,
-                            "fait partie de"@fr,
-                            "fa parte di"@it ;
-    rdfs:comment            "Indicates that this resource is a sequence of a video or audio resource"@en ;
-    :subjectClassConstraint :Resource ;
-    :objectClassConstraint  :Resource ;
-    :isEditable             true ;
-    rdfs:subPropertyOf      :hasLinkTo .
-
-
-###  http://www.knora.org/ontology/knora-base#isSequenceOfValue
-
-:isSequenceOfValue
-    rdf:type                owl:ObjectProperty ;
-    :objectClassConstraint  :LinkValue ;
-    :subjectClassConstraint :Resource ;
-    :isEditable             true ;
-    rdfs:subPropertyOf      :hasLinkToValue .
-
-
 ###  http://www.knora.org/ontology/knora-base#isRegionOf
 
 :isRegionOf
@@ -652,18 +627,6 @@
                            "Numéro de séquence"@fr,
                            "Numero di sequenza"@it ;
     rdfs:comment           "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource."@en .
-
-
-###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
-
-:hasSequenceBounds
-    rdf:type               owl:ObjectProperty ;
-    :objectClassConstraint :IntervalValue ;
-    :isEditable            true ;
-    rdfs:subPropertyOf     :hasValue ;
-    rdfs:label             "Sequenz-Grenzen"@de,
-                           "Sequence Bounds"@en ;
-    rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
@@ -2230,3 +2193,69 @@
     rdfs:subClassOf :Value ;
     rdfs:label      "Deleted Value"@en ;
     rdfs:comment    "Generic representation of a deleted value that can therefore not be displayed"@en .
+
+
+#################################################################
+### temporary elements
+#################################################################
+
+
+
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOf
+
+:isSequenceOf
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Sequenz von"@de,
+                            "is sequence of"@en,
+                            "fait partie de"@fr,
+                            "fa parte di"@it ;
+    rdfs:comment            "Indicates that this resource is a sequence of a video or audio resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :Resource ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasLinkTo .
+
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOfValue
+
+:isSequenceOfValue
+    rdf:type                owl:ObjectProperty ;
+    :objectClassConstraint  :LinkValue ;
+    :subjectClassConstraint :Resource ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
+
+:hasSequenceBounds
+    rdf:type               owl:ObjectProperty ;
+    :objectClassConstraint :IntervalValue ;
+    :isEditable            true ;
+    rdfs:subPropertyOf     :hasValue ;
+    rdfs:label             "Sequenz-Grenzen"@de,
+                           "Sequence Bounds"@en ;
+    rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
+
+
+###  http://www.knora.org/ontology/knora-base#Sequence
+
+:Sequence
+    rdf:type           owl:Class ;
+    rdfs:subClassOf    :Resource,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :hasComment ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ],
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :isSequenceOf  ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger ],
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :isSequenceOfValue  ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label         "Sequence"@de,
+                       "Sequence"@en,
+                       "Sequence"@fr,
+                       "Sequence"@it ;
+    :canBeInstantiated true ;
+    rdfs:comment       "TODO: explain"@en .
