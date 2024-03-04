@@ -139,23 +139,6 @@ trait GroupsResponderADM {
     iri: GroupIri,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
-
-  /**
-   * Change group's basic information.
-   *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param changeGroupRequest the change request.
-   * @param requestingUser     the user making the request.
-   * @param apiRequestID       the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): Task[GroupGetResponseADM]
-
 }
 
 final case class GroupsResponderADMLive(
@@ -178,14 +161,7 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupChangeStatusRequestADM =>
-      changeGroupStatusRequestADM(
-        r.groupIri,
-        r.changeGroupRequest,
-        r.requestingUser,
-        r.apiRequestID
-      )
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -432,64 +408,6 @@ final case class GroupsResponderADMLive(
       result  <- removeGroupMembersIfNecessary(updated.group)
     } yield result
     IriLocker.runWithIriLock(apiRequestID, iri.value, task)
-  }
-
-  /**
-   * Change group's basic information.
-   *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param changeGroupRequest the change request.
-   * @param requestingUser     the user making the request.
-   * @param apiRequestID       the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  override def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: User,
-    apiRequestID: UUID
-  ): Task[GroupGetResponseADM] = {
-
-    /**
-     * The actual change group task run with an IRI lock.
-     */
-    def changeGroupStatusTask(
-      groupIri: IRI,
-      changeGroupRequest: ChangeGroupApiRequestADM,
-      requestingUser: User
-    ): Task[GroupGetResponseADM] =
-      for {
-        /* Get the project IRI which also verifies that the group exists. */
-        groupADM <- groupGetADM(groupIri)
-                      .someOrFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
-
-        /* check if the requesting user is allowed to perform updates */
-        _ <- ZIO
-               .fail(ForbiddenException("Group's status can only be changed by a project or system admin."))
-               .when {
-                 val userPermissions = requestingUser.permissions
-                 !userPermissions.isProjectAdmin(groupADM.project.id) &&
-                 !userPermissions.isSystemAdmin
-               }
-
-        maybeStatus = changeGroupRequest.status.map(GroupStatus.from)
-
-        /* create the update request */
-        groupUpdatePayload = GroupUpdateRequest(status = maybeStatus)
-
-        iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException(_))
-
-        // update group status
-        updateGroupResult <- updateGroupHelper(iri, groupUpdatePayload)
-
-        // remove all members from group if status is false
-        operationResponse <-
-          removeGroupMembersIfNecessary(changedGroup = updateGroupResult.group)
-
-      } yield operationResponse
-
-    val task = changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, groupIri, task)
   }
 
   /**

@@ -10,8 +10,6 @@ import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
@@ -108,21 +106,6 @@ case class MultipleGroupsGetRequestADM(
  * @param requestingUser       the user initiating the request.
  */
 case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
-
-/**
- * Request changing the status (active/inactive) of an existing group.
- *
- * @param groupIri             the IRI of the group to be deleted.
- * @param changeGroupRequest   the data which needs to be update.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class GroupChangeStatusRequestADM(
-  groupIri: IRI,
-  changeGroupRequest: ChangeGroupApiRequestADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends GroupsResponderRequestADM
 
 // Responses
 /**
