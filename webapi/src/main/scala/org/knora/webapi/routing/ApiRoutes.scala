@@ -24,7 +24,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.admin.*
 import org.knora.webapi.routing.v2.*
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
@@ -101,7 +100,6 @@ private final case class ApiRoutesImpl(
             DSPApiDirectives.handleErrors(appConfig) {
               (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes).reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
-                GroupsRouteADM(routeData, runtime).makeRoute ~
                 HealthRoute().makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
