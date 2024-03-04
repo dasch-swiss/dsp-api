@@ -163,7 +163,7 @@ object KnoraProjectRepoLive {
 
     def setProjectRestrictedView(projectIri: ProjectIri, restriction: RestrictedView): Update = {
       val project                   = Rdf.iri(projectIri.value)
-      val (prevSize, prevWatermark) = (variable("p"), variable("o"))
+      val (prevSize, prevWatermark) = (variable("prevSize"), variable("prevWatermark"))
       val query = Queries
         .MODIFY()
         .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
