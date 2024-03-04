@@ -37,7 +37,7 @@ final case class KnoraProjectRepoLive(
       model     <- triplestore.queryRdfModel(ProjectQueries.findAll)
       resources <- model.getSubjectResources
       projects <- ZIO.foreach(resources)(res =>
-                    toKnoraProject(res).orElseFail(
+                    toKnoraProject(res).logError.orElseFail(
                       InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject")
                     )
                   )
@@ -73,17 +73,26 @@ final case class KnoraProjectRepoLive(
       project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
     } yield project
 
-  private def toKnoraProject(resource: RdfResource): IO[RdfError, KnoraProject] =
+  private def toKnoraProject(resource: RdfResource): IO[RdfError, KnoraProject] = {
+    def getRestrictedView =
+      for {
+        size <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
+        watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(b =>
+                       Right(RestrictedView.Watermark.from(b))
+                     )
+      } yield size.orElse(watermark).getOrElse(RestrictedView.default)
+
     for {
-      iri         <- resource.getSubjectIri
-      shortcode   <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
-      shortname   <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
-      longname    <- resource.getStringLiteral[Longname](ProjectLongname)
-      description <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
-      keywords    <- resource.getStringLiterals[Keyword](ProjectKeyword)
-      logo        <- resource.getStringLiteral[Logo](ProjectLogo)
-      status      <- resource.getBooleanLiteralOrFail[Status](StatusProp)
-      selfjoin    <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+      iri            <- resource.getSubjectIri
+      shortcode      <- resource.getStringLiteralOrFail[Shortcode](ProjectShortcode)
+      shortname      <- resource.getStringLiteralOrFail[Shortname](ProjectShortname)
+      longname       <- resource.getStringLiteral[Longname](ProjectLongname)
+      description    <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
+      keywords       <- resource.getStringLiterals[Keyword](ProjectKeyword)
+      logo           <- resource.getStringLiteral[Logo](ProjectLogo)
+      status         <- resource.getBooleanLiteralOrFail[Status](StatusProp)
+      selfjoin       <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
+      restrictedView <- getRestrictedView
     } yield KnoraProject(
       id = ProjectIri.unsafeFrom(iri.value),
       shortcode = shortcode,
@@ -93,14 +102,13 @@ final case class KnoraProjectRepoLive(
       keywords = keywords.toList.sortBy(_.value),
       logo = logo,
       status = status,
-      selfjoin = selfjoin
+      selfjoin = selfjoin,
+      restrictedView = restrictedView
     )
+  }
 
-  override def setProjectRestrictedView(
-    project: KnoraProject,
-    settings: RestrictedView
-  ): Task[Unit] =
-    triplestore.query(ProjectQueries.setProjectRestrictedView(project.id, settings))
+  override def save(project: KnoraProject): Task[KnoraProject] =
+    triplestore.query(ProjectQueries.save(project)).as(project)
 
 }
 
@@ -160,33 +168,65 @@ object KnoraProjectRepoLive {
           .where(project.isA(Vocabulary.KnoraAdmin.KnoraProject).and(projectPo))
       Construct(query.getQueryString)
     }
+    private def toTriples(project: KnoraProject) = {
+      val pattern = Rdf
+        .iri(project.id.value)
+        .has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject)
+        .andHas(Vocabulary.KnoraAdmin.projectShortname, project.shortname.value)
+        .andHas(Vocabulary.KnoraAdmin.projectShortcode, project.shortcode.value)
+        .andHas(Vocabulary.KnoraAdmin.status, project.status.value)
+        .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, project.selfjoin.value)
+      project.longname.foreach(longname => pattern.andHas(Vocabulary.KnoraAdmin.projectLongname, longname.value))
+      project.description.foreach(description =>
+        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, description.value.toRdfLiteral)
+      )
+      project.keywords.foreach(keyword => pattern.andHas(Vocabulary.KnoraAdmin.projectKeyword, keyword.value))
+      project.logo.foreach(logo => pattern.andHas(Vocabulary.KnoraAdmin.projectLogo, logo.value))
 
-    def setProjectRestrictedView(projectIri: ProjectIri, restriction: RestrictedView): Update = {
-      val project                   = Rdf.iri(projectIri.value)
-      val (prevSize, prevWatermark) = (variable("prevSize"), variable("prevWatermark"))
+      project.restrictedView match {
+        case RestrictedView.Size(size) =>
+          pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewSize, size)
+        case RestrictedView.Watermark(watermark) =>
+          pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
+      }
+      pattern
+    }
+
+    def save(project: KnoraProject): Update = {
+      val id = Rdf.iri(project.id.value)
       val query = Queries
         .MODIFY()
-        .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
+        .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS)
         .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
-        .delete(
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize),
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark)
-        )
-        .insert(
-          restriction match {
-            case RestrictedView.Watermark(value) =>
-              project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, value)
-            case RestrictedView.Size(value) =>
-              project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, value)
-          }
-        )
+        .insert(toTriples(project))
+        .delete {
+          knoraProjectProperties.zipWithIndex
+            .foldLeft(id.has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject)) { case (p, (iri, index)) =>
+              p.andHas(iri, variable(s"n$index"))
+            }
+        }
         .where(
-          project.isA(Vocabulary.KnoraAdmin.KnoraProject),
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize).optional(),
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark).optional()
+          knoraProjectProperties.zipWithIndex
+            .foldLeft(id.has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject).optional()) { case (p, (iri, index)) =>
+              p.and(id.has(iri, variable(s"n$index")).optional())
+            }
         )
-      Update(query.getQueryString)
+      Update(query)
     }
+
+    private val knoraProjectProperties = List(
+      Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
+      Vocabulary.KnoraAdmin.projectDescription,
+      Vocabulary.KnoraAdmin.projectKeyword,
+      Vocabulary.KnoraAdmin.projectLogo,
+      Vocabulary.KnoraAdmin.projectLongname,
+      Vocabulary.KnoraAdmin.projectShortcode,
+      Vocabulary.KnoraAdmin.projectShortname,
+      Vocabulary.KnoraAdmin.status,
+      Vocabulary.KnoraAdmin.projectRestrictedViewSize,
+      Vocabulary.KnoraAdmin.projectRestrictedViewWatermark
+    )
+
   }
 
   val layer = ZLayer.derive[KnoraProjectRepoLive]

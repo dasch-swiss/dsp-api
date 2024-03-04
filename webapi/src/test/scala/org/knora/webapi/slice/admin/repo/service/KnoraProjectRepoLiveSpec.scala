@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
@@ -36,7 +37,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     List(Keyword.unsafeFrom("project1")),
     Some(Logo.unsafeFrom("logo.png")),
     Status.Active,
-    SelfJoin.CannotJoin
+    SelfJoin.CannotJoin,
+    RestrictedView.default
   )
 
   private val someProjectTrig =
@@ -53,7 +55,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:projectKeyword "project1" ;
         |    knora-admin:projectLogo "logo.png" ;
         |    knora-admin:status true ;
-        |    knora-admin:hasSelfJoinEnabled false .
+        |    knora-admin:hasSelfJoinEnabled false ;
+        |    knora-admin:projectRestrictedViewSize "!128,128" .
         |}
         |""".stripMargin
 
@@ -62,8 +65,18 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
 
   private def findById(id: ProjectIdentifierADM): ZIO[KnoraProjectRepoLive, Throwable, Option[KnoraProject]] =
     ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findById(id))
+  private def findById(id: ProjectIri): ZIO[KnoraProjectRepoLive, Throwable, Option[KnoraProject]] =
+    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findById(id))
+  private def save(project: KnoraProject): ZIO[KnoraProjectRepoLive, Throwable, KnoraProject] =
+    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.save(project))
 
   override def spec: Spec[Any, Any] = suite("KnoraProjectRepoLive")(
+    suite("save")(test("save a project") {
+      for {
+        saved   <- save(someProject)
+        project <- findById(someProject.id)
+      } yield assertTrue(project.contains(someProject), saved == someProject)
+    }),
     suite("findAll")(
       test("return all projects if some exist") {
         for {
