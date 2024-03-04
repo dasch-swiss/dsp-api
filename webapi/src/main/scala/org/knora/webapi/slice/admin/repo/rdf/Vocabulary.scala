@@ -41,6 +41,10 @@ object Vocabulary {
     val belongsToProject: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
     val groupName: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "groupName")
     val groupDescriptions: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "groupDescriptions")
+
+    // project properties
+    val projectRestrictedViewSize: Iri      = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewSize")
+    val projectRestrictedViewWatermark: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewWatermark")
   }
 
   object KnoraBase {

@@ -17,6 +17,12 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
+import org.knora.webapi.slice.admin.domain.model.Password
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
@@ -42,7 +48,6 @@ object Codecs {
     implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
     implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
     implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
-    implicit val restrictedViewSize: StringCodec[RestrictedViewSize]   = stringCodec(RestrictedViewSize.from)
     implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)
@@ -89,11 +94,14 @@ object Codecs {
     implicit val assetId: StringCodec[AssetId] = stringCodec(AssetId.from, _.value)
 
     // project
-    implicit val keyword: StringCodec[Keyword]                         = stringCodec(Keyword.from)
-    implicit val logo: StringCodec[Logo]                               = stringCodec(Logo.from)
-    implicit val longname: StringCodec[Longname]                       = stringCodec(Longname.from)
-    implicit val projectIri: StringCodec[ProjectIri]                   = stringCodec(ProjectIri.from)
-    implicit val restrictedViewSize: StringCodec[RestrictedViewSize]   = stringCodec(RestrictedViewSize.from)
+    implicit val keyword: StringCodec[Keyword]                        = stringCodec(Keyword.from)
+    implicit val logo: StringCodec[Logo]                              = stringCodec(Logo.from)
+    implicit val longname: StringCodec[Longname]                      = stringCodec(Longname.from)
+    implicit val projectIri: StringCodec[ProjectIri]                  = stringCodec(ProjectIri.from)
+    implicit val restrictedViewSize: StringCodec[RestrictedView.Size] = stringCodec(RestrictedView.Size.from)
+    implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
+      RestrictedView.Watermark.from
+    )
     implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname]                     = stringCodec(Shortname.from)

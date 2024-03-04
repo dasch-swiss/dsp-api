@@ -23,7 +23,6 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
@@ -274,7 +273,7 @@ final case class ProjectsADMRestServiceLive(
    * @param id   The project's id represented by iri, shortcode or shortname.
    * @param user Requesting user.
    * @param req  Contains the values to be set.
-   * @return [[ProjectRestrictedViewSizeResponseADM]].
+   * @return [[RestrictedViewResponse]].
    */
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
@@ -282,11 +281,11 @@ final case class ProjectsADMRestServiceLive(
     req: SetRestrictedViewRequest
   ): Task[RestrictedViewResponse] =
     for {
-      project      <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _            <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      watermarkBool = req.watermark.getOrElse(false)
-      _            <- projectService.setProjectRestrictedView(project, RestrictedView(req.size, watermarkBool))
-    } yield RestrictedViewResponse(req.size, watermarkBool)
+      project        <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _              <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      restrictedView <- req.toRestrictedView
+      newSettings    <- projectService.setProjectRestrictedView(project, restrictedView)
+    } yield RestrictedViewResponse.from(newSettings)
 
   override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
     convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))

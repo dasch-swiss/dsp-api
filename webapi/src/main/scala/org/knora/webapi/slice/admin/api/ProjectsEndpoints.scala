@@ -24,7 +24,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
@@ -94,17 +94,19 @@ final case class ProjectsEndpoints(
   object Secured {
     private val bodyProjectSetRestrictedViewSizeRequest =
       zioJsonBody[SetRestrictedViewRequest]
-        .default(SetRestrictedViewRequest(RestrictedViewSize.default, watermark = Some(false)))
         .description(
-          "The restricted view settings to be set.\n" +
-            "The image restrictions support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
+          "Set how all still image resources of a projects should be displayed when viewed as restricted.\n" +
+            "This can be either a size restriction or a watermark.\n" +
+            "For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:\n" +
             "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
             "greater than d, while maintaining the aspect ratio.\n" +
             "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
             "of the extracted region. 1<= n <= 100.\n\n" +
-            "If the watermark is set to `true`, the returned image will be watermarked."
+            "If the watermark is set to `true`, the returned image will be watermarked, " +
+            "otherwise the default size " + RestrictedView.Size.default.value + " is set.\n\n" +
+            "It is only possible to set either the size or the watermark, not both at the same time."
         )
-        .example(SetRestrictedViewRequest(RestrictedViewSize.default, watermark = Some(false)))
+        .example(SetRestrictedViewRequest(Some(RestrictedView.Size.default), None))
 
     val postAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByIri / restrictedViewSettings)
