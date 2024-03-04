@@ -103,7 +103,6 @@ private final case class ApiRoutesImpl(
                 HealthRoute().makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
-                RejectingRoute(appConfig, runtime).makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ValuesRouteV2().makeRoute ~

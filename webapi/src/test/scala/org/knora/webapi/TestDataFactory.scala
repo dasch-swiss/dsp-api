@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model._
 
 /**
  * Helps in creating value objects for tests.
@@ -60,6 +61,17 @@ object TestDataFactory {
       isInGroup = Chunk.empty,
       isInSystemAdminGroup = SystemAdmin.IsSystemAdmin,
       isInProjectAdminGroup = Chunk.empty
+    )
+  }
+
+  object UserGroup {
+    val testUserGroup: KnoraUserGroup = KnoraUserGroup(
+      GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"),
+      GroupName.unsafeFrom("User Group"),
+      GroupDescriptions.unsafeFrom(List(V2.StringLiteralV2("one user group to rule them all", None))),
+      GroupStatus.from(true),
+      Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
+      GroupSelfJoin.from(false)
     )
   }
 
