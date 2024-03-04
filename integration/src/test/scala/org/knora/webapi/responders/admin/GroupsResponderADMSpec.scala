@@ -11,7 +11,6 @@ import dsp.errors.*
 import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
@@ -186,7 +185,17 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "return 'BadRequest' if nothing would be changed during the update" in {
-        an[BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.updateGroup(
+            GroupIri.unsafeFrom(newGroupIri.get),
+            GroupUpdateRequest(None, None, None, None),
+            UUID.randomUUID
+          )
+        )
+        assertFailsWithA[BadRequestException](
+          exit,
+          "No data would be changed. Aborting update request."
+        )
       }
     }
 
