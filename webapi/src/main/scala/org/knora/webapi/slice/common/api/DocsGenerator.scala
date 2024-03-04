@@ -32,10 +32,7 @@ import org.knora.webapi.slice.admin.api.PermissionsEndpoints
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
 import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
-import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 
@@ -48,9 +45,6 @@ final case class DocsNoopAuthenticator() extends Authenticator {
   override def doAuthenticateV2(requestContext: RequestContext): Task[HttpResponse]                      = ???
   override def presentLoginFormV2(requestContext: RequestContext): Task[HttpResponse]                    = ???
   override def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[Boolean]         = ???
-  override def getUserByIri(identifier: UserIri): Task[User]                                             = ???
-  override def getUserByEmail(identifier: Email): Task[User]                                             = ???
-  override def getUserByUsername(identifier: Username): Task[User]                                       = ???
 }
 object DocsNoopAuthenticator {
   val layer = ZLayer.succeed(DocsNoopAuthenticator())

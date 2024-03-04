@@ -21,12 +21,8 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserGetByIriADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceClearCache
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -39,12 +35,13 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedViewSize
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 /**
  * Returns information about projects.
@@ -172,11 +169,12 @@ trait ProjectsResponderADM {
 
 final case class ProjectsResponderADMLive(
   private val iriService: IriService,
-  private val messageRelay: MessageRelay,
+  private val cacheService: CacheService,
   private val permissionsResponderADM: PermissionsResponderADM,
   private val predicateObjectMapper: PredicateObjectMapper,
   private val projectService: ProjectADMService,
   private val triplestore: TriplestoreService,
+  private val userService: UserService,
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
@@ -279,25 +277,9 @@ final case class ProjectsResponderADMLive(
                       .map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris =
-        if (statements.nonEmpty) { statements.map(_._1.toString) }
-        else { Seq.empty[IRI] }
-
-      maybeUserFutures: Seq[Task[Option[User]]] =
-        userIris.map { userIri =>
-          messageRelay
-            .ask[Option[User]](
-              UserGetByIriADM(
-                identifier = UserIri.unsafeFrom(userIri),
-                userInformationTypeADM = UserInformationType.Restricted,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )
-            )
-        }
-      maybeUsers      <- ZioHelper.sequence(maybeUserFutures)
-      users: Seq[User] = maybeUsers.flatten
-
-    } yield ProjectMembersGetResponseADM(members = users)
+      userIris = statements.map { case (s: SubjectV2, _) => UserIri.unsafeFrom(s.value) }
+      users   <- userService.findUsersByIris(userIris)
+    } yield ProjectMembersGetResponseADM(users)
 
   /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
@@ -335,23 +317,9 @@ final case class ProjectsResponderADMLive(
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris = if (statements.nonEmpty) { statements.map(_._1.toString) }
-                 else { Seq.empty[IRI] }
-
-      maybeUserTasks: Seq[Task[Option[User]]] = userIris.map { userIri =>
-                                                  messageRelay
-                                                    .ask[Option[User]](
-                                                      UserGetByIriADM(
-                                                        identifier = UserIri.unsafeFrom(userIri),
-                                                        userInformationTypeADM = UserInformationType.Restricted,
-                                                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                      )
-                                                    )
-                                                }
-      maybeUsers      <- ZioHelper.sequence(maybeUserTasks)
-      users: Seq[User] = maybeUsers.flatten
-
-    } yield ProjectAdminMembersGetResponseADM(members = users)
+      userIris = statements.map { case (subject, _) => UserIri.unsafeFrom(subject.value) }
+      users   <- userService.findUsersByIris(userIris)
+    } yield ProjectAdminMembersGetResponseADM(users)
 
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
@@ -497,8 +465,8 @@ final case class ProjectsResponderADMLive(
                .findByProjectIdentifier(projectId)
                .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found. Aborting update request."))
 
-        // we are changing the project, so lets get rid of the cached copy
-        _ <- messageRelay.ask[Any](CacheServiceClearCache)
+        // we are changing the project, so lets get rid of the cache
+        _ <- cacheService.clearCache()
 
         /* Update project */
         updateQuery = sparql.admin.txt.updateProject(
@@ -811,20 +779,18 @@ final case class ProjectsResponderADMLive(
 }
 
 object ProjectsResponderADMLive {
-  val layer: ZLayer[
-    IriService & MessageRelay & PermissionsResponderADM & PredicateObjectMapper & ProjectADMService & StringFormatter & TriplestoreService,
-    Nothing,
-    ProjectsResponderADMLive
-  ] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       iris    <- ZIO.service[IriService]
+      cs      <- ZIO.service[CacheService]
       ps      <- ZIO.service[ProjectADMService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      handler <- mr.subscribe(ProjectsResponderADMLive(iris, mr, pr, po, ps, ts, sf))
+      us      <- ZIO.service[UserService]
+      handler <- mr.subscribe(ProjectsResponderADMLive(iris, cs, pr, po, ps, ts, us, sf))
     } yield handler
   }
 }
