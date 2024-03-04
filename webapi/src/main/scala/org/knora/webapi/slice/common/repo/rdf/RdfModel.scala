@@ -341,6 +341,13 @@ final case class RdfResource(private val res: Resource) {
   def getObjectIris(propertyIri: String): IO[RdfError, Chunk[InternalIri]] =
     getObjectUris(propertyIri).map(_.map(InternalIri))
 
+  def getObjectIrisConvert[A](prop: String)(implicit map: String => Either[String, A]) =
+    getObjectIris(prop).flatMap { iris =>
+      ZIO.foreach(iris) { iri =>
+        ZIO.fromEither(map(iri.value)).mapError(err => ConversionError(s"Unable to parse $iri: $err"))
+      }
+    }
+
   /**
    * Returns the IRIs of the objects of a given predicate IRI.
    * Fails if the objects are not present.
