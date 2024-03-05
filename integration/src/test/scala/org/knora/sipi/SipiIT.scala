@@ -23,7 +23,6 @@ import scala.util.Try
 
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
@@ -317,7 +316,11 @@ object MockDspApiServer {
 
   def resetAndStubGetResponse(url: String, status: Int): URIO[WireMockServer, WireMockServer] =
     resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetJsonResponse(server, url, status)))
-  def resetAndStubGetResponse(url: String, status: Int, body: KnoraResponseADM): URIO[WireMockServer, WireMockServer] =
+  def resetAndStubGetResponse(
+    url: String,
+    status: Int,
+    body: PermissionCodeAndProjectRestrictedViewSettings,
+  ): URIO[WireMockServer, WireMockServer] =
     resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetJsonResponse(server, url, status, Some(body))))
 
   def resetAndAllowWithPermissionCode(
@@ -349,9 +352,10 @@ object MockDspApiServer {
     server: WireMockServer,
     url: String,
     status: Int,
-    body: Option[KnoraResponseADM] = None,
+    body: Option[PermissionCodeAndProjectRestrictedViewSettings] = None,
   ): Unit = {
-    val json         = body.map(_.toJsValue.compactPrint).orNull
+    val json =
+      body.map(it => PermissionCodeAndProjectRestrictedViewSettings.codec.encoder.encodeJson(it).toString).orNull
     val jsonResponse = aResponse().withStatus(status).withBody(json).withHeader("Content-Type", "application/json")
     val stubBuilder  = get(urlEqualTo(url)).willReturn(jsonResponse)
     server.stubFor(stubBuilder)
