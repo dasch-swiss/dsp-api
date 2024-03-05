@@ -60,7 +60,7 @@ final case class ProjectADMService(
            )
   } yield prj
 
-  private def toKnoraProject(project: ProjectADM): KnoraProject =
+  private def toKnoraProject(project: ProjectADM, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
       id = ProjectIri.unsafeFrom(project.id),
       shortname = Shortname.unsafeFrom(project.shortname),
@@ -72,7 +72,8 @@ final case class ProjectADMService(
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
       status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin)
+      selfjoin = SelfJoin.from(project.selfjoin),
+      restrictedView
     )
 
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
@@ -101,11 +102,11 @@ final case class ProjectADMService(
       case RestrictedView.Watermark(false) => RestrictedView.default
       case s                               => s
     }
-    projectRepo.setProjectRestrictedView(project, newSettings).as(newSettings)
+    projectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
   }
 
   def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[RestrictedView] =
-    setProjectRestrictedView(toKnoraProject(project), settings)
+    setProjectRestrictedView(toKnoraProject(project, settings), settings)
 }
 
 object ProjectADMService {

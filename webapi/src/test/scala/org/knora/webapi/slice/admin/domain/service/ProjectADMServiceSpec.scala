@@ -14,6 +14,7 @@ import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectADMServiceSpec extends ZIOSpecDefault {
@@ -51,7 +52,8 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           keywords = List.empty,
           logo = None,
           status = Status.Active,
-          selfjoin = SelfJoin.CanJoin
+          selfjoin = SelfJoin.CanJoin,
+          restrictedView = RestrictedView.default
         )
         assertTrue(
           ProjectADMService
