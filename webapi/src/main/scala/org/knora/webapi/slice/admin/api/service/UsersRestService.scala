@@ -60,7 +60,7 @@ final case class UsersRestService(
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
                   .map(_.map(_.filterUserInformation(requestingUser, UserInformationType.Restricted)).sorted)
                   .map(UsersGetResponseADM.apply)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   def deleteUser(requestingUser: User, deleteIri: UserIri): Task[UserResponseADM] = for {
@@ -83,7 +83,7 @@ final case class UsersRestService(
       .findUserByIri(userIri)
       .map(_.map(_.groups).getOrElse(Seq.empty))
       .map(UserGroupMembershipsGetResponseADM)
-      .flatMap(format.toExternal)
+      .flatMap(format.toExternalADM)
 
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserResponseADM] =
     for {
@@ -96,7 +96,7 @@ final case class UsersRestService(
     for {
       kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProject)
-      external <- format.toExternal(UserProjectMembershipsGetResponseADM(projects))
+      external <- format.toExternalADM(UserProjectMembershipsGetResponseADM(projects))
     } yield external
 
   private def getKnoraUserOrNotFound(userIri: UserIri) =
@@ -106,7 +106,7 @@ final case class UsersRestService(
     for {
       kUser    <- getKnoraUserOrNotFound(userIri)
       projects <- projectService.findByIds(kUser.isInProjectAdminGroup)
-      external <- format.toExternal(UserProjectAdminMembershipsGetResponseADM(projects))
+      external <- format.toExternalADM(UserProjectAdminMembershipsGetResponseADM(projects))
     } yield external
 
   def getUserByUsername(requestingUser: User, username: Username): Task[UserResponseADM] = for {
@@ -218,7 +218,7 @@ final case class UsersRestService(
 
   private def asExternalUserResponseADM(requestingUser: User, user: User): Task[UserResponseADM] = {
     val userFiltered = user.filterUserInformation(requestingUser, UserInformationType.Restricted)
-    format.toExternal(UserResponseADM(userFiltered))
+    format.toExternalADM(UserResponseADM(userFiltered))
   }
 
   def addUserToProjectAsAdmin(

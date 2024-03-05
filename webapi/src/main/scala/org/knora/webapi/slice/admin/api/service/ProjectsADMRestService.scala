@@ -97,7 +97,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def listAllProjects(): Task[ProjectsGetResponseADM] = for {
     internal <- responder.getNonSystemProjects
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -111,7 +111,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse] = for {
     internal <- responder.getSingleProjectADMRequest(id)
-    external <- format.toExternalNonSpray(internal)
+    external <- format.toExternal(internal)
   } yield external
 
   /**
@@ -128,7 +128,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
     internal <- ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -147,7 +147,7 @@ final case class ProjectsADMRestServiceLive(
     for {
       apiId    <- Random.nextUUID
       internal <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
   }
 
@@ -169,7 +169,7 @@ final case class ProjectsADMRestServiceLive(
     user: User,
   ): Task[ProjectOperationResponseADM] = for {
     internal <- Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -203,7 +203,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] = for {
     internal <- responder.projectMembersGetRequestADM(id, user)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -222,7 +222,7 @@ final case class ProjectsADMRestServiceLive(
     id: ProjectIdentifierADM,
   ): Task[ProjectAdminMembersGetResponseADM] = for {
     internal <- responder.projectAdminMembersGetRequestADM(id, user)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -235,7 +235,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] = for {
     internal <- responder.projectsKeywordsGetRequestADM()
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -249,7 +249,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM] = for {
     internal <- responder.projectKeywordsGetRequestADM(iri)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -264,7 +264,7 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
       internal <- responder.projectRestrictedViewSettingsGetRequestADM(id)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   /**

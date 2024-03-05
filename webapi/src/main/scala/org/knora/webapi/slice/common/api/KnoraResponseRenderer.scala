@@ -36,13 +36,13 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
    * @param response the response that should be transformed
    * @return the transformed [[AdminKnoraResponseADM]]
    */
-  def toExternal[A <: AdminKnoraResponseADM](response: A): Task[A] =
+  def toExternalADM[A <: AdminKnoraResponseADM](response: A): Task[A] =
     RouteUtilADM
       .transformResponseIntoExternalFormat(response)
       .provide(ZLayer.succeed(stringFormatter))
       .mapAttempt(_.asInstanceOf[A])
 
-  def toExternalNonSpray[A <: AdminResponse](response: A): Task[A] =
+  def toExternal[A <: AdminResponse](response: A): Task[A] =
     RouteUtilADM
       .transformResponseIntoExternalFormat(response)
       .provide(ZLayer.succeed(stringFormatter))
