@@ -35,7 +35,7 @@ object AppRouter {
     core.ActorSystem & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & MessageRelay &
       OntologyCache & OntologyHelpers & OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
     Nothing,
-    AppRouter
+    AppRouter,
   ] =
     ZLayer {
       for {
@@ -44,16 +44,16 @@ object AppRouter {
         runtime <-
           ZIO.runtime[
             CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers &
-              OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2
+              OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
           ]
       } yield new AppRouter {
         implicit val system: org.apache.pekko.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(
-            core.actors.RoutingActor(messageRelay, runtime)
+            core.actors.RoutingActor(messageRelay, runtime),
           ).withRouter(new RoundRobinPool(1_000)),
-          name = APPLICATION_MANAGER_ACTOR_NAME
+          name = APPLICATION_MANAGER_ACTOR_NAME,
         )
       }
     }.tap(_ => ZIO.logInfo(">>> AppRouter Initialized <<<"))

@@ -23,8 +23,8 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    )
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
   )
 
   "The Sipi responder" should {
@@ -34,8 +34,8 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
         AssetPermissionsResponder.getFileInfoForSipiADM(
           ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
-          SharedTestDataADM.incunabulaMemberUser
-        )
+          SharedTestDataADM.incunabulaMemberUser,
+        ),
       )
 
       actual shouldEqual PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None)
@@ -47,13 +47,13 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
         AssetPermissionsResponder.getFileInfoForSipiADM(
           ShortcodeIdentifier.unsafeFrom("0803"),
           "incunabula_0000003328.jp2",
-          SharedTestDataADM.anonymousUser
-        )
+          SharedTestDataADM.anonymousUser,
+        ),
       )
 
       actual shouldEqual PermissionCodeAndProjectRestrictedViewSettings(
         permissionCode = 1,
-        Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = true))
+        Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = true)),
       )
     }
   }

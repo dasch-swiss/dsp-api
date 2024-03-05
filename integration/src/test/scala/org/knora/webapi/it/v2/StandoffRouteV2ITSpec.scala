@@ -71,12 +71,12 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(
       path = "test_data/project_data/freetest-data.ttl",
-      name = "http://www.knora.org/data/0001/freetest"
-    )
+      name = "http://www.knora.org/data/0001/freetest",
+    ),
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
@@ -86,15 +86,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val formDataMapping = Multipart.FormData(
       Multipart.FormData.BodyPart(
         "json",
-        HttpEntity(ContentTypes.`application/json`, mappingParams)
+        HttpEntity(ContentTypes.`application/json`, mappingParams),
       ),
       Multipart.FormData.BodyPart(
         "xml",
-        HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), mappingFile)
-      )
+        HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), mappingFile),
+      ),
     )
     val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-      BasicHttpCredentials(anythingUserEmail, password)
+      BasicHttpCredentials(anythingUserEmail, password),
     )
     singleAwaitingRequest(mappingRequest)
   }
@@ -103,35 +103,35 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     val jsonLDEntity = Map(
       "@type" -> "freetest:FreeTest".toJson,
       "knora-api:attachedToProject" -> Map(
-        "@id" -> "http://rdfh.ch/projects/0001".toJson
+        "@id" -> "http://rdfh.ch/projects/0001".toJson,
       ).toJson,
       "rdfs:label" -> "obj_inst1".toJson,
       "freetest:hasText" -> Map(
         "@type"                    -> "knora-api:TextValue".toJson,
         "knora-api:textValueAsXml" -> xmlContent.toJson,
         "knora-api:textValueHasMapping" -> Map(
-          "@id" -> mappingIRI.toJson
-        ).toJson
+          "@id" -> mappingIRI.toJson,
+        ).toJson,
       ).toJson,
       "@context" -> Map(
         "anything"  -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
         "freetest"  -> freetestOntologyIRI.toJson,
         "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
         "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
-        "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
-      ).toJson
+        "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson,
+      ).toJson,
     ).toJson.prettyPrint
 
     val resourceRequest = Post(
       s"$baseApiUrl/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
     singleAwaitingRequest(resourceRequest)
   }
 
   def getTextValueAsDocument(iri: String): JsonLDDocument = {
     val request = Get(
-      s"$baseApiUrl/v2/resources/$iri"
+      s"$baseApiUrl/v2/resources/$iri",
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
     getResponseJsonLD(request)
   }
@@ -141,15 +141,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
       val response = createResourceWithTextValue(
         xmlContent = xmlContent,
-        mappingIRI = OntologyConstants.KnoraBase.StandardMapping
+        mappingIRI = OntologyConstants.KnoraBase.StandardMapping,
       )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
         resourceResponseDocument.body.requireStringWithValidation(
           JsonLDKeywords.ID,
-          validationFun
-        )
+          validationFun,
+        ),
       )
     }
 
@@ -164,7 +164,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue
+        OntologyConstants.KnoraApiV2Complex.TextValue,
       )
       textValueObject
         .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
@@ -207,18 +207,18 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
           "json",
-          HttpEntity(ContentTypes.`application/json`, mappingParams)
+          HttpEntity(ContentTypes.`application/json`, mappingParams),
         ),
         Multipart.FormData.BodyPart(
           "xml",
           HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
-          Map("filename" -> "brokenMapping.xml")
-        )
+          Map("filename" -> "brokenMapping.xml"),
+        ),
       )
 
       // create standoff from XML
       val request = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       )
       val response = singleAwaitingRequest(request)
       val status   = response.status
@@ -226,17 +226,17 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
 
       assert(
         status == StatusCodes.OK,
-        s"creation of a mapping returned a non successful HTTP status code: $text"
+        s"creation of a mapping returned a non successful HTTP status code: $text",
       )
 
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("../test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld")
+          Paths.get("../test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
         )
 
       compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = text
+        receivedJSONLD = text,
       )
     }
 
@@ -256,15 +256,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
       val response = createResourceWithTextValue(
         xmlContent = xmlContent,
-        mappingIRI = freetestCustomMappingIRI
+        mappingIRI = freetestCustomMappingIRI,
       )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
         resourceResponseDocument.body.requireStringWithValidation(
           JsonLDKeywords.ID,
-          validationFun
-        )
+          validationFun,
+        ),
       )
     }
 
@@ -279,7 +279,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue
+        OntologyConstants.KnoraApiV2Complex.TextValue,
       )
       textValueObject
         .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
@@ -300,7 +300,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       // get authentication token
       val params = Map(
         "email"    -> "root@example.com",
-        "password" -> "test"
+        "password" -> "test",
       ).toJson.compactPrint
       val loginRequest                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val loginResponse: HttpResponse = singleAwaitingRequest(loginRequest)
@@ -312,8 +312,8 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
         Multipart.FormData.BodyPart(
           "file",
           HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, Paths.get(pathToFreetestXSLTFile)),
-          Map("filename" -> freetestXSLTFile)
-        )
+          Map("filename" -> freetestXSLTFile),
+        ),
       )
       val sipiRequest  = Post(s"${baseInternalSipiUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
@@ -327,14 +327,14 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
         .make(
           fileType = FileType.TextFile,
           internalFilename = uploadedFile.internalFilename,
-          resourceIRI = Some(freetestXSLTIRI)
+          resourceIRI = Some(freetestXSLTIRI),
         )
         .toJsonLd(
-          className = Some("XSLTransformation")
+          className = Some("XSLTransformation"),
         )
       val fileRepresentationRequest = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, uploadFileJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, uploadFileJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val fileRepresentationResponse = singleAwaitingRequest(fileRepresentationRequest)
       assert(StatusCodes.OK == fileRepresentationResponse.status, responseToString(fileRepresentationResponse))
@@ -358,15 +358,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
       val response = createResourceWithTextValue(
         xmlContent = xmlContent,
-        mappingIRI = freetestCustomMappingWithTranformationIRI
+        mappingIRI = freetestCustomMappingWithTranformationIRI,
       )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
         resourceResponseDocument.body.requireStringWithValidation(
           JsonLDKeywords.ID,
-          validationFun
-        )
+          validationFun,
+        ),
       )
     }
 
@@ -382,7 +382,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       textValueObject
         .getRequiredString(JsonLDKeywords.TYPE)
         .fold(msg => throw BadRequestException(msg), identity) should equal(
-        OntologyConstants.KnoraApiV2Complex.TextValue
+        OntologyConstants.KnoraApiV2Complex.TextValue,
       )
       textValueObject
         .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)

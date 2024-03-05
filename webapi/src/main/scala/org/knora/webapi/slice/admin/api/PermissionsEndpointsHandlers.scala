@@ -31,18 +31,18 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 final case class PermissionsEndpointsHandlers(
   permissionsEndpoints: PermissionsEndpoints,
   restService: PermissionsRestService,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
 
   private val postPermissionsApHandler =
     SecuredEndpointHandler[
       CreateAdministrativePermissionAPIRequestADM,
-      AdministrativePermissionCreateResponseADM
+      AdministrativePermissionCreateResponseADM,
     ](
       permissionsEndpoints.postPermissionsAp,
       user => { case (request: CreateAdministrativePermissionAPIRequestADM) =>
         restService.createAdministrativePermission(request, user)
-      }
+      },
     )
 
   private val getPermissionsApByProjectIriHandler =
@@ -50,7 +50,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.getPermissionsApByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsApByProjectIri(projectIri.value, user)
-      }
+      },
     )
 
   private val getPermissionsApByProjectAndGroupIriHandler =
@@ -58,7 +58,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
       user => { case (projectIri: IriIdentifier, groupIri: GroupIri) =>
         restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
-      }
+      },
     )
 
   private val getPermissionsDaopByProjectIriHandler =
@@ -66,7 +66,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.getPermissionsDoapByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsDaopByProjectIri(projectIri.value, user)
-      }
+      },
     )
 
   private val getPermissionsByProjectIriHandler =
@@ -74,7 +74,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.getPermissionsByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsByProjectIri(projectIri.value, user)
-      }
+      },
     )
 
   private val deletePermissionHandler =
@@ -82,40 +82,40 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.deletePermission,
       user => { case (permissionIri: PermissionIri) =>
         restService.deletePermission(permissionIri, user)
-      }
+      },
     )
 
   private val postPermissionsDoapHandler =
     SecuredEndpointHandler[
       CreateDefaultObjectAccessPermissionAPIRequestADM,
-      DefaultObjectAccessPermissionCreateResponseADM
+      DefaultObjectAccessPermissionCreateResponseADM,
     ](
       permissionsEndpoints.postPermissionsDoap,
       user => { case (request: CreateDefaultObjectAccessPermissionAPIRequestADM) =>
         restService.createDefaultObjectAccessPermission(request, user)
-      }
+      },
     )
 
   private val putPermissionsProjectIriGroupHandler =
     SecuredEndpointHandler[
       (PermissionIri, ChangePermissionGroupApiRequestADM),
-      PermissionGetResponseADM
+      PermissionGetResponseADM,
     ](
       permissionsEndpoints.putPermissionsProjectIriGroup,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionGroupApiRequestADM) =>
         restService.updatePermissionGroup(permissionIri, request, user)
-      }
+      },
     )
 
   private val putPermissionsHasPermissionsHandler =
     SecuredEndpointHandler[
       (PermissionIri, ChangePermissionHasPermissionsApiRequestADM),
-      PermissionGetResponseADM
+      PermissionGetResponseADM,
     ](
       permissionsEndpoints.putPerrmissionsHasPermissions,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionHasPermissionsApiRequestADM) =>
         restService.updatePermissionHasPermissions(permissionIri, request, user)
-      }
+      },
     )
 
   private val putPermissionsResourceClass =
@@ -123,7 +123,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.putPermisssionsResourceClass,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionResourceClassApiRequestADM) =>
         restService.updatePermissionResourceClass(permissionIri, request, user)
-      }
+      },
     )
 
   private val putPermissionsProperty =
@@ -131,7 +131,7 @@ final case class PermissionsEndpointsHandlers(
       permissionsEndpoints.putPermissionsProperty,
       user => { case (permissionIri: PermissionIri, request: ChangePermissionPropertyApiRequestADM) =>
         restService.updatePermissionProperty(permissionIri, request, user)
-      }
+      },
     )
 
   private val securedHandlers =
@@ -146,7 +146,7 @@ final case class PermissionsEndpointsHandlers(
       putPermissionsProperty,
       putPermissionsResourceClass,
       deletePermissionHandler,
-      postPermissionsDoapHandler
+      postPermissionsDoapHandler,
     ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHanders = securedHandlers

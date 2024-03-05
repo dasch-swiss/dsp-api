@@ -40,7 +40,7 @@ object Asset {
 final case class ProjectImportServiceLive(
   private val config: Triplestore,
   private val exportStorage: ProjectExportStorageService,
-  private val dspIngestClient: DspIngestClient
+  private val dspIngestClient: DspIngestClient,
 ) extends ProjectImportService {
 
   private val fusekiBaseUrl: URL = {

@@ -18,10 +18,10 @@ class ListsResponderV2SpecFullData {
   val treeList = ListGetResponseV2(
     list = ListADM(
       listinfo = SharedListsTestDataADM.treeListInfo.sorted,
-      children = SharedListsTestDataADM.treeListChildNodes.map(_.sorted)
+      children = SharedListsTestDataADM.treeListChildNodes.map(_.sorted),
     ),
     userLang = "de",
-    fallbackLang = "en"
+    fallbackLang = "en",
   )
 
   val treeNode = NodeGetResponseV2(
@@ -32,16 +32,16 @@ class ListsResponderV2SpecFullData {
         stringLiterals = Vector(
           StringLiteralV2(
             value = "Tree list node 11",
-            language = Some("en")
-          )
-        )
+            language = Some("en"),
+          ),
+        ),
       ),
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/0001/treeList",
-      comments = StringLiteralSequenceV2.empty
+      comments = StringLiteralSequenceV2.empty,
     ),
     userLang = "de",
-    fallbackLang = "en"
+    fallbackLang = "en",
   )
 
 }

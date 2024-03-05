@@ -29,13 +29,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 final case class AssetPermissionsResponder(
   private val projectsResponder: ProjectsResponderADM,
   private val triplestoreService: TriplestoreService,
-  private implicit val sf: StringFormatter
+  private implicit val sf: StringFormatter,
 ) {
 
   def getPermissionCodeAndProjectRestrictedViewSettings(
     shortcode: ShortcodeIdentifier,
     filename: String,
-    requestingUser: User
+    requestingUser: User,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
       queryResponse  <- queryForFileValue(filename)
@@ -54,14 +54,14 @@ final case class AssetPermissionsResponder(
   private def getPermissionCode(
     queryResponse: SparqlExtendedConstructResponse,
     filename: String,
-    requestingUser: User
+    requestingUser: User,
   ): Task[Int] =
     ZIO.attempt {
       val fileValueIriSubject = queryResponse.statements.keys.head match {
         case iriSubject: IriSubjectV2 => iriSubject
         case _ =>
           throw InconsistentRepositoryDataException(
-            s"The subject of the file value with filename $filename is not an IRI"
+            s"The subject of the file value with filename $filename is not an IRI",
           )
       }
 
@@ -77,7 +77,7 @@ final case class AssetPermissionsResponder(
 
   private def buildResponse(
     shortcode: ShortcodeIdentifier,
-    permissionCode: Int
+    permissionCode: Int,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     permissionCode match {
       case 1 =>
@@ -93,7 +93,7 @@ final case class AssetPermissionsResponder(
 object AssetPermissionsResponder {
   def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
     ZIO.serviceWithZIO[AssetPermissionsResponder](
-      _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user)
+      _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user),
     )
 
   val layer = ZLayer.derive[AssetPermissionsResponder]

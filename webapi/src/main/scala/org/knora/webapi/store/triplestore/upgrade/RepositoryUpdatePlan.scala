@@ -23,27 +23,27 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(
         versionNumber = 1,
         plugin = new UpgradePluginPR1307(),
-        prBasedVersionString = Some("PR 1307")
+        prBasedVersionString = Some("PR 1307"),
       ),
       PluginForKnoraBaseVersion(
         versionNumber = 2,
         plugin = new UpgradePluginPR1322(),
-        prBasedVersionString = Some("PR 1322")
+        prBasedVersionString = Some("PR 1322"),
       ),
       PluginForKnoraBaseVersion(
         versionNumber = 3,
         plugin = new UpgradePluginPR1367(),
-        prBasedVersionString = Some("PR 1367")
+        prBasedVersionString = Some("PR 1367"),
       ),
       PluginForKnoraBaseVersion(
         versionNumber = 4,
         plugin = new UpgradePluginPR1372(),
-        prBasedVersionString = Some("PR 1372")
+        prBasedVersionString = Some("PR 1372"),
       ),
       PluginForKnoraBaseVersion(
         versionNumber = 5,
         plugin = new MigrateOnlyBuiltInGraphs,
-        prBasedVersionString = Some("PR 1440")
+        prBasedVersionString = Some("PR 1440"),
       ),
       PluginForKnoraBaseVersion(versionNumber = 6, plugin = new MigrateOnlyBuiltInGraphs), // PR 1206
       PluginForKnoraBaseVersion(versionNumber = 7, plugin = new MigrateOnlyBuiltInGraphs), // PR 1403
@@ -62,7 +62,7 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 25, plugin = new MigrateOnlyBuiltInGraphs), // PR 2268
       PluginForKnoraBaseVersion(versionNumber = 26, plugin = new MigrateOnlyBuiltInGraphs), // PR 3003
       PluginForKnoraBaseVersion(versionNumber = 27, plugin = new MigrateOnlyBuiltInGraphs), // PR 3026
-      PluginForKnoraBaseVersion(versionNumber = 28, plugin = new MigrateOnlyBuiltInGraphs)  // PR 3038
+      PluginForKnoraBaseVersion(versionNumber = 28, plugin = new MigrateOnlyBuiltInGraphs), // PR 3038
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )
@@ -73,24 +73,24 @@ object RepositoryUpdatePlan {
   val builtInNamedGraphs: Set[RdfDataObject] = Set(
     RdfDataObject(
       path = "knora-ontologies/knora-admin.ttl",
-      name = "http://www.knora.org/ontology/knora-admin"
+      name = "http://www.knora.org/ontology/knora-admin",
     ),
     RdfDataObject(
       path = "knora-ontologies/knora-base.ttl",
-      name = "http://www.knora.org/ontology/knora-base"
+      name = "http://www.knora.org/ontology/knora-base",
     ),
     RdfDataObject(
       path = "knora-ontologies/salsah-gui.ttl",
-      name = "http://www.knora.org/ontology/salsah-gui"
+      name = "http://www.knora.org/ontology/salsah-gui",
     ),
     RdfDataObject(
       path = "knora-ontologies/standoff-onto.ttl",
-      name = "http://www.knora.org/ontology/standoff"
+      name = "http://www.knora.org/ontology/standoff",
     ),
     RdfDataObject(
       path = "knora-ontologies/standoff-data.ttl",
-      name = "http://www.knora.org/data/standoff"
-    )
+      name = "http://www.knora.org/data/standoff",
+    ),
   )
 
   /**
@@ -103,7 +103,7 @@ object RepositoryUpdatePlan {
   case class PluginForKnoraBaseVersion(
     versionNumber: Int,
     plugin: UpgradePlugin,
-    prBasedVersionString: Option[String] = None
+    prBasedVersionString: Option[String] = None,
   ) {
     lazy val versionString: String =
       prBasedVersionString match {

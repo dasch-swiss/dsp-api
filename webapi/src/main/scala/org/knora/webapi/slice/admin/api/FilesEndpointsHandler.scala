@@ -18,18 +18,18 @@ import org.knora.webapi.slice.common.domain.SparqlEncodedString
 final case class FilesEndpointsHandler(
   filesEndpoints: FilesEndpoints,
   assetPermissionsResponder: AssetPermissionsResponder,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
 
   private val getAdminFilesShortcodeFileIri =
     SecuredEndpointHandler[
       (ShortcodeIdentifier, SparqlEncodedString),
-      PermissionCodeAndProjectRestrictedViewSettings
+      PermissionCodeAndProjectRestrictedViewSettings,
     ](
       filesEndpoints.getAdminFilesShortcodeFileIri,
       (user: User) => { case (shortcode: ShortcodeIdentifier, filename: SparqlEncodedString) =>
         assetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename.value, user)
-      }
+      },
     )
 
   val allHandlers = List(getAdminFilesShortcodeFileIri).map(mapper.mapSecuredEndpointHandler(_))

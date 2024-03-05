@@ -14,7 +14,7 @@ case class ResourceInfo(
   creationDate: Instant,
   lastModificationDate: Option[Instant],
   deleteDate: Option[Instant],
-  isDeleted: Boolean
+  isDeleted: Boolean,
 )
 object ResourceInfo {
   def apply(iri: IRI, creationDate: Instant, lastModificationDate: Option[Instant]): ResourceInfo =

@@ -30,7 +30,7 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
       case ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
       case ShortnameIdentifier(shortname) => _.shortname == shortname
       case IriIdentifier(iri)             => _.id.value == iri.value
-    })
+    }),
   )
 
   override def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =

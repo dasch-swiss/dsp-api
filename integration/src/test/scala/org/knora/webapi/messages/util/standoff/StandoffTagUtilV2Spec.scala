@@ -36,7 +36,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -48,20 +48,20 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagStringAttributeV2(
           standoffPropertyIri =
             "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix".toSmartIri,
-          value = "correction"
+          value = "correction",
         ),
         StandoffTagStringAttributeV2(
           standoffPropertyIri =
             "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle".toSmartIri,
-          value = "titre"
-        )
+          value = "titre",
+        ),
       ),
       startIndex = 1,
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri
-    )
+      standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri,
+    ),
   )
 
   val standoff2: Vector[StandoffTagV2] = Vector(
@@ -76,7 +76,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -88,20 +88,20 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagStringAttributeV2(
           standoffPropertyIri =
             "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle".toSmartIri,
-          value = "titre"
+          value = "titre",
         ),
         StandoffTagStringAttributeV2(
           standoffPropertyIri =
             "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix".toSmartIri,
-          value = "correction"
-        )
+          value = "correction",
+        ),
       ),
       startIndex = 1,
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri
-    )
+      standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri,
+    ),
   )
 
   val sparqlResultsV1 = Map(
@@ -112,7 +112,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"             -> "235",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"              -> "JPyErhf2RVmq0QYTIAKwYw",
       "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"     -> "0",
@@ -120,7 +120,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"          -> "0",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"           -> "PQ2Xgu4mTSywsqHM8um1Tg",
       "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType" -> "letter",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
@@ -128,7 +128,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"         -> "295",
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"       -> "75",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"        -> "ysmmZTLdQEGP6dWtGOmZlg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID" -> "first",
@@ -137,8 +137,8 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"           -> "69",
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"         -> "5",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"          -> "98NJtln8QtaS5u7ahxeUfg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
-    )
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag",
+    ),
   )
 
   val sparqlResultsV2 = Map(
@@ -148,7 +148,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"         -> "295",
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"       -> "75",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"        -> "ysmmZTLdQEGP6dWtGOmZlg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID" -> "first",
@@ -157,7 +157,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"           -> "69",
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"         -> "5",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"          -> "98NJtln8QtaS5u7ahxeUfg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"     -> "0",
@@ -165,7 +165,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"          -> "0",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"           -> "PQ2Xgu4mTSywsqHM8um1Tg",
       "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType" -> "letter",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag",
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/3" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"       -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2",
@@ -175,8 +175,8 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       "http://www.knora.org/ontology/knora-base#standoffTagHasStart"             -> "235",
       "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"              -> "JPyErhf2RVmq0QYTIAKwYw",
       "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
-    )
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag",
+    ),
   )
 
   val expectedStandoffTagsV1: Vector[StandoffTagV2] = Vector(
@@ -189,14 +189,14 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       attributes = Vector(
         StandoffTagStringAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType".toSmartIri,
-          value = "letter"
-        )
+          value = "letter",
+        ),
       ),
       startIndex = 0,
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -209,7 +209,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 5,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -222,7 +222,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 75,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -233,15 +233,15 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       attributes = Vector(
         StandoffTagInternalReferenceAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference".toSmartIri,
-          value = "first"
-        )
+          value = "first",
+        ),
       ),
       startIndex = 3,
       endIndex = None,
       dataType = Some(StandoffDataTypeClasses.StandoffInternalReferenceTag),
       startPosition = 235,
-      standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag".toSmartIri
-    )
+      standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag".toSmartIri,
+    ),
   )
 
   val expectedStandoffTagsV2 = Vector(
@@ -254,14 +254,14 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       attributes = Vector(
         StandoffTagStringAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType".toSmartIri,
-          value = "letter"
-        )
+          value = "letter",
+        ),
       ),
       startIndex = 0,
       endIndex = None,
       dataType = None,
       startPosition = 0,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -274,7 +274,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 5,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -287,7 +287,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       endIndex = None,
       dataType = None,
       startPosition = 75,
-      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri
+      standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
     ),
     StandoffTagV2(
       endParentIndex = None,
@@ -298,15 +298,15 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       attributes = Vector(
         StandoffTagInternalReferenceAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference".toSmartIri,
-          value = "first"
-        )
+          value = "first",
+        ),
       ),
       startIndex = 3,
       endIndex = None,
       dataType = Some(StandoffDataTypeClasses.StandoffInternalReferenceTag),
       startPosition = 235,
-      standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag".toSmartIri
-    )
+      standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag".toSmartIri,
+    ),
   )
 
   "StandoffTagUtilV2" should {
@@ -323,14 +323,14 @@ class StandoffTagUtilV2Spec extends CoreSpec {
 
       val standoffTagsV1: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[StandoffTagUtilV2](
-          _.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUserProfile)
-        )
+          _.createStandoffTagsV2FromSelectResults(sparqlResultsV1, anythingUserProfile),
+        ),
       )
 
       val standoffTagsV2: Vector[StandoffTagV2] = UnsafeZioRun.runOrThrow(
         ZIO.serviceWithZIO[StandoffTagUtilV2](
-          _.createStandoffTagsV2FromSelectResults(sparqlResultsV2, anythingUserProfile)
-        )
+          _.createStandoffTagsV2FromSelectResults(sparqlResultsV2, anythingUserProfile),
+        ),
       )
 
       assert(standoffTagsV1 == expectedStandoffTagsV1)

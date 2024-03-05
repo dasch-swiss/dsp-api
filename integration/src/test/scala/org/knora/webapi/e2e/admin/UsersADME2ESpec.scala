@@ -48,7 +48,7 @@ class UsersADME2ESpec
   private def addProjectAdminUserCredentials() = addCredentials(projectAdminUser)
   private def addNormalUserCredentials()       = addCredentials(normalUser)
   private def addCredentials(user: User): RequestTransformer = addCredentials(
-    BasicHttpCredentials(user.email, "test")
+    BasicHttpCredentials(user.email, "test"),
   )
 
   private val normalUserIri    = SharedTestDataADM2.normalUser.userData.user_id.get
@@ -125,10 +125,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-users-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -144,10 +144,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -155,7 +155,7 @@ class UsersADME2ESpec
         /* Correct username and password */
         val request =
           Get(
-            baseApiUrl + s"/admin/users/email/${URLEncoder.encode(rootUser.email, "utf-8")}"
+            baseApiUrl + s"/admin/users/email/${URLEncoder.encode(rootUser.email, "utf-8")}",
           ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -165,7 +165,7 @@ class UsersADME2ESpec
       "return a single user profile identified by username" in {
         /* Correct username and password */
         val request = Get(
-          baseApiUrl + s"/admin/users/username/${SharedTestDataADM.rootUser.username}"
+          baseApiUrl + s"/admin/users/username/${SharedTestDataADM.rootUser.username}",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -184,10 +184,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-for-SystemAdmin-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -200,10 +200,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-for-itself-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -222,10 +222,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-for-nonSystemAdmin-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -244,10 +244,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-for-anonymous-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -260,10 +260,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-users-for-SystemAdmin-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -276,10 +276,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-users-for-ProjectAdmin-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -307,7 +307,7 @@ class UsersADME2ESpec
              |}""".stripMargin
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, validUserCreationRequest)
+          HttpEntity(ContentTypes.`application/json`, validUserCreationRequest),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.Unauthorized)
@@ -332,14 +332,14 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-with-custom-Iri-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createUserWithCustomIriRequest
-          )
+            text = createUserWithCustomIriRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, createUserWithCustomIriRequest)
+          HttpEntity(ContentTypes.`application/json`, createUserWithCustomIriRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -355,10 +355,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-with-custom-Iri-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -378,7 +378,7 @@ class UsersADME2ESpec
 
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, params)
+          HttpEntity(ContentTypes.`application/json`, params),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -408,7 +408,7 @@ class UsersADME2ESpec
 
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, createUserWithApostropheRequest)
+          HttpEntity(ContentTypes.`application/json`, createUserWithApostropheRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -433,7 +433,7 @@ class UsersADME2ESpec
         val userIriEncoded = java.net.URLEncoder.encode(otherCustomUserIri, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest)
+          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -478,14 +478,14 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createUserRequest
-          )
+            text = createUserRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+          HttpEntity(ContentTypes.`application/json`, createUserRequest),
         ) ~> addRootUserCredentials()
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -507,10 +507,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -532,14 +532,14 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-request-duplicate-username",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createUserRequest
-          )
+            text = createUserRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+          HttpEntity(ContentTypes.`application/json`, createUserRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -550,10 +550,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-response-duplicate-username",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -575,14 +575,14 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-request-duplicate-email",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createUserRequest
-          )
+            text = createUserRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/users",
-          HttpEntity(ContentTypes.`application/json`, createUserRequest)
+          HttpEntity(ContentTypes.`application/json`, createUserRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -593,16 +593,16 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-user-response-duplicate-email",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "authenticate the newly created user using HttpBasicAuth" in {
         val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials("donald.duck@example.org", "test")
+          BasicHttpCredentials("donald.duck@example.org", "test"),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -642,16 +642,16 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateUserRequest
-          )
+            text = updateUserRequest,
+          ),
         )
 
         val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest)
+          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -668,10 +668,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -686,16 +686,16 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-request-without-iri",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateUserRequest
-          )
+            text = updateUserRequest,
+          ),
         )
 
         val missingUserIri = ""
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$missingUserIri/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest)
+          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -706,16 +706,16 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-response-without-iri-1",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
         val missingUserIriNone = None
         val request2 = Put(
           baseApiUrl + s"/admin/users/iri/$missingUserIriNone/BasicUserInformation",
-          HttpEntity(ContentTypes.`application/json`, updateUserRequest)
+          HttpEntity(ContentTypes.`application/json`, updateUserRequest),
         ) ~> addRootUserCredentials()
         val response2: HttpResponse = singleAwaitingRequest(request2)
 
@@ -726,10 +726,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-response-without-iri-2",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response2)
-          )
+            text = responseToString(response2),
+          ),
         )
 
       }
@@ -743,7 +743,7 @@ class UsersADME2ESpec
 
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(customUserIri, "utf-8")}/Password",
-          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test"))
         val response1: HttpResponse = singleAwaitingRequest(request1)
         response1.status should be(StatusCodes.Forbidden)
@@ -761,15 +761,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-password-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeUserPasswordRequest
-          )
+            text = changeUserPasswordRequest,
+          ),
         )
 
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
-          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
         logger.debug(s"response: ${response1.toString}")
@@ -780,15 +780,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-password-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response1)
-          )
+            text = responseToString(response1),
+          ),
         )
 
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUser.email, "test123456")
+          BasicHttpCredentials(normalUser.email, "test123456"),
         ) // new password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -806,7 +806,7 @@ class UsersADME2ESpec
 
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
-          HttpEntity(ContentTypes.`application/json`, params01)
+          HttpEntity(ContentTypes.`application/json`, params01),
         ) ~> addCredentials(BasicHttpCredentials(rootUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
         logger.debug(s"response: ${response1.toString}")
@@ -814,7 +814,7 @@ class UsersADME2ESpec
 
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUser.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321"),
         ) // new password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -831,15 +831,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "incomplete-update-user-password-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeUserPasswordRequest
-          )
+            text = changeUserPasswordRequest,
+          ),
         )
 
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
-          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
@@ -850,15 +850,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "incomplete-update-user-password-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response1)
-          )
+            text = responseToString(response1),
+          ),
         )
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUser.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321"),
         ) // old password (taken from previous test)
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -875,15 +875,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "incomplete-update-user-password-request-2",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeUserPasswordRequest
-          )
+            text = changeUserPasswordRequest,
+          ),
         )
 
         val request1 = Put(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/Password",
-          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
@@ -894,15 +894,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "incomplete-update-user-password-response-2",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response1)
-          )
+            text = responseToString(response1),
+          ),
         )
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUser.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321"),
         ) // old password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -919,15 +919,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-status-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeUserStatusRequest
-          )
+            text = changeUserStatusRequest,
+          ),
         )
         val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
-          HttpEntity(ContentTypes.`application/json`, changeUserStatusRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserStatusRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -939,10 +939,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-status-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -957,15 +957,15 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-system-admin-membership-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeUserSystemAdminMembershipRequest
-          )
+            text = changeUserSystemAdminMembershipRequest,
+          ),
         )
         val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin",
-          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -980,16 +980,16 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-user-system-admin-membership-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
         // Throw BadRequest exception if user is built-in user
         val badRequest = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
-          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest),
         ) ~> addRootUserCredentials()
         val badResponse: HttpResponse = singleAwaitingRequest(badRequest)
         badResponse.status should be(StatusCodes.BadRequest)
@@ -1003,7 +1003,7 @@ class UsersADME2ESpec
 
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
-          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -1019,7 +1019,7 @@ class UsersADME2ESpec
 
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/Status",
-          HttpEntity(ContentTypes.`application/json`, params)
+          HttpEntity(ContentTypes.`application/json`, params),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -1036,7 +1036,7 @@ class UsersADME2ESpec
 
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$anonymousUserIriEncoded/Status",
-          HttpEntity(ContentTypes.`application/json`, params)
+          HttpEntity(ContentTypes.`application/json`, params),
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -1053,10 +1053,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "delete-user-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1089,7 +1089,7 @@ class UsersADME2ESpec
         projects should contain allElementsOf Seq(
           SharedTestDataADM.imagesProjectExternal,
           SharedTestDataADM.incunabulaProjectExternal,
-          SharedTestDataADM.anythingProjectExternal
+          SharedTestDataADM.anythingProjectExternal,
         )
 
         // testing getUserProjectMemberships method, which should return the same result
@@ -1099,10 +1099,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-project-memberships-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -1111,7 +1111,7 @@ class UsersADME2ESpec
 
       "NOT add a user to project if the requesting user is not a SystemAdmin or ProjectAdmin" in {
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test654321"))
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1123,7 +1123,7 @@ class UsersADME2ESpec
         membershipsBeforeUpdate should equal(Seq())
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1137,10 +1137,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-user-to-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1148,7 +1148,7 @@ class UsersADME2ESpec
         val membershipsBeforeTryUpdate = getUserProjectMemberships(normalUser.id)
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1163,10 +1163,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "user-already-member-of-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1175,7 +1175,7 @@ class UsersADME2ESpec
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1189,10 +1189,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "remove-user-from-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1201,7 +1201,7 @@ class UsersADME2ESpec
     "used to query project admin group memberships" should {
       "return all projects the user is a member of the project admin group" in {
         val request = Get(
-          baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships"
+          baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -1211,7 +1211,7 @@ class UsersADME2ESpec
         projects should contain allElementsOf Seq(
           SharedTestDataADM.imagesProjectExternal,
           SharedTestDataADM.incunabulaProjectExternal,
-          SharedTestDataADM.anythingProjectExternal
+          SharedTestDataADM.anythingProjectExternal,
         )
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
@@ -1221,10 +1221,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-project-admin-group-memberships-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1234,7 +1234,7 @@ class UsersADME2ESpec
       "add user to project admin group only if he is already member of that project" in {
         // add user as project admin to images project - returns a BadRequest because user is not member of the project
         val requestWithoutBeingMember = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val responseWithoutBeingMember: HttpResponse = singleAwaitingRequest(requestWithoutBeingMember)
 
@@ -1242,7 +1242,7 @@ class UsersADME2ESpec
 
         // add user as member to images project
         val requestAddUserToProject = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val responseAddUserToProject: HttpResponse = singleAwaitingRequest(requestAddUserToProject)
 
@@ -1254,7 +1254,7 @@ class UsersADME2ESpec
 
         // add user as project admin to images project
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1269,10 +1269,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-user-to-project-admin-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1282,7 +1282,7 @@ class UsersADME2ESpec
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1297,17 +1297,17 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "remove-user-from-project-admin-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "remove user from project which also removes him from project admin group" in {
         // add user as project admin to images project
         val requestAddUserAsProjectAdmin = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-admin-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val responseAddUserAsProjectAdmin: HttpResponse = singleAwaitingRequest(requestAddUserAsProjectAdmin)
 
@@ -1319,7 +1319,7 @@ class UsersADME2ESpec
 
         // remove user as project member from images project
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/project-memberships/$imagesProjectIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1353,10 +1353,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-user-group-memberships-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1368,7 +1368,7 @@ class UsersADME2ESpec
         membershipsBeforeUpdate should equal(Seq.empty[GroupADM])
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/group-memberships/$imagesReviewerGroupIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/group-memberships/$imagesReviewerGroupIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1382,10 +1382,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-user-to-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -1394,7 +1394,7 @@ class UsersADME2ESpec
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/group-memberships/$imagesReviewerGroupIriEnc"
+          baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/group-memberships/$imagesReviewerGroupIriEnc",
         ) ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1408,10 +1408,10 @@ class UsersADME2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "remove-user-from-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }

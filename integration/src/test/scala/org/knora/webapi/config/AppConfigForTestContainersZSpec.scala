@@ -24,15 +24,15 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
       } yield {
         assertTrue(
           appConfig.sipi.internalPort == sipiContainer.getFirstMappedPort,
-          appConfig.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString)
+          appConfig.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
         )
       }
-    }
+    },
   ).provide(
     AppConfigForTestContainers.testcontainers,
     DspIngestTestContainer.layer,
     FusekiTestContainer.layer,
     SharedVolumes.Images.layer,
-    SipiTestContainer.layer
+    SipiTestContainer.layer,
   )
 }

@@ -71,19 +71,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
       path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
+      name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+      name = "http://www.knora.org/ontology/0001/anything",
+    ),
   )
 
   // The default timeout for receiving reply messages from actors.
@@ -124,7 +124,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 7,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 0
+      startIndex = 0,
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -132,8 +132,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 10,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 1
-    )
+      startIndex = 1,
+    ),
   )
 
   private val sampleStandoffModified: Vector[StandoffTagV2] = Vector(
@@ -143,7 +143,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 7,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 0
+      startIndex = 0,
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -151,8 +151,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 10,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 1
-    )
+      startIndex = 1,
+    ),
   )
 
   private val sampleStandoffWithLink: Vector[StandoffTagV2] = Vector(
@@ -167,9 +167,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       attributes = Vector(
         StandoffTagIriAttributeV2(
           standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-          value = aThingIri
-        )
-      )
+          value = aThingIri,
+        ),
+      ),
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -177,8 +177,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 10,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 1
-    )
+      startIndex = 1,
+    ),
   )
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
@@ -186,13 +186,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private def getResourceWithValues(
     resourceIri: IRI,
     propertyIrisForGravsearch: Seq[SmartIri],
-    requestingUser: User
+    requestingUser: User,
   ): ReadResourceV2 = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
         resourceIri = resourceIri,
-        propertyIris = propertyIrisForGravsearch
+        propertyIris = propertyIrisForGravsearch,
       )
       .toString()
 
@@ -201,8 +201,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       SearchResponderV2.gravsearchV2(
         GravsearchParser.parseQuery(gravsearchQuery),
         SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
-        requestingUser
-      )
+        requestingUser,
+      ),
     )
 
     result.toResource(resourceIri).toOntologySchema(ApiV2Complex)
@@ -211,13 +211,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private def getValuesFromResource(resource: ReadResourceV2, propertyIriInResult: SmartIri): Seq[ReadValueV2] =
     resource.values.getOrElse(
       propertyIriInResult,
-      throw AssertionException(s"Resource <${resource.resourceIri}> does not have property <$propertyIriInResult>")
+      throw AssertionException(s"Resource <${resource.resourceIri}> does not have property <$propertyIriInResult>"),
     )
 
   private def getValueFromResource(
     resource: ReadResourceV2,
     propertyIriInResult: SmartIri,
-    expectedValueIri: IRI
+    expectedValueIri: IRI,
   ): ReadValueV2 = {
     val propertyValues: Seq[ReadValueV2] =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
@@ -225,8 +225,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       .find(_.valueIri == expectedValueIri)
       .getOrElse(
         throw AssertionException(
-          s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"
-        )
+          s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>",
+        ),
       )
   }
 
@@ -237,12 +237,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     customDeleteDate: Option[Instant] = None,
     deleteComment: Option[String] = None,
     requestingUser: User,
-    isLinkValue: Boolean = false
+    isLinkValue: Boolean = false,
   ): Unit = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
@@ -254,8 +254,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deletedValues = resource.values.getOrElse(
       OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
       throw AssertionException(
-        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
-      )
+        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted.",
+      ),
     )
 
     if (!isLinkValue) {
@@ -266,11 +266,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       checkLastModDate(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
+        maybeUpdatedLastModDate = resource.lastModificationDate,
       )
 
       val deletionInfo = deletedValue.deletionInfo.getOrElse(
-        throw AssertionException(s"Value <$valueIri> does not have deletion information")
+        throw AssertionException(s"Value <$valueIri> does not have deletion information"),
       )
 
       customDeleteDate match {
@@ -290,7 +290,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           v.previousValueIri match {
             case Some(previousValueIRI) => previousValueIRI == valueIri
             case None                   => false
-          }
+          },
         )
       ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
     }
@@ -299,7 +299,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private def checkLastModDate(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
-    maybeUpdatedLastModDate: Option[Instant]
+    maybeUpdatedLastModDate: Option[Instant],
   ): Assertion =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
@@ -318,25 +318,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
     requestingUser: User,
-    checkLastModDateChanged: Boolean = true
+    checkLastModDateChanged: Boolean = true,
   ): ReadValueV2 = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     if (checkLastModDateChanged) {
       checkLastModDate(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
+        maybeUpdatedLastModDate = resource.lastModificationDate,
       )
     }
     getValueFromResource(
       resource = resource,
       propertyIriInResult = propertyIriInResult,
-      expectedValueIri = expectedValueIri
+      expectedValueIri = expectedValueIri,
     )
   }
 
@@ -344,7 +344,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     appActor ! ResourcesPreviewGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     expectMsgPF(timeout) { case previewResponse: ReadResourcesSequenceV2 =>
@@ -399,7 +399,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   "Load test data" in {
     appActor ! GetMappingRequestV2(
       mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
+      requestingUser = KnoraSystemInstances.Users.SystemUser,
     )
 
     expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
@@ -424,12 +424,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intValueIri.set(createValueResponse.valueIri)
@@ -444,7 +444,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -478,7 +478,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
         requestingUser = anythingUser1,
-        checkLastModDateChanged = false
+        checkLastModDateChanged = false,
       )
 
       // Update the value.
@@ -494,12 +494,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueIri.set(updateValueResponse.valueIri)
@@ -513,7 +513,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -548,12 +548,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intValueIriForFreetest.set(createValueResponse.valueIri)
@@ -567,7 +567,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -590,7 +590,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIriForFreetest.get,
         requestingUser = anythingUser2,
-        checkLastModDateChanged = false
+        checkLastModDateChanged = false,
       )
 
       // Update the value.
@@ -604,8 +604,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueIri = intValueIriForFreetest.get,
         valueContent = IntegerValueContentV2(
           ontologySchema = ApiV2Complex,
-          valueHasInteger = intValue
-        )
+          valueHasInteger = intValue,
+        ),
       )
 
       val updateValueResponse =
@@ -622,7 +622,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
+        requestingUser = anythingUser2,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -654,18 +654,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueIri = intValueIriForFreetest.get,
             valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = Some("this value was incorrect")
+            deleteComment = Some("this value was incorrect"),
           ),
           anythingUser2,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
         valueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
+        requestingUser = anythingUser2,
       )
     }
 
@@ -683,12 +683,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -707,7 +707,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
         requestingUser = anythingUser1,
-        checkLastModDateChanged = false
+        checkLastModDateChanged = false,
       )
 
       // Update the value.
@@ -724,12 +724,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = intValue,
-              comment = Some(comment)
-            )
+              comment = Some(comment),
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueIri.set(updateValueResponse.valueIri)
@@ -742,7 +742,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -776,12 +776,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = intValue,
-              comment = Some(comment)
-            )
+              comment = Some(comment),
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -800,7 +800,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
         requestingUser = anythingUser1,
-        checkLastModDateChanged = false
+        checkLastModDateChanged = false,
       )
 
       // Update the value.
@@ -817,12 +817,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = intValue,
-              comment = Some(comment)
-            )
+              comment = Some(comment),
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueIri.set(updateValueResponse.valueIri)
@@ -835,7 +835,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -871,12 +871,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = intValue,
-              comment = Some(comment)
-            )
+              comment = Some(comment),
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intValueIri.set(createValueResponse.valueIri)
@@ -889,7 +889,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -918,13 +918,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
@@ -937,14 +937,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIriWithCustomPermissions.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
         case savedValue: IntegerValueContentV2 =>
           savedValue.valueHasInteger should ===(intValue)
           PermissionUtilADM.parsePermissions(valueFromTriplestore.permissions) should ===(
-            PermissionUtilADM.parsePermissions(permissions)
+            PermissionUtilADM.parsePermissions(permissions),
           )
 
         case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
@@ -965,13 +965,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       assertFailsWithA[BadRequestException](actual)
@@ -991,13 +991,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       assertFailsWithA[NotFoundException](actual)
@@ -1021,14 +1021,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
             valueUUID = Some(valueUUID),
-            valueCreationDate = Some(valueCreationDate)
+            valueCreationDate = Some(valueCreationDate),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intValueForRsyncIri.set(createValueResponse.valueIri)
@@ -1041,7 +1041,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1069,13 +1069,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueForRsyncIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            valueCreationDate = Some(valueCreationDate)
+            valueCreationDate = Some(valueCreationDate),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -1099,13 +1099,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueForRsyncIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            valueCreationDate = Some(valueCreationDate)
+            valueCreationDate = Some(valueCreationDate),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueForRsyncIri.set(updateValueResponse.valueIri)
@@ -1118,7 +1118,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -1149,13 +1149,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueForRsyncIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            newValueVersionIri = Some(newValueVersionIri.toSmartIri)
+            newValueVersionIri = Some(newValueVersionIri.toSmartIri),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       intValueForRsyncIri.set(updateValueResponse.valueIri)
 
@@ -1167,7 +1167,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -1192,12 +1192,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[ForbiddenException](actual)
     }
@@ -1215,12 +1215,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
@@ -1233,7 +1233,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1254,12 +1254,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1279,12 +1279,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some(valueHasString),
-              comment = Some(valueHasComment)
-            )
+              comment = Some(valueHasComment),
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
@@ -1297,7 +1297,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinCommentWithCommentIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1326,12 +1326,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
@@ -1344,7 +1344,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1374,12 +1374,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoffModified,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1400,12 +1400,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = DecimalValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal
-            )
+              valueHasDecimal = valueHasDecimal,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       decimalValueIri.set(createValueResponse.valueIri)
@@ -1418,7 +1418,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1440,12 +1440,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = DecimalValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal
-            )
+              valueHasDecimal = valueHasDecimal,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1466,12 +1466,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = TimeValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp
-            )
+              valueHasTimeStamp = valueHasTimeStamp,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       timeValueIri.set(createValueResponse.valueIri)
@@ -1484,7 +1484,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1506,7 +1506,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasStartJDN = 2264907,
         valueHasStartPrecision = DatePrecisionYear,
         valueHasEndJDN = 2265271,
-        valueHasEndPrecision = DatePrecisionYear
+        valueHasEndPrecision = DatePrecisionYear,
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
@@ -1515,11 +1515,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = submittedValueContent
+            valueContent = submittedValueContent,
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       dateValueIri.set(createValueResponse.valueIri)
@@ -1532,7 +1532,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1557,7 +1557,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasStartJDN = 2264907,
         valueHasStartPrecision = DatePrecisionYear,
         valueHasEndJDN = 2265271,
-        valueHasEndPrecision = DatePrecisionYear
+        valueHasEndPrecision = DatePrecisionYear,
       )
 
       val actual = UnsafeZioRun.run(
@@ -1566,11 +1566,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = submittedValueContent
+            valueContent = submittedValueContent,
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1591,12 +1591,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = BooleanValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean
-            )
+              valueHasBoolean = valueHasBoolean,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       booleanValueIri.set(createValueResponse.valueIri)
@@ -1609,7 +1609,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1635,12 +1635,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = GeomValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry
-            )
+              valueHasGeometry = valueHasGeometry,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       geometryValueIri.set(createValueResponse.valueIri)
@@ -1653,7 +1653,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1676,12 +1676,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = GeomValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry
-            )
+              valueHasGeometry = valueHasGeometry,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1704,12 +1704,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntervalValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd
-            )
+              valueHasIntervalEnd = valueHasIntervalEnd,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       intervalValueIri.set(createValueResponse.valueIri)
@@ -1722,7 +1722,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1749,12 +1749,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntervalValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd
-            )
+              valueHasIntervalEnd = valueHasIntervalEnd,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1775,12 +1775,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       listValueIri.set(createValueResponse.valueIri)
@@ -1793,7 +1793,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1817,12 +1817,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1840,12 +1840,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -1864,12 +1864,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -1890,12 +1890,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = ColorValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor
-            )
+              valueHasColor = valueHasColor,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       colorValueIri.set(createValueResponse.valueIri)
@@ -1908,7 +1908,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -1932,12 +1932,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = ColorValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor
-            )
+              valueHasColor = valueHasColor,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -1958,12 +1958,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = UriValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri
-            )
+              valueHasUri = valueHasUri,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       uriValueIri.set(createValueResponse.valueIri)
@@ -1976,7 +1976,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -2000,12 +2000,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = UriValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri
-            )
+              valueHasUri = valueHasUri,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -2026,12 +2026,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode
-            )
+              valueHasGeonameCode = valueHasGeonameCode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       geonameValueIri.set(createValueResponse.valueIri)
@@ -2044,7 +2044,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -2068,12 +2068,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode
-            )
+              valueHasGeonameCode = valueHasGeonameCode,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -2092,12 +2092,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
+              referredResourceIri = zeitglöckleinIri,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       linkValueIri.set(createValueResponse.valueIri)
       linkValueUUID = createValueResponse.valueUUID
@@ -2108,7 +2108,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore match {
@@ -2132,12 +2132,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = linkValuePropertyIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
+              referredResourceIri = zeitglöckleinIri,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -2154,12 +2154,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = linkPropertyIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
+              referredResourceIri = zeitglöckleinIri,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -2173,12 +2173,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = generationeIri
-            )
+              referredResourceIri = generationeIri,
+            ),
           ),
           requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -2196,12 +2196,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -2219,12 +2219,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -2242,12 +2242,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -2264,12 +2264,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is not a date")
-            )
+              maybeValueHasString = Some("this is not a date"),
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[OntologyConstraintException](actual)
     }
@@ -2287,12 +2287,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0803/e41ab5695c"
-            )
+              referredResourceIri = "http://rdfh.ch/0803/e41ab5695c",
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[OntologyConstraintException](actual)
 
@@ -2306,12 +2306,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = 1
-            )
+              valueHasInteger = 1,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
       assertFailsWithA[OntologyConstraintException](actual2)
     }
@@ -2331,13 +2331,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           attributes = Vector(
             StandoffTagIriAttributeV2(
               standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-              value = zeitglöckleinIri
-            )
+              value = zeitglöckleinIri,
+            ),
           ),
           uuid = randomUUID(),
           originalXMLID = None,
-          startIndex = 0
-        )
+          startIndex = 0,
+        ),
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
@@ -2351,12 +2351,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = standoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       lobComment1Iri.set(createValueResponse.valueIri)
@@ -2366,19 +2366,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val updatedResource = getResourceWithValues(
         resourceIri = resourceIri,
         propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       checkLastModDate(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        maybeUpdatedLastModDate = updatedResource.lastModificationDate
+        maybeUpdatedLastModDate = updatedResource.lastModificationDate,
       )
 
       val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
         resource = updatedResource,
         propertyIriInResult = propertyIri,
-        expectedValueIri = lobComment1Iri.get
+        expectedValueIri = lobComment1Iri.get,
       )
 
       textValueFromTriplestore.valueContent match {
@@ -2396,7 +2396,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
         resource = updatedResource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
       assert(linkValuesFromTripletore.size == 1)
@@ -2427,13 +2427,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           attributes = Vector(
             StandoffTagIriAttributeV2(
               standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-              value = zeitglöckleinIri
-            )
+              value = zeitglöckleinIri,
+            ),
           ),
           uuid = randomUUID(),
           originalXMLID = None,
-          startIndex = 0
-        )
+          startIndex = 0,
+        ),
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
@@ -2447,12 +2447,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = standoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       lobComment2Iri.set(createValueResponse.valueIri)
@@ -2462,19 +2462,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val updatedResource = getResourceWithValues(
         resourceIri = resourceIri,
         propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       checkLastModDate(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        maybeUpdatedLastModDate = updatedResource.lastModificationDate
+        maybeUpdatedLastModDate = updatedResource.lastModificationDate,
       )
 
       val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
         resource = updatedResource,
         propertyIriInResult = propertyIri,
-        expectedValueIri = lobComment2Iri.get
+        expectedValueIri = lobComment2Iri.get,
       )
 
       textValueFromTriplestore.valueContent match {
@@ -2493,7 +2493,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
         resource = updatedResource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
       assert(linkValuesFromTripletore.size == 1)
@@ -2523,12 +2523,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = firstIntValueVersionIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -2547,12 +2547,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[ForbiddenException](actual)
     }
@@ -2573,13 +2573,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueIri.set(updateValueResponse.valueIri)
@@ -2592,7 +2592,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent match {
@@ -2619,13 +2619,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           anythingUser2,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[ForbiddenException](actual)
     }
@@ -2645,13 +2645,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -2671,13 +2671,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
+              valueHasInteger = intValue,
             ),
-            permissions = Some(permissions)
+            permissions = Some(permissions),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -2695,7 +2695,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
         requestingUser = anythingUser1,
-        checkLastModDateChanged = false
+        checkLastModDateChanged = false,
       )
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
@@ -2706,11 +2706,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions
+            permissions = permissions,
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       intValueIri.set(updateValueResponse.valueIri)
@@ -2723,7 +2723,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       updatedValueFromTriplestore.valueContent should ===(oldValueFromTriplestore.valueContent)
@@ -2743,11 +2743,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions
+            permissions = permissions,
           ),
           anythingUser2,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[ForbiddenException](actual)
     }
@@ -2765,11 +2765,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions
+            permissions = permissions,
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[BadRequestException](actual)
     }
@@ -2787,11 +2787,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions
+            permissions = permissions,
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -2810,12 +2810,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = intValueIri.get,
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
+              valueHasInteger = intValue,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -2834,12 +2834,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
 
@@ -2851,7 +2851,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -2878,12 +2878,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoffWithLink,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
 
@@ -2895,7 +2895,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -2913,12 +2913,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resource = getResourceWithValues(
         resourceIri = zeitglöckleinIri,
         propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       val standoffLinkValues: Seq[ReadValueV2] = getValuesFromResource(
         resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
       assert(standoffLinkValues.size == 1)
@@ -2946,12 +2946,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -2973,12 +2973,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+          apiRequestID = randomUUID,
+        ),
       )
 
       zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
@@ -2991,7 +2991,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3022,12 +3022,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3050,12 +3050,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoffModified,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
@@ -3068,7 +3068,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = incunabulaUser,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3099,12 +3099,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some(valueHasString),
               standoff = sampleStandoffModified,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3122,12 +3122,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
+              maybeValueHasString = Some(valueHasString),
+            ),
           ),
           incunabulaUser,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3147,12 +3147,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = decimalValueIri.get,
             valueContent = DecimalValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal
-            )
+              valueHasDecimal = valueHasDecimal,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       decimalValueIri.set(updateValueResponse.valueIri)
 
@@ -3164,7 +3164,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3187,12 +3187,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = decimalValueIri.get,
             valueContent = DecimalValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal
-            )
+              valueHasDecimal = valueHasDecimal,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3212,12 +3212,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = timeValueIri.get,
             valueContent = TimeValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp
-            )
+              valueHasTimeStamp = valueHasTimeStamp,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       timeValueIri.set(updateValueResponse.valueIri)
 
@@ -3229,7 +3229,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3252,12 +3252,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = timeValueIri.get,
             valueContent = TimeValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp
-            )
+              valueHasTimeStamp = valueHasTimeStamp,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](value)
     }
@@ -3273,7 +3273,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasStartJDN = 2264908,
         valueHasStartPrecision = DatePrecisionYear,
         valueHasEndJDN = 2265272,
-        valueHasEndPrecision = DatePrecisionYear
+        valueHasEndPrecision = DatePrecisionYear,
       )
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
@@ -3283,11 +3283,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = dateValueIri.get,
-            valueContent = submittedValueContent
+            valueContent = submittedValueContent,
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
 
       dateValueIri.set(updateValueResponse.valueIri)
@@ -3300,7 +3300,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3325,7 +3325,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasStartJDN = 2264908,
         valueHasStartPrecision = DatePrecisionYear,
         valueHasEndJDN = 2265272,
-        valueHasEndPrecision = DatePrecisionYear
+        valueHasEndPrecision = DatePrecisionYear,
       )
 
       val actual = UnsafeZioRun.run(
@@ -3335,11 +3335,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = dateValueIri.get,
-            valueContent = submittedValueContent
+            valueContent = submittedValueContent,
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3359,12 +3359,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = booleanValueIri.get,
             valueContent = BooleanValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean
-            )
+              valueHasBoolean = valueHasBoolean,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       booleanValueIri.set(updateValueResponse.valueIri)
 
@@ -3376,7 +3376,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3399,12 +3399,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = booleanValueIri.get,
             valueContent = BooleanValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean
-            )
+              valueHasBoolean = valueHasBoolean,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3425,12 +3425,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = geometryValueIri.get,
             valueContent = GeomValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry
-            )
+              valueHasGeometry = valueHasGeometry,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       geometryValueIri.set(updateValueResponse.valueIri)
 
@@ -3442,7 +3442,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3466,12 +3466,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = geometryValueIri.get,
             valueContent = GeomValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry
-            )
+              valueHasGeometry = valueHasGeometry,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3493,12 +3493,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntervalValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd
-            )
+              valueHasIntervalEnd = valueHasIntervalEnd,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       intervalValueIri.set(updateValueResponse.valueIri)
 
@@ -3510,7 +3510,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3538,12 +3538,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntervalValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd
-            )
+              valueHasIntervalEnd = valueHasIntervalEnd,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3563,12 +3563,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = listValueIri.get,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       listValueIri.set(updateValueResponse.valueIri)
 
@@ -3580,7 +3580,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3605,12 +3605,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = listValueIri.get,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3629,12 +3629,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = listValueIri.get,
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode
-            )
+              valueHasListNode = valueHasListNode,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[NotFoundException](actual)
     }
@@ -3654,12 +3654,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = colorValueIri.get,
             valueContent = ColorValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor
-            )
+              valueHasColor = valueHasColor,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       colorValueIri.set(updateValueResponse.valueIri)
 
@@ -3671,7 +3671,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3696,12 +3696,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = colorValueIri.get,
             valueContent = ColorValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor
-            )
+              valueHasColor = valueHasColor,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3721,12 +3721,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = uriValueIri.get,
             valueContent = UriValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri
-            )
+              valueHasUri = valueHasUri,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       uriValueIri.set(updateValueResponse.valueIri)
 
@@ -3738,7 +3738,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3763,12 +3763,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = uriValueIri.get,
             valueContent = UriValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri
-            )
+              valueHasUri = valueHasUri,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
     }
@@ -3788,12 +3788,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = geonameValueIri.get,
             valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode
-            )
+              valueHasGeonameCode = valueHasGeonameCode,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       geonameValueIri.set(updateValueResponse.valueIri)
 
@@ -3805,7 +3805,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
       )
 
       valueFromTriplestore.valueContent match {
@@ -3830,12 +3830,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueIri = geonameValueIri.get,
             valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode
-            )
+              valueHasGeonameCode = valueHasGeonameCode,
+            ),
           ),
           anythingUser1,
-          randomUUID
-        )
+          randomUUID,
+        ),
       )
       assertFailsWithA[DuplicateValueException](actual)
 
@@ -3857,12 +3857,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
+            referredResourceIri = generationeIri,
+          ),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     linkValueIri.set(updateValueResponse.valueIri)
 
@@ -3876,7 +3876,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriForGravsearch = linkPropertyIri,
       propertyIriInResult = linkValuePropertyIri,
       expectedValueIri = linkValueIri.get,
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     valueFromTriplestore match {
@@ -3901,12 +3901,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
+            referredResourceIri = generationeIri,
+          ),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[DuplicateValueException](actual)
   }
@@ -3928,12 +3928,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
             referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
+            comment = Some(comment),
+          ),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     linkValueIri.set(updateValueResponse.valueIri)
@@ -3947,7 +3947,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriForGravsearch = linkPropertyIri,
       propertyIriInResult = linkValuePropertyIri,
       expectedValueIri = linkValueIri.get,
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     valueFromTriplestore match {
@@ -3975,12 +3975,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
             referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
+            comment = Some(comment),
+          ),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[DuplicateValueException](actual)
   }
@@ -4002,12 +4002,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
             referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
+            comment = Some(comment),
+          ),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     linkValueIri.set(updateValueResponse.valueIri)
@@ -4021,7 +4021,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriForGravsearch = linkPropertyIri,
       propertyIriInResult = linkValuePropertyIri,
       expectedValueIri = linkValueIri.get,
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     valueFromTriplestore match {
@@ -4050,12 +4050,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
             referredResourceIri = zeitglöckleinIri,
-            comment = Some(comment)
-          )
+            comment = Some(comment),
+          ),
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
     linkValueIri.set(createValueResponse.valueIri)
 
@@ -4065,7 +4065,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriForGravsearch = linkPropertyIri,
       propertyIriInResult = linkValuePropertyIri,
       expectedValueIri = linkValueIri.get,
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     valueFromTriplestore match {
@@ -4088,12 +4088,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueIri = zeitglöckleinCommentWithStandoffIri.get,
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
+            referredResourceIri = generationeIri,
+          ),
         ),
         SharedTestDataADM.superUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[BadRequestException](actual)
   }
@@ -4117,12 +4117,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             Some(mimeTypeJP2),
             Some("test.tiff"),
             Some(mimeTypeTIFF),
-            None
-          )
+            None,
+          ),
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[DuplicateValueException](actual)
   }
@@ -4140,7 +4140,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriInResult = propertyIri,
       expectedValueIri = stillImageFileValueIri.get,
       requestingUser = anythingUser1,
-      checkLastModDateChanged = false
+      checkLastModDateChanged = false,
     )
 
     // Update the value.
@@ -4164,12 +4164,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             Some(internalMimeType),
             originalFilename,
             originalMimeType,
-            None
-          )
+            None,
+          ),
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     stillImageFileValueIri.set(updateValueResponse.valueIri)
@@ -4182,7 +4182,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       propertyIriForGravsearch = propertyIri,
       propertyIriInResult = propertyIri,
       expectedValueIri = stillImageFileValueIri.get,
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
 
     updatedValueFromTriplestore.valueIri should equal(stillImageFileValueIri.get)
@@ -4212,10 +4212,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
         internalMimeType = mimeTypeJP2,
         originalFilename = Some("test.tiff"),
-        originalMimeType = Some(mimeTypeTIFF)
+        originalMimeType = Some(mimeTypeTIFF),
       ),
       dimX = 512,
-      dimY = 256
+      dimY = 256,
     )
 
     // Knora will reject this request.
@@ -4226,11 +4226,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
+          valueContent = valueContent,
         ),
         incunabulaUser, // this user doesn't have the necessary permission
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[ForbiddenException](actual)
   }
@@ -4245,10 +4245,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
         internalMimeType = mimeTypeJP2,
         originalFilename = Some("test.tiff"),
-        originalMimeType = Some(mimeTypeTIFF)
+        originalMimeType = Some(mimeTypeTIFF),
       ),
       dimX = 512,
-      dimY = 256
+      dimY = 256,
     )
 
     // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
@@ -4259,11 +4259,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
+          valueContent = valueContent,
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[SipiException](actual)
   }
@@ -4280,11 +4280,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           propertyIri = propertyIri,
           valueIri = intValueIri.get,
           valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          deleteComment = Some("this value was incorrect")
+          deleteComment = Some("this value was incorrect"),
         ),
         anythingUser2,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[ForbiddenException](actual)
   }
@@ -4304,18 +4304,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           propertyIri = propertyIri,
           valueIri = valueIri,
           valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          deleteComment = Some("this value was incorrect")
+          deleteComment = Some("this value was incorrect"),
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     checkValueIsDeleted(
       resourceIri = resourceIri,
       maybePreviousLastModDate = maybeResourceLastModDate,
       valueIri = intValueIri.get,
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
   }
 
@@ -4335,11 +4335,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueIri = intValueForRsyncIri.get,
           valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           deleteComment = deleteComment,
-          deleteDate = Some(deleteDate)
+          deleteDate = Some(deleteDate),
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     checkValueIsDeleted(
@@ -4348,7 +4348,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       valueIri = intValueForRsyncIri.get,
       customDeleteDate = Some(deleteDate),
       deleteComment = deleteComment,
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
   }
 
@@ -4360,11 +4360,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
           valueIri = standoffLinkValueIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         ),
         SharedTestDataADM.superUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[BadRequestException](actual)
   }
@@ -4381,18 +4381,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           propertyIri = propertyIri,
           valueIri = zeitglöckleinCommentWithStandoffIri.get,
           valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-          deleteComment = Some("this value was incorrect")
+          deleteComment = Some("this value was incorrect"),
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     checkValueIsDeleted(
       resourceIri = zeitglöckleinIri,
       maybePreviousLastModDate = maybeResourceLastModDate,
       valueIri = zeitglöckleinCommentWithStandoffIri.get,
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     // There should be no standoff link values left in the resource.
@@ -4400,7 +4400,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val resource = getResourceWithValues(
       resourceIri = zeitglöckleinIri,
       propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
-      requestingUser = incunabulaUser
+      requestingUser = incunabulaUser,
     )
 
     assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
@@ -4419,11 +4419,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIRI,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         ),
         incunabulaUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     checkValueIsDeleted(
@@ -4431,7 +4431,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       maybePreviousLastModDate = maybeResourceLastModDate,
       valueIri = linkValueIRI,
       requestingUser = anythingUser1,
-      isLinkValue = true
+      isLinkValue = true,
     )
   }
 
@@ -4445,11 +4445,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           propertyIri = propertyIri,
           valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
         ),
         incunabulaCreatorUser,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
     assertFailsWithA[OntologyConstraintException](actual)
   }
@@ -4463,13 +4463,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       label = "test bildformat",
       values = Map.empty,
       projectADM = SharedTestDataADM.imagesProject,
-      permissions = Some("M knora-admin:ProjectMember")
+      permissions = Some("M knora-admin:ProjectMember"),
     )
 
     appActor ! CreateResourceRequestV2(
       createResource = inputResource,
       requestingUser = SharedTestDataADM.imagesUser01,
-      apiRequestID = randomUUID
+      apiRequestID = randomUUID,
     )
 
     expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4485,13 +4485,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = 5,
-            comment = Some("this is the number five")
+            comment = Some("this is the number five"),
           ),
-          permissions = Some("CR knora-admin:Creator")
+          permissions = Some("CR knora-admin:Creator"),
         ),
         requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
     assertFailsWithA[ForbiddenException](actual)
   }
@@ -4505,13 +4505,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       label = "test bildformat",
       values = Map.empty,
       projectADM = SharedTestDataADM.imagesProject,
-      permissions = Some("M knora-admin:ProjectMember")
+      permissions = Some("M knora-admin:ProjectMember"),
     )
 
     appActor ! CreateResourceRequestV2(
       createResource = inputResource,
       requestingUser = SharedTestDataADM.imagesUser01,
-      apiRequestID = randomUUID
+      apiRequestID = randomUUID,
     )
 
     expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4527,13 +4527,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = 5,
-            comment = Some("this is the number five")
+            comment = Some("this is the number five"),
           ),
-          permissions = Some("CR knora-admin:Creator")
+          permissions = Some("CR knora-admin:Creator"),
         ),
         requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
   }
 
@@ -4546,13 +4546,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       label = "test bildformat",
       values = Map.empty,
       projectADM = SharedTestDataADM.imagesProject,
-      permissions = Some("M knora-admin:ProjectMember")
+      permissions = Some("M knora-admin:ProjectMember"),
     )
 
     appActor ! CreateResourceRequestV2(
       createResource = inputResource,
       requestingUser = SharedTestDataADM.imagesUser01,
-      apiRequestID = randomUUID
+      apiRequestID = randomUUID,
     )
 
     expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4568,13 +4568,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
             valueHasInteger = 5,
-            comment = Some("this is the number five")
+            comment = Some("this is the number five"),
           ),
-          permissions = Some("CR knora-admin:Creator")
+          permissions = Some("CR knora-admin:Creator"),
         ),
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
   }
 
@@ -4595,21 +4595,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             maybeValueHasString = Some("Comment 1 for UUID checking"),
             standoff = sampleStandoffWithLink,
             mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
+            mapping = standardMapping,
+          ),
         ),
         requestingUser = anythingUser1,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
 
     val resourceVersion1: ReadResourceV2 = getResourceWithValues(
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
       ),
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
 
     // Get the UUIDs of the text value and of the standoff link value.
@@ -4636,21 +4636,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             maybeValueHasString = Some("Comment 2 for UUID checking"),
             standoff = sampleStandoffWithLink,
             mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
+            mapping = standardMapping,
+          ),
         ),
         requestingUser = anythingUser1,
-        apiRequestID = randomUUID
-      )
+        apiRequestID = randomUUID,
+      ),
     )
 
     val resourceVersion2: ReadResourceV2 = getResourceWithValues(
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
       ),
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
 
     // Get the second text value's UUID.
@@ -4687,21 +4687,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             maybeValueHasString = Some("Comment 3 for UUID checking"),
             standoff = sampleStandoffWithLink,
             mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
+            mapping = standardMapping,
+          ),
         ),
         anythingUser1,
-        randomUUID
-      )
+        randomUUID,
+      ),
     )
 
     val resourceVersion3: ReadResourceV2 = getResourceWithValues(
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
       ),
-      requestingUser = anythingUser1
+      requestingUser = anythingUser1,
     )
 
     // We should now have a new version of the second text value, containing the UUID that was in the previous version.
@@ -4720,7 +4720,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       resourceVersion3
         .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
         .head
-        .valueIri == standoffLinkValueVersion2.valueIri
+        .valueIri == standoffLinkValueVersion2.valueIri,
     )
   }
 }

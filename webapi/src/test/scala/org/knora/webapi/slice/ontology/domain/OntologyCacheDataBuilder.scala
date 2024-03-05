@@ -48,7 +48,7 @@ object OntologyCacheDataBuilder {
 
   case class Builder(ocd: OntologyCacheData = empty) {
     def addOntology(ro: ReadOntologyV2): Builder = copy(
-      ocd.copy(ontologies = ocd.ontologies ++ Map(ro.ontologyMetadata.ontologyIri -> ro))
+      ocd.copy(ontologies = ocd.ontologies ++ Map(ro.ontologyMetadata.ontologyIri -> ro)),
     )
 
     def addOntology(ro: ReadOntologyV2Builder.Builder): Builder = addOntology(ro.build)
@@ -93,11 +93,11 @@ object ReadOntologyV2Builder {
   }
 
   def builder(ontologyIri: InternalIri): Builder = Builder(
-    ReadOntologyV2(OntologyMetadataV2(ontologyIri.smartIri), Map.empty)
+    ReadOntologyV2(OntologyMetadataV2(ontologyIri.smartIri), Map.empty),
   )
 
   def builder(ontologyIri: SmartIri): Builder = Builder(
-    ReadOntologyV2(OntologyMetadataV2(ontologyIri.internal), Map.empty)
+    ReadOntologyV2(OntologyMetadataV2(ontologyIri.internal), Map.empty),
   )
 }
 
@@ -128,9 +128,9 @@ object ReadClassInfoV2Builder {
       copy(rci =
         rci.copy(entityInfoContent =
           rci.entityInfoContent.copy(directCardinalities =
-            rci.entityInfoContent.directCardinalities + (propertyIri.smartIri -> KnoraCardinalityInfo(cardinality))
-          )
-        )
+            rci.entityInfoContent.directCardinalities + (propertyIri.smartIri -> KnoraCardinalityInfo(cardinality)),
+          ),
+        ),
       )
   }
 
@@ -141,7 +141,7 @@ object ReadClassInfoV2Builder {
   def builder(classIri: InternalIri): Builder = builder(classIri.smartIri)
 
   def builder(classIri: SmartIri): Builder = Builder(
-    ReadClassInfoV2(ClassInfoContentV2Builder.builder(classIri).build, allBaseClasses = List(classIri))
+    ReadClassInfoV2(ClassInfoContentV2Builder.builder(classIri).build, allBaseClasses = List(classIri)),
   )
 
   object ClassInfoContentV2Builder {
@@ -155,7 +155,7 @@ object ReadClassInfoV2Builder {
     }
 
     def builder(classIri: SmartIri): Builder = Builder(
-      ClassInfoContentV2(classIri.internal, ontologySchema = ApiV2Complex)
+      ClassInfoContentV2(classIri.internal, ontologySchema = ApiV2Complex),
     )
   }
 }

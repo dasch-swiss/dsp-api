@@ -66,7 +66,7 @@ abstract class KnoraRoute(routeData: KnoraRouteData, protected implicit val runt
         }
         Future.failed(newThrowable)
       },
-      Future.successful
+      Future.successful,
     )
 
   def getUserADM(ctx: RequestContext) = UnsafeZioRun.runToFuture(Authenticator.getUserADM(ctx))

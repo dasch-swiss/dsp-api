@@ -38,11 +38,11 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
             subj = statement.subj,
             pred = newPredicateLabel,
             obj = groupDescriptionWithLanguage,
-            context = statement.context
+            context = statement.context,
           )
 
           log.info(
-            s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>"
+            s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>",
           )
 
         // the group description did already have a language attribute
@@ -53,7 +53,7 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
             subj = statement.subj,
             pred = newPredicateLabel,
             obj = statement.obj,
-            context = statement.context
+            context = statement.context,
           )
           log.info(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
       }
@@ -70,7 +70,7 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
               case _ =>
                 updateGroupDescription(
                   statement = statement,
-                  languageTag = Some(DEFAULT_LANG)
+                  languageTag = Some(DEFAULT_LANG),
                 )
             }
           }
@@ -84,7 +84,7 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
               case _ =>
                 updateGroupDescription(
                   statement = statement,
-                  languageTag = Some(DEFAULT_LANG)
+                  languageTag = Some(DEFAULT_LANG),
                 )
             }
           }

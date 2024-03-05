@@ -39,7 +39,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
    */
   override def cacheUpdatedOntologyWithoutUpdatingMaps(
     updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2
+    updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] = ???
 
   /**
@@ -59,7 +59,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
    */
   override def cacheUpdatedOntology(
     updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2
+    updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] = ???
 
   /**
@@ -73,7 +73,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
   override def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri
+    updatedClassIri: SmartIri,
   ): Task[OntologyCacheData] = ???
 }
 

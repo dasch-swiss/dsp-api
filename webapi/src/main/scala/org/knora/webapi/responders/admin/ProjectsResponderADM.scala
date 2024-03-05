@@ -123,7 +123,7 @@ trait ProjectsResponderADM {
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
-    id: ProjectIdentifierADM
+    id: ProjectIdentifierADM,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
   /**
@@ -143,7 +143,7 @@ trait ProjectsResponderADM {
   def projectCreateRequestADM(
     createReq: ProjectCreateRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ProjectOperationResponseADM]
 
   /**
@@ -161,7 +161,7 @@ trait ProjectsResponderADM {
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ProjectOperationResponseADM]
 
 }
@@ -174,7 +174,7 @@ final case class ProjectsResponderADMLive(
   private val projectService: ProjectADMService,
   private val triplestore: TriplestoreService,
   private val userService: UserService,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
 ) extends ProjectsResponderADM
     with MessageHandler
     with LazyLogging {
@@ -196,13 +196,13 @@ final case class ProjectsResponderADMLive(
           projectIri,
           projectUpdatePayload,
           requestingUser,
-          apiRequestID
+          apiRequestID,
         ) =>
       changeBasicInformationRequestADM(
         projectIri,
         projectUpdatePayload,
         requestingUser,
-        apiRequestID
+        apiRequestID,
       )
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
@@ -245,7 +245,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectMembersGetRequestADM(
     id: ProjectIdentifierADM,
-    user: User
+    user: User,
   ): Task[ProjectMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
@@ -266,8 +266,8 @@ final case class ProjectsResponderADMLive(
                   .getProjectMembers(
                     maybeIri = id.asIriIdentifierOption,
                     maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption
-                  )
+                    maybeShortcode = id.asShortcodeIdentifierOption,
+                  ),
               )
 
       statements <- triplestore
@@ -290,7 +290,7 @@ final case class ProjectsResponderADMLive(
    */
   override def projectAdminMembersGetRequestADM(
     id: ProjectIdentifierADM,
-    user: User
+    user: User,
   ): Task[ProjectAdminMembersGetResponseADM] =
     for {
       /* Get project and verify permissions. */
@@ -309,8 +309,8 @@ final case class ProjectsResponderADMLive(
                   .getProjectAdminMembers(
                     maybeIri = id.asIriIdentifierOption,
                     maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption
-                  )
+                    maybeShortcode = id.asShortcodeIdentifierOption,
+                  ),
               )
 
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
@@ -350,15 +350,15 @@ final case class ProjectsResponderADMLive(
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
   override def projectRestrictedViewSettingsGetADM(
-    id: ProjectIdentifierADM
+    id: ProjectIdentifierADM,
   ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
     val query = Construct(
       sparql.admin.txt
         .getProjects(
           maybeIri = id.asIriIdentifierOption,
           maybeShortname = id.asShortnameIdentifierOption,
-          maybeShortcode = id.asShortcodeIdentifierOption
-        )
+          maybeShortcode = id.asShortcodeIdentifierOption,
+        ),
     )
     for {
       projectResponse <- triplestore.query(query).flatMap(_.asExtended)
@@ -369,13 +369,13 @@ final case class ProjectsResponderADMLive(
             size <- predicateObjectMapper
                       .getSingleOption[StringLiteralV2](
                         OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
-                        propsMap
+                        propsMap,
                       )
                       .map(_.map(_.value))
             watermark <- predicateObjectMapper
                            .getSingleOption[BooleanLiteralV2](
                              OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
-                             propsMap
+                             propsMap,
                            )
                            .map(_.exists(_.value))
           } yield Some(ProjectRestrictedViewSettingsADM(size, watermark))
@@ -394,7 +394,7 @@ final case class ProjectsResponderADMLive(
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   override def projectRestrictedViewSettingsGetRequestADM(
-    id: ProjectIdentifierADM
+    id: ProjectIdentifierADM,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
       .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
@@ -415,7 +415,7 @@ final case class ProjectsResponderADMLive(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ProjectOperationResponseADM] = {
 
     /**
@@ -424,7 +424,7 @@ final case class ProjectsResponderADMLive(
     def changeProjectTask(
       projectIri: ProjectIri,
       updateReq: ProjectUpdateRequest,
-      requestingUser: User
+      requestingUser: User,
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
@@ -477,7 +477,7 @@ final case class ProjectsResponderADMLive(
                         maybeKeywords = projectUpdatePayload.keywords.map(_.map(_.value)),
                         maybeLogo = projectUpdatePayload.logo.map(_.value),
                         maybeStatus = projectUpdatePayload.status.map(_.value),
-                        maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
+                        maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value),
                       )
         _ <- triplestore.query(Update(updateQuery))
 
@@ -488,7 +488,7 @@ final case class ProjectsResponderADMLive(
             .someOrFail(UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
         _ <- ZIO.logDebug(
-               s"updateProjectADM - projectUpdatePayload: $projectUpdatePayload /  updatedProject: $updatedProject"
+               s"updateProjectADM - projectUpdatePayload: $projectUpdatePayload /  updatedProject: $updatedProject",
              )
 
         _ <- checkProjectUpdate(updatedProject, projectUpdatePayload)
@@ -508,7 +508,7 @@ final case class ProjectsResponderADMLive(
    */
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
-    projectUpdatePayload: ProjectUpdateRequest
+    projectUpdatePayload: ProjectUpdateRequest,
   ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
@@ -517,8 +517,8 @@ final case class ProjectsResponderADMLive(
         .filter(_ == updatedProject.shortname)
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'shortname' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'shortname' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -529,8 +529,8 @@ final case class ProjectsResponderADMLive(
         .filter(updatedProject.longname.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'longname' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'longname' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -541,8 +541,8 @@ final case class ProjectsResponderADMLive(
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'description' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'description' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -553,8 +553,8 @@ final case class ProjectsResponderADMLive(
         .filter(_.sorted == updatedProject.keywords.sorted)
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'keywords' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'keywords' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -565,8 +565,8 @@ final case class ProjectsResponderADMLive(
         .filter(updatedProject.logo.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'logo' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'logo' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -576,8 +576,8 @@ final case class ProjectsResponderADMLive(
         .filter(_ == updatedProject.status)
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'status' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'status' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
 
@@ -587,8 +587,8 @@ final case class ProjectsResponderADMLive(
         .filter(_ == updatedProject.selfjoin)
         .getOrElse(
           throw UpdateNotPerformedException(
-            "Project's 'selfjoin' was not updated. Please report this as a possible bug."
-          )
+            "Project's 'selfjoin' was not updated. Please report this as a possible bug.",
+          ),
         )
     }
   }
@@ -610,7 +610,7 @@ final case class ProjectsResponderADMLive(
   override def projectCreateRequestADM(
     createReq: ProjectCreateRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ProjectOperationResponseADM] = {
 
     /**
@@ -631,10 +631,10 @@ final case class ProjectsResponderADMLive(
                  forProject = projectIri,
                  forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
                  hasPermissions =
-                   Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+                   Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
                ),
                requestingUser,
-               UUID.randomUUID()
+               UUID.randomUUID(),
              )
 
         // Give the members of the new project rights to create resources.
@@ -642,10 +642,10 @@ final case class ProjectsResponderADMLive(
                CreateAdministrativePermissionAPIRequestADM(
                  forProject = projectIri,
                  forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                 hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                 hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
                ),
                requestingUser,
-               UUID.randomUUID()
+               UUID.randomUUID(),
              )
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
@@ -656,9 +656,9 @@ final case class ProjectsResponderADMLive(
                           forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
                           hasPermissions = Set(
                             PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-                          )
-                        )
+                            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                          ),
+                        ),
                       )
         _ <- permissionsResponderADM.createDefaultObjectAccessPermission(groupAdmin, requestingUser, UUID.randomUUID())
 
@@ -670,24 +670,24 @@ final case class ProjectsResponderADMLive(
                            forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                            hasPermissions = Set(
                              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                             PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-                           )
-                         )
+                             PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                           ),
+                         ),
                        )
         _ <- permissionsResponderADM.createDefaultObjectAccessPermission(groupMember, requestingUser, UUID.randomUUID())
       } yield ()
 
     def projectCreateTask(
       createProjectRequest: ProjectCreateRequest,
-      requestingUser: User
+      requestingUser: User,
     ): Task[ProjectOperationResponseADM] =
       for {
         // check if the supplied shortname is unique
         _ <- ZIO
                .fail(
                  DuplicateValueException(
-                   s"Project with the shortname: '${createProjectRequest.shortname.value}' already exists"
-                 )
+                   s"Project with the shortname: '${createProjectRequest.shortname.value}' already exists",
+                 ),
                )
                .whenZIO(projectByShortnameExists(createProjectRequest.shortname.value))
 
@@ -695,8 +695,8 @@ final case class ProjectsResponderADMLive(
         _ <- ZIO
                .fail(
                  DuplicateValueException(
-                   s"Project with the shortcode: '${createProjectRequest.shortcode.value}' already exists"
-                 )
+                   s"Project with the shortcode: '${createProjectRequest.shortcode.value}' already exists",
+                 ),
                )
                .whenZIO(projectByShortcodeExists(createProjectRequest.shortcode.value))
 
@@ -727,7 +727,7 @@ final case class ProjectsResponderADMLive(
                                      } else None,
                                      maybeLogo = maybeLogo,
                                      status = createProjectRequest.status.value,
-                                     hasSelfJoinEnabled = createProjectRequest.selfjoin.value
+                                     hasSelfJoinEnabled = createProjectRequest.selfjoin.value,
                                    )
         _ <- triplestore.query(Update(createNewProjectSparql))
 
@@ -739,8 +739,8 @@ final case class ProjectsResponderADMLive(
                            .findByProjectIdentifier(id)
                            .someOrFail(
                              UpdateNotPerformedException(
-                               s"Project $newProjectIRI was not created. Please report this as a possible bug."
-                             )
+                               s"Project $newProjectIRI was not created. Please report this as a possible bug.",
+                             ),
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)

@@ -15,7 +15,7 @@ object LogAspect {
   def logAnnotateCorrelationId(): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
     new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
       override def apply[R, E, A](
-        zio: ZIO[R, E, A]
+        zio: ZIO[R, E, A],
       )(implicit trace: Trace): ZIO[R, E, A] =
         Random.nextUUID.map(_.toString).flatMap(id => ZIO.logAnnotate("correlation-id", id)(zio))
     }
@@ -26,11 +26,11 @@ object LogAspect {
    * @param label
    */
   def logSpan(
-    label: String
+    label: String,
   ): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
     new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
       override def apply[R, E, A](zio: ZIO[R, E, A])(implicit
-        trace: Trace
+        trace: Trace,
       ): ZIO[R, E, A] =
         ZIO.logSpan(label)(zio)
     }

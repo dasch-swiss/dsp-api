@@ -68,7 +68,7 @@ final case class ListsResponderV2(appConfig: AppConfig, listsResponder: ListsRes
 object ListsResponderV2 {
   val layer: URLayer[
     AppConfig & ListsResponder & MessageRelay,
-    ListsResponderV2
+    ListsResponderV2,
   ] = ZLayer.fromZIO {
     for {
       ac      <- ZIO.service[AppConfig]

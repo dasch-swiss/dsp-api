@@ -69,7 +69,7 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
       groupDescriptions,
       groupStatus,
       belongsToProject,
-      hasSelfJoinEnabled
+      hasSelfJoinEnabled,
     )
   }.mapError(it => TriplestoreResponseException(it.toString))
 }
@@ -88,7 +88,7 @@ private object KnoraUserGroupQueries {
         s
           .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
           .and(s.has(p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri)
+          .from(Vocabulary.NamedGraphs.knoraAdminIri),
       )
     Construct(query.getQueryString)
   }
@@ -103,7 +103,7 @@ private object KnoraUserGroupQueries {
         s
           .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
           .and(tp(s, p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri)
+          .from(Vocabulary.NamedGraphs.knoraAdminIri),
       )
     Construct(query)
   }
@@ -112,7 +112,7 @@ private object KnoraUserGroupQueries {
     id: Iri,
     rdfType: Iri,
     query: ModifyQuery,
-    iris: List[Iri]
+    iris: List[Iri],
   ): ModifyQuery =
     query
       .delete(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType)) { case (p, (iri, index)) =>
@@ -138,7 +138,7 @@ private object KnoraUserGroupQueries {
     Vocabulary.KnoraAdmin.groupDescriptions,
     Vocabulary.KnoraAdmin.status,
     Vocabulary.KnoraAdmin.belongsToProject,
-    Vocabulary.KnoraAdmin.hasSelfJoinEnabled
+    Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
   )
 
   private def toTriples(group: KnoraUserGroup) = {

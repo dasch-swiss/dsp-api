@@ -23,7 +23,7 @@ final case class ResourceInfoRoutes(
   endpoints: ResourceInfoEndpoints,
   resourceInfoService: RestResourceInfoService,
   mapper: HandlerMapper,
-  interpreter: TapirToPekkoInterpreter
+  interpreter: TapirToPekkoInterpreter,
 ) {
 
   val getResourcesInfoHandler =
@@ -34,9 +34,9 @@ final case class ResourceInfoRoutes(
           projectIri,
           resourceClass,
           order.getOrElse(Asc),
-          orderBy.getOrElse(LastModificationDate)
+          orderBy.getOrElse(LastModificationDate),
         )
-      }
+      },
     )
 
   val routes: Seq[Route] = List(getResourcesInfoHandler)

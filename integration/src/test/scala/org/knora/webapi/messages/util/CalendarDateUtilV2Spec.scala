@@ -19,18 +19,18 @@ class CalendarDateUtilV2Spec extends CoreSpec {
     calendarDate: CalendarDateV2,
     expectedStartJDN: Int,
     expectedEndJDN: Int,
-    dateStr: String
+    dateStr: String,
   ): Assertion = {
     val calendarDateRange = CalendarDateRangeV2(
       startCalendarDate = calendarDate,
-      endCalendarDate = calendarDate
+      endCalendarDate = calendarDate,
     )
 
     checkDateRange(
       calendarDateRange = calendarDateRange,
       expectedStartJDN = expectedStartJDN,
       expectedEndJDN = expectedEndJDN,
-      dateStr = dateStr
+      dateStr = dateStr,
     )
   }
 
@@ -38,7 +38,7 @@ class CalendarDateUtilV2Spec extends CoreSpec {
     calendarDateRange: CalendarDateRangeV2,
     expectedStartJDN: Int,
     expectedEndJDN: Int,
-    dateStr: String
+    dateStr: String,
   ): Assertion = {
     // Convert the date range to Julian Day Numbers and check that they're correct.
     val (startJDN: Int, endJDN: Int) = calendarDateRange.toJulianDayRange
@@ -51,18 +51,18 @@ class CalendarDateUtilV2Spec extends CoreSpec {
     val convertedStartCalendarDate = CalendarDateV2.fromJulianDayNumber(
       julianDay = startJDN,
       precision = calendarDateRange.startCalendarDate.precision,
-      calendarName = calendarDateRange.startCalendarDate.calendarName
+      calendarName = calendarDateRange.startCalendarDate.calendarName,
     )
 
     val convertedEndCalendarDate = CalendarDateV2.fromJulianDayNumber(
       julianDay = endJDN,
       precision = calendarDateRange.endCalendarDate.precision,
-      calendarName = calendarDateRange.endCalendarDate.calendarName
+      calendarName = calendarDateRange.endCalendarDate.calendarName,
     )
 
     val convertedCalendarDateRange = CalendarDateRangeV2(
       startCalendarDate = convertedStartCalendarDate,
-      endCalendarDate = convertedEndCalendarDate
+      endCalendarDate = convertedEndCalendarDate,
     )
 
     assert(convertedCalendarDateRange == calendarDateRange)
@@ -86,11 +86,11 @@ class CalendarDateUtilV2Spec extends CoreSpec {
           year = 1291,
           maybeMonth = Some(8),
           maybeDay = Some(1),
-          maybeEra = Some(DateEraCE)
+          maybeEra = Some(DateEraCE),
         ),
         expectedStartJDN = 2192808,
         expectedEndJDN = 2192808,
-        dateStr = "JULIAN:1291-08-01 CE"
+        dateStr = "JULIAN:1291-08-01 CE",
       )
 
       // JULIAN:4713-01-01 BCE
@@ -101,11 +101,11 @@ class CalendarDateUtilV2Spec extends CoreSpec {
           year = 4713,
           maybeMonth = Some(1),
           maybeDay = Some(1),
-          maybeEra = Some(DateEraBCE)
+          maybeEra = Some(DateEraBCE),
         ),
         expectedStartJDN = 0,
         expectedEndJDN = 0,
-        dateStr = "JULIAN:4713-01-01 BCE"
+        dateStr = "JULIAN:4713-01-01 BCE",
       )
     }
 
@@ -118,11 +118,11 @@ class CalendarDateUtilV2Spec extends CoreSpec {
           year = 1969,
           maybeMonth = Some(3),
           maybeDay = Some(10),
-          maybeEra = Some(DateEraCE)
+          maybeEra = Some(DateEraCE),
         ),
         expectedStartJDN = 2440291,
         expectedEndJDN = 2440291,
-        dateStr = "GREGORIAN:1969-03-10 CE"
+        dateStr = "GREGORIAN:1969-03-10 CE",
       )
 
       // GREGORIAN:1291-08 CE:1969-03-10 CE
@@ -134,19 +134,19 @@ class CalendarDateUtilV2Spec extends CoreSpec {
             year = 1291,
             maybeMonth = Some(8),
             maybeDay = None,
-            maybeEra = Some(DateEraCE)
+            maybeEra = Some(DateEraCE),
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
             year = 1969,
             maybeMonth = Some(3),
             maybeDay = Some(10),
-            maybeEra = Some(DateEraCE)
-          )
+            maybeEra = Some(DateEraCE),
+          ),
         ),
         expectedStartJDN = 2192801,
         expectedEndJDN = 2440291,
-        dateStr = "GREGORIAN:1291-08 CE:1969-03-10 CE"
+        dateStr = "GREGORIAN:1291-08 CE:1969-03-10 CE",
       )
 
       // GREGORIAN:2005-09 CE:2015-07 CE
@@ -158,19 +158,19 @@ class CalendarDateUtilV2Spec extends CoreSpec {
             year = 2005,
             maybeMonth = Some(9),
             maybeDay = None,
-            maybeEra = Some(DateEraCE)
+            maybeEra = Some(DateEraCE),
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameGregorian,
             year = 2015,
             maybeMonth = Some(7),
             maybeDay = None,
-            maybeEra = Some(DateEraCE)
-          )
+            maybeEra = Some(DateEraCE),
+          ),
         ),
         expectedStartJDN = 2453615,
         expectedEndJDN = 2457235,
-        dateStr = "GREGORIAN:2005-09 CE:2015-07 CE"
+        dateStr = "GREGORIAN:2005-09 CE:2015-07 CE",
       )
     }
 
@@ -295,11 +295,11 @@ class CalendarDateUtilV2Spec extends CoreSpec {
           year = 1432,
           maybeMonth = Some(8),
           maybeDay = Some(29),
-          maybeEra = None
+          maybeEra = None,
         ),
         expectedStartJDN = 2455774,
         expectedEndJDN = 2455774,
-        dateStr = "ISLAMIC:1432-08-29"
+        dateStr = "ISLAMIC:1432-08-29",
       )
 
       // ISLAMIC:1432-08-29:1436-09-14
@@ -311,19 +311,19 @@ class CalendarDateUtilV2Spec extends CoreSpec {
             year = 1432,
             maybeMonth = Some(8),
             maybeDay = Some(29),
-            maybeEra = None
+            maybeEra = None,
           ),
           endCalendarDate = CalendarDateV2(
             calendarName = CalendarNameIslamic,
             year = 1436,
             maybeMonth = Some(9),
             maybeDay = Some(14),
-            maybeEra = None
-          )
+            maybeEra = None,
+          ),
         ),
         expectedStartJDN = 2455774,
         expectedEndJDN = 2457205,
-        dateStr = "ISLAMIC:1432-08-29:1436-09-14"
+        dateStr = "ISLAMIC:1432-08-29:1436-09-14",
       )
     }
   }

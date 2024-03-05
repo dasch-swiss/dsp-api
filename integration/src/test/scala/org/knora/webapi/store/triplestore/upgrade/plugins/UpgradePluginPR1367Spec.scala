@@ -28,7 +28,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
         .find(
           subj = Some(subj),
           pred = Some(pred),
-          obj = None
+          obj = None,
         )
         .toSet
         .headOption match {

@@ -39,7 +39,7 @@ object DspIngestTestContainer {
   private val initDspIngest = ZLayer.fromZIO(
     ZIO.serviceWithZIO[DspIngestTestContainer] { it =>
       ZIO.attemptBlocking(it.execInContainer("mkdir", s"$tempDir")).orDie
-    }
+    },
   )
 
   val layer: URLayer[SharedVolumes.Images, DspIngestTestContainer] =

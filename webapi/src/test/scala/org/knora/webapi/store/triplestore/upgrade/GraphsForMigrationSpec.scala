@@ -27,13 +27,13 @@ object GraphsForMigrationSpec extends ZIOSpecDefault {
     test("Merging two different MigrateSpecificGraphs with duplicate IRI should result in distinct IRI") {
       val specificGraphs1 = MigrateSpecificGraphs.from(Seq(InternalIri("http://example.com/graph1")))
       val specificGraphs2 = MigrateSpecificGraphs.from(
-        Seq(InternalIri("http://example.com/graph1"), InternalIri("http://example.com/graph2"))
+        Seq(InternalIri("http://example.com/graph1"), InternalIri("http://example.com/graph2")),
       )
       val actual = specificGraphs1.merge(specificGraphs2)
       assertTrue(
         actual == MigrateSpecificGraphs.from(
-          Seq(InternalIri("http://example.com/graph1"), InternalIri("http://example.com/graph2"))
-        )
+          Seq(InternalIri("http://example.com/graph1"), InternalIri("http://example.com/graph2")),
+        ),
       )
     },
     test("Creating with MigrateSpecificGraphs.from(Seq) should contain the builtIn") {
@@ -43,6 +43,6 @@ object GraphsForMigrationSpec extends ZIOSpecDefault {
     test("Creating with MigrateSpecificGraphs.from(IRI) should contain the builtIn") {
       val actual = MigrateSpecificGraphs.from(InternalIri("http://example.com/graph1"))
       assertTrue(MigrateSpecificGraphs.builtIn.graphIris.subsetOf(actual.graphIris))
-    }
+    },
   )
 }

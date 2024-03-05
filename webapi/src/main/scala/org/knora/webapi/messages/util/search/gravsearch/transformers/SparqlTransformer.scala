@@ -73,8 +73,8 @@ object SparqlTransformer {
   def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable =
     QueryVariable(
       escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(
-        baseStatement.pred
-      ) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix
+        baseStatement.pred,
+      ) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix,
     )
 
   /**
@@ -101,7 +101,7 @@ object SparqlTransformer {
       case StatementPattern(
             _,
             IriRef(SmartIri(OntologyConstants.KnoraBase.IsDeleted), _),
-            XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean))
+            XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean)),
           ) =>
         true
       case _ => false
@@ -115,9 +115,9 @@ object SparqlTransformer {
             StatementPattern(
               subj = statementPattern.subj,
               pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-            )
-          )
+              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+            ),
+          ),
         )
     }
 

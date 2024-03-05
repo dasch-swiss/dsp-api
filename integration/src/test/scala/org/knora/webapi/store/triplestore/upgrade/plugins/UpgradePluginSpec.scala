@@ -61,8 +61,8 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
       VariableResultsRow(
         new ErrorHandlingMap[String, String](
           mapToWrap,
-          (key: String) => s"No value found for SPARQL query variable '$key' in query result row"
-        )
+          (key: String) => s"No value found for SPARQL query variable '$key' in query result row",
+        ),
       )
     }
 

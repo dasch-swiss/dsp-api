@@ -19,7 +19,7 @@ final case class AdminApiRoutes(
   project: ProjectsEndpointsHandler,
   storeEndpoints: StoreEndpointsHandler,
   users: UsersEndpointsHandler,
-  tapirToPekko: TapirToPekkoInterpreter
+  tapirToPekko: TapirToPekkoInterpreter,
 ) {
 
   private val handlers =

@@ -16,7 +16,7 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 final case class MaintenanceEndpointsHandlers(
   endpoints: MaintenanceEndpoints,
   restService: MaintenanceRestService,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
 
   private val postMaintenanceHandler =
@@ -24,7 +24,7 @@ final case class MaintenanceEndpointsHandlers(
       endpoints.postMaintenance,
       (user: User) => { case (action: String, jsonMaybe: Option[Json]) =>
         restService.executeMaintenanceAction(user, action, jsonMaybe)
-      }
+      },
     )
 
   val allHandlers = List(postMaintenanceHandler).map(mapper.mapSecuredEndpointHandler(_))

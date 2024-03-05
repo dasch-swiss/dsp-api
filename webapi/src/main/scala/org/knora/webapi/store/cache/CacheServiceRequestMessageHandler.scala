@@ -23,13 +23,13 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
   private val cacheServiceWriteProjectTimer = Metric
     .timer(
       name = "cache-service-write-project",
-      chronoUnit = ChronoUnit.NANOS
+      chronoUnit = ChronoUnit.NANOS,
     )
 
   private val cacheServiceReadProjectTimer = Metric
     .timer(
       name = "cache-service-read-project",
-      chronoUnit = ChronoUnit.NANOS
+      chronoUnit = ChronoUnit.NANOS,
     )
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[CacheServiceRequest]
 

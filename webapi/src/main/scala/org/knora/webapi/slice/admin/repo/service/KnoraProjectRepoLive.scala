@@ -29,7 +29,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
-  private val triplestore: TriplestoreService
+  private val triplestore: TriplestoreService,
 ) extends KnoraProjectRepo {
 
   override def findAll(): Task[List[KnoraProject]] =
@@ -38,8 +38,8 @@ final case class KnoraProjectRepoLive(
       resources <- model.getSubjectResources
       projects <- ZIO.foreach(resources)(res =>
                     toKnoraProject(res).orElseFail(
-                      InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject")
-                    )
+                      InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject"),
+                    ),
                   )
     } yield projects.toList
 
@@ -93,12 +93,12 @@ final case class KnoraProjectRepoLive(
       keywords = keywords.toList.sortBy(_.value),
       logo = logo,
       status = status,
-      selfjoin = selfjoin
+      selfjoin = selfjoin,
     )
 
   override def setProjectRestrictedView(
     project: KnoraProject,
-    settings: RestrictedView
+    settings: RestrictedView,
   ): Task[Unit] =
     triplestore.query(ProjectQueries.setProjectRestrictedView(project.id, settings))
 
@@ -118,7 +118,7 @@ object KnoraProjectRepoLive {
             |  BIND(IRI("${iri.value}") as ?project)
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findOneByShortcode(shortcode: Shortcode): Construct =
@@ -133,7 +133,7 @@ object KnoraProjectRepoLive {
             |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findOneByShortname(shortname: Shortname): Construct =
@@ -147,7 +147,7 @@ object KnoraProjectRepoLive {
             |  ?project knora-admin:projectShortname "${shortname.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findAll: Construct = {
@@ -170,7 +170,7 @@ object KnoraProjectRepoLive {
         .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
         .delete(
           project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize),
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark)
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark),
         )
         .insert(
           restriction match {
@@ -178,12 +178,12 @@ object KnoraProjectRepoLive {
               project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, value)
             case RestrictedView.Size(value) =>
               project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, value)
-          }
+          },
         )
         .where(
           project.isA(Vocabulary.KnoraAdmin.KnoraProject),
           project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize).optional(),
-          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark).optional()
+          project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark).optional(),
         )
       Update(query.getQueryString)
     }

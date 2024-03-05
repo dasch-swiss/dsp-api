@@ -25,7 +25,7 @@ class UpgradePluginPR1372() extends UpgradePlugin {
       model.remove(
         subj = Some(valueIri),
         pred = Some(HasPermissionsIri),
-        obj = None
+        obj = None,
       )
     }
 
@@ -41,7 +41,7 @@ class UpgradePluginPR1372() extends UpgradePlugin {
           .find(
             subj = None,
             pred = Some(PreviousValueIri),
-            obj = Some(resource)
+            obj = Some(resource),
           )
           .nonEmpty
       }

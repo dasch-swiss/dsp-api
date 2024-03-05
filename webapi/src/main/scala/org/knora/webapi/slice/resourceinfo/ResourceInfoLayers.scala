@@ -23,7 +23,7 @@ object ResourceInfoLayers {
   val live: ZLayer[
     TriplestoreService & IriConverter & BaseEndpoints & HandlerMapper & TapirToPekkoInterpreter,
     Nothing,
-    RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoRoutes
+    RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoRoutes,
   ] =
     ResourceInfoRepoLive.layer >>> RestResourceInfoServiceLive.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoRoutes.layer
 

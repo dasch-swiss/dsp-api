@@ -19,31 +19,31 @@ class ResponseCheckerV2Spec extends CoreSpec {
     "not throw an exception if received and expected resource responses are the same" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
         )
 
       ResponseCheckerV2.compareJSONLDForResourcesResponse(
         expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = expectedAnswerJSONLD
+        receivedJSONLD = expectedAnswerJSONLD,
       )
     }
 
     "not throw an exception if received and expected mapping responses are the same" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld")
+          Paths.get("..", "test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
         )
 
       ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,
-        receivedJSONLD = expectedAnswerJSONLD
+        receivedJSONLD = expectedAnswerJSONLD,
       )
     }
 
     "throw an exception if received and expected resource responses are different" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
         )
       val receivedAnswerJSONLD =
         FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithListValue.jsonld"))
@@ -51,7 +51,7 @@ class ResponseCheckerV2Spec extends CoreSpec {
       assertThrows[AssertionError] {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
-          receivedJSONLD = receivedAnswerJSONLD
+          receivedJSONLD = receivedAnswerJSONLD,
         )
       }
     }
@@ -59,17 +59,17 @@ class ResponseCheckerV2Spec extends CoreSpec {
     "throw an exception if the values of the received and expected resource responses are different" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
       val receivedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"),
         )
 
       assertThrows[AssertionError] {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
-          receivedJSONLD = receivedAnswerJSONLD
+          receivedJSONLD = receivedAnswerJSONLD,
         )
       }
     }
@@ -77,18 +77,18 @@ class ResponseCheckerV2Spec extends CoreSpec {
     "throw an exception if the number of values of the received and expected resource responses are different" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
         )
       // number of StillImageFileValue is wrong
       val receivedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld")
+          Paths.get("..", "test_data/generated_test_data/responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld"),
         )
 
       assertThrows[AssertionError] {
         ResponseCheckerV2.compareJSONLDForResourcesResponse(
           expectedJSONLD = expectedAnswerJSONLD,
-          receivedJSONLD = receivedAnswerJSONLD
+          receivedJSONLD = receivedAnswerJSONLD,
         )
       }
     }
@@ -96,20 +96,20 @@ class ResponseCheckerV2Spec extends CoreSpec {
     "throw an exception if received and expected mapping responses are different" in {
       val expectedAnswerJSONLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld")
+          Paths.get("..", "test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld"),
         )
       val receivedAnswerJSONLD =
         FileUtil.readTextFile(
           Paths.get(
             "..",
-            "test_data/generated_test_data/standoffR2RV2/mappingCreationResponseWithDifferentLabel.jsonld"
-          )
+            "test_data/generated_test_data/standoffR2RV2/mappingCreationResponseWithDifferentLabel.jsonld",
+          ),
         )
 
       assertThrows[AssertionError] {
         ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
           expectedJSONLD = expectedAnswerJSONLD,
-          receivedJSONLD = receivedAnswerJSONLD
+          receivedJSONLD = receivedAnswerJSONLD,
         )
       }
     }

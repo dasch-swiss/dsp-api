@@ -19,13 +19,13 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class OntologyInferencer(
   private val ontologyCache: OntologyCache,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
 ) {
 
   private def inferSubclasses(
     statementPattern: StatementPattern,
     cache: OntologyCacheData,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]],
   ): IO[GravsearchException, Seq[QueryPattern]] = for {
     // Expand using rdfs:subClassOf*.
     baseClassIri <-
@@ -74,7 +74,7 @@ final case class OntologyInferencer(
     statementPattern: StatementPattern,
     predIri: SmartIri,
     cache: OntologyCacheData,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]],
   ): IO[GravsearchException, Seq[QueryPattern]] = {
 
     // Expand using rdfs:subPropertyOf*.
@@ -108,8 +108,8 @@ final case class OntologyInferencer(
     val unions = if (subProps.length > 1) {
       Seq(
         UnionPattern(
-          subProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
-        )
+          subProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate)))),
+        ),
       )
     } else {
       // if no subproperties are available, the initial statement can be used
@@ -129,7 +129,7 @@ final case class OntologyInferencer(
   def transformStatementInWhere(
     statementPattern: StatementPattern,
     simulateInference: Boolean,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[Seq[QueryPattern]] =
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>

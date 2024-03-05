@@ -65,14 +65,14 @@ class ValuesV2R2RSpec extends R2RSpec {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   private def getResourceWithValues(
     resourceIri: IRI,
     propertyIrisForGravsearch: Seq[SmartIri],
-    userEmail: String
+    userEmail: String,
   ): JsonLDDocument = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
@@ -82,7 +82,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     // Run the query.
     Post(
       "/v2/searchextended",
-      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery),
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password)) ~> searchPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
       responseToJsonLDDocument(response)
@@ -95,7 +95,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   private def getValueFromResource(
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
-    expectedValueIri: IRI
+    expectedValueIri: IRI,
   ): JsonLDObject = {
     val resourceIri: IRI =
       resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -106,20 +106,20 @@ class ValuesV2R2RSpec extends R2RSpec {
       case jsonLDObject: JsonLDObject
           if jsonLDObject.requireStringWithValidation(
             JsonLDKeywords.ID,
-            validationFun
+            validationFun,
           ) == expectedValueIri =>
         jsonLDObject
     }
 
     if (matchingValues.isEmpty) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"
+        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>",
       )
     }
 
     if (matchingValues.size > 1) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>"
+        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>",
       )
     }
 
@@ -131,18 +131,18 @@ class ValuesV2R2RSpec extends R2RSpec {
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-    userEmail: String
+    userEmail: String,
   ): JsonLDObject = {
     val resource: JsonLDDocument = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
-      userEmail = userEmail
+      userEmail = userEmail,
     )
 
     getValueFromResource(
       resource = resource,
       propertyIriInResult = propertyIriInResult,
-      expectedValueIri = expectedValueIri
+      expectedValueIri = expectedValueIri,
     )
   }
 
@@ -171,14 +171,14 @@ class ValuesV2R2RSpec extends R2RSpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-still-image-file-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       ) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -194,7 +194,7 @@ class ValuesV2R2RSpec extends R2RSpec {
           propertyIriForGravsearch = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
           propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
           expectedValueIri = stillImageFileValueIri.get,
-          userEmail = anythingUserEmail
+          userEmail = anythingUserEmail,
         )
 
         savedValue

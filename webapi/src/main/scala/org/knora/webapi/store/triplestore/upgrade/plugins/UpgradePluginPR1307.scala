@@ -37,7 +37,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
   case class StandoffRdf(oldIri: IriNode, statements: Set[Statement]) {
     def notFound =
       throw InconsistentRepositoryDataException(
-        s"$oldIri does not have knora-base:standoffTagHasStartIndex with an integer object"
+        s"$oldIri does not have knora-base:standoffTagHasStartIndex with an integer object",
       )
 
     /**
@@ -84,7 +84,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
           subj = newIri,
           pred = statement.pred,
           obj = newStatementObj,
-          context = statement.context
+          context = statement.context,
         )
       }
   }
@@ -103,7 +103,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
     iri: IriNode,
     context: Option[IRI],
     valueHasStandoffStatements: Set[Statement],
-    standoff: Map[IriNode, StandoffRdf]
+    standoff: Map[IriNode, StandoffRdf],
   ) {
     def transform(model: RdfModel): Unit = {
       // Transform the text value's standoff tags.
@@ -125,7 +125,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
             subj = iri,
             pred = statement.pred,
             obj = targetTagNewIri,
-            context = statement.context
+            context = statement.context,
           )
         }
 
@@ -135,7 +135,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
           pred = ValueHasMaxStandoffStartIndexIri,
           obj = JenaNodeFactory
             .makeDatatypeLiteral(standoff.values.map(_.startIndex).max.toString, OntologyConstants.Xsd.Integer),
-          context = context
+          context = context,
         )
       }
     }
@@ -156,7 +156,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
       .find(
         subj = None,
         pred = Some(rdfTypeIri),
-        obj = Some(TextValueIri)
+        obj = Some(TextValueIri),
       )
       .map { statement =>
         (JenaNodeFactory.makeIriNode(statement.subj.stringValue), statement.context)
@@ -169,7 +169,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
         .find(
           subj = Some(textValueSubj),
           pred = None,
-          obj = None
+          obj = None,
         )
         .toSet
 
@@ -184,7 +184,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
           case iriNode: IriNode => iriNode
           case other =>
             throw InconsistentRepositoryDataException(
-              s"Unexpected object for $textValueSubj $ValueHasStandoffIri: $other"
+              s"Unexpected object for $textValueSubj $ValueHasStandoffIri: $other",
             )
         }
       }
@@ -197,9 +197,9 @@ class UpgradePluginPR1307() extends UpgradePlugin {
             .find(
               subj = Some(standoffSubj),
               pred = None,
-              obj = None
+              obj = None,
             )
-            .toSet
+            .toSet,
         )
       }.toMap
 
@@ -207,7 +207,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
         iri = textValueSubj,
         context = textValueContext,
         valueHasStandoffStatements = valueHasStandoffStatements,
-        standoff = standoff
+        standoff = standoff,
       )
     }.toVector
   }

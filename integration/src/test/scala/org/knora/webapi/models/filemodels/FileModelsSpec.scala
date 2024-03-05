@@ -71,7 +71,7 @@ class FileModelsSpec extends CoreSpec {
 
         val context = FileModelUtil.getJsonLdContext(
           ontology = "biblio",
-          ontologyIRI = Some("http://www.knora.org/ontology/0801/biblio")
+          ontologyIRI = Some("http://www.knora.org/ontology/0801/biblio"),
         )
         context should equal(expectedContext)
       }
@@ -83,7 +83,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = fileNamePDF
+          internalFilename = fileNamePDF,
         )
         documentRepresentation.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -106,10 +106,10 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.DocumentFile(
             pageCount = pageCount,
             dimX = dimX,
-            dimY = dimY
+            dimY = dimY,
           ),
           internalFilename = internalFilename,
-          label = customLabel
+          label = customLabel,
         )
         documentRepresentation.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -126,7 +126,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a StillImageRepresentation with default values" in {
         val stillImageRepresentation = UploadFileRequest.make(
           fileType = FileType.StillImageFile(),
-          internalFilename = fileNameImage
+          internalFilename = fileNameImage,
         )
         stillImageRepresentation.fileType match {
           case FileType.StillImageFile(x, y) =>
@@ -134,7 +134,7 @@ class FileModelsSpec extends CoreSpec {
             y should equal(100)
           case _ =>
             throw AssertionException(
-              s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)"
+              s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)",
             )
         }
         stillImageRepresentation.internalFilename should equal(fileNameImage)
@@ -143,7 +143,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a StillImageRepresentation with custom values" in {
         val stillImageRepresentation = UploadFileRequest.make(
           fileType = FileType.StillImageFile(dimX = 10, dimY = 10),
-          internalFilename = fileNameImage
+          internalFilename = fileNameImage,
         )
         stillImageRepresentation.fileType match {
           case FileType.StillImageFile(x, y) =>
@@ -151,7 +151,7 @@ class FileModelsSpec extends CoreSpec {
             y should equal(10)
           case _ =>
             throw AssertionException(
-              s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)"
+              s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)",
             )
         }
         stillImageRepresentation.internalFilename should equal(fileNameImage)
@@ -160,7 +160,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a MovingImageRepresentation with default values" in {
         val movingImageRepresentation = UploadFileRequest.make(
           fileType = FileType.MovingImageFile(),
-          internalFilename = fileNameVideo
+          internalFilename = fileNameVideo,
         )
         movingImageRepresentation.fileType match {
           case FileType.MovingImageFile(x, y) =>
@@ -168,7 +168,7 @@ class FileModelsSpec extends CoreSpec {
             y should equal(100)
           case _ =>
             throw AssertionException(
-              s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)"
+              s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)",
             )
         }
         movingImageRepresentation.internalFilename should equal(fileNameVideo)
@@ -177,7 +177,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a MovingImageRepresentation with custom values" in {
         val movingImageRepresentation = UploadFileRequest.make(
           fileType = FileType.MovingImageFile(10, 11),
-          internalFilename = fileNameVideo
+          internalFilename = fileNameVideo,
         )
         movingImageRepresentation.fileType match {
           case FileType.MovingImageFile(x, y) =>
@@ -185,7 +185,7 @@ class FileModelsSpec extends CoreSpec {
             y should equal(11)
           case _ =>
             throw AssertionException(
-              s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)"
+              s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)",
             )
         }
         movingImageRepresentation.internalFilename should equal(fileNameVideo)
@@ -194,7 +194,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a AudioRepresentation" in {
         val audioRepresentation = UploadFileRequest.make(
           fileType = FileType.AudioFile,
-          internalFilename = fileNameAudio
+          internalFilename = fileNameAudio,
         )
         audioRepresentation.fileType should equal(FileType.AudioFile)
         audioRepresentation.internalFilename should equal(fileNameAudio)
@@ -203,7 +203,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a TextRepresentation" in {
         val textRepresentation = UploadFileRequest.make(
           fileType = FileType.TextFile,
-          internalFilename = fileNameText
+          internalFilename = fileNameText,
         )
         textRepresentation.fileType should equal(FileType.TextFile)
         textRepresentation.internalFilename should equal(fileNameText)
@@ -212,7 +212,7 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a ArchiveRepresentation" in {
         val archiveRepresentation = UploadFileRequest.make(
           fileType = FileType.ArchiveFile,
-          internalFilename = fileNameArchive
+          internalFilename = fileNameArchive,
         )
         archiveRepresentation.fileType should equal(FileType.ArchiveFile)
         archiveRepresentation.internalFilename should equal(fileNameArchive)
@@ -224,25 +224,25 @@ class FileModelsSpec extends CoreSpec {
       "correctly serialize a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = fileNamePDF
+          internalFilename = fileNamePDF,
         )
         val json = documentRepresentation.toJsonLd().parseJson
         val expectedJSON = Map(
           "@type" -> "knora-api:DocumentRepresentation".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
             "@type"                          -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> fileNamePDF
+            "knora-api:fileValueHasFilename" -> fileNamePDF,
           ).toJson,
           "knora-api:attachedToProject" -> Map(
-            "@id" -> "http://rdfh.ch/projects/0001"
+            "@id" -> "http://rdfh.ch/projects/0001",
           ).toJson,
           "rdfs:label" -> "test label".toJson,
           "@context" -> Map(
             "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
             "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
-          ).toJson
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#",
+          ).toJson,
         ).toJson
         json should equal(expectedJSON)
       }
@@ -257,24 +257,24 @@ class FileModelsSpec extends CoreSpec {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(pageCount = None, dimX = Some(20), dimY = None),
           internalFilename = fileNamePDF,
-          label = label
+          label = label,
         )
         val json = documentRepresentation
           .toJsonLd(
             className = className,
             ontologyName = ontologyName,
             shortcode = shortcode,
-            ontologyIRI = ontologyIRI
+            ontologyIRI = ontologyIRI,
           )
           .parseJson
         val expectedJSON = Map(
           "@type" -> s"$ontologyName:${className.get}".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
             "@type"                          -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> fileNamePDF
+            "knora-api:fileValueHasFilename" -> fileNamePDF,
           ).toJson,
           "knora-api:attachedToProject" -> Map(
-            "@id" -> s"http://rdfh.ch/projects/$shortcode"
+            "@id" -> s"http://rdfh.ch/projects/$shortcode",
           ).toJson,
           "rdfs:label" -> label.toJson,
           "@context" -> Map(
@@ -282,8 +282,8 @@ class FileModelsSpec extends CoreSpec {
             "knora-api"  -> "http://api.knora.org/ontology/knora-api/v2#",
             "rdfs"       -> "http://www.w3.org/2000/01/rdf-schema#",
             "xsd"        -> "http://www.w3.org/2001/XMLSchema#",
-            ontologyName -> ontologyIRI.get
-          ).toJson
+            ontologyName -> ontologyIRI.get,
+          ).toJson,
         ).toJson
         json should equal(expectedJSON)
       }
@@ -293,7 +293,7 @@ class FileModelsSpec extends CoreSpec {
       "correctly serialize a DocumentRepresentation with default values" in {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = fileNamePDF
+          internalFilename = fileNamePDF,
         )
         val msg = documentRepresentation.toMessage()
 
@@ -309,20 +309,20 @@ class FileModelsSpec extends CoreSpec {
                     internalFilename = fileNamePDF,
                     internalMimeType = "application/pdf",
                     originalFilename = None,
-                    originalMimeType = Some("application/pdf")
+                    originalMimeType = Some("application/pdf"),
                   ),
                   pageCount = Some(1),
                   dimX = Some(100),
                   dimY = Some(100),
-                  comment = None
+                  comment = None,
                 ),
                 customValueIri = None,
                 customValueUUID = None,
                 customValueCreationDate = None,
-                permissions = None
-              )
-            )
-          )
+                permissions = None,
+              ),
+            ),
+          ),
         )
         msg.projectADM should equal(SharedTestDataADM.anythingProject)
         msg.permissions should equal(None)
@@ -352,7 +352,7 @@ class FileModelsSpec extends CoreSpec {
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(pageCount = pageCount, dimX = dimX, dimY = dimY),
           internalFilename = fileNamePDF,
-          label = label
+          label = label,
         )
         val msg = documentRepresentation.toMessage(
           resourceIri = Some(resourceIRI),
@@ -368,7 +368,7 @@ class FileModelsSpec extends CoreSpec {
           resourceCreationDate = customResourceCreationDate,
           resourceClassIRI = Some(resourceClassIRI),
           valuePropertyIRI = Some(valuePropertyIRI),
-          project = Some(project)
+          project = Some(project),
         )
 
         msg.resourceIri should equal(Some(resourceIRI.toSmartIri))
@@ -387,20 +387,20 @@ class FileModelsSpec extends CoreSpec {
                     internalFilename = fileNamePDF,
                     internalMimeType = internalMimetype.get,
                     originalFilename = originalFilename,
-                    originalMimeType = originalMimeType
+                    originalMimeType = originalMimeType,
                   ),
                   pageCount = pageCount,
                   dimX = dimX,
                   dimY = dimY,
-                  comment = comment
+                  comment = comment,
                 ),
                 customValueIri = customValueIRI,
                 customValueUUID = customValueUUID,
                 customValueCreationDate = customValueCreationDate,
-                permissions = valuePermissions
-              )
-            )
-          )
+                permissions = valuePermissions,
+              ),
+            ),
+          ),
         )
       }
 
@@ -415,7 +415,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.DocumentFile(),
           internalFilename = fileNamePDF,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -444,13 +444,13 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.DocumentFile(
             pageCount = pageCount,
             dimX = dimX,
-            dimY = dimY
+            dimY = dimY,
           ),
           internalFilename = fileNamePDF,
           resourceIri = resourceIRI,
           valueIri = valueIRI,
           className = Some(className),
-          ontologyName = ontologyName
+          ontologyName = ontologyName,
         )
         change.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -474,7 +474,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.StillImageFile(),
           internalFilename = fileNameImage,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType match {
           case FileType.StillImageFile(x, y) =>
@@ -497,7 +497,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.MovingImageFile(),
           internalFilename = fileNameVideo,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType match {
           case FileType.MovingImageFile(x, y) =>
@@ -520,7 +520,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.AudioFile,
           internalFilename = fileNameAudio,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType should equal(FileType.AudioFile)
         change.internalFilename should equal(fileNameAudio)
@@ -538,7 +538,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.TextFile,
           internalFilename = fileNameText,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType should equal(FileType.TextFile)
         change.internalFilename should equal(fileNameText)
@@ -556,7 +556,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.ArchiveFile,
           internalFilename = fileNameArchive,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         change.fileType should equal(FileType.ArchiveFile)
         change.internalFilename should equal(fileNameArchive)
@@ -576,7 +576,7 @@ class FileModelsSpec extends CoreSpec {
           fileType = FileType.DocumentFile(),
           internalFilename = fileNamePDF,
           resourceIri = resourceIRI,
-          valueIri = valueIRI
+          valueIri = valueIRI,
         )
         val json = documentRepresentation.toJsonLd.parseJson
         val expectedJSON = Map(
@@ -585,14 +585,14 @@ class FileModelsSpec extends CoreSpec {
           "knora-api:hasDocumentFileValue" -> Map(
             "@id"                            -> valueIRI,
             "@type"                          -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> fileNamePDF
+            "knora-api:fileValueHasFilename" -> fileNamePDF,
           ).toJson,
           "@context" -> Map(
             "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
             "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
-          ).toJson
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#",
+          ).toJson,
         ).toJson
         json should equal(expectedJSON)
       }
@@ -609,7 +609,7 @@ class FileModelsSpec extends CoreSpec {
           resourceIri = resourceIRI,
           valueIri = valueIRI,
           className = Some(className),
-          ontologyName = prefix
+          ontologyName = prefix,
         )
         val json = documentRepresentation.toJsonLd.parseJson
         val expectedJSON = Map(
@@ -618,14 +618,14 @@ class FileModelsSpec extends CoreSpec {
           "knora-api:hasDocumentFileValue" -> Map(
             "@id"                            -> valueIRI,
             "@type"                          -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> fileNamePDF
+            "knora-api:fileValueHasFilename" -> fileNamePDF,
           ).toJson,
           "@context" -> Map(
             "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
             "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
-          ).toJson
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#",
+          ).toJson,
         ).toJson
         json should equal(expectedJSON)
       }

@@ -33,10 +33,10 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           logo = None,
           ontologies = List.empty,
           status = true,
-          selfjoin = true
+          selfjoin = true,
         )
         assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname"
+          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
         )
       },
       test("a KnoraProject") {
@@ -51,13 +51,13 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           keywords = List.empty,
           logo = None,
           status = Status.Active,
-          selfjoin = SelfJoin.CanJoin
+          selfjoin = SelfJoin.CanJoin,
         )
         assertTrue(
           ProjectADMService
             .projectDataNamedGraphV2(p)
-            .value == s"http://www.knora.org/data/$shortcode/$shortname"
+            .value == s"http://www.knora.org/data/$shortcode/$shortname",
         )
-      }
+      },
     )
 }

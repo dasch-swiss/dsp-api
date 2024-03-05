@@ -241,7 +241,7 @@ object StringFormatter {
     standoffStartIndex: Option[Int] = None,
     ontologySchema: Option[OntologySchema],
     isBuiltInDef: Boolean = false,
-    sharedOntology: Boolean = false
+    sharedOntology: Boolean = false,
   )
 
   /**
@@ -260,7 +260,7 @@ object StringFormatter {
   private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri =
     smartIriCache.computeIfAbsent(
       iriStr,
-      JavaUtil.function({ (_: Object) => creationFun() })
+      JavaUtil.function({ (_: Object) => creationFun() }),
     )
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { (appConfig: AppConfig) =>
@@ -558,7 +558,7 @@ object IriConversions {
 class StringFormatter private (
   val maybeConfig: Option[AppConfig],
   maybeKnoraHostAndPort: Option[String] = None,
-  initForTest: Boolean = false
+  initForTest: Boolean = false,
 ) {
 
   // The host and port number that this Knora server is running on, and that should be used
@@ -595,7 +595,7 @@ class StringFormatter private (
 
   // The strings that Knora data IRIs can start with.
   private val DataIriStarts: Set[String] = Set(
-    "http://" + IriDomain + "/"
+    "http://" + IriDomain + "/",
   )
 
   // The project code of the default shared ontologies project.
@@ -604,7 +604,7 @@ class StringFormatter private (
   // The beginnings of Knora definition IRIs that we know we can cache.
   private val KnoraDefinitionIriStarts = (Set(
     InternalIriHostname,
-    CentralKnoraApiHostname
+    CentralKnoraApiHostname,
   ) ++ knoraApiHostAndPort).map(hostname => "http://" + hostname)
 
   // The beginnings of all definition IRIs that we know we can cache.
@@ -612,7 +612,7 @@ class StringFormatter private (
     OntologyConstants.Rdf.RdfPrefixExpansion,
     OntologyConstants.Rdfs.RdfsPrefixExpansion,
     OntologyConstants.Xsd.XsdPrefixExpansion,
-    OntologyConstants.Owl.OwlPrefixExpansion
+    OntologyConstants.Owl.OwlPrefixExpansion,
   )
 
   // Reserved words used in Knora API v2 IRI version segments.
@@ -667,7 +667,7 @@ class StringFormatter private (
     projectCode = None,
     ontologyName = None,
     entityName = None,
-    ontologySchema = None
+    ontologySchema = None,
   )
 
   /**
@@ -728,7 +728,7 @@ class StringFormatter private (
                 iriType = KnoraDataIri,
                 ontologySchema = None,
                 projectCode = Some(projectCode),
-                resourceID = Some(resourceID)
+                resourceID = Some(resourceID),
               )
 
             case ValueIriRegex(projectCode: String, resourceID: String, valueID: String) =>
@@ -738,14 +738,14 @@ class StringFormatter private (
                 ontologySchema = None,
                 projectCode = Some(projectCode),
                 resourceID = Some(resourceID),
-                valueID = Some(valueID)
+                valueID = Some(valueID),
               )
 
             case StandoffIriRegex(
                   projectCode: String,
                   resourceID: String,
                   valueID: String,
-                  standoffStartIndex: String
+                  standoffStartIndex: String,
                 ) =>
               // It's a standoff IRI.
               SmartIriInfo(
@@ -754,21 +754,21 @@ class StringFormatter private (
                 projectCode = Some(projectCode),
                 resourceID = Some(resourceID),
                 valueID = Some(valueID),
-                standoffStartIndex = Some(standoffStartIndex.toInt)
+                standoffStartIndex = Some(standoffStartIndex.toInt),
               )
 
             case _ =>
               // It's some other kind of data IRI; nothing else to do.
               SmartIriInfo(
                 iriType = KnoraDataIri,
-                ontologySchema = None
+                ontologySchema = None,
               )
           }
         } else if (iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart)) {
           // Nothing else to do.
           SmartIriInfo(
             iriType = KnoraDataIri,
-            ontologySchema = None
+            ontologySchema = None,
           )
         } else {
           // If this is an entity IRI in a hash namespace, separate the entity name from the namespace.
@@ -898,7 +898,7 @@ class StringFormatter private (
               entityName = entityName,
               ontologySchema = ontologySchema,
               isBuiltInDef = hasBuiltInOntologyName,
-              sharedOntology = sharedOntology
+              sharedOntology = sharedOntology,
             )
           } else {
             UnknownIriInfo
@@ -1034,7 +1034,7 @@ class StringFormatter private (
                     iriStr = convertedIri,
                     creationFun = { () =>
                       new SmartIriImpl(convertedIri)
-                    }
+                    },
                   )
 
                 case None =>
@@ -1072,7 +1072,7 @@ class StringFormatter private (
       val internalOntologyIri = makeInternalOntologyIriStr(
         internalOntologyName = internalOntologyName,
         isShared = iriInfo.sharedOntology,
-        projectCode = iriInfo.projectCode
+        projectCode = iriInfo.projectCode,
       )
 
       val convertedIriStr = new StringBuilder(internalOntologyIri).append("#").append(entityName).toString
@@ -1083,14 +1083,14 @@ class StringFormatter private (
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
             ontologyName = Some(internalOntologyName),
-            ontologySchema = Some(InternalSchema)
+            ontologySchema = Some(InternalSchema),
           )
 
           new SmartIriImpl(
             iriStr = convertedIriStr,
-            parsedIriInfo = Some(convertedSmartIriInfo)
+            parsedIriInfo = Some(convertedSmartIriInfo),
           )
-        }
+        },
       )
     }
 
@@ -1106,14 +1106,14 @@ class StringFormatter private (
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
             ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
-            ontologySchema = Some(targetSchema)
+            ontologySchema = Some(targetSchema),
           )
 
           new SmartIriImpl(
             iriStr = convertedEntityIriStr,
-            parsedIriInfo = Some(convertedSmartIriInfo)
+            parsedIriInfo = Some(convertedSmartIriInfo),
           )
-        }
+        },
       )
     }
 
@@ -1157,14 +1157,14 @@ class StringFormatter private (
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
             ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
-            ontologySchema = Some(targetSchema)
+            ontologySchema = Some(targetSchema),
           )
 
           new SmartIriImpl(
             iriStr = convertedIriStr,
-            parsedIriInfo = Some(convertedSmartIriInfo)
+            parsedIriInfo = Some(convertedSmartIriInfo),
           )
-        }
+        },
       )
     }
 
@@ -1172,7 +1172,7 @@ class StringFormatter private (
       val convertedIriStr = makeInternalOntologyIriStr(
         internalOntologyName = externalToInternalOntologyName(getOntologyName),
         isShared = iriInfo.sharedOntology,
-        projectCode = iriInfo.projectCode
+        projectCode = iriInfo.projectCode,
       )
 
       getOrCacheSmartIri(
@@ -1180,14 +1180,14 @@ class StringFormatter private (
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
             ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
-            ontologySchema = Some(InternalSchema)
+            ontologySchema = Some(InternalSchema),
           )
 
           new SmartIriImpl(
             iriStr = convertedIriStr,
-            parsedIriInfo = Some(convertedSmartIriInfo)
+            parsedIriInfo = Some(convertedSmartIriInfo),
           )
-        }
+        },
       )
     }
 
@@ -1208,14 +1208,14 @@ class StringFormatter private (
           iriStr = convertedIriStr,
           creationFun = { () =>
             val convertedSmartIriInfo = iriInfo.copy(
-              entityName = Some(convertedEntityName)
+              entityName = Some(convertedEntityName),
             )
 
             new SmartIriImpl(
               iriStr = convertedIriStr,
-              parsedIriInfo = Some(convertedSmartIriInfo)
+              parsedIriInfo = Some(convertedSmartIriInfo),
             )
-          }
+          },
         )
       } else {
         throw InconsistentRepositoryDataException(s"Link value predicate IRI $iri does not end with 'Value'")
@@ -1237,14 +1237,14 @@ class StringFormatter private (
         iriStr = convertedIriStr,
         creationFun = { () =>
           val convertedSmartIriInfo = iriInfo.copy(
-            entityName = Some(convertedEntityName)
+            entityName = Some(convertedEntityName),
           )
 
           new SmartIriImpl(
             iriStr = convertedIriStr,
-            parsedIriInfo = Some(convertedSmartIriInfo)
+            parsedIriInfo = Some(convertedSmartIriInfo),
           )
-        }
+        },
       )
     }
 
@@ -1290,7 +1290,7 @@ class StringFormatter private (
           projectID = iriInfo.projectCode.get,
           resourceID = iriInfo.resourceID.get,
           maybeValueUUID = None,
-          maybeTimestamp = maybeTimestamp
+          maybeTimestamp = maybeTimestamp,
         )
 
       }
@@ -1311,7 +1311,7 @@ class StringFormatter private (
           projectID = iriInfo.projectCode.get,
           resourceID = iriInfo.resourceID.get,
           maybeValueUUID = Some(valueUUID),
-          maybeTimestamp = maybeTimestamp
+          maybeTimestamp = maybeTimestamp,
         )
 
       }
@@ -1419,7 +1419,7 @@ class StringFormatter private (
   private def makeInternalOntologyIriStr(
     internalOntologyName: String,
     isShared: Boolean,
-    projectCode: Option[String]
+    projectCode: Option[String],
   ): IRI = {
     val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
@@ -1450,7 +1450,7 @@ class StringFormatter private (
   def makeProjectSpecificInternalOntologyIri(
     internalOntologyName: String,
     isShared: Boolean,
-    projectCode: String
+    projectCode: String,
   ): SmartIri =
     toSmartIri(makeInternalOntologyIriStr(internalOntologyName, isShared, Some(projectCode)))
 
@@ -1520,7 +1520,7 @@ class StringFormatter private (
     projectID: String,
     resourceID: String,
     maybeValueUUID: Option[UUID],
-    maybeTimestamp: Option[Instant]
+    maybeTimestamp: Option[Instant],
   ): String = {
 
     /**
@@ -1671,8 +1671,8 @@ class StringFormatter private (
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language)
-      )
+        StringLiteralV2(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language),
+      ),
     )
   def unescapeOptionalString(optionalString: Option[String]): Option[String] =
     optionalString match {

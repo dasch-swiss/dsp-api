@@ -34,7 +34,7 @@ class RdfModelSpec() extends CoreSpec {
   private def addAndFindBySubjAndPred(
     subj: RdfResource,
     pred: IriNode,
-    obj: RdfNode
+    obj: RdfNode,
   ): Assertion = {
     val statement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
     model.addStatement(statement)
@@ -57,7 +57,7 @@ class RdfModelSpec() extends CoreSpec {
       addAndFindBySubjAndPred(
         subj = JenaNodeFactory.makeIriNode("http://example.org/2"),
         pred = JenaNodeFactory.makeIriNode("http://example.org/decimal_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal)
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal),
       )
     }
 
@@ -65,7 +65,7 @@ class RdfModelSpec() extends CoreSpec {
       addAndFindBySubjAndPred(
         subj = JenaNodeFactory.makeIriNode("http://example.org/3"),
         pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = JenaNodeFactory.makeIriNode("http://example.org/1")
+        obj = JenaNodeFactory.makeIriNode("http://example.org/1"),
       )
     }
 
@@ -73,7 +73,7 @@ class RdfModelSpec() extends CoreSpec {
       addAndFindBySubjAndPred(
         subj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
         pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean),
       )
     }
 
@@ -81,7 +81,7 @@ class RdfModelSpec() extends CoreSpec {
       addAndFindBySubjAndPred(
         subj = JenaNodeFactory.makeIriNode("http://example.org/4"),
         pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = JenaNodeFactory.makeBlankNodeWithID("bnode_1")
+        obj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
       )
     }
 
@@ -97,25 +97,25 @@ class RdfModelSpec() extends CoreSpec {
       val booleanStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean),
       )
 
       val stringStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = JenaNodeFactory.makeIriNode("http://example.org/string_prop"),
-        obj = JenaNodeFactory.makeDatatypeLiteral(value = "Hello", datatype = OntologyConstants.Xsd.String)
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "Hello", datatype = OntologyConstants.Xsd.String),
       )
 
       val stringWithLangStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = JenaNodeFactory.makeIriNode("http://example.org/string_with_lang_prop"),
-        obj = JenaNodeFactory.makeStringWithLanguage(value = "Hello", language = "en")
+        obj = JenaNodeFactory.makeStringWithLanguage(value = "Hello", language = "en"),
       )
 
       val statements: Set[Statement] = Set(
         booleanStatement,
         stringStatement,
-        stringWithLangStatement
+        stringWithLangStatement,
       )
 
       model.addStatements(statements)
@@ -125,7 +125,7 @@ class RdfModelSpec() extends CoreSpec {
         .find(
           subj = Some(subj),
           pred = Some(stringWithLangStatement.pred),
-          obj = Some(stringWithLangStatement.obj)
+          obj = Some(stringWithLangStatement.obj),
         )
         .toSet
 
@@ -160,7 +160,7 @@ class RdfModelSpec() extends CoreSpec {
         pred = labelPred,
         obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "Lucky's Discount X-Wing Repair", datatype = OntologyConstants.Xsd.String),
-        context = Some(context1)
+        context = Some(context1),
       )
 
       val graph1CommentStatement = JenaNodeFactory.makeStatement(
@@ -168,12 +168,12 @@ class RdfModelSpec() extends CoreSpec {
         pred = commentPred,
         obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "A safe flight or your money back", datatype = OntologyConstants.Xsd.String),
-        context = Some(context1)
+        context = Some(context1),
       )
 
       val graph1 = Set(
         graph1LabelStatement,
-        graph1CommentStatement
+        graph1CommentStatement,
       )
 
       val context2 = "http://example.org/graph2"
@@ -183,7 +183,7 @@ class RdfModelSpec() extends CoreSpec {
         pred = labelPred,
         obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "Mos Eisley Used Droids", datatype = OntologyConstants.Xsd.String),
-        context = Some(context2)
+        context = Some(context2),
       )
 
       val graph2CommentStatement = JenaNodeFactory.makeStatement(
@@ -191,12 +191,12 @@ class RdfModelSpec() extends CoreSpec {
         pred = commentPred,
         obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "All droids guaranteed for 10 seconds", datatype = OntologyConstants.Xsd.String),
-        context = Some(context2)
+        context = Some(context2),
       )
 
       val graph2 = Set(
         graph2LabelStatement,
-        graph2CommentStatement
+        graph2CommentStatement,
       )
 
       model.addStatements(graph1)
@@ -207,14 +207,14 @@ class RdfModelSpec() extends CoreSpec {
       assert(
         model.find(subj = None, pred = Some(labelPred), obj = None).toSet == Set(
           graph1LabelStatement,
-          graph2LabelStatement
-        )
+          graph2LabelStatement,
+        ),
       )
       assert(
         model.find(subj = None, pred = Some(commentPred), obj = None).toSet == Set(
           graph1CommentStatement,
-          graph2CommentStatement
-        )
+          graph2CommentStatement,
+        ),
       )
 
       model.removeStatement(graph1CommentStatement)
@@ -235,7 +235,7 @@ class RdfModelSpec() extends CoreSpec {
         subj = subj,
         pred = pred,
         obj = obj,
-        context = None
+        context = None,
       )
 
       val context = "http://example.org/namedGraph"
@@ -244,7 +244,7 @@ class RdfModelSpec() extends CoreSpec {
         subj = subj,
         pred = pred,
         obj = obj,
-        context = Some(context)
+        context = Some(context),
       )
 
       model.addStatement(statementInDefaultGraph)
@@ -269,7 +269,7 @@ class RdfModelSpec() extends CoreSpec {
         subj = subj,
         pred = pred,
         obj = obj,
-        context = None
+        context = None,
       )
 
       val context = "http://example.org/namedGraph"
@@ -278,7 +278,7 @@ class RdfModelSpec() extends CoreSpec {
         subj = subj,
         pred = pred,
         obj = obj,
-        context = Some(context)
+        context = Some(context),
       )
 
       model.addStatement(statementInDefaultGraph)
@@ -290,7 +290,7 @@ class RdfModelSpec() extends CoreSpec {
       model.remove(
         subj = Some(subj),
         pred = Some(pred),
-        obj = Some(obj)
+        obj = Some(obj),
       )
 
       assert(!model.contains(statementInDefaultGraph))
@@ -325,13 +325,13 @@ class RdfModelSpec() extends CoreSpec {
         Map(
           "resource"     -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
           "value"        -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
-          "decimalValue" -> "1.5"
+          "decimalValue" -> "1.5",
         ),
         Map(
           "resource"     -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
           "value"        -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
-          "decimalValue" -> "2.1"
-        )
+          "decimalValue" -> "2.1",
+        ),
       )
 
       assert(results == expectedResults)

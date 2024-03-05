@@ -63,7 +63,7 @@ object LangString {
           log.warn(s"Called unsafeMake() for an invalid LangString '$unsafe': $e")
           unsafe
         },
-        langString => langString
+        langString => langString,
       )
 }
 

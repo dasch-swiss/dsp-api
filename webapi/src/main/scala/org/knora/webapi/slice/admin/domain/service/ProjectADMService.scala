@@ -22,7 +22,7 @@ import org.knora.webapi.store.cache.CacheService
 final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,
   private val projectRepo: KnoraProjectRepo,
-  private val cacheService: CacheService
+  private val cacheService: CacheService,
 ) {
 
   def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
@@ -55,8 +55,8 @@ final case class ProjectADMService(
                logo = knoraProject.logo.map(_.value),
                status = knoraProject.status.value,
                selfjoin = knoraProject.selfjoin.value,
-               ontologies = ontologies
-             ).unescape
+               ontologies = ontologies,
+             ).unescape,
            )
   } yield prj
 
@@ -72,7 +72,7 @@ final case class ProjectADMService(
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
       status = Status.from(project.status),
-      selfjoin = SelfJoin.from(project.selfjoin)
+      selfjoin = SelfJoin.from(project.selfjoin),
     )
 
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =

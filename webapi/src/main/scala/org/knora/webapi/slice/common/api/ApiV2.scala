@@ -113,7 +113,7 @@ object ApiV2 {
         (s: Set[Rendering]) =>
           (
             s.collectFirst { case jsonLd: JsonLdRendering => jsonLd },
-            s.collectFirst { case markup: MarkupRendering => markup }
+            s.collectFirst { case markup: MarkupRendering => markup },
           )
       }
 
@@ -121,10 +121,10 @@ object ApiV2 {
     private val rdfFormat: EndpointIO.Header[RdfFormat] = header[Option[MediaType]](HeaderNames.Accept)
       .description(
         s"""The RDF format to be used for the request. Valid values are: ${RdfFormat.values}
-           |If not specified or unknown, the fallback RDF format ${RdfFormat.default} will be used.""".stripMargin
+           |If not specified or unknown, the fallback RDF format ${RdfFormat.default} will be used.""".stripMargin,
       )
       .mapDecode(s => DecodeResult.Value(s.flatMap(RdfFormat.from).getOrElse(RdfFormat.default)))(it =>
-        Some(it.mediaType)
+        Some(it.mediaType),
       )
       .validate(Validator.pass[RdfFormat])
 
@@ -133,7 +133,7 @@ object ApiV2 {
       .and(apiV2Schema)
       .and(renderingSet)
       .map { case (format, schema, rendering) => FormatOptions(format, schema, rendering) }(s =>
-        (s.rdfFormat, s.schema, s.rendering)
+        (s.rdfFormat, s.schema, s.rendering),
       )
   }
 

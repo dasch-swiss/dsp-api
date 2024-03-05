@@ -29,7 +29,7 @@ object PasswordServiceSpec extends ZIOSpecDefault {
   // legacy encoders
   private val sCryptEncoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
   private def sha1Encode(rawPassword: String) = PasswordHash.unsafeFrom(
-    MessageDigest.getInstance("SHA-1").digest(rawPassword.getBytes("UTF-8")).map("%02x".format(_)).mkString
+    MessageDigest.getInstance("SHA-1").digest(rawPassword.getBytes("UTF-8")).map("%02x".format(_)).mkString,
   )
 
   private def hashPassword(pw: String): URIO[PasswordService, PasswordHash] =
@@ -92,7 +92,7 @@ object PasswordServiceSpec extends ZIOSpecDefault {
           for {
             matched <- matches(someOtherPassword, sha1Hash)
           } yield assertTrue(!matched)
-        }
-      )
+        },
+      ),
     ).provide(ZLayer.succeed(strength) >>> ZLayer.derive[PasswordService])
 }

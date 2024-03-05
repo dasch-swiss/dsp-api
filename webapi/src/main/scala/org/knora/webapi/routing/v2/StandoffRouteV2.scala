@@ -38,9 +38,9 @@ import pekko.http.scaladsl.server.Route
  */
 final case class StandoffRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay
+    AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay,
   ],
-  private implicit val system: ActorSystem
+  private implicit val system: ActorSystem,
 ) extends LazyLogging {
   private implicit val ec: ExecutionContext = system.dispatcher
 
@@ -86,7 +86,7 @@ final case class StandoffRouteV2()(
               ZIO
                 .fromOption(allParts.get(jsonPartKey))
                 .orElseFail(
-                  BadRequestException(s"MultiPart POST request was sent without required '$jsonPartKey' part!")
+                  BadRequestException(s"MultiPart POST request was sent without required '$jsonPartKey' part!"),
                 )
                 .mapAttempt(JsonLDUtil.parseJsonLD(_))
             apiRequestID <- RouteUtilZ.randomUuid()
@@ -97,7 +97,7 @@ final case class StandoffRouteV2()(
                 .fromOption(allParts.get(xmlPartKey))
                 .mapBoth(
                   _ => BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!"),
-                  CreateMappingRequestXMLV2
+                  CreateMappingRequestXMLV2,
                 )
           } yield CreateMappingRequestV2(metadata, xml, requestingUser, apiRequestID)
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)

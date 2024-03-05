@@ -51,7 +51,7 @@ final case class ListsResponder(
   projectRepo: KnoraProjectRepo,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) {
 
   // The IRI used to lock user creation and update
@@ -108,11 +108,11 @@ final case class ListsResponder(
                              case Some(info: ListRootNodeInfoADM) => info
                              case Some(_: ListChildNodeInfoADM) =>
                                throw InconsistentRepositoryDataException(
-                                 "A child node info was found, although we are expecting a root node info. Please report this as a possible bug."
+                                 "A child node info was found, although we are expecting a root node info. Please report this as a possible bug.",
                                )
                              case Some(_) | None =>
                                throw InconsistentRepositoryDataException(
-                                 "No info about list node found, although list node should exist. Please report this as a possible bug."
+                                 "No info about list node found, although list node should exist. Please report this as a possible bug.",
                                )
                            }
 
@@ -153,7 +153,7 @@ final case class ListsResponder(
                         case Some(childNode: ListChildNodeADM) => getNodeADM(childNode)
                         case _                                 => ZIO.fail(NotFoundException(s"Node '$nodeIri' not found"))
                       }
-      } yield entireNode
+      } yield entireNode,
     )
   }
 
@@ -190,7 +190,7 @@ final case class ListsResponder(
                       case Some(iri: IriLiteralV2) => Some(iri.value)
                       case other =>
                         throw InconsistentRepositoryDataException(
-                          s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                          s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                         )
                     }
 
@@ -204,7 +204,7 @@ final case class ListsResponder(
                       case Some(iri: IriLiteralV2) => Some(iri.value)
                       case other =>
                         throw InconsistentRepositoryDataException(
-                          s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                          s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                         )
                     }
 
@@ -217,7 +217,7 @@ final case class ListsResponder(
                     case Some(value: BooleanLiteralV2) => value.value
                     case Some(other) =>
                       throw InconsistentRepositoryDataException(
-                        s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
+                        s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other",
                       )
                     case None => false
                   }
@@ -234,14 +234,14 @@ final case class ListsResponder(
                   id = nodeIri.toString,
                   projectIri = attachedToProjectOption.getOrElse(
                     throw InconsistentRepositoryDataException(
-                      s"Required attachedToProject property missing for list node $nodeIri."
-                    )
+                      s"Required attachedToProject property missing for list node $nodeIri.",
+                    ),
                   ),
                   name = propsMap
                     .get(KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector),
-                  comments = StringLiteralSequenceV2(comments.toVector)
+                  comments = StringLiteralSequenceV2(comments.toVector),
                 ).unescape
               } else {
                 ListChildNodeInfoADM(
@@ -253,14 +253,14 @@ final case class ListsResponder(
                   comments = StringLiteralSequenceV2(comments.toVector),
                   position = positionOption.getOrElse(
                     throw InconsistentRepositoryDataException(
-                      s"Required position property missing for list node $nodeIri."
-                    )
+                      s"Required position property missing for list node $nodeIri.",
+                    ),
                   ),
                   hasRootNode = hasRootNodeOption.getOrElse(
                     throw InconsistentRepositoryDataException(
-                      s"Required hasRootNode property missing for list node $nodeIri."
-                    )
-                  )
+                      s"Required hasRootNode property missing for list node $nodeIri.",
+                    ),
+                  ),
                 ).unescape
               }
           }
@@ -325,7 +325,7 @@ final case class ListsResponder(
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
                                             case other =>
                                               throw InconsistentRepositoryDataException(
-                                                s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                                s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                                               )
                                           }
 
@@ -339,7 +339,7 @@ final case class ListsResponder(
                                             case Some(iri: IriLiteralV2) => Some(iri.value)
                                             case other =>
                                               throw InconsistentRepositoryDataException(
-                                                s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                                s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other",
                                               )
                                           }
 
@@ -353,7 +353,7 @@ final case class ListsResponder(
                                             case Some(value: BooleanLiteralV2) => value.value
                                             case Some(other) =>
                                               throw InconsistentRepositoryDataException(
-                                                s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
+                                                s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other",
                                               )
                                             case None => false
                                           }
@@ -370,15 +370,15 @@ final case class ListsResponder(
                                         id = nodeIri.toString,
                                         projectIri = attachedToProjectOption.getOrElse(
                                           throw InconsistentRepositoryDataException(
-                                            s"Required attachedToProject property missing for list node $nodeIri."
-                                          )
+                                            s"Required attachedToProject property missing for list node $nodeIri.",
+                                          ),
                                         ),
                                         name = propsMap
                                           .get(KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
                                         labels = StringLiteralSequenceV2(labels.toVector),
                                         comments = StringLiteralSequenceV2(comments.toVector),
-                                        children = children
+                                        children = children,
                                       )
                                     } else {
                                       ListChildNodeADM(
@@ -390,15 +390,15 @@ final case class ListsResponder(
                                         comments = StringLiteralSequenceV2(comments.toVector),
                                         position = positionOption.getOrElse(
                                           throw InconsistentRepositoryDataException(
-                                            s"Required position property missing for list node $nodeIri."
-                                          )
+                                            s"Required position property missing for list node $nodeIri.",
+                                          ),
                                         ),
                                         hasRootNode = hasRootNodeOption.getOrElse(
                                           throw InconsistentRepositoryDataException(
-                                            s"Required hasRootNode property missing for list node $nodeIri."
-                                          )
+                                            s"Required hasRootNode property missing for list node $nodeIri.",
+                                          ),
                                         ),
-                                        children = children
+                                        children = children,
                                       )
                                     }
                                 }
@@ -435,7 +435,7 @@ final case class ListsResponder(
       val hasRootNode: IRI = propsMap
         .getOrElse(
           KnoraBase.HasRootNode.toSmartIri,
-          throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri.")
+          throw InconsistentRepositoryDataException(s"Required hasRootNode property missing for list node $nodeIri."),
         )
         .head
         .toString
@@ -455,7 +455,7 @@ final case class ListsResponder(
         .get(KnoraBase.ListNodePosition.toSmartIri)
         .map(_.head.asInstanceOf[IntLiteralV2].value)
       val position = positionOption.getOrElse(
-        throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri.")
+        throw InconsistentRepositoryDataException(s"Required position property missing for list node $nodeIri."),
       )
 
       val children: Seq[ListChildNodeADM] = propsMap.get(KnoraBase.HasSubListNode.toSmartIri) match {
@@ -480,7 +480,7 @@ final case class ListsResponder(
         comments = StringLiteralSequenceV2(comments.toVector),
         children = children.map(_.sorted),
         position = position,
-        hasRootNode = hasRootNode
+        hasRootNode = hasRootNode,
       ).unescape
     }
 
@@ -513,7 +513,7 @@ final case class ListsResponder(
    * @return a [newListNodeIri]
    */
   private def createNode(
-    createNodeRequest: ListCreateRequest
+    createNodeRequest: ListCreateRequest,
   ): Task[IRI] = {
     val parentNode: Option[ListIri] = createNodeRequest match {
       case _: ListCreateRootNodeRequest      => None
@@ -529,7 +529,7 @@ final case class ListsResponder(
       if (position.exists(_.value > children.size)) {
         val givenPosition = position.map(_.value)
         throw BadRequestException(
-          s"Invalid position given ${givenPosition.get}, maximum allowed position is = ${children.size}."
+          s"Invalid position given ${givenPosition.get}, maximum allowed position is = ${children.size}.",
         )
       }
 
@@ -549,7 +549,7 @@ final case class ListsResponder(
 
     def getRootNodeAndPositionOfNewChild(
       parentNodeIri: IRI,
-      dataNamedGraph: IRI
+      dataNamedGraph: IRI,
     ): Task[(Some[Int], Some[IRI])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
@@ -574,7 +574,7 @@ final case class ListsResponder(
                                    endPos = children.size - 1,
                                    nodes = children,
                                    shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph
+                                   dataNamedGraph = dataNamedGraph,
                                  )
             } yield updatedSiblings
           } else {
@@ -596,13 +596,13 @@ final case class ListsResponder(
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
                                  projectIri.value,
-                                 name
+                                 name,
                                )
       _ = if (!projectUniqueNodeName) {
             val escapedName   = name.get.value
             val unescapedName = Iri.fromSparqlEncodedString(escapedName)
             throw BadRequestException(
-              s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}."
+              s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}.",
             )
           }
 
@@ -614,7 +614,7 @@ final case class ListsResponder(
         if (parentNode.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
             parentNodeIri = parentNode.get.value,
-            dataNamedGraph = dataNamedGraph
+            dataNamedGraph = dataNamedGraph,
           )
         } else {
           ZIO.attempt((None, None))
@@ -640,7 +640,7 @@ final case class ListsResponder(
                                           position = None,
                                           maybeName = r.name.map(_.value),
                                           maybeLabels = r.labels.value,
-                                          maybeComments = Some(r.comments.value)
+                                          maybeComments = Some(r.comments.value),
                                         )
                                     case c: ListCreateChildNodeRequest =>
                                       sparql.admin.txt
@@ -654,7 +654,7 @@ final case class ListsResponder(
                                           position = newPosition,
                                           maybeName = c.name.map(_.value),
                                           maybeLabels = c.labels.value,
-                                          maybeComments = c.comments.map(_.value)
+                                          maybeComments = c.comments.map(_.value),
                                         )
                                   }
 
@@ -690,7 +690,7 @@ final case class ListsResponder(
    */
   def nodeInfoChangeRequest(
     changeNodeRequest: ListChangeRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = {
     val nodeIri = changeNodeRequest.listIri.value
     val nodeInfoChangeTask =
@@ -705,8 +705,8 @@ final case class ListsResponder(
             case _ =>
               ZIO.fail(
                 UpdateNotPerformedException(
-                  s"Node $nodeIri was not updated. Please report this as a possible bug."
-                )
+                  s"Node $nodeIri was not updated. Please report this as a possible bug.",
+                ),
               )
           }
       } yield updated
@@ -722,14 +722,14 @@ final case class ListsResponder(
    */
   def listCreateChildNode(
     req: ListCreateChildNodeRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ChildNodeInfoGetResponseADM] = {
 
     /**
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ListCreateChildNodeRequest
+      createChildNodeRequest: ListCreateChildNodeRequest,
     ): Task[ChildNodeInfoGetResponseADM] =
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
@@ -739,11 +739,11 @@ final case class ListsResponder(
                         case Some(childNode: ListChildNodeInfoADM) => childNode
                         case Some(_: ListRootNodeInfoADM) =>
                           throw UpdateNotPerformedException(
-                            s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload."
+                            s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload.",
                           )
                         case _ =>
                           throw UpdateNotPerformedException(
-                            s"List node $newListNodeIri was not created. Please report this as a possible bug."
+                            s"List node $newListNodeIri was not created. Please report this as a possible bug.",
                           )
                       }
 
@@ -752,7 +752,7 @@ final case class ListsResponder(
     IriLocker.runWithIriLock(
       apiRequestID,
       LISTS_GLOBAL_LOCK_IRI,
-      listChildNodeCreateTask(req)
+      listChildNodeCreateTask(req),
     )
   }
 
@@ -776,7 +776,7 @@ final case class ListsResponder(
     listIri: ListIri,
     changeNameReq: ListChangeNameRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = {
     val updateTask =
       for {
@@ -787,8 +787,8 @@ final case class ListsResponder(
             changeNodeInfoRequest = ListChangeRequest(
               listIri = listIri,
               projectIri = project.id,
-              name = Some(changeNameReq.name)
-            )
+              name = Some(changeNameReq.name),
+            ),
           )
         _       <- triplestore.query(Update(updateQuery))
         updated <- loadUpdatedListFromTriplestore(listIri)
@@ -825,7 +825,7 @@ final case class ListsResponder(
     listIri: ListIri,
     changeNodeLabelsRequest: ListChangeLabelsRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = {
     val updateTask =
       for {
@@ -835,8 +835,8 @@ final case class ListsResponder(
                          changeNodeInfoRequest = ListChangeRequest(
                            listIri = listIri,
                            projectIri = project.id,
-                           labels = Some(changeNodeLabelsRequest.labels)
-                         )
+                           labels = Some(changeNodeLabelsRequest.labels),
+                         ),
                        )
         _ <- triplestore.query(Update(updateQuery))
 
@@ -860,7 +860,7 @@ final case class ListsResponder(
     listIri: ListIri,
     changeNodeCommentsRequest: ListChangeCommentsRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = {
     val updateTask =
       for {
@@ -870,8 +870,8 @@ final case class ListsResponder(
                                       ListChangeRequest(
                                         listIri = listIri,
                                         projectIri = project.id,
-                                        comments = Some(changeNodeCommentsRequest.comments)
-                                      )
+                                        comments = Some(changeNodeCommentsRequest.comments),
+                                      ),
                                     )
         _ <- triplestore.query(Update(changeNodeCommentsSparql))
 
@@ -896,7 +896,7 @@ final case class ListsResponder(
     nodeIri: ListIri,
     changeNodePositionRequest: ListChangePositionRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[NodePositionChangeResponseADM] = {
 
     /**
@@ -952,20 +952,20 @@ final case class ListsResponder(
         updatedNode = rest.head
         _ = if (updatedNode.id != nodeIri.value || updatedNode.position != newPosition) {
               throw UpdateNotPerformedException(
-                s"Node is not repositioned correctly in specified parent node. Please report this as a bug."
+                s"Node is not repositioned correctly in specified parent node. Please report this as a bug.",
               )
             }
         leftPositions = siblingsPositionedBefore.map(child => child.position)
         _ = if (leftPositions != leftPositions.sorted) {
               throw UpdateNotPerformedException(
-                s"Something has gone wrong with shifting nodes. Please report this as a bug."
+                s"Something has gone wrong with shifting nodes. Please report this as a bug.",
               )
             }
         siblingsPositionedAfter = rest.slice(1, rest.length)
         rightSiblings           = siblingsPositionedAfter.map(child => child.position)
         _ = if (rightSiblings != rightSiblings.sorted) {
               throw UpdateNotPerformedException(
-                s"Something has gone wrong with shifting nodes. Please report this as a bug."
+                s"Something has gone wrong with shifting nodes. Please report this as a bug.",
               )
             }
 
@@ -985,14 +985,14 @@ final case class ListsResponder(
       node: ListChildNodeADM,
       parentIri: IRI,
       givenPosition: Int,
-      dataNamedGraph: IRI
+      dataNamedGraph: IRI,
     ): Task[Int] =
       for {
         // get parent node with its immediate children
         maybeParentNode <- listNodeGetADM(nodeIri = parentIri, shallow = true)
         parentNode =
           maybeParentNode.getOrElse(
-            throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug.")
+            throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug."),
           )
         _              = isNewPositionValid(parentNode, isNewParent = false)
         parentChildren = parentNode.children
@@ -1008,7 +1008,7 @@ final case class ListsResponder(
         _ <- updatePositionOfNode(
                nodeIri = node.id,
                newPosition = newPosition,
-               dataNamedGraph = dataNamedGraph
+               dataNamedGraph = dataNamedGraph,
              )
 
         // update position of siblings
@@ -1021,7 +1021,7 @@ final case class ListsResponder(
                                    endPos = newPosition,
                                    nodes = parentChildren,
                                    shiftToLeft = true,
-                                   dataNamedGraph = dataNamedGraph
+                                   dataNamedGraph = dataNamedGraph,
                                  )
             } yield updatedSiblings
           } else if (currPosition > newPosition) {
@@ -1032,7 +1032,7 @@ final case class ListsResponder(
                                    endPos = currPosition - 1,
                                    nodes = parentChildren,
                                    shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph
+                                   dataNamedGraph = dataNamedGraph,
                                  )
             } yield updatedSiblings
           } else {
@@ -1057,7 +1057,7 @@ final case class ListsResponder(
       newParentIri: IRI,
       currParentIri: IRI,
       givenPosition: Int,
-      dataNamedGraph: IRI
+      dataNamedGraph: IRI,
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
@@ -1081,7 +1081,7 @@ final case class ListsResponder(
         _ <- updatePositionOfNode(
                nodeIri = node.id,
                newPosition = newPosition,
-               dataNamedGraph = dataNamedGraph
+               dataNamedGraph = dataNamedGraph,
              )
 
         // shift current siblings with a higher position to left as if the node is deleted
@@ -1090,7 +1090,7 @@ final case class ListsResponder(
                endPos = currentSiblings.last.position,
                nodes = currentSiblings,
                shiftToLeft = true,
-               dataNamedGraph = dataNamedGraph
+               dataNamedGraph = dataNamedGraph,
              )
 
         // Is node supposed to be added to the end of new parent's children list?
@@ -1107,7 +1107,7 @@ final case class ListsResponder(
                                    endPos = newSiblings.last.position,
                                    nodes = newSiblings,
                                    shiftToLeft = false,
-                                   dataNamedGraph = dataNamedGraph
+                                   dataNamedGraph = dataNamedGraph,
                                  )
             } yield updatedSiblings
           }
@@ -1117,7 +1117,7 @@ final case class ListsResponder(
                nodeIri = node.id,
                oldParentIri = currParentIri,
                newParentIri = newParentIri,
-               dataNamedGraph = dataNamedGraph
+               dataNamedGraph = dataNamedGraph,
              )
 
       } yield newPosition
@@ -1144,7 +1144,7 @@ final case class ListsResponder(
               node = node,
               parentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
-              dataNamedGraph = dataNamedGraph
+              dataNamedGraph = dataNamedGraph,
             )
           } else {
             updateParentAndPosition(
@@ -1152,7 +1152,7 @@ final case class ListsResponder(
               newParentIri = changeNodePositionRequest.parentNodeIri.value,
               currParentIri = currentParentNodeIri,
               givenPosition = changeNodePositionRequest.position.value,
-              dataNamedGraph = dataNamedGraph
+              dataNamedGraph = dataNamedGraph,
             )
           }
         /* Verify that the node position and parent children position were updated */
@@ -1202,7 +1202,7 @@ final case class ListsResponder(
   def deleteListItemRequestADM(
     nodeIri: ListIri,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[ListItemDeleteResponseADM] = {
 
     /**
@@ -1217,15 +1217,15 @@ final case class ListsResponder(
         // Is node itself in use?
         _ <- isNodeUsed(
                nodeIri = nodeIri,
-               errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use.")
+               errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use."),
              )
 
         errorCheckFutures: Seq[Task[Unit]] = nodeChildren.map { child =>
                                                isNodeUsed(
                                                  nodeIri = child.id,
                                                  errorFun = throw BadRequestException(
-                                                   s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use."
-                                                 )
+                                                   s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.",
+                                                 ),
                                                )
                                              }
 
@@ -1248,7 +1248,7 @@ final case class ListsResponder(
       nodeIri: IRI,
       projectIri: ProjectIri,
       children: Seq[ListChildNodeADM],
-      isRootNode: Boolean
+      isRootNode: Boolean,
     ): Task[IRI] =
       for {
         // get the data graph of the project.
@@ -1279,14 +1279,14 @@ final case class ListsResponder(
       deletedNodeIri: IRI,
       positionOfDeletedNode: Int,
       parentNodeIri: IRI,
-      dataNamedGraph: IRI
+      dataNamedGraph: IRI,
     ): Task[ListNodeADM] =
       for {
         maybeNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = false)
 
         parentNode: ListNodeADM =
           maybeNode.getOrElse(
-            throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug.")
+            throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug."),
           )
 
         remainingChildren = parentNode.children
@@ -1304,7 +1304,7 @@ final case class ListsResponder(
                                    endPos = remainingChildren.last.position,
                                    nodes = remainingChildren,
                                    shiftToLeft = true,
-                                   dataNamedGraph = dataNamedGraph
+                                   dataNamedGraph = dataNamedGraph,
                                  )
             } yield shiftedChildren
           } else {
@@ -1320,7 +1320,7 @@ final case class ListsResponder(
                                   name = rootNode.name,
                                   labels = rootNode.labels,
                                   comments = rootNode.comments,
-                                  children = updatedChildren
+                                  children = updatedChildren,
                                 )
 
                               case childNode: ListChildNodeADM =>
@@ -1331,7 +1331,7 @@ final case class ListsResponder(
                                   comments = childNode.comments,
                                   position = childNode.position,
                                   hasRootNode = childNode.hasRootNode,
-                                  children = updatedChildren
+                                  children = updatedChildren,
                                 )
                             }
       } yield updatedParentNode
@@ -1414,7 +1414,7 @@ final case class ListsResponder(
    * @return a [[String]].
    */
   private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: ListChangeRequest
+    changeNodeInfoRequest: ListChangeRequest,
   ): Task[String] =
     for {
       // get the data graph of the project.
@@ -1423,11 +1423,11 @@ final case class ListsResponder(
       /* verify that the list name is unique for the project */
       nodeNameUnique <- listNodeNameIsProjectUnique(
                           changeNodeInfoRequest.projectIri.value,
-                          changeNodeInfoRequest.name
+                          changeNodeInfoRequest.name,
                         )
       _ = if (!nodeNameUnique) {
             throw DuplicateValueException(
-              s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
+              s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}.",
             )
           }
 
@@ -1435,7 +1435,7 @@ final case class ListsResponder(
       maybeNode <- listNodeGetADM(nodeIri = changeNodeInfoRequest.listIri.value, shallow = true)
 
       node = maybeNode.getOrElse(
-               throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found.")
+               throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found."),
              )
 
       // Update the list
@@ -1449,7 +1449,7 @@ final case class ListsResponder(
                                                projectIri = changeNodeInfoRequest.projectIri.value,
                                                listClassIri = KnoraBase.ListNode,
                                                maybeLabels = changeNodeInfoRequest.labels.map(_.value),
-                                               maybeComments = changeNodeInfoRequest.comments.map(_.value)
+                                               maybeComments = changeNodeInfoRequest.comments.map(_.value),
                                              )
                                              .toString
     } yield changeNodeInfoSparqlString
@@ -1556,13 +1556,13 @@ final case class ListsResponder(
   private def updatePositionOfNode(
     nodeIri: IRI,
     newPosition: Int,
-    dataNamedGraph: IRI
+    dataNamedGraph: IRI,
   ): Task[ListChildNodeADM] = {
     // Generate SPARQL for erasing a node.
     val sparqlUpdateNodePosition = sparql.admin.txt.updateNodePosition(
       dataNamedGraph = dataNamedGraph,
       nodeIri = nodeIri,
-      newPosition = newPosition
+      newPosition = newPosition,
     )
     for {
       _ <- triplestore.query(Update(sparqlUpdateNodePosition))
@@ -1577,7 +1577,7 @@ final case class ListsResponder(
 
       _ = if (!childNode.position.equals(newPosition)) {
             throw UpdateNotPerformedException(
-              s"The position of the node $nodeIri could not be updated, report this as a possible bug."
+              s"The position of the node $nodeIri could not be updated, report this as a possible bug.",
             )
           }
 
@@ -1601,11 +1601,11 @@ final case class ListsResponder(
     endPos: Int,
     nodes: Seq[ListChildNodeADM],
     shiftToLeft: Boolean,
-    dataNamedGraph: IRI
+    dataNamedGraph: IRI,
   ): Task[Seq[ListChildNodeADM]] =
     for {
       nodesTobeUpdated <- ZIO.attempt(
-                            nodes.filter(node => node.position >= startPos && node.position <= endPos)
+                            nodes.filter(node => node.position >= startPos && node.position <= endPos),
                           )
       staticStartNodes = nodes.filter(node => node.position < startPos)
       staticEndNotes   = nodes.filter(node => node.position > endPos)
@@ -1618,7 +1618,7 @@ final case class ListsResponder(
                                 updatePositionOfNode(
                                   nodeIri = child.id,
                                   newPosition = newPos,
-                                  dataNamedGraph = dataNamedGraph
+                                  dataNamedGraph = dataNamedGraph,
                                 )
                               }
       updatedNodes <- ZioHelper.sequence(updatePositionFutures)
@@ -1637,7 +1637,7 @@ final case class ListsResponder(
     nodeIri: IRI,
     oldParentIri: IRI,
     newParentIri: IRI,
-    dataNamedGraph: IRI
+    dataNamedGraph: IRI,
   ): Task[Unit] = for {
     _ <-
       triplestore.query(Update(sparql.admin.txt.changeParentNode(dataNamedGraph, nodeIri, oldParentIri, newParentIri)))
@@ -1648,7 +1648,7 @@ final case class ListsResponder(
     childrenOfOldParent = maybeOldParent.get.children
     _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
           throw UpdateNotPerformedException(
-            s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug."
+            s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug.",
           )
         }
     // get new parent node with its immediate children
@@ -1691,13 +1691,13 @@ object ListsResponder {
 
   def listCreateRootNode(
     req: ListCreateRootNodeRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): ZIO[ListsResponder, Throwable, ListGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listCreateRootNode(req, apiRequestID))
 
   def listCreateChildNode(
     req: ListCreateChildNodeRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): ZIO[ListsResponder, Throwable, ChildNodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.listCreateChildNode(req, apiRequestID))
 
@@ -1705,22 +1705,22 @@ object ListsResponder {
     nodeIri: ListIri,
     changeNodePositionRequest: ListChangePositionRequest,
     requestingUser: User,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): ZIO[ListsResponder, Throwable, NodePositionChangeResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](
-      _.nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
+      _.nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID),
     )
 
   def nodeInfoChangeRequest(
     req: ListChangeRequest,
-    apiRequestId: UUID
+    apiRequestId: UUID,
   ): ZIO[ListsResponder, Throwable, NodeInfoGetResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.nodeInfoChangeRequest(req, apiRequestId))
 
   def deleteListItemRequestADM(
     iri: ListIri,
     user: User,
-    uuid: UUID
+    uuid: UUID,
   ): ZIO[ListsResponder, Throwable, ListItemDeleteResponseADM] =
     ZIO.serviceWithZIO[ListsResponder](_.deleteListItemRequestADM(iri, user, uuid))
 

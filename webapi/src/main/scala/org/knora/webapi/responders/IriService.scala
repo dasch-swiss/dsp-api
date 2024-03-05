@@ -33,7 +33,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 final case class IriService(
   private val iriConverter: IriConverter,
   private val triplestore: TriplestoreService,
-  private val stringFormatter: StringFormatter
+  private val stringFormatter: StringFormatter,
 ) extends LazyLogging {
 
   /**
@@ -48,7 +48,7 @@ final case class IriService(
   def isEntityUsed(
     iri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
-    ignoreRdfSubjectAndObject: Boolean = false
+    ignoreRdfSubjectAndObject: Boolean = false,
   ): Task[Boolean] = triplestore
     .query(Ask(sparql.v2.txt.isEntityUsed(iri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)))
 
@@ -107,7 +107,7 @@ final case class IriService(
                     ZIO.succeed(newIri)
                   } else if (attempts == 0) {
                     ZIO.fail(
-                      UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")
+                      UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts"),
                     )
                   } else {
                     makeUnusedIriRec(attempts - 1)

@@ -74,7 +74,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }.toMap
 
     val definitionsWithSubClassOf = definitions.copy(
-      subClassOf = allSubClassOfRelations
+      subClassOf = allSubClassOfRelations,
     )
 
     checkRec(instanceElement = instanceElement, classIri = expectedClassIri, definitions = definitionsWithSubClassOf)
@@ -102,11 +102,11 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       !instanceInspector.elementHasCompatibleType(
         element = instanceElement,
         expectedType = classIri,
-        definitions = definitions
+        definitions = definitions,
       )
     ) {
       throwAndLogAssertionException(
-        s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri"
+        s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri",
       )
     }
 
@@ -125,7 +125,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
 
     if (extraInstancePropertyNames.nonEmpty) {
       throwAndLogAssertionException(
-        s"One or more instance properties are not allowed by cardinalities: ${extraInstancePropertyNames.mkString(", ")}"
+        s"One or more instance properties are not allowed by cardinalities: ${extraInstancePropertyNames.mkString(", ")}",
       )
     }
 
@@ -143,7 +143,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         (cardinality == AtLeastOne && numberOfObjects == 0)
       ) {
         throwAndLogAssertionException(
-          s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is ${cardinality.toString}"
+          s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is ${cardinality.toString}",
         )
       }
     }
@@ -154,7 +154,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
         val propertyDef = definitions.getPropertyDef(propertyIri, throwAndLogAssertionException)
         getObjectType(propertyDef).getOrElse(
-          throwAndLogAssertionException(s"Property $propertyIri has no knora-api:objectType")
+          throwAndLogAssertionException(s"Property $propertyIri has no knora-api:objectType"),
         )
       } else {
         OntologyConstants.Xsd.String.toSmartIri
@@ -188,7 +188,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
           } else if (!instanceInspector.elementIsIri(obj)) {
             // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
             throwAndLogAssertionException(
-              s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead"
+              s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead",
             )
           }
         } else {
@@ -198,7 +198,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
             !instanceInspector.elementHasCompatibleType(
               element = obj,
               expectedType = objectType,
-              definitions = definitions
+              definitions = definitions,
             )
           ) {
             throwAndLogAssertionException(errorMsg)
@@ -229,7 +229,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
   private def getDefinitionsRec(
     classIri: SmartIri,
     knoraRouteGet: String => String,
-    definitions: Definitions
+    definitions: Definitions,
   ): Definitions = {
     // Get the definition of classIri.
     val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
@@ -266,7 +266,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     // Update definitions with the class and property definitions we've got so far.
     val updatedDefs: Definitions = definitions.copy(
       classDefs = definitions.classDefs + (classIri -> classDef),
-      propertyDefs = definitions.propertyDefs ++ propertyDefsFromCardinalities
+      propertyDefs = definitions.propertyDefs ++ propertyDefsFromCardinalities,
     )
 
     val classIrisForRecursion = baseClassIris ++ classIrisFromObjectTypes -- definitions.classDefs.keySet - classIri
@@ -276,12 +276,12 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       val recDefinitions: Definitions = getDefinitionsRec(
         classIri = classIriFromObjectType,
         knoraRouteGet = knoraRouteGet,
-        definitions = acc
+        definitions = acc,
       )
 
       acc.copy(
         classDefs = acc.classDefs ++ recDefinitions.classDefs,
-        propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
+        propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs,
       )
     }
   }
@@ -413,7 +413,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
 case class InstanceElement(
   elementType: String,
   literalContent: Option[String] = None,
-  propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty
+  propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty,
 )
 
 /**
@@ -496,8 +496,8 @@ class JsonLDInstanceInspector extends InstanceInspector {
         Vector(
           InstanceElement(
             elementType = OntologyConstants.Xsd.Boolean,
-            literalContent = Some(jsonLDBoolean.value.toString)
-          )
+            literalContent = Some(jsonLDBoolean.value.toString),
+          ),
         )
     }
 
@@ -523,7 +523,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
   override def elementHasCompatibleType(
     element: InstanceElement,
     expectedType: SmartIri,
-    definitions: Definitions
+    definitions: Definitions,
   ): Boolean = {
     val expectedTypeStr: IRI = expectedType.toString
 
@@ -551,7 +551,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
 case class Definitions(
   classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
   propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty,
-  subClassOf: Map[SmartIri, Seq[SmartIri]] = Map.empty
+  subClassOf: Map[SmartIri, Seq[SmartIri]] = Map.empty,
 ) {
   def getClassDef(classIri: SmartIri, errorFun: String => Nothing): ClassInfoContentV2 =
     classDefs.getOrElse(classIri, errorFun(s"No definition for class $classIri"))

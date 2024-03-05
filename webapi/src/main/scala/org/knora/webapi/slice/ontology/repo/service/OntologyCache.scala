@@ -59,7 +59,7 @@ object OntologyCache {
   def checkOntologyReferencesInClassDef(
     cache: OntologyCacheData,
     classDef: ClassInfoContentV2,
-    errorFun: String => Nothing
+    errorFun: String => Nothing,
   ): Unit = {
     classDef.subClassOf.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
     classDef.directCardinalities.keys.foreach(checkOntologyReferenceInEntity(cache, classDef.classIri, _, errorFun))
@@ -78,7 +78,7 @@ object OntologyCache {
     ontologyCacheData: OntologyCacheData,
     sourceEntityIri: SmartIri,
     targetEntityIri: SmartIri,
-    errorFun: String => Nothing
+    errorFun: String => Nothing,
   ): Unit =
     if (targetEntityIri.isKnoraDefinitionIri) {
       val sourceOntologyIri      = sourceEntityIri.getOntologyFromEntity
@@ -90,7 +90,7 @@ object OntologyCache {
       if (sourceOntologyMetadata.projectIri != targetOntologyMetadata.projectIri) {
         if (!(targetOntologyIri.isKnoraBuiltInDefinitionIri || targetOntologyIri.isKnoraSharedDefinitionIri)) {
           errorFun(
-            s"Entity $sourceEntityIri refers to entity $targetEntityIri, which is in a non-shared ontology that belongs to another project"
+            s"Entity $sourceEntityIri refers to entity $targetEntityIri, which is in a non-shared ontology that belongs to another project",
           )
         }
       }
@@ -106,7 +106,7 @@ object OntologyCache {
   def checkOntologyReferencesInPropertyDef(
     ontologyCacheData: OntologyCacheData,
     propertyDef: PropertyInfoContentV2,
-    errorFun: String => Nothing
+    errorFun: String => Nothing,
   )(implicit stringFormatter: StringFormatter): Unit = {
     // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
 
@@ -115,7 +115,7 @@ object OntologyCache {
         ontologyCacheData = ontologyCacheData,
         sourceEntityIri = propertyDef.propertyIri,
         targetEntityIri = subPropertyOf,
-        errorFun = errorFun
+        errorFun = errorFun,
       )
     }
 
@@ -127,7 +127,7 @@ object OntologyCache {
           ontologyCacheData = ontologyCacheData,
           sourceEntityIri = propertyDef.propertyIri,
           targetEntityIri = subjectClassConstraint,
-          errorFun = errorFun
+          errorFun = errorFun,
         )
 
       case None => ()
@@ -139,7 +139,7 @@ object OntologyCache {
           ontologyCacheData = ontologyCacheData,
           sourceEntityIri = propertyDef.propertyIri,
           targetEntityIri = objectClassConstraint,
-          errorFun = errorFun
+          errorFun = errorFun,
         )
 
       case None => ()
@@ -152,14 +152,14 @@ object OntologyCache {
    * @param ontologyCacheData the ontology cache data.
    */
   def checkReferencesBetweenOntologies(
-    ontologyCacheData: OntologyCacheData
+    ontologyCacheData: OntologyCacheData,
   )(implicit stringFormatter: StringFormatter): Unit =
     for (ontology <- ontologyCacheData.ontologies.values) {
       for (propertyInfo <- ontology.properties.values) {
         checkOntologyReferencesInPropertyDef(
           ontologyCacheData = ontologyCacheData,
           propertyDef = propertyInfo.entityInfoContent,
-          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) }
+          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) },
         )
       }
 
@@ -167,7 +167,7 @@ object OntologyCache {
         checkOntologyReferencesInClassDef(
           cache = ontologyCacheData,
           classDef = classInfo.entityInfoContent,
-          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) }
+          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) },
         )
       }
     }
@@ -261,7 +261,7 @@ object OntologyCache {
     val propertiesWithStandoffTagSubjects: Set[SmartIri] = readPropertyInfos.flatMap {
       case (propertyIri, readPropertyInfo) =>
         readPropertyInfo.entityInfoContent.getPredicateIriObject(
-          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
         ) match {
           case Some(subjectClassConstraint: SmartIri) =>
             readClassInfos.get(subjectClassConstraint) match {
@@ -291,36 +291,36 @@ object OntologyCache {
     val subClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Seq[SmartIri]](
         allSubClassOfRelations,
-        key => s"Class not found in classToSuperClassLookup: $key"
+        key => s"Class not found in classToSuperClassLookup: $key",
       )
     val superClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Set[SmartIri]](
         allSuperClassOfRelations,
-        key => s"Class not found in superClassOfRelations: $key"
+        key => s"Class not found in superClassOfRelations: $key",
       )
     val subPropertyOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Set[SmartIri]](
         allSubPropertyOfRelations,
-        key => s"Property not found in allSubPropertyOfRelations: $key"
+        key => s"Property not found in allSubPropertyOfRelations: $key",
       )
     val superPropertyOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Set[SmartIri]](
         allSuperPropertyOfRelations,
-        key => s"Property not found in allSuperPropertyOfRelations: $key"
+        key => s"Property not found in allSuperPropertyOfRelations: $key",
       )
     val classDefinedInOntologyErrorMap =
       new ErrorHandlingMap[SmartIri, SmartIri](
         classDefinedInOntology,
-        key => s"Class not found classDefinedInOntology: $key"
+        key => s"Class not found classDefinedInOntology: $key",
       )
     val propertyDefinedInOntologyErrorMap =
       new ErrorHandlingMap[SmartIri, SmartIri](
         propertyDefinedInOntology,
-        key => s"Property not found in propertyDefinedInOntology: $key"
+        key => s"Property not found in propertyDefinedInOntology: $key",
       )
     val entityDefinedInOntologyErrorMap = new ErrorHandlingMap[SmartIri, SmartIri](
       propertyDefinedInOntology ++ classDefinedInOntology,
-      key => s"Property not found in propertyDefinedInOntology: $key"
+      key => s"Property not found in propertyDefinedInOntology: $key",
     )
 
     val standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
@@ -334,7 +334,7 @@ object OntologyCache {
       classDefinedInOntology = classDefinedInOntologyErrorMap,
       propertyDefinedInOntology = propertyDefinedInOntologyErrorMap,
       entityDefinedInOntology = entityDefinedInOntologyErrorMap,
-      standoffProperties = standoffProperties
+      standoffProperties = standoffProperties,
     )
   }
 
@@ -356,7 +356,7 @@ object OntologyCache {
     constraintValueToBeChecked: SmartIri,
     allSuperPropertyIris: Set[SmartIri],
     errorSchema: OntologySchema,
-    errorFun: String => Nothing
+    errorFun: String => Nothing,
   ): Unit = {
     // The property constraint value must be a Knora class, or one of a limited set of classes defined in OWL.
     val superClassesOfConstraintValueToBeChecked: Set[SmartIri] =
@@ -369,8 +369,8 @@ object OntologyCache {
             errorFun(
               s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
                   .toOntologySchema(errorSchema)} of " +
-                s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}"
-            )
+                s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}",
+            ),
           )
           .toSet
       }
@@ -384,8 +384,8 @@ object OntologyCache {
           .getOrElse(
             superPropertyIri,
             errorFun(
-              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined"
-            )
+              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined",
+            ),
           )
     }
 
@@ -397,9 +397,9 @@ object OntologyCache {
         .map(
           _.requireIriObject(
             throw InconsistentRepositoryDataException(
-              s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"
-            )
-          )
+              s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri",
+            ),
+          ),
         )
         .map { superPropertyConstraintValue =>
           superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
@@ -416,7 +416,7 @@ object OntologyCache {
             s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}, because that is not a subclass of " +
             s"${superPropertyConstraintValue.toOntologySchema(errorSchema)}, which is the ${constraintPredicateIri
                 .toOntologySchema(errorSchema)} of " +
-            s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}"
+            s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}",
         )
       }
     }
@@ -451,7 +451,7 @@ trait OntologyCache {
    */
   def cacheUpdatedOntologyWithoutUpdatingMaps(
     updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2
+    updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData]
 
   /**
@@ -482,13 +482,13 @@ trait OntologyCache {
   def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri
+    updatedClassIri: SmartIri,
   ): Task[OntologyCacheData]
 }
 
 final case class OntologyCacheLive(
   triplestore: TriplestoreService,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends OntologyCache
     with LazyLogging {
 
@@ -504,13 +504,13 @@ final case class OntologyCacheLive(
         ZIO
           .fail(ForbiddenException(s"Only a system administrator can reload ontologies"))
           .when(
-            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
+            !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin),
           )
 
       // Get all ontology metadata.
       allOntologyMetadataSparql <- ZIO.succeed(
                                      sparql.v2.txt
-                                       .getAllOntologyMetadata()
+                                       .getAllOntologyMetadata(),
                                    )
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestore.query(Select(allOntologyMetadataSparql))
@@ -519,18 +519,18 @@ final case class OntologyCacheLive(
       knoraBaseOntologyMetadata =
         allOntologyMetadata.getOrElse(
           OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
-          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
+          throw InconsistentRepositoryDataException(s"No knora-base ontology found"),
         )
       knoraBaseOntologyVersion =
         knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
           throw InconsistentRepositoryDataException(
-            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
-          )
+            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates.",
+          ),
         )
 
       _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
             throw InconsistentRepositoryDataException(
-              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
+              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.",
             )
           }
 
@@ -551,7 +551,7 @@ final case class OntologyCacheLive(
                 case Some(iri: SmartIri) =>
                   if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
                     throw MissingLastModificationDateOntologyException(
-                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`",
                     )
                   }
                 case _ => ()
@@ -579,14 +579,14 @@ final case class OntologyCacheLive(
    */
   private def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
-    ontologyGraphs: Iterable[OntologyGraph]
+    ontologyGraphs: Iterable[OntologyGraph],
   ): Task[OntologyCacheData] = ZIO.attempt {
     // Get the IRIs of all the entities in each ontology.
 
     // A map of ontology IRIs to class IRIs in each ontology.
     val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = OntologyHelpers.getEntityIrisFromOntologyGraphs(
       ontologyGraphs = ontologyGraphs,
-      entityTypes = Set(OntologyConstants.Owl.Class)
+      entityTypes = Set(OntologyConstants.Owl.Class),
     )
 
     // A map of ontology IRIs to property IRIs in each ontology.
@@ -596,14 +596,14 @@ final case class OntologyCacheLive(
         OntologyConstants.Owl.ObjectProperty,
         OntologyConstants.Owl.DatatypeProperty,
         OntologyConstants.Owl.AnnotationProperty,
-        OntologyConstants.Rdf.Property
-      )
+        OntologyConstants.Rdf.Property,
+      ),
     )
 
     // A map of ontology IRIs to named individual IRIs in each ontology.
     val individualIrisPerOntology: Map[SmartIri, Set[SmartIri]] = OntologyHelpers.getEntityIrisFromOntologyGraphs(
       ontologyGraphs = ontologyGraphs,
-      entityTypes = Set(OntologyConstants.Owl.NamedIndividual)
+      entityTypes = Set(OntologyConstants.Owl.NamedIndividual),
     )
 
     // Construct entity definitions.
@@ -612,7 +612,7 @@ final case class OntologyCacheLive(
     val allClassDefs: Map[SmartIri, ClassInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
       OntologyHelpers.constructResponseToClassDefinitions(
         classIrisPerOntology(ontologyGraph.ontologyIri),
-        ontologyGraph.constructResponse
+        ontologyGraph.constructResponse,
       )
     }.toMap
 
@@ -620,7 +620,7 @@ final case class OntologyCacheLive(
     val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
       OntologyHelpers.constructResponseToPropertyDefinitions(
         propertyIris = propertyIrisPerOntology(ontologyGraph.ontologyIri),
-        constructResponse = ontologyGraph.constructResponse
+        constructResponse = ontologyGraph.constructResponse,
       )
     }.toMap
 
@@ -628,7 +628,7 @@ final case class OntologyCacheLive(
     val allIndividuals: Map[SmartIri, IndividualInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
       OntologyHelpers.constructResponseToIndividuals(
         individualIris = individualIrisPerOntology(ontologyGraph.ontologyIri),
-        constructResponse = ontologyGraph.constructResponse
+        constructResponse = ontologyGraph.constructResponse,
       )
     }.toMap
 
@@ -681,17 +681,17 @@ final case class OntologyCacheLive(
 
     // A set of all subproperties of knora-base:hasLinkTo.
     val allLinkProps: Set[SmartIri] = allPropertyIris.filter(prop =>
-      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri)
+      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri),
     )
 
     // A set of all subproperties of knora-base:hasLinkToValue.
     val allLinkValueProps: Set[SmartIri] = allPropertyIris.filter(prop =>
-      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
+      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri),
     )
 
     // A set of all subproperties of knora-base:hasFileValue.
     val allFileValueProps: Set[SmartIri] = allPropertyIris.filter(prop =>
-      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue.toSmartIri)
+      allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue.toSmartIri),
     )
 
     // A map of the cardinalities defined directly on each resource class. Each class IRI points to a map of
@@ -709,7 +709,7 @@ final case class OntologyCacheLive(
             classIri = resourceClassIri,
             directSubClassOfRelations = directSubClassOfRelations,
             allSubPropertyOfRelations = allSubPropertyOfRelations,
-            directClassCardinalities = directClassCardinalities
+            directClassCardinalities = directClassCardinalities,
           )
 
         resourceClassIri -> resourceClassCardinalities
@@ -726,7 +726,7 @@ final case class OntologyCacheLive(
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
       allLinkValueProps = allLinkValueProps,
-      allFileValueProps = allFileValueProps
+      allFileValueProps = allFileValueProps,
     )
 
     // Construct a ReadPropertyInfoV2 for each property definition.
@@ -736,7 +736,7 @@ final case class OntologyCacheLive(
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
       allLinkValueProps = allLinkValueProps,
-      allFileValueProps = allFileValueProps
+      allFileValueProps = allFileValueProps,
     )
 
     // Construct a ReadIndividualV2 for each OWL named individual.
@@ -756,7 +756,7 @@ final case class OntologyCacheLive(
           individuals = readIndividualInfos.filter { case (individualIri, _) =>
             individualIri.getOntologyFromEntity == ontologyIri
           },
-          isWholeOntology = true
+          isWholeOntology = true,
         )
     }
 
@@ -773,7 +773,7 @@ final case class OntologyCacheLive(
     val propertiesWithStandoffTagSubjects: Set[SmartIri] = readPropertyInfos.flatMap {
       case (propertyIri, readPropertyInfo) =>
         readPropertyInfo.entityInfoContent.getPredicateIriObject(
-          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
         ) match {
           case Some(subjectClassConstraint: SmartIri) =>
             readClassInfos.get(subjectClassConstraint) match {
@@ -815,9 +815,9 @@ final case class OntologyCacheLive(
         new ErrorHandlingMap[SmartIri, SmartIri](propertyDefinedInOntology, key => s"Property not found: $key"),
       entityDefinedInOntology = new ErrorHandlingMap[SmartIri, SmartIri](
         propertyDefinedInOntology ++ classDefinedInOntology,
-        key => s"Property not found: $key"
+        key => s"Property not found: $key",
       ),
-      standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
+      standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects,
     )
 
     // Check property subject and object class constraints.
@@ -826,7 +826,7 @@ final case class OntologyCacheLive(
       val allSuperPropertyIris: Set[SmartIri] = allSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[SmartIri])
 
       readPropertyInfo.entityInfoContent.getPredicateIriObject(
-        OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+        OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
       ) match {
         case Some(subjectClassConstraint) =>
           // Each property's subject class constraint, if provided, must be a subclass of the subject class constraints of all its base properties.
@@ -839,7 +839,7 @@ final case class OntologyCacheLive(
             errorSchema = InternalSchema,
             errorFun = { (msg: String) =>
               throw InconsistentRepositoryDataException(msg)
-            }
+            },
           )
 
           // If the property is defined in a project-specific ontology, its subject class constraint, if provided, must be a Knora resource or standoff class.
@@ -851,7 +851,7 @@ final case class OntologyCacheLive(
                 baseClassesOfSubjectClassConstraint.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri))
             ) {
               throw InconsistentRepositoryDataException(
-                s"Property $propertyIri is defined in a project-specific ontology, but its knora-base:subjectClassConstraint, $subjectClassConstraint, is not a subclass of knora-base:Resource or knora-base:StandoffTag"
+                s"Property $propertyIri is defined in a project-specific ontology, but its knora-base:subjectClassConstraint, $subjectClassConstraint, is not a subclass of knora-base:Resource or knora-base:StandoffTag",
               )
             }
           }
@@ -860,7 +860,7 @@ final case class OntologyCacheLive(
       }
 
       readPropertyInfo.entityInfoContent.getPredicateIriObject(
-        OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+        OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
       ) match {
         case Some(objectClassConstraint) =>
           // Each property's object class constraint, if provided, must be a subclass of the object class constraints of all its base properties.
@@ -873,7 +873,7 @@ final case class OntologyCacheLive(
             errorSchema = InternalSchema,
             errorFun = { (msg: String) =>
               throw InconsistentRepositoryDataException(msg)
-            }
+            },
           )
 
         case None =>
@@ -913,7 +913,7 @@ final case class OntologyCacheLive(
         case Some(data) => data
         case None =>
           throw ApplicationCacheException(
-            s"The Knora API server has not loaded any ontologies, perhaps because of an invalid ontology"
+            s"The Knora API server has not loaded any ontologies, perhaps because of an invalid ontology",
           )
       }
     }
@@ -962,7 +962,7 @@ final case class OntologyCacheLive(
           errorSchema = ApiV2Complex,
           errorFun = { (msg: String) =>
             throw BadRequestException(msg)
-          }
+          },
         )
 
         // Update the cache.
@@ -971,18 +971,18 @@ final case class OntologyCacheLive(
         val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
 
         val newKnoraResourceProperties = newInheritedCardinalities.keySet.filter(
-          OntologyHelpers.isKnoraResourceProperty(_, cacheData)
+          OntologyHelpers.isKnoraResourceProperty(_, cacheData),
         )
 
         val updatedOntology = ontology.copy(
           classes = ontology.classes + (directSubClassIri -> directSubClass.copy(
             inheritedCardinalities = newInheritedCardinalities,
-            knoraResourceProperties = newKnoraResourceProperties
-          ))
+            knoraResourceProperties = newKnoraResourceProperties,
+          )),
         )
 
         cacheDataAcc.copy(
-          ontologies = cacheDataAcc.ontologies + (ontologyIri -> updatedOntology)
+          ontologies = cacheDataAcc.ontologies + (ontologyIri -> updatedOntology),
         )
     }
 
@@ -1005,7 +1005,7 @@ final case class OntologyCacheLive(
   override def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
-    updatedClassIri: SmartIri
+    updatedClassIri: SmartIri,
   ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
@@ -1025,7 +1025,7 @@ final case class OntologyCacheLive(
    */
   override def cacheUpdatedOntology(
     updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2
+    updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData
@@ -1044,7 +1044,7 @@ final case class OntologyCacheLive(
    */
   override def cacheUpdatedOntologyWithoutUpdatingMaps(
     updatedOntologyIri: SmartIri,
-    updatedOntologyData: ReadOntologyV2
+    updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] =
     for {
       ontologyCache        <- getCacheData

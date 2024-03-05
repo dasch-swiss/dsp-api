@@ -26,7 +26,7 @@ object Iri {
   val urlValidator =
     new UrlValidator(
       Array("http", "https"),       // valid URL schemes
-      UrlValidator.ALLOW_LOCAL_URLS // local URLs are URL-encoded IRIs as part of the whole URL
+      UrlValidator.ALLOW_LOCAL_URLS,// local URLs are URL-encoded IRIs as part of the whole URL
     )
 
   object KnoraInternal {

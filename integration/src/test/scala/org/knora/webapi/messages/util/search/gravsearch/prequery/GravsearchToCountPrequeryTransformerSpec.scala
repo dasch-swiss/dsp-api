@@ -44,16 +44,16 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
         new GravsearchToCountPrequeryTransformer(
           constructClause = constructClause,
           typeInspectionResult = inspectionResult,
-          querySchema = querySchema
+          querySchema = querySchema,
         )
       prequery <- ZIO.serviceWithZIO[QueryTraverser](
                     _.transformConstructToSelect(
                       inputQuery = constructQuery.copy(
                         whereClause = sanitizedWhereClause,
-                        orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
+                        orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
                       ),
-                      transformer
-                    )
+                      transformer,
+                    ),
                   )
 
     } yield prequery
@@ -93,8 +93,8 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
         Count(
           inputVariable = QueryVariable(variableName = "thing"),
           distinct = true,
-          outputVariableName = "count"
-        )
+          outputVariableName = "count",
+        ),
       ),
       offset = 0,
       groupBy = Nil,
@@ -105,23 +105,23 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
               iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-              propertyPathOperator = None
+              propertyPathOperator = None,
             ),
             obj = XsdLiteral(
               value = "false",
-              datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-            )
+              datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
+            ),
           ),
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
               iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              propertyPathOperator = None
+              propertyPathOperator = None,
             ),
             obj = IriRef(
               iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-              propertyPathOperator = None
-            )
+              propertyPathOperator = None,
+            ),
           ),
           OptionalPattern(
             patterns = Vector(
@@ -129,28 +129,28 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
-                obj = QueryVariable(variableName = "decimal")
+                obj = QueryVariable(variableName = "decimal"),
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
                 obj = XsdLiteral(
                   value = "false",
-                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                )
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
+                ),
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
-                obj = QueryVariable(variableName = "decimal__valueHasDecimal")
+                obj = QueryVariable(variableName = "decimal__valueHasDecimal"),
               ),
               FilterPattern(expression =
                 CompareExpression(
@@ -158,18 +158,18 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   operator = CompareExpressionOperator.GREATER_THAN,
                   rightArg = XsdLiteral(
                     value = "2",
-                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
-                  )
-                )
-              )
-            )
-          )
+                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ).toSeq,
         positiveEntities = Set(),
-        querySchema = None
+        querySchema = None,
       ),
       limit = Some(1),
-      useDistinct = true
+      useDistinct = true,
     )
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilterComplex: String =
@@ -203,8 +203,8 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
         Count(
           outputVariableName = "count",
           distinct = true,
-          inputVariable = QueryVariable(variableName = "thing")
-        )
+          inputVariable = QueryVariable(variableName = "thing"),
+        ),
       ),
       offset = 0,
       groupBy = Nil,
@@ -215,23 +215,23 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
               iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-              propertyPathOperator = None
+              propertyPathOperator = None,
             ),
             obj = XsdLiteral(
               value = "false",
-              datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-            )
+              datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
+            ),
           ),
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
               iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              propertyPathOperator = None
+              propertyPathOperator = None,
             ),
             obj = IriRef(
               iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-              propertyPathOperator = None
-            )
+              propertyPathOperator = None,
+            ),
           ),
           OptionalPattern(
             patterns = Vector(
@@ -239,28 +239,28 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
-                obj = QueryVariable(variableName = "decimal")
+                obj = QueryVariable(variableName = "decimal"),
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
                 obj = XsdLiteral(
                   value = "false",
-                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                )
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
+                ),
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
+                  propertyPathOperator = None,
                 ),
-                obj = QueryVariable(variableName = "decimalVal")
+                obj = QueryVariable(variableName = "decimalVal"),
               ),
               FilterPattern(expression =
                 CompareExpression(
@@ -268,18 +268,18 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   operator = CompareExpressionOperator.GREATER_THAN,
                   rightArg = XsdLiteral(
                     value = "2",
-                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
-                  )
-                )
-              )
-            )
-          )
+                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
         positiveEntities = Set(),
-        querySchema = None
+        querySchema = None,
       ),
       limit = Some(1),
-      useDistinct = true
+      useDistinct = true,
     )
 
   "The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object" should {

@@ -71,7 +71,7 @@ trait ConstructResponseUtilV2 {
    */
   def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
-    requestingUser: User
+    requestingUser: User,
   ): MainResourcesAndValueRdfData
 
   /**
@@ -107,7 +107,7 @@ trait ConstructResponseUtilV2 {
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -120,7 +120,7 @@ trait ConstructResponseUtilV2 {
    */
   def getMappingsFromQueryResultsSeparated(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    requestingUser: User
+    requestingUser: User,
   ): zio.Task[Map[IRI, MappingAndXSLTransformation]]
 }
 object ConstructResponseUtilV2 {
@@ -191,7 +191,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asStringLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -205,7 +205,7 @@ object ConstructResponseUtilV2 {
      */
     def requireStringObject(predicateIri: SmartIri): String =
       maybeStringObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
 
     /**
@@ -218,7 +218,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asIriLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -232,7 +232,7 @@ object ConstructResponseUtilV2 {
      */
     def requireIriObject(predicateIri: SmartIri): IRI =
       maybeIriObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
 
     /**
@@ -245,7 +245,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asIntLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -259,7 +259,7 @@ object ConstructResponseUtilV2 {
      */
     def requireIntObject(predicateIri: SmartIri): Int =
       maybeIntObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
 
     /**
@@ -272,7 +272,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asBooleanLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -286,7 +286,7 @@ object ConstructResponseUtilV2 {
      */
     def requireBooleanObject(predicateIri: SmartIri): Boolean =
       maybeBooleanObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
 
     /**
@@ -299,7 +299,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asDecimalLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -313,7 +313,7 @@ object ConstructResponseUtilV2 {
      */
     def requireDecimalObject(predicateIri: SmartIri): BigDecimal =
       maybeDecimalObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
 
     /**
@@ -326,7 +326,7 @@ object ConstructResponseUtilV2 {
       assertions.get(predicateIri).map { literal =>
         literal
           .asDateTimeLiteral(
-            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal")
+            throw InconsistentRepositoryDataException(s"Unexpected object of $subjectIri $predicateIri: $literal"),
           )
           .value
       }
@@ -340,7 +340,7 @@ object ConstructResponseUtilV2 {
      */
     def requireDateTimeObject(predicateIri: SmartIri): Instant =
       maybeDateTimeObject(predicateIri).getOrElse(
-        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri")
+        throw InconsistentRepositoryDataException(s"Subject $subjectIri does not have predicate $predicateIri"),
       )
   }
 
@@ -362,7 +362,7 @@ object ConstructResponseUtilV2 {
     isIncomingLink: Boolean = false,
     userPermission: EntityPermission,
     assertions: FlatPredicateObjects,
-    standoff: FlatStatements
+    standoff: FlatStatements,
   ) extends RdfData
 
   /**
@@ -379,7 +379,7 @@ object ConstructResponseUtilV2 {
     assertions: FlatPredicateObjects,
     isMainResource: Boolean,
     userPermission: Option[EntityPermission],
-    valuePropertyAssertions: RdfPropertyValues
+    valuePropertyAssertions: RdfPropertyValues,
   ) extends RdfData
 
   /**
@@ -393,7 +393,7 @@ object ConstructResponseUtilV2 {
   case class MappingAndXSLTransformation(
     mapping: MappingXMLtoStandoff,
     standoffEntities: StandoffEntityInfoGetResponseV2,
-    XSLTransformation: Option[String]
+    XSLTransformation: Option[String],
   )
 
   /**
@@ -420,12 +420,12 @@ final case class ConstructResponseUtilV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
   standoffTagUtilV2: StandoffTagUtilV2,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends ConstructResponseUtilV2 {
 
   private val inferredPredicates = Set(
     OntologyConstants.KnoraBase.HasValue,
-    OntologyConstants.KnoraBase.IsMainResource
+    OntologyConstants.KnoraBase.IsMainResource,
   )
 
   /**
@@ -439,7 +439,7 @@ final case class ConstructResponseUtilV2Live(
    */
   override def splitMainResourcesAndValueRdfData(
     constructQueryResults: SparqlExtendedConstructResponse,
-    requestingUser: User
+    requestingUser: User,
   ): MainResourcesAndValueRdfData = {
 
     // Make sure all the subjects are IRIs, because blank nodes are not used in resources.
@@ -493,7 +493,7 @@ final case class ConstructResponseUtilV2Live(
               case IriLiteralV2(iri) => iri
               case other =>
                 throw InconsistentRepositoryDataException(
-                  s"Unexpected object for $resourceIri knora-base:hasValue: $other"
+                  s"Unexpected object for $resourceIri knora-base:hasValue: $other",
                 )
             }
         }.flatten.toSet
@@ -508,7 +508,7 @@ final case class ConstructResponseUtilV2Live(
           resourceIri = resourceIri,
           requestingUser = requestingUser,
           assertionsExplicit = assertionsExplicit,
-          nonResourceStatements = nonResourceStatements
+          nonResourceStatements = nonResourceStatements,
         )
 
         // Flatten the resource assertions.
@@ -525,7 +525,7 @@ final case class ConstructResponseUtilV2Live(
           assertions = resourceAssertions,
           isMainResource = isMainResource,
           userPermission = userPermission,
-          valuePropertyAssertions = valuePropertyToValueObject
+          valuePropertyAssertions = valuePropertyToValueObject,
         )
     }
 
@@ -561,7 +561,7 @@ final case class ConstructResponseUtilV2Live(
         visibleResources = visibleResources,
         dependentResourceIrisVisible = dependentResourceIrisVisible,
         dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
-        incomingLinksForResource = incomingLinksForResource
+        incomingLinksForResource = incomingLinksForResource,
       )
 
       resourceIri -> transformedResource
@@ -569,7 +569,7 @@ final case class ConstructResponseUtilV2Live(
 
     MainResourcesAndValueRdfData(
       resources = mainResourcesNested,
-      hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible
+      hiddenResourceIris = mainResourceIrisNotVisible ++ dependentResourceIrisNotVisible,
     )
   }
 
@@ -582,7 +582,7 @@ final case class ConstructResponseUtilV2Live(
    */
   private def mapPropertyIrisToValueIris(
     assertionsExplicit: ConstructPredicateObjects,
-    valueObjectIris: Set[IRI]
+    valueObjectIris: Set[IRI],
   ): Map[SmartIri, Seq[IRI]] =
     assertionsExplicit.map { case (pred: SmartIri, objs: Seq[LiteralV2]) =>
       // Get only the assertions in which the object is a value object IRI.
@@ -617,7 +617,7 @@ final case class ConstructResponseUtilV2Live(
     resourceIri: IRI,
     requestingUser: User,
     assertionsExplicit: ConstructPredicateObjects,
-    nonResourceStatements: Statements
+    nonResourceStatements: Statements,
   )(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
     valuePropertyToObjectIris.map { case (property: SmartIri, valObjIris: Seq[IRI]) =>
       // Make an RdfWithUserPermission for each value of the property.
@@ -630,7 +630,7 @@ final case class ConstructResponseUtilV2Live(
         val resourceProjectLiteral: LiteralV2 = assertionsExplicit
           .getOrElse(
             OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-            throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
+            throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject"),
           )
           .head
 
@@ -638,9 +638,9 @@ final case class ConstructResponseUtilV2Live(
         val maybeUserPermission = PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(
           entityIri = valObjIri,
           assertions = valueObjAssertions + (OntologyConstants.KnoraBase.AttachedToProject.toSmartIri -> Seq(
-            resourceProjectLiteral
+            resourceProjectLiteral,
           )),
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
         valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
@@ -685,12 +685,12 @@ final case class ConstructResponseUtilV2Live(
           // Get the rdf:type of the value.
           val rdfTypeLiteral: LiteralV2 = valueStatements.getOrElse(
             OntologyConstants.Rdf.Type.toSmartIri,
-            throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type")
+            throw InconsistentRepositoryDataException(s"Value $valObjIri has no rdf:type"),
           )
 
           val valueObjectClass: SmartIri = rdfTypeLiteral
             .asIriLiteral(
-              throw InconsistentRepositoryDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral")
+              throw InconsistentRepositoryDataException(s"Unexpected object of $valObjIri rdf:type: $rdfTypeLiteral"),
             )
             .value
             .toSmartIri
@@ -704,8 +704,8 @@ final case class ConstructResponseUtilV2Live(
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                 assertions = valueStatements,
-                standoff = emptyFlatStatements // link value does not contain standoff
-              )
+                standoff = emptyFlatStatements, // link value does not contain standoff
+              ),
             )
 
           } else {
@@ -716,8 +716,8 @@ final case class ConstructResponseUtilV2Live(
                 valueObjectClass = valueObjectClass,
                 userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                 assertions = valueStatements,
-                standoff = standoffAssertions
-              )
+                standoff = standoffAssertions,
+              ),
             )
           }
       }
@@ -739,7 +739,7 @@ final case class ConstructResponseUtilV2Live(
    * @return the incoming links as a map of resource IRIs
    */
   private def getIncomingLink(visibleResources: RdfResources, flatResourcesWithValues: RdfResources)(implicit
-    stringFormatter: StringFormatter
+    stringFormatter: StringFormatter,
   ): Map[IRI, RdfResources] =
     visibleResources.map { case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
       // get all incoming links for resourceIri
@@ -777,7 +777,7 @@ final case class ConstructResponseUtilV2Live(
           if (incomingLinkPropertyAssertions.nonEmpty) {
             // add resource values to the existing values
             acc + (otherResourceIri -> values.copy(
-              valuePropertyAssertions = incomingLinkPropertyAssertions
+              valuePropertyAssertions = incomingLinkPropertyAssertions,
             ))
           } else {
             // it does not already exist therefore add the new one
@@ -810,7 +810,7 @@ final case class ConstructResponseUtilV2Live(
     dependentResourceIrisVisible: Set[IRI],
     dependentResourceIrisNotVisible: Set[IRI],
     incomingLinksForResource: Map[IRI, RdfResources],
-    alreadyTraversed: Set[IRI] = Set.empty[IRI]
+    alreadyTraversed: Set[IRI] = Set.empty[IRI],
   )(implicit stringFormatter: StringFormatter): ResourceWithValueRdfData = {
     val resource = visibleResources(resourceIri)
 
@@ -823,7 +823,7 @@ final case class ConstructResponseUtilV2Live(
           dependentResourceIrisVisible = dependentResourceIrisVisible,
           dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
           incomingLinksForResource = incomingLinksForResource,
-          alreadyTraversed = alreadyTraversed + resourceIri
+          alreadyTraversed = alreadyTraversed + resourceIri,
         )
 
         propIri -> transformedValues
@@ -880,22 +880,22 @@ final case class ConstructResponseUtilV2Live(
                 dependentResourceIrisVisible = dependentResourceIrisVisible,
                 dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
                 incomingLinksForResource = incomingLinksForResource,
-                alreadyTraversed = alreadyTraversed + resourceIri
-              )
+                alreadyTraversed = alreadyTraversed + resourceIri,
+              ),
             )
 
             linkValue.copy(
               nestedResource = source,
-              isIncomingLink = true
+              isIncomingLink = true,
             )
         }
 
       resource.copy(
-        valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps
+        valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps,
       )
     } else {
       resource.copy(
-        valuePropertyAssertions = transformedValuePropertyAssertions
+        valuePropertyAssertions = transformedValuePropertyAssertions,
       )
     }
   }
@@ -920,7 +920,7 @@ final case class ConstructResponseUtilV2Live(
     dependentResourceIrisVisible: Set[IRI],
     dependentResourceIrisNotVisible: Set[IRI],
     incomingLinksForResource: Map[IRI, RdfResources],
-    alreadyTraversed: Set[IRI]
+    alreadyTraversed: Set[IRI],
   )(implicit stringFormatter: StringFormatter): Seq[ValueRdfData] =
     values.foldLeft(Vector.empty[ValueRdfData]) { case (acc: Vector[ValueRdfData], value: ValueRdfData) =>
       if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
@@ -939,11 +939,11 @@ final case class ConstructResponseUtilV2Live(
               dependentResourceIrisVisible = dependentResourceIrisVisible,
               dependentResourceIrisNotVisible = dependentResourceIrisNotVisible,
               incomingLinksForResource = incomingLinksForResource,
-              alreadyTraversed = alreadyTraversed
+              alreadyTraversed = alreadyTraversed,
             )
 
             acc :+ value.copy(
-              nestedResource = Some(dependentResource)
+              nestedResource = Some(dependentResource),
             )
           } else if (dependentResourceIrisNotVisible.contains(dependentResourceIri)) {
             // No, because the user doesn't have permission to see it. Skip the link value.
@@ -966,13 +966,13 @@ final case class ConstructResponseUtilV2Live(
    * @return a set of mapping Iris.
    */
   override def getMappingIrisFromValuePropertyAssertions(
-    valuePropertyAssertions: RdfPropertyValues
+    valuePropertyAssertions: RdfPropertyValues,
   ): Set[IRI] =
     valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
         val mappings: Seq[String] = valObjs.filter { (valObj: ValueRdfData) =>
           valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.contains(
-            OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri
+            OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri,
           )
         }.map { (textValObj: ValueRdfData) =>
           textValObj.requireIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
@@ -1008,7 +1008,7 @@ final case class ConstructResponseUtilV2Live(
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    requestingUser: User
+    requestingUser: User,
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
@@ -1022,7 +1022,7 @@ final case class ConstructResponseUtilV2Live(
       for {
         standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                       standoffAssertions = valueObject.standoff,
-                      requestingUser = requestingUser
+                      requestingUser = requestingUser,
                     )
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
@@ -1032,7 +1032,7 @@ final case class ConstructResponseUtilV2Live(
         mappingIri = mappingIri,
         mapping = mappingAndXsltTransformation.map(_.mapping),
         xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
-        comment = valueCommentOption
+        comment = valueCommentOption,
       )
     } else {
       // The query returned no standoff markup.
@@ -1042,8 +1042,8 @@ final case class ConstructResponseUtilV2Live(
           ontologySchema = InternalSchema,
           maybeValueHasString = valueObjectValueHasString,
           valueHasLanguage = valueLanguageOption,
-          comment = valueCommentOption
-        )
+          comment = valueCommentOption,
+        ),
       )
     }
   }
@@ -1061,7 +1061,7 @@ final case class ConstructResponseUtilV2Live(
       internalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalMimeType.toSmartIri),
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
       originalFilename = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalFilename.toSmartIri),
-      originalMimeType = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri)
+      originalMimeType = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri),
     )
 
     valueType match {
@@ -1072,8 +1072,8 @@ final case class ConstructResponseUtilV2Live(
             fileValue = fileValue,
             dimX = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
             dimY = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.DocumentFileValue =>
@@ -1084,8 +1084,8 @@ final case class ConstructResponseUtilV2Live(
             pageCount = valueObject.maybeIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
             dimX = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
             dimY = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.TextFileValue =>
@@ -1093,8 +1093,8 @@ final case class ConstructResponseUtilV2Live(
           TextFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.AudioFileValue =>
@@ -1102,8 +1102,8 @@ final case class ConstructResponseUtilV2Live(
           AudioFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.MovingImageFileValue =>
@@ -1111,8 +1111,8 @@ final case class ConstructResponseUtilV2Live(
           MovingImageFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.ArchiveFileValue =>
@@ -1120,8 +1120,8 @@ final case class ConstructResponseUtilV2Live(
           ArchiveFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case _ => ZIO.fail(InconsistentRepositoryDataException(s"Unexpected file value type: $valueType"))
@@ -1147,7 +1147,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ) = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
@@ -1160,7 +1160,7 @@ final case class ConstructResponseUtilV2Live(
       referredResourceIri = referredResourceIri,
       isIncomingLink = valueObject.isIncomingLink,
       nestedResource = None,
-      comment = valueCommentOption
+      comment = valueCommentOption,
     )
 
     // Is there a nested resource in the link value?
@@ -1175,10 +1175,10 @@ final case class ConstructResponseUtilV2Live(
                               queryStandoff = queryStandoff,
                               versionDate = versionDate,
                               requestingUser = requestingUser,
-                              targetSchema = targetSchema
+                              targetSchema = targetSchema,
                             )
         } yield linkValue.copy(
-          nestedResource = Some(nestedResource)
+          nestedResource = Some(nestedResource),
         )
 
       case None =>
@@ -1204,7 +1204,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ) = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
@@ -1223,7 +1223,7 @@ final case class ConstructResponseUtilV2Live(
           valueObjectValueHasString = valueObjectValueHasString,
           valueCommentOption = valueCommentOption,
           mappings = mappings,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
       case OntologyConstants.KnoraBase.DateValue =>
@@ -1240,18 +1240,18 @@ final case class ConstructResponseUtilV2Live(
             valueHasEndJDN = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
             valueHasStartPrecision = DatePrecisionV2.parse(
               startPrecisionStr,
-              throw InconsistentRepositoryDataException(s"Invalid date precision: $startPrecisionStr")
+              throw InconsistentRepositoryDataException(s"Invalid date precision: $startPrecisionStr"),
             ),
             valueHasEndPrecision = DatePrecisionV2.parse(
               endPrecisionStr,
-              throw InconsistentRepositoryDataException(s"Invalid date precision: $endPrecisionStr")
+              throw InconsistentRepositoryDataException(s"Invalid date precision: $endPrecisionStr"),
             ),
             valueHasCalendar = CalendarNameV2.parse(
               calendarNameStr,
-              throw InconsistentRepositoryDataException(s"Invalid calendar name: $calendarNameStr")
+              throw InconsistentRepositoryDataException(s"Invalid calendar name: $calendarNameStr"),
             ),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.IntValue =>
@@ -1259,8 +1259,8 @@ final case class ConstructResponseUtilV2Live(
           IntegerValueContentV2(
             ontologySchema = InternalSchema,
             valueHasInteger = valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.DecimalValue =>
@@ -1268,8 +1268,8 @@ final case class ConstructResponseUtilV2Live(
           DecimalValueContentV2(
             ontologySchema = InternalSchema,
             valueHasDecimal = valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.BooleanValue =>
@@ -1277,8 +1277,8 @@ final case class ConstructResponseUtilV2Live(
           BooleanValueContentV2(
             ontologySchema = InternalSchema,
             valueHasBoolean = valueObject.requireBooleanObject(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.UriValue =>
@@ -1286,8 +1286,8 @@ final case class ConstructResponseUtilV2Live(
           UriValueContentV2(
             ontologySchema = InternalSchema,
             valueHasUri = valueObject.requireIriObject(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.ColorValue =>
@@ -1295,8 +1295,8 @@ final case class ConstructResponseUtilV2Live(
           ColorValueContentV2(
             ontologySchema = InternalSchema,
             valueHasColor = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasColor.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.GeomValue =>
@@ -1304,8 +1304,8 @@ final case class ConstructResponseUtilV2Live(
           GeomValueContentV2(
             ontologySchema = InternalSchema,
             valueHasGeometry = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeometry.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.GeonameValue =>
@@ -1314,8 +1314,8 @@ final case class ConstructResponseUtilV2Live(
             ontologySchema = InternalSchema,
             valueHasGeonameCode =
               valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeonameCode.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.ListValue =>
@@ -1325,7 +1325,7 @@ final case class ConstructResponseUtilV2Live(
           ontologySchema = InternalSchema,
           valueHasListNode = listNodeIri,
           listNodeLabel = None,
-          comment = valueCommentOption
+          comment = valueCommentOption,
         )
 
         // only query the list node if the response is requested in the simple schema
@@ -1337,7 +1337,7 @@ final case class ConstructResponseUtilV2Live(
               nodeResponse <- messageRelay.ask[NodeGetResponseV2](NodeGetRequestV2(listNodeIri, requestingUser))
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
-                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage)
+                .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = appConfig.fallbackLanguage),
             )
 
           case ApiV2Complex => ZIO.succeed(listNode)
@@ -1351,8 +1351,8 @@ final case class ConstructResponseUtilV2Live(
               valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalStart.toSmartIri),
             valueHasIntervalEnd =
               valueObject.requireDecimalObject(OntologyConstants.KnoraBase.ValueHasIntervalEnd.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.TimeValue =>
@@ -1361,8 +1361,8 @@ final case class ConstructResponseUtilV2Live(
             ontologySchema = InternalSchema,
             valueHasTimeStamp =
               valueObject.requireDateTimeObject(OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri),
-            comment = valueCommentOption
-          )
+            comment = valueCommentOption,
+          ),
         )
 
       case OntologyConstants.KnoraBase.LinkValue =>
@@ -1373,14 +1373,14 @@ final case class ConstructResponseUtilV2Live(
           queryStandoff = queryStandoff,
           versionDate = versionDate,
           targetSchema = targetSchema,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
       case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
         makeFileValueContentV2(
           valueType = fileValueClass,
           valueObject = valueObject,
-          valueCommentOption = valueCommentOption
+          valueCommentOption = valueCommentOption,
         )
 
       case other => throw NotImplementedException(s"Not implemented yet: $other")
@@ -1406,7 +1406,7 @@ final case class ConstructResponseUtilV2Live(
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
       val mayHaveDeletedStatements: Option[Boolean] =
@@ -1420,8 +1420,8 @@ final case class ConstructResponseUtilV2Live(
             Some(
               DeletionInfo(
                 deleteDate = deleteDate,
-                maybeDeleteComment = maybeDeleteComment
-              )
+                maybeDeleteComment = maybeDeleteComment,
+              ),
             )
           } else {
             None
@@ -1434,8 +1434,8 @@ final case class ConstructResponseUtilV2Live(
     val resourceClassStr: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri)
     val resourceClass = resourceClassStr.toSmartIriWithErr(
       throw InconsistentRepositoryDataException(
-        s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"
-      )
+        s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>",
+      ),
     )
     val resourceAttachedToUser: IRI =
       resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
@@ -1467,20 +1467,20 @@ final case class ConstructResponseUtilV2Live(
                   mappings = mappings,
                   queryStandoff = queryStandoff,
                   targetSchema = targetSchema,
-                  requestingUser = requestingUser
+                  requestingUser = requestingUser,
                 )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
               permissions    = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
               valueCreationDate: Instant = valObj.requireDateTimeObject(
-                                             OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri
+                                             OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri,
                                            )
               valueDeletionInfo = getDeletionInfo(valObj)
               valueHasUUID: UUID = UuidUtil.decode(
-                                     valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri)
+                                     valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri),
                                    )
               previousValueIri: Option[IRI] = valObj.maybeIriObject(
-                                                OntologyConstants.KnoraBase.PreviousValue.toSmartIri
+                                                OntologyConstants.KnoraBase.PreviousValue.toSmartIri,
                                               )
 
             } yield valueContent match {
@@ -1498,7 +1498,7 @@ final case class ConstructResponseUtilV2Live(
                   valueContent = linkValueContentV2,
                   valueHasRefCount = valueHasRefCount,
                   previousValueIri = previousValueIri,
-                  deletionInfo = valueDeletionInfo
+                  deletionInfo = valueDeletionInfo,
                 )
 
               case textValueContentV2: TextValueContentV2 =>
@@ -1515,7 +1515,7 @@ final case class ConstructResponseUtilV2Live(
                   valueContent = textValueContentV2,
                   valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
                   previousValueIri = previousValueIri,
-                  deletionInfo = valueDeletionInfo
+                  deletionInfo = valueDeletionInfo,
                 )
 
               case otherValueContentV2: ValueContentV2 =>
@@ -1528,7 +1528,7 @@ final case class ConstructResponseUtilV2Live(
                   valueHasUUID = valueHasUUID,
                   valueContent = otherValueContentV2,
                   previousValueIri = previousValueIri,
-                  deletionInfo = valueDeletionInfo
+                  deletionInfo = valueDeletionInfo,
                 )
             }
           }
@@ -1543,8 +1543,8 @@ final case class ConstructResponseUtilV2Live(
             ProjectGetRequestADM(identifier =
               IriIdentifier
                 .fromString(resourceAttachedToProject)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
+                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+            ),
           )
 
       valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
@@ -1560,7 +1560,7 @@ final case class ConstructResponseUtilV2Live(
       creationDate = resourceCreationDate,
       lastModificationDate = resourceLastModificationDate,
       versionDate = versionDate,
-      deletionInfo = resourceDeletionInfo
+      deletionInfo = resourceDeletionInfo,
     )
   }
 
@@ -1589,7 +1589,7 @@ final case class ConstructResponseUtilV2Live(
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
 
     val visibleResourceIris: Seq[IRI] =
@@ -1605,7 +1605,7 @@ final case class ConstructResponseUtilV2Live(
         queryStandoff = queryStandoff,
         versionDate = versionDate,
         targetSchema = targetSchema,
-        requestingUser = requestingUser
+        requestingUser = requestingUser,
       )
     }.toVector
 
@@ -1619,7 +1619,7 @@ final case class ConstructResponseUtilV2Live(
     } yield ReadResourcesSequenceV2(
       resources = resources,
       hiddenResourceIris = mainResourcesAndValueRdfData.hiddenResourceIris,
-      mayHaveMoreResults = mayHaveMoreResults
+      mayHaveMoreResults = mayHaveMoreResults,
     )
   }
 
@@ -1633,7 +1633,7 @@ final case class ConstructResponseUtilV2Live(
    */
   override def getMappingsFromQueryResultsSeparated(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Map[IRI, MappingAndXSLTransformation]] = {
 
     // collect the Iris of the mappings referred to in the resources' text values
@@ -1660,14 +1660,14 @@ final case class ConstructResponseUtilV2Live(
                   xslTransformation <- messageRelay.ask[GetXSLTransformationResponseV2](
                                          GetXSLTransformationRequestV2(
                                            mapping.mapping.defaultXSLTransformation.get,
-                                           requestingUser = requestingUser
-                                         )
+                                           requestingUser = requestingUser,
+                                         ),
                                        )
                 } yield Some(xslTransformation.xslt)
 
                 xslTransformationFuture.mapError { case notFound: NotFoundException =>
                   throw SipiException(
-                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}"
+                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}",
                   )
                 }
               } else {
@@ -1676,7 +1676,7 @@ final case class ConstructResponseUtilV2Live(
           } yield mapping.mappingIri -> MappingAndXSLTransformation(
             mapping = mapping.mapping,
             standoffEntities = mapping.standoffEntities,
-            XSLTransformation = xsltOption
+            XSLTransformation = xsltOption,
           )
 
         }
@@ -1688,6 +1688,6 @@ final case class ConstructResponseUtilV2Live(
 object ConstructResponseUtilV2Live {
   val layer: URLayer[
     AppConfig & MessageRelay & StandoffTagUtilV2 & StringFormatter,
-    ConstructResponseUtilV2
+    ConstructResponseUtilV2,
   ] = ZLayer.fromFunction(ConstructResponseUtilV2Live.apply _)
 }

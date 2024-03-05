@@ -176,7 +176,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
     Seq(
       get.usersByIriProjectMemberShips,
       get.usersByIriProjectAdminMemberShips,
-      get.usersByIriGroupMemberships
+      get.usersByIriGroupMemberships,
     )
   private val secured =
     Seq(
@@ -195,7 +195,7 @@ final case class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       delete.deleteUser,
       delete.usersByIriProjectMemberShips,
       delete.usersByIriProjectAdminMemberShips,
-      delete.usersByIriGroupMemberShips
+      delete.usersByIriGroupMemberShips,
     ).map(_.endpoint)
   val endpoints: Seq[AnyEndpoint] = (public ++ secured).map(_.tag("Admin Users"))
 }
@@ -212,7 +212,7 @@ object UsersEndpoints {
       password: Password,
       status: UserStatus,
       lang: LanguageCode,
-      systemAdmin: SystemAdmin
+      systemAdmin: SystemAdmin,
     )
     object UserCreateRequest {
       implicit val jsonCodec: JsonCodec[UserCreateRequest] = DeriveJsonCodec.gen[UserCreateRequest]
@@ -223,7 +223,7 @@ object UsersEndpoints {
       email: Option[Email] = None,
       givenName: Option[GivenName] = None,
       familyName: Option[FamilyName] = None,
-      lang: Option[LanguageCode] = None
+      lang: Option[LanguageCode] = None,
     )
     object BasicUserInformationChangeRequest {
       implicit val jsonCodec: JsonCodec[BasicUserInformationChangeRequest] =

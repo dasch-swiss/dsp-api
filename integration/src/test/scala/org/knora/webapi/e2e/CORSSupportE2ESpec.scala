@@ -25,14 +25,14 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
 class CORSSupportE2ESpec extends E2ESpec {
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   val exampleOrigin = HttpOrigin("http://example.com")
@@ -48,30 +48,30 @@ class CORSSupportE2ESpec extends E2ESpec {
         `Access-Control-Allow-Origin`(exampleOrigin),
         `Access-Control-Allow-Methods`(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
         `Access-Control-Max-Age`(1800),
-        `Access-Control-Allow-Credentials`(true)
+        `Access-Control-Allow-Credentials`(true),
       )
     }
 
     "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
       val request = Get(
         baseApiUrl + "/v2/resources/" + java.net.URLEncoder
-          .encode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg", "utf-8")
+          .encode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg", "utf-8"),
       ) ~> Origin(exampleOrigin)
       val response = singleAwaitingRequest(request)
       response.status should equal(StatusCodes.OK)
       response.headers should contain allElementsOf Seq(
-        `Access-Control-Allow-Origin`(exampleOrigin)
+        `Access-Control-Allow-Origin`(exampleOrigin),
       )
     }
 
     "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
       val request = Get(
-        baseApiUrl + "/v2/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8")
+        baseApiUrl + "/v2/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8"),
       ) ~> Origin(exampleOrigin)
       val response = singleAwaitingRequest(request)
       response.status should equal(StatusCodes.NotFound)
       response.headers should contain allElementsOf Seq(
-        `Access-Control-Allow-Origin`(exampleOrigin)
+        `Access-Control-Allow-Origin`(exampleOrigin),
       )
     }
 
@@ -80,7 +80,7 @@ class CORSSupportE2ESpec extends E2ESpec {
       val response = singleAwaitingRequest(request)
       response.status should equal(StatusCodes.NotFound)
       response.headers should contain allElementsOf Seq(
-        `Access-Control-Allow-Origin`(exampleOrigin)
+        `Access-Control-Allow-Origin`(exampleOrigin),
       )
     }
 

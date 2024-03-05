@@ -29,7 +29,7 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
       TriplestoreServiceLive.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
-      StringFormatter.test
+      StringFormatter.test,
     )
 
   def spec: Spec[Any, Nothing] =
@@ -90,6 +90,6 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
           // _      <- Clock.ClockLive.sleep(10.seconds)
           result <- TriplestoreService.query(Select(searchStringOfDeath)).exit
         } yield assertTrue(result.is(_.failure) == NotFoundException("The requested data was not found"))
-      }
+      },
     ).provideLayer(testLayer) @@ TestAspect.sequential
 }

@@ -47,12 +47,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   def getProjectMemberShipsByUserIri(
-    userIri: UserIri
+    userIri: UserIri,
   ): ZIO[UsersRestService, Throwable, UserProjectMembershipsGetResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.getProjectMemberShipsByUserIri(userIri))
 
   def getProjectAdminMemberShipsByUserIri(
-    userIri: UserIri
+    userIri: UserIri,
   ): ZIO[UsersRestService, Throwable, UserProjectAdminMembershipsGetResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.getProjectAdminMemberShipsByUserIri(userIri))
 
@@ -62,49 +62,49 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
   def addGroupToUserIsInGroup(
     requestingUser: User,
     userIri: UserIri,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addUserToGroup(requestingUser, userIri, groupIri))
 
   def addUserToProject(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addUserToProject(requestingUser, userIri, projectIri))
 
   def addUserToProjectAsAdmin(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.addUserToProjectAsAdmin(requestingUser, userIri, projectIri))
 
   def changePassword(
     requestingUser: User,
     userIri: UserIri,
-    passwordChangeRequest: PasswordChangeRequest
+    passwordChangeRequest: PasswordChangeRequest,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changePassword(requestingUser, userIri, passwordChangeRequest))
 
   def changeSystemAdmin(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: SystemAdminChangeRequest
+    changeRequest: SystemAdminChangeRequest,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changeSystemAdmin(requestingUser, userIri, changeRequest))
 
   def changeUserStatus(
     requestingUser: User,
     userIri: UserIri,
-    statusChangeRequest: StatusChangeRequest
+    statusChangeRequest: StatusChangeRequest,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.changeStatus(requestingUser, userIri, statusChangeRequest))
 
   def updateUser(
     requestingUser: User,
     userIri: UserIri,
-    basicUserInformationChangeRequest: BasicUserInformationChangeRequest
+    basicUserInformationChangeRequest: BasicUserInformationChangeRequest,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.updateUser(requestingUser, userIri, basicUserInformationChangeRequest))
 
@@ -114,27 +114,27 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
   def removeUserFromProject(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.removeUserFromProject(requestingUser, userIri, projectIri))
 
   def removeUserFromProjectAsAdmin(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.removeUserFromProjectAsAdmin(requestingUser, userIri, projectIri))
 
   def removeUserFromGroup(
     requestingUser: User,
     userIri: UserIri,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.removeUserFromGroup(requestingUser, userIri, groupIri))
 
   def createUser(
     requestingUser: User,
-    userCreateRequest: UserCreateRequest
+    userCreateRequest: UserCreateRequest,
   ): ZIO[UsersRestService, Throwable, UserResponseADM] =
     ZIO.serviceWithZIO[UsersRestService](_.createUser(requestingUser, userCreateRequest))
 
@@ -161,14 +161,14 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(
-          getUserByEmail(Email.unsafeFrom(rootUser.email), KnoraSystemInstances.Users.SystemUser)
+          getUserByEmail(Email.unsafeFrom(rootUser.email), KnoraSystemInstances.Users.SystemUser),
         )
         actual.user shouldBe rootUser.ofType(UserInformationType.Restricted)
       }
 
       "return 'None' when the user is unknown" in {
         val exit = UnsafeZioRun.run(
-          getUserByEmail(Email.unsafeFrom("userwrong@example.com"), KnoraSystemInstances.Users.SystemUser)
+          getUserByEmail(Email.unsafeFrom("userwrong@example.com"), KnoraSystemInstances.Users.SystemUser),
         )
         assertFailsWithA[NotFoundException](exit)
       }
@@ -181,7 +181,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
       "return a profile if the user (root user) is known" in {
         val actual = UnsafeZioRun.runOrThrow(
-          getUserByUsername(KnoraSystemInstances.Users.SystemUser, rootUser.getUsername)
+          getUserByUsername(KnoraSystemInstances.Users.SystemUser, rootUser.getUsername),
         )
 
         actual.user shouldBe rootUser.ofType(UserInformationType.Restricted)
@@ -191,8 +191,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           getUserByUsername(
             KnoraSystemInstances.Users.SystemUser,
-            Username.unsafeFrom("userwrong")
-          )
+            Username.unsafeFrom("userwrong"),
+          ),
         )
         assertFailsWithA[NotFoundException](exit)
       }
@@ -223,9 +223,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.IsNotSystemAdmin
-            )
-          )
+              systemAdmin = SystemAdmin.IsNotSystemAdmin,
+            ),
+          ),
         )
         val u = response.user
         u.username shouldBe "donald.duck"
@@ -248,9 +248,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.IsNotSystemAdmin
-            )
-          )
+              systemAdmin = SystemAdmin.IsNotSystemAdmin,
+            ),
+          ),
         )
         assertFailsWithA[DuplicateValueException](exit, s"User with the username 'root' already exists")
       }
@@ -267,9 +267,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
               password = Password.unsafeFrom("test"),
               status = UserStatus.from(true),
               lang = LanguageCode.en,
-              systemAdmin = SystemAdmin.IsNotSystemAdmin
-            )
-          )
+              systemAdmin = SystemAdmin.IsNotSystemAdmin,
+            ),
+          ),
         )
         assertFailsWithA[DuplicateValueException](exit, s"User with the email 'root@example.com' already exists")
       }
@@ -282,8 +282,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald")))
-          )
+            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("Donald"))),
+          ),
         )
 
         response1.user.givenName should equal("Donald")
@@ -293,8 +293,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck")))
-          )
+            BasicUserInformationChangeRequest(familyName = Some(FamilyName.unsafeFrom("Duck"))),
+          ),
         )
 
         response2.user.familyName should equal("Duck")
@@ -306,9 +306,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
             SharedTestDataADM.normalUser.userIri,
             BasicUserInformationChangeRequest(
               givenName = Some(GivenName.unsafeFrom(SharedTestDataADM.normalUser.givenName)),
-              familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName))
-            )
-          )
+              familyName = Some(FamilyName.unsafeFrom(SharedTestDataADM.normalUser.familyName)),
+            ),
+          ),
         )
 
         response3.user.givenName should equal(SharedTestDataADM.normalUser.givenName)
@@ -322,12 +322,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(username = duplicateUsername)
-          )
+            BasicUserInformationChangeRequest(username = duplicateUsername),
+          ),
         )
         assertFailsWithA[DuplicateValueException](
           exit,
-          s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists"
+          s"User with the username '${SharedTestDataADM.anythingUser1.username}' already exists",
         )
       }
 
@@ -337,12 +337,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           updateUser(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            BasicUserInformationChangeRequest(email = duplicateEmail)
-          )
+            BasicUserInformationChangeRequest(email = duplicateEmail),
+          ),
         )
         assertFailsWithA[DuplicateValueException](
           exit,
-          s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists"
+          s"User with the email '${SharedTestDataADM.anythingUser1.email}' already exists",
         )
       }
 
@@ -350,7 +350,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test123456")
         UnsafeZioRun.runOrThrow(
-          changePassword(normalUser, normalUser.userIri, PasswordChangeRequest(requesterPassword, newPassword))
+          changePassword(normalUser, normalUser.userIri, PasswordChangeRequest(requesterPassword, newPassword)),
         )
 
         // need to be able to authenticate credentials with new password
@@ -369,8 +369,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           changePassword(
             SharedTestDataADM.rootUser,
             SharedTestDataADM.normalUser.userIri,
-            PasswordChangeRequest(requesterPassword, newPassword)
-          )
+            PasswordChangeRequest(requesterPassword, newPassword),
+          ),
         )
 
         // need to be able to authenticate credentials with new password
@@ -386,8 +386,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           changeUserStatus(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            StatusChangeRequest(UserStatus.Inactive)
-          )
+            StatusChangeRequest(UserStatus.Inactive),
+          ),
         )
         response1.user.status should equal(false)
 
@@ -395,8 +395,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           changeUserStatus(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            StatusChangeRequest(UserStatus.Active)
-          )
+            StatusChangeRequest(UserStatus.Active),
+          ),
         )
         response2.user.status should equal(true)
       }
@@ -406,8 +406,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           changeSystemAdmin(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin)
-          )
+            SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin),
+          ),
         )
         response1.user.isSystemAdmin should equal(true)
 
@@ -415,8 +415,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           changeSystemAdmin(
             rootUser,
             SharedTestDataADM.normalUser.userIri,
-            SystemAdminChangeRequest(SystemAdmin.IsNotSystemAdmin)
-          )
+            SystemAdminChangeRequest(SystemAdmin.IsNotSystemAdmin),
+          ),
         )
         response2.user.permissions.isSystemAdmin should equal(false)
       }
@@ -439,8 +439,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectMembersGetRequestADM(
             IriIdentifier.unsafeFrom(imagesProject.id),
-            KnoraSystemInstances.Users.SystemUser
-          )
+            KnoraSystemInstances.Users.SystemUser,
+          ),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -455,14 +455,14 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         val membershipsAfterUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsAfterUpdate.projects.map(_.id).sorted should equal(
-          Seq(imagesProject.id, incunabulaProject.id).sorted
+          Seq(imagesProject.id, incunabulaProject.id).sorted,
         )
 
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectMembersGetRequestADM(
             IriIdentifier.unsafeFrom(incunabulaProject.id),
-            KnoraSystemInstances.Users.SystemUser
-          )
+            KnoraSystemInstances.Users.SystemUser,
+          ),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -471,12 +471,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         // check project memberships (user should be member of images and incunabula projects)
         val membershipsBeforeUpdate = UnsafeZioRun.runOrThrow(getProjectMemberShipsByUserIri(normalUser.userIri))
         membershipsBeforeUpdate.projects.map(_.id).sorted should equal(
-          Seq(imagesProject.id, incunabulaProject.id).sorted
+          Seq(imagesProject.id, incunabulaProject.id).sorted,
         )
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri),
         )
 
         // verify that the user has been added as project admin to the images project
@@ -498,7 +498,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
+          ProjectsResponderADM.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -513,11 +513,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // try to add user as project admin to images project (expected to fail because he is not a member of the project)
         val exit = UnsafeZioRun.run(
-          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin."
+          "User http://rdfh.ch/users/normaluser is not a member of project http://rdfh.ch/projects/00FF. A user needs to be a member of the project to be added as project admin.",
         )
       }
 
@@ -532,7 +532,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // add user as project admin to images project
         UnsafeZioRun.runOrThrow(
-          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri)
+          addUserToProjectAsAdmin(rootUser, normalUser.userIri, imagesProject.projectIri),
         )
 
         // get the updated project admin memberships (should contain images project)
@@ -542,7 +542,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -556,8 +556,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           removeUserFromProjectAsAdmin(
             rootUser,
             normalUser.userIri,
-            imagesProject.projectIri
-          )
+            imagesProject.projectIri,
+          ),
         )
 
         val membershipsAfterUpdate =
@@ -565,7 +565,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser)
+          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -574,7 +574,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
     "asked to update the user's group membership" should {
       def findGroupMembershipsByIri(userIri: UserIri): Seq[GroupADM] =
         UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[UserService](_.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty)))
+          ZIO.serviceWithZIO[UserService](_.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty))),
         )
 
       "ADD user to group" in {
@@ -588,7 +588,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser
+          requestingUser = rootUser,
         )
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
@@ -603,8 +603,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
           removeUserFromGroup(
             rootUser,
             normalUser.userIri,
-            imagesReviewerGroup.groupIri
-          )
+            imagesReviewerGroup.groupIri,
+          ),
         )
 
         val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
@@ -612,7 +612,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser
+          requestingUser = rootUser,
         )
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 

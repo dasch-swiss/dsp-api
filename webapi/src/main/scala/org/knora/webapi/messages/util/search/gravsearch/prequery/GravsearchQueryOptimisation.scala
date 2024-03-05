@@ -28,7 +28,7 @@ object GravsearchQueryOptimisation {
 
   def optimiseQueryPatterns(
     patterns: Seq[QueryPattern],
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): Seq[QueryPattern] = {
     val removedRedundant = removeRedundantKnoraApiResource(patterns)
     val removedEntities  = removeEntitiesInferredFromProperty(removedRedundant, typeInspectionResult)
@@ -109,7 +109,7 @@ private object RemoveEntitiesInferredFromProperty {
 
   def removeEntitiesInferredFromProperty(
     patterns: Seq[QueryPattern],
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): Seq[QueryPattern] = {
 
     // Collect all entities which are used as subject or object of an OptionalPattern.
@@ -238,7 +238,7 @@ private object ReorderPatternsByDependency {
      */
     def findOrdersNotEndingWithObjectOfRdfType(
       orders: Set[Vector[StringHyperGraph#NodeT]],
-      statementPatterns: Seq[StatementPattern]
+      statementPatterns: Seq[StatementPattern],
     ): Set[Vector[StringHyperGraph#NodeT]] = {
       type NodeT = StringHyperGraph#NodeT
 
@@ -268,7 +268,7 @@ private object ReorderPatternsByDependency {
      */
     def findBestTopologicalOrder(
       graph: StringHyperGraph,
-      statementPatterns: Seq[StatementPattern]
+      statementPatterns: Seq[StatementPattern],
     ): Vector[StringHyperGraph#NodeT] = {
       type NodeT = StringHyperGraph#NodeT
 
@@ -316,7 +316,7 @@ private object ReorderPatternsByDependency {
 
     def sortStatementPatterns(
       createdGraph: StringHyperGraph,
-      statementPatterns: Seq[StatementPattern]
+      statementPatterns: Seq[StatementPattern],
     ): Seq[QueryPattern] = {
       type NodeT = StringHyperGraph#NodeT
 

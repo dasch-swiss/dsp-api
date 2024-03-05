@@ -77,7 +77,7 @@ object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
         } +
 
         test(
-          "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)"
+          "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)",
         ) {
 
           val searchString = "Reise ins Heilige Lan"
@@ -99,7 +99,7 @@ object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
         } +
 
         test(
-          "combine all space separated words to a phrase but the last one and add a wildcard to it (exact sequence)"
+          "combine all space separated words to a phrase but the last one and add a wildcard to it (exact sequence)",
         ) {
 
           val searchString = "Reise ins Heilige Lan"
@@ -140,6 +140,6 @@ object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
 
           assertTrue(searchExpression == "")
 
-        }
+        },
     )
 }

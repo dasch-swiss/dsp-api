@@ -21,7 +21,7 @@ object TopologicalSortUtil {
    * @tparam T the type of the nodes in the graph.
    */
   def findAllTopologicalOrderPermutations[T](
-    graph: Graph[T, DiHyperEdge[T]]
+    graph: Graph[T, DiHyperEdge[T]],
   ): Set[Vector[Graph[T, DiHyperEdge[T]]#NodeT]] = {
     type NodeT = Graph[T, DiHyperEdge[T]]#NodeT
 

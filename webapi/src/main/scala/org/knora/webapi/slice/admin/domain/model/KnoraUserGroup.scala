@@ -31,7 +31,7 @@ final case class KnoraUserGroup(
   groupDescriptions: GroupDescriptions,
   status: GroupStatus,
   belongsToProject: Option[ProjectIri],
-  hasSelfJoinEnabled: GroupSelfJoin
+  hasSelfJoinEnabled: GroupSelfJoin,
 )
 
 final case class GroupIri private (override val value: String) extends AnyVal with StringValue

@@ -18,7 +18,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
       .find(
         subj = Some(subj),
         pred = Some(pred),
-        obj = None
+        obj = None,
       )
       .toSet
       .headOption match {
@@ -45,7 +45,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
         model = model,
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-empty-string/values/1"),
         pred = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasString),
-        expectedObj = JenaNodeFactory.makeStringLiteral("FIXME")
+        expectedObj = JenaNodeFactory.makeStringLiteral("FIXME"),
       )
 
       // Check that the empty string literal value with lang tag is replaced with FIXME.
@@ -53,7 +53,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
         model = model,
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/projects/XXXX"),
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#projectDescription"),
-        expectedObj = JenaNodeFactory.makeStringWithLanguage(value = "FIXME", language = "en")
+        expectedObj = JenaNodeFactory.makeStringWithLanguage(value = "FIXME", language = "en"),
       )
     }
   }

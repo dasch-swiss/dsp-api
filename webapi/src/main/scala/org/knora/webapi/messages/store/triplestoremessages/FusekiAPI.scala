@@ -25,7 +25,7 @@ case class FusekiServer(
   version: String,
   startDateTime: String,
   uptime: Int,
-  datasets: Seq[FusekiDataset]
+  datasets: Seq[FusekiDataset],
 )
 
 /**

@@ -43,9 +43,9 @@ lazy val buildSettings = Seq(
     HeaderLicense.Custom(
       """|Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
          |SPDX-License-Identifier: Apache-2.0
-         |""".stripMargin
-    )
-  )
+         |""".stripMargin,
+    ),
+  ),
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -56,7 +56,7 @@ lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
     sipi,
-    integration
+    integration,
   )
   .settings(
     // values set for all sub-projects
@@ -65,24 +65,24 @@ lazy val root: Project = Project(id = "root", file("."))
     ThisBuild / licenses          := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     ThisBuild / homepage          := Some(url("https://github.com/dasch-swiss/dsp-api")),
     ThisBuild / scmInfo := Some(
-      ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
+      ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git"),
     ),
     Global / scalaVersion := Dependencies.ScalaVersion,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
     dockerImageTag := (ThisBuild / version).value,
     publish / skip := true,
-    name           := "dsp-api"
+    name           := "dsp-api",
   )
 
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate"
+  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck"
+  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "integration/test")
@@ -109,7 +109,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     },
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=30s --retries=4 --start-period=30s \
-        |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin
+        |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin,
     ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
@@ -125,7 +125,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
 
       // don't filter the rest; don't filter out anything that doesn't match a pattern
       case cmd => false
-    }
+    },
   )
 
 //////////////////////////////////////
@@ -135,7 +135,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
 run / connectInput := true
 
 lazy val webApiCommonSettings = Seq(
-  name := "webapi"
+  name := "webapi",
 )
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
@@ -159,7 +159,7 @@ val customScalacOptions = Seq(
   "-Xlint:doc-detached",
   // silence twirl templates unused imports warnings
   "-Wconf:src=target/.*:s",
-  "-Xfatal-warnings"
+  "-Xfatal-warnings",
 )
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
@@ -172,28 +172,28 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies,
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     ),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies,
   )
   .settings(
     // add needed files to production jar
     Compile / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
+      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
-    Compile / exportJars := true
+    Compile / exportJars := true,
   )
   .settings(
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    javaAgents += Dependencies.aspectjweaver
+    javaAgents += Dependencies.aspectjweaver,
   )
   .settings(LocalSettings.localScalacOptions: _*)
   .settings(
@@ -213,7 +213,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Universal / scriptClasspath := Seq(
       "webapi/scripts",
       "webapi/src/main/resources/knora-ontologies",
-      "../config/"
+      "../config/",
     ) ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
     Compile / mainClass := Some("org.knora.webapi.Main"),
@@ -230,15 +230,15 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     dockerLabels := Map[String, Option[String]](
       "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
       "org.opencontainers.image.revision" -> Some(gitCommit),
-      "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api")
+      "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api"),
     ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
       "RUN",
-      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
+      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*",
     ), // install jq for container healthcheck
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
-        |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin
+        |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin,
     ),
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
@@ -247,7 +247,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
 
       // don't filter the rest; don't filter out anything that doesn't match a pattern
       case cmd => false
-    }
+    },
   )
   .settings(
     buildInfoKeys ++= Seq[BuildInfoKey](
@@ -255,9 +255,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       version,
       "sipi"      -> Dependencies.sipiImage,
       "fuseki"    -> Dependencies.fusekiImage,
-      "pekkoHttp" -> Dependencies.pekkoHttp
+      "pekkoHttp" -> Dependencies.pekkoHttp,
     ),
-    buildInfoPackage := "org.knora.webapi.http.version"
+    buildInfoPackage := "org.knora.webapi.http.version",
   )
 
 //////////////////////////////////////
@@ -283,13 +283,13 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / parallelExecution  := false,
     Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
   )
   .settings(LocalSettings.localScalacOptions: _*)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "integration",
     resolvers ++= Seq(
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-    )
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    ),
   )

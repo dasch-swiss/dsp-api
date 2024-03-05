@@ -61,7 +61,7 @@ final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
   private val httpClient: CloseableHttpClient,
-  private val dspIngestClient: DspIngestClient
+  private val dspIngestClient: DspIngestClient,
 ) extends SipiService {
 
   private object SipiRoutes {
@@ -100,7 +100,7 @@ final case class SipiServiceLive(
       response.height,
       None,
       response.duration.map(BigDecimal(_)),
-      response.fps.map(BigDecimal(_))
+      response.fps.map(BigDecimal(_)),
     )
 
   /**
@@ -110,7 +110,7 @@ final case class SipiServiceLive(
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
@@ -121,10 +121,10 @@ final case class SipiServiceLive(
           Map(
             "permission" -> JsString("StoreFile"),
             "filename"   -> JsString(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-            "prefix"     -> JsString(moveTemporaryFileToPermanentStorageRequestV2.prefix)
-          )
-        )
-      )
+            "prefix"     -> JsString(moveTemporaryFileToPermanentStorageRequestV2.prefix),
+          ),
+        ),
+      ),
     )
 
     // builds the url for the operation
@@ -167,15 +167,15 @@ final case class SipiServiceLive(
         "knora-data" -> JsObject(
           Map(
             "permission" -> JsString("DeleteTempFile"),
-            "filename"   -> JsString(deleteTemporaryFileRequestV2.internalFilename)
-          )
-        )
-      )
+            "filename"   -> JsString(deleteTemporaryFileRequestV2.internalFilename),
+          ),
+        ),
+      ),
     )
 
     def deleteUrl(token: String): Task[String] =
       ZIO.succeed(
-        s"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+        s"${sipiConfig.internalBaseUrl}/${sipiConfig.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token",
       )
 
     for {
@@ -198,33 +198,33 @@ final case class SipiServiceLive(
       case notFoundException: NotFoundException =>
         ZIO.die(
           NotFoundException(
-            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}"
-          )
+            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}",
+          ),
         )
 
       case badRequestException: BadRequestException =>
         ZIO.die(
           SipiException(
-            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}"
-          )
+            s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}",
+          ),
         )
 
       case sipiException: SipiException =>
         ZIO.die(
           SipiException(
             s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}",
-            sipiException.cause
-          )
+            sipiException.cause,
+          ),
         )
 
       case other =>
         ZIO.logError(
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}",
         ) *>
           ZIO.die(
             SipiException(
-              s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
-            )
+              s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}",
+            ),
           )
     }
 
@@ -314,7 +314,7 @@ final case class SipiServiceLive(
           .flatMap(response => saveToFile(response.getEntity, targetDir / targetFilename))
           .tapBoth(
             e => ZIO.logWarning(s"Failed downloading $uri: ${e.getMessage}"),
-            _ => ZIO.logDebug(s"Downloaded $uri")
+            _ => ZIO.logDebug(s"Downloaded $uri"),
           )
           .fold(_ => None, Some(_))
       }
