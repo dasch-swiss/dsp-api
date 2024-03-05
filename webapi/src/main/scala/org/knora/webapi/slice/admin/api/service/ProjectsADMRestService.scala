@@ -111,7 +111,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
     internal <- responder.getSingleProjectADMRequest(id)
-    external <- format.toExternal(internal)
+    external <- format.toExternalNonSpray(internal)
   } yield external
 
   /**

@@ -14,6 +14,8 @@ import spray.json.RootJsonFormat
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.DecodeResult
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -28,6 +30,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
@@ -106,8 +109,10 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponseADM(project: ProjectADM) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectResponseADMFormat.write(this)
+case class ProjectGetResponseADM(project: ProjectADM) extends AdminResponse
+object ProjectGetResponseADM {
+  implicit val projectCodec: JsonCodec[ProjectADM]     = DeriveJsonCodec.gen[ProjectADM]
+  implicit val codec: JsonCodec[ProjectGetResponseADM] = DeriveJsonCodec.gen[ProjectGetResponseADM]
 }
 
 /**
@@ -400,9 +405,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")),
   )
-  implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectGetResponseADM, "project")),
-  )
+
   implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
     jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
 

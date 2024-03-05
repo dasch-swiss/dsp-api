@@ -23,6 +23,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
@@ -63,7 +64,6 @@ object RouteUtilADM {
 
       response match {
         case ProjectsGetResponseADM(projects) => ProjectsGetResponseADM(projects.map(projectAsExternalRepresentation))
-        case ProjectGetResponseADM(project)   => ProjectGetResponseADM(projectAsExternalRepresentation(project))
         case ProjectMembersGetResponseADM(members) =>
           ProjectMembersGetResponseADM(members.map(userAsExternalRepresentation))
         case ProjectAdminMembersGetResponseADM(members) =>
@@ -86,6 +86,23 @@ object RouteUtilADM {
           UserGroupMembershipsGetResponseADM(groups.map(groupAsExternalRepresentation))
 
         case _ => response
+      }
+    }
+  }
+
+  def transformResponseIntoExternalFormat(
+    response: AdminResponse,
+  ): ZIO[StringFormatter, Throwable, AdminResponse] = ZIO.serviceWithZIO[StringFormatter] { sf =>
+    ZIO.attempt {
+      def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
+        val ontologiesExternal =
+          project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+        project.copy(ontologies = ontologiesExternal)
+      }
+
+      response match {
+        case ProjectGetResponseADM(project) => ProjectGetResponseADM(projectAsExternalRepresentation(project))
+        case _                              => response
       }
     }
   }
