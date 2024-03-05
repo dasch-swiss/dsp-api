@@ -77,7 +77,7 @@ final case class PredicateObjectMapper(private val iriConverter: IriConverter) {
    */
   def getNonEmptyChunkOrFail[A <: LiteralV2](
     key: IRI,
-    propertiesMap: ConstructPredicateObjects
+    propertiesMap: ConstructPredicateObjects,
   ): Task[NonEmptyChunk[A]] =
     getListOption[A](key, propertiesMap).some
       .orElseFail(InconsistentRepositoryDataException(s"PropertiesMap has no $key defined."))
@@ -85,7 +85,7 @@ final case class PredicateObjectMapper(private val iriConverter: IriConverter) {
         ZIO
           .fail(InconsistentRepositoryDataException(s"PropertiesMap has $key defined but list of values is empty."))
           .when(list.isEmpty)
-          .as(NonEmptyChunk.fromIterable(list.head, list.tail))
+          .as(NonEmptyChunk.fromIterable(list.head, list.tail)),
       )
 
   /**

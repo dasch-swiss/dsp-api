@@ -18,17 +18,17 @@ class StringLiteralSequenceV2Spec extends CoreSpec {
     Vector(
       StringLiteralV2(
         value = "Film und Foto",
-        language = Some("de")
+        language = Some("de"),
       ),
       StringLiteralV2(
         value = "Film and Photo",
-        language = Some("en")
+        language = Some("en"),
       ),
       StringLiteralV2(
         value = "Film e Fotografia",
-        language = Some("it")
-      )
-    )
+        language = Some("it"),
+      ),
+    ),
   )
 
   private val emptySeq = StringLiteralSequenceV2.empty

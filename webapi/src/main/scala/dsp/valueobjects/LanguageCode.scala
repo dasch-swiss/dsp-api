@@ -20,7 +20,7 @@ object LanguageCode { self =>
   implicit val codec: JsonCodec[LanguageCode] =
     JsonCodec[String].transformOrFail(
       value => LanguageCode.make(value).toEitherWith(e => e.head.getMessage()),
-      languageCode => languageCode.value
+      languageCode => languageCode.value,
     )
 
   val DE: String = "de"
@@ -34,7 +34,7 @@ object LanguageCode { self =>
     EN,
     FR,
     IT,
-    RM
+    RM,
   )
 
   def unsafeFrom(value: String): LanguageCode =

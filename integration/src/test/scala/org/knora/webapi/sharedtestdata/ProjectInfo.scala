@@ -31,7 +31,7 @@ case class ProjectInfo(
   logo: Option[IRI],
   ontologies: Seq[IRI],
   status: Boolean,
-  selfjoin: Boolean
+  selfjoin: Boolean,
 )
 
 object ProjectInfo {
@@ -46,6 +46,6 @@ object ProjectInfo {
       logo = projectADM.logo,
       ontologies = projectADM.ontologies,
       status = projectADM.status,
-      selfjoin = projectADM.selfjoin
+      selfjoin = projectADM.selfjoin,
     )
 }

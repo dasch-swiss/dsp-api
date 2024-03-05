@@ -23,7 +23,7 @@ object ZioHelperSpec extends ZIOSpecDefault {
         for {
           actual <- ZioHelper.sequence(list)
         } yield assertTrue(actual == Map.empty[Int, String])
-      }
+      },
     ),
     suite(".sequence(List)")(
       test("should sequence a List of ZIOs") {
@@ -37,7 +37,7 @@ object ZioHelperSpec extends ZIOSpecDefault {
         for {
           actual <- ZioHelper.sequence(list)
         } yield assertTrue(actual == List.empty[String])
-      }
+      },
     ),
     suite("sequence(Set)")(
       test("should sequence a Set of ZIOs") {
@@ -51,7 +51,7 @@ object ZioHelperSpec extends ZIOSpecDefault {
         for {
           actual <- ZioHelper.sequence(set)
         } yield assertTrue(actual == Set.empty[String])
-      }
-    )
+      },
+    ),
   )
 }

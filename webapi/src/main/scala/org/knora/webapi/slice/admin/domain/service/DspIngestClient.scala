@@ -58,7 +58,7 @@ final case class AssetInfoResponse(
   duration: Option[Double] = None,
   fps: Option[Double] = None,
   internalMimeType: Option[String] = None,
-  originalMimeType: Option[String] = None
+  originalMimeType: Option[String] = None,
 )
 object AssetInfoResponse {
   implicit val decoder: JsonDecoder[AssetInfoResponse] = DeriveJsonDecoder.gen[AssetInfoResponse]
@@ -67,7 +67,7 @@ object AssetInfoResponse {
 final case class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig,
-  sttpBackend: SttpBackend[Task, ZioStreams]
+  sttpBackend: SttpBackend[Task, ZioStreams],
 ) extends DspIngestClient {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
@@ -108,8 +108,8 @@ final case class DspIngestClientLive(
                   .addHeaders(
                     Headers(
                       Header.Authorization.Bearer(token.jwtString),
-                      Header.ContentType(MediaType.application.zip)
-                    )
+                      Header.ContentType(MediaType.application.zip),
+                    ),
                   )
       response     <- Client.request(request).provideSomeLayer[Scope](Client.default)
       bodyAsString <- response.body.asString

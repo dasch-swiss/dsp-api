@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 object KnoraUserGroupSpec extends ZIOSpecDefault {
   private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
   private val invalidDescription = Seq(
-    V2.StringLiteralV2(value = "", language = Some("en"))
+    V2.StringLiteralV2(value = "", language = Some("en")),
   )
 
   def spec: Spec[Any, Any] = groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest
@@ -26,7 +26,7 @@ object KnoraUserGroupSpec extends ZIOSpecDefault {
     },
     test("be created from a valid value") {
       assertTrue(GroupName.from("Valid group name").map(_.value) == Right("Valid group name"))
-    }
+    },
   )
 
   private val groupDescriptionsTest = suite("GroupDescriptions should")(
@@ -39,24 +39,24 @@ object KnoraUserGroupSpec extends ZIOSpecDefault {
     },
     test("be created from a valid value") {
       assertTrue(GroupDescriptions.from(validDescription).map(_.value) == Right(validDescription))
-    }
+    },
   )
 
   private val groupStatusTest = suite("GroupStatus")(
     test("should be created from a valid value") {
       assertTrue(
         GroupStatus.from(true) == GroupStatus.active,
-        GroupStatus.from(false) == GroupStatus.inactive
+        GroupStatus.from(false) == GroupStatus.inactive,
       )
-    }
+    },
   )
 
   private val groupSelfJoinTest = suite("GroupSelfJoin")(
     test("should be created from a valid value") {
       assertTrue(
         GroupSelfJoin.from(true) == GroupSelfJoin.enabled,
-        GroupSelfJoin.from(false) == GroupSelfJoin.disabled
+        GroupSelfJoin.from(false) == GroupSelfJoin.disabled,
       )
-    }
+    },
   )
 }

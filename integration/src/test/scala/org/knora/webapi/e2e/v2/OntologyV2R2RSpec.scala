@@ -85,22 +85,22 @@ class OntologyV2R2RSpec extends R2RSpec {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_ontologies/example-box.ttl",
-      name = "http://www.knora.org/ontology/shared/example-box"
+      name = "http://www.knora.org/ontology/shared/example-box",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/minimal-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/minimal"
+      name = "http://www.knora.org/ontology/0001/minimal",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
+      name = "http://www.knora.org/ontology/0001/anything",
     ),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
   // Directory path for generated client test data
@@ -117,10 +117,10 @@ class OntologyV2R2RSpec extends R2RSpec {
         filePath = TestDataFilePath(
           directoryPath = clientTestDataPath,
           filename = fileName,
-          fileExtension = "json"
+          fileExtension = "json",
         ),
-        text = fileContent
-      )
+        text = fileContent,
+      ),
     )
 
   /**
@@ -137,7 +137,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     urlPath: String,
     fileBasename: String,
     maybeClientTestDataBasename: Option[String] = None,
-    disableWrite: Boolean = false
+    disableWrite: Boolean = false,
   ) {
     private def makeFile(suffix: String): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
@@ -233,136 +233,136 @@ class OntologyV2R2RSpec extends R2RSpec {
     HttpGetTest(
       urlPath = "/v2/ontologies/metadata",
       fileBasename = "allOntologyMetadata",
-      maybeClientTestDataBasename = Some("all-ontology-metadata-response")
+      maybeClientTestDataBasename = Some("all-ontology-metadata-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
       fileBasename = "anythingOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-anything-response")
+      maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/metadata/$incunabulaProjectSegment",
       fileBasename = "incunabulaOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-incunabula-response")
+      maybeClientTestDataBasename = Some("get-ontologies-project-incunabula-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/metadata/$beolProjectSegment",
       fileBasename = "beolOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-beol-response")
+      maybeClientTestDataBasename = Some("get-ontologies-project-beol-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$knoraApiSimpleOntologySegment",
-      fileBasename = "knoraApiOntologySimple"
+      fileBasename = "knoraApiOntologySimple",
     ),
     HttpGetTest(
       urlPath = "/ontology/knora-api/simple/v2",
       fileBasename = "knoraApiOntologySimple",
-      disableWrite = true
+      disableWrite = true,
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment",
       fileBasename = "knoraApiOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("knora-api-ontology")
+      maybeClientTestDataBasename = Some("knora-api-ontology"),
     ),
     HttpGetTest(
       urlPath = "/ontology/knora-api/v2",
       fileBasename = "knoraApiOntologyWithValueObjects",
-      disableWrite = true
+      disableWrite = true,
     ),
     HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
     HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$incunabulaOntologySimpleSegment",
-      fileBasename = "incunabulaOntologySimple"
+      fileBasename = "incunabulaOntologySimple",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$incunabulaOntologyWithValueObjectsSegment",
       fileBasename = "incunabulaOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("incunabula-ontology")
+      maybeClientTestDataBasename = Some("incunabula-ontology"),
     ),
     HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateSegment", fileBasename = "knoraApiDate"),
     HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateValueSegment", fileBasename = "knoraApiDateValue"),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$knoraApiSimpleHasColorSegment",
-      fileBasename = "knoraApiSimpleHasColor"
+      fileBasename = "knoraApiSimpleHasColor",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment",
-      fileBasename = "knoraApiWithValueObjectsHasColor"
+      fileBasename = "knoraApiWithValueObjectsHasColor",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment",
-      fileBasename = "incunabulaSimplePubDate"
+      fileBasename = "incunabulaSimplePubDate",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment",
-      fileBasename = "incunabulaWithValueObjectsPubDate"
+      fileBasename = "incunabulaWithValueObjectsPubDate",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment",
-      fileBasename = "incunabulaPageAndBookWithValueObjects"
+      fileBasename = "incunabulaPageAndBookWithValueObjects",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment",
-      fileBasename = "boxOntologyWithValueObjects"
+      fileBasename = "boxOntologyWithValueObjects",
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects",
       fileBasename = "minimalOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("minimal-ontology")
+      maybeClientTestDataBasename = Some("minimal-ontology"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects",
       fileBasename = "anythingOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("anything-ontology")
+      maybeClientTestDataBasename = Some("anything-ontology"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/classes/$anythingThingWithAllLanguages?allLanguages=true",
       fileBasename = "anythingThingWithAllLanguages",
-      maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response")
+      maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/classes/$imagesBild",
       fileBasename = "imagesBild",
-      maybeClientTestDataBasename = Some("get-class-image-bild-response")
+      maybeClientTestDataBasename = Some("get-class-image-bild-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/classes/$incunabulaBook",
       fileBasename = "incunabulaBook",
-      maybeClientTestDataBasename = Some("get-class-incunabula-book-response")
+      maybeClientTestDataBasename = Some("get-class-incunabula-book-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/classes/$incunabulaPage",
       fileBasename = "incunabulaPage",
-      maybeClientTestDataBasename = Some("get-class-incunabula-page-response")
+      maybeClientTestDataBasename = Some("get-class-incunabula-page-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$anythingHasListItem",
       fileBasename = "anythingHasListItem",
-      maybeClientTestDataBasename = Some("get-property-listValue-response")
+      maybeClientTestDataBasename = Some("get-property-listValue-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$anythingHasDate",
       fileBasename = "anythingHasDate",
-      maybeClientTestDataBasename = Some("get-property-DateValue-response")
+      maybeClientTestDataBasename = Some("get-property-DateValue-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$imagesTitel",
       fileBasename = "imagesTitel",
-      maybeClientTestDataBasename = Some("get-property-textValue-response")
+      maybeClientTestDataBasename = Some("get-property-textValue-response"),
     ),
     HttpGetTest(
       urlPath = s"/v2/ontologies/properties/$incunabulaPartOf",
       fileBasename = "incunabulaPartOf",
-      maybeClientTestDataBasename = Some("get-property-linkvalue-response")
-    )
+      maybeClientTestDataBasename = Some("get-property-linkvalue-response"),
+    ),
   )
 
   // The media types that will be used in HTTP Accept headers in HTTP GET tests.
   private val mediaTypesForGetTests = Seq(
     RdfMediaTypes.`application/ld+json`,
     RdfMediaTypes.`text/turtle`,
-    RdfMediaTypes.`application/rdf+xml`
+    RdfMediaTypes.`application/rdf+xml`,
   )
 
   private val fooIri                  = new MutableTestIri
@@ -451,7 +451,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "not allow the user to request the knora-base ontology" in {
       Get(
-        "/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-base%2Fv2"
+        "/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-base%2Fv2",
       ) ~> ontologiesPath ~> check {
         val responseStr: String = responseAs[String]
         assert(response.status == StatusCodes.BadRequest, responseStr)
@@ -460,7 +460,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "not allow the user to request the knora-admin ontology" in {
       Get(
-        "/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-admin%2Fv2"
+        "/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-admin%2Fv2",
       ) ~> ontologiesPath ~> check {
         val responseStr: String = responseAs[String]
         assert(response.status == StatusCodes.BadRequest, responseStr)
@@ -486,7 +486,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       CollectClientTestData("create-empty-foo-ontology-request", params)
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -500,7 +500,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         fooLastModDate = lastModDate
@@ -530,7 +530,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       CollectClientTestData("create-ontology-with-comment-request", params)
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -540,14 +540,14 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            Iri.fromSparqlEncodedString(comment)
-          )
+            Iri.fromSparqlEncodedString(comment),
+          ),
         )
         barIri.set(ontologyIri)
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
         barLastModDate = lastModDate
 
@@ -574,7 +574,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -584,8 +584,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            Iri.fromSparqlEncodedString(comment)
-          )
+            Iri.fromSparqlEncodedString(comment),
+          ),
         )
       }
     }
@@ -613,7 +613,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       CollectClientTestData("update-ontology-metadata-request", params)
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -626,7 +626,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -653,7 +653,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -662,14 +662,14 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == barIri.get)
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            Iri.fromSparqlEncodedString(newComment)
-          )
+            Iri.fromSparqlEncodedString(newComment),
+          ),
         )
 
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(barLastModDate))
@@ -682,7 +682,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -695,7 +695,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -707,7 +707,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
 
       Get(s"/v2/ontologies/candeleteontology/$fooIriEncoded") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
@@ -724,7 +724,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -792,7 +792,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -851,7 +851,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -860,7 +860,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet
+          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects.toSet,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -909,7 +909,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -921,7 +921,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           .predicates(OntologyConstants.Rdfs.Comment.toSmartIri)
           .objects
           .toSet should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet
+          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects.toSet,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -967,7 +967,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -976,7 +976,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects
+          paramsAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -992,7 +992,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate"
+        s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate",
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -1000,7 +1000,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -1061,7 +1061,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
         responseFromJsonLD.properties.head._2.predicates.toSet should ===(
-          expectedResponseToCompare.properties.head._2.predicates.toSet
+          expectedResponseToCompare.properties.head._2.predicates.toSet,
         )
 
         CollectClientTestData("delete-property-comment-response", responseStr)
@@ -1074,7 +1074,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/classes/comment/$classSegment?lastModificationDate=$lastModificationDate"
+        s"/v2/ontologies/classes/comment/$classSegment?lastModificationDate=$lastModificationDate",
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -1082,7 +1082,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
@@ -1139,7 +1139,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
         responseFromJsonLD.classes.head._2.predicates.toSet should ===(
-          expectedResponseToCompare.classes.head._2.predicates.toSet
+          expectedResponseToCompare.classes.head._2.predicates.toSet,
         )
 
         CollectClientTestData("delete-class-comment-response", responseStr)
@@ -1181,7 +1181,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Put(
         "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -1198,7 +1198,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           paramsAsInput.properties.head._2
             .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
             .objects
-            .toSet
+            .toSet,
         )
 
         responseAsInput.properties.head._2
@@ -1208,7 +1208,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           paramsAsInput.properties.head._2
             .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
             .objects
-            .toSet
+            .toSet,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1253,7 +1253,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Put(
         "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.BadRequest, responseStr)
@@ -1290,7 +1290,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Put(
         "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -1302,12 +1302,12 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.External.GuiElementProp.toSmartIri)
+            .contains(SalsahGui.External.GuiElementProp.toSmartIri),
         )
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.External.GuiAttribute.toSmartIri)
+            .contains(SalsahGui.External.GuiAttribute.toSmartIri),
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1369,7 +1369,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1381,7 +1381,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         // Check that cardinalities were inherited from anything:Thing.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1433,7 +1433,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1446,7 +1446,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1494,7 +1494,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1503,7 +1503,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
-          paramsAsInput.classes.head._2.predicates.head._2.objects
+          paramsAsInput.classes.head._2.predicates.head._2.objects,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1549,7 +1549,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -1558,7 +1558,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          paramsAsInput.classes.head._2.predicates.head._2.objects
+          paramsAsInput.classes.head._2.predicates.head._2.objects,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1617,7 +1617,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1681,13 +1681,13 @@ class OntologyV2R2RSpec extends R2RSpec {
               classDef.directCardinalities("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing".toSmartIri)
 
           classIri -> classDef.copy(
-            directCardinalities = classDef.directCardinalities + hasOtherNothingValueCardinality
+            directCardinalities = classDef.directCardinalities + hasOtherNothingValueCardinality,
           )
-        }
+        },
       )
 
       Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1697,12 +1697,12 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.directCardinalities should ===(
-          paramsWithAddedLinkValueCardinality.classes.head._2.directCardinalities
+          paramsWithAddedLinkValueCardinality.classes.head._2.directCardinalities,
         )
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -1717,7 +1717,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     "add all IRIs to newly created link value property again" in {
       val url = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
       Get(
-        s"/v2/ontologies/allentities/$url"
+        s"/v2/ontologies/allentities/$url",
       ) ~> ontologiesPath ~> check {
         val responseStr: String = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -1733,7 +1733,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             _.asInstanceOf[JsonLDObject]
               .value("@id")
               .asInstanceOf[JsonLDString]
-              .value == "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothingValue"
+              .value == "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothingValue",
           )
           .head
           .asInstanceOf[JsonLDObject]
@@ -1750,7 +1750,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           KnoraApiV2Complex.ObjectType,
           KnoraApiV2Complex.SubjectType,
           "@id",
-          "@type"
+          "@type",
         )
 
         iris should equal(expectedIris)
@@ -1795,7 +1795,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
@@ -1817,7 +1817,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1826,7 +1826,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/$encodedIri"
+          s"/v2/ontologies/allentities/$encodedIri",
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -1840,7 +1840,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           val nothingValue = graph
             .filter(
               _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri
+                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
             )
             .head
           val isEditableMaybe =
@@ -1886,7 +1886,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
@@ -1910,7 +1910,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1919,7 +1919,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/$encodedIri"
+          s"/v2/ontologies/allentities/$encodedIri",
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -1933,7 +1933,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           val nothingValue = graph
             .filter(
               _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri
+                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
             )
             .head
           val isEditableMaybe =
@@ -1951,9 +1951,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       val propertyIriEncoded = URLEncoder.encode(hasOtherNothingIri, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate"
+        s"/v2/ontologies/properties/comment/$propertyIriEncoded?lastModificationDate=$anythingLastModDate",
       ) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
@@ -1973,7 +1973,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -1982,7 +1982,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/$encodedIri"
+          s"/v2/ontologies/allentities/$encodedIri",
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -1996,7 +1996,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           val nothingValue = graph
             .filter(
               _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri
+                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
             )
             .head
           val isEditableMaybe =
@@ -2039,9 +2039,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Put(
         "/v2/ontologies/properties/guielement",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, params),
       ) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
@@ -2060,7 +2060,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(lastModDate.isAfter(fooLastModDate))
@@ -2069,7 +2069,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // load back the ontology to verify that the updated property still is editable
         val encodedIri = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
         Get(
-          s"/v2/ontologies/allentities/$encodedIri"
+          s"/v2/ontologies/allentities/$encodedIri",
         ) ~> ontologiesPath ~> check {
           val responseStr: String = responseAs[String]
           assert(status == StatusCodes.OK, response.toString)
@@ -2083,7 +2083,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           val nothingValue = graph
             .filter(
               _.getRequiredString("@id")
-                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri
+                .fold(msg => throw BadRequestException(msg), identity) == hasOtherNothingValueIri,
             )
             .head
           val isEditableMaybe =
@@ -2119,7 +2119,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       CollectClientTestData("remove-property-cardinality-request", params)
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2131,7 +2131,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -2145,7 +2145,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
 
       Get(s"/v2/ontologies/candeleteproperty/$propertySegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2159,18 +2159,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate"
+        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
         responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2222,7 +2222,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2273,7 +2273,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2282,12 +2282,12 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.directCardinalities should ===(
-          paramsAsInput.classes.head._2.directCardinalities
+          paramsAsInput.classes.head._2.directCardinalities,
         )
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -2335,7 +2335,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/guiorder", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2344,7 +2344,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.directCardinalities should ===(
-          paramsAsInput.classes.head._2.directCardinalities
+          paramsAsInput.classes.head._2.directCardinalities,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -2398,7 +2398,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2419,7 +2419,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
 
       Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2464,7 +2464,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2473,12 +2473,12 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseAsInput: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseAsInput.classes.head._2.directCardinalities should ===(
-          paramsAsInput.classes.head._2.directCardinalities
+          paramsAsInput.classes.head._2.directCardinalities,
         )
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -2493,18 +2493,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate"
+        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
         responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2538,7 +2538,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       CollectClientTestData("remove-class-cardinalities-request", params)
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2550,7 +2550,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         // Check that cardinalities were inherited from knora-api:Resource.
         getPropertyIrisFromResourceClassResponse(responseJsonDoc) should contain(
-          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri
+          "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
         )
 
         // Check that the ontology's last modification date was updated.
@@ -2565,18 +2565,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
-        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate"
+        s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate",
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
         responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2588,7 +2588,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
 
       Get(s"/v2/ontologies/candeleteclass/$classSegment") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2602,18 +2602,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate") ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
         responseJsonDoc.body.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===(
-          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+          "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -2640,7 +2640,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~> addCredentials(
-        BasicHttpCredentials(superUsername, password)
+        BasicHttpCredentials(superUsername, password),
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2653,7 +2653,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val lastModDate = metadata.requireDatatypeValueInObject(
           key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
 
         uselessLastModDate = lastModDate
@@ -2702,7 +2702,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createPropertyJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createPropertyJson),
       ) ~> addCredentials(BasicHttpCredentials(superUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2760,7 +2760,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/classes",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
@@ -2815,7 +2815,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2871,7 +2871,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2926,7 +2926,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/properties",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestLinkPropRequestJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createTestLinkPropRequestJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
@@ -2985,7 +2985,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       Post(
         "/v2/ontologies/cardinalities",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -3035,7 +3035,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}""".stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUsername, password)
+        BasicHttpCredentials(anythingUsername, password),
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, response.toString)
@@ -3055,7 +3055,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment = Some(
       LangString
         .make(LanguageCode.en, "A Blue Free Test class used for testing cardinalities")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createClassRequestJson = CreateClassRequest
       .make(
@@ -3063,13 +3063,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "BlueFreeTestClass",
         label = label,
-        comment = comment
+        comment = comment,
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = responseToJsonLDDocument(response)
@@ -3085,7 +3085,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment1 = Some(
       LangString
         .make(LanguageCode.en, "A blue test text property")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createTestTextPropRequestJson =
       CreatePropertyRequest
@@ -3096,13 +3096,13 @@ class OntologyV2R2RSpec extends R2RSpec {
           subjectClassName = Some("BlueFreeTestClass"),
           propertyType = PropertyValueType.TextValue,
           label = label1,
-          comment = comment1
+          comment = comment1,
         )
         .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3119,7 +3119,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment2 = Some(
       LangString
         .make(LanguageCode.en, "A blue test integer property")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createTestIntegerPropRequestJson = CreatePropertyRequest
       .make(
@@ -3129,13 +3129,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = Some("BlueFreeTestClass"),
         propertyType = PropertyValueType.IntValue,
         label = label2,
-        comment = comment2
+        comment = comment2,
       )
       .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3156,19 +3156,19 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.MaxCardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "hasBlueTestTextProp")
+            onProperty = Property(ontology = "freetest", property = "hasBlueTestTextProp"),
           ),
           Restriction(
             CardinalityRestriction.MaxCardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "hasBlueTestIntProp")
-          )
-        )
+            onProperty = Property(ontology = "freetest", property = "hasBlueTestIntProp"),
+          ),
+        ),
       )
       .value
 
     Post(
       "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3205,7 +3205,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     Post(
       "/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3223,9 +3223,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       restrictions = List(
         Restriction(
           CardinalityRestriction.MinCardinalityOne,
-          onProperty = Property(ontology = "freetest", property = "hasText")
-        )
-      )
+          onProperty = Property(ontology = "freetest", property = "hasText"),
+        ),
+      ),
     )
 
     CollectClientTestData("candeletecardinalities-false-request", cardinalityCantBeDeletedPayload.value)
@@ -3233,7 +3233,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
     Post(
       "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload.value)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload.value),
     ) ~>
       addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
@@ -3243,7 +3243,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           !responseJsonDoc.body
             .value(KnoraApiV2Complex.CanDo)
             .asInstanceOf[JsonLDBoolean]
-            .value
+            .value,
         )
 
         CollectClientTestData("candeletecardinalities-false-response", responseStr)
@@ -3285,9 +3285,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     // Successfully check if the cardinality can be deleted
     Post(
       "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, params),
     ) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3299,7 +3299,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // Successfully remove the (unused) text value cardinality from the class.
     Patch("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3317,7 +3317,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment = Some(
       LangString
         .make(LanguageCode.en, "A test class used for testing cardinalities")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createClassRequestJsonOne = CreateClassRequest
       .make(
@@ -3325,13 +3325,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassOne",
         label = label,
-        comment = comment
+        comment = comment,
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonOne)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonOne),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = responseToJsonLDDocument(response)
@@ -3347,7 +3347,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment1 = Some(
       LangString
         .make(LanguageCode.en, "A test class used for testing cardinalities")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createClassRequestJsonTwo = CreateClassRequest
       .make(
@@ -3355,13 +3355,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassTwo",
         label = label1,
-        comment = comment1
+        comment = comment1,
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonTwo)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonTwo),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = responseToJsonLDDocument(response)
@@ -3377,7 +3377,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val comment2 = Some(
       LangString
         .make(LanguageCode.en, "A test int property")
-        .fold(e => throw e.head, v => v)
+        .fold(e => throw e.head, v => v),
     )
     val createPropRequestJson = CreatePropertyRequest
       .make(
@@ -3387,13 +3387,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
         label = label2,
-        comment = comment2
+        comment = comment2,
       )
       .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createPropRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createPropRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3414,15 +3414,15 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.MaxCardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "hasIntProp")
-          )
-        )
+            onProperty = Property(ontology = "freetest", property = "hasIntProp"),
+          ),
+        ),
       )
       .value
 
     Post(
       "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonOne)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonOne),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3442,15 +3442,15 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.MaxCardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "hasIntProp")
-          )
-        )
+            onProperty = Property(ontology = "freetest", property = "hasIntProp"),
+          ),
+        ),
       )
       .value
 
     Post(
       "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonTwo)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonTwo),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3486,7 +3486,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     Post(
       "/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3506,21 +3506,21 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.MaxCardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "hasIntProp")
-          )
-        )
+            onProperty = Property(ontology = "freetest", property = "hasIntProp"),
+          ),
+        ),
       )
       .value
 
     CollectClientTestData(
       "candeletecardinalities-true-if-not-used-in-this-class-request",
-      cardinalityCanBeDeletedPayload
+      cardinalityCanBeDeletedPayload,
     )
 
     // Expect cardinality can be deleted from TestClassTwo - CanDo response should return true
     Post(
       "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCanBeDeletedPayload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCanBeDeletedPayload),
     ) ~>
       addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
@@ -3530,7 +3530,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           responseJsonDoc.body
             .value(KnoraApiV2Complex.CanDo)
             .asInstanceOf[JsonLDBoolean]
-            .value
+            .value,
         )
 
         CollectClientTestData("candeletecardinalities-true-if-not-used-in-this-class-response", responseStr)
@@ -3547,16 +3547,16 @@ class OntologyV2R2RSpec extends R2RSpec {
       restrictions = List(
         Restriction(
           CardinalityRestriction.MinCardinalityZero,
-          onProperty = Property(ontology = "anything", property = "isPartOfOtherThing")
-        )
-      )
+          onProperty = Property(ontology = "anything", property = "isPartOfOtherThing"),
+        ),
+      ),
     )
 
     Post(
       "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value),
     ) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3569,7 +3569,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3582,7 +3582,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val thingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/candeleteclass/$thingIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3595,7 +3595,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
 
     Get(s"/v2/ontologies/candeleteproperty/$propertyIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3608,7 +3608,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
 
     Get(s"/v2/ontologies/candeleteontology/$ontologyIri") ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3625,13 +3625,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "testClass",
         label = label,
-        comment = None
+        comment = None,
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
@@ -3653,13 +3653,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
         label = label,
-        comment = None
+        comment = None,
       )
       .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
 
       val response = responseAs[String]
@@ -3684,13 +3684,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "VideoResource",
-        subClassOf = Some("knora-api:MovingImageRepresentation")
+        subClassOf = Some("knora-api:MovingImageRepresentation"),
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createVideoClassRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createVideoClassRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
@@ -3706,13 +3706,13 @@ class OntologyV2R2RSpec extends R2RSpec {
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
-        className = "VideoSequence"
+        className = "VideoSequence",
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
@@ -3731,13 +3731,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "isSequenceOfVideo",
         subjectClassName = None,
         propertyType = PropertyValueType.Resource,
-        subPropertyOf = Some("knora-api:isSequenceOf")
+        subPropertyOf = Some("knora-api:isSequenceOf"),
       )
       .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
 
       val response = responseAs[String]
@@ -3758,19 +3758,19 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.CardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "isSequenceOfVideo")
+            onProperty = Property(ontology = "freetest", property = "isSequenceOfVideo"),
           ),
           Restriction(
             CardinalityRestriction.CardinalityOne,
-            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds")
-          )
-        )
+            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds"),
+          ),
+        ),
       )
       .value
 
     Post(
       "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3784,7 +3784,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // check the ontology to see if all worked as it should
     val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
     Get(
-      s"/v2/ontologies/allentities/$url"
+      s"/v2/ontologies/allentities/$url",
     ) ~> ontologiesPath ~> check {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3817,13 +3817,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "AudioResource",
-        subClassOf = Some("knora-api:AudioRepresentation")
+        subClassOf = Some("knora-api:AudioRepresentation"),
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createAudioClassRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createAudioClassRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
@@ -3839,13 +3839,13 @@ class OntologyV2R2RSpec extends R2RSpec {
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
-        className = "AudioSequence"
+        className = "AudioSequence",
       )
       .value
 
     Post(
       "/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
@@ -3864,13 +3864,13 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "isSequenceOfAudio",
         subjectClassName = None,
         propertyType = PropertyValueType.Resource,
-        subPropertyOf = Some("knora-api:isSequenceOf")
+        subPropertyOf = Some("knora-api:isSequenceOf"),
       )
       .value
 
     Post(
       "/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
 
       val response = responseAs[String]
@@ -3891,19 +3891,19 @@ class OntologyV2R2RSpec extends R2RSpec {
         restrictions = List(
           Restriction(
             CardinalityRestriction.CardinalityOne,
-            onProperty = Property(ontology = "freetest", property = "isSequenceOfAudio")
+            onProperty = Property(ontology = "freetest", property = "isSequenceOfAudio"),
           ),
           Restriction(
             CardinalityRestriction.CardinalityOne,
-            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds")
-          )
-        )
+            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds"),
+          ),
+        ),
       )
       .value
 
     Post(
       "/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson),
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
@@ -3917,7 +3917,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // check the ontology to see if all worked as it should
     val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
     Get(
-      s"/v2/ontologies/allentities/$url"
+      s"/v2/ontologies/allentities/$url",
     ) ~> ontologiesPath ~> check {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
@@ -3953,11 +3953,11 @@ class OntologyV2R2RSpec extends R2RSpec {
         ZIO
           .fromOption(
             graph.find(
-              _.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity) == property
-            )
+              _.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity) == property,
+            ),
           )
           .flatMap(it =>
-            ZIO.fromEither(it.getRequiredBoolean(KnoraApiV2Complex.IsEditable)).mapError(BadRequestException(_))
+            ZIO.fromEither(it.getRequiredBoolean(KnoraApiV2Complex.IsEditable)).mapError(BadRequestException(_)),
           )
       }
 
@@ -4012,7 +4012,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}""".stripMargin
 
     Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
 
       val responseStr: String = responseAs[String]
@@ -4063,7 +4063,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}""".stripMargin
 
     Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-      BasicHttpCredentials(anythingUsername, password)
+      BasicHttpCredentials(anythingUsername, password),
     ) ~> ontologiesPath ~> check {
 
       val responseStr: String = responseAs[String]

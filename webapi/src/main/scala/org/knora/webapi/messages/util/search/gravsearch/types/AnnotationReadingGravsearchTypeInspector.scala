@@ -43,7 +43,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
     annotationProp: TypeAnnotationProperty,
     typeIri: SmartIri,
     isResource: Boolean = false,
-    isValue: Boolean = false
+    isValue: Boolean = false,
   )
 
   /**
@@ -55,7 +55,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
    */
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
-    whereClause: WhereClause
+    whereClause: WhereClause,
   ): Task[IntermediateTypeInspectionResult] =
     for {
       // Get all the type annotations.
@@ -65,7 +65,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
                            queryTraverser.visitWherePatterns(
                              patterns = whereClause.patterns,
                              whereVisitor = new AnnotationCollectingWhereVisitor(querySchema),
-                             initialAcc = Vector.empty[GravsearchTypeAnnotation]
+                             initialAcc = Vector.empty[GravsearchTypeAnnotation],
                            )
                          }
 
@@ -81,7 +81,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
                   GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
                 acc.addTypes(
                   typeAnnotation.typeableEntity,
-                  Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = isResource, isValueType = isValue))
+                  Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = isResource, isValueType = isValue)),
                 )
 
               case TypeAnnotationProperties.ObjectType =>
@@ -95,9 +95,9 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
                     PropertyTypeInfo(
                       typeAnnotation.typeIri,
                       objectIsResourceType = isResource,
-                      objectIsValueType = isValue
-                    )
-                  )
+                      objectIsValueType = isValue,
+                    ),
+                  ),
                 )
             }
         }
@@ -110,7 +110,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
       extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
     override def visitStatementInWhere(
       statementPattern: StatementPattern,
-      acc: Vector[GravsearchTypeAnnotation]
+      acc: Vector[GravsearchTypeAnnotation],
     ): Vector[GravsearchTypeAnnotation] =
       if (GravsearchTypeInspectionUtil.canBeAnnotationStatement(statementPattern)) {
         acc :+ annotationStatementToAnnotation(statementPattern, querySchema)
@@ -120,7 +120,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
 
     override def visitFilter(
       filterPattern: FilterPattern,
-      acc: Vector[GravsearchTypeAnnotation]
+      acc: Vector[GravsearchTypeAnnotation],
     ): Vector[GravsearchTypeAnnotation] = acc
   }
 
@@ -133,7 +133,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
    */
   private def annotationStatementToAnnotation(
     statementPattern: StatementPattern,
-    querySchema: ApiV2Schema
+    querySchema: ApiV2Schema,
   ): GravsearchTypeAnnotation = {
     val typeableEntity: TypeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(statementPattern.subj)
 
@@ -159,7 +159,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
     GravsearchTypeAnnotation(
       typeableEntity = typeableEntity,
       annotationProp = annotationProp,
-      typeIri = typeIri
+      typeIri = typeIri,
     )
   }
 }

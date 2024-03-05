@@ -26,7 +26,7 @@ class UpgradePluginPR1322() extends UpgradePlugin {
       model.add(
         subj = valueIri,
         pred = ValueHasUUIDIri,
-        obj = JenaNodeFactory.makeStringLiteral(UuidUtil.makeRandomBase64EncodedUuid)
+        obj = JenaNodeFactory.makeStringLiteral(UuidUtil.makeRandomBase64EncodedUuid),
       )
     }
 
@@ -42,7 +42,7 @@ class UpgradePluginPR1322() extends UpgradePlugin {
           .find(
             subj = None,
             pred = Some(PreviousValueIri),
-            obj = Some(resource)
+            obj = Some(resource),
           )
           .isEmpty
       }

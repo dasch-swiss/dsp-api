@@ -17,7 +17,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
       .find(
         subj = Some(subj),
         pred = Some(pred),
-        obj = None
+        obj = None,
       )
       .toSet
       .headOption match {
@@ -44,7 +44,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-without-language-attribute-1"),
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
         expectedObj =
-          JenaNodeFactory.makeStringWithLanguage("A group description without language attribute.", language = "en")
+          JenaNodeFactory.makeStringWithLanguage("A group description without language attribute.", language = "en"),
       )
 
       // Check that a group description without language attribute gets a language attribute. String is not marked as string.
@@ -53,7 +53,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-without-language-attribute-2"),
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
         expectedObj =
-          JenaNodeFactory.makeStringWithLanguage("A group description without language attribute.", language = "en")
+          JenaNodeFactory.makeStringWithLanguage("A group description without language attribute.", language = "en"),
       )
 
       // Check that a group description with old predicate name and without language attribute gets a language attribute. String is marked as string.
@@ -63,8 +63,8 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
         expectedObj = JenaNodeFactory.makeStringWithLanguage(
           "A group description with old predicate name and without language attribute.",
-          language = "en"
-        )
+          language = "en",
+        ),
       )
 
       // Check that a group description with old predicate name and without language attribute gets a language attribute. String is not marked as string.
@@ -74,8 +74,8 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
         expectedObj = JenaNodeFactory.makeStringWithLanguage(
           "A group description with old predicate name and without language attribute.",
-          language = "en"
-        )
+          language = "en",
+        ),
       )
     }
     "not change group descriptions which have language attributes" in {
@@ -84,7 +84,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         model = model,
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-with-language-attribute-de"),
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
-        expectedObj = JenaNodeFactory.makeStringWithLanguage(value = "Eine Gruppe mit Sprachattribut.", language = "de")
+        expectedObj = JenaNodeFactory.makeStringWithLanguage(value = "Eine Gruppe mit Sprachattribut.", language = "de"),
       )
 
       // Check that a group description with default language attribute is not changed.
@@ -93,7 +93,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
         subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-with-language-attribute-en"),
         pred = JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
         expectedObj =
-          JenaNodeFactory.makeStringWithLanguage(value = "A group with language attribute.", language = "en")
+          JenaNodeFactory.makeStringWithLanguage(value = "A group with language attribute.", language = "en"),
       )
     }
   }

@@ -43,9 +43,9 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           actual <- AuthorizationRestService.ensureSystemAdmin(inactiveSystemAdmin).exit
         } yield assertTrue(
-          actual == Exit.fail(ForbiddenException("The account with username 'username' is not active."))
+          actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")),
         )
-      }
+      },
     ),
     suite("given a active system admin")(
       test("isSystemAdmin should return true") {
@@ -55,7 +55,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           _ <- AuthorizationRestService.ensureSystemAdmin(activeSystemAdmin)
         } yield assertCompletes
-      }
+      },
     ),
     suite("given an inactive normal user")(
       test("isSystemAdmin should return false") {
@@ -65,9 +65,9 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           actual <- AuthorizationRestService.ensureSystemAdmin(inactiveNormalUser).exit
         } yield assertTrue(
-          actual == Exit.fail(ForbiddenException("The account with username 'username' is not active."))
+          actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")),
         )
-      }
+      },
     ),
     suite("given an active normal user")(
       test("isSystemAdmin should return false") {
@@ -79,13 +79,13 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(
           actual == Exit.fail(
             ForbiddenException(
-              "You are logged in with username 'username', but only a system administrator has permissions for this operation."
-            )
-          )
+              "You are logged in with username 'username', but only a system administrator has permissions for this operation.",
+            ),
+          ),
         )
       },
       test(
-        "and given a project for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed"
+        "and given a project for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed",
       ) {
         val project = TestDataFactory.someProject
         for {
@@ -96,7 +96,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(project == actualProject)
       },
       test(
-        "and given the project does not exists for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed"
+        "and given the project does not exists for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed",
       ) {
         val project = TestDataFactory.someProject
         val userIsAdmin =
@@ -106,7 +106,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
       test(
-        "and given a project for which the user is _not_ project admin  when ensureSystemAdminOrProjectAdmin then fail"
+        "and given a project for which the user is _not_ project admin  when ensureSystemAdminOrProjectAdmin then fail",
       ) {
         val project = TestDataFactory.someProject
         for {
@@ -114,7 +114,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
           userIsNotAdmin = activeNormalUser.copy(permissions = PermissionsDataADM(Map.empty))
           exit          <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsNotAdmin, project.id).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
-      }
-    )
+      },
+    ),
   ).provide(AuthorizationRestServiceLive.layer, KnoraProjectRepoInMemory.layer, KnoraUserGroupRepoInMemory.layer)
 }

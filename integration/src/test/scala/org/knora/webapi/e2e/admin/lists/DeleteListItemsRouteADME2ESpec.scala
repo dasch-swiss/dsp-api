@@ -45,32 +45,32 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         filePath = TestDataFilePath(
           directoryPath = clientTestDataPath,
           filename = fileName,
-          fileExtension = "json"
+          fileExtension = "json",
         ),
-        text = fileContent
-      )
+        text = fileContent,
+      ),
     )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   val rootCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.rootUser,
-    "test"
+    "test",
   )
 
   val anythingUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingUser1,
-    "test"
+    "test",
   )
 
   val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
-    "test"
+    "test",
   )
 
   "The admin lists route (/admin/lists)" when {
@@ -78,7 +78,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "return forbidden exception when requesting user is not system or project admin" in {
         val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password)
+          BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.Forbidden)
@@ -87,7 +87,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "delete first of two child node and remaining child" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList0141", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -103,7 +103,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "delete a middle node and shift its siblings" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -125,7 +125,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "delete the single child of a node" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList031", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -138,7 +138,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
       "delete a list entirely with all its children" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -157,7 +157,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val unusedList        = "http://rdfh.ch/lists/0001/notUsedList"
         val unusedListEncoded = java.net.URLEncoder.encode(unusedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + unusedListEncoded) ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+          BasicHttpCredentials(rootCreds.email, rootCreds.password),
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -175,7 +175,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val usedList        = "http://rdfh.ch/lists/0001/treeList01"
         val usedListEncoded = java.net.URLEncoder.encode(usedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + usedListEncoded) ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+          BasicHttpCredentials(rootCreds.email, rootCreds.password),
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -191,7 +191,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val badlistIri        = "bad list Iri"
         val badListIriEncoded = java.net.URLEncoder.encode(badlistIri, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + badListIriEncoded) ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+          BasicHttpCredentials(rootCreds.email, rootCreds.password),
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -206,7 +206,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val childNodeIri        = "http://rdfh.ch/lists/0001/testList01"
         val childNodeIriEncoded = java.net.URLEncoder.encode(childNodeIri, "utf-8")
         val request = Delete(s"$baseApiUrl/admin/lists/comments/$childNodeIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+          BasicHttpCredentials(rootCreds.email, rootCreds.password),
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -225,7 +225,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         val childNodeIri        = "http://rdfh.ch/lists/0001/testList"
         val childNodeIriEncoded = java.net.URLEncoder.encode(childNodeIri, "utf-8")
         val request = Delete(s"$baseApiUrl/admin/lists/comments/$childNodeIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+          BasicHttpCredentials(rootCreds.email, rootCreds.password),
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)

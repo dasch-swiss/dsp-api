@@ -28,7 +28,7 @@ trait MaintenanceService {
 final case class MaintenanceServiceLive(
   projectRepo: KnoraProjectRepo,
   triplestoreService: TriplestoreService,
-  mapper: PredicateObjectMapper
+  mapper: PredicateObjectMapper,
 ) extends MaintenanceService {
 
   override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
@@ -53,7 +53,7 @@ final case class MaintenanceServiceLive(
           // None.type errors are just a sign that the assetId should be ignored. Some.type errors are real errors.
           .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing ${knoraProject.id}, $assetId: $e") }
           // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
-          .orElseFail(None)
+          .orElseFail(None),
       )
 
     ZIO.logInfo(s"Starting fix top left maintenance") *>
@@ -71,7 +71,7 @@ final case class MaintenanceServiceLive(
 
   private def checkDimensions(
     project: KnoraProject,
-    asset: ReportAsset
+    asset: ReportAsset,
   ): IO[Option[Throwable], InternalIri] =
     for {
       result <- getDimensionAndStillImageValueIri(project, asset).tapSomeError { case None =>
@@ -79,13 +79,13 @@ final case class MaintenanceServiceLive(
                 }
       (actualDimensions, iri) = result
       _ <- ZIO.when(actualDimensions == asset.dimensions)(
-             ZIO.logDebug(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None)
+             ZIO.logDebug(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None),
            )
     } yield iri
 
   private def getDimensionAndStillImageValueIri(
     project: KnoraProject,
-    asset: ReportAsset
+    asset: ReportAsset,
   ): IO[Option[Throwable], (Dimensions, InternalIri)] =
     for {
       result <- triplestoreService.query(checkDimensionsQuery(project, asset.id)).asSomeError
@@ -116,7 +116,7 @@ final case class MaintenanceServiceLive(
 
   private def transposeImageDimensions(
     project: KnoraProject,
-    stillImageFileValueIri: InternalIri
+    stillImageFileValueIri: InternalIri,
   ): IO[Option[Throwable], Unit] =
     triplestoreService.query(transposeUpdate(project, stillImageFileValueIri)).asSomeError
 
@@ -144,7 +144,7 @@ final case class MaintenanceServiceLive(
          |  ?r knora-base:dimX ?oldX .
          |  ?r knora-base:dimY ?oldY .
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )
   }
 }

@@ -37,7 +37,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         subj = Some(JenaNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
         pred = Some(JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
         obj = None,
-        context = context
+        context = context,
       )
       .toSet
 
@@ -49,14 +49,14 @@ class RdfFormatUtilSpec() extends CoreSpec {
     assert(
       jsonLDDocument.body
         .getRequiredString(JsonLDKeywords.TYPE)
-        .fold(msg => throw BadRequestException(msg), identity) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"
+        .fold(msg => throw BadRequestException(msg), identity) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
     )
 
   "RdfFormatUtil" should {
     "parse RDF in Turtle format, producing an RdfModel, then format it as Turtle again" in {
       val inputTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
       checkModelForRdfTypeBook(inputModel)
@@ -70,7 +70,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in JSON-LD format, producing an RdfModel, then format it as JSON-LD again" in {
       val inputTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = JsonLD)
       checkModelForRdfTypeBook(inputModel)
@@ -84,7 +84,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in Turtle format, producing a JsonLDDocument, then format it as Turtle again" in {
       val inputTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
       val inputJsonLDDocument: JsonLDDocument =
@@ -104,7 +104,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in RDF/XML format, producing a JsonLDDocument, then format it as RDF/XML again" in {
       val inputRdfXml: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"),
         )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputRdfXml, rdfFormat = RdfXml)
       val inputJsonLDDocument: JsonLDDocument =
@@ -124,7 +124,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in TriG format" in {
       val graphIri = "http://example.org/data#"
       val inputTrig = FileUtil.readTextFile(
-        Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig")
+        Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig"),
       )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = TriG)
       checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
@@ -143,9 +143,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
       val rdfSource = RdfInputStreamSource(
         new BufferedInputStream(
           Files.newInputStream(
-            Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
-          )
-        )
+            Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
+          ),
+        ),
       )
       val outputFile: Path = Files.createTempFile("test", ".trig")
 
@@ -153,7 +153,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         rdfSource = rdfSource,
         graphIri = graphIri,
         outputFile = outputFile,
-        outputFormat = TriG
+        outputFormat = TriG,
       )
 
       val quadsModel: RdfModel = RdfFormatUtil.fileToRdfModel(file = outputFile, rdfFormat = TriG)
@@ -165,9 +165,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
       val rdfSource = RdfInputStreamSource(
         new BufferedInputStream(
           Files.newInputStream(
-            Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
-          )
-        )
+            Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
+          ),
+        ),
       )
       val outputFile: Path = Files.createTempFile("test", ".trig")
 
@@ -175,7 +175,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         rdfSource = rdfSource,
         graphIri = graphIri,
         outputFile = outputFile,
-        outputFormat = NQuads
+        outputFormat = NQuads,
       )
 
       val quadsModel: RdfModel = RdfFormatUtil.fileToRdfModel(file = outputFile, rdfFormat = NQuads)
@@ -185,7 +185,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in JSON-LD format, producing a JsonLDDocument, then format it as JSON-LD again" in {
       val inputTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
       val inputJsonLDDocument: JsonLDDocument =
         RdfFormatUtilSpec.parseToJsonLDDocument(inputTurtle, JsonLD)
@@ -201,7 +201,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "use prefixes and custom datatypes" in {
       val inputJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"),
         )
       val inputJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
       val outputModel: RdfModel               = inputJsonLDDocument.toRdfModel
@@ -213,7 +213,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         "knora-api"  -> "http://api.knora.org/ontology/knora-api/simple/v2#",
         "rdf"        -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "rdfs"       -> "http://www.w3.org/2000/01/rdf-schema#",
-        "xsd"        -> "http://www.w3.org/2001/XMLSchema#"
+        "xsd"        -> "http://www.w3.org/2001/XMLSchema#",
       )
 
       for ((prefix, namespace) <- namespaces) {
@@ -235,7 +235,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
       RdfFormatUtil.rdfModelToOutputStream(
         rdfModel = rdfModel,
         outputStream = byteArrayOutputStream,
-        rdfFormat = Turtle
+        rdfFormat = Turtle,
       )
       byteArrayOutputStream.close()
 
@@ -253,13 +253,13 @@ object RdfFormatUtilSpec {
   private val expectedThingLabelStatement = JenaNodeFactory.makeStatement(
     JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),
     JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label),
-    JenaNodeFactory.makeStringWithLanguage(value = "Thing", language = "en")
+    JenaNodeFactory.makeStringWithLanguage(value = "Thing", language = "en"),
   )
 
   def parseToJsonLDDocument(
     rdfStr: String,
     rdfFormat: RdfFormat,
-    flatJsonLD: Boolean = false
+    flatJsonLD: Boolean = false,
   ): JsonLDDocument =
     rdfFormat match {
       case JsonLD =>

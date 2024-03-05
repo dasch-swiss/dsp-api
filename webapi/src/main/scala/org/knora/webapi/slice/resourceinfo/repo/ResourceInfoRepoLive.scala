@@ -22,7 +22,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
 
   override def findByProjectAndResourceClass(
     projectIri: IriIdentifier,
-    resourceClass: InternalIri
+    resourceClass: InternalIri,
   ): Task[List[ResourceInfo]] = {
     val select = selectResourcesByCreationDate(resourceClass, projectIri)
     triplestore.query(select).logError.flatMap(toResourceInfoList)
@@ -42,7 +42,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
        |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate .}
        |    OPTIONAL { ?resource knora-base:deleteDate ?deleteDate . }
        |}
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   private def toResourceInfoList(result: SparqlSelectResult) =
@@ -55,7 +55,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
       Instant.parse(rowMap("creationDate")),
       rowMap.get("lastModificationDate").map(Instant.parse(_)),
       rowMap.get("deleteDate").map(Instant.parse),
-      rowMap("isDeleted").toBoolean
+      rowMap("isDeleted").toBoolean,
     )
   }
 }

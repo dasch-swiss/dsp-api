@@ -32,9 +32,9 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
         pred = JenaNodeFactory.makeIriNode(LastModificationDate),
         obj = JenaNodeFactory.makeDatatypeLiteral(
           value = newModificationDate,
-          datatype = DateTime
+          datatype = DateTime,
         ),
-        context = Some(ontology.iri)
+        context = Some(ontology.iri),
       )
 
       log.info(s"Updated ontology: ${ontology.iri} with LastModificationDate")
@@ -45,7 +45,7 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
       .find(
         subj = None,
         pred = Some(JenaNodeFactory.makeIriNode(LastModificationDate)),
-        obj = None
+        obj = None,
       )
       .map(_.subj)
       .toSet
@@ -54,7 +54,7 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
       .find(
         subj = None,
         pred = None,
-        obj = Some(ontologyType)
+        obj = Some(ontologyType),
       )
       .map(_.subj)
       .toSet
@@ -66,7 +66,7 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
       .find(
         subj = None,
         pred = Some(JenaNodeFactory.makeIriNode(AttachedToProject)),
-        obj = None
+        obj = None,
       )
       .filter(triple => (triple.obj == JenaNodeFactory.makeIriNode(SystemProject)))
       .map(_.subj)

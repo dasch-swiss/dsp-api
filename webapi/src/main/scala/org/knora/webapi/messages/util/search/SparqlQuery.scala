@@ -29,7 +29,7 @@ object SparqlQueryConstants {
     mainType = "application",
     subType = "sparql-query",
     charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("rq")
+    fileExtensions = List("rq"),
   )
 }
 
@@ -165,7 +165,7 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends Que
     copy(
       subj = entityToOntologySchema(subj, targetSchema),
       pred = entityToOntologySchema(pred, targetSchema),
-      obj = entityToOntologySchema(obj, targetSchema)
+      obj = entityToOntologySchema(obj, targetSchema),
     )
 
   private def entityToOntologySchema(entity: Entity, targetSchema: OntologySchema): Entity =
@@ -382,7 +382,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
 
     if (args.size <= pos)
       throw GravsearchException(
-        s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)"
+        s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)",
       )
 
     args(pos) match {
@@ -405,7 +405,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
 
     if (args.size <= pos)
       throw GravsearchException(
-        s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)"
+        s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)",
       )
 
     args(pos) match {
@@ -513,7 +513,7 @@ case class ConstructClause(statements: Seq[StatementPattern], querySchema: Optio
 case class WhereClause(
   patterns: Seq[QueryPattern],
   positiveEntities: Set[Entity] = Set.empty[Entity],
-  querySchema: Option[ApiV2Schema] = None
+  querySchema: Option[ApiV2Schema] = None,
 ) extends SparqlGenerator {
   override def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
@@ -558,7 +558,7 @@ case class ConstructQuery(
   whereClause: WhereClause,
   orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion],
   offset: Long = 0,
-  querySchema: Option[ApiV2Schema] = None
+  querySchema: Option[ApiV2Schema] = None,
 ) extends SparqlGenerator {
   override def toSparql: String = {
     val stringBuilder = new StringBuilder
@@ -599,7 +599,7 @@ case class SelectQuery(
   groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable],
   orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion],
   limit: Option[Int] = None,
-  offset: Long = 0
+  offset: Long = 0,
 ) extends SparqlGenerator {
   override def toSparql: String = {
     val stringBuilder = new StringBuilder

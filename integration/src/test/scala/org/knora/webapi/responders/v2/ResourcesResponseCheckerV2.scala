@@ -19,7 +19,7 @@ object ResourcesResponseCheckerV2 {
    */
   def compareReadResourcesSequenceV2Response(
     expected: ReadResourcesSequenceV2,
-    received: ReadResourcesSequenceV2
+    received: ReadResourcesSequenceV2,
   ): Unit = {
     assert(expected.resources.size == received.resources.size, "number of resources is not equal")
     assert(expected.resources.size == received.resources.size, "number of resources are not equal")
@@ -33,7 +33,7 @@ object ResourcesResponseCheckerV2 {
         assert(expectedResource.resourceClassIri == receivedResource.resourceClassIri, "resource class does not match")
         assert(
           expectedResource.userPermission == receivedResource.userPermission,
-          s"expected user permission ${expectedResource.userPermission} on resource ${receivedResource.resourceIri}, received ${receivedResource.userPermission}"
+          s"expected user permission ${expectedResource.userPermission} on resource ${receivedResource.resourceIri}, received ${receivedResource.userPermission}",
         )
 
         // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
@@ -45,7 +45,7 @@ object ResourcesResponseCheckerV2 {
         expectedResource.values.toSeq.sortBy(_._1).zip(receivedResource.values.toSeq.sortBy(_._1)).foreach {
           case (
                 (expectedPropIri: SmartIri, expectedPropValues: Seq[ReadValueV2]),
-                (receivedPropIri: SmartIri, receivedPropValues: Seq[ReadValueV2])
+                (receivedPropIri: SmartIri, receivedPropValues: Seq[ReadValueV2]),
               ) =>
             assert(expectedPropIri == receivedPropIri)
 

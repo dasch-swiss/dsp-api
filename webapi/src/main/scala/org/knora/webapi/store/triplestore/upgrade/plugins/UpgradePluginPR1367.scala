@@ -29,7 +29,7 @@ class UpgradePluginPR1367() extends UpgradePlugin {
               subj = statement.subj,
               pred = statement.pred,
               obj = JenaNodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Decimal),
-              context = statement.context
+              context = statement.context,
             )
           }
 

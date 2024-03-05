@@ -34,7 +34,7 @@ object HttpServer {
           ZIO.acquireRelease {
             ZIO
               .fromFuture(_ =>
-                Http().newServerAt(config.knoraApi.internalHost, config.knoraApi.internalPort).bind(apiRoutes.routes)
+                Http().newServerAt(config.knoraApi.internalHost, config.knoraApi.internalPort).bind(apiRoutes.routes),
               )
               .zipLeft(ZIO.logInfo(">>> Acquire HTTP Server <<<"))
               .orDie
@@ -42,8 +42,8 @@ object HttpServer {
             ZIO
               .fromFuture(_ =>
                 serverBinding.terminate(
-                  new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.MILLISECONDS)
-                )
+                  new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.MILLISECONDS),
+                ),
               )
               .zipLeft(ZIO.logInfo(">>> Release HTTP Server <<<"))
               .orDie

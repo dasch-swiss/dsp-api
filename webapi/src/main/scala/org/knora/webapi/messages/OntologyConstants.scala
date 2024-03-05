@@ -66,7 +66,7 @@ object OntologyConstants {
     val cardinalityOWLRestrictions: Set[IRI] = Set(
       Cardinality,
       MinCardinality,
-      MaxCardinality
+      MaxCardinality,
     )
 
     val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
@@ -77,20 +77,20 @@ object OntologyConstants {
     val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
       Ontology,
       Class,
-      Restriction
+      Restriction,
     )
   }
 
   val ClassTypes: Set[IRI] = Set(
     Owl.Class,
-    Rdfs.Datatype
+    Rdfs.Datatype,
   )
 
   val PropertyTypes: Set[IRI] = Set(
     Rdf.Property,
     Owl.ObjectProperty,
     Owl.DatatypeProperty,
-    Owl.AnnotationProperty
+    Owl.AnnotationProperty,
   )
 
   object Xsd {
@@ -105,7 +105,7 @@ object OntologyConstants {
     lazy val integerTypes: Set[IRI] = Set(
       Int,
       Integer,
-      NonNegativeInteger
+      NonNegativeInteger,
     )
 
     val Decimal: IRI       = XsdPrefixExpansion + "decimal"
@@ -133,7 +133,7 @@ object OntologyConstants {
    * The object types of resource metadata properties.
    */
   val ResourceMetadataPropertyAxioms: Map[IRI, IRI] = Map(
-    OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
+    OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String,
   )
 
   /**
@@ -141,7 +141,7 @@ object OntologyConstants {
    */
   val InternalOntologyLabels: Set[String] = Set(
     KnoraBase.KnoraBaseOntologyLabel,
-    KnoraAdmin.KnoraAdminOntologyLabel
+    KnoraAdmin.KnoraAdminOntologyLabel,
   )
 
   /**
@@ -152,7 +152,7 @@ object OntologyConstants {
     KnoraAdmin.KnoraAdminOntologyLabel,
     KnoraApi.KnoraApiOntologyLabel,
     SalsahGui.SalsahGuiOntologyLabel,
-    Standoff.StandoffOntologyLabel
+    Standoff.StandoffOntologyLabel,
   )
 
   object KnoraBase {
@@ -313,7 +313,7 @@ object OntologyConstants {
       DDDFileValue,
       TextFileValue,
       DocumentFileValue,
-      ArchiveFileValue
+      ArchiveFileValue,
     )
 
     val ValueClasses: Set[IRI] = Set(
@@ -337,7 +337,7 @@ object OntologyConstants {
       ArchiveFileValue,
       StillImageFileValue,
       MovingImageFileValue,
-      TextFileValue
+      TextFileValue,
     )
 
     val ListNode: IRI         = KnoraBasePrefixExpansion + "ListNode"
@@ -375,7 +375,7 @@ object OntologyConstants {
       ViewPermission,
       ModifyPermission,
       DeletePermission,
-      ChangeRightsPermission
+      ChangeRightsPermission,
     )
 
     /* Standoff */
@@ -439,7 +439,7 @@ object OntologyConstants {
       ArchiveRepresentation,
       MovingImageRepresentation,
       StillImageRepresentation,
-      TextRepresentation
+      TextRepresentation,
     )
   }
 
@@ -501,7 +501,7 @@ object OntologyConstants {
       ProjectMember,
       Creator,
       SystemAdmin,
-      ProjectAdmin
+      ProjectAdmin,
     )
 
     /* Institution */
@@ -533,7 +533,7 @@ object OntologyConstants {
       ProjectAdminAllPermission,
       ProjectAdminGroupAllPermission,
       ProjectAdminGroupRestrictedPermission,
-      ProjectAdminRightsAllPermission
+      ProjectAdminRightsAllPermission,
     )
 
     val HasDefaultRestrictedViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultRestrictedViewPermission"
@@ -547,7 +547,7 @@ object OntologyConstants {
       HasDefaultViewPermission,
       HasDefaultModifyPermission,
       HasDefaultDeletePermission,
-      HasDefaultChangeRightsPermission
+      HasDefaultChangeRightsPermission,
     )
 
     val SystemProject: IRI                  = KnoraAdminPrefixExpansion + "SystemProject"
@@ -614,7 +614,7 @@ object OntologyConstants {
      */
     lazy val KnoraApiV2ResourceIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.Resource,
-      OntologyConstants.KnoraApiV2Complex.Resource
+      OntologyConstants.KnoraApiV2Complex.Resource,
     )
 
     /**
@@ -622,7 +622,7 @@ object OntologyConstants {
      */
     lazy val GravsearchOptionsIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
-      OntologyConstants.KnoraApiV2Complex.GravsearchOptions
+      OntologyConstants.KnoraApiV2Complex.GravsearchOptions,
     )
 
     /**
@@ -630,7 +630,7 @@ object OntologyConstants {
      */
     lazy val UseInferenceIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.UseInference,
-      OntologyConstants.KnoraApiV2Complex.UseInference
+      OntologyConstants.KnoraApiV2Complex.UseInference,
     )
 
     /**
@@ -745,7 +745,7 @@ object OntologyConstants {
       ColorBase,
       DateBase,
       TimeBase,
-      DecimalBase
+      DecimalBase,
     )
 
     val Value: IRI         = KnoraApiV2PrefixExpansion + "Value"
@@ -782,7 +782,7 @@ object OntologyConstants {
       DDDFileValue,
       TextFileValue,
       DocumentFileValue,
-      ArchiveFileValue
+      ArchiveFileValue,
     )
 
     val ValueClasses: Set[IRI] = Set(
@@ -798,7 +798,7 @@ object OntologyConstants {
       ListValue,
       UriValue,
       GeonameValue,
-      ColorValue
+      ColorValue,
     ) ++ FileValueClasses
 
     val ResourceProperty: IRI     = KnoraApiV2PrefixExpansion + "resourceProperty"
@@ -991,7 +991,7 @@ object OntologyConstants {
       Color,
       Interval,
       Geoname,
-      File
+      File,
     )
 
     val ArkUrl: IRI        = KnoraApiV2PrefixExpansion + "arkUrl"
@@ -1039,7 +1039,7 @@ object OntologyConstants {
       KnoraBase.HasDDDFileValue          -> KnoraApiV2Simple.HasDDDFile,
       KnoraBase.HasTextFileValue         -> KnoraApiV2Simple.HasTextFile,
       KnoraBase.HasDocumentFileValue     -> KnoraApiV2Simple.HasDocumentFile,
-      KnoraBase.HasArchiveFileValue      -> KnoraApiV2Simple.HasArchiveFile
+      KnoraBase.HasArchiveFileValue      -> KnoraApiV2Simple.HasArchiveFile,
     ),
     (InternalSchema, ApiV2Complex) -> Map(
       KnoraBase.SubjectClassConstraint   -> KnoraApiV2Complex.SubjectType,
@@ -1059,7 +1059,7 @@ object OntologyConstants {
       KnoraBase.ValueHasColor            -> KnoraApiV2Complex.ColorValueAsColor,
       KnoraBase.ValueHasStandoff         -> KnoraApiV2Complex.TextValueHasStandoff,
       KnoraAdmin.KnoraProject            -> Xsd.Uri,
-      KnoraAdmin.User                    -> Xsd.Uri
+      KnoraAdmin.User                    -> Xsd.Uri,
     ),
     (ApiV2Simple, InternalSchema) -> Map(
       // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -1081,7 +1081,7 @@ object OntologyConstants {
       KnoraApiV2Simple.HasTextFile        -> KnoraBase.HasTextFileValue,
       KnoraApiV2Simple.HasDocumentFile    -> KnoraBase.HasDocumentFileValue,
       KnoraApiV2Simple.HasArchiveFile     -> KnoraBase.HasArchiveFileValue,
-      KnoraApiV2Simple.ListNode           -> KnoraBase.ListValue
+      KnoraApiV2Simple.ListNode           -> KnoraBase.ListValue,
     ),
     (ApiV2Complex, InternalSchema) -> Map(
       KnoraApiV2Complex.SubjectType               -> KnoraBase.SubjectClassConstraint,
@@ -1098,8 +1098,8 @@ object OntologyConstants {
       KnoraApiV2Complex.ListValueAsListNode       -> KnoraBase.ValueHasListNode,
       KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
       KnoraApiV2Complex.ColorValueAsColor         -> KnoraBase.ValueHasColor,
-      KnoraApiV2Complex.TextValueHasStandoff      -> KnoraBase.ValueHasStandoff
-    )
+      KnoraApiV2Complex.TextValueHasStandoff      -> KnoraBase.ValueHasStandoff,
+    ),
   )
 
   /**

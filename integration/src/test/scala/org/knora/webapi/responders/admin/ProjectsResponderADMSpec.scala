@@ -53,7 +53,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           IriIdentifier
             .fromString(SharedTestDataADM.incunabulaProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
 
@@ -63,7 +63,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           ShortnameIdentifier
             .fromString(SharedTestDataADM.incunabulaProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
       }
@@ -72,7 +72,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(identifier =
           IriIdentifier
             .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found")))
 
@@ -82,7 +82,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(
           identifier = ShortnameIdentifier
             .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
       }
@@ -91,7 +91,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ProjectGetRequestADM(
           identifier = ShortcodeIdentifier
             .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
+            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
         expectMsg(timeout, Failure(NotFoundException(s"Project '9999' not found")))
       }
@@ -103,8 +103,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
-            IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)
-          )
+            IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
+          ),
         )
         actual shouldEqual Some(expectedResult)
       }
@@ -112,8 +112,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
-            ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname)
-          )
+            ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
+          ),
         )
         actual shouldEqual Some(expectedResult)
       }
@@ -121,8 +121,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return restricted view settings using project SHORTCODE" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectRestrictedViewSettingsGetADM(
-            ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode)
-          )
+            ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
+          ),
         )
         actual shouldEqual Some(expectedResult)
       }
@@ -130,15 +130,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
-            IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri)
-          )
+            IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(ShortcodeIdentifier.unsafeFrom("9999"))
+          ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(ShortcodeIdentifier.unsafeFrom("9999")),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
@@ -146,8 +146,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectRestrictedViewSettingsGetRequestADM(
-            ShortnameIdentifier.unsafeFrom("wrongshortname")
-          )
+            ShortnameIdentifier.unsafeFrom("wrongshortname"),
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
@@ -168,10 +168,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin
+            selfjoin = SelfJoin.CannotJoin,
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
 
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
@@ -179,7 +179,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.shortcode should be(shortcode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(V2.StringLiteralV2(value = "project description", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))),
         )
 
         newProjectIri.set(received.project.id)
@@ -192,7 +192,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
             ap.hasPermissions.equals(
-              Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+              Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
             )
         }
 
@@ -208,20 +208,20 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         // Check Default Object Access permissions
         val receivedDoaps = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsDaopByProjectIri(ProjectIri.unsafeFrom(received.project.id))
+          PermissionsResponderADM.getPermissionsDaopByProjectIri(ProjectIri.unsafeFrom(received.project.id)),
         )
 
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
           (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
-              OntologyConstants.KnoraAdmin.ProjectAdmin
+              OntologyConstants.KnoraAdmin.ProjectAdmin,
             ) &&
             doap.hasPermissions.equals(
               Set(
                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-              )
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+              ),
             )
         }
         hasDOAPForProjectAdmin.size shouldBe 1
@@ -230,13 +230,13 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
           (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
-              OntologyConstants.KnoraAdmin.ProjectMember
+              OntologyConstants.KnoraAdmin.ProjectMember,
             ) &&
             doap.hasPermissions.equals(
               Set(
                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-              )
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+              ),
             )
         }
         hasDOAPForProjectMember.size shouldBe 1
@@ -253,10 +253,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin
+            selfjoin = SelfJoin.CannotJoin,
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
@@ -264,7 +264,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         received.project.shortcode should be("1112")
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(V2.StringLiteralV2(value = "project description", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))),
         )
 
       }
@@ -280,15 +280,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortcode = Shortcode.unsafeFrom("1312"),
             longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
             description = List(
-              Description.unsafeFrom(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en")))
+              Description.unsafeFrom(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))),
             ),
             keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin
+            selfjoin = SelfJoin.CannotJoin,
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
 
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
@@ -297,9 +297,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           Seq(
             V2.StringLiteralV2(
               value = Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
-              language = Some("en")
-            )
-          )
+              language = Some("en"),
+            ),
+          ),
         )
         received.project.keywords should contain(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter))
       }
@@ -315,10 +315,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin
+            selfjoin = SelfJoin.CannotJoin,
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
         expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
       }
@@ -334,10 +334,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin
+            selfjoin = SelfJoin.CannotJoin,
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
         expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '111C' already exists")))
       }
@@ -347,8 +347,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val updatedLongname = Longname.unsafeFrom("updated project longname")
         val updatedDescription = List(
           Description.unsafeFrom(
-            V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))
-          )
+            V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")),
+          ),
         )
         val updatedKeywords = List("updated", "keywords").map(Keyword.unsafeFrom)
         val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
@@ -364,10 +364,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             keywords = Some(updatedKeywords),
             logo = Some(updatedLogo),
             status = Some(projectStatus),
-            selfjoin = Some(selfJoin)
+            selfjoin = Some(selfJoin),
           ),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.shortname should be("newproject")
@@ -377,9 +377,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           Seq(
             V2.StringLiteralV2(
               value = """updated project description with "quotes" and <html tags>""",
-              language = Some("en")
-            )
-          )
+              language = Some("en"),
+            ),
+          ),
         )
         received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
         received.project.logo should be(Some("/fu/bar/baz-updated.jpg"))
@@ -394,14 +394,14 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           projectIri = iri,
           projectUpdatePayload = ProjectUpdateRequest(longname = Some(longname)),
           SharedTestDataADM.rootUser,
-          UUID.randomUUID()
+          UUID.randomUUID(),
         )
         expectMsg(
           Failure(
             NotFoundException(
-              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request."
-            )
-          )
+              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request.",
+            ),
+          ),
         )
       }
     }
@@ -412,8 +412,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           ProjectsResponderADM
             .projectMembersGetRequestADM(
               IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
-              SharedTestDataADM.rootUser
-            )
+              SharedTestDataADM.rootUser,
+            ),
         )
 
         val members = actual.members
@@ -422,7 +422,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           SharedTestDataADM.imagesUser01.id,
           SharedTestDataADM.imagesUser02.id,
           SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id
+          SharedTestDataADM.imagesReviewerUser.id,
         )
       }
 
@@ -431,8 +431,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           ProjectsResponderADM
             .projectMembersGetRequestADM(
               ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
-              SharedTestDataADM.rootUser
-            )
+              SharedTestDataADM.rootUser,
+            ),
         )
 
         val members = actual.members
@@ -441,7 +441,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           SharedTestDataADM.imagesUser01.id,
           SharedTestDataADM.imagesUser02.id,
           SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id
+          SharedTestDataADM.imagesReviewerUser.id,
         )
       }
 
@@ -450,8 +450,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           ProjectsResponderADM
             .projectMembersGetRequestADM(
               ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
-              SharedTestDataADM.rootUser
-            )
+              SharedTestDataADM.rootUser,
+            ),
         )
 
         val members = actual.members
@@ -460,7 +460,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           SharedTestDataADM.imagesUser01.id,
           SharedTestDataADM.imagesUser02.id,
           SharedTestDataADM.multiuserUser.id,
-          SharedTestDataADM.imagesReviewerUser.id
+          SharedTestDataADM.imagesReviewerUser.id,
         )
       }
 
@@ -468,8 +468,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectMembersGetRequestADM(
             IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
@@ -478,8 +478,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectMembersGetRequestADM(
             ShortnameIdentifier.unsafeFrom("wrongshortname"),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
@@ -488,8 +488,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectMembersGetRequestADM(
             ShortcodeIdentifier.unsafeFrom("9999"),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
@@ -498,15 +498,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
 
         val members = received.members
         members.size should be(2)
         members.map(_.id) should contain allElementsOf Seq(
           SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id
+          SharedTestDataADM.multiuserUser.id,
         )
       }
 
@@ -514,15 +514,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
 
         val members = received.members
         members.size should be(2)
         members.map(_.id) should contain allElementsOf Seq(
           SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id
+          SharedTestDataADM.multiuserUser.id,
         )
       }
 
@@ -530,15 +530,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
 
         val members = received.members
         members.size should be(2)
         members.map(_.id) should contain allElementsOf Seq(
           SharedTestDataADM.imagesUser01.id,
-          SharedTestDataADM.multiuserUser.id
+          SharedTestDataADM.multiuserUser.id,
         )
       }
 
@@ -546,8 +546,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
 
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
@@ -557,8 +557,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             ShortnameIdentifier.unsafeFrom("wrongshortname"),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
@@ -567,8 +567,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val exit = UnsafeZioRun.run(
           ProjectsResponderADM.projectAdminMembersGetRequestADM(
             ShortcodeIdentifier.unsafeFrom("9999"),
-            SharedTestDataADM.rootUser
-          )
+            SharedTestDataADM.rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
@@ -583,22 +583,22 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return all keywords for a single project" in {
         val received = UnsafeZioRun.runOrThrow(
           ProjectsResponderADM.projectKeywordsGetRequestADM(
-            ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id)
-          )
+            ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id),
+          ),
         )
         received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
       }
 
       "return empty list for a project without keywords" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id))
+          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id)),
         )
         received.keywords should be(Seq.empty[String])
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri))
+          ProjectsResponderADM.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }

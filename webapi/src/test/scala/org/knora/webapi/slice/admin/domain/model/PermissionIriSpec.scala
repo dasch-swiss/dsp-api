@@ -22,8 +22,8 @@ object PermissionIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/permissions/0001/30-characters-iri-for-testing1",
           "http://rdfh.ch/permissions/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
           "http://rdfh.ch/permissions/0111/U_U_I_D_1",
-          "http://rdfh.ch/permissions/0111/12"
-        )
+          "http://rdfh.ch/permissions/0111/12",
+        ),
       )
       check(validIris)(i => assertTrue(PermissionIri.from(i).isRight))
     },
@@ -34,10 +34,10 @@ object PermissionIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/permissions/0111/1",
           "http://rdfh.ch/permissions/0001/31-characters-iri-for-testing12",
           "http://rdfh.ch/permissions/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
-          "http://rdfh.ch/permissions/jDEEitJESRi3pDaDjjQ1WQ"
-        )
+          "http://rdfh.ch/permissions/jDEEitJESRi3pDaDjjQ1WQ",
+        ),
       )
       check(invalidIris)(i => assertTrue(PermissionIri.from(i) == Left(s"Invalid permission IRI: $i.")))
-    }
+    },
   )
 }

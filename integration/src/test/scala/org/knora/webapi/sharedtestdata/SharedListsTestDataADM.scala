@@ -19,7 +19,7 @@ object SharedListsTestDataADM {
     projectIri = "http://rdfh.ch/projects/0001",
     name = None,
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Tree list root", Some("en")))),
-    comments = StringLiteralSequenceV2.empty
+    comments = StringLiteralSequenceV2.empty,
   )
 
   val summerNodeInfo: ListChildNodeInfoADM = ListChildNodeInfoADM(
@@ -28,7 +28,7 @@ object SharedListsTestDataADM {
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
     comments = StringLiteralSequenceV2.empty,
     position = 0,
-    hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
+    hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
   )
 
   val seasonListNodes: Seq[ListChildNodeADM] = Seq(
@@ -39,7 +39,7 @@ object SharedListsTestDataADM {
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 0,
-      hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
+      hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
     ),
     ListChildNodeADM(
       id = "http://rdfh.ch/lists/00FF/eda2792605",
@@ -48,8 +48,8 @@ object SharedListsTestDataADM {
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 1,
-      hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
-    )
+      hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
+    ),
   )
 
   val nodePath: Seq[NodePathElementADM] = Seq(
@@ -57,20 +57,20 @@ object SharedListsTestDataADM {
       id = "http://rdfh.ch/lists/00FF/691eee1cbe",
       name = Some("4KUN"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2("KUNST"))),
-      comments = StringLiteralSequenceV2.empty
+      comments = StringLiteralSequenceV2.empty,
     ),
     NodePathElementADM(
       id = "http://rdfh.ch/lists/00FF/2ebd2706c1",
       name = Some("7"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2("FILM UND FOTO"))),
-      comments = StringLiteralSequenceV2.empty
+      comments = StringLiteralSequenceV2.empty,
     ),
     NodePathElementADM(
       id = "http://rdfh.ch/lists/00FF/c7f07a3fc1",
       name = Some("1"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Heidi Film"))),
-      comments = StringLiteralSequenceV2.empty
-    )
+      comments = StringLiteralSequenceV2.empty,
+    ),
   )
 
   val treeListInfo: ListRootNodeInfoADM = ListRootNodeInfoADM(
@@ -80,10 +80,10 @@ object SharedListsTestDataADM {
     labels = StringLiteralSequenceV2(
       Vector(
         StringLiteralV2(value = "Tree list root", language = Some("en")),
-        StringLiteralV2(value = "Listenwurzel", language = Some("de"))
-      )
+        StringLiteralV2(value = "Listenwurzel", language = Some("de")),
+      ),
     ),
-    comments = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Anything Tree List", language = Some("en"))))
+    comments = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Anything Tree List", language = Some("en")))),
   )
 
   val treeListNode01Info: ListChildNodeInfoADM = ListChildNodeInfoADM(
@@ -92,7 +92,7 @@ object SharedListsTestDataADM {
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 01", language = Some("en")))),
     comments = StringLiteralSequenceV2.empty,
     position = 0,
-    hasRootNode = "http://rdfh.ch/lists/0001/treeList"
+    hasRootNode = "http://rdfh.ch/lists/0001/treeList",
   )
   val treeListChildNodes: Seq[ListChildNodeADM] = Seq(
     ListChildNodeADM(
@@ -102,7 +102,7 @@ object SharedListsTestDataADM {
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 0,
-      hasRootNode = "http://rdfh.ch/lists/0001/treeList"
+      hasRootNode = "http://rdfh.ch/lists/0001/treeList",
     ),
     ListChildNodeADM(
       id = "http://rdfh.ch/lists/0001/treeList02",
@@ -110,13 +110,13 @@ object SharedListsTestDataADM {
       labels = StringLiteralSequenceV2(
         Vector(
           StringLiteralV2(value = "Baumlistenknoten 02", language = Some("de")),
-          StringLiteralV2(value = "Tree list node 02", language = Some("en"))
-        )
+          StringLiteralV2(value = "Tree list node 02", language = Some("en")),
+        ),
       ),
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 1,
-      hasRootNode = "http://rdfh.ch/lists/0001/treeList"
+      hasRootNode = "http://rdfh.ch/lists/0001/treeList",
     ),
     ListChildNodeADM(
       id = "http://rdfh.ch/lists/0001/treeList03",
@@ -131,7 +131,7 @@ object SharedListsTestDataADM {
           comments = StringLiteralSequenceV2.empty,
           children = Seq.empty[ListChildNodeADM],
           position = 0,
-          hasRootNode = "http://rdfh.ch/lists/0001/treeList"
+          hasRootNode = "http://rdfh.ch/lists/0001/treeList",
         ),
         ListChildNodeADM(
           id = "http://rdfh.ch/lists/0001/treeList11",
@@ -140,12 +140,12 @@ object SharedListsTestDataADM {
           comments = StringLiteralSequenceV2.empty,
           children = Seq.empty[ListChildNodeADM],
           position = 1,
-          hasRootNode = "http://rdfh.ch/lists/0001/treeList"
-        )
+          hasRootNode = "http://rdfh.ch/lists/0001/treeList",
+        ),
       ),
       position = 2,
-      hasRootNode = "http://rdfh.ch/lists/0001/treeList"
-    )
+      hasRootNode = "http://rdfh.ch/lists/0001/treeList",
+    ),
   )
 
 }

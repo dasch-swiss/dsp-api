@@ -76,6 +76,6 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
 
   def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     ZIO.foreach(discoverFiles(testDataPath))(pathToFile =>
-      ZIO.debug(s"applying to $pathToFile") *> applyUpgradePluginTo(upgradePlugin, pathToFile)
+      ZIO.debug(s"applying to $pathToFile") *> applyUpgradePluginTo(upgradePlugin, pathToFile),
     )
 }

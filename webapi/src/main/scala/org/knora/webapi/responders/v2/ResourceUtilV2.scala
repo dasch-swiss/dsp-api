@@ -48,7 +48,7 @@ trait ResourceUtilV2 {
   def checkResourcePermission(
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
-    requestingUser: User
+    requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
   /**
@@ -64,7 +64,7 @@ trait ResourceUtilV2 {
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
-    requestingUser: User
+    requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
   /**
@@ -80,7 +80,7 @@ trait ResourceUtilV2 {
     projectIri: IRI,
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
-    requestingUser: User
+    requestingUser: User,
   ): Task[String]
 
   /**
@@ -106,12 +106,12 @@ trait ResourceUtilV2 {
   def doSipiPostUpdate[T <: UpdateResultInProject](
     updateTask: Task[T],
     fileValues: Seq[FileValueContentV2],
-    requestingUser: User
+    requestingUser: User,
   ): Task[T]
   final def doSipiPostUpdate[T <: UpdateResultInProject](
     updateTask: Task[T],
     fileValue: FileValueContentV2,
-    requestingUser: User
+    requestingUser: User,
   ): Task[T] = doSipiPostUpdate(updateTask, List(fileValue), requestingUser)
 }
 
@@ -129,13 +129,13 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
   override def checkResourcePermission(
     resourceInfo: ReadResourceV2,
     permissionNeeded: EntityPermission,
-    requestingUser: User
+    requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = resourceInfo.permissions,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
@@ -146,8 +146,8 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     ZIO
       .fail(
         ForbiddenException(
-          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>"
-        )
+          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>",
+        ),
       )
       .when(!hasRequiredPermission)
       .unit
@@ -165,13 +165,13 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
     permissionNeeded: EntityPermission,
-    requestingUser: User
+    requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = valueInfo.permissions,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
@@ -182,8 +182,8 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     ZIO
       .fail(
         ForbiddenException(
-          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>"
-        )
+          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>",
+        ),
       )
       .when(!hasRequiredPermission)
       .unit
@@ -202,7 +202,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     projectIri: IRI,
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
-    requestingUser: User
+    requestingUser: User,
   ): Task[String] =
     for {
       defaultObjectAccessPermissionsResponse <- messageRelay
@@ -212,8 +212,8 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
                                                       resourceClassIri = resourceClassIri.toString,
                                                       propertyIri = propertyIri.toString,
                                                       targetUser = requestingUser,
-                                                      requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                    )
+                                                      requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                                    ),
                                                   )
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
@@ -254,7 +254,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
   override def doSipiPostUpdate[T <: UpdateResultInProject](
     updateTask: Task[T],
     valueContents: Seq[FileValueContentV2],
-    requestingUser: User
+    requestingUser: User,
   ): Task[T] =
     // Was this update a success?
     updateTask.foldZIO(
@@ -273,7 +273,7 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
           .map(_.fileValue.internalFilename)
           .map(MoveTemporaryFileToPermanentStorageRequest(_, updateInProject.projectADM.shortcode, requestingUser))
         ZIO.foreachDiscard(moveRequests)(messageRelay.ask[SuccessResponseV2](_)) *> ZIO.succeed(updateInProject)
-      }
+      },
     )
 }
 

@@ -39,8 +39,8 @@ class KnoraSipiAuthenticationITSpec
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   "The Knora/Sipi authentication" should {
@@ -84,8 +84,8 @@ class KnoraSipiAuthenticationITSpec
         Multipart.FormData.BodyPart(
           "file",
           HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString)
-        )
+          Map("filename" -> pathToMarbles.getFileName.toString),
+        ),
       )
 
       // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
@@ -105,8 +105,8 @@ class KnoraSipiAuthenticationITSpec
         Multipart.FormData.BodyPart(
           "file",
           HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString)
-        )
+          Map("filename" -> pathToMarbles.getFileName.toString),
+        ),
       )
 
       // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.

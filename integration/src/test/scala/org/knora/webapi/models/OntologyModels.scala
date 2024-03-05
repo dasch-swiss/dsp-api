@@ -46,7 +46,7 @@ object CreateClassRequest {
     className: String,
     label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
     comment: Option[LangString] = None,
-    subClassOf: Option[String] = None
+    subClassOf: Option[String] = None,
   ): CreateClassRequest = {
     val ontologyId           = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val maybeComment: String = Comments.handleOptionalComment(comment)
@@ -115,7 +115,7 @@ object CreatePropertyRequest {
     propertyType: PropertyValueType,
     label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
     comment: Option[LangString] = None,
-    subPropertyOf: Option[String] = None
+    subPropertyOf: Option[String] = None,
   ): CreatePropertyRequest = {
     val LocalHost_Ontology   = "http://0.0.0.0:3333/ontology"
     val ontologyId           = LocalHost_Ontology + s"/0001/$ontologyName/v2"
@@ -220,7 +220,7 @@ object AddCardinalitiesRequest {
     ontologyName: String,
     lastModificationDate: Instant,
     className: String,
-    restrictions: List[Restriction]
+    restrictions: List[Restriction],
   ): AddCardinalitiesRequest = {
     val ontologyId                 = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)

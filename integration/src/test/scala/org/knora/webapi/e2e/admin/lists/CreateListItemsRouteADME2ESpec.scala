@@ -42,17 +42,17 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
   val anythingUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingUser1,
-    "test"
+    "test",
   )
 
   val anythingAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
-    "test"
+    "test",
   )
 
   val beolAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.beolUser,
-    "test"
+    "test",
   )
 
   private val customChildNodeIRI = "http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw"
@@ -81,14 +81,14 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-list-with-custom-IRI-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createListWithCustomIriRequest
-          )
+            text = createListWithCustomIriRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/lists",
-          HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)
+          HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -107,10 +107,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-list-with-custom-IRI-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -128,7 +128,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request =
           Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            anythingAdminUserCreds.basicHttpCredentials
+            anythingAdminUserCreds.basicHttpCredentials,
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -155,17 +155,17 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-child-node-with-custom-IRI-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createChildNodeWithCustomIriRequest
-          )
+            text = createChildNodeWithCustomIriRequest,
+          ),
         )
 
         val encodedParentNodeUrl = java.net.URLEncoder.encode(SharedTestDataADM.customListIRI, "utf-8")
 
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedParentNodeUrl,
-          HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)
+          HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -185,10 +185,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-child-node-with-custom-IRI-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -212,14 +212,14 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-list-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createListRequest
-          )
+            text = createListRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/lists",
-          HttpEntity(ContentTypes.`application/json`, createListRequest)
+          HttpEntity(ContentTypes.`application/json`, createListRequest),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -245,10 +245,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-list-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
         // store list IRI for next test
         newListIri.set(listInfo.id)
@@ -264,7 +264,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request = Post(
           baseApiUrl + s"/admin/lists",
-          HttpEntity(ContentTypes.`application/json`, createListRequest)
+          HttpEntity(ContentTypes.`application/json`, createListRequest),
         ) ~> addCredentials(beolAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -287,7 +287,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request =
           Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            anythingUserCreds.basicHttpCredentials
+            anythingUserCreds.basicHttpCredentials,
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -307,7 +307,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request01 =
           Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(
-            anythingAdminUserCreds.basicHttpCredentials
+            anythingAdminUserCreds.basicHttpCredentials,
           )
         val response01: HttpResponse = singleAwaitingRequest(request01)
         response01.status should be(StatusCodes.BadRequest)
@@ -325,7 +325,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request02 =
           Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(
-            anythingAdminUserCreds.basicHttpCredentials
+            anythingAdminUserCreds.basicHttpCredentials,
           )
         val response02: HttpResponse = singleAwaitingRequest(request02)
         response02.status should be(StatusCodes.BadRequest)
@@ -343,7 +343,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request03 =
           Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(
-            anythingAdminUserCreds.basicHttpCredentials
+            anythingAdminUserCreds.basicHttpCredentials,
           )
         val response03: HttpResponse = singleAwaitingRequest(request03)
         response03.status should be(StatusCodes.BadRequest)
@@ -361,7 +361,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           parentNodeIri = newListIri.get,
           name = name,
           label = label,
-          comment = comment
+          comment = comment,
         )
 
         clientTestDataCollector.addFile(
@@ -369,15 +369,15 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-child-node-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = addChildToRoot
-          )
+            text = addChildToRoot,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, addChildToRoot)
+          HttpEntity(ContentTypes.`application/json`, addChildToRoot),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -413,10 +413,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-child-node-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
         firstChildIri.set(childNodeInfo.id)
       }
@@ -432,21 +432,21 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           parentNodeIri = newListIri.get,
           name = name,
           label = label,
-          comment = comment
+          comment = comment,
         )
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-second-child-to-root-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = addSecondChildToRoot
-          )
+            text = addSecondChildToRoot,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot)
+          HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -485,10 +485,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-second-child-to-root-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -514,14 +514,14 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "insert-childNode-in-position-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = insertChild
-          )
+            text = insertChild,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, insertChild)
+          HttpEntity(ContentTypes.`application/json`, insertChild),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -560,10 +560,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "insert-childNode-in-position-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -578,21 +578,21 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           parentNodeIri = secondChildIri.get,
           name = name,
           label = label,
-          comment = comment
+          comment = comment,
         )
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-child-to-second-child-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = addChildToSecondChild
-          )
+            text = addChildToSecondChild,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, addChildToSecondChild)
+          HttpEntity(ContentTypes.`application/json`, addChildToSecondChild),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -631,10 +631,10 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "add-child-to-second-child-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }

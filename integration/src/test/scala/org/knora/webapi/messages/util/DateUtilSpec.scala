@@ -30,7 +30,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "1291-08-01",
         era1 = "CE",
         era2 = "CE",
-        calendar = KnoraCalendarType.JULIAN
+        calendar = KnoraCalendarType.JULIAN,
       )
 
       val bundesbriefJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(bundesbriefDateValueV1)
@@ -41,8 +41,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval2 = 2192808,
           calendar = KnoraCalendarType.JULIAN,
           dateprecision1 = KnoraCalendarPrecision.DAY,
-          dateprecision2 = KnoraCalendarPrecision.DAY
-        )
+          dateprecision2 = KnoraCalendarPrecision.DAY,
+        ),
       )
 
       val reverseConvertedBundesbriefDateValueV1 =
@@ -92,7 +92,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "4713-01-01",
         era1 = "BCE",
         era2 = "BCE",
-        calendar = KnoraCalendarType.JULIAN
+        calendar = KnoraCalendarType.JULIAN,
       )
 
       val theJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
@@ -100,7 +100,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       DateUtil.julianDayNumber2DateString(
         theJulianDayCountValueV1.dateval1,
         theJulianDayCountValueV1.calendar,
-        theJulianDayCountValueV1.dateprecision1
+        theJulianDayCountValueV1.dateprecision1,
       )
 
     }
@@ -111,7 +111,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "4713-01-01",
         era1 = "BCE",
         era2 = "BCE",
-        calendar = KnoraCalendarType.JULIAN
+        calendar = KnoraCalendarType.JULIAN,
       )
 
       val theJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
@@ -122,8 +122,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval2 = 0,
           calendar = KnoraCalendarType.JULIAN,
           dateprecision1 = KnoraCalendarPrecision.DAY,
-          dateprecision2 = KnoraCalendarPrecision.DAY
-        )
+          dateprecision2 = KnoraCalendarPrecision.DAY,
+        ),
       )
 
     }
@@ -134,7 +134,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "1969-03-10",
         era2 = "CE",
         era1 = "CE",
-        calendar = KnoraCalendarType.GREGORIAN
+        calendar = KnoraCalendarType.GREGORIAN,
       )
 
       val benBirthdayJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(benBirthdayDateValueV1)
@@ -145,8 +145,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval2 = 2440291,
           calendar = KnoraCalendarType.GREGORIAN,
           dateprecision1 = KnoraCalendarPrecision.DAY,
-          dateprecision2 = KnoraCalendarPrecision.DAY
-        )
+          dateprecision2 = KnoraCalendarPrecision.DAY,
+        ),
       )
 
       val reverseConvertedBenBirthdayDateValueV1 =
@@ -161,7 +161,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "1969-03-10",
         era2 = "CE",
         era1 = "CE",
-        calendar = KnoraCalendarType.GREGORIAN
+        calendar = KnoraCalendarType.GREGORIAN,
       )
 
       val julianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
@@ -172,8 +172,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval2 = 2440291,
           calendar = KnoraCalendarType.GREGORIAN,
           dateprecision1 = KnoraCalendarPrecision.MONTH,
-          dateprecision2 = KnoraCalendarPrecision.DAY
-        )
+          dateprecision2 = KnoraCalendarPrecision.DAY,
+        ),
       )
 
       val reverseConvertedDateValueV1 = DateUtil.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
@@ -186,7 +186,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
         dateval2 = "2015-07",
         era2 = "CE",
         era1 = "CE",
-        calendar = KnoraCalendarType.GREGORIAN
+        calendar = KnoraCalendarType.GREGORIAN,
       )
 
       val julianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
@@ -197,8 +197,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval2 = 2457235,
           calendar = KnoraCalendarType.GREGORIAN,
           dateprecision1 = KnoraCalendarPrecision.MONTH,
-          dateprecision2 = KnoraCalendarPrecision.MONTH
-        )
+          dateprecision2 = KnoraCalendarPrecision.MONTH,
+        ),
       )
 
       val reverseConvertedDateValueV1 = DateUtil.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)

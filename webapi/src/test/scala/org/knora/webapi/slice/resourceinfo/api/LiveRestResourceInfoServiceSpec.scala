@@ -40,11 +40,11 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
                         knownProjectIRI,
                         "invalid-resource-class",
                         Asc,
-                        LastModificationDate
+                        LastModificationDate,
                       )
                       .exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class"))
+          actual == Exit.fail(BadRequestException("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class")),
         )
       },
       test("should return empty list if no resources found // unknown project and resourceClass") {
@@ -54,7 +54,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
               unknownProjectIRI,
               "http://unknown-resource-class",
               Asc,
-              LastModificationDate
+              LastModificationDate,
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -64,7 +64,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
                       knownProjectIRI,
                       "http://unknown-resource-class",
                       Asc,
-                      LastModificationDate
+                      LastModificationDate,
                     )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -75,7 +75,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
               unknownProjectIRI,
               knownResourceClass.value,
               Asc,
-              LastModificationDate
+              LastModificationDate,
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -83,7 +83,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         """given two ResourceInfo exist
           | when findByProjectAndResourceClass
           | then it should return all info sorted by (lastModificationDate, ASC)
-          |""".stripMargin.linesIterator.mkString("")
+          |""".stripMargin.linesIterator.mkString(""),
       ) {
         val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), Some(now.minus(9, DAYS)))
         val given2 =
@@ -95,7 +95,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
               knownProjectIRI,
               knownResourceClass.value,
               Asc,
-              LastModificationDate
+              LastModificationDate,
             )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.lastModificationDate)
@@ -106,7 +106,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         """given two ResourceInfo exist
           | when findByProjectAndResourceClass ordered by (creationDate, DESC)
           | then it should return all info sorted correctly
-          |""".stripMargin.linesIterator.mkString("")
+          |""".stripMargin.linesIterator.mkString(""),
       ) {
         val given1 = ResourceInfo("http://resourceIri/" + randomUUID, now.minus(10, DAYS), Some(now.minus(9, DAYS)))
         val given2 =
@@ -117,17 +117,17 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
                       knownProjectIRI,
                       knownResourceClass.value,
                       Desc,
-                      CreationDate
+                      CreationDate,
                     )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.creationDate).reverse
           assertTrue(actual == model.ListResponseDto(items))
         }
-      }
+      },
     ).provide(
       IriConverter.layer,
       StringFormatter.test,
       RestResourceInfoServiceLive.layer,
-      ResourceInfoRepoFake.layer
+      ResourceInfoRepoFake.layer,
     )
 }

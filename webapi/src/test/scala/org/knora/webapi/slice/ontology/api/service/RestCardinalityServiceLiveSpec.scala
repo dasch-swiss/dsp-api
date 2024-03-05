@@ -36,7 +36,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
     .addOntology(
       ReadOntologyV2Builder
         .builder(IriTestConstants.Biblio.Ontology)
-        .assignToProject(IriTestConstants.Project.TestProject)
+        .assignToProject(IriTestConstants.Project.TestProject),
     )
     .build
   private val projectIri: IRI  = IriTestConstants.Project.TestProject
@@ -44,7 +44,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
   private val userWithAccess: User =
     SystemUser.copy(permissions =
-      SystemUser.permissions.copy(groupsPerProject = Map(projectIri -> List(OntologyConstants.KnoraAdmin.ProjectAdmin)))
+      SystemUser.permissions.copy(groupsPerProject = Map(projectIri -> List(OntologyConstants.KnoraAdmin.ProjectAdmin))),
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
@@ -63,13 +63,13 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                      CanSetCardinalityCheckResult.SuperClassCheckFailure(
                        List(
                          IriTestConstants.Biblio.Instance.SomePublicationInstance,
-                         IriTestConstants.Biblio.Instance.SomeArticleInstance
-                       )
+                         IriTestConstants.Biblio.Instance.SomeArticleInstance,
+                       ),
                      ),
                      CanSetCardinalityCheckResult.SubclassCheckFailure(
-                       List(IriTestConstants.Biblio.Instance.SomeJournalArticleInstance)
-                     )
-                   )
+                       List(IriTestConstants.Biblio.Instance.SomeJournalArticleInstance),
+                     ),
+                   ),
                  )
             response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
             responseJson <- renderResponseJson(response)
@@ -102,7 +102,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
                 |  }
                 |}
-                |""".asJson
+                |""".asJson,
           )
         },
         test("should render a fail Response correctly with single Reason and Context") {
@@ -110,9 +110,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
             _ <- StubCardinalitiesService.setSetResponseFailure(
                    List(
                      CanSetCardinalityCheckResult.SubclassCheckFailure(
-                       List(IriTestConstants.Biblio.Instance.SomePublicationInstance)
-                     )
-                   )
+                       List(IriTestConstants.Biblio.Instance.SomePublicationInstance),
+                     ),
+                   ),
                  )
             response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
             responseJson <- renderResponseJson(response)
@@ -132,9 +132,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |  },
                 |  "@context":{"knora-api":"http://api.knora.org/ontology/knora-api/v2#"}
                 |}
-                |""".asJson
+                |""".asJson,
           )
-        }
+        },
       ),
       suite("canReplaceCardinality")(
         test("should render a success Response") {
@@ -156,10 +156,10 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                 |  "knora-api:cannotDoReason": "Cardinality is in use.",
                 |  "@context": { "knora-api": "http://api.knora.org/ontology/knora-api/v2#"}
                 |}
-                |""".asJson
+                |""".asJson,
           )
-        }
-      )
+        },
+      ),
     ).provide(
       RestCardinalityServiceLive.layer,
       IriConverter.layer,
@@ -167,12 +167,12 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
       OntologyRepoLive.layer,
       OntologyCacheFake.withCache(ontology),
       StubCardinalitiesService.layer,
-      AppConfig.layer
+      AppConfig.layer,
     )
 
   final case class StubCardinalitiesService(
     setResponse: Ref[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]],
-    replaceResponse: Ref[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult]
+    replaceResponse: Ref[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult],
   ) extends CardinalityService {
 
     def setSetResponseFailure(response: List[CanSetCardinalityCheckResult.Failure]): UIO[Unit] =
@@ -182,7 +182,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
     override def canSetCardinality(
       classIri: InternalIri,
       propertyIri: InternalIri,
-      newCardinality: Cardinality
+      newCardinality: Cardinality,
     ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
       setResponse.get
 
@@ -191,20 +191,20 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
 
     def setReplaceResponseSuccess(): UIO[Unit] = replaceResponse.set(replaceSuccess)
     override def canReplaceCardinality(
-      classIri: InternalIri
+      classIri: InternalIri,
     ): Task[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult] = replaceResponse.get
   }
   object StubCardinalitiesService {
     def setSetResponseSuccess(): ZIO[StubCardinalitiesService, Nothing, Unit] =
       ZIO.serviceWithZIO[StubCardinalitiesService](_.setSetResponseSuccess())
     def setSetResponseFailure(
-      failure: List[CanSetCardinalityCheckResult.Failure]
+      failure: List[CanSetCardinalityCheckResult.Failure],
     ): ZIO[StubCardinalitiesService, Nothing, Unit] =
       ZIO.serviceWithZIO[StubCardinalitiesService](_.setSetResponseFailure(failure))
     def setReplaceResponseSuccess(): ZIO[StubCardinalitiesService, Nothing, Unit] =
       ZIO.serviceWithZIO[StubCardinalitiesService](_.setReplaceResponseSuccess())
     def setReplaceResponseFailure(
-      failure: ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.Failure
+      failure: ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.Failure,
     ): ZIO[StubCardinalitiesService, Nothing, Unit] =
       ZIO.serviceWithZIO[StubCardinalitiesService](_.setReplaceFailure(failure))
     private val replaceSuccess = CanReplaceCardinalityCheckResult.Success
@@ -213,7 +213,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
       for {
         refSet <-
           Ref.make[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]](
-            setSuccess
+            setSuccess,
           )
         refRepl <- Ref.make[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult](replaceSuccess)
       } yield StubCardinalitiesService(refSet, refRepl)

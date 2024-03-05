@@ -21,7 +21,7 @@ object RestrictedViewSpec extends ZIOSpecDefault {
           if (1 <= n && n <= 100) assertTrue(RestrictedView.Size.from(param).map(_.value) == Right(param))
           else assertTrue(RestrictedView.Size.from(param) == Left(s"Invalid RestrictedViewSize: pct:$n"))
         }
-      }
+      },
     ),
     suite("!n,n | dimensions form")(
       test("should succeed on passing the same x y dimensions") {
@@ -46,7 +46,7 @@ object RestrictedViewSpec extends ZIOSpecDefault {
       },
       test("should fail on passing empty value") {
         assertTrue(RestrictedView.Size.from("") == Left("RestrictedViewSize cannot be empty."))
-      }
-    )
+      },
+    ),
   )
 }

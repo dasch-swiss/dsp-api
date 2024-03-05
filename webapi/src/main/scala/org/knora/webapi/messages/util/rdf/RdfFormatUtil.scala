@@ -226,14 +226,14 @@ object RdfFormatUtil {
     rdfModel: RdfModel,
     rdfFormat: RdfFormat,
     schemaOptions: Set[Rendering] = Set.empty,
-    prettyPrint: Boolean = true
+    prettyPrint: Boolean = true,
   ): String =
     rdfFormat match {
       case JsonLD =>
         // Use JsonLDUtil to convert to JSON-LD.
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.fromRdfModel(
           model = rdfModel,
-          flatJsonLD = SchemaOptions.returnFlatJsonLD(schemaOptions)
+          flatJsonLD = SchemaOptions.returnFlatJsonLD(schemaOptions),
         )
 
         // Format the document as a string.
@@ -256,7 +256,7 @@ object RdfFormatUtil {
         formatNonJsonLD(
           rdfModel = rdfModel,
           rdfFormat = nonJsonLD,
-          prettyPrint = prettyPrint
+          prettyPrint = prettyPrint,
         )
     }
 
@@ -270,7 +270,7 @@ object RdfFormatUtil {
   def fileToRdfModel(file: Path, rdfFormat: NonJsonLD): RdfModel =
     inputStreamToRdfModel(
       inputStream = new BufferedInputStream(Files.newInputStream(file)),
-      rdfFormat = rdfFormat
+      rdfFormat = rdfFormat,
     )
 
   /**
@@ -284,7 +284,7 @@ object RdfFormatUtil {
     rdfModelToOutputStream(
       rdfModel = rdfModel,
       outputStream = new BufferedOutputStream(Files.newOutputStream(file)),
-      rdfFormat = rdfFormat
+      rdfFormat = rdfFormat,
     )
 
   /**
@@ -301,7 +301,7 @@ object RdfFormatUtil {
       jena.riot.RDFDataMgr.read(
         model.getDataset.asDatasetGraph,
         inputStream,
-        RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
+        RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat),
       )
       model
     }
@@ -354,7 +354,7 @@ object RdfFormatUtil {
     val streamRDF = new jena.riot.system.StreamRDF {
       val inner: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
         bufferedFileOutputStream,
-        RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
+        RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat),
       )
       def processStatement(statement: JenaStatement): Unit =
         inner.quad(
@@ -362,8 +362,8 @@ object RdfFormatUtil {
             jena.graph.NodeFactory.createURI(graphIri),
             JenaConversions.asJenaNode(statement.subj),
             JenaConversions.asJenaNode(statement.pred),
-            JenaConversions.asJenaNode(statement.obj)
-          )
+            JenaConversions.asJenaNode(statement.obj),
+          ),
         )
       override def start(): Unit                                      = inner.start()
       override def base(s: String): Unit                              = {}

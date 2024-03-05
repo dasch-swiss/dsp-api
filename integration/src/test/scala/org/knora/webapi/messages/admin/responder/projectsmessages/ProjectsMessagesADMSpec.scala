@@ -29,8 +29,8 @@ class ProjectsMessagesADMSpec extends CoreSpec {
           logo = None,
           ontologies = Seq.empty[IRI],
           status = true,
-          selfjoin = false
-        )
+          selfjoin = false,
+        ),
       )
     }
   }

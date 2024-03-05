@@ -22,7 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
  */
 final case class AuthenticationRouteV2()(
-  private implicit val runtime: Runtime[Authenticator]
+  private implicit val runtime: Runtime[Authenticator],
 ) extends AuthenticationV2JsonProtocol {
 
   def makeRoute: Route =

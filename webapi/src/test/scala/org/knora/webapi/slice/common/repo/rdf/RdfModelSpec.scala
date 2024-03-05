@@ -53,7 +53,7 @@ object RdfModelSpec extends ZIOSpecDefault {
         for {
           rdfModel <- RdfModel.fromTurtle("Not turtle").exit
         } yield assert(rdfModel)(failsWithA[RdfParsingError])
-      }
+      },
     ),
     suite("Get resource")(
       suite("Get resource by subject IRI")(
@@ -77,7 +77,7 @@ object RdfModelSpec extends ZIOSpecDefault {
               rdfModel <- RdfModel.fromTurtle(turtle)
               resource <- rdfModel.getResourceOrFail("http://example.org/does-not-exist").exit
             } yield assert(resource)(failsWithA[ResourceNotPresent])
-          }
+          },
         ),
         suite("getResource")(
           test("Get a resource that exists") {
@@ -99,8 +99,8 @@ object RdfModelSpec extends ZIOSpecDefault {
               rdfModel <- RdfModel.fromTurtle(turtle)
               resource <- rdfModel.getResource("http://example.org/does-not-exist")
             } yield assertTrue(resource.isEmpty)
-          }
-        )
+          },
+        ),
       ),
       suite("Get resource by property IRI and value")(
         suite("getResourceByPropertyStringValueOrFail")(
@@ -147,7 +147,7 @@ object RdfModelSpec extends ZIOSpecDefault {
               resource <-
                 rdfModel.getResourceByPropertyStringValueOrFail("http://example.org/predicate", "1.2").exit
             } yield assert(resource)(failsWithA[ResourceNotPresent])
-          }
+          },
         ),
         suite("getResourceByPropertyStringValue")(
           test("Get a resource that exists") {
@@ -190,10 +190,10 @@ object RdfModelSpec extends ZIOSpecDefault {
               rdfModel <- RdfModel.fromTurtle(turtle)
               resource <- rdfModel.getResourceByPropertyStringValue("http://example.org/predicate", "1.2")
             } yield assertTrue(resource.isEmpty)
-          }
-        )
-      )
-    )
+          },
+        ),
+      ),
+    ),
   )
 
   private val stringLiteralSuite =
@@ -254,7 +254,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteral[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getStringLiteralOrFail")(
         test("Get a string literal that exists") {
@@ -312,7 +312,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getStringLiteralOrFail[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getStringLiterals")(
         test("Get string literals that exist") {
@@ -326,7 +326,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[StringContainer]("http://example.org/predicate")
           } yield assert(literals)(
-            hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2")))
+            hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2"))),
           )
         },
         test("Get an empty list for string literals that do not exist") {
@@ -374,7 +374,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiterals[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getStringLiteralsOrFail")(
         test("Get string literals that exist") {
@@ -388,7 +388,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[StringContainer]("http://example.org/predicate")
           } yield assert(literals.toChunk)(
-            hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2")))
+            hasSameElementsDistinct(Chunk(StringContainer("object1"), StringContainer("object2"))),
           )
         },
         test("Fail to get string literals that do not exist") {
@@ -436,8 +436,8 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getStringLiteralsOrFail[FailingStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
-      )
+        },
+      ),
     )
 
   private val langStringLiteralSuite =
@@ -509,7 +509,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getLangStringLiteral[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getLangStringLiteralOrFail")(
         test("Get a multi-language string that exists and has a language tag") {
@@ -582,7 +582,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             literal <-
               resource.getLangStringLiteralOrFail[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getLangStringLiterals")(
         test("Get multi-language strings that exist") {
@@ -601,9 +601,9 @@ object RdfModelSpec extends ZIOSpecDefault {
               Chunk(
                 LangStringContainer(LangString("object1", Some("en"))),
                 LangStringContainer(LangString("object2", Some("de"))),
-                LangStringContainer(LangString("object3", None))
-              )
-            )
+                LangStringContainer(LangString("object3", None)),
+              ),
+            ),
           )
         },
         test("Get an empty list for multi-language strings that do not exist") {
@@ -658,7 +658,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getLangStringLiterals[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getLangStringLiteralsOrFail")(
         test("Get multi-language strings that exist") {
@@ -677,9 +677,9 @@ object RdfModelSpec extends ZIOSpecDefault {
               Chunk(
                 LangStringContainer(LangString("object1", Some("en"))),
                 LangStringContainer(LangString("object2", Some("de"))),
-                LangStringContainer(LangString("object3", None))
-              )
-            )
+                LangStringContainer(LangString("object3", None)),
+              ),
+            ),
           )
         },
         test("Fail to get multi-language strings that do not exist") {
@@ -738,8 +738,8 @@ object RdfModelSpec extends ZIOSpecDefault {
             literals <-
               resource.getLangStringLiteralsOrFail[FailingLangStringContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
-      )
+        },
+      ),
     )
 
   private val booleanLiteralSuite =
@@ -810,7 +810,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteral[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getBooleanLiteralOrFail")(
         test("Get a boolean literal that exists") {
@@ -878,7 +878,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literal  <- resource.getBooleanLiteralOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literal)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getBooleanLiterals")(
         test("Get boolean literals that exist") {
@@ -936,7 +936,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             literals <- resource.getBooleanLiterals[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
+        },
       ),
       suite("getBooleanLiteralsOrFail")(
         test("Get boolean literals that exist") {
@@ -998,8 +998,8 @@ object RdfModelSpec extends ZIOSpecDefault {
             literals <-
               resource.getBooleanLiteralsOrFail[FailingBooleanContainer]("http://example.org/predicate").exit
           } yield assert(literals)(failsWithA[ConversionError])
-        }
-      )
+        },
+      ),
     )
 
   private val objectsSuite =
@@ -1037,7 +1037,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIri("http://example.org/predicate").exit
           } yield assert(iri)(failsWithA[ObjectNotAResource])
-        }
+        },
       ),
       suite("getObjectIriOrFail")(
         test("Get an IRI that exists") {
@@ -1072,7 +1072,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iri      <- resource.getObjectIriOrFail("http://example.org/predicate").exit
           } yield assert(iri)(failsWithA[ObjectNotAResource])
-        }
+        },
       ),
       suite("getObjectIris")(
         test("Get IRIs that exist") {
@@ -1089,9 +1089,9 @@ object RdfModelSpec extends ZIOSpecDefault {
             hasSameElementsDistinct(
               Chunk(
                 InternalIri("http://example.org/object1"),
-                InternalIri("http://example.org/object2")
-              )
-            )
+                InternalIri("http://example.org/object2"),
+              ),
+            ),
           )
         },
         test("Get an empty list for IRIs that do not exist") {
@@ -1115,7 +1115,7 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIris("http://example.org/predicate").exit
           } yield assert(iris)(failsWithA[ObjectNotAResource])
-        }
+        },
       ),
       suite("getObjectIrisOrFail")(
         test("Get IRIs that exist") {
@@ -1132,9 +1132,9 @@ object RdfModelSpec extends ZIOSpecDefault {
             hasSameElementsDistinct(
               Chunk(
                 InternalIri("http://example.org/object1"),
-                InternalIri("http://example.org/object2")
-              )
-            )
+                InternalIri("http://example.org/object2"),
+              ),
+            ),
           )
         },
         test("Fail to get IRIs that do not exist") {
@@ -1158,8 +1158,8 @@ object RdfModelSpec extends ZIOSpecDefault {
             resource <- rdfModel.getResourceOrFail("http://example.org/subject")
             iris     <- resource.getObjectIrisOrFail("http://example.org/predicate").exit
           } yield assert(iris)(failsWithA[ObjectNotAResource])
-        }
-      )
+        },
+      ),
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("RdfModelSpec")(
@@ -1168,9 +1168,9 @@ object RdfModelSpec extends ZIOSpecDefault {
       suite("Literals")(
         stringLiteralSuite,
         langStringLiteralSuite,
-        booleanLiteralSuite
+        booleanLiteralSuite,
       ),
-      objectsSuite
-    )
+      objectsSuite,
+    ),
   )
 }

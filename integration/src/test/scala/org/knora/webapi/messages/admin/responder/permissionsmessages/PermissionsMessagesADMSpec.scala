@@ -35,8 +35,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         AdministrativePermissionForIriGetRequestADM(
           administrativePermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
+          apiRequestID = UUID.randomUUID(),
+        ),
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
@@ -47,8 +47,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         AdministrativePermissionForProjectGroupGetADM(
           projectIri = projectIri,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
@@ -58,8 +58,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         AdministrativePermissionForProjectGroupGetADM(
           projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
+          requestingUser = SharedTestDataADM.imagesUser02,
+        ),
       )
       assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
     }
@@ -72,10 +72,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateAdministrativePermissionAPIRequestADM(
             forProject = "invalid-project-IRI",
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, "Project IRI is invalid.")
     }
@@ -87,10 +87,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = groupIri,
-            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
     }
@@ -103,10 +103,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
     }
@@ -117,23 +117,23 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = invalidName,
           additionalInformation = None,
-          permissionCode = None
-        )
+          permissionCode = None,
+        ),
       )
       val exit = UnsafeZioRun.run(
         PermissionsRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = hasPermissions
+            hasPermissions = hasPermissions,
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](
         exit,
         s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
-          s"${AdministrativePermissionAbbreviations.toString}"
+          s"${AdministrativePermissionAbbreviations.toString}",
       )
     }
 
@@ -143,10 +143,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set.empty[PermissionADM]
+            hasPermissions = Set.empty[PermissionADM],
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, "Permissions needs to be supplied.")
     }
@@ -157,14 +157,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission),
           ),
-          SharedTestDataADM.imagesReviewerUser
-        )
+          SharedTestDataADM.imagesReviewerUser,
+        ),
       )
       assertFailsWithA[ForbiddenException](
         exit,
-        "You are logged in with username 'images-reviewer-user', but only a system administrator or project administrator has permissions for this operation."
+        "You are logged in with username 'images-reviewer-user', but only a system administrator or project administrator has permissions for this operation.",
       )
     }
 
@@ -175,8 +175,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ObjectAccessPermissionsForResourceGetADM(
           resourceIri = SharedTestDataADM.customValueIRI,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+        ),
       )
       // a value IRI is given instead of a resource IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid resource IRI: ${SharedTestDataADM.customValueIRI}")
@@ -186,8 +186,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ObjectAccessPermissionsForValueGetADM(
           valueIri = SharedTestDataADM.customResourceIRI,
-          requestingUser = SharedTestDataADM.anythingAdminUser
-        )
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+        ),
       )
       // a resource IRI is given instead of a value IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid value IRI: ${SharedTestDataADM.customResourceIRI}")
@@ -202,8 +202,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionGetRequestADM(
           projectIri = projectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
@@ -213,8 +213,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = Some(SharedTestDataADM.customResourceIRI),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       // a resource IRI is given instead of a resource class IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
@@ -225,8 +225,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.imagesProjectIri,
           propertyIri = Some(SharedTestDataADM.customValueIRI),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       // a value IRI is given instead of a property IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
@@ -238,8 +238,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Not allowed to supply groupIri and resourceClassIri together.")
     }
@@ -250,8 +250,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost),
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Not allowed to supply groupIri and propertyIri together.")
     }
@@ -260,11 +260,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(
-        caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given."
+        caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.",
       )
     }
 
@@ -273,11 +273,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.imagesProjectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
+          requestingUser = SharedTestDataADM.imagesUser02,
+        ),
       )
       assert(
-        caught.getMessage === s"Default object access permissions can only be queried by system and project admin."
+        caught.getMessage === s"Default object access permissions can only be queried by system and project admin.",
       )
     }
 
@@ -287,8 +287,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         DefaultObjectAccessPermissionForIriGetRequestADM(
           defaultObjectAccessPermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
+          apiRequestID = UUID.randomUUID(),
+        ),
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
@@ -299,8 +299,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedTestDataADM.customResourceIRI,
           targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       // a resource IRI is given instead of a resource class IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
@@ -312,8 +312,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
+          requestingUser = SharedTestDataADM.imagesUser02,
+        ),
       )
       assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
     }
@@ -325,8 +325,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = projectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.imagesUser02,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
@@ -337,8 +337,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           projectIri = SharedTestDataADM.imagesProjectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.anonymousUser,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Anonymous Users are not allowed.")
     }
@@ -351,8 +351,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesUser02,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
@@ -364,8 +364,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           resourceClassIri = SharedTestDataADM.customResourceIRI,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       // a resource IRI is given instead of a resource class IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
@@ -378,8 +378,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedTestDataADM.customValueIRI,
           targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       // a value IRI is given instead of a property IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
@@ -392,8 +392,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesReviewerUser,
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
+          requestingUser = SharedTestDataADM.imagesUser02,
+        ),
       )
       assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
     }
@@ -405,8 +405,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.anonymousUser,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Anonymous Users are not allowed.")
     }
@@ -420,10 +420,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Project IRI is invalid.")
     }
@@ -435,10 +435,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(groupIri),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
     }
@@ -451,10 +451,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
     }
@@ -465,10 +465,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-            hasPermissions = Set.empty[PermissionADM]
+            hasPermissions = Set.empty[PermissionADM],
           ),
-          SharedTestDataADM.imagesUser01
-        )
+          SharedTestDataADM.imagesUser01,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, "Permissions needs to be supplied.")
     }
@@ -478,14 +478,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = "invalid",
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
-          permissionCode = Some(8)
-        )
+          permissionCode = Some(8),
+        ),
       )
       val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
       assertFailsWithA[BadRequestException](
         exit,
         "Invalid value for name parameter of hasPermissions: invalid, it should be one of " +
-          s"${EntityPermissionAbbreviations.toString}"
+          s"${EntityPermissionAbbreviations.toString}",
       )
     }
 
@@ -495,15 +495,15 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = OntologyConstants.KnoraBase.ChangeRightsPermission,
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
-          permissionCode = Some(invalidCode)
-        )
+          permissionCode = Some(invalidCode),
+        ),
       )
 
       val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
       assertFailsWithA[BadRequestException](
         exit,
         s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
-          s"${PermissionTypeAndCodes.values.toString}"
+          s"${PermissionTypeAndCodes.values.toString}",
       )
     }
 
@@ -514,14 +514,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = name,
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
-          permissionCode = Some(code)
-        )
+          permissionCode = Some(code),
+        ),
       )
 
       val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
       assertFailsWithA[BadRequestException](
         exit,
-        s"Given permission code $code and permission name $name are not consistent."
+        s"Given permission code $code and permission name $name are not consistent.",
       )
     }
 
@@ -531,14 +531,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = "",
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
-          permissionCode = None
-        )
+          permissionCode = None,
+        ),
       )
 
       val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
       assertFailsWithA[BadRequestException](
         exit,
-        s"One of permission code or permission name must be provided for a default object access permission."
+        s"One of permission code or permission name must be provided for a default object access permission.",
       )
     }
 
@@ -548,13 +548,13 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionADM(
           name = OntologyConstants.KnoraBase.ChangeRightsPermission,
           additionalInformation = None,
-          permissionCode = Some(8)
-        )
+          permissionCode = Some(8),
+        ),
       )
       val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
       assertFailsWithA[BadRequestException](
         exit,
-        s"additionalInformation of a default object access permission type cannot be empty."
+        s"additionalInformation of a default object access permission type cannot be empty.",
       )
     }
 
@@ -564,14 +564,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-            hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+            hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)),
           ),
-          SharedTestDataADM.anythingUser2
-        )
+          SharedTestDataADM.anythingUser2,
+        ),
       )
       assertFailsWithA[ForbiddenException](
         exit,
-        "You are logged in with username 'anything.user02', but only a system administrator or project administrator has permissions for this operation."
+        "You are logged in with username 'anything.user02', but only a system administrator or project administrator has permissions for this operation.",
       )
     }
 
@@ -582,10 +582,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.rootUser
-        )
+          SharedTestDataADM.rootUser,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and resourceClassIri together.")
     }
@@ -597,10 +597,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.rootUser
-        )
+          SharedTestDataADM.rootUser,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and propertyIri together.")
     }
@@ -611,10 +611,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.rootUser
-        )
+          SharedTestDataADM.rootUser,
+        ),
       )
       assertFailsWithA[BadRequestException](exit, s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
     }
@@ -625,14 +625,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.rootUser
-        )
+          SharedTestDataADM.rootUser,
+        ),
       )
       assertFailsWithA[BadRequestException](
         exit,
-        s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost"
+        s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost",
       )
     }
 
@@ -641,14 +641,14 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionsRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
-          SharedTestDataADM.rootUser
-        )
+          SharedTestDataADM.rootUser,
+        ),
       )
       assertFailsWithA[BadRequestException](
         exit,
-        "Either a group, a resource class, a property, or a combination of resource class and property must be given."
+        "Either a group, a resource class, a property, or a combination of resource class and property must be given.",
       )
     }
   }
@@ -744,8 +744,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val caught = intercept[BadRequestException](
         PermissionByIriGetRequestADM(
           permissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
+          requestingUser = SharedTestDataADM.imagesUser02,
+        ),
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }

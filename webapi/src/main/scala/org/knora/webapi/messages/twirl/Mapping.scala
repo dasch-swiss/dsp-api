@@ -17,7 +17,7 @@ import org.knora.webapi.IRI
 case class MappingStandoffDatatypeClass(
   datatype: IRI,
   attributeName: String,
-  mappingStandoffDataTypeClassElementIri: IRI
+  mappingStandoffDataTypeClassElementIri: IRI,
 )
 
 /**
@@ -32,7 +32,7 @@ case class MappingXMLAttribute(
   attributeName: String,
   namespace: String,
   standoffProperty: IRI,
-  mappingXMLAttributeElementIri: IRI
+  mappingXMLAttributeElementIri: IRI,
 )
 
 /**
@@ -54,5 +54,5 @@ case class MappingElement(
   attributes: Seq[MappingXMLAttribute] = Seq.empty[MappingXMLAttribute],
   standoffDataTypeClass: Option[MappingStandoffDatatypeClass] = None,
   mappingElementIri: IRI,
-  separatorRequired: Boolean
+  separatorRequired: Boolean,
 )

@@ -21,7 +21,7 @@ import org.knora.webapi.messages.StringFormatter
  */
 case class IntermediateTypeInspectionResult(
   entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]],
-  entitiesInferredFromPropertyIris: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty
+  entitiesInferredFromPropertyIris: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty,
 ) {
 
   /**
@@ -35,7 +35,7 @@ case class IntermediateTypeInspectionResult(
   def addTypes(
     entity: TypeableEntity,
     entityTypes: Set[GravsearchEntityTypeInfo],
-    inferredFromPropertyIri: Boolean = false
+    inferredFromPropertyIri: Boolean = false,
   ): IntermediateTypeInspectionResult =
     if (entityTypes.nonEmpty) {
       val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
@@ -50,7 +50,7 @@ case class IntermediateTypeInspectionResult(
 
       IntermediateTypeInspectionResult(
         entities = entities + (entity -> newTypes),
-        entitiesInferredFromPropertyIris = newEntitiesInferredFromPropertyIris
+        entitiesInferredFromPropertyIris = newEntitiesInferredFromPropertyIris,
       )
     } else {
       this
@@ -81,7 +81,7 @@ case class IntermediateTypeInspectionResult(
 
     IntermediateTypeInspectionResult(
       entities = entities + (entity -> remainingTypes),
-      entitiesInferredFromPropertyIris = updatedEntitiesInferredFromProperties
+      entitiesInferredFromPropertyIris = updatedEntitiesInferredFromProperties,
     )
   }
 
@@ -114,7 +114,7 @@ case class IntermediateTypeInspectionResult(
           throw AssertionException(s"Cannot generate final type inspection result because of inconsistent types")
         }
       },
-      entitiesInferredFromProperties = entitiesInferredFromPropertyIris
+      entitiesInferredFromProperties = entitiesInferredFromPropertyIris,
     )
 }
 
@@ -127,11 +127,11 @@ object IntermediateTypeInspectionResult {
    * @param entities the set of typeable entities found in the WHERE clause of a Gravsearch query.
    */
   def apply(
-    entities: Set[TypeableEntity]
+    entities: Set[TypeableEntity],
   )(implicit stringFormatter: StringFormatter): IntermediateTypeInspectionResult = {
     // Make an IntermediateTypeInspectionResult in which each typeable entity has no types.
     val emptyResult = new IntermediateTypeInspectionResult(
-      entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap
+      entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap,
     )
 
     // Collect the typeable IRIs used.
@@ -149,7 +149,7 @@ object IntermediateTypeInspectionResult {
           TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(
             objectTypeIri = objectTypeIri.toSmartIri,
             objectIsResourceType = !isValue,
-            objectIsValueType = isValue
+            objectIsValueType = isValue,
           )
         }
 

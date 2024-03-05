@@ -77,7 +77,7 @@ object DocsGenerator extends ZIOAppDefault {
     ResourceInfoEndpoints.layer,
     SearchEndpoints.layer,
     StoreEndpoints.layer,
-    UsersEndpoints.layer
+    UsersEndpoints.layer,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {
@@ -86,8 +86,8 @@ object DocsGenerator extends ZIOAppDefault {
       .servers(
         List(
           Server(url = "http://localhost:3333", description = Some("Local development server")),
-          Server(url = "https://api.dasch.swiss", description = Some("Production server"))
-        )
+          Server(url = "https://api.dasch.swiss", description = Some("Production server")),
+        ),
       )
     for {
       _     <- ZIO.logInfo(s"Writing to $path")

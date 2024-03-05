@@ -24,7 +24,7 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(IriIdentifier, Inter
 
   override def findByProjectAndResourceClass(
     projectIri: IriIdentifier,
-    resourceClass: InternalIri
+    resourceClass: InternalIri,
   ): Task[List[ResourceInfo]] =
     entitiesRef.get.map(_.getOrElse((projectIri, resourceClass), List.empty))
 
@@ -48,21 +48,21 @@ object ResourceInfoRepoFake {
 
   def findByProjectAndResourceClass(
     projectIri: IriIdentifier,
-    resourceClass: InternalIri
+    resourceClass: InternalIri,
   ): ZIO[ResourceInfoRepoFake, Throwable, List[ResourceInfo]] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.findByProjectAndResourceClass(projectIri, resourceClass))
 
   def addAll(
     items: List[ResourceInfo],
     projectIri: IriIdentifier,
-    resourceClass: InternalIri
+    resourceClass: InternalIri,
   ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.addAll(items, projectIri, resourceClass))
 
   def add(
     entity: ResourceInfo,
     projectIri: IriIdentifier,
-    resourceClass: InternalIri
+    resourceClass: InternalIri,
   ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.add(entity, projectIri, resourceClass))
 

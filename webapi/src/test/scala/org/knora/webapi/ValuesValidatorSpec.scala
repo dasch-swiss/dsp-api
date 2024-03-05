@@ -26,7 +26,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("not parse invalid input") {
       val res = ValuesValidator.validateBoolean("foo")
       assert(res)(isNone)
-    }
+    },
   )
 
   val integerSuite = suite("validateInt")(
@@ -37,7 +37,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("not parse invalid input") {
       val res = ValuesValidator.validateInt("1.1")
       assert(res)(isNone)
-    }
+    },
   )
 
   val bigDecimalSuite = suite("validateBigDecimal")(
@@ -56,7 +56,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("not parse invalid input") {
       val res = ValuesValidator.validateBigDecimal("false")
       assert(res)(isNone)
-    }
+    },
   )
 
   val geometrySuite = suite("validateGeometryString")(
@@ -79,7 +79,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("not parse invalid JSON") {
       val res = ValuesValidator.validateGeometryString("not valid json")
       assert(res)(isNone)
-    }
+    },
   )
 
   val colorSuite = suite("validateColor")(
@@ -101,7 +101,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("not parse a a non-hexadecimal color code") {
       val res = ValuesValidator.validateColor("rgb(127,255,0)")
       assert(res)(isNone)
-    }
+    },
   )
 
   val dateSuite = suite("validateDate")(
@@ -125,7 +125,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
         val dateString = "GREGORIAN:0 BC"
         val res        = ValuesValidator.validateDate(dateString)
         assert(res)(isNone)
-      }
+      },
     ),
     suite("accept date")(
       test("GREGORIAN:2017") {
@@ -197,8 +197,8 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
         val dateString = "GREGORIAN:10 BC:1 AD"
         val res        = ValuesValidator.validateDate(dateString)
         assert(res)(isSome(equalTo(dateString)))
-      }
-    )
+      },
+    ),
   )
 
   val xsdTimestampSuite = suite("xsdDateTimeStampToInstant")(
@@ -212,7 +212,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
       val timestamp = "2018-06-04T08:xy:22Z"
       val res       = ValuesValidator.xsdDateTimeStampToInstant(timestamp)
       assert(res)(isNone)
-    }
+    },
   )
 
   val arkTimestampSuite =
@@ -231,7 +231,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
         val dateString = "20180604T085622Z"
         val res        = ValuesValidator.arkTimestampToInstant(dateString)
         assert(res)(isSome(equalTo(Instant.parse("2018-06-04T08:56:22Z"))))
-      }
+      },
     )
 
   val optionStringToBooleanSuite = suite("optionStringToBoolean")(
@@ -254,7 +254,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     test("provide the fallback value for an invalid string") {
       val res = ValuesValidator.optionStringToBoolean(Some("invalid"), fallback = true)
       assertTrue(res)
-    }
+    },
   )
 
   override def spec: Spec[Any, Nothing] = suite("ValuesValidator")(
@@ -266,6 +266,6 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     dateSuite,
     xsdTimestampSuite,
     arkTimestampSuite,
-    optionStringToBooleanSuite
+    optionStringToBooleanSuite,
   )
 }

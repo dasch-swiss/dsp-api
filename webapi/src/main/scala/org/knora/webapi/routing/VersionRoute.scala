@@ -35,9 +35,9 @@ final case class VersionRoute() {
           "scala"     -> JsString(BuildInfo.scalaVersion),
           "pekkoHttp" -> JsString(BuildInfo.pekkoHttp),
           "sipi"      -> JsString(sipiVersion),
-          "fuseki"    -> JsString(fusekiVersion)
-        ).prettyPrint
-      )
+          "fuseki"    -> JsString(fusekiVersion),
+        ).prettyPrint,
+      ),
     )
   }
 

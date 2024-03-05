@@ -51,7 +51,7 @@ final case class UsersRestService(
   passwordService: PasswordService,
   projectService: ProjectADMService,
   responder: UsersResponder,
-  format: KnoraResponseRenderer
+  format: KnoraResponseRenderer,
 ) {
 
   def getAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
@@ -129,7 +129,7 @@ final case class UsersRestService(
   def updateUser(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: BasicUserInformationChangeRequest
+    changeRequest: BasicUserInformationChangeRequest,
   ): Task[UserResponseADM] = for {
     _    <- ensureNotABuiltInUser(userIri)
     _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
@@ -139,7 +139,7 @@ final case class UsersRestService(
                   email = changeRequest.email,
                   givenName = changeRequest.givenName,
                   familyName = changeRequest.familyName,
-                  lang = changeRequest.lang
+                  lang = changeRequest.lang,
                 )
     updated  <- knoraUserService.updateUser(user, theChange)
     response <- asExternalUserResponseADM(requestingUser, updated)
@@ -148,7 +148,7 @@ final case class UsersRestService(
   def changePassword(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: PasswordChangeRequest
+    changeRequest: PasswordChangeRequest,
   ): Task[UserResponseADM] =
     for {
       _ <- ensureNotABuiltInUser(userIri)
@@ -158,8 +158,8 @@ final case class UsersRestService(
              .unless(
                passwordService.matches(
                  changeRequest.requesterPassword,
-                 PasswordHash.unsafeFrom(requestingUser.password.getOrElse(""))
-               )
+                 PasswordHash.unsafeFrom(requestingUser.password.getOrElse("")),
+               ),
              )
       user <- getKnoraUserOrNotFound(userIri)
       response <- knoraUserService
@@ -170,7 +170,7 @@ final case class UsersRestService(
   def changeStatus(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: StatusChangeRequest
+    changeRequest: StatusChangeRequest,
   ): Task[UserResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
@@ -183,7 +183,7 @@ final case class UsersRestService(
   def changeSystemAdmin(
     requestingUser: User,
     userIri: UserIri,
-    changeRequest: SystemAdminChangeRequest
+    changeRequest: SystemAdminChangeRequest,
   ): Task[UserResponseADM] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
@@ -197,7 +197,7 @@ final case class UsersRestService(
   def addUserToProject(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): Task[UserResponseADM] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
@@ -224,7 +224,7 @@ final case class UsersRestService(
   def addUserToProjectAsAdmin(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): Task[UserResponseADM] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
@@ -238,7 +238,7 @@ final case class UsersRestService(
   def removeUserFromProject(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): Task[UserResponseADM] =
     for {
       _          <- ensureNotABuiltInUser(userIri)
@@ -252,7 +252,7 @@ final case class UsersRestService(
   def removeUserFromProjectAsAdmin(
     requestingUser: User,
     userIri: UserIri,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): Task[UserResponseADM] =
     for {
       _       <- ensureNotABuiltInUser(userIri)
@@ -268,7 +268,7 @@ final case class UsersRestService(
   def addUserToGroup(
     requestingUser: User,
     userIri: UserIri,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): Task[UserResponseADM] =
     for {
       _     <- ensureNotABuiltInUser(userIri)
@@ -284,7 +284,7 @@ final case class UsersRestService(
   def removeUserFromGroup(
     requestingUser: User,
     userIri: UserIri,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): Task[UserResponseADM] =
     for {
       _    <- ensureNotABuiltInUser(userIri)

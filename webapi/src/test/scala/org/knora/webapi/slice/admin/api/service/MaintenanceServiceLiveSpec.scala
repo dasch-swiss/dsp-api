@@ -37,7 +37,7 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
   private val testAssetId              = AssetId.unsafeFrom("some-asset-id")
   private val expectedDimension        = Dimensions(5202, 3602)
   private val testReport = ProjectsWithBakfilesReport(
-    Chunk(ProjectWithBakFiles(testProject.shortcode, Chunk(ReportAsset(testAssetId, expectedDimension))))
+    Chunk(ProjectWithBakFiles(testProject.shortcode, Chunk(ReportAsset(testAssetId, expectedDimension)))),
   )
   private val testValueIri = "http://rdfh.ch/some-value-iri"
 
@@ -100,7 +100,7 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(actualDimension == expectedDimension)
     },
     test(
-      "fixTopLeftDimensions should not transpose dimension for an existing StillImageFileValue if the dimensions are correct"
+      "fixTopLeftDimensions should not transpose dimension for an existing StillImageFileValue if the dimensions are correct",
     ) {
       for {
         // given
@@ -111,13 +111,13 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
         // then
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
-    }
+    },
   ).provide(
     MaintenanceServiceLive.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
     PredicateObjectMapper.layer,
     IriConverter.layer,
-    StringFormatter.test
+    StringFormatter.test,
   )
 }

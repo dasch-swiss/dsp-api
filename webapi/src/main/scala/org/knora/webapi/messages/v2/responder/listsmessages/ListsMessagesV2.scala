@@ -50,10 +50,10 @@ trait ListResponderResponseV2 {
     iri: IRI,
     stringVals: StringLiteralSequenceV2,
     userLang: String,
-    fallbackLang: String
+    fallbackLang: String,
   ): Map[IRI, JsonLDString] =
     Map(
-      iri -> stringVals.getPreferredLanguage(userLang, fallbackLang)
+      iri -> stringVals.getPreferredLanguage(userLang, fallbackLang),
     ).collect { case (iri: IRI, Some(strVal: String)) =>
       iri -> JsonLDString(strVal)
     }
@@ -74,7 +74,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -93,13 +93,13 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
           OntologyConstants.Rdfs.Comment,
           node.comments,
           userLang,
-          fallbackLang
+          fallbackLang,
         )
 
       val position: Map[IRI, JsonLDInt] = Map(
         OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(
-          node.position
-        )
+          node.position,
+        ),
       )
 
       val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
@@ -107,8 +107,8 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
           OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
             node.children.map { (childNode: ListChildNodeADM) =>
               makeNode(childNode) // recursion
-            }
-          )
+            },
+          ),
         )
       } else {
         // no children (abort condition for recursion)
@@ -117,16 +117,16 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
       val nodeHasRootNode: Map[IRI, JsonLDObject] = Map(
         OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil
-          .iriToJsonLDObject(node.hasRootNode)
+          .iriToJsonLDObject(node.hasRootNode),
       )
 
       JsonLDObject(
         Map(
           "@id" -> JsonLDString(node.id),
           "@type" -> JsonLDString(
-            OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString
-          )
-        ) ++ position ++ nodeHasRootNode ++ children ++ label ++ comment
+            OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
+          ),
+        ) ++ position ++ nodeHasRootNode ++ children ++ label ++ comment,
       )
     }
 
@@ -143,8 +143,8 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
         OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
           list.children.map { (childNode: ListNodeADM) =>
             makeNode(childNode.asInstanceOf[ListChildNodeADM])
-          }
-        )
+          },
+        ),
       )
     } else {
       Map.empty[IRI, JsonLDArray]
@@ -152,29 +152,29 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
     val project: Map[IRI, JsonLDObject] = Map(
       OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil
-        .iriToJsonLDObject(listinfo.projectIri)
+        .iriToJsonLDObject(listinfo.projectIri),
     )
 
     val body = rdf.JsonLDObject(
       Map(
         "@id" -> JsonLDString(listinfo.id),
         "@type" -> JsonLDString(
-          OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString
+          OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
         ),
-        OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDBoolean(true)
-      ) ++ project ++ children ++ label ++ comment
+        OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDBoolean(true),
+      ) ++ project ++ children ++ label ++ comment,
     )
 
     val context = JsonLDObject(
       Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
         ),
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
         "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
         "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
-      )
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
+      ),
     )
 
     JsonLDDocument(body, context)
@@ -202,7 +202,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -225,9 +225,9 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
           Map(
             "@id" -> JsonLDString(root.id),
             "@type" -> JsonLDString(
-              OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString
-            )
-          ) ++ rootNode ++ label ++ comment ++ position
+              OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
+            ),
+          ) ++ rootNode ++ label ++ comment ++ position,
         )
       }
 
@@ -241,22 +241,22 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
         val position: Map[IRI, JsonLDInt] = Map(
           OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(
-            child.position
-          )
+            child.position,
+          ),
         )
 
         val rootNode = Map(
           OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDUtil
-            .iriToJsonLDObject(child.hasRootNode)
+            .iriToJsonLDObject(child.hasRootNode),
         )
 
         JsonLDObject(
           Map(
             "@id" -> JsonLDString(child.id),
             "@type" -> JsonLDString(
-              OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString
-            )
-          ) ++ rootNode ++ label ++ comment ++ position
+              OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString,
+            ),
+          ) ++ rootNode ++ label ++ comment ++ position,
         )
       }
     }
@@ -264,13 +264,13 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
     val context = JsonLDObject(
       Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
         ),
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
         "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
         "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
-      )
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
+      ),
     )
 
     JsonLDDocument(body, context)

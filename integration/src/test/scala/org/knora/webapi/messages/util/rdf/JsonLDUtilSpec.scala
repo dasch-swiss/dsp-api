@@ -108,7 +108,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read a JSON-LD file.
       val inputJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld")
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
         )
 
       // Parse it to a JsonLDDocument.
@@ -120,7 +120,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read an isomorphic Turtle file.
       val expectedTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl")
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
         )
 
       // Parse the Turtle to an RDF4J Model.
@@ -134,7 +134,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read a Turtle file.
       val turtle =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl")
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"),
         )
 
       // Parse it to an RDF4J Model.
@@ -152,7 +152,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld")
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"),
         )
 
       // Parse it to an RDF4J Model.
@@ -166,7 +166,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read a JSON-LD file.
       val inputJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
 
       // Parse it to a JsonLDDocument.
@@ -184,7 +184,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read an isomorphic Turtle file.
       val expectedTurtle =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
 
       // Parse it to an RDF4J Model.
@@ -197,7 +197,7 @@ class JsonLDUtilSpec() extends CoreSpec {
     "convert an RDF4J Model representing a resource to JSON-LD" in {
       // Read a Turtle file.
       val turtle = FileUtil.readTextFile(
-        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
       )
 
       // Parse it to an RDF4J Model.
@@ -215,7 +215,7 @@ class JsonLDUtilSpec() extends CoreSpec {
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
 
       // Parse it to a JsonLDDocument and compare it with the generated one.
@@ -263,11 +263,11 @@ class JsonLDUtilSpec() extends CoreSpec {
               "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
               "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1"))
-              )
-            )
-          )
-        )
+                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1")),
+              ),
+            ),
+          ),
+        ),
       )
 
       val expectedWithFoo2AtTopLevel = JsonLDObject(
@@ -281,16 +281,16 @@ class JsonLDUtilSpec() extends CoreSpec {
               "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
               "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
-              )
-            )
-          )
-        )
+                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")),
+              ),
+            ),
+          ),
+        ),
       )
 
       assert(
         outputJsonLD.body == expectedWithFoo1AtTopLevel ||
-          outputJsonLD.body == expectedWithFoo2AtTopLevel
+          outputJsonLD.body == expectedWithFoo2AtTopLevel,
       )
     }
 
@@ -331,8 +331,8 @@ class JsonLDUtilSpec() extends CoreSpec {
           "http://example.org/foo#hasBar" -> JsonLDObject(
             value = Map(
               "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-            )
+              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1"),
+            ),
           ),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
@@ -344,12 +344,12 @@ class JsonLDUtilSpec() extends CoreSpec {
               "http://example.org/foo#hasBar" -> JsonLDObject(value =
                 Map(
                   "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-                  "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
-                )
-              )
-            )
-          )
-        )
+                  "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
+                ),
+              ),
+            ),
+          ),
+        ),
       )
 
       assert(hierarchicalJsonLD.body == expectedHierarchicalJsonLD)
@@ -369,13 +369,13 @@ class JsonLDUtilSpec() extends CoreSpec {
                   "http://example.org/foo#hasBar" -> JsonLDObject(value =
                     Map(
                       "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-                      "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-                    )
+                      "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1"),
+                    ),
                   ),
                   "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
-                    Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
-                  )
-                )
+                    Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")),
+                  ),
+                ),
               ),
               JsonLDObject(value =
                 Map(
@@ -386,14 +386,14 @@ class JsonLDUtilSpec() extends CoreSpec {
                   "http://example.org/foo#hasBar" -> JsonLDObject(value =
                     Map(
                       "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
-                      "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar")
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
+                      "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       )
 
       assert(flatJsonLD.body == expectedFlatJsonLD)
@@ -417,7 +417,7 @@ class JsonLDUtilSpec() extends CoreSpec {
 
       val expectedJsonLDDocument = JsonLDDocument(
         body = JsonLDObject(Map("http://ns.dasch.swiss/repository#hasLicense" -> JsonLDObject(Map.empty))),
-        context = JsonLDObject(Map.empty)
+        context = JsonLDObject(Map.empty),
       )
 
       assert(jsonLDDocument == expectedJsonLDDocument)

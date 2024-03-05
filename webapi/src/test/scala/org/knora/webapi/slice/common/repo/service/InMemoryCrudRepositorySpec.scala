@@ -57,6 +57,6 @@ object InMemoryCrudRepositorySpec extends ZIOSpecDefault {
         _      <- repo(_.deleteAllById(twoEntities.map(_.id)))
         actual <- repo(_.findAll())
         count  <- repo(_.count())
-      } yield assertTrue(actual.isEmpty, count == 0))
+      } yield assertTrue(actual.isEmpty, count == 0)),
     ).provide(InMemoryRepository.layer)
 }

@@ -80,7 +80,7 @@ final case class ResourcesResponderV2Live(
   permissionUtilADM: PermissionUtilADM,
   projectRepo: KnoraProjectRepo,
   searchResponderV2: SearchResponderV2,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends ResourcesResponderV2
     with MessageHandler
     with LazyLogging {
@@ -96,7 +96,7 @@ final case class ResourcesResponderV2Live(
   private case class ResourceReadyToCreate(
     sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
     values: Map[SmartIri, Seq[UnverifiedValueV2]],
-    hasStandoffLink: Boolean
+    hasStandoffLink: Boolean,
   )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
@@ -111,7 +111,7 @@ final case class ResourcesResponderV2Live(
           withDeleted,
           targetSchema,
           schemaOptions,
-          requestingUser
+          requestingUser,
         ) =>
       getResourcesV2(
         resIris,
@@ -122,13 +122,13 @@ final case class ResourcesResponderV2Live(
         showDeletedValues = false,
         targetSchema,
         schemaOptions,
-        requestingUser
+        requestingUser,
       )
     case ResourcesPreviewGetRequestV2(
           resIris,
           withDeletedResource,
           targetSchema,
-          requestingUser
+          requestingUser,
         ) =>
       getResourcePreviewV2(resIris, withDeletedResource, targetSchema, requestingUser)
     case ResourceTEIGetRequestV2(
@@ -137,7 +137,7 @@ final case class ResourcesResponderV2Live(
           mappingIri,
           gravsearchTemplateIri,
           headerXSLTIri,
-          requestingUser
+          requestingUser,
         ) =>
       getResourceAsTeiV2(
         resIri,
@@ -145,7 +145,7 @@ final case class ResourcesResponderV2Live(
         mappingIri,
         gravsearchTemplateIri,
         headerXSLTIri,
-        requestingUser
+        requestingUser,
       )
 
     case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -194,7 +194,7 @@ final case class ResourcesResponderV2Live(
         // Check link targets and list nodes that should exist.
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
-               requestingUser = createResourceRequestV2.requestingUser
+               requestingUser = createResourceRequestV2.requestingUser,
              )
 
         _ <- checkListNodes(internalCreateResource.flatValues)
@@ -203,7 +203,7 @@ final case class ResourcesResponderV2Live(
         linkTargetClasses <- getLinkTargetClasses(
                                resourceIri: IRI,
                                internalCreateResources = Seq(internalCreateResource),
-                               requestingUser = createResourceRequestV2.requestingUser
+                               requestingUser = createResourceRequestV2.requestingUser,
                              )
 
         // Get the definitions of the resource class and its properties, as well as of the classes of all
@@ -213,12 +213,12 @@ final case class ResourcesResponderV2Live(
             .ask[EntityInfoGetResponseV2](
               EntityInfoGetRequestV2(
                 classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-                requestingUser = createResourceRequestV2.requestingUser
-              )
+                requestingUser = createResourceRequestV2.requestingUser,
+              ),
             )
 
         resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
-                                               internalCreateResource.resourceClassIri
+                                               internalCreateResource.resourceClassIri,
                                              )
 
         propertyEntityInfoResponse <-
@@ -226,13 +226,13 @@ final case class ResourcesResponderV2Live(
             .ask[EntityInfoGetResponseV2](
               EntityInfoGetRequestV2(
                 propertyIris = resourceClassInfo.knoraResourceProperties,
-                requestingUser = createResourceRequestV2.requestingUser
-              )
+                requestingUser = createResourceRequestV2.requestingUser,
+              ),
             )
 
         allEntityInfo = EntityInfoGetResponseV2(
                           classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
-                          propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
+                          propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap,
                         )
 
         // Get the default permissions of the resource class.
@@ -240,7 +240,7 @@ final case class ResourcesResponderV2Live(
         defaultResourcePermissionsMap <- getResourceClassDefaultPermissions(
                                            projectIri = createResourceRequestV2.createResource.projectADM.id,
                                            resourceClassIris = Set(internalCreateResource.resourceClassIri),
-                                           requestingUser = createResourceRequestV2.requestingUser
+                                           requestingUser = createResourceRequestV2.requestingUser,
                                          )
 
         defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
@@ -250,12 +250,12 @@ final case class ResourcesResponderV2Live(
         defaultPropertyPermissionsMap <- getDefaultPropertyPermissions(
                                            projectIri = createResourceRequestV2.createResource.projectADM.id,
                                            resourceClassProperties = Map(
-                                             internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
+                                             internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet,
                                            ),
-                                           requestingUser = createResourceRequestV2.requestingUser
+                                           requestingUser = createResourceRequestV2.requestingUser,
                                          )
         defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
-                                                              internalCreateResource.resourceClassIri
+                                                              internalCreateResource.resourceClassIri,
                                                             )
 
         // Make a versionDate for the resource and its values.
@@ -272,7 +272,7 @@ final case class ResourcesResponderV2Live(
                                    defaultResourcePermissions = defaultResourcePermissions,
                                    defaultPropertyPermissions = defaultPropertyPermissions,
                                    creationDate = creationDate,
-                                   requestingUser = createResourceRequestV2.requestingUser
+                                   requestingUser = createResourceRequestV2.requestingUser,
                                  )
 
         // Get the IRI of the named graph in which the resource will be created.
@@ -284,7 +284,7 @@ final case class ResourcesResponderV2Live(
                          dataNamedGraph = dataNamedGraph,
                          resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
                          projectIri = createResourceRequestV2.createResource.projectADM.id,
-                         creatorIri = createResourceRequestV2.requestingUser.id
+                         creatorIri = createResourceRequestV2.requestingUser.id,
                        )
         // Do the update.
         _ <- triplestore.query(Update(sparqlUpdate))
@@ -293,7 +293,7 @@ final case class ResourcesResponderV2Live(
         previewOfCreatedResource <- verifyResource(
                                       resourceReadyToCreate = resourceReadyToCreate,
                                       projectIri = createResourceRequestV2.createResource.projectADM.id,
-                                      requestingUser = createResourceRequestV2.requestingUser
+                                      requestingUser = createResourceRequestV2.requestingUser,
                                     )
       } yield previewOfCreatedResource
     }
@@ -308,7 +308,7 @@ final case class ResourcesResponderV2Live(
       projectIri = createResourceRequestV2.createResource.projectADM.id
       _ <-
         ZIO.when(
-          projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+          projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         )(ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")))
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
@@ -318,8 +318,8 @@ final case class ResourcesResponderV2Live(
                                   .ask[ReadOntologyMetadataV2](
                                     OntologyMetadataGetByIriRequestV2(
                                       Set(resourceClassOntologyIri),
-                                      createResourceRequestV2.requestingUser
-                                    )
+                                      createResourceRequestV2.requestingUser,
+                                    ),
                                   )
       ontologyMetadata <- ZIO
                             .fromOption(readOntologyMetadataV2.ontologies.headOption)
@@ -329,12 +329,12 @@ final case class ResourcesResponderV2Live(
           .fromOption(ontologyMetadata.projectIri)
           .mapBoth(
             _ => InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"),
-            _.toString()
+            _.toString(),
           )
 
       _ <-
         ZIO.when(
-          projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
+          projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri),
         ) {
           val msg =
             s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
@@ -349,7 +349,7 @@ final case class ResourcesResponderV2Live(
 
       _ <- ZIO.when(
              !createResourceRequestV2.requestingUser.permissions
-               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri)
+               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri),
            ) {
              val msg =
                s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
@@ -359,14 +359,14 @@ final case class ResourcesResponderV2Live(
       resourceIri <-
         iriService.checkOrCreateEntityIri(
           createResourceRequestV2.createResource.resourceIri,
-          stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode)
+          stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode),
         )
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
                       createResourceRequestV2.apiRequestID,
                       resourceIri,
-                      makeTaskFuture(resourceIri)
+                      makeTaskFuture(resourceIri),
                     )
     } yield taskResult
 
@@ -391,7 +391,7 @@ final case class ResourcesResponderV2Live(
    * @return a [[UpdateResourceMetadataResponseV2]].
    */
   private def updateResourceMetadataV2(
-    updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2
+    updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2,
   ): Task[UpdateResourceMetadataResponseV2] = {
     def makeTaskFuture: Task[UpdateResourceMetadataResponseV2] = {
       for {
@@ -399,7 +399,7 @@ final case class ResourcesResponderV2Live(
         resourcesSeq <- getResourcePreviewV2(
                           resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                           targetSchema = ApiV2Complex,
-                          requestingUser = updateResourceMetadataRequestV2.requestingUser
+                          requestingUser = updateResourceMetadataRequestV2.requestingUser,
                         )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
@@ -415,7 +415,7 @@ final case class ResourcesResponderV2Live(
         // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
         _ <-
           ZIO.when(
-            resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty
+            resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty,
           ) {
             val msg =
               s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
@@ -426,7 +426,7 @@ final case class ResourcesResponderV2Live(
         // Make sure that the resource hasn't been updated since the client got its last modification date.
         _ <- ZIO.when(
                updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
-                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate
+                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate,
              ) {
                val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
                ZIO.fail(EditConflictException(msg))
@@ -436,7 +436,7 @@ final case class ResourcesResponderV2Live(
         _ <- resourceUtilV2.checkResourcePermission(
                resource,
                ModifyPermission,
-               updateResourceMetadataRequestV2.requestingUser
+               updateResourceMetadataRequestV2.requestingUser,
              )
 
         // Get the IRI of the named graph in which the resource is stored.
@@ -463,7 +463,7 @@ final case class ResourcesResponderV2Live(
                          maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
                          newModificationDate = newModificationDate,
                          maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
-                         maybePermissions = updateResourceMetadataRequestV2.maybePermissions
+                         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
                        )
         // Do the update.
         _ <- triplestore.query(Update(sparqlUpdate))
@@ -474,7 +474,7 @@ final case class ResourcesResponderV2Live(
           getResourcePreviewV2(
             resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
             targetSchema = ApiV2Complex,
-            requestingUser = updateResourceMetadataRequestV2.requestingUser
+            requestingUser = updateResourceMetadataRequestV2.requestingUser,
           )
 
         _ <- ZIO.when(updatedResourcesSeq.resources.size != 1) {
@@ -508,7 +508,7 @@ final case class ResourcesResponderV2Live(
         resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-        lastModificationDate = newModificationDate
+        lastModificationDate = newModificationDate,
       )
     }
 
@@ -517,7 +517,7 @@ final case class ResourcesResponderV2Live(
       taskResult <- IriLocker.runWithIriLock(
                       updateResourceMetadataRequestV2.apiRequestID,
                       updateResourceMetadataRequestV2.resourceIri,
-                      makeTaskFuture
+                      makeTaskFuture,
                     )
     } yield taskResult
   }
@@ -529,7 +529,7 @@ final case class ResourcesResponderV2Live(
    * @param deleteOrEraseResourceV2 the request message.
    */
   private def deleteOrEraseResourceV2(
-    deleteOrEraseResourceV2: DeleteOrEraseResourceRequestV2
+    deleteOrEraseResourceV2: DeleteOrEraseResourceRequestV2,
   ): Task[SuccessResponseV2] =
     if (deleteOrEraseResourceV2.erase) {
       eraseResourceV2(deleteOrEraseResourceV2)
@@ -549,7 +549,7 @@ final case class ResourcesResponderV2Live(
         resourcesSeq <- getResourcePreviewV2(
                           resourceIris = Seq(deleteResourceV2.resourceIri),
                           targetSchema = ApiV2Complex,
-                          requestingUser = deleteResourceV2.requestingUser
+                          requestingUser = deleteResourceV2.requestingUser,
                         )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
@@ -571,8 +571,8 @@ final case class ResourcesResponderV2Live(
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
         _ <- ZIO.when(
                deleteResourceV2.maybeDeleteDate.exists(
-                 !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate))
-               )
+                 !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate)),
+               ),
              ) {
                val msg =
                  s"A custom delete date must be later than the date when the resource was created or last modified"
@@ -591,7 +591,7 @@ final case class ResourcesResponderV2Live(
                          resourceIri = deleteResourceV2.resourceIri,
                          maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
                          currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
-                         requestingUser = deleteResourceV2.requestingUser.id
+                         requestingUser = deleteResourceV2.requestingUser.id,
                        )
         // Do the update.
         _ <- triplestore.query(Update(sparqlUpdate))
@@ -604,7 +604,7 @@ final case class ResourcesResponderV2Live(
 
         _ <-
           ZIO.when(
-            rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
+            rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false),
           ) {
             val msg =
               s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."
@@ -628,7 +628,7 @@ final case class ResourcesResponderV2Live(
         resourcesSeq <- getResourcePreviewV2(
                           resourceIris = Seq(eraseResourceV2.resourceIri),
                           targetSchema = ApiV2Complex,
-                          requestingUser = eraseResourceV2.requestingUser
+                          requestingUser = eraseResourceV2.requestingUser,
                         )
 
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
@@ -636,7 +636,7 @@ final case class ResourcesResponderV2Live(
         // Ensure that the requesting user is a system admin, or an admin of this project.
         _ <- ZIO.when(
                !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
-                 eraseResourceV2.requestingUser.permissions.isSystemAdmin)
+                 eraseResourceV2.requestingUser.permissions.isSystemAdmin),
              ) {
                ZIO.fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))
              }
@@ -681,8 +681,8 @@ final case class ResourcesResponderV2Live(
           ZIO
             .fail(
               UpdateNotPerformedException(
-                s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug."
-              )
+                s"Resource <${eraseResourceV2.resourceIri}> was not erased. Please report this as a possible bug.",
+              ),
             )
             .whenZIO(iriService.checkIriExists(resourceSmartIri.toString))
       } yield SuccessResponseV2("Resource erased")
@@ -721,7 +721,7 @@ final case class ResourcesResponderV2Live(
     defaultResourcePermissions: String,
     defaultPropertyPermissions: Map[SmartIri, String],
     creationDate: Instant,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
@@ -746,19 +746,19 @@ final case class ResourcesResponderV2Live(
                      .orElseFail(
                        OntologyConstraintException(
                          s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                             .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
-                       )
+                             .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>",
+                       ),
                      )
 
                  _ <-
                    ZIO.when(
-                     (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
+                     (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1,
                    ) {
                      ZIO.fail(
                        OntologyConstraintException(
                          s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                             .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
-                       )
+                             .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>",
+                       ),
                      )
                    }
                } yield ()
@@ -780,8 +780,8 @@ final case class ResourcesResponderV2Live(
              ZIO.fail(
                OntologyConstraintException(
                  s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
-                     .toOntologySchema(ApiV2Complex)}>: $missingProps"
-               )
+                     .toOntologySchema(ApiV2Complex)}>: $missingProps",
+               ),
              )
            }
 
@@ -792,7 +792,7 @@ final case class ResourcesResponderV2Live(
              linkTargetClasses,
              entityInfo,
              clientResourceIDs,
-             resourceIDForErrorMsg
+             resourceIDForErrorMsg,
            )
 
       // Check that the submitted values do not contain duplicates.
@@ -817,7 +817,7 @@ final case class ResourcesResponderV2Live(
                          internalCreateResource.projectADM.id,
                          validatedCustomPermissions,
                          defaultResourcePermissions,
-                         requestingUser
+                         requestingUser,
                        )
                      ZIO.when(permissionComparisonResult == AGreaterThanB) {
                        val msg =
@@ -836,7 +836,7 @@ final case class ResourcesResponderV2Live(
           values = internalCreateResource.values,
           defaultPropertyPermissions = defaultPropertyPermissions,
           resourceIDForErrorMsg = resourceIDForErrorMsg,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
       // Ask the values responder for SPARQL for generating the values.
@@ -847,8 +847,8 @@ final case class ResourcesResponderV2Live(
               resourceIri = resourceIri,
               values = valuesWithValidatedPermissions,
               creationDate = creationDate,
-              requestingUser = requestingUser
-            )
+              requestingUser = requestingUser,
+            ),
           )
     } yield ResourceReadyToCreate(
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
@@ -857,10 +857,10 @@ final case class ResourcesResponderV2Live(
         sparqlForValues = sparqlForValuesResponse.insertSparql,
         resourceClassIri = internalCreateResource.resourceClassIri.toString,
         resourceLabel = internalCreateResource.label,
-        resourceCreationDate = creationDate
+        resourceCreationDate = creationDate,
       ),
       values = sparqlForValuesResponse.unverifiedValues,
-      hasStandoffLink = sparqlForValuesResponse.hasStandoffLink
+      hasStandoffLink = sparqlForValuesResponse.hasStandoffLink,
     )
   }
 
@@ -877,7 +877,7 @@ final case class ResourcesResponderV2Live(
   private def getLinkTargetClasses(
     resourceIri: IRI,
     internalCreateResources: Seq[CreateResourceV2],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Map[IRI, SmartIri]] = {
     // Get the IRIs of the new and existing resources that are targets of links.
     val (existingTargetIris: Set[IRI], newTargets: Set[IRI]) =
@@ -907,7 +907,7 @@ final case class ResourcesResponderV2Live(
       existingTargets <- getResourcePreviewV2(
                            resourceIris = existingTargetIris.toSeq,
                            targetSchema = ApiV2Complex,
-                           requestingUser = requestingUser
+                           requestingUser = requestingUser,
                          )
 
       // Make a map of the IRIs of existing target resources to their class IRIs.
@@ -927,7 +927,7 @@ final case class ResourcesResponderV2Live(
    */
   private def checkForDuplicateValues(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-    resourceIDForErrorMsg: IRI
+    resourceIDForErrorMsg: IRI,
   ): Task[Unit] =
     ZIO.foreachDiscard(values) { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       // Given the values for a property, compute all possible combinations of two of those values.
@@ -962,7 +962,7 @@ final case class ResourcesResponderV2Live(
     linkTargetClasses: Map[IRI, SmartIri],
     entityInfo: EntityInfoGetResponseV2,
     clientResourceIDs: Map[IRI, String],
-    resourceIDForErrorMsg: IRI
+    resourceIDForErrorMsg: IRI,
   ): Task[Unit] = ZIO.foreachDiscard(values) {
     case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       val propertyInfo: ReadPropertyInfoV2 = entityInfo.propertyInfoMap(propertyIri)
@@ -988,8 +988,8 @@ final case class ResourcesResponderV2Live(
         objectClassConstraint <- ZIO
                                    .fromOption(
                                      propertyInfoForObjectClassConstraint.entityInfoContent.getIriObject(
-                                       OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
-                                     )
+                                       OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                                     ),
                                    )
                                    .orElseFail {
                                      val msg =
@@ -1027,8 +1027,8 @@ final case class ResourcesResponderV2Live(
                               OntologyConstraintException(
                                 s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
                                     .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
-                                    .toOntologySchema(ApiV2Complex)}>"
-                              )
+                                    .toOntologySchema(ApiV2Complex)}>",
+                              ),
                             )
                           }
                    } yield ()
@@ -1057,7 +1057,7 @@ final case class ResourcesResponderV2Live(
    */
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Unit] = {
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
@@ -1071,7 +1071,7 @@ final case class ResourcesResponderV2Live(
     getResourcePreviewV2(
       resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
       targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     ).unit
   }
 
@@ -1108,7 +1108,7 @@ final case class ResourcesResponderV2Live(
                   ZIO.fail(NotFoundException(s"<$listNodeIri> does not exist, or is not a ListNode."))
               }
           } yield ()
-        }.toSeq
+        }.toSeq,
       )
       .unit
   }
@@ -1131,7 +1131,7 @@ final case class ResourcesResponderV2Live(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
-    requestingUser: User
+    requestingUser: User,
   ): Task[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Task[GenerateSparqlForValueInNewResourceV2]]] =
       values.map { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
@@ -1147,7 +1147,7 @@ final case class ResourcesResponderV2Live(
                   // Is the requesting user a system admin, or an admin of this project?
                   _ <- ZIO.when(
                          !(requestingUser.permissions
-                           .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)
+                           .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin),
                        ) {
 
                          // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
@@ -1157,14 +1157,14 @@ final case class ResourcesResponderV2Live(
                              entityProject = project.id,
                              permissionLiteralA = validatedCustomPermissions,
                              permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                             requestingUser = requestingUser
+                             requestingUser = requestingUser,
                            )
 
                          ZIO.when(permissionComparisonResult == AGreaterThanB) {
                            ZIO.fail(
                              ForbiddenException(
-                               s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                             )
+                               s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                             ),
                            )
                          }
                        }
@@ -1173,7 +1173,7 @@ final case class ResourcesResponderV2Live(
                   customValueIri = valueToCreate.customValueIri,
                   customValueUUID = valueToCreate.customValueUUID,
                   customValueCreationDate = valueToCreate.customValueCreationDate,
-                  permissions = validatedCustomPermissions
+                  permissions = validatedCustomPermissions,
                 )
 
               case None =>
@@ -1184,7 +1184,7 @@ final case class ResourcesResponderV2Live(
                     customValueIri = valueToCreate.customValueIri,
                     customValueUUID = valueToCreate.customValueUUID,
                     customValueCreationDate = valueToCreate.customValueCreationDate,
-                    permissions = defaultPropertyPermissions(propertyIri)
+                    permissions = defaultPropertyPermissions(propertyIri),
                   )
                 }
             }
@@ -1207,14 +1207,14 @@ final case class ResourcesResponderV2Live(
   private def getResourceClassDefaultPermissions(
     projectIri: IRI,
     resourceClassIris: Set[SmartIri],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Map[SmartIri, String]] = {
     val permissionsFutures: Map[SmartIri, Task[String]] = resourceClassIris.toSeq.map { resourceClassIri =>
       val requestMessage = DefaultObjectAccessPermissionsStringForResourceClassGetADM(
         projectIri = projectIri,
         resourceClassIri = resourceClassIri.toString,
         targetUser = requestingUser,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
+        requestingUser = KnoraSystemInstances.Users.SystemUser,
       )
 
       resourceClassIri ->
@@ -1237,7 +1237,7 @@ final case class ResourcesResponderV2Live(
   private def getDefaultPropertyPermissions(
     projectIri: IRI,
     resourceClassProperties: Map[SmartIri, Set[SmartIri]],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Map[SmartIri, Map[SmartIri, String]]] = {
     val permissionsFutures: Map[SmartIri, Task[Map[SmartIri, String]]] = resourceClassProperties.map {
       case (resourceClassIri, propertyIris) =>
@@ -1246,7 +1246,7 @@ final case class ResourcesResponderV2Live(
             projectIri = projectIri,
             resourceClassIri = resourceClassIri,
             propertyIri = propertyIri,
-            requestingUser = requestingUser
+            requestingUser = requestingUser,
           )
         }.toMap
 
@@ -1268,7 +1268,7 @@ final case class ResourcesResponderV2Live(
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
     projectIri: IRI,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
@@ -1277,13 +1277,13 @@ final case class ResourcesResponderV2Live(
                              resourceIris = Seq(resourceIri),
                              requestingUser = requestingUser,
                              targetSchema = ApiV2Complex,
-                             schemaOptions = SchemaOptions.ForStandoffWithTextValues
+                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                            )
 
       resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
       _ <- ZIO.when(
-             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri
+             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri,
            ) {
              ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class"))
            }
@@ -1302,7 +1302,7 @@ final case class ResourcesResponderV2Live(
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
       unescapedLabel: String = Iri.fromSparqlEncodedString(
-                                 resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
+                                 resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
                                )
 
       _ <- ZIO.when(resource.label != unescapedLabel) {
@@ -1338,7 +1338,7 @@ final case class ResourcesResponderV2Live(
                         ZIO.when(
                           !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                             savedValue.permissions == expectedValue.permissions &&
-                            savedValue.attachedToUser == requestingUser.id)
+                            savedValue.attachedToUser == requestingUser.id),
                         ) {
                           val msg = s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
                           ZIO.fail(AssertionException(msg))
@@ -1350,7 +1350,7 @@ final case class ResourcesResponderV2Live(
 
     resourceFuture.mapError { case _: NotFoundException =>
       UpdateNotPerformedException(
-        s"Resource <$resourceIri> was not created. Please report this as a possible bug."
+        s"Resource <$resourceIri> was not created. Please report this as a possible bug.",
       )
     }
   }
@@ -1377,7 +1377,7 @@ final case class ResourcesResponderV2Live(
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
     val query =
       Construct(
@@ -1390,8 +1390,8 @@ final case class ResourcesResponderV2Live(
             maybeValueUuid = valueUuid,
             maybeVersionDate = versionDate,
             queryAllNonStandoff = true,
-            queryStandoff = queryStandoff
-          )
+            queryStandoff = queryStandoff,
+          ),
       )
 
     triplestore
@@ -1423,7 +1423,7 @@ final case class ResourcesResponderV2Live(
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[Rendering],
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1444,13 +1444,13 @@ final case class ResourcesResponderV2Live(
           valueUuid = valueUuid,
           versionDate = versionDate,
           queryStandoff = queryStandoff,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
       mappingsAsMap <-
         if (queryStandoff) {
           constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
             mainResourcesAndValueRdfData.resources,
-            requestingUser
+            requestingUser,
           )
         } else {
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
@@ -1466,7 +1466,7 @@ final case class ResourcesResponderV2Live(
           versionDate = versionDate,
           calculateMayHaveMoreResults = false,
           targetSchema = targetSchema,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
       _ = apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
@@ -1474,7 +1474,7 @@ final case class ResourcesResponderV2Live(
       _ <- valueUuid match {
              case Some(definedValueUuid) =>
                ZIO.unless(
-                 apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))
+                 apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid))),
                ) {
                  val msg =
                    s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
@@ -1501,7 +1501,7 @@ final case class ResourcesResponderV2Live(
                                                        }
                                                    }
                                                    apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced
+                                                     resourceListWithDeletedResourcesReplaced,
                                                    )
                                                  } else {
                                                    apiResponse
@@ -1525,7 +1525,7 @@ final case class ResourcesResponderV2Live(
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
 
     // eliminate duplicate Iris
@@ -1538,7 +1538,7 @@ final case class ResourcesResponderV2Live(
                                         withDeleted = withDeleted,
                                         queryStandoff =
                                           false, // This has no effect, because we are not querying values.
-                                        requestingUser = requestingUser
+                                        requestingUser = requestingUser,
                                       )
 
       apiResponse <- constructResponseUtilV2.createApiResponse(
@@ -1550,12 +1550,12 @@ final case class ResourcesResponderV2Live(
                        versionDate = None,
                        calculateMayHaveMoreResults = false,
                        targetSchema = targetSchema,
-                       requestingUser = requestingUser
+                       requestingUser = requestingUser,
                      )
 
       _ = apiResponse.checkResourceIris(
             targetResourceIris = resourceIris.toSet,
-            resourcesSequence = apiResponse
+            resourcesSequence = apiResponse,
           )
 
       // Check if resources are deleted, if so, replace them with DeletedResource
@@ -1570,7 +1570,7 @@ final case class ResourcesResponderV2Live(
                                                        }
                                                    }
                                                    apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced
+                                                     resourceListWithDeletedResourcesReplaced,
                                                    )
                                                  } else {
                                                    apiResponse
@@ -1590,7 +1590,7 @@ final case class ResourcesResponderV2Live(
    */
   private def getGravsearchTemplate(
     gravsearchTemplateIri: IRI,
-    requestingUser: User
+    requestingUser: User,
   ): Task[String] = {
 
     val gravsearchUrlTask = for {
@@ -1598,7 +1598,7 @@ final case class ResourcesResponderV2Live(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
                      schemaOptions = Set(MarkupRendering.Standoff),
-                     requestingUser = requestingUser
+                     requestingUser = requestingUser,
                    )
 
       resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
@@ -1650,8 +1650,8 @@ final case class ResourcesResponderV2Live(
                       SipiGetTextFileRequest(
                         fileUrl = gravsearchTemplateUrl,
                         requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        senderName = this.getClass.getName
-                      )
+                        senderName = this.getClass.getName,
+                      ),
                     )
       gravsearchTemplate: String = response.content
 
@@ -1678,7 +1678,7 @@ final case class ResourcesResponderV2Live(
     mappingIri: Option[IRI],
     gravsearchTemplateIri: Option[IRI],
     headerXSLTIri: Option[String],
-    requestingUser: User
+    requestingUser: User,
   ): Task[ResourceTEIGetResponseV2] = {
 
     /**
@@ -1717,8 +1717,8 @@ final case class ResourcesResponderV2Live(
                 readNonLinkValueV2.copy(
                   valueContent = dateContent.copy(
                     // act as if this was a Gregorian date
-                    valueHasCalendar = CalendarNameGregorian
-                  )
+                    valueHasCalendar = CalendarNameGregorian,
+                  ),
                 )
               case _ => valueObj
             }
@@ -1733,10 +1733,10 @@ final case class ResourcesResponderV2Live(
                 nestedResource = Some(
                   linkContent.nestedResource.get.copy(
                     // recursive call
-                    values = convertDateToGregorian(linkContent.nestedResource.get.values)
-                  )
-                )
-              )
+                    values = convertDateToGregorian(linkContent.nestedResource.get.values),
+                  ),
+                ),
+              ),
             )
 
           case valueObj => valueObj
@@ -1782,7 +1782,7 @@ final case class ResourcesResponderV2Live(
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                          requestingUser = requestingUser
+                          requestingUser = requestingUser,
                         ).mapAttempt(_.toResource(resourceIri))
           } yield resource
         }
@@ -1793,7 +1793,7 @@ final case class ResourcesResponderV2Live(
       // the ext value is expected to have standoff markup
       _ <-
         ZIO.when(bodyTextValue.standoff.isEmpty)(
-          ZIO.fail(BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup"))
+          ZIO.fail(BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")),
         )
 
       // get all the metadata but the text property for the TEI header
@@ -1808,7 +1808,7 @@ final case class ResourcesResponderV2Live(
                             { case e: NotFoundException =>
                               SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
                             },
-                            resp => Some(resp.xslt)
+                            resp => Some(resp.xslt),
                           )
                       case _ => ZIO.none
                     }
@@ -1838,7 +1838,7 @@ final case class ResourcesResponderV2Live(
                           // get XSLT for the TEI body.
                           messageRelay
                             .ask[GetXSLTransformationResponseV2](
-                              GetXSLTransformationRequestV2(xslTransformationIri, requestingUser)
+                              GetXSLTransformationRequestV2(xslTransformationIri, requestingUser),
                             )
                             .mapBoth(
                               { case notFound: NotFoundException =>
@@ -1846,7 +1846,7 @@ final case class ResourcesResponderV2Live(
                                   s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
                                 SipiException(msg)
                               },
-                              _.xslt
+                              _.xslt,
                             )
                         case None =>
                           val msg = s"Default XSL Transformation expected for mapping $otherMapping"
@@ -1858,13 +1858,13 @@ final case class ResourcesResponderV2Live(
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                appConfig = appConfig
+                appConfig = appConfig,
               ),
               body = TEIBody(
                 bodyInfo = bodyTextValue,
                 bodyXSLT = bodyXslt,
-                teiMapping = teiMapping.mapping
-              )
+                teiMapping = teiMapping.mapping,
+              ),
             )
 
     } yield tei
@@ -1895,7 +1895,7 @@ final case class ResourcesResponderV2Live(
       nodeLabel: String,
       nodeCreator: IRI,
       nodeProject: IRI,
-      nodePermissions: String
+      nodePermissions: String,
     )
 
     /**
@@ -1916,7 +1916,7 @@ final case class ResourcesResponderV2Live(
       linkProp: SmartIri,
       linkValueCreator: IRI,
       sourceNodeProject: IRI,
-      linkValuePermissions: String
+      linkValuePermissions: String,
     )
 
     /**
@@ -1927,7 +1927,7 @@ final case class ResourcesResponderV2Live(
      */
     case class GraphQueryResults(
       nodes: Set[QueryResultNode] = Set.empty[QueryResultNode],
-      edges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]
+      edges: Set[QueryResultEdge] = Set.empty[QueryResultEdge],
     )
 
     /**
@@ -1944,7 +1944,7 @@ final case class ResourcesResponderV2Live(
       startNode: QueryResultNode,
       outbound: Boolean,
       depth: Int,
-      traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]
+      traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge],
     ): Task[GraphQueryResults] = {
       if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
@@ -1955,7 +1955,7 @@ final case class ResourcesResponderV2Live(
             startNodeOnly = false,
             maybeExcludeLinkProperty = excludePropertyInternal,
             outbound = outbound, // true to query outbound edges, false to query inbound edges
-            limit = appConfig.v2.graphRoute.maxGraphBreadth
+            limit = appConfig.v2.graphRoute.maxGraphBreadth,
           )
       for {
         // Get the direct links from/to the start node.
@@ -1978,7 +1978,7 @@ final case class ResourcesResponderV2Live(
                 nodeLabel = rowMap("nodeLabel"),
                 nodeCreator = rowMap("nodeCreator"),
                 nodeProject = rowMap("nodeProject"),
-                nodePermissions = rowMap("nodePermissions")
+                nodePermissions = rowMap("nodePermissions"),
               )
             }.filter { (node: QueryResultNode) =>
               // Filter out the nodes that the user doesn't have permission to see.
@@ -1987,7 +1987,7 @@ final case class ResourcesResponderV2Live(
                   entityCreator = node.nodeCreator,
                   entityProject = node.nodeProject,
                   entityPermissionLiteral = node.nodePermissions,
-                  requestingUser = graphDataGetRequest.requestingUser
+                  requestingUser = graphDataGetRequest.requestingUser,
                 )
                 .nonEmpty
             }
@@ -2015,7 +2015,7 @@ final case class ResourcesResponderV2Live(
                 linkProp = rowMap("linkProp").toSmartIri,
                 linkValueCreator = rowMap("linkValueCreator"),
                 sourceNodeProject = if (outbound) startNode.nodeProject else rowMap("nodeProject"),
-                linkValuePermissions = rowMap("linkValuePermissions")
+                linkValuePermissions = rowMap("linkValuePermissions"),
               )
             }.filter { (edge: QueryResultEdge) =>
               // Filter out the edges that the user doesn't have permission to see. To see an edge,
@@ -2028,7 +2028,7 @@ final case class ResourcesResponderV2Live(
                       entityCreator = edge.linkValueCreator,
                       entityProject = edge.sourceNodeProject,
                       entityPermissionLiteral = edge.linkValuePermissions,
-                      requestingUser = graphDataGetRequest.requestingUser
+                      requestingUser = graphDataGetRequest.requestingUser,
                     )
                     .nonEmpty
 
@@ -2063,7 +2063,7 @@ final case class ResourcesResponderV2Live(
                   startNode = node,
                   outbound = outbound,
                   depth = depth - 1,
-                  traversedEdges = traversedEdgesForRecursion
+                  traversedEdges = traversedEdgesForRecursion,
                 )
               }
 
@@ -2075,7 +2075,7 @@ final case class ResourcesResponderV2Live(
                 lowerResultsSeq.foldLeft(results) { case (acc: GraphQueryResults, lowerResults: GraphQueryResults) =>
                   GraphQueryResults(
                     nodes = acc.nodes ++ lowerResults.nodes,
-                    edges = acc.edges ++ lowerResults.edges
+                    edges = acc.edges ++ lowerResults.edges,
                   )
                 }
               }
@@ -2092,7 +2092,7 @@ final case class ResourcesResponderV2Live(
           maybeExcludeLinkProperty = excludePropertyInternal,
           startNodeOnly = true,
           outbound = true,
-          limit = appConfig.v2.graphRoute.maxGraphBreadth
+          limit = appConfig.v2.graphRoute.maxGraphBreadth,
         )
 
     for {
@@ -2112,7 +2112,7 @@ final case class ResourcesResponderV2Live(
                                      nodeLabel = firstRowMap("nodeLabel"),
                                      nodeCreator = firstRowMap("nodeCreator"),
                                      nodeProject = firstRowMap("nodeProject"),
-                                     nodePermissions = firstRowMap("nodePermissions")
+                                     nodePermissions = firstRowMap("nodePermissions"),
                                    )
 
       // Make sure the user has permission to see the start node.
@@ -2122,9 +2122,9 @@ final case class ResourcesResponderV2Live(
                  entityCreator = startNode.nodeCreator,
                  entityProject = startNode.nodeProject,
                  entityPermissionLiteral = startNode.nodePermissions,
-                 requestingUser = graphDataGetRequest.requestingUser
+                 requestingUser = graphDataGetRequest.requestingUser,
                )
-               .isEmpty
+               .isEmpty,
            ) {
              val msg =
                s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>"
@@ -2137,7 +2137,7 @@ final case class ResourcesResponderV2Live(
           traverseGraph(
             startNode = startNode,
             outbound = true,
-            depth = graphDataGetRequest.depth
+            depth = graphDataGetRequest.depth,
           )
         } else {
           ZIO.succeed(GraphQueryResults())
@@ -2149,7 +2149,7 @@ final case class ResourcesResponderV2Live(
           traverseGraph(
             startNode = startNode,
             outbound = false,
-            depth = graphDataGetRequest.depth
+            depth = graphDataGetRequest.depth,
           )
         } else {
           ZIO.succeed(GraphQueryResults())
@@ -2164,7 +2164,7 @@ final case class ResourcesResponderV2Live(
                                            GraphNodeV2(
                                              resourceIri = node.nodeIri,
                                              resourceClassIri = node.nodeClass,
-                                             resourceLabel = node.nodeLabel
+                                             resourceLabel = node.nodeLabel,
                                            )
                                          }.toVector
 
@@ -2173,14 +2173,14 @@ final case class ResourcesResponderV2Live(
                                            GraphEdgeV2(
                                              source = edge.sourceNodeIri,
                                              propertyIri = edge.linkProp,
-                                             target = edge.targetNodeIri
+                                             target = edge.targetNodeIri,
                                            )
                                          }.toVector
 
     } yield GraphDataGetResponseV2(
       nodes = resultNodes,
       edges = resultEdges,
-      ontologySchema = InternalSchema
+      ontologySchema = InternalSchema,
     )
   }
 
@@ -2191,7 +2191,7 @@ final case class ResourcesResponderV2Live(
    * @return the resource's version history.
    */
   private def getResourceHistoryV2(
-    resourceHistoryRequest: ResourceVersionHistoryGetRequestV2
+    resourceHistoryRequest: ResourceVersionHistoryGetRequestV2,
   ): Task[ResourceVersionHistoryResponseV2] =
     for {
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
@@ -2200,7 +2200,7 @@ final case class ResourcesResponderV2Live(
                                    resourceIris = Seq(resourceHistoryRequest.resourceIri),
                                    withDeleted = resourceHistoryRequest.withDeletedResource,
                                    targetSchema = ApiV2Complex,
-                                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                                   requestingUser = KnoraSystemInstances.Users.SystemUser,
                                  )
 
       resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
@@ -2212,7 +2212,7 @@ final case class ResourcesResponderV2Live(
                                  withDeletedResource = resourceHistoryRequest.withDeletedResource,
                                  resourceIri = resourceHistoryRequest.resourceIri,
                                  maybeStartDate = resourceHistoryRequest.startDate,
-                                 maybeEndDate = resourceHistoryRequest.endDate
+                                 maybeEndDate = resourceHistoryRequest.endDate,
                                )
       valueHistoryResponse <- triplestore.query(Select(historyRequestSparql))
 
@@ -2224,7 +2224,7 @@ final case class ResourcesResponderV2Live(
             .fromOption(ValuesValidator.xsdDateTimeStampToInstant(versionDateStr))
             .mapBoth(
               _ => InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr"),
-              versionDate => ResourceHistoryEntry(versionDate, author)
+              versionDate => ResourceHistoryEntry(versionDate, author),
             )
         }
 
@@ -2244,12 +2244,12 @@ final case class ResourcesResponderV2Live(
             // No. Add a history entry for it.
             valueHistoryEntries :+ ResourceHistoryEntry(
               versionDate = resourcePreview.creationDate,
-              author = resourcePreview.attachedToUser
+              author = resourcePreview.attachedToUser,
             )
           }
         }
     } yield ResourceVersionHistoryResponseV2(
-      historyEntriesWithResourceCreation
+      historyEntriesWithResourceCreation,
     )
 
   private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] =
@@ -2265,9 +2265,9 @@ final case class ResourcesResponderV2Live(
       gravsearchQueryForIncomingLinks <- ZIO.attempt(
                                            org.knora.webapi.messages.twirl.queries.gravsearch.txt
                                              .getIncomingImageLinks(
-                                               resourceIri = request.resourceIri
+                                               resourceIri = request.resourceIri,
                                              )
-                                             .toString()
+                                             .toString(),
                                          )
 
       // Run the query.
@@ -2276,7 +2276,7 @@ final case class ResourcesResponderV2Live(
       searchResponse <- searchResponderV2.gravsearchV2(
                           parsedGravsearchQuery,
                           apiV2SchemaWithOption(MarkupRendering.Standoff),
-                          request.requestingUser
+                          request.requestingUser,
                         )
 
       resource      = searchResponse.toResource(request.resourceIri)
@@ -2295,11 +2295,11 @@ final case class ResourcesResponderV2Live(
             "type"                 -> JsonLDString("Manifest"),
             "label"                -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(resource.label))))),
             "behavior"             -> JsonLDArray(Seq(JsonLDString("paged"))),
-            "items"                -> items
-          )
+            "items"                -> items,
+          ),
         ),
-        keepStructure = true
-      )
+        keepStructure = true,
+      ),
     )
 
   private def toItems(representations: Seq[ReadResourceV2]): Task[JsonLDArray] =
@@ -2311,7 +2311,7 @@ final case class ResourcesResponderV2Live(
               .fromOption(
                 representation.values
                   .get(OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri)
-                  .flatMap(_.headOption)
+                  .flatMap(_.headOption),
               )
               .orElseFail {
                 val msg = s"Representation ${representation.resourceIri} has no still image file value"
@@ -2358,22 +2358,22 @@ final case class ResourcesResponderV2Live(
                                       Map(
                                         "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
                                         "type"    -> JsonLDString("ImageService3"),
-                                        "profile" -> JsonLDString("level1")
-                                      )
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
+                                        "profile" -> JsonLDString("level1"),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         )
       }
       .map(JsonLDArray)
@@ -2385,7 +2385,7 @@ final case class ResourcesResponderV2Live(
    * @return the events extracted from full representation of a resource at each time point in its history ordered by version date.
    */
   private def getResourceHistoryEvents(
-    resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2
+    resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2,
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       resourceHistory <-
@@ -2393,13 +2393,13 @@ final case class ResourcesResponderV2Live(
           ResourceVersionHistoryGetRequestV2(
             resourceIri = resourceHistoryEventsGetRequest.resourceIri,
             withDeletedResource = true,
-            requestingUser = resourceHistoryEventsGetRequest.requestingUser
-          )
+            requestingUser = resourceHistoryEventsGetRequest.requestingUser,
+          ),
         )
       resourceFullHist <- extractEventsFromHistory(
                             resourceIri = resourceHistoryEventsGetRequest.resourceIri,
                             resourceHistory = resourceHistory.history,
-                            requestingUser = resourceHistoryEventsGetRequest.requestingUser
+                            requestingUser = resourceHistoryEventsGetRequest.requestingUser,
                           )
       sortedResourceHistory = resourceFullHist.sortBy(_.versionDate)
     } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedResourceHistory)
@@ -2411,7 +2411,7 @@ final case class ResourcesResponderV2Live(
    * @return the all history events of resources of a project ordered by version date.
    */
   private def getProjectResourceHistoryEvents(
-    projectResourceHistoryEventsGetRequest: ProjectResourcesWithHistoryGetRequestV2
+    projectResourceHistoryEventsGetRequest: ProjectResourcesWithHistoryGetRequestV2,
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
@@ -2434,14 +2434,14 @@ final case class ResourcesResponderV2Live(
                 ResourceVersionHistoryGetRequestV2(
                   resourceIri = resourceIri,
                   withDeletedResource = true,
-                  requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
-                )
+                  requestingUser = projectResourceHistoryEventsGetRequest.requestingUser,
+                ),
               )
             resourceFullHist <-
               extractEventsFromHistory(
                 resourceIri = resourceIri,
                 resourceHistory = resourceHistory.history,
-                requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+                requestingUser = projectResourceHistoryEventsGetRequest.requestingUser,
               )
           } yield resourceFullHist
         }
@@ -2463,7 +2463,7 @@ final case class ResourcesResponderV2Live(
   private def extractEventsFromHistory(
     resourceIri: IRI,
     resourceHistory: Seq[ResourceHistoryEntry],
-    requestingUser: User
+    requestingUser: User,
   ): Task[Seq[ResourceAndValueHistoryEvent]] =
     for {
       resourceHist <- ZIO.succeed(resourceHistory.reverse)
@@ -2472,7 +2472,7 @@ final case class ResourcesResponderV2Live(
                                                                        getResourceAtGivenTime(
                                                                          resourceIri = resourceIri,
                                                                          versionHist = hist,
-                                                                         requestingUser = requestingUser
+                                                                         requestingUser = requestingUser,
                                                                        )
                                                                      }
 
@@ -2482,7 +2482,7 @@ final case class ResourcesResponderV2Live(
       (creationTimeHist, resourceAtCreation) = fullReps.head
       resourceCreationEvent: Seq[ResourceAndValueHistoryEvent] = getResourceCreationEvent(
                                                                    resourceAtCreation,
-                                                                   creationTimeHist
+                                                                   creationTimeHist,
                                                                  )
 
       // If there is a version history for deletion of the event, create a delete resource event for it.
@@ -2491,7 +2491,7 @@ final case class ResourcesResponderV2Live(
                                                   .asInstanceOf[ReadResourceV2]
                                                   .deletionInfo
                                                   .exists(deletionInfo =>
-                                                    deletionInfo.deleteDate == resHist.versionDate
+                                                    deletionInfo.deleteDate == resHist.versionDate,
                                                   )
                                               }
       resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
@@ -2508,7 +2508,7 @@ final case class ResourcesResponderV2Live(
       resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryEvent] = getResourceMetadataUpdateEvent(
                                                                          fullReps.last,
                                                                          valuesEvents,
-                                                                         resourceDeleteEvent
+                                                                         resourceDeleteEvent,
                                                                        )
 
     } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents ++ resourceMetadataUpdateEvent
@@ -2525,7 +2525,7 @@ final case class ResourcesResponderV2Live(
   private def getResourceAtGivenTime(
     resourceIri: IRI,
     versionHist: ResourceHistoryEntry,
-    requestingUser: User
+    requestingUser: User,
   ): Task[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
       resourceFullRepAtCreationTime <- getResourcesV2(
@@ -2534,7 +2534,7 @@ final case class ResourcesResponderV2Live(
                                          showDeletedValues = true,
                                          targetSchema = ApiV2Complex,
                                          schemaOptions = Set.empty[Rendering],
-                                         requestingUser = requestingUser
+                                         requestingUser = requestingUser,
                                        )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
     } yield versionHist -> resourceAtCreationTime
@@ -2548,7 +2548,7 @@ final case class ResourcesResponderV2Live(
    */
   private def getResourceCreationEvent(
     resourceAtTimeOfCreation: ReadResourceV2,
-    versionInfoAtCreation: ResourceHistoryEntry
+    versionInfoAtCreation: ResourceHistoryEntry,
   ): Seq[ResourceAndValueHistoryEvent] = {
 
     val requestBody: ResourceEventBody = ResourceEventBody(
@@ -2560,7 +2560,7 @@ final case class ResourcesResponderV2Live(
         .toMap,
       projectADM = resourceAtTimeOfCreation.projectADM,
       permissions = Some(resourceAtTimeOfCreation.permissions),
-      creationDate = Some(resourceAtTimeOfCreation.creationDate)
+      creationDate = Some(resourceAtTimeOfCreation.creationDate),
     )
 
     Seq(
@@ -2568,8 +2568,8 @@ final case class ResourcesResponderV2Live(
         eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
         versionDate = versionInfoAtCreation.versionDate,
         author = versionInfoAtCreation.author,
-        eventBody = requestBody
-      )
+        eventBody = requestBody,
+      ),
     )
   }
 
@@ -2581,7 +2581,7 @@ final case class ResourcesResponderV2Live(
    * @return a seq of deleteResource events.
    */
   private def getResourceDeletionEvents(
-    resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)]
+    resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)],
   ): Seq[ResourceAndValueHistoryEvent] =
     resourceDeletionInfo.map { case (delHist, fullRepresentation) =>
       val requestBody: ResourceEventBody = ResourceEventBody(
@@ -2589,13 +2589,13 @@ final case class ResourcesResponderV2Live(
         resourceClassIri = fullRepresentation.resourceClassIri,
         projectADM = fullRepresentation.projectADM,
         lastModificationDate = fullRepresentation.lastModificationDate,
-        deletionInfo = fullRepresentation.deletionInfo
+        deletionInfo = fullRepresentation.deletionInfo,
       )
       ResourceAndValueHistoryEvent(
         eventType = ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT,
         versionDate = delHist.versionDate,
         author = delHist.author,
-        eventBody = requestBody
+        eventBody = requestBody,
       )
     }
 
@@ -2610,7 +2610,7 @@ final case class ResourcesResponderV2Live(
   private def getValueEvents(
     resourceAtGivenTime: ReadResourceV2,
     versionHist: ResourceHistoryEntry,
-    allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]
+    allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
   ): Task[Seq[ResourceAndValueHistoryEvent]] = {
 
     /** returns the values of the resource which have the given version date. */
@@ -2619,8 +2619,8 @@ final case class ResourcesResponderV2Live(
         val valuesWithGivenVersion: Seq[ReadValueV2] =
           readValue.filter(readValue =>
             readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
-              deleteInfo.deleteDate == versionHist.versionDate
-            )
+              deleteInfo.deleteDate == versionHist.versionDate,
+            ),
           )
         if (valuesWithGivenVersion.nonEmpty) {
           acc + (propIri -> valuesWithGivenVersion.head)
@@ -2642,15 +2642,15 @@ final case class ResourcesResponderV2Live(
             valueIri = readValue.valueIri,
             valueTypeIri = readValue.valueContent.valueType,
             deletionInfo = readValue.deletionInfo,
-            previousValueIri = readValue.previousValueIri
+            previousValueIri = readValue.previousValueIri,
           )
           ZIO.succeed(
             acc appended ResourceAndValueHistoryEvent(
               eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
               versionDate = versionHist.versionDate,
               author = versionHist.author,
-              eventBody = deleteValueRequestBody
-            )
+              eventBody = deleteValueRequestBody,
+            ),
           )
         } else {
           // No. Is the given date a creation date, i.e. value does not have a previous version?
@@ -2667,15 +2667,15 @@ final case class ResourcesResponderV2Live(
               valueUUID = Some(readValue.valueHasUUID),
               valueCreationDate = Some(readValue.valueCreationDate),
               permissions = Some(readValue.permissions),
-              valueComment = readValue.valueContent.comment
+              valueComment = readValue.valueContent.comment,
             )
             ZIO.succeed(
               acc appended ResourceAndValueHistoryEvent(
                 eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
                 versionDate = versionHist.versionDate,
                 author = versionHist.author,
-                eventBody = createValueRequestBody
-              )
+                eventBody = createValueRequestBody,
+              ),
             )
           } else {
             // No. return updateValue event
@@ -2685,7 +2685,7 @@ final case class ResourcesResponderV2Live(
                   eventType = updateEventType,
                   versionDate = versionHist.versionDate,
                   author = versionHist.author,
-                  eventBody = updateEventRequestBody
+                  eventBody = updateEventRequestBody,
                 )
             }
           }
@@ -2708,7 +2708,7 @@ final case class ResourcesResponderV2Live(
     propertyIri: SmartIri,
     currentVersionOfValue: ReadValueV2,
     allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
-    resourceAtGivenTime: ReadResourceV2
+    resourceAtGivenTime: ReadResourceV2,
   ): Task[(String, ValueEventBody)] = for {
     previousValueIri <-
       ZIO
@@ -2721,9 +2721,9 @@ final case class ResourcesResponderV2Live(
         .fromOption(
           allResourceVersions.find { case (_, resource) =>
             resource.values.exists(item =>
-              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)
+              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri),
             )
-          }
+          },
         )
         .orElseFail(NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
     (previousVersionDate, previousVersionOfResource) = versionDateAndPreviousVersion
@@ -2751,7 +2751,7 @@ final case class ResourcesResponderV2Live(
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
         permissions = Some(currentVersionOfValue.permissions),
-        valueComment = currentVersionOfValue.valueContent.comment
+        valueComment = currentVersionOfValue.valueContent.comment,
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValuePermissionsRequestBody)
     } else {
@@ -2767,7 +2767,7 @@ final case class ResourcesResponderV2Live(
         valueUUID = Some(currentVersionOfValue.valueHasUUID),
         valueCreationDate = Some(currentVersionOfValue.valueCreationDate),
         valueComment = currentVersionOfValue.valueContent.comment,
-        previousValueIri = currentVersionOfValue.previousValueIri
+        previousValueIri = currentVersionOfValue.previousValueIri,
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
     }
@@ -2785,7 +2785,7 @@ final case class ResourcesResponderV2Live(
   private def getResourceMetadataUpdateEvent(
     latestVersionOfResource: (ResourceHistoryEntry, ReadResourceV2),
     valueEvents: Seq[ResourceAndValueHistoryEvent],
-    resourceDeleteEvents: Seq[ResourceAndValueHistoryEvent]
+    resourceDeleteEvents: Seq[ResourceAndValueHistoryEvent],
   ): Seq[ResourceAndValueHistoryEvent] = {
     val readResource: ReadResourceV2 = latestVersionOfResource._2
     val author: IRI                  = latestVersionOfResource._1.author
@@ -2807,13 +2807,13 @@ final case class ResourcesResponderV2Live(
             resourceIri = readResource.resourceIri,
             resourceClassIri = readResource.resourceClassIri,
             lastModificationDate = readResource.creationDate,
-            newModificationDate = modDate
+            newModificationDate = modDate,
           )
           val event = ResourceAndValueHistoryEvent(
             eventType = ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT,
             versionDate = modDate,
             author = author,
-            eventBody = requestBody
+            eventBody = requestBody,
           )
           Seq(event)
         } else {
@@ -2842,13 +2842,13 @@ final case class ResourcesResponderV2Live(
                 resourceIri = readResource.resourceIri,
                 resourceClassIri = readResource.resourceClassIri,
                 lastModificationDate = oldModDate,
-                newModificationDate = modDate
+                newModificationDate = modDate,
               )
               val event = ResourceAndValueHistoryEvent(
                 eventType = ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT,
                 versionDate = modDate,
                 author = author,
-                eventBody = requestBody
+                eventBody = requestBody,
               )
               Seq(event)
           }
@@ -2862,7 +2862,7 @@ object ResourcesResponderV2Live {
 
   val layer: URLayer[
     AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectRepo & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService,
-    ResourcesResponderV2
+    ResourcesResponderV2,
   ] = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]

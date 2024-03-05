@@ -23,34 +23,34 @@ object RdfMediaTypes {
     mainType = "application",
     subType = "ld+json",
     charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("jsonld")
+    fileExtensions = List("jsonld"),
   )
 
   val `text/turtle`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
     mainType = "text",
     subType = "turtle",
     charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("ttl")
+    fileExtensions = List("ttl"),
   )
 
   val `application/rdf+xml`: MediaType.WithOpenCharset = MediaType.customWithOpenCharset(
     mainType = "application",
     subType = "rdf+xml",
-    fileExtensions = List("rdf")
+    fileExtensions = List("rdf"),
   )
 
   val `application/trig`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
     mainType = "application",
     subType = "trig",
     charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("trig")
+    fileExtensions = List("trig"),
   )
 
   val `application/n-quads`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
     mainType = "application",
     subType = "n-quads",
     charset = HttpCharsets.`UTF-8`,
-    fileExtensions = List("nq")
+    fileExtensions = List("nq"),
   )
 
   /**
@@ -62,7 +62,7 @@ object RdfMediaTypes {
     `text/turtle`,
     `application/trig`,
     `application/rdf+xml`,
-    `application/n-quads`
+    `application/n-quads`,
   ).map { mediaType =>
     mediaType.toString -> mediaType
   }.toMap

@@ -46,7 +46,7 @@ object Dependencies {
   // refined
   val refined = Seq(
     "eu.timepit" %% "refined"                  % "0.11.1",
-    "dev.zio"    %% "zio-json-interop-refined" % "0.6.2"
+    "dev.zio"    %% "zio-json-interop-refined" % "0.6.2",
   )
 
   // zio-test and friends
@@ -123,12 +123,12 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.9"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.9",
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
     "dev.zio"                     %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
   val integrationTestDependencies = Seq(
@@ -142,7 +142,7 @@ object Dependencies {
     wiremock,
     xmlunitCore,
     zioTest,
-    zioTestSbt
+    zioTestSbt,
   ).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
@@ -182,6 +182,6 @@ object Dependencies {
     zioMacros,
     zioNio,
     zioPrelude,
-    zioSttp
+    zioSttp,
   ) ++ metrics ++ tapir
 }

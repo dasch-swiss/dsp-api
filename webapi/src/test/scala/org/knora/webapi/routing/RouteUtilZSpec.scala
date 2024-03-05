@@ -24,16 +24,16 @@ object RouteUtilZSpec extends ZIOSpecDefault {
         for {
           error <- RouteUtilZ.urlDecode("%-5", "Failed to url decode IRI.").exit
         } yield assert(error)(
-          fails(equalTo(BadRequestException("Failed to url decode IRI.")))
+          fails(equalTo(BadRequestException("Failed to url decode IRI."))),
         )
       },
       test("given an empty value, return BadRequestException with default error message") {
         for {
           error <- RouteUtilZ.urlDecode("%-5").exit
         } yield assert(error)(
-          fails(equalTo(BadRequestException("Not an url encoded utf-8 String '%-5'")))
+          fails(equalTo(BadRequestException("Not an url encoded utf-8 String '%-5'"))),
         )
-      }
-    )
+      },
+    ),
   )
 }

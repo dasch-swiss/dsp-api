@@ -164,7 +164,7 @@ case class CalendarDateV2(
   year: Int,
   maybeMonth: Option[Int],
   maybeDay: Option[Int],
-  maybeEra: Option[DateEraV2]
+  maybeEra: Option[DateEraV2],
 ) {
   if (maybeMonth.isEmpty && maybeDay.isDefined) {
     throw AssertionException(s"Invalid date: CalendarDateV2($calendarName, $year, $maybeMonth, $maybeDay, $maybeEra)")
@@ -358,7 +358,7 @@ object CalendarDateV2 {
           year = year,
           maybeMonth = None,
           maybeDay = None,
-          maybeEra = maybeEra
+          maybeEra = maybeEra,
         )
 
       case DatePrecisionMonth =>
@@ -367,7 +367,7 @@ object CalendarDateV2 {
           year = year,
           maybeMonth = Some(month),
           maybeDay = None,
-          maybeEra = maybeEra
+          maybeEra = maybeEra,
         )
 
       case DatePrecisionDay =>
@@ -376,7 +376,7 @@ object CalendarDateV2 {
           year = year,
           maybeMonth = Some(month),
           maybeDay = Some(day),
-          maybeEra = maybeEra
+          maybeEra = maybeEra,
         )
     }
   }
@@ -422,7 +422,7 @@ object CalendarDateV2 {
             year = dateSegments.head.toInt,
             maybeMonth = None,
             maybeDay = None,
-            maybeEra = maybeEra
+            maybeEra = maybeEra,
           )
 
         case 2 => // month precision
@@ -431,7 +431,7 @@ object CalendarDateV2 {
             year = dateSegments.head.toInt,
             maybeMonth = Some(dateSegments(1).toInt),
             maybeDay = None,
-            maybeEra = maybeEra
+            maybeEra = maybeEra,
           )
 
         case 3 => // day precision
@@ -440,7 +440,7 @@ object CalendarDateV2 {
             year = dateSegments.head.toInt,
             maybeMonth = Some(dateSegments(1).toInt),
             maybeDay = Some(dateSegments(2).toInt),
-            maybeEra = maybeEra
+            maybeEra = maybeEra,
           )
 
         case _ => throw BadRequestException(s"Invalid date: $dateStr")
@@ -531,7 +531,7 @@ object CalendarDateRangeV2 {
       // Yes.
       CalendarDateRangeV2(
         startCalendarDate = CalendarDateV2.parse(parsedDate(1), calendarName),
-        endCalendarDate = CalendarDateV2.parse(parsedDate(2), calendarName)
+        endCalendarDate = CalendarDateV2.parse(parsedDate(2), calendarName),
       )
     } else {
       // No, just a single date.
@@ -540,7 +540,7 @@ object CalendarDateRangeV2 {
 
       CalendarDateRangeV2(
         startCalendarDate = singleDate,
-        endCalendarDate = singleDate
+        endCalendarDate = singleDate,
       )
     }
   }

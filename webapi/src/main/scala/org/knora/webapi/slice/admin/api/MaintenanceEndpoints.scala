@@ -25,13 +25,13 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
         .description("""The name of the maintenance action to be executed.
                        |Maintenance actions are executed asynchronously in the background.
                        |""".stripMargin)
-        .example("fix-top-left-dimensions")
+        .example("fix-top-left-dimensions"),
     )
     .in(
       zioJsonBody[Option[Json]]
         .description("""The optional parameters as json for the maintenance action.
                        |May be required by certain actions.
-                       |""".stripMargin)
+                       |""".stripMargin),
     )
     .out(statusCode(StatusCode.Accepted))
 

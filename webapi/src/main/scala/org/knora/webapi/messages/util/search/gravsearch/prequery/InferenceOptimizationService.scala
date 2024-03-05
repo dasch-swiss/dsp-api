@@ -45,7 +45,7 @@ trait InferenceOptimizationService {
 final case class InferenceOptimizationServiceLive(
   private val messageRelay: MessageRelay,
   private val ontologyCache: OntologyCache,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
 ) extends InferenceOptimizationService {
 
   /**
@@ -94,7 +94,7 @@ final case class InferenceOptimizationServiceLive(
   }
 
   override def getOntologiesRelevantForInference(
-    whereClause: WhereClause
+    whereClause: WhereClause,
   ): Task[Option[Set[SmartIri]]] = {
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =

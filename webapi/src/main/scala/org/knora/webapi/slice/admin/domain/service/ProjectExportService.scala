@@ -92,7 +92,7 @@ private object TriGCombiner {
              for {
                is <- ZScopedJavaIoStreams.fileInputStream(file)
                _  <- ZIO.attemptBlocking(RDFParser.source(is).lang(Lang.TRIG).parse(outWriter))
-             } yield ()
+             } yield (),
            )
     } yield outputFile
   }
@@ -123,7 +123,7 @@ final case class ProjectExportServiceLive(
   private val projectService: ProjectADMService,
   private val triplestore: TriplestoreService,
   private val dspIngestClient: DspIngestClient,
-  private val exportStorage: ProjectExportStorageService
+  private val exportStorage: ProjectExportStorageService,
 ) extends ProjectExportService {
 
   override def listExports(): Task[Chunk[ProjectExportInfo]]           = exportStorage.listExports()
