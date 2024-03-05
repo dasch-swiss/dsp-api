@@ -47,7 +47,7 @@ final case class ProjectsEndpoints(
 
     val getAdminProjects = baseEndpoints.publicEndpoint.get
       .in(projectsBase)
-      .out(sprayJsonBody[ProjectsGetResponseADM])
+      .out(zioJsonBody[ProjectsGetResponseADM])
       .description("Returns all projects.")
 
     val getAdminProjectsKeywords = baseEndpoints.publicEndpoint.get

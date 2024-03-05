@@ -63,7 +63,6 @@ object RouteUtilADM {
       }
 
       response match {
-        case ProjectsGetResponseADM(projects) => ProjectsGetResponseADM(projects.map(projectAsExternalRepresentation))
         case ProjectMembersGetResponseADM(members) =>
           ProjectMembersGetResponseADM(members.map(userAsExternalRepresentation))
         case ProjectAdminMembersGetResponseADM(members) =>
@@ -101,8 +100,9 @@ object RouteUtilADM {
       }
 
       response match {
-        case ProjectGetResponse(project) => ProjectGetResponse(projectAsExternalRepresentation(project))
-        case _                           => response
+        case ProjectsGetResponseADM(projects) => ProjectsGetResponseADM(projects.map(projectAsExternalRepresentation))
+        case ProjectGetResponse(project)      => ProjectGetResponse(projectAsExternalRepresentation(project))
+        case _                                => response
       }
     }
   }

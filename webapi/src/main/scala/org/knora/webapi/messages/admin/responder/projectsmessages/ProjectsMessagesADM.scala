@@ -93,15 +93,20 @@ case class ProjectChangeRequestADM(
 
 // Responses
 
+object ProjectCodec {
+  implicit val projectCodec: JsonCodec[ProjectADM] = DeriveJsonCodec.gen[ProjectADM]
+}
+
 /**
  * Represents the Knora API ADM JSON response to a request for information about all projects.
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectsResponseADMFormat.write(this)
+case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends AdminResponse
+object ProjectsGetResponseADM {
+  // can be removed as soon as ProjectADM can define its own codec
+  import ProjectCodec.projectCodec
+  implicit val codec: JsonCodec[ProjectsGetResponseADM] = DeriveJsonCodec.gen[ProjectsGetResponseADM]
 }
 
 /**
@@ -111,7 +116,8 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
  */
 case class ProjectGetResponse(project: ProjectADM) extends AdminResponse
 object ProjectGetResponse {
-  implicit val projectCodec: JsonCodec[ProjectADM]  = DeriveJsonCodec.gen[ProjectADM]
+  // can be removed as soon as ProjectADM can define its own codec
+  import ProjectCodec.projectCodec
   implicit val codec: JsonCodec[ProjectGetResponse] = DeriveJsonCodec.gen[ProjectGetResponse]
 }
 
@@ -401,9 +407,6 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       "status",
       "selfjoin",
     ),
-  )
-  implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")),
   )
 
   implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
