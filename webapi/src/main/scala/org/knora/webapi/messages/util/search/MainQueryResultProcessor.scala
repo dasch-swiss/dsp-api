@@ -37,7 +37,7 @@ object MainQueryResultProcessor {
     valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
     allResourceVariablesFromTypeInspection: Set[QueryVariable],
     dependentResourceIrisFromTypeInspection: Set[IRI],
-    transformer: GravsearchToPrequeryTransformer
+    transformer: GravsearchToPrequeryTransformer,
   ): RdfResources = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -83,8 +83,8 @@ object MainQueryResultProcessor {
             valueObjIrisForRes.getOrElse(
               requestedQueryVar,
               throw AssertionException(
-                s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $mainResIri"
-              )
+                s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $mainResIri",
+              ),
             )
         }
 
@@ -97,8 +97,8 @@ object MainQueryResultProcessor {
       val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerMainResource.getOrElse(
         mainResIri,
         throw AssertionException(
-          s"key $mainResIri is absent in requested value object IRIs collection for resource $mainResIri"
-        )
+          s"key $mainResIri is absent in requested value object IRIs collection for resource $mainResIri",
+        ),
       )
 
       /**
@@ -130,9 +130,9 @@ object MainQueryResultProcessor {
                 valObj.copy(
                   nestedResource = Some(
                     targetResourceAssertions.copy(
-                      valuePropertyAssertions = targetResourceAssertionsFiltered
-                    )
-                  )
+                      valuePropertyAssertions = targetResourceAssertionsFiltered,
+                    ),
+                  ),
                 )
               } else {
                 valObj
@@ -157,7 +157,7 @@ object MainQueryResultProcessor {
 
       // only return the requested values for the current main resource
       mainResIri -> assertions.copy(
-        valuePropertyAssertions = requestedValuePropertyAssertions
+        valuePropertyAssertions = requestedValuePropertyAssertions,
       )
     }
   }

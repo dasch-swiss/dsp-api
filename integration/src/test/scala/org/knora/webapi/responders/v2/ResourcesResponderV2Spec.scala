@@ -77,157 +77,157 @@ class GraphTestData {
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+        source = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        source = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/0001/start",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/start",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/0001/start",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/start",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/0001/start",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      )
+        source = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+      ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Mike",
-        resourceIri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+        resourceIri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start"
+        resourceIri = "http://rdfh.ch/0001/start",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Hotel",
-        resourceIri = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ"
+        resourceIri = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Delta",
-        resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
-      )
+        resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
+      ),
     ),
-    ontologySchema = InternalSchema
+    ontologySchema = InternalSchema,
   )
 
   val graphForIncunabulaUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
@@ -235,127 +235,127 @@ class GraphTestData {
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/0001/start",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/start",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/0001/start",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/start",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
       ),
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
-      )
+        source = "http://rdfh.ch/0001/start",
+      ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start"
+        resourceIri = "http://rdfh.ch/0001/start",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
-      )
+        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+      ),
     ),
-    ontologySchema = InternalSchema
+    ontologySchema = InternalSchema,
   )
 
   val graphWithStandoffLink: GraphDataGetResponseV2 = GraphDataGetResponseV2(
@@ -363,22 +363,22 @@ class GraphTestData {
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/a-thing",
         propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
-        source = "http://rdfh.ch/0001/a-thing-with-text-values"
-      )
+        source = "http://rdfh.ch/0001/a-thing-with-text-values",
+      ),
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values"
+        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "A thing",
-        resourceIri = "http://rdfh.ch/0001/a-thing"
-      )
+        resourceIri = "http://rdfh.ch/0001/a-thing",
+      ),
     ),
-    ontologySchema = InternalSchema
+    ontologySchema = InternalSchema,
   )
 
   val graphWithOneNode: GraphDataGetResponseV2 = GraphDataGetResponseV2(
@@ -387,10 +387,10 @@ class GraphTestData {
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Another thing",
-        resourceIri = "http://rdfh.ch/0001/another-thing"
-      )
+        resourceIri = "http://rdfh.ch/0001/another-thing",
+      ),
     ),
-    ontologySchema = InternalSchema
+    ontologySchema = InternalSchema,
   )
 }
 
@@ -415,10 +415,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
+      name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
@@ -428,7 +428,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 26,
       uuid = UUID.randomUUID(),
       originalXMLID = None,
-      startIndex = 0
+      startIndex = 0,
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -437,7 +437,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       uuid = UUID.randomUUID(),
       originalXMLID = None,
       startIndex = 1,
-      startParentIndex = Some(0)
+      startParentIndex = Some(0),
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
@@ -446,8 +446,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       uuid = UUID.randomUUID(),
       originalXMLID = None,
       startIndex = 2,
-      startParentIndex = Some(1)
-    )
+      startParentIndex = Some(1),
+    ),
   )
 
   private val sampleStandoffForErasingResource: Vector[StandoffTagV2] = Vector(
@@ -457,7 +457,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       endPosition = 26,
       uuid = UUID.randomUUID(),
       originalXMLID = None,
-      startIndex = 0
+      startIndex = 0,
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -466,7 +466,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       uuid = UUID.randomUUID(),
       originalXMLID = None,
       startIndex = 1,
-      startParentIndex = Some(0)
+      startParentIndex = Some(0),
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
@@ -475,15 +475,15 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       uuid = UUID.randomUUID(),
       originalXMLID = None,
       startIndex = 2,
-      startParentIndex = Some(1)
-    )
+      startParentIndex = Some(1),
+    ),
   )
 
   private def getResource(resourceIri: IRI): ReadResourceV2 = {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      requestingUser = anythingUserProfile
+      requestingUser = anythingUserProfile,
     )
 
     expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
@@ -497,7 +497,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     outputResource: ReadResourceV2,
     defaultResourcePermissions: String,
     defaultValuePermissions: String,
-    requestingUser: User
+    requestingUser: User,
   ): Unit = {
     assert(outputResource.resourceIri == inputResourceIri)
     assert(outputResource.resourceClassIri == inputResource.resourceClassIri)
@@ -526,7 +526,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
     val actual = UnsafeZioRun.runOrThrow(
-      TriplestoreService.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid)))
+      TriplestoreService.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid))),
     )
     actual.results.bindings.map(_.rowMap("standoffTag")).toSet
   }
@@ -537,7 +537,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   "Load test data" in {
     appActor ! GetMappingRequestV2(
       mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
+      requestingUser = KnoraSystemInstances.Users.SystemUser,
     )
 
     expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
@@ -552,13 +552,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = response
+          received = response,
         )
       }
 
@@ -569,13 +569,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourcesPreviewGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
-          received = response
+          received = response,
         )
       }
 
@@ -587,13 +587,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-          received = response
+          received = response,
         )
       }
 
@@ -605,13 +605,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response
+          received = response,
         )
       }
 
@@ -622,13 +622,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourcesPreviewGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
-          received = response
+          received = response,
         )
       }
 
@@ -640,14 +640,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected =
             resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
-          received = response
+          received = response,
         )
       }
 
@@ -660,14 +660,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = incunabulaUserProfile,
       )
 
       // the redundant Iri should be ignored (distinct)
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response
+          received = response,
         )
       }
 
@@ -681,7 +681,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ResourceTEIGetResponseV2 =>
@@ -705,7 +705,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ResourceTEIGetResponseV2 =>
@@ -729,13 +729,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionDate),
         targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
-          received = response
+          received = response,
         )
       }
 
@@ -748,7 +748,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIri = resourceIri,
         startDate = None,
         endDate = None,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
@@ -765,7 +765,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIri = resourceIri,
         startDate = Some(startDate),
         endDate = Some(endDate),
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
@@ -778,13 +778,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
         valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
-          received = response
+          received = response,
         )
       }
     }
@@ -795,13 +795,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
-          received = response
+          received = response,
         )
       }
     }
@@ -813,7 +813,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         inbound = true,
         outbound = true,
         excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
+        requestingUser = SharedTestDataADM.anythingUser1,
       )
 
       val response = expectMsgType[GraphDataGetResponseV2](timeout)
@@ -831,7 +831,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         inbound = true,
         outbound = true,
         excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser,
       )
 
       val response = expectMsgType[GraphDataGetResponseV2](timeout)
@@ -849,7 +849,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         inbound = true,
         outbound = true,
         excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
+        requestingUser = SharedTestDataADM.anythingUser1,
       )
 
       expectMsgPF(timeout) { case response: GraphDataGetResponseV2 =>
@@ -864,7 +864,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         inbound = true,
         outbound = true,
         excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
+        requestingUser = SharedTestDataADM.anythingUser1,
       )
 
       expectMsgPF(timeout) { case response: GraphDataGetResponseV2 =>
@@ -882,13 +882,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       // Check that the response contains the correct metadata.
@@ -902,7 +902,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           outputResource = outputResource,
           defaultResourcePermissions = defaultAnythingResourcePermissions,
           defaultValuePermissions = defaultAnythingValuePermissions,
-          requestingUser = anythingUserProfile
+          requestingUser = anythingUserProfile,
         )
       }
 
@@ -916,7 +916,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -931,13 +931,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "test thing",
         values = Map.empty,
         projectADM = SharedTestDataADM.anythingProject,
-        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -952,7 +952,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -967,24 +967,24 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
           ),
           CreateValueInNewResourceV2(
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasInteger = 6
-            )
-          )
+              valueHasInteger = 6,
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text without standoff")
-            )
-          )
+              maybeValueHasString = Some("this is text without standoff"),
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
@@ -993,17 +993,17 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some("this is text with standoff"),
               standoff = sampleStandoff,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          )
+              mapping = standardMapping,
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = DecimalValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasDecimal = BigDecimal("100000000000000.000000000000001")
-            )
-          )
+              valueHasDecimal = BigDecimal("100000000000000.000000000000001"),
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
@@ -1013,76 +1013,76 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               valueHasStartJDN = 2264907,
               valueHasStartPrecision = DatePrecisionYear,
               valueHasEndJDN = 2265271,
-              valueHasEndPrecision = DatePrecisionYear
-            )
-          )
+              valueHasEndPrecision = DatePrecisionYear,
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = BooleanValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasBoolean = true
-            )
-          )
+              valueHasBoolean = true,
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = GeomValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasGeometry =
-                """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
-            )
-          )
+                """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}""",
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = IntervalValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasIntervalStart = BigDecimal("1.2"),
-              valueHasIntervalEnd = BigDecimal("3.4")
-            )
-          )
+              valueHasIntervalEnd = BigDecimal("3.4"),
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
-            )
-          )
+              valueHasListNode = "http://rdfh.ch/lists/0001/treeList03",
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = ColorValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasColor = "#ff3333"
-            )
-          )
+              valueHasColor = "#ff3333",
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = UriValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasUri = "https://www.knora.org"
-            )
-          )
+              valueHasUri = "https://www.knora.org",
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = "2661604"
-            )
-          )
+              valueHasGeonameCode = "2661604",
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0001/a-thing"
-            )
-          )
-        )
+              referredResourceIri = "http://rdfh.ch/0001/a-thing",
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1090,13 +1090,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -1111,7 +1111,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -1124,16 +1124,16 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         .make(
           fileType = FileType.StillImageFile(
             dimX = 512,
-            dimY = 256
+            dimY = 256,
           ),
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
         )
         .toMessage(resourceIri = Some(resourceIri))
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -1148,7 +1148,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -1160,14 +1160,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputResource = UploadFileRequest
         .make(
           fileType = FileType.DocumentFile(),
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf",
         )
         .toMessage(resourceIri = Some(resourceIri))
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -1182,7 +1182,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -1194,17 +1194,17 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputResource = UploadFileRequest
         .make(
           fileType = FileType.ArchiveFile,
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip"
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
         )
         .toMessage(
           resourceIri = Some(resourceIri),
-          internalMimeType = Some("application/zip")
+          internalMimeType = Some("application/zip"),
         )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -1219,7 +1219,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -1231,13 +1231,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1253,24 +1253,24 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
+              maybeValueHasString = Some("test title"),
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 1")
-            )
+              maybeValueHasString = Some("test publoc 1"),
+            ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 2")
-            )
-          )
-        )
+              maybeValueHasString = Some("test publoc 2"),
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1278,13 +1278,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1300,18 +1300,18 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
+              maybeValueHasString = Some("test title"),
+            ),
+          ),
         ),
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test pagenum")
-            )
-          )
-        )
+              maybeValueHasString = Some("test pagenum"),
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1319,13 +1319,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1341,22 +1341,22 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
-            )
+              maybeValueHasString = Some("test title 1"),
+            ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 2")
-            )
+              maybeValueHasString = Some("test title 2"),
+            ),
           ),
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
-            )
-          )
-        )
+              maybeValueHasString = Some("test title 1"),
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1364,13 +1364,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1386,10 +1386,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
-        )
+              maybeValueHasString = Some("test title"),
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1397,13 +1397,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         label = "invalid book",
         values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1419,10 +1419,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing"
-            )
-          )
-        )
+              referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing",
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1430,13 +1430,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1454,7 +1454,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           endPosition = 26,
           uuid = UUID.randomUUID(),
           originalXMLID = None,
-          startIndex = 0
+          startIndex = 0,
         ),
         StandoffTagV2(
           standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
@@ -1467,10 +1467,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           attributes = Vector(
             StandoffTagIriAttributeV2(
               standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-              value = "http://rdfh.ch/0001/nonexistent-thing"
-            )
+              value = "http://rdfh.ch/0001/nonexistent-thing",
+            ),
           ),
-          startParentIndex = Some(0)
+          startParentIndex = Some(0),
         ),
         StandoffTagV2(
           standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
@@ -1479,8 +1479,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           uuid = UUID.randomUUID(),
           originalXMLID = None,
           startIndex = 2,
-          startParentIndex = Some(1)
-        )
+          startParentIndex = Some(1),
+        ),
       )
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
@@ -1491,10 +1491,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some("this is text with standoff"),
               standoff = standoffWithInvalidLink,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          )
-        )
+              mapping = standardMapping,
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1502,13 +1502,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1524,10 +1524,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = HierarchicalListValueContentV2(
               ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node"
-            )
-          )
-        )
+              valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node",
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1535,13 +1535,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1557,10 +1557,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("invalid text value")
-            )
-          )
-        )
+              maybeValueHasString = Some("invalid text value"),
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1568,13 +1568,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1590,10 +1590,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
-          )
-        )
+              referredResourceIri = zeitglöckleinIri,
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1601,13 +1601,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1624,13 +1624,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "invalid thing",
         values = Map.empty,
         projectADM = SharedTestDataADM.anythingProject,
-        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
+        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser"),
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1647,11 +1647,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
-          )
-        )
+            permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser"),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -1659,13 +1659,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = values,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1681,13 +1681,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.incunabulaProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1701,7 +1701,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("new test label"),
         requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1717,7 +1717,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
         maybeLabel = Some("new test label"),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1738,7 +1738,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLabel = Some(newLabel),
         maybePermissions = Some(newPermissions),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1751,8 +1751,8 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(outputResource.label == newLabel)
       assert(
         PermissionUtilADM.parsePermissions(outputResource.permissions) == PermissionUtilADM.parsePermissions(
-          newPermissions
-        )
+          newPermissions,
+        ),
       )
       aThingLastModificationDate = outputResource.lastModificationDate.get
       assert(aThingLastModificationDate.isAfter(dateTimeStampBeforeUpdate))
@@ -1764,7 +1764,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("another new test label"),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1781,7 +1781,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(Instant.MIN),
         maybeLabel = Some("another new test label"),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1800,7 +1800,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeLabel = Some(newLabel),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1823,7 +1823,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(Instant.MIN),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1842,7 +1842,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(newModificationDate),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! updateRequest
@@ -1867,7 +1867,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = Some(aThingLastModificationDate),
         requestingUser = SharedTestDataADM.anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! deleteRequest
@@ -1884,7 +1884,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeDeleteComment = Some("This resource is too boring."),
         maybeLastModificationDate = Some(aThingLastModificationDate),
         requestingUser = SharedTestDataADM.anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! deleteRequest
@@ -1894,7 +1894,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq(aThingIri),
         targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anythingUser1
+        requestingUser = SharedTestDataADM.anythingUser1,
       )
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         response.resources.size should equal(1)
@@ -1917,7 +1917,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = None,
         requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! deleteRequest
@@ -1927,7 +1927,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anythingUser1
+        requestingUser = SharedTestDataADM.anythingUser1,
       )
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         response.resources.size should equal(1)
@@ -1949,13 +1949,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "test bildformat",
         values = Map.empty,
         projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("CR knora-admin:Creator")
+        permissions = Some("CR knora-admin:Creator"),
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1972,13 +1972,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "test bildformat",
         values = Map.empty,
         projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("CR knora-admin:Creator")
+        permissions = Some("CR knora-admin:Creator"),
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgClass(classOf[ReadResourcesSequenceV2])
@@ -1993,13 +1993,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "test bildformat",
         values = Map.empty,
         projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("CR knora-admin:Creator")
+        permissions = Some("CR knora-admin:Creator"),
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgClass(classOf[ReadResourcesSequenceV2])
@@ -2014,11 +2014,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("CR knora-admin:Creator")
-          )
-        )
+            permissions = Some("CR knora-admin:Creator"),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2026,13 +2026,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject
+        projectADM = SharedTestDataADM.imagesProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2049,11 +2049,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("CR knora-admin:Creator")
-          )
-        )
+            permissions = Some("CR knora-admin:Creator"),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2061,13 +2061,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject
+        projectADM = SharedTestDataADM.imagesProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgClass(timeout, (classOf[ReadResourcesSequenceV2]))
@@ -2082,11 +2082,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("CR knora-admin:Creator")
-          )
-        )
+            permissions = Some("CR knora-admin:Creator"),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2094,13 +2094,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
         label = "test bildformat",
         values = inputValues,
-        projectADM = SharedTestDataADM.imagesProject
+        projectADM = SharedTestDataADM.imagesProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgClass(classOf[ReadResourcesSequenceV2])
@@ -2123,10 +2123,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some("this is text with standoff"),
               standoff = sampleStandoffForErasingResource,
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          )
-        )
+              mapping = standardMapping,
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2134,13 +2134,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = resourceClassIri,
         label = "test thing",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -2166,12 +2166,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               maybeValueHasString = Some("this is some other text with standoff"),
               standoff = Vector(sampleStandoffForErasingResource.head),
               mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
+              mapping = standardMapping,
+            ),
           ),
           anythingUserProfile,
-          UUID.randomUUID
-        )
+          UUID.randomUUID,
+        ),
       )
       secondValueIriToErase.set(updateValueResponse.valueIri)
 
@@ -2203,7 +2203,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! eraseRequest
@@ -2225,10 +2225,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = resourceIriToErase.get
-            )
-          )
-        )
+              referredResourceIri = resourceIriToErase.get,
+            ),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2236,13 +2236,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = resourceClassIri,
         label = "thing with link",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -2258,7 +2258,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
         requestingUser = SharedTestDataADM.anythingAdminUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! eraseRequest
@@ -2275,11 +2275,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = linkValuePropertyIri,
             valueIri = linkValue.valueIri,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
           ),
           anythingUserProfile,
-          UUID.randomUUID()
-        )
+          UUID.randomUUID(),
+        ),
       )
     }
 
@@ -2292,7 +2292,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
         requestingUser = SharedTestDataADM.anythingAdminUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       appActor ! eraseRequest
@@ -2330,13 +2330,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "thing with a custom IRI",
         values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       // Check that the response contains the correct metadata.
@@ -2350,7 +2350,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           outputResource = outputResource,
           defaultResourcePermissions = defaultAnythingResourcePermissions,
           defaultValuePermissions = defaultAnythingValuePermissions,
-          requestingUser = anythingUserProfile
+          requestingUser = anythingUserProfile,
         )
       }
 
@@ -2364,7 +2364,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
 
@@ -2379,12 +2379,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
             permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
-            customValueUUID = Some(UuidUtil.base64Decode("IN4R19yYR0ygi3K2VEHpUQ").get)
-          )
-        )
+            customValueUUID = Some(UuidUtil.base64Decode("IN4R19yYR0ygi3K2VEHpUQ").get),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -2392,13 +2392,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "thing with custom value UUID",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
@@ -2413,7 +2413,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
     }
   }
@@ -2423,7 +2423,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2445,7 +2445,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2465,16 +2465,16 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
             valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
+            permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
           ),
           anythingUserProfile,
-          UUID.randomUUID
-        )
+          UUID.randomUUID,
+        ),
       )
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2502,19 +2502,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
             valueContent = TextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(testValue)
+              maybeValueHasString = Some(testValue),
             ),
             valueIri = Some(newValueIri.toSmartIri),
-            permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
+            permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
           ),
           requestingUser = anythingUserProfile,
-          apiRequestID = UUID.randomUUID
-        )
+          apiRequestID = UUID.randomUUID,
+        ),
       )
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2524,7 +2524,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         events.find(event =>
           event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
             .asInstanceOf[ValueEventBody]
-            .valueIri == newValueIri
+            .valueIri == newValueIri,
         )
       assert(createValueEvent.isDefined)
       val createValuePayloadContent = createValueEvent.get.eventBody
@@ -2550,16 +2550,16 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
             valueIri = valueToDelete,
             valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-            deleteComment = Some(deleteComment)
+            deleteComment = Some(deleteComment),
           ),
           anythingUserProfile,
-          UUID.randomUUID
-        )
+          UUID.randomUUID,
+        ),
       )
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2569,7 +2569,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         events.find(event =>
           event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
             .asInstanceOf[ValueEventBody]
-            .valueIri == valueToDelete
+            .valueIri == valueToDelete,
         )
       assert(deleteValueEvent.isDefined)
     }
@@ -2579,7 +2579,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
 
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2600,14 +2600,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("a new label"),
         requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = UUID.randomUUID,
       )
 
       expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        requestingUser = anythingUserProfile
+        requestingUser = anythingUserProfile,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
@@ -2622,7 +2622,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/1111",
-        requestingUser = SharedTestDataADM.anythingAdminUser
+        requestingUser = SharedTestDataADM.anythingAdminUser,
       )
       expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -2632,7 +2632,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "return seq of full history events for each resource of a project" in {
       appActor ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/0001",
-        requestingUser = SharedTestDataADM.anythingAdminUser
+        requestingUser = SharedTestDataADM.anythingAdminUser,
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)

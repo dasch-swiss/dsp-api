@@ -41,8 +41,8 @@ object RouteUtilZ {
       .attempt(URLDecoder.decode(value, "utf-8"))
       .orElseFail(
         BadRequestException(
-          if (!errorMsg.isBlank) errorMsg else s"Not an url encoded utf-8 String '$value'"
-        )
+          if (!errorMsg.isBlank) errorMsg else s"Not an url encoded utf-8 String '$value'",
+        ),
       )
 
   def decodeUuid(uuidStr: String): IO[BadRequestException, UUID] =

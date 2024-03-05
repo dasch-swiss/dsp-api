@@ -30,13 +30,13 @@ case class LoginApiRequestPayloadV2(
   iri: Option[IRI] = None,
   email: Option[String] = None,
   username: Option[String] = None,
-  password: String
+  password: String,
 ) {
 
   val identifyingParameterCount: Int = List(
     iri,
     email,
-    username
+    username,
   ).flatten.size
 
   // something needs to be set

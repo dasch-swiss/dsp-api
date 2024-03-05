@@ -17,7 +17,7 @@ object LangStringSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, ValidationException] = suite("LangStringSpec")(
     langStringTest,
-    multiLangStringTest
+    multiLangStringTest,
   )
 
   private val langStringTest = suite("LangString")(
@@ -38,7 +38,7 @@ object LangStringSpec extends ZIOSpecDefault {
           result <- LangString.make(LanguageCode.en, stringValue)
         } yield assertTrue(result.language.value == "en") &&
           assertTrue(result.value == stringValue)).toZIO
-      }
+      },
     ),
     suite("`makeFromStrings()` smart constructor")(
       test("pass an invalid language value and return an error") {
@@ -64,7 +64,7 @@ object LangStringSpec extends ZIOSpecDefault {
           result <- LangString.makeFromStrings("en", stringValue)
         } yield assertTrue(result.language.value == "en") &&
           assertTrue(result.value == stringValue)).toZIO
-      }
+      },
     ),
     suite("`unsafeMake()` unsafe constructor")(
       test("create a valid LangString through the unsafe method") {
@@ -78,8 +78,8 @@ object LangStringSpec extends ZIOSpecDefault {
         val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
         assertTrue(unsafeValid.language.value == "en") &&
         assertTrue(unsafeValid.value == str)
-      }
-    )
+      },
+    ),
   )
 
   private val multiLangStringTest = suite("MultiLangString")(
@@ -95,7 +95,7 @@ object LangStringSpec extends ZIOSpecDefault {
           LangString.unsafeMake(LanguageCode.en, "english 2"),
           LangString.unsafeMake(LanguageCode.de, "german 1"),
           LangString.unsafeMake(LanguageCode.de, "german 2"),
-          LangString.unsafeMake(LanguageCode.fr, "french 1")
+          LangString.unsafeMake(LanguageCode.fr, "french 1"),
         )
         val nonUniqueLanguages = Set(LanguageCode.en, LanguageCode.de)
         val res                = MultiLangString.make(langStrings)
@@ -107,7 +107,7 @@ object LangStringSpec extends ZIOSpecDefault {
         val langStrings = Set(
           LangString.unsafeMake(LanguageCode.en, "string in english"),
           LangString.unsafeMake(LanguageCode.de, "string in german"),
-          LangString.unsafeMake(LanguageCode.fr, "string in french")
+          LangString.unsafeMake(LanguageCode.fr, "string in french"),
         )
         (for {
           res <- MultiLangString.make(langStrings)
@@ -115,8 +115,8 @@ object LangStringSpec extends ZIOSpecDefault {
           assertTrue(res.langStrings.size == 3) &&
             assertTrue(res.langStrings == langStrings)
         )).toZIO
-      }
-    )
+      },
+    ),
   )
 
 }

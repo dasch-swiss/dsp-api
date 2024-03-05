@@ -39,12 +39,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/images-demo-data.ttl",
-      name = "http://www.knora.org/data/00FF/images"
+      name = "http://www.knora.org/data/00FF/images",
     ),
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
@@ -83,7 +83,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return basic list information (anything other list)" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList")
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/0001/otherTreeList"),
         )
         actual match {
           case RootNodeInfoGetResponseADM(listInfo) => listInfo.sorted should be(otherTreeListInfo.sorted)
@@ -93,7 +93,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return basic node information (images list - sommer)" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04")
+          ListsResponder.listNodeInfoGetRequestADM("http://rdfh.ch/lists/00FF/526f26ed04"),
         )
         actual match {
           case ChildNodeInfoGetResponseADM(childInfo) => childInfo.sorted should be(summerNodeInfo.sorted)
@@ -103,7 +103,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return a full list response" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList")
+          ListsResponder.listGetRequestADM("http://rdfh.ch/lists/0001/treeList"),
         )
         actual match {
           case ListGetResponseADM(list) =>
@@ -128,10 +128,10 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")))),
               Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
               Some(ListName.unsafeFrom("neuelistename")),
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            apiRequestID = UUID.randomUUID
-          )
+            apiRequestID = UUID.randomUUID,
+          ),
         )
 
         val listInfo = received.list.listinfo
@@ -164,10 +164,10 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               Comments.unsafeFrom(Seq(V2.StringLiteralV2(commentWithSpecialCharacter, language = Some("de")))),
               Labels.unsafeFrom(Seq(V2.StringLiteralV2(labelWithSpecialCharacter, language = Some("de")))),
               Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            apiRequestID = UUID.randomUUID
-          )
+            apiRequestID = UUID.randomUUID,
+          ),
         )
 
         val listInfo = received.list.listinfo
@@ -199,19 +199,19 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             Labels.unsafeFrom(
               Seq(
                 V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                V2.StringLiteralV2(value = "Changed List", language = Some("en"))
-              )
-            )
+                V2.StringLiteralV2(value = "Changed List", language = Some("en")),
+              ),
+            ),
           ),
           comments = Some(
             Comments
               .unsafeFrom(
                 Seq(
                   V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                  V2.StringLiteralV2(value = "New Comment", language = Some("en"))
-                )
-              )
-          )
+                  V2.StringLiteralV2(value = "New Comment", language = Some("en")),
+                ),
+              ),
+          ),
         )
 
         val received = UnsafeZioRun.runOrThrow(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
@@ -227,8 +227,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         labels.sorted should be(
           Seq(
             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-            StringLiteralV2(value = "Changed List", language = Some("en"))
-          ).sorted
+            StringLiteralV2(value = "Changed List", language = Some("en")),
+          ).sorted,
         )
 
         val comments = listInfo.comments.stringLiterals
@@ -236,8 +236,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         comments.sorted should be(
           Seq(
             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-            StringLiteralV2(value = "New Comment", language = Some("en"))
-          ).sorted
+            StringLiteralV2(value = "New Comment", language = Some("en")),
+          ).sorted,
         )
       }
 
@@ -247,12 +247,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val theChange = ListChangeRequest(
           listIri = ListIri.unsafeFrom(newListIri.get),
           projectIri = projectIRI,
-          name = name
+          name = name,
         )
         val exit = UnsafeZioRun.run(ListsResponder.nodeInfoChangeRequest(theChange, UUID.randomUUID()))
         assertFailsWithA[DuplicateValueException](
           exit,
-          s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
+          s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}.",
         )
       }
 
@@ -263,19 +263,19 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
-                )
+                  Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
+                ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+                Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("first")),
               ListIri.unsafeFrom(newListIri.get),
               None,
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val nodeInfo = received.nodeinfo
@@ -289,14 +289,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -317,19 +317,19 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
-                )
+                  Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
+                ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+                Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("second")),
               ListIri.unsafeFrom(newListIri.get),
               Some(Position.unsafeFrom(0)),
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val nodeInfo = received.nodeinfo
@@ -344,14 +344,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -372,19 +372,19 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
-                )
+                  Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
+                ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+                Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("third")),
               ListIri.unsafeFrom(secondChildIri.get),
               Some(Position.unsafeFrom(0)),
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val nodeInfo = received.nodeinfo
@@ -399,14 +399,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -429,24 +429,24 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
-                )
+                  Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))),
+                ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en")))
+                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("fourth")),
               ListIri.unsafeFrom(newListIri.get),
               Some(givenPosition),
-              ProjectIri.unsafeFrom(imagesProjectIri)
+              ProjectIri.unsafeFrom(imagesProjectIri),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2."
+          s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.",
         )
       }
     }
@@ -461,12 +461,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[UpdateNotPerformedException](
           exit,
-          s"The given position is the same as node's current position."
+          s"The given position is the same as node's current position.",
         )
       }
 
@@ -480,12 +480,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid position given, maximum allowed position is = 4."
+          s"Invalid position given, maximum allowed position is = 4.",
         )
       }
 
@@ -499,12 +499,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Invalid position given, maximum allowed position is = 3."
+          s"Invalid position given, maximum allowed position is = 3.",
         )
       }
 
@@ -518,8 +518,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -550,8 +550,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -583,8 +583,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
@@ -601,7 +601,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
         // last node of new parent must be shifted one place to right
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3
+          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3,
         )
         isShifted should be(true)
 
@@ -634,8 +634,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
@@ -652,7 +652,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
         // last node of new parent must have remained in its current position
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3
+          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3,
         )
         isShifted should be(true)
 
@@ -680,8 +680,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -704,8 +704,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -728,8 +728,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -748,8 +748,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -768,8 +768,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -788,8 +788,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received.node
@@ -806,12 +806,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             nodeInUseIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Node ${nodeInUseIri.value} cannot be deleted, because it is in use."
+          s"Node ${nodeInUseIri.value} cannot be deleted, because it is in use.",
         )
       }
 
@@ -821,13 +821,13 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             nodeIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
         assertFailsWithA[BadRequestException](
           exit,
-          s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use."
+          s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use.",
         )
       }
 
@@ -837,12 +837,12 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             nodeInUseInOntologyIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use."
+          s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use.",
         )
       }
 
@@ -852,8 +852,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             nodeIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val parentNode = received match {
@@ -878,8 +878,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             nodeIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         val parentNode = received match {
           case ChildNodeDeleteResponseADM(node) => node
@@ -899,8 +899,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.deleteListItemRequestADM(
             listIri,
             SharedTestDataADM.anythingAdminUser,
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val received = actual match {
@@ -962,7 +962,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
         assertFailsWithA[BadRequestException](
           exit,
-          s"Root node comments cannot be deleted."
+          s"Root node comments cannot be deleted.",
         )
       }
 
@@ -985,7 +985,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val exit    = UnsafeZioRun.run(ListsResponder.deleteListNodeCommentsADM(listIri))
         assertFailsWithA[BadRequestException](
           exit,
-          s"Nothing to delete. Node ${listIri.value} does not have comments."
+          s"Nothing to delete. Node ${listIri.value} does not have comments.",
         )
       }
     }

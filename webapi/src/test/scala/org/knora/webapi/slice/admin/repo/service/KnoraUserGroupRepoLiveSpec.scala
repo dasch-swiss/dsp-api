@@ -37,7 +37,7 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
         ZIO.serviceWithZIO[KnoraUserGroupRepo](userGroupRepo =>
           for {
             userGroup <- userGroupRepo.findById(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"))
-          } yield assertTrue(userGroup.isEmpty)
+          } yield assertTrue(userGroup.isEmpty),
         )
       },
       test("findById given an existing user should return that user") {
@@ -45,7 +45,7 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
           for {
             _         <- userGroupRepo.save(testUserGroup)
             userGroup <- userGroupRepo.findById(testUserGroup.id)
-          } yield assertTrue(userGroup.contains(testUserGroup))
+          } yield assertTrue(userGroup.contains(testUserGroup)),
         )
       },
       test("save should update fields") {
@@ -55,17 +55,17 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
             testUserGroupModified =
               testUserGroup.copy(
                 groupName = GroupName.unsafeFrom("another"),
-                belongsToProject = None
+                belongsToProject = None,
               )
             _         <- userGroupRepo.save(testUserGroupModified)
             userGroup <- userGroupRepo.findById(testUserGroup.id)
-          } yield assertTrue(userGroup.contains(testUserGroupModified))
+          } yield assertTrue(userGroup.contains(testUserGroupModified)),
         )
-      }
-    )
+      },
+    ),
   ).provide(
     KnoraUserGroupRepoLive.layer,
     TriplestoreServiceInMemory.emptyLayer,
-    StringFormatter.test
+    StringFormatter.test,
   )
 }

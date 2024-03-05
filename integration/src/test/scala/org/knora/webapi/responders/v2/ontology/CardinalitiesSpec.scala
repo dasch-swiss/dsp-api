@@ -31,8 +31,8 @@ class CardinalitiesSpec extends CoreSpec {
       val resF =
         UnsafeZioRun.runToFuture(
           ZIO.serviceWithZIO[CardinalityHandler](
-            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
-          )
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri),
+          ),
         )
       resF map { res =>
         println(res); assert(res, "property is used in resource (instance of that resource class)")
@@ -47,8 +47,8 @@ class CardinalitiesSpec extends CoreSpec {
       val resF =
         UnsafeZioRun.runToFuture(
           ZIO.serviceWithZIO[CardinalityHandler](
-            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
-          )
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri),
+          ),
         )
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
@@ -63,8 +63,8 @@ class CardinalitiesSpec extends CoreSpec {
       val resF =
         UnsafeZioRun.runToFuture(
           ZIO.serviceWithZIO[CardinalityHandler](
-            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
-          )
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri),
+          ),
         )
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
@@ -80,8 +80,8 @@ class CardinalitiesSpec extends CoreSpec {
       val resF =
         UnsafeZioRun.runToFuture(
           ZIO.serviceWithZIO[CardinalityHandler](
-            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
-          )
+            _.isPropertyUsedInResources(internalClassIri, internalPropertyIri),
+          ),
         )
       resF map { res =>
         println(res); assert(res, "property is used in resource (instance of resource class)")
@@ -95,7 +95,7 @@ class CardinalitiesSpec extends CoreSpec {
 
       val resF =
         UnsafeZioRun.runToFuture(
-          ZIO.serviceWithZIO[CardinalityHandler](_.isPropertyUsedInResources(internalClassIri, internalPropertyIri))
+          ZIO.serviceWithZIO[CardinalityHandler](_.isPropertyUsedInResources(internalClassIri, internalPropertyIri)),
         )
       resF map { res =>
         println(res); assert(res, "property is used in a resource of subclass")

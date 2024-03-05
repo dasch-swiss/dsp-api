@@ -33,7 +33,7 @@ case class CacheService(
   mappingUsernameUserIri: TMap[Username, UserIri],
   mappingEmailUserIri: TMap[Email, UserIri],
   mappingShortcodeProjectIri: TMap[Shortcode, ProjectIri],
-  mappingShortnameProjectIri: TMap[Shortname, ProjectIri]
+  mappingShortnameProjectIri: TMap[Shortname, ProjectIri],
 ) {
 
   /**

@@ -28,19 +28,19 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass an invalid UUID and return an error") {
       assertTrue(
-        Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri)))
+        Base64Uuid.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(invalidIri))),
       )
     },
     test("pass an valid UUID, which has not supported version 3") {
       assertTrue(
-        Base64Uuid.make(uuidVersion3) == Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+        Base64Uuid.make(uuidVersion3) == Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid)),
       )
     },
     test("pass valid UUID and successfully create value object") {
       (for {
         uuid <- Base64Uuid.make(supportedUuid)
       } yield assertTrue(uuid.value == supportedUuid)).toZIO
-    }
+    },
   )
 
   private val roleIriTest = suite("RoleIri should")(
@@ -52,8 +52,8 @@ object IriSpec extends ZIOSpecDefault {
         Seq(
           "http://rdfh.ch/roles/40-characters-iri-for-testing-purposes-1",
           "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ",
-          "http://rdfh.ch/roles/1234"
-        )
+          "http://rdfh.ch/roles/1234",
+        ),
       )
       check(validIris)(i => assertTrue(RoleIri.from(i).isRight))
     },
@@ -63,10 +63,10 @@ object IriSpec extends ZIOSpecDefault {
           "Invalid IRI",
           "http://rdfh.ch/roles/123",
           "http://rdfh.ch/roles/41-characters-iri-for-testing-purposes-12",
-          "http://rdfh.ch/roles/(DEEitJESRi3pDaDjjQ1WQ"
-        )
+          "http://rdfh.ch/roles/(DEEitJESRi3pDaDjjQ1WQ",
+        ),
       )
       check(invalidIris)(i => assertTrue(RoleIri.from(i) == Left(s"Role IRI is invalid.")))
-    }
+    },
   )
 }

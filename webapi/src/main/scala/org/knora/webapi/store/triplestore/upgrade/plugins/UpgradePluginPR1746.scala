@@ -35,7 +35,7 @@ class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
         subj = statement.subj,
         pred = statement.pred,
         obj = fixMeString,
-        context = statement.context
+        context = statement.context,
       )
 
       log.info(s"Changed empty object of <${statement.subj}> <${statement.pred}> to FIXME")
@@ -50,14 +50,14 @@ class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
                 if (datatypeLiteral.datatype == OntologyConstants.Xsd.String) {
                   replaceEmptyStringWithDummy(
                     statement = statement,
-                    languageTag = None
+                    languageTag = None,
                   )
                 }
 
               case stringWithLanguage: StringWithLanguage =>
                 replaceEmptyStringWithDummy(
                   statement = statement,
-                  languageTag = Some(stringWithLanguage.language)
+                  languageTag = Some(stringWithLanguage.language),
                 )
             }
           }

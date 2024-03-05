@@ -67,7 +67,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
                .withHeader("Content-Type", "application/zip")
                .withHeader("Content-Disposition", s"export-$testShortcodeStr.zip")
                .withBody(testContent)
-               .withStatus(200)
+               .withStatus(200),
            )
 
       // when
@@ -77,7 +77,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
       _ <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
-               .withHeader("Authorization", equalTo(s"Bearer $mockJwt"))
+               .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
       contentIsDownloaded <- Files.readAllBytes(path).map(_.toArray).map(_ sameElements testContent)
     } yield assertTrue(contentIsDownloaded)
@@ -94,7 +94,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       checksumOriginal = "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
       checksumDerivative = "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
       internalMimeType = Some("text/plain"),
-      originalMimeType = Some("text/plain")
+      originalMimeType = Some("text/plain"),
     )
     for {
       // given
@@ -107,7 +107,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
       _ <- HttpMockServer.verify.request(
              getRequestedFor(urlPathEqualTo(expectedUrl))
-               .withHeader("Authorization", equalTo(s"Bearer $mockJwt"))
+               .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
            )
     } yield assertTrue(assetInfo == expected)
   })
@@ -115,13 +115,13 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("DspIngestClientLive")(
       exportProjectSuite,
-      getAssetInfoSuite
+      getAssetInfoSuite,
     ).provideSome[Scope](
       DspIngestClientLive.layer,
       HttpMockServer.layer,
       TestPort.random,
       dspIngestConfigLayer,
-      jwtServiceMockLayer
+      jwtServiceMockLayer,
     ) @@ TestAspect.sequential
 }
 
@@ -139,7 +139,7 @@ object DspIngestClientLiveSpecLayers {
   val dspIngestConfigLayer: ZLayer[TestPort, Nothing, DspIngestConfig] = ZLayer.fromZIO(
     ZIO
       .serviceWith[TestPort](_.value)
-      .map(port => DspIngestConfig(baseUrl = s"http://localhost:$port", audience = "audience"))
+      .map(port => DspIngestConfig(baseUrl = s"http://localhost:$port", audience = "audience")),
   )
 }
 
@@ -147,21 +147,21 @@ object HttpMockServer {
   object verify {
     def request(
       requestPattern: RequestPatternBuilder,
-      amount: CountMatchingStrategy = WireMock.exactly(1)
+      amount: CountMatchingStrategy = WireMock.exactly(1),
     ): ZIO[WireMockServer, Throwable, Unit] = ZIO.serviceWithZIO[WireMockServer](server =>
       ZIO.attempt(server.verify(amount, requestPattern)).tapError { e =>
         Console.printLine(s"\nMockDspApiServer: ${e.getMessage}")
-      }
+      },
     )
   }
 
   object stub {
     def getResponseJsonBody[A](url: String, status: Int, body: A)(implicit
-      encoder: JsonEncoder[A]
+      encoder: JsonEncoder[A],
     ): URIO[WireMockServer, WireMockServer] =
       getResponse(
         url,
-        aResponse().withStatus(status).withBody(body.toJson).withHeader("Content-Type", "application/json")
+        aResponse().withStatus(status).withBody(body.toJson).withHeader("Content-Type", "application/json"),
       )
 
     def getResponse(url: String, response: ResponseDefinitionBuilder): URIO[WireMockServer, WireMockServer] =

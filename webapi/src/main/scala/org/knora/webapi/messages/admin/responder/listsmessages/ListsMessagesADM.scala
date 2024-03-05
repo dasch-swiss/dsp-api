@@ -218,7 +218,7 @@ case class ListRootNodeInfoADM(
   projectIri: IRI,
   name: Option[String] = None,
   labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2
+  comments: StringLiteralSequenceV2,
 ) extends ListNodeInfoADM {
 
   /**
@@ -232,7 +232,7 @@ case class ListRootNodeInfoADM(
       projectIri = projectIri,
       name = name,
       labels = labels.sortByLanguage,
-      comments = comments.sortByLanguage
+      comments = comments.sortByLanguage,
     )
 
   /**
@@ -281,7 +281,7 @@ case class ListChildNodeInfoADM(
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2,
   position: Int,
-  hasRootNode: IRI
+  hasRootNode: IRI,
 ) extends ListNodeInfoADM {
 
   /**
@@ -296,7 +296,7 @@ case class ListChildNodeInfoADM(
       labels = labels.sortByLanguage,
       comments = comments.sortByLanguage,
       position = position,
-      hasRootNode = hasRootNode
+      hasRootNode = hasRootNode,
     )
 
   /**
@@ -410,7 +410,7 @@ case class ListRootNodeADM(
   name: Option[String],
   labels: StringLiteralSequenceV2,
   comments: StringLiteralSequenceV2,
-  children: Seq[ListChildNodeADM]
+  children: Seq[ListChildNodeADM],
 ) extends ListNodeADM {
 
   /**
@@ -422,7 +422,7 @@ case class ListRootNodeADM(
     this.copy(
       labels = labels.sortByLanguage,
       comments = comments.sortByLanguage,
-      children = children.sortBy(_.position).map(_.sorted)
+      children = children.sortBy(_.position).map(_.sorted),
     )
 
   /**
@@ -481,7 +481,7 @@ case class ListChildNodeADM(
   comments: StringLiteralSequenceV2,
   position: Int,
   hasRootNode: IRI,
-  children: Seq[ListChildNodeADM]
+  children: Seq[ListChildNodeADM],
 ) extends ListNodeADM {
 
   /**
@@ -542,7 +542,7 @@ case class NodePathElementADM(
   id: IRI,
   name: Option[String],
   labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2
+  comments: StringLiteralSequenceV2,
 )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -591,7 +591,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
               "name"       -> root.name.toJson,
               "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
               "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
-              "isRootNode" -> true.toJson
+              "isRootNode" -> true.toJson,
             )
           } else {
             JsObject(
@@ -599,7 +599,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
               "projectIri" -> root.projectIri.toJson,
               "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
               "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
-              "isRootNode" -> true.toJson
+              "isRootNode" -> true.toJson,
             )
           }
 
@@ -611,7 +611,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
               "labels"      -> JsArray(child.labels.stringLiterals.map(_.toJson)),
               "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
               "position"    -> child.position.toJson,
-              "hasRootNode" -> child.hasRootNode.toJson
+              "hasRootNode" -> child.hasRootNode.toJson,
             )
           } else {
             JsObject(
@@ -619,7 +619,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
               "labels"      -> JsArray(child.labels.stringLiterals.map(_.toJson)),
               "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
               "position"    -> child.position.toJson,
-              "hasRootNode" -> child.hasRootNode.toJson
+              "hasRootNode" -> child.hasRootNode.toJson,
             )
           }
       }
@@ -668,7 +668,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           projectIri = maybeProjectIri.getOrElse(throw DeserializationException("The project IRI is not defined.")),
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
-          comments = StringLiteralSequenceV2(comments.toVector)
+          comments = StringLiteralSequenceV2(comments.toVector),
         )
       } else {
         ListChildNodeInfoADM(
@@ -677,7 +677,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           labels = StringLiteralSequenceV2(labels.toVector),
           comments = StringLiteralSequenceV2(comments.toVector),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
-          hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined."))
+          hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
         )
       }
     }
@@ -710,7 +710,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
             "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
             "isRootNode" -> true.toJson,
-            "children"   -> JsArray(root.children.map(write).toVector)
+            "children"   -> JsArray(root.children.map(write).toVector),
           )
 
         case child: ListChildNodeADM =>
@@ -721,7 +721,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
             "position"    -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
-            "children"    -> JsArray(child.children.map(write).toVector)
+            "children"    -> JsArray(child.children.map(write).toVector),
           )
       }
 
@@ -776,7 +776,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
           comments = StringLiteralSequenceV2(comments.toVector),
-          children = children
+          children = children,
         )
       } else {
         ListChildNodeADM(
@@ -786,7 +786,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           comments = StringLiteralSequenceV2(comments.toVector),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
           hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
-          children = children
+          children = children,
         )
       }
     }
@@ -805,7 +805,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         "id"       -> element.id.toJson,
         "name"     -> element.name.toJson,
         "labels"   -> JsArray(element.labels.stringLiterals.map(_.toJson)),
-        "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson))
+        "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson)),
       )
 
     /**
@@ -837,7 +837,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         id = id,
         name = name,
         labels = StringLiteralSequenceV2(labels.toVector),
-        comments = StringLiteralSequenceV2(comments.toVector)
+        comments = StringLiteralSequenceV2(comments.toVector),
       )
 
     }
@@ -854,7 +854,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     def write(list: ListADM): JsValue =
       JsObject(
         "listinfo" -> list.listinfo.toJson,
-        "children" -> JsArray(list.children.map(_.toJson).toVector)
+        "children" -> JsArray(list.children.map(_.toJson).toVector),
       )
 
     /**
@@ -878,7 +878,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
       ListADM(
         listinfo = listinfo,
-        children = children
+        children = children,
       )
     }
   }
@@ -894,7 +894,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     def write(node: NodeADM): JsValue =
       JsObject(
         "nodeinfo" -> node.nodeinfo.toJson,
-        "children" -> JsArray(node.children.map(_.toJson).toVector)
+        "children" -> JsArray(node.children.map(_.toJson).toVector),
       )
 
     /**
@@ -918,7 +918,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
       NodeADM(
         nodeinfo = nodeinfo,
-        children = children
+        children = children,
       )
     }
   }

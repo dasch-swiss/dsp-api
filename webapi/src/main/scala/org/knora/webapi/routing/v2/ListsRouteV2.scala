@@ -24,7 +24,7 @@ import pekko.http.scaladsl.server.Route
  * Provides a function for API routes that deal with lists and nodes.
  */
 final case class ListsRouteV2()(
-  private implicit val runtime: Runtime[AppConfig & Authenticator & StringFormatter & MessageRelay]
+  private implicit val runtime: Runtime[AppConfig & Authenticator & StringFormatter & MessageRelay],
 ) {
 
   def makeRoute: Route = getList() ~ getNode()

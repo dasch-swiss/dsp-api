@@ -30,7 +30,7 @@ case class OntologyCacheData(
   classDefinedInOntology: Map[SmartIri, SmartIri],
   propertyDefinedInOntology: Map[SmartIri, SmartIri],
   entityDefinedInOntology: Map[SmartIri, SmartIri],
-  standoffProperties: Set[SmartIri]
+  standoffProperties: Set[SmartIri],
 ) {
   lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
     .flatMap(_.properties.map { case (propertyIri, readPropertyInfo) =>

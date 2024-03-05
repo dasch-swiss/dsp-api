@@ -29,7 +29,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
         .find(
           subj = Some(subj),
           pred = Some(pred),
-          obj = None
+          obj = None,
         )
         .toSet
         .headOption match {

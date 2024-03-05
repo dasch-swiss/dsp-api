@@ -55,7 +55,7 @@ object ValueContentV2Spec extends ZIOSpecDefault {
           for {
             exit <- ValueContentV2.getFileInfo("0001", AssetIngested, jsonLdObj).exit
           } yield assert(exit)(failsWithA[AssertionException])
-        }
+        },
       ).provide(mockSipi(AssetInTemp)),
       suite("Given the asset is ingested")(
         test("When getting file metadata with AssetInTemp from Sipi, then it should fail") {
@@ -67,8 +67,8 @@ object ValueContentV2Spec extends ZIOSpecDefault {
           for {
             ingested <- ValueContentV2.getFileInfo("0001", AssetIngested, jsonLdObj)
           } yield assertTrue(ingested.metadata == expected)
-        }
-      ).provide(mockSipi(AssetIngested))
+        },
+      ).provide(mockSipi(AssetIngested)),
     )
 
   private def mockSipi(flag: AssetIngestState) = ZLayer.succeed(new SipiService {
@@ -79,18 +79,18 @@ object ValueContentV2Spec extends ZIOSpecDefault {
 
     override def getFileMetadataFromDspIngest(
       shortcode: KnoraProject.Shortcode,
-      assetId: AssetId
+      assetId: AssetId,
     ): Task[FileMetadataSipiResponse] =
       if (flag == AssetIngested) { ZIO.succeed(expected) }
       else { ZIO.fail(AssertionException("fail")) }
 
     // The following are unsupported operations because they are not used in the test
     def moveTemporaryFileToPermanentStorage(
-      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
     ): Task[SuccessResponseV2] =
       ZIO.dieMessage("unsupported operation")
     def deleteTemporaryFile(
-      deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest
+      deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest,
     ): Task[SuccessResponseV2] =
       ZIO.dieMessage("unsupported operation")
     def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] =

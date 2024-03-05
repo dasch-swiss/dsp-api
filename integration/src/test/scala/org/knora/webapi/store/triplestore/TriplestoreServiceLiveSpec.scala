@@ -23,7 +23,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
   override implicit val timeout: FiniteDuration = 30.seconds
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything")
+    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
   )
 
   val countTriplesQuery: String =
@@ -139,7 +139,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       UnsafeZioRun.runOrThrow(
         TriplestoreService
           .resetTripleStoreContent(rdfDataObjects)
-          .timeout(java.time.Duration.ofMinutes(5))
+          .timeout(java.time.Duration.ofMinutes(5)),
       )
 
       val msg = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(countTriplesQuery)))
@@ -156,7 +156,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(countTriplesQuery))
-          .map(_.results.bindings.head.rowMap("no").toInt)
+          .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesBefore should ===(afterLoadCount)
 
@@ -165,14 +165,14 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val checkInsertActual = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(checkInsertQuery))
-          .map(_.results.bindings.size)
+          .map(_.results.bindings.size),
       )
       checkInsertActual should ===(3)
 
       afterChangeCount = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(countTriplesQuery))
-          .map(_.results.bindings.head.rowMap("no").toInt)
+          .map(_.results.bindings.head.rowMap("no").toInt),
       )
       (afterChangeCount - afterLoadCount) should ===(3)
     }
@@ -181,7 +181,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(countTriplesQuery))
-          .map(_.results.bindings.head.rowMap("no").toInt)
+          .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesBefore should ===(afterChangeCount)
 
@@ -190,14 +190,14 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       val countTriplesQueryActual = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(countTriplesQuery))
-          .map(_.results.bindings.head.rowMap("no").toInt)
+          .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesQueryActual should ===(afterLoadCount)
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
         TriplestoreService
           .query(Select(checkInsertQuery))
-          .map(_.results.bindings.size)
+          .map(_.results.bindings.size),
       )
       checkInsertActual should ===(0)
     }
@@ -207,7 +207,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           TriplestoreService
             .query(Select(textSearchQueryFusekiValueHasString))
-            .map(_.results.bindings.size)
+            .map(_.results.bindings.size),
         )
         actual should ===(3)
       }
@@ -218,7 +218,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           TriplestoreService
             .query(Select(textSearchQueryFusekiDRFLabel))
-            .map(_.results.bindings.size)
+            .map(_.results.bindings.size),
         )
         actual should ===(1)
       }

@@ -44,14 +44,14 @@ final case class UserChangeRequest(
   projects: Option[Chunk[ProjectIri]] = None,
   projectsAdmin: Option[Chunk[ProjectIri]] = None,
   groups: Option[Chunk[GroupIri]] = None,
-  systemAdmin: Option[SystemAdmin] = None
+  systemAdmin: Option[SystemAdmin] = None,
 )
 
 case class KnoraUserService(
   private val userRepo: KnoraUserRepo,
   private val iriService: IriService,
   private val passwordService: PasswordService,
-  private val cacheService: CacheService
+  private val cacheService: CacheService,
 ) {
 
   def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
@@ -66,7 +66,7 @@ case class KnoraUserService(
       isInProject = update.projects.getOrElse(kUser.isInProject).distinct,
       isInProjectAdminGroup = update.projectsAdmin.getOrElse(kUser.isInProjectAdminGroup).distinct,
       isInGroup = update.groups.getOrElse(kUser.isInGroup).distinct,
-      isInSystemAdminGroup = update.systemAdmin.getOrElse(kUser.isInSystemAdminGroup)
+      isInSystemAdminGroup = update.systemAdmin.getOrElse(kUser.isInSystemAdminGroup),
     )
     ZIO.foreachDiscard(update.email)(ensureEmailDoesNotExist) *>
       ZIO.foreachDiscard(update.username)(ensureUsernameDoesNotExist) *>
@@ -75,12 +75,12 @@ case class KnoraUserService(
 
   private def ensureEmailDoesNotExist(email: Email) =
     ZIO.whenZIO(userRepo.existsByEmail(email))(
-      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists"))
+      ZIO.fail(DuplicateValueException(s"User with the email '${email.value}' already exists")),
     )
 
   private def ensureUsernameDoesNotExist(username: Username) =
     ZIO.whenZIO(userRepo.existsByUsername(username))(
-      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists"))
+      ZIO.fail(DuplicateValueException(s"User with the username '${username.value}' already exists")),
     )
 
   def deleteUser(user: KnoraUser): UIO[KnoraUser] =
@@ -104,14 +104,14 @@ case class KnoraUserService(
                   Chunk.empty,
                   Chunk.empty,
                   req.systemAdmin,
-                  Chunk.empty
+                  Chunk.empty,
                 )
       userCreated <- userRepo.save(newUser)
     } yield userCreated
 
   def addUserToGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
-           ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}."))
+           ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}.")),
          )
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
   } yield user
@@ -143,7 +143,7 @@ case class KnoraUserService(
    */
   def removeUserFromProject(
     user: KnoraUser,
-    project: ProjectADM
+    project: ProjectADM,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of project ${project.projectIri.value}."))
@@ -165,12 +165,12 @@ case class KnoraUserService(
    */
   def addUserToProjectAsAdmin(
     user: KnoraUser,
-    project: ProjectADM
+    project: ProjectADM,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <-
       ZIO
         .fail(
-          UserServiceError(s"User ${user.id.value} is already admin member of project ${project.projectIri.value}.")
+          UserServiceError(s"User ${user.id.value} is already admin member of project ${project.projectIri.value}."),
         )
         .when(user.isInProjectAdminGroup.contains(project.projectIri))
     _ <-
@@ -193,7 +193,7 @@ case class KnoraUserService(
    */
   def removeUserFromProjectAsAdmin(
     user: KnoraUser,
-    project: ProjectADM
+    project: ProjectADM,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${project.projectIri.value}."))

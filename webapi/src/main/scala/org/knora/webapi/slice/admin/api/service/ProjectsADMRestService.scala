@@ -43,7 +43,7 @@ trait ProjectADMRestService {
   def updateProject(
     id: IriIdentifier,
     updateReq: ProjectUpdateRequest,
-    user: User
+    user: User,
   ): Task[ProjectOperationResponseADM]
 
   def deleteProject(id: IriIdentifier, user: User): Task[ProjectOperationResponseADM]
@@ -73,7 +73,7 @@ trait ProjectADMRestService {
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
-    setSizeReq: SetRestrictedViewRequest
+    setSizeReq: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse]
 }
 
@@ -84,7 +84,7 @@ final case class ProjectsADMRestServiceLive(
   projectService: ProjectADMService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
-  permissionService: AuthorizationRestService
+  permissionService: AuthorizationRestService,
 ) extends ProjectADMRestService {
 
   /**
@@ -166,7 +166,7 @@ final case class ProjectsADMRestServiceLive(
   def updateProject(
     id: IriIdentifier,
     updateReq: ProjectUpdateRequest,
-    user: User
+    user: User,
   ): Task[ProjectOperationResponseADM] = for {
     internal <- Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
     external <- format.toExternal(internal)
@@ -219,7 +219,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def getProjectAdminMembers(
     user: User,
-    id: ProjectIdentifierADM
+    id: ProjectIdentifierADM,
   ): Task[ProjectAdminMembersGetResponseADM] = for {
     internal <- responder.projectAdminMembersGetRequestADM(id, user)
     external <- format.toExternal(internal)
@@ -278,7 +278,7 @@ final case class ProjectsADMRestServiceLive(
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
-    req: SetRestrictedViewRequest
+    req: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse] =
     for {
       project        <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
@@ -301,7 +301,7 @@ final case class ProjectsADMRestServiceLive(
 
   override def importProject(
     shortcodeStr: String,
-    user: User
+    user: User,
   ): Task[ProjectImportResponse] = for {
     _         <- permissionService.ensureSystemAdmin(user)
     shortcode <- convertStringToShortcodeId(shortcodeStr)
@@ -324,6 +324,6 @@ final case class ProjectsADMRestServiceLive(
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
     KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectADMService & ProjectImportService & AuthorizationRestService,
-    ProjectsADMRestServiceLive
+    ProjectsADMRestServiceLive,
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

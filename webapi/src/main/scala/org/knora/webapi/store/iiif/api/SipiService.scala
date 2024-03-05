@@ -38,7 +38,7 @@ case class FileMetadataSipiResponse(
   height: Option[Int],
   numpages: Option[Int],
   duration: Option[BigDecimal],
-  fps: Option[BigDecimal]
+  fps: Option[BigDecimal],
 ) {
   if (originalFilename.contains("")) {
     throw SipiException(s"Sipi returned an empty originalFilename")
@@ -87,7 +87,7 @@ trait SipiService {
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2]
 
   /**

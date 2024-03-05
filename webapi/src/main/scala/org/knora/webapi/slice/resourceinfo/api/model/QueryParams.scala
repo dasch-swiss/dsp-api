@@ -21,7 +21,7 @@ object QueryParams {
     allValues
       .find(_.urlParam.equalsIgnoreCase(value))
       .fold[DecodeResult[A]](
-        DecodeResult.Error(value, BadRequestException(s"Expected one of ${allValues.map(_.urlParam.mkString)}"))
+        DecodeResult.Error(value, BadRequestException(s"Expected one of ${allValues.map(_.urlParam.mkString)}")),
       )(DecodeResult.Value(_))
 
   sealed trait OrderBy             extends WithUrlParam

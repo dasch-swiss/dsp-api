@@ -53,6 +53,6 @@ object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
           resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
 
         assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithSwappedCharactersAndCorrectCheckDigit))
-      }
+      },
   )
 }

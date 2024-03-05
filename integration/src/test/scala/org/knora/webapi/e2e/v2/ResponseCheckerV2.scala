@@ -62,31 +62,31 @@ object ResponseCheckerV2 {
     assert(
       expectedResource.value(JsonLDKeywords.ID) == receivedResource.value(JsonLDKeywords.ID),
       s"Received resource Iri ${receivedResource
-          .value(JsonLDKeywords.ID)} does not match expected Iri ${expectedResource.value(JsonLDKeywords.ID)}"
+          .value(JsonLDKeywords.ID)} does not match expected Iri ${expectedResource.value(JsonLDKeywords.ID)}",
     )
 
     assert(
       expectedResource.value(JsonLDKeywords.TYPE) == receivedResource.value(JsonLDKeywords.TYPE),
       s"Received resource type ${receivedResource
-          .value(JsonLDKeywords.TYPE)} does not match expected type ${expectedResource.value(JsonLDKeywords.TYPE)}"
+          .value(JsonLDKeywords.TYPE)} does not match expected type ${expectedResource.value(JsonLDKeywords.TYPE)}",
     )
 
     assert(
       expectedResource.value(OntologyConstants.Rdfs.Label) == receivedResource.value(OntologyConstants.Rdfs.Label),
-      s"rdfs:label did not match for ${receivedResource.value(JsonLDKeywords.ID)}"
+      s"rdfs:label did not match for ${receivedResource.value(JsonLDKeywords.ID)}",
     )
 
     assert(
       expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys,
       s"property Iris are different for resource ${receivedResource
-          .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}"
+          .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}",
     )
 
     (expectedResource.value -- noPropertyKeys).foreach { case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>
       // make sure that the property Iri exists in the received resource
       assert(
         receivedResource.value.contains(propIri),
-        s"Property $propIri not found in received resource ${receivedResource.value(JsonLDKeywords.ID)}"
+        s"Property $propIri not found in received resource ${receivedResource.value(JsonLDKeywords.ID)}",
       )
 
       val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
@@ -97,7 +97,7 @@ object ResponseCheckerV2 {
       // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
       assert(
         sortedExpectedPropertyValues.value.size == sortedReceivedPropertyValues.value.size,
-        "number of values is not equal"
+        "number of values is not equal",
       )
 
       sortedExpectedPropertyValues.value.zip(sortedReceivedPropertyValues.value).foreach {
@@ -117,17 +117,17 @@ object ResponseCheckerV2 {
    */
   def compareParsedJSONLDForResourcesResponse(
     expectedResponse: JsonLDDocument,
-    receivedResponse: JsonLDDocument
+    receivedResponse: JsonLDDocument,
   ): Unit = {
 
     // returns a list even if there is only one element
     val expectedResourcesAsArray: JsonLDArray = elementToArray(
-      expectedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, expectedResponse.body)
+      expectedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, expectedResponse.body),
     )
 
     // returns a list even if there is only one element
     val receivedResourcesAsArray: JsonLDArray = elementToArray(
-      receivedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedResponse.body)
+      receivedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedResponse.body),
     )
 
     // check that the actual amount of resources returned is correct
@@ -135,7 +135,7 @@ object ResponseCheckerV2 {
     // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
     assert(
       expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size,
-      s"received list of resources has wrong length (expected ${expectedResourcesAsArray.value.size}, got ${receivedResourcesAsArray.value.size})"
+      s"received list of resources has wrong length (expected ${expectedResourcesAsArray.value.size}, got ${receivedResourcesAsArray.value.size})",
     )
 
     // loop over all the given resources and compare them (order of resources is determined by request)
@@ -162,7 +162,7 @@ object ResponseCheckerV2 {
 
     compareParsedJSONLDForResourcesResponse(
       expectedResponse = expectedJsonLDDocument,
-      receivedResponse = receivedJsonLDDocument
+      receivedResponse = receivedJsonLDDocument,
     )
 
   }
@@ -182,7 +182,7 @@ object ResponseCheckerV2 {
     val receivedNumber = receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value
     assert(
       receivedNumber == expectedNumber,
-      s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)"
+      s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)",
     )
 
   }
@@ -197,12 +197,12 @@ object ResponseCheckerV2 {
   def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
     val receivedResourcesAsArray: JsonLDArray = elementToArray(
-      receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body)
+      receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body),
     )
     val numberOfResultsReceived = receivedResourcesAsArray.value.size
     assert(
       numberOfResultsReceived == expectedNumber,
-      s"Expected $expectedNumber results, received $numberOfResultsReceived"
+      s"Expected $expectedNumber results, received $numberOfResultsReceived",
     )
   }
 
@@ -218,7 +218,7 @@ object ResponseCheckerV2 {
 
     assert(
       expectedJsonLDDocument == receivedJsonLDDocument,
-      "Mapping creation response did not match expected response"
+      "Mapping creation response did not match expected response",
     )
   }
 
@@ -234,7 +234,7 @@ object ResponseCheckerV2 {
 
     assert(
       expectedJsonLDDocument == receivedJsonLDDocument,
-      "Resource history response did not match expected response"
+      "Resource history response did not match expected response",
     )
   }
 

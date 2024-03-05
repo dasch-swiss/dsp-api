@@ -35,12 +35,12 @@ class OntologyCacheSpec extends CoreSpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books"
+      name = "http://www.knora.org/ontology/0001/books",
     ),
     RdfDataObject(
       path = "test_data/project_data/books-data.ttl",
-      name = "http://www.knora.org/data/0001/books"
-    )
+      name = "http://www.knora.org/data/0001/books",
+    ),
   )
 
   val CACHE_NOT_AVAILABLE_ERROR = "Cache not available"
@@ -64,9 +64,9 @@ class OntologyCacheSpec extends CoreSpec {
           // copy books-onto but remove :hasTitle property
           val newBooks = previousBooks.copy(
             ontologyMetadata = previousBooks.ontologyMetadata.copy(
-              lastModificationDate = Some(Instant.now())
+              lastModificationDate = Some(Instant.now()),
             ),
-            properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
+            properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap,
           )
 
           // update cache
@@ -111,47 +111,47 @@ class OntologyCacheSpec extends CoreSpec {
               predicates = Map(
                 stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
-                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty))),
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
                   Seq(
                     StringLiteralV2("A Description", language = Some("en")),
-                    StringLiteralV2("Eine Beschreibung", language = Some("de"))
-                  )
+                    StringLiteralV2("Eine Beschreibung", language = Some("de")),
+                  ),
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                  Seq(SmartIriLiteralV2(iri))
+                  Seq(SmartIriLiteralV2(iri)),
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue))),
                 ),
                 stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
-                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.SimpleText)))
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.SimpleText))),
                 ),
                 stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
                   Seq(
                     StringLiteralV2("size=80"),
-                    StringLiteralV2("maxlength=255")
-                  )
-                )
+                    StringLiteralV2("maxlength=255"),
+                  ),
+                ),
               ),
               subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasValue)),
-              ontologySchema = InternalSchema
+              ontologySchema = InternalSchema,
             ),
             isResourceProp = true,
-            isEditable = true
+            isEditable = true,
           )
           val newProps = previousBooks.properties + (hasDescriptionPropertyIri -> descriptionProp)
           val newBooks = previousBooks.copy(
             ontologyMetadata = previousBooks.ontologyMetadata.copy(
-              lastModificationDate = Some(Instant.now())
+              lastModificationDate = Some(Instant.now()),
             ),
-            properties = newProps
+            properties = newProps,
           )
 
           // update cache
@@ -197,51 +197,51 @@ class OntologyCacheSpec extends CoreSpec {
             predicates = Map(
               stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
-                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty))),
               ),
               stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
                 Seq(
                   StringLiteralV2("Seite im Buch", language = Some("de")),
-                  StringLiteralV2("Page in the book", language = Some("en"))
-                )
+                  StringLiteralV2("Page in the book", language = Some("en")),
+                ),
               ),
               stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                Seq(SmartIriLiteralV2(bookIri))
+                Seq(SmartIriLiteralV2(bookIri)),
               ),
               stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                Seq(SmartIriLiteralV2(pagePropertyIri))
+                Seq(SmartIriLiteralV2(pagePropertyIri)),
               ),
               stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
-                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.Searchbox)))
-              )
+                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.Searchbox))),
+              ),
             ),
             subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),
-            ontologySchema = InternalSchema
+            ontologySchema = InternalSchema,
           )
           val hasPageProperties = ReadPropertyInfoV2(
             entityInfoContent = linkPropertyInfoContent,
             isResourceProp = true,
             isEditable = true,
-            isLinkProp = true
+            isLinkProp = true,
           )
           val hasPageValueProperties = ReadPropertyInfoV2(
             entityInfoContent = OntologyHelpers.linkPropertyDefToLinkValuePropertyDef(linkPropertyInfoContent),
             isResourceProp = true,
             isEditable = true,
-            isLinkValueProp = true
+            isLinkValueProp = true,
           )
           val newProps = previousBooks.properties +
             (hasPagePropertyIri      -> hasPageProperties) +
             (hasPageValuePropertyIri -> hasPageValueProperties)
           val newBooks = previousBooks.copy(
             ontologyMetadata = previousBooks.ontologyMetadata.copy(
-              lastModificationDate = Some(Instant.now())
+              lastModificationDate = Some(Instant.now()),
             ),
-            properties = newProps
+            properties = newProps,
           )
 
           // update cache

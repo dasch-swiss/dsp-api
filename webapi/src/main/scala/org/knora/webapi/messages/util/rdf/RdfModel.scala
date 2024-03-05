@@ -268,7 +268,7 @@ trait RdfModel extends Iterable[Statement] {
     subj: Option[RdfResource],
     pred: Option[IriNode],
     obj: Option[RdfNode],
-    context: Option[IRI] = None
+    context: Option[IRI] = None,
   ): Iterator[Statement]
 
   /**

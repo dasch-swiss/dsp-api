@@ -45,8 +45,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 final case class OntologiesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & RestCardinalityService & StringFormatter
-  ]
+    AppConfig & Authenticator & IriConverter & MessageRelay & RestCardinalityService & StringFormatter,
+  ],
 ) {
 
   private val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -111,7 +111,7 @@ final case class OntologiesRouteV2()(
     ZIO.fromOption(iri.getOntologySchema).orElseFail(BadRequestException(s"Invalid ontology IRI: $iri"))
 
   private def getOntologySmartIri(
-    requestContext: RequestContext
+    requestContext: RequestContext,
   ): ZIO[AppConfig & IriConverter & StringFormatter, BadRequestException, SmartIri] = {
     val urlPath = requestContext.request.uri.path.toString
     ZIO.serviceWithZIO[AppConfig] { appConfig =>
@@ -223,7 +223,7 @@ final case class OntologiesRouteV2()(
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(
-                  ChangeClassLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                  ChangeClassLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser),
                 )
             } yield requestMessage
             RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
@@ -240,7 +240,7 @@ final case class OntologiesRouteV2()(
           classIri <- RouteUtilZ
                         .toSmartIri(classIriStr, s"Invalid class IRI for request: $classIriStr")
                         .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                          BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                          BadRequestException(s"Invalid class IRI for request: $classIriStr"),
                         )
           lastModificationDate <- getLastModificationDate(requestContext)
           requestingUser       <- Authenticator.getUserADM(requestContext)
@@ -311,7 +311,7 @@ final case class OntologiesRouteV2()(
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg <- ZIO.attempt(
-                       CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                       CanDeleteCardinalitiesFromClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser),
                      )
             } yield msg
             RouteUtilV2.runRdfRouteZ(messageTask, requestContext)
@@ -367,7 +367,7 @@ final case class OntologiesRouteV2()(
               RouteUtilZ
                 .toSmartIri(iri, s"Invalid class IRI: $iri")
                 .flatMap(RouteUtilZ.ensureExternalOntologyName)
-                .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri)
+                .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri),
             )
             .map(_.toSet)
 
@@ -377,8 +377,8 @@ final case class OntologiesRouteV2()(
               ZIO.foreach(iriSet)(iri =>
                 ZIO
                   .fromOption(iri.getOntologySchema)
-                  .orElseFail(BadRequestException(s"Class IRI does not have an ontology schema: $iri"))
-              )
+                  .orElseFail(BadRequestException(s"Class IRI does not have an ontology schema: $iri")),
+              ),
             )
             .filterOrFail(_.size == 1)(BadRequestException(s"Only one ontology may be queried per request"))
             .map(_.head)
@@ -402,7 +402,7 @@ final case class OntologiesRouteV2()(
               .flatMap(RouteUtilZ.ensureExternalOntologyName)
               .filterOrFail(_.isKnoraApiV2EntityIri)(BadRequestException(s"Invalid class IRI: $classIriStr"))
               .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
-                BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                BadRequestException(s"Invalid class IRI for request: $classIriStr"),
               )
           requestingUser <- Authenticator.getUserADM(requestContext)
         } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
@@ -434,7 +434,7 @@ final case class OntologiesRouteV2()(
       .fromOption(ctx.request.uri.query().toMap.get(lastModificationDateKey))
       .mapBoth(
         _ => BadRequestException(s"Missing parameter: $lastModificationDateKey"),
-        ValuesValidator.xsdDateTimeStampToInstant
+        ValuesValidator.xsdDateTimeStampToInstant,
       )
       .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
 
@@ -522,7 +522,7 @@ final case class OntologiesRouteV2()(
                       case objectType: SmartIriLiteralV2 =>
                         IriConverter
                           .asSmartIri(
-                            objectType.value.toOntologySchema(InternalSchema).toString
+                            objectType.value.toOntologySchema(InternalSchema).toString,
                           )
                           .map(Some(_))
                       case other =>
@@ -579,11 +579,11 @@ final case class OntologiesRouteV2()(
                     label,
                     comment,
                     superProperties,
-                    guiObject
+                    guiObject,
                   )
                   .flatMap(v =>
                     CreatePropertyCommand
-                      .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5)
+                      .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5),
                   )
                   .toZIO
             } yield requestMessage
@@ -607,7 +607,7 @@ final case class OntologiesRouteV2()(
                 ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other"))
             }
           }
-          .map(_.toSet.flatten)
+          .map(_.toSet.flatten),
       )
 
   private def getGuiElement(propertyInfoContent: PropertyInfoContentV2) =
@@ -622,7 +622,7 @@ final case class OntologiesRouteV2()(
             case other =>
               ZIO.fail(BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other"))
           }
-        }
+        },
       )
 
   private def getPropertyDef(inputOntology: InputOntologyV2) =
@@ -643,7 +643,7 @@ final case class OntologiesRouteV2()(
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(
-                  ChangePropertyLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
+                  ChangePropertyLabelsOrCommentsRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser),
                 )
             } yield requestMessage
             RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
@@ -695,7 +695,7 @@ final case class OntologiesRouteV2()(
               guiObject,
               lastModificationDate,
               apiRequestId,
-              requestingUser
+              requestingUser,
             )
             RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
@@ -766,7 +766,7 @@ final case class OntologiesRouteV2()(
           propertyIri,
           lastModificationDate,
           apiRequestId,
-          requestingUser
+          requestingUser,
         )
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }

@@ -30,7 +30,7 @@ final case class AppServer(
   ontologyCache: OntologyCache,
   sipiService: SipiService,
   hs: HttpServer,
-  appConfig: AppConfig
+  appConfig: AppConfig,
 ) {
 
   /**
@@ -117,7 +117,7 @@ final case class AppServer(
    */
   def start(
     requiresAdditionalRepositoryChecks: Boolean,
-    requiresIIIFService: Boolean
+    requiresIIIFService: Boolean,
   ): Task[Unit] =
     for {
       _ <- ZIO.logInfo("=> Startup checks initiated")

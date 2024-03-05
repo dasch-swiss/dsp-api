@@ -32,12 +32,12 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
    * @return                  SuccessResponseV2
    */
   private def resetRepositoryAndLoadDataIntoCache(
-    rdfDataObjs: List[RdfDataObject]
+    rdfDataObjs: List[RdfDataObject],
   ): Either[Status.Failure, SuccessResponseV2] = {
     UnsafeZioRun.runOrThrow(
       TriplestoreService
         .resetTripleStoreContent(rdfDataObjs)
-        .timeout(java.time.Duration.ofMinutes(5))
+        .timeout(java.time.Duration.ofMinutes(5)),
     )
 
     UnsafeZioRun
@@ -54,8 +54,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/onto-without-project.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -66,8 +66,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/missing-link-value-cardinality-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -78,8 +78,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/missing-link-cardinality-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -90,8 +90,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-incompatible-with-scc-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -101,8 +101,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-without-label-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -113,8 +113,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/property-without-label-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -125,8 +125,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/resource-class-is-standoff-class-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -137,8 +137,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-missing-property-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -149,8 +149,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-non-resource-prop-cardinality-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -161,8 +161,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-cardinality-on-kbresprop-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -173,8 +173,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -185,8 +185,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/resource-class-with-invalid-base-class-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -197,8 +197,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/standoff-class-with-resprop-cardinality-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -209,8 +209,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/standoff-class-with-invalid-base-class-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -221,8 +221,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-non-knora-scc-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -232,8 +232,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-value-scc-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -244,8 +244,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-guielement-scc-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -256,8 +256,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-non-knora-occ-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -268,8 +268,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-incompatible-occ-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -280,8 +280,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-misdefined-link-property-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -292,8 +292,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-misdefined-link-value-property-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -304,8 +304,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/resource-prop-without-label-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -316,8 +316,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-both-value-and-link-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -327,8 +327,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/filevalue-prop-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -339,8 +339,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/resource-prop-wrong-base-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -351,8 +351,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/cardinality-with-guielement-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -363,8 +363,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/cardinality-with-guiattribute-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -374,8 +374,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/transitive-prop.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -386,8 +386,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-inherits-prop-and-subprop-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -398,8 +398,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-mismatched-link-cardinalities-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -410,8 +410,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/invalid-card-on-boolean-prop.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -422,8 +422,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-non-shared-cardinality.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -434,8 +434,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/class-with-non-shared-base-class.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -446,8 +446,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-non-shared-base-prop.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -457,8 +457,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-non-shared-scc.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -468,8 +468,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/prop-with-non-shared-occ.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)
@@ -480,8 +480,8 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
         RdfDataObject(
           path =
             "test_data/generated_test_data/responders.v2.LoadOntologiesRequestV2Spec/conflicting-cardinalities-onto.ttl",
-          name = INVALID_ONTO_NAME
-        )
+          name = INVALID_ONTO_NAME,
+        ),
       )
       val result = resetRepositoryAndLoadDataIntoCache(invalidOnto)
       assert(result.isLeft)

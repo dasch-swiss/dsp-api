@@ -54,7 +54,7 @@ final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends 
           .list(projectDirectory)
           .filterZIO(Files.isRegularFile(_))
           .filter(_.filename.toString().endsWith(exportFileEnding))
-          .map(file => (projectDirectory, file))
+          .map(file => (projectDirectory, file)),
       )
       .map(toProjectExportInfo)
       .runCollect
@@ -72,6 +72,6 @@ object ProjectExportStorageServiceLive {
     for {
       exportDirectory <- ZIO.serviceWith[AppConfig](_.tmpDataDirPath / "project-export")
       _               <- Files.createDirectories(exportDirectory).orDie
-    } yield ProjectExportStorageServiceLive(exportDirectory)
+    } yield ProjectExportStorageServiceLive(exportDirectory),
   )
 }

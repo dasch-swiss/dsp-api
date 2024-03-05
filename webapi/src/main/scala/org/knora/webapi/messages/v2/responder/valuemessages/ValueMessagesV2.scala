@@ -69,13 +69,13 @@ case class CreateValueResponseV2(
   valueType: SmartIri,
   valueUUID: UUID,
   valueCreationDate: Instant,
-  projectADM: ProjectADM
+  projectADM: ProjectADM,
 ) extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -91,15 +91,15 @@ case class CreateValueResponseV2(
           ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
           ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
-            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-          )
-        )
+            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          ),
+        ),
       ),
       context = JsonLDUtil.makeContext(
         fixedPrefixes = Map(
-          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> KnoraApiV2PrefixExpansion
-        )
-      )
+          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> KnoraApiV2PrefixExpansion,
+        ),
+      ),
     )
   }
 }
@@ -118,7 +118,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
@@ -129,14 +129,14 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID))
-        )
+          ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
+        ),
       ),
       context = JsonLDUtil.makeContext(
         fixedPrefixes = Map(
-          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> KnoraApiV2PrefixExpansion
-        )
-      )
+          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> KnoraApiV2PrefixExpansion,
+        ),
+      ),
     )
   }
 }
@@ -160,7 +160,7 @@ case class DeleteValueV2(
   valueIri: IRI,
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
-  deleteDate: Option[Instant] = None
+  deleteDate: Option[Instant] = None,
 )
 
 object DeleteValueV2 {
@@ -181,7 +181,7 @@ object DeleteValueV2 {
                 jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
                   .mapError(BadRequestException(_))
                   .tap(iri =>
-                    ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")).when(!iri.isKnoraResourceIri)
+                    ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")).when(!iri.isKnoraResourceIri),
                   )
 
               resourceClassIri <-
@@ -192,7 +192,7 @@ object DeleteValueV2 {
                      .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
                      .when(
                        UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
-                         !UuidUtil.hasSupportedVersion(valueIri.toString)
+                         !UuidUtil.hasSupportedVersion(valueIri.toString),
                      )
               valueTypeIri <- jsonLDObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
               deleteComment <- ZIO.attempt {
@@ -200,7 +200,7 @@ object DeleteValueV2 {
                                    (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                                  jsonLDObject.maybeStringWithValidation(
                                    OntologyConstants.KnoraApiV2Complex.DeleteComment,
-                                   validationFun
+                                   validationFun,
                                  )
                                }
               deleteDate <- ZIO.attempt(
@@ -208,8 +208,8 @@ object DeleteValueV2 {
                                 key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
                                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                 validationFun =
-                                  (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                              )
+                                  (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                              ),
                             )
             } yield DeleteValueV2(
               resourceIri = resourceIri.toString,
@@ -218,7 +218,7 @@ object DeleteValueV2 {
               valueIri = valueIri.toString,
               valueTypeIri = valueTypeIri,
               deleteComment = deleteComment,
-              deleteDate = deleteDate
+              deleteDate = deleteDate,
             )
         }
       }
@@ -252,7 +252,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV2(
   resourceIri: IRI,
   values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
   creationDate: Instant,
-  requestingUser: User
+  requestingUser: User,
 ) extends ValuesResponderRequestV2 {
   lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
 }
@@ -262,7 +262,7 @@ case class GenerateSparqlForValueInNewResourceV2(
   customValueIri: Option[SmartIri],
   customValueUUID: Option[UUID],
   customValueCreationDate: Option[Instant],
-  permissions: String
+  permissions: String,
 ) extends IOValueV2
 
 /**
@@ -278,7 +278,7 @@ case class GenerateSparqlForValueInNewResourceV2(
 case class GenerateSparqlToCreateMultipleValuesResponseV2(
   insertSparql: String,
   unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
-  hasStandoffLink: Boolean
+  hasStandoffLink: Boolean,
 )
 
 /**
@@ -310,9 +310,9 @@ case class DeletionInfo(deleteDate: Instant, maybeDeleteComment: Option[String])
       DeleteDate -> JsonLDObject(
         Map(
           JsonLDKeywords.TYPE  -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
-          JsonLDKeywords.VALUE -> JsonLDString(deleteDate.toString)
-        )
-      )
+          JsonLDKeywords.VALUE -> JsonLDString(deleteDate.toString),
+        ),
+      ),
     ) ++ maybeDeleteCommentStatement
   }
 }
@@ -385,7 +385,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -393,7 +393,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
       targetSchema = targetSchema,
       projectADM = projectADM,
       appConfig = appConfig,
-      schemaOptions = schemaOptions
+      schemaOptions = schemaOptions,
     )
 
     // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
@@ -414,18 +414,18 @@ sealed trait ReadValueV2 extends IOValueV2 {
               UserHasPermission   -> JsonLDString(userPermission.toString),
               ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueCreationDate.toString,
-                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
               ),
               ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID)),
               ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
-                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
               VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri
                   .fromValueIriToArkUrl(valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
-                datatype = OntologyConstants.Xsd.Uri.toSmartIri
-              )
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+              ),
             )
 
             val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map { definedComment =>
@@ -441,7 +441,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
 
           case other =>
             throw AssertionException(
-              s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other"
+              s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other",
             )
         }
 
@@ -465,7 +465,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
       valueHasUUID = this.valueHasUUID,
       valueContent = DeletedValueContentV2(InternalSchema),
       previousValueIri = this.previousValueIri,
-      deletionInfo = this.deletionInfo
+      deletionInfo = this.deletionInfo,
     )
 
 }
@@ -497,7 +497,7 @@ case class ReadTextValueV2(
   valueContent: TextValueContentV2,
   valueHasMaxStandoffStartIndex: Option[Int],
   previousValueIri: Option[IRI],
-  deletionInfo: Option[DeletionInfo]
+  deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadTextValueV2] {
 
@@ -536,7 +536,7 @@ case class ReadLinkValueV2(
   valueContent: LinkValueContentV2,
   valueHasRefCount: Int,
   previousValueIri: Option[IRI] = None,
-  deletionInfo: Option[DeletionInfo]
+  deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadLinkValueV2] {
 
@@ -572,7 +572,7 @@ case class ReadOtherValueV2(
   valueHasUUID: UUID,
   valueContent: ValueContentV2,
   previousValueIri: Option[IRI],
-  deletionInfo: Option[DeletionInfo]
+  deletionInfo: Option[DeletionInfo],
 ) extends ReadValueV2
     with KnoraReadV2[ReadOtherValueV2] {
 
@@ -608,7 +608,7 @@ case class CreateValueV2(
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None,
-  ingestState: AssetIngestState = AssetInTemp
+  ingestState: AssetIngestState = AssetInTemp,
 ) extends IOValueV2
 
 /**
@@ -627,7 +627,7 @@ object CreateValueV2 {
   def fromJsonLd(
     ingestState: AssetIngestState,
     jsonLdString: String,
-    requestingUser: User
+    requestingUser: User,
   ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
@@ -659,8 +659,8 @@ object CreateValueV2 {
                                              stringFormatter.validateCustomValueIri(
                                                _,
                                                shortcode,
-                                               resourceIri.getResourceID.get
-                                             )
+                                               resourceIri.getResourceID.get,
+                                             ),
                                            )
                                            definedNewIri
                                          }
@@ -676,7 +676,7 @@ object CreateValueV2 {
                                            key = ValueCreationDate,
                                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                            validationFun = (s, errorFun) =>
-                                             ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                                             ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
                                          )
                                          .orElse(
                                            jsonLdObject
@@ -684,9 +684,9 @@ object CreateValueV2 {
                                                key = CreationDate,
                                                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                                validationFun = (s, errorFun) =>
-                                                 ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                                             )
-                                         )
+                                                 ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                                             ),
+                                         ),
                                      )
 
                 maybePermissions <-
@@ -704,7 +704,7 @@ object CreateValueV2 {
                 valueUUID = maybeCustomUUID,
                 valueCreationDate = maybeCreationDate,
                 permissions = maybePermissions,
-                ingestState = ingestState
+                ingestState = ingestState,
               )
           }
       } yield createValue
@@ -752,7 +752,7 @@ object UpdateValueV2 {
    */
   def fromJsonLd(
     jsonLdString: String,
-    requestingUser: User
+    requestingUser: User,
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       def makeUpdateValueContentV2(
@@ -762,7 +762,7 @@ object UpdateValueV2 {
         jsonLDObject: JsonLDObject,
         valueIri: SmartIri,
         maybeValueCreationDate: Option[Instant],
-        maybeNewIri: Option[SmartIri]
+        maybeNewIri: Option[SmartIri],
       ) =
         for {
           maybePermissions <-
@@ -782,7 +782,7 @@ object UpdateValueV2 {
           valueContent = valueContent,
           permissions = maybePermissions,
           valueCreationDate = maybeValueCreationDate,
-          newValueVersionIri = maybeNewIri
+          newValueVersionIri = maybeNewIri,
         )
 
       def makeUpdateValuePermissionsV2(
@@ -792,15 +792,15 @@ object UpdateValueV2 {
         jsonLDObject: JsonLDObject,
         valueIri: SmartIri,
         maybeValueCreationDate: Option[Instant],
-        maybeNewIri: Option[SmartIri]
+        maybeNewIri: Option[SmartIri],
       ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
         // Yes. This is a request to change the value's permissions.
         for {
           valueType <- ZIO.attempt(
                          jsonLDObject.requireStringWithValidation(
                            JsonLDKeywords.TYPE,
-                           stringFormatter.toSmartIriWithErr
-                         )
+                           stringFormatter.toSmartIriWithErr,
+                         ),
                        )
           permissions <- ZIO.attempt {
                            val validationFun: (String, => Nothing) => String =
@@ -815,7 +815,7 @@ object UpdateValueV2 {
           valueType = valueType,
           permissions = permissions,
           valueCreationDate = maybeValueCreationDate,
-          newValueVersionIri = maybeNewIri
+          newValueVersionIri = maybeNewIri,
         )
       }
 
@@ -842,7 +842,7 @@ object UpdateValueV2 {
                                                    JsonLDKeywords.ID,
                                                    JsonLDKeywords.TYPE,
                                                    ValueCreationDate,
-                                                   NewValueVersionIri
+                                                   NewValueVersionIri,
                                                  )
                 maybeValueCreationDate <- ZIO.attempt(
                                             jsonLDObject.maybeDatatypeValueInObject(
@@ -851,8 +851,8 @@ object UpdateValueV2 {
                                               validationFun = (s, errorFun) =>
                                                 ValuesValidator
                                                   .xsdDateTimeStampToInstant(s)
-                                                  .getOrElse(errorFun)
-                                            )
+                                                  .getOrElse(errorFun),
+                                            ),
                                           )
                 // Get and validate the custom new value version IRI, if provided.
 
@@ -860,26 +860,26 @@ object UpdateValueV2 {
                   ZIO
                     .attempt(
                       jsonLDObject
-                        .maybeIriInObject(NewValueVersionIri, stringFormatter.toSmartIriWithErr)
+                        .maybeIriInObject(NewValueVersionIri, stringFormatter.toSmartIriWithErr),
                     )
                     .flatMap(smartIriMaybe =>
                       ZIO.foreach(smartIriMaybe) { definedNewIri =>
                         if (definedNewIri == valueIri) {
                           ZIO.fail(
                             BadRequestException(
-                              s"The IRI of a new value version cannot be the same as the IRI of the current version"
-                            )
+                              s"The IRI of a new value version cannot be the same as the IRI of the current version",
+                            ),
                           )
                         } else {
                           ZIO.attempt(
                             stringFormatter.validateCustomValueIri(
                               customValueIri = definedNewIri,
                               projectCode = valueIri.getProjectCode.get,
-                              resourceID = valueIri.getResourceID.get
-                            )
+                              resourceID = valueIri.getResourceID.get,
+                            ),
                           )
                         }
-                      }
+                      },
                     )
 
                 value <- if (otherValuePredicates == Set(HasPermissions)) {
@@ -890,7 +890,7 @@ object UpdateValueV2 {
                              jsonLDObject,
                              valueIri,
                              maybeValueCreationDate,
-                             maybeNewIri
+                             maybeNewIri,
                            )
                          } else {
                            makeUpdateValueContentV2(
@@ -900,7 +900,7 @@ object UpdateValueV2 {
                              jsonLDObject,
                              valueIri,
                              maybeValueCreationDate,
-                             maybeNewIri
+                             maybeNewIri,
                            )
                          }
               } yield value
@@ -932,7 +932,7 @@ case class UpdateValueContentV2(
   valueContent: ValueContentV2,
   permissions: Option[String] = None,
   valueCreationDate: Option[Instant] = None,
-  newValueVersionIri: Option[SmartIri] = None
+  newValueVersionIri: Option[SmartIri] = None,
 ) extends IOValueV2
     with UpdateValueV2
 
@@ -959,7 +959,7 @@ case class UpdateValuePermissionsV2(
   valueType: SmartIri,
   permissions: String,
   valueCreationDate: Option[Instant] = None,
-  newValueVersionIri: Option[SmartIri] = None
+  newValueVersionIri: Option[SmartIri] = None,
 ) extends UpdateValueV2
 
 /**
@@ -976,7 +976,7 @@ case class UnverifiedValueV2(
   newValueUUID: UUID,
   valueContent: ValueContentV2,
   permissions: String,
-  creationDate: Instant
+  creationDate: Instant,
 )
 
 /**
@@ -1017,7 +1017,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue
 
   /**
@@ -1063,7 +1063,7 @@ object ValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: User,
-    fileInfo: Option[FileInfo]
+    fileInfo: Option[FileInfo],
   ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
@@ -1131,7 +1131,7 @@ object ValueContentV2 {
   def getFileInfo(
     shortcode: String,
     ingestState: AssetIngestState,
-    jsonLdObject: JsonLDObject
+    jsonLdObject: JsonLDObject,
   ): ZIO[SipiService, Throwable, FileInfo] =
     for {
       internalFilename <- {
@@ -1166,7 +1166,7 @@ case class DateValueContentV2(
   valueHasStartPrecision: DatePrecisionV2,
   valueHasEndPrecision: DatePrecisionV2,
   valueHasCalendar: CalendarNameV2,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1177,18 +1177,18 @@ case class DateValueContentV2(
     val startCalendarDate = CalendarDateV2.fromJulianDayNumber(
       julianDay = valueHasStartJDN,
       precision = valueHasStartPrecision,
-      calendarName = valueHasCalendar
+      calendarName = valueHasCalendar,
     )
 
     val endCalendarDate = CalendarDateV2.fromJulianDayNumber(
       julianDay = valueHasEndJDN,
       precision = valueHasEndPrecision,
-      calendarName = valueHasCalendar
+      calendarName = valueHasCalendar,
     )
 
     CalendarDateRangeV2(
       startCalendarDate = startCalendarDate,
-      endCalendarDate = endCalendarDate
+      endCalendarDate = endCalendarDate,
     )
   }
 
@@ -1202,13 +1202,13 @@ case class DateValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasString,
-          datatype = OntologyConstants.KnoraApiV2Simple.Date.toSmartIri
+          datatype = OntologyConstants.KnoraApiV2Simple.Date.toSmartIri,
         )
 
       case ApiV2Complex =>
@@ -1230,8 +1230,8 @@ case class DateValueContentV2(
         JsonLDObject(
           Map(
             ValueAsString        -> JsonLDString(valueHasString),
-            DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
-          ) ++ startDateAssertions ++ endDateAssertions
+            DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString),
+          ) ++ startDateAssertions ++ endDateAssertions,
         )
     }
 
@@ -1285,7 +1285,7 @@ object DateValueContentV2 {
       valueHasEndJDN = endJDN,
       valueHasStartPrecision = dateRange.startCalendarDate.precision,
       valueHasEndPrecision = dateRange.endCalendarDate.precision,
-      valueHasCalendar = dateRange.startCalendarDate.calendarName
+      valueHasCalendar = dateRange.startCalendarDate.calendarName,
     )
   }
 
@@ -1332,7 +1332,7 @@ object DateValueContentV2 {
              .fail(AssertionException(s"Era is required in calendar $calendarName"))
              .when(
                calendarName.isInstanceOf[CalendarNameGregorianOrJulian] &&
-                 (maybeDateValueHasStartEra.isEmpty || maybeDateValueHasEndEra.isEmpty)
+                 (maybeDateValueHasStartEra.isEmpty || maybeDateValueHasEndEra.isEmpty),
              )
 
       // Construct a CalendarDateRangeV2 representing the start and end dates.
@@ -1341,7 +1341,7 @@ object DateValueContentV2 {
                             year = dateValueHasStartYear,
                             maybeMonth = maybeDateValueHasStartMonth,
                             maybeDay = maybeDateValueHasStartDay,
-                            maybeEra = maybeDateValueHasStartEra
+                            maybeEra = maybeDateValueHasStartEra,
                           )
 
       endCalendarDate = CalendarDateV2(
@@ -1349,7 +1349,7 @@ object DateValueContentV2 {
                           year = dateValueHasEndYear,
                           maybeMonth = maybeDateValueHasEndMonth,
                           maybeDay = maybeDateValueHasEndDay,
-                          maybeEra = maybeDateValueHasEndEra
+                          maybeEra = maybeDateValueHasEndEra,
                         )
 
       dateRange = CalendarDateRangeV2(startCalendarDate, endCalendarDate)
@@ -1364,7 +1364,7 @@ object DateValueContentV2 {
       valueHasStartPrecision = startCalendarDate.precision,
       valueHasEndPrecision = endCalendarDate.precision,
       valueHasCalendar = calendarName,
-      comment
+      comment,
     )
 }
 
@@ -1380,7 +1380,7 @@ case class CreateStandoffTagV2InTriplestore(
   standoffNode: StandoffTagV2,
   standoffTagInstanceIri: IRI,
   startParentIri: Option[IRI] = None,
-  endParentIri: Option[IRI] = None
+  endParentIri: Option[IRI] = None,
 )
 
 /**
@@ -1400,7 +1400,7 @@ case class TextValueContentV2(
   mappingIri: Option[IRI] = None,
   mapping: Option[MappingXMLtoStandoff] = None,
   xslt: Option[String] = None,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1455,7 +1455,7 @@ case class TextValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -1465,7 +1465,7 @@ case class TextValueContentV2(
             // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
             JsonLDUtil.objectWithLangToJsonLDObject(
               obj = valueHasStringWithoutStandoff,
-              lang = lang
+              lang = lang,
             )
 
           case None => JsonLDString(valueHasStringWithoutStandoff)
@@ -1474,7 +1474,7 @@ case class TextValueContentV2(
       case ApiV2Complex =>
         val renderStandoffAsXml: Boolean = standoff.nonEmpty && SchemaOptions.renderMarkupAsXml(
           targetSchema = targetSchema,
-          schemaOptions = schemaOptions
+          schemaOptions = schemaOptions,
         )
 
         // Should we render standoff as XML?
@@ -1490,7 +1490,7 @@ case class TextValueContentV2(
           val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
             utf8str = valueHasString,
             standoff = standoff,
-            mappingXMLtoStandoff = definedMapping
+            mappingXMLtoStandoff = definedMapping,
           )
 
           // check if there is an XSL transformation
@@ -1498,7 +1498,7 @@ case class TextValueContentV2(
             case Some(definedXslt) =>
               val xmlTransformed: String = XMLUtil.applyXSLTransformation(
                 xml = xmlFromStandoff,
-                xslt = definedXslt
+                xslt = definedXslt,
               )
 
               // the xml was converted to HTML
@@ -1506,16 +1506,16 @@ case class TextValueContentV2(
                 TextValueAsHtml -> JsonLDString(xmlTransformed),
                 TextValueAsXml  -> JsonLDString(xmlFromStandoff),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
-                  definedMappingIri
-                )
+                  definedMappingIri,
+                ),
               )
 
             case None =>
               Map(
                 TextValueAsXml -> JsonLDString(xmlFromStandoff),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
-                  definedMappingIri
-                )
+                  definedMappingIri,
+                ),
               )
           }
         } else {
@@ -1551,8 +1551,8 @@ case class TextValueContentV2(
             standoffNode = standoffNode,
             standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
               valueIri = valueIri,
-              startIndex = standoffNode.startIndex
-            ) // generate IRI for new standoff node
+              startIndex = standoffNode.startIndex,
+            ), // generate IRI for new standoff node
           )
       }
 
@@ -1593,11 +1593,11 @@ case class TextValueContentV2(
           standoffTag.copy(
             standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
             startParentIri = startParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex)
+              startIndexesToStandoffNodeIris(parentIndex),
             ), // If there's a start parent index, get its IRI, otherwise None
             endParentIri = endParentIndex.map(parentIndex =>
-              startIndexesToStandoffNodeIris(parentIndex)
-            ) // If there's an end parent index, get its IRI, otherwise None
+              startIndexesToStandoffNodeIris(parentIndex),
+            ), // If there's an end parent index, get its IRI, otherwise None
           )
       }
 
@@ -1615,14 +1615,14 @@ case class TextValueContentV2(
             stringAttribute.copy(value = Iri.fromSparqlEncodedString(stringAttribute.value))
 
           case other => other
-        }
+        },
       )
     }
 
     copy(
       maybeValueHasString = maybeValueHasString.map(str => Iri.fromSparqlEncodedString(str)),
       standoff = unescapedStandoff,
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
   }
 
@@ -1660,7 +1660,7 @@ case class TextValueContentV2(
 object TextValueContentV2 {
   private def getSparqlEncodedString(
     obj: JsonLDObject,
-    key: String
+    key: String,
   ): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
     ZIO
       .fromEither(obj.getString(key))
@@ -1678,7 +1678,7 @@ object TextValueContentV2 {
     maybeTextValueAsXml: Option[String],
     maybeValueHasLanguage: Option[IRI],
     maybeMappingResponse: Option[GetMappingResponseV2],
-    jsonLdObject: JsonLDObject
+    jsonLdObject: JsonLDObject,
   ) =
     (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
       case (Some(valueAsString), None, None) => // Text without standoff.
@@ -1688,8 +1688,8 @@ object TextValueContentV2 {
             TextValueContentV2(
               ontologySchema = ApiV2Complex,
               maybeValueHasString = Some(valueAsString),
-              comment = comment
-            )
+              comment = comment,
+            ),
           )
 
       case (None, Some(textValueAsXml), Some(mappingResponse)) =>
@@ -1699,8 +1699,8 @@ object TextValueContentV2 {
                                     StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                                       textValueAsXml,
                                       mappingResponse,
-                                      acceptStandoffLinksToClientIDs = false
-                                    )
+                                      acceptStandoffLinksToClientIDs = false,
+                                    ),
                                   )
           text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
           comment <- JsonLDUtil.getComment(jsonLdObject)
@@ -1711,14 +1711,14 @@ object TextValueContentV2 {
           standoff = textWithStandoffTags.standoffTagV2,
           mappingIri = Some(mappingResponse.mappingIri),
           mapping = Some(mappingResponse.mapping),
-          comment = comment
+          comment = comment,
         )
 
       case _ =>
         ZIO.fail(
           BadRequestException(
-            s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
-          )
+            s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping",
+          ),
         )
     }
 
@@ -1731,7 +1731,7 @@ object TextValueContentV2 {
    */
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
-    requestingUser: User
+    requestingUser: User,
   ): ZIO[StringFormatter & MessageRelay, Throwable, TextValueContentV2] =
     for {
       maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
@@ -1743,7 +1743,7 @@ object TextValueContentV2 {
         getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
           ZIO.foreach(mappingIriOption) { mappingIri =>
             MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
-          }
+          },
         )
 
       _ <- JsonLDUtil.getComment(jsonLdObject)
@@ -1753,7 +1753,7 @@ object TextValueContentV2 {
                      maybeTextValueAsXml,
                      maybeValueHasLanguage,
                      maybeMappingResponse,
-                     jsonLdObject
+                     jsonLdObject,
                    )
 
     } yield textValue
@@ -1781,7 +1781,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDInt(valueHasInteger)
@@ -1822,7 +1822,7 @@ object IntegerValueContentV2 {
    * @return an [[IntegerValueContentV2]].
    */
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
+    jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, IntegerValueContentV2] =
     for {
       intValue <- ZIO
@@ -1841,7 +1841,7 @@ object IntegerValueContentV2 {
 case class DecimalValueContentV2(
   ontologySchema: OntologySchema,
   valueHasDecimal: BigDecimal,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1857,11 +1857,11 @@ case class DecimalValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
       value = valueHasDecimal.toString,
-      datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+      datatype = OntologyConstants.Xsd.Decimal.toSmartIri,
     )
 
     targetSchema match {
@@ -1909,8 +1909,8 @@ object DecimalValueContentV2 {
                           jsonLdObject.requireDatatypeValueInObject(
                             key = DecimalValueAsDecimal,
                             expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-                            validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
-                          )
+                            validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
+                          ),
                         )
         comment <- JsonLDUtil.getComment(jsonLdObject)
       } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
@@ -1926,7 +1926,7 @@ object DecimalValueContentV2 {
 case class BooleanValueContentV2(
   ontologySchema: OntologySchema,
   valueHasBoolean: Boolean,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1942,7 +1942,7 @@ case class BooleanValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
@@ -2009,13 +2009,13 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasGeometry,
-          datatype = OntologyConstants.KnoraApiV2Simple.Geom.toSmartIri
+          datatype = OntologyConstants.KnoraApiV2Simple.Geom.toSmartIri,
         )
 
       case ApiV2Complex =>
@@ -2025,7 +2025,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
   override def unescape: ValueContentV2 =
     copy(
       valueHasGeometry = Iri.fromSparqlEncodedString(valueHasGeometry),
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2060,8 +2060,8 @@ object GeomValueContentV2 {
       geometryValueAsGeometry <- ZIO.attempt(
                                    jsonLDObject.requireStringWithValidation(
                                      GeometryValueAsGeometry,
-                                     (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun)
-                                   )
+                                     (s, errorFun) => ValuesValidator.validateGeometryString(s).getOrElse(errorFun),
+                                   ),
                                  )
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield GeomValueContentV2(ontologySchema = ApiV2Complex, geometryValueAsGeometry, comment)
@@ -2078,7 +2078,7 @@ case class IntervalValueContentV2(
   ontologySchema: OntologySchema,
   valueHasIntervalStart: BigDecimal,
   valueHasIntervalEnd: BigDecimal,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2094,13 +2094,13 @@ case class IntervalValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasString,
-          datatype = OntologyConstants.KnoraApiV2Simple.Interval.toSmartIri
+          datatype = OntologyConstants.KnoraApiV2Simple.Interval.toSmartIri,
         )
 
       case ApiV2Complex =>
@@ -2109,14 +2109,14 @@ case class IntervalValueContentV2(
             IntervalValueHasStart ->
               JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueHasIntervalStart.toString,
-                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                datatype = OntologyConstants.Xsd.Decimal.toSmartIri,
               ),
             IntervalValueHasEnd ->
               JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueHasIntervalEnd.toString,
-                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
-              )
-          )
+                datatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+              ),
+          ),
         )
     }
 
@@ -2162,8 +2162,8 @@ object IntervalValueContentV2 {
                                      key = IntervalValueHasStart,
                                      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
                                      validationFun =
-                                       (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
-                                   )
+                                       (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
+                                   ),
                                  )
 
         intervalValueHasEnd <- ZIO.attempt(
@@ -2171,8 +2171,8 @@ object IntervalValueContentV2 {
                                    key = IntervalValueHasEnd,
                                    expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
                                    validationFun =
-                                     (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
-                                 )
+                                     (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
+                                 ),
                                )
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield IntervalValueContentV2(ApiV2Complex, intervalValueHasStart, intervalValueHasEnd, comment)
@@ -2188,7 +2188,7 @@ object IntervalValueContentV2 {
 case class TimeValueContentV2(
   ontologySchema: OntologySchema,
   valueHasTimeStamp: Instant,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2203,13 +2203,13 @@ case class TimeValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasTimeStamp.toString,
-          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         )
 
       case ApiV2Complex =>
@@ -2218,9 +2218,9 @@ case class TimeValueContentV2(
             TimeValueAsTimeStamp ->
               JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueHasTimeStamp.toString,
-                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-              )
-          )
+                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+              ),
+          ),
         )
     }
 
@@ -2264,8 +2264,8 @@ object TimeValueContentV2 {
                                  key = TimeValueAsTimeStamp,
                                  expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                                  validationFun =
-                                   (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                               )
+                                   (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                               ),
                              )
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield TimeValueContentV2(ApiV2Complex, valueHasTimeStamp, comment)
@@ -2283,7 +2283,7 @@ case class HierarchicalListValueContentV2(
   ontologySchema: OntologySchema,
   valueHasListNode: IRI,
   listNodeLabel: Option[String] = None,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2299,7 +2299,7 @@ case class HierarchicalListValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2307,7 +2307,7 @@ case class HierarchicalListValueContentV2(
           case Some(labelStr) =>
             JsonLDUtil.datatypeValueToJsonLDObject(
               value = labelStr,
-              datatype = OntologyConstants.KnoraApiV2Simple.ListNode.toSmartIri
+              datatype = OntologyConstants.KnoraApiV2Simple.ListNode.toSmartIri,
             )
           case None =>
             throw AssertionException("Can't convert list value to simple schema because it has no list node label")
@@ -2317,15 +2317,15 @@ case class HierarchicalListValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           Map(
-            ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode)
-          )
+            ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode),
+          ),
         )
     }
 
   override def unescape: ValueContentV2 =
     copy(
       listNodeLabel = listNodeLabel.map(labelStr => Iri.fromSparqlEncodedString(labelStr)),
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2356,12 +2356,12 @@ object HierarchicalListValueContentV2 {
    * @return a [[HierarchicalListValueContentV2]].
    */
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
+    jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, HierarchicalListValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit stringFormatter =>
       for {
         listValueAsListNode <- ZIO.attempt(
-                                 jsonLDObject.requireIriInObject(ListValueAsListNode, stringFormatter.toSmartIriWithErr)
+                                 jsonLDObject.requireIriInObject(ListValueAsListNode, stringFormatter.toSmartIriWithErr),
                                )
         _ <- ZIO
                .fail(BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI"))
@@ -2392,13 +2392,13 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasColor,
-          datatype = OntologyConstants.KnoraApiV2Simple.Color.toSmartIri
+          datatype = OntologyConstants.KnoraApiV2Simple.Color.toSmartIri,
         )
 
       case ApiV2Complex =>
@@ -2408,7 +2408,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
   override def unescape: ValueContentV2 =
     copy(
       valueHasColor = Iri.fromSparqlEncodedString(valueHasColor),
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2470,11 +2470,11 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
       value = valueHasUri,
-      datatype = OntologyConstants.Xsd.Uri.toSmartIri
+      datatype = OntologyConstants.Xsd.Uri.toSmartIri,
     )
 
     targetSchema match {
@@ -2488,7 +2488,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
   override def unescape: ValueContentV2 =
     copy(
       valueHasUri = Iri.fromSparqlEncodedString(valueHasUri),
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2527,7 +2527,7 @@ object UriValueContentV2 {
                            jsonLDObject.requireDatatypeValueInObject(
                              UriValueAsUri,
                              OntologyConstants.Xsd.Uri.toSmartIri,
-                             validationFun
+                             validationFun,
                            )
                          }
         comment <- JsonLDUtil.getComment(jsonLDObject)
@@ -2544,7 +2544,7 @@ object UriValueContentV2 {
 case class GeonameValueContentV2(
   ontologySchema: OntologySchema,
   valueHasGeonameCode: String,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2560,25 +2560,25 @@ case class GeonameValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
         JsonLDUtil.datatypeValueToJsonLDObject(
           value = valueHasGeonameCode,
-          datatype = OntologyConstants.KnoraApiV2Simple.Geoname.toSmartIri
+          datatype = OntologyConstants.KnoraApiV2Simple.Geoname.toSmartIri,
         )
 
       case ApiV2Complex =>
         JsonLDObject(
-          Map(GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode))
+          Map(GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)),
         )
     }
 
   override def unescape: ValueContentV2 =
     copy(
       valueHasGeonameCode = Iri.fromSparqlEncodedString(valueHasGeonameCode),
-      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2615,7 +2615,7 @@ object GeonameValueContentV2 {
                                        (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                                      jsonLDObject.requireStringWithValidation(
                                        GeonameValueAsGeonameCode,
-                                       validationFun
+                                       validationFun,
                                      )
                                    }
       comment <- JsonLDUtil.getComment(jsonLDObject)
@@ -2629,7 +2629,7 @@ case class FileValueV2(
   internalFilename: String,
   internalMimeType: String,
   originalFilename: Option[String],
-  originalMimeType: Option[String]
+  originalMimeType: Option[String],
 )
 
 /**
@@ -2647,7 +2647,7 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
 
     JsonLDUtil.datatypeValueToJsonLDObject(
       value = fileUrl,
-      datatype = OntologyConstants.KnoraApiV2Simple.File.toSmartIri
+      datatype = OntologyConstants.KnoraApiV2Simple.File.toSmartIri,
     )
   }
 
@@ -2655,8 +2655,8 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
     FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
     FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
       value = fileUrl,
-      datatype = OntologyConstants.Xsd.Uri.toSmartIri
-    )
+      datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+    ),
   )
 }
 
@@ -2673,7 +2673,7 @@ case class StillImageFileValueContentV2(
   fileValue: FileValueV2,
   dimX: Int,
   dimY: Int,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2692,7 +2692,7 @@ case class StillImageFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String = makeFileUrl(projectADM, appConfig.sipi.externalBaseUrl)
 
@@ -2707,9 +2707,9 @@ case class StillImageFileValueContentV2(
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
                 value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
-                datatype = OntologyConstants.Xsd.Uri.toSmartIri
-              )
-          )
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+              ),
+          ),
         )
     }
   }
@@ -2744,7 +2744,7 @@ object StillImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, StillImageFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
@@ -2754,7 +2754,7 @@ object StillImageFileValueContentV2 {
         FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
       dimX = metadata.width.getOrElse(0),
       dimY = metadata.height.getOrElse(0),
-      comment = comment
+      comment = comment,
     )
 }
 
@@ -2773,7 +2773,7 @@ case class DocumentFileValueContentV2(
   pageCount: Option[Int],
   dimX: Option[Int],
   dimY: Option[Int],
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2789,7 +2789,7 @@ case class DocumentFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2800,8 +2800,8 @@ case class DocumentFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(
-            fileUrl
-          )
+            fileUrl,
+          ),
         )
     }
   }
@@ -2835,7 +2835,7 @@ case class DocumentFileValueContentV2(
 case class ArchiveFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2851,7 +2851,7 @@ case class ArchiveFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2861,8 +2861,8 @@ case class ArchiveFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(
-            fileUrl
-          )
+            fileUrl,
+          ),
         )
     }
   }
@@ -2894,7 +2894,7 @@ object DocumentFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, DocumentFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLdObject)
@@ -2905,7 +2905,7 @@ object DocumentFileValueContentV2 {
       pageCount = metadata.numpages,
       dimX = metadata.width,
       dimY = metadata.height,
-      comment
+      comment,
     )
 }
 
@@ -2916,14 +2916,14 @@ object ArchiveFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, ArchiveFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLdObject)
     } yield ArchiveFileValueContentV2(
       ApiV2Complex,
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment
+      comment,
     )
 }
 
@@ -2936,7 +2936,7 @@ object ArchiveFileValueContentV2 {
 case class TextFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2952,7 +2952,7 @@ case class TextFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2993,13 +2993,13 @@ object TextFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, TextFileValueContentV2] = for {
     comment <- JsonLDUtil.getComment(jsonLDObject)
   } yield TextFileValueContentV2(
     ApiV2Complex,
     FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-    comment
+    comment,
   )
 }
 
@@ -3012,7 +3012,7 @@ object TextFileValueContentV2 {
 case class AudioFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -3028,7 +3028,7 @@ case class AudioFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -3069,14 +3069,14 @@ object AudioFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, AudioFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield AudioFileValueContentV2(
       ApiV2Complex,
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment
+      comment,
     )
 }
 
@@ -3089,7 +3089,7 @@ object AudioFileValueContentV2 {
 case class MovingImageFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -3105,7 +3105,7 @@ case class MovingImageFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -3115,7 +3115,7 @@ case class MovingImageFileValueContentV2(
 
       case ApiV2Complex =>
         JsonLDObject(
-          toJsonLDObjectMapInComplexSchema(fileUrl)
+          toJsonLDObjectMapInComplexSchema(fileUrl),
         )
     }
   }
@@ -3148,14 +3148,14 @@ object MovingImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     internalFilename: String,
-    metadata: FileMetadataSipiResponse
+    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, MovingImageFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield MovingImageFileValueContentV2(
       ApiV2Complex,
       FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
-      comment
+      comment,
     )
 }
 
@@ -3176,7 +3176,7 @@ case class LinkValueContentV2(
   referredResourceExists: Boolean = true,
   isIncomingLink: Boolean = false,
   nestedResource: Option[ReadResourceV2] = None,
-  comment: Option[String] = None
+  comment: Option[String] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -3197,7 +3197,7 @@ case class LinkValueContentV2(
 
     copy(
       ontologySchema = targetSchema,
-      nestedResource = convertedNestedResource
+      nestedResource = convertedNestedResource,
     )
   }
 
@@ -3205,7 +3205,7 @@ case class LinkValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
@@ -3218,7 +3218,7 @@ case class LinkValueContentV2(
             val referredResourceAsJsonLDValue: JsonLDObject = targetResource.toJsonLD(
               targetSchema = targetSchema,
               appConfig = appConfig,
-              schemaOptions = schemaOptions
+              schemaOptions = schemaOptions,
             )
 
             // check whether the nested resource is the target or the source of the link
@@ -3232,14 +3232,14 @@ case class LinkValueContentV2(
             if (!isIncomingLink) {
               Map(
                 LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(
-                  referredResourceIri
-                )
+                  referredResourceIri,
+                ),
               )
             } else {
               Map(
                 LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(
-                  referredResourceIri
-                )
+                  referredResourceIri,
+                ),
               )
             }
         }
@@ -3275,15 +3275,15 @@ case class LinkValueContentV2(
  */
 object LinkValueContentV2 {
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
+    jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, LinkValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit stringFormatter =>
       for {
         targetIri <- ZIO.attempt(
                        jsonLDObject.requireIriInObject(
                          LinkValueHasTargetIri,
-                         stringFormatter.toSmartIriWithErr
-                       )
+                         stringFormatter.toSmartIriWithErr,
+                       ),
                      )
         _ <- ZIO
                .fail(BadRequestException(s"Link target IRI <$targetIri> is not a Knora data IRI"))
@@ -3313,7 +3313,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
 
   override def unescape: ValueContentV2 =

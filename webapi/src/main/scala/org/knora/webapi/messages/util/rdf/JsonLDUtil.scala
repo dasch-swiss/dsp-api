@@ -170,7 +170,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             // add it to the top level and refer to it by IRI here.
             jsonLDObject.flattened(
               entitiesToAddToTopLevel = entitiesToAddToTopLevel,
-              isAtTopLevel = false
+              isAtTopLevel = false,
             )
 
           case jsonLDArray: JsonLDArray =>
@@ -178,7 +178,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             // move its elements to the top level, because they're already at the top level.
             jsonLDArray.flattened(
               entitiesToAddToTopLevel = entitiesToAddToTopLevel,
-              isAtTopLevel = pred == JsonLDKeywords.GRAPH
+              isAtTopLevel = pred == JsonLDKeywords.GRAPH,
             )
 
           case _ =>
@@ -202,7 +202,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         JsonLDUtil.iriToJsonLDObject(
           thisWithFlattenedContent
             .getRequiredString(JsonLDKeywords.ID)
-            .fold(msg => throw BadRequestException(msg), identity)
+            .fold(msg => throw BadRequestException(msg), identity),
         )
       } else {
         // No, it's a blank node or some other type of data. Just return it with flattened content.
@@ -248,7 +248,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model = model,
         rdfSubj = rdfSubj,
         rdfPred = rdfPred,
-        jsonLDValue = obj
+        jsonLDValue = obj,
       )
     }
 
@@ -267,7 +267,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       model.add(
         subj = rdfSubj,
         pred = JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
-        obj = JenaNodeFactory.makeIriNode(typeIri.value)
+        obj = JenaNodeFactory.makeIriNode(typeIri.value),
       )
 
     def invalidType: Nothing = throw InvalidJsonLDException("The objects of @type must be strings")
@@ -352,7 +352,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param jsonLDValue the value to be added.
    */
   private def addJsonLDValueToModel(model: RdfModel, rdfSubj: RdfResource, rdfPred: IriNode, jsonLDValue: JsonLDValue)(
-    implicit stringFormatter: StringFormatter
+    implicit stringFormatter: StringFormatter,
   ): Unit =
     // Which type of JSON-LD value is this?
     jsonLDValue match {
@@ -361,7 +361,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         val rdfObj: RdfNode = if (jsonLDObject.isIri) {
           // An IRI.
           JenaNodeFactory.makeIriNode(
-            jsonLDObject.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
+            jsonLDObject.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity),
           )
         } else if (jsonLDObject.isDatatypeValue) {
           // A literal.
@@ -370,7 +370,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
               .getRequiredString(JsonLDKeywords.VALUE)
               .fold(msg => throw BadRequestException(msg), identity),
             datatype =
-              jsonLDObject.getRequiredString(JsonLDKeywords.TYPE).fold(msg => throw BadRequestException(msg), identity)
+              jsonLDObject.getRequiredString(JsonLDKeywords.TYPE).fold(msg => throw BadRequestException(msg), identity),
           )
         } else if (jsonLDObject.isStringWithLang) {
           // A string literal with a language tag.
@@ -380,7 +380,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
               .fold(msg => throw BadRequestException(msg), identity),
             language = jsonLDObject
               .getRequiredString(JsonLDKeywords.LANGUAGE)
-              .fold(msg => throw BadRequestException(msg), identity)
+              .fold(msg => throw BadRequestException(msg), identity),
           )
         } else {
           // Triples. Recurse to add its contents to the model.
@@ -391,7 +391,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model.add(
           subj = rdfSubj,
           pred = rdfPred,
-          obj = rdfObj
+          obj = rdfObj,
         )
 
       case jsonLDArray: JsonLDArray =>
@@ -402,7 +402,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             model = model,
             rdfSubj = rdfSubj,
             rdfPred = rdfPred,
-            jsonLDValue = elem
+            jsonLDValue = elem,
           )
         }
 
@@ -411,7 +411,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model.add(
           subj = rdfSubj,
           pred = rdfPred,
-          obj = JenaNodeFactory.makeStringLiteral(jsonLDString.value)
+          obj = JenaNodeFactory.makeStringLiteral(jsonLDString.value),
         )
 
       case jsonLDBoolean: JsonLDBoolean =>
@@ -419,7 +419,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model.add(
           rdfSubj,
           rdfPred,
-          JenaNodeFactory.makeBooleanLiteral(jsonLDBoolean.value)
+          JenaNodeFactory.makeBooleanLiteral(jsonLDBoolean.value),
         )
 
       case jsonLDInt: JsonLDInt =>
@@ -428,8 +428,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
           pred = rdfPred,
           obj = JenaNodeFactory.makeDatatypeLiteral(
             value = jsonLDInt.value.toString,
-            datatype = OntologyConstants.Xsd.Integer
-          )
+            datatype = OntologyConstants.Xsd.Integer,
+          ),
         )
     }
 
@@ -628,7 +628,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   def requireDatatypeValueInObject[T](
     key: String,
     expectedDatatype: SmartIri,
-    validationFun: (String, => Nothing) => T
+    validationFun: (String, => Nothing) => T,
   ): T =
     getRequiredObject(key)
       .fold(e => throw BadRequestException(e), identity)
@@ -651,7 +651,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   def maybeDatatypeValueInObject[T](
     key: String,
     expectedDatatype: SmartIri,
-    validationFun: (String, => Nothing) => T
+    validationFun: (String, => Nothing) => T,
   ): Option[T] =
     getObject(key)
       .fold(e => throw BadRequestException(e), identity)
@@ -676,7 +676,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
           _ <- ZIO
                  .fromEither(obj.getRequiredString(JsonLDKeywords.TYPE))
                  .filterOrElseWith(_ == expectedType.toString)(actualType =>
-                   ZIO.fail(s"Expected data type '$expectedType', found data type '$actualType'")
+                   ZIO.fail(s"Expected data type '$expectedType', found data type '$actualType'"),
                  )
           value <- ZIO.fromEither(obj.getRequiredString(JsonLDKeywords.VALUE))
         } yield value
@@ -779,7 +779,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
           .asSmartIri(str)
           .mapError(_.getMessage)
           .filterOrFail(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(
-            s"Invalid Knora API v2 complex type IRI: $str"
+            s"Invalid Knora API v2 complex type IRI: $str",
           )
       case None => ZIO.fail(s"No ${JsonLDKeywords.TYPE} provided")
     }
@@ -798,7 +798,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                   c.asSmartIri(key)
                     .orElseFail("Invalid property IRI: $key")
                     .filterOrElseWith(it => it.isKnoraEntityIri && it.isApiV2ComplexSchema)(it =>
-                      ZIO.fail(s"Invalid Knora API v2 complex property IRI: $it")
+                      ZIO.fail(s"Invalid Knora API v2 complex property IRI: $it"),
                     )
                 value <- jsonLDValue match {
                            case obj: JsonLDObject => ZIO.succeed(propertySmartIri -> obj)
@@ -862,7 +862,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
    */
   def flattened(
     entitiesToAddToTopLevel: collection.mutable.Set[JsonLDObject],
-    isAtTopLevel: Boolean = false
+    isAtTopLevel: Boolean = false,
   ): JsonLDArray =
     JsonLDArray {
       // Flatten the JSON-LD objects that are elements of the array.
@@ -873,7 +873,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
           // at the top level.
           jsonLDObject.flattened(
             entitiesToAddToTopLevel = entitiesToAddToTopLevel,
-            isAtTopLevel = isAtTopLevel
+            isAtTopLevel = isAtTopLevel,
           )
 
         case elem =>
@@ -923,7 +923,7 @@ case class JsonLDDocument(
   body: JsonLDObject,
   context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue]),
   isFlat: Boolean = false,
-  keepStructure: Boolean = false
+  keepStructure: Boolean = false,
 ) {
 
   /**
@@ -943,7 +943,7 @@ case class JsonLDDocument(
       // Flatten the content of the document.
       val flattenedContent: JsonLDObject = body.flattened(
         entitiesToAddToTopLevel = entitiesToAddToTopLevel,
-        isAtTopLevel = true
+        isAtTopLevel = true,
       )
 
       // Are there any entities to add to the top level?
@@ -967,8 +967,8 @@ case class JsonLDDocument(
           flattenedContent.getArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
         JsonLDObject(
           Map(
-            JsonLDKeywords.GRAPH -> JsonLDArray(maybeTopLevelObject ++ existingGraphElements ++ entitiesToAddToTopLevel)
-          )
+            JsonLDKeywords.GRAPH -> JsonLDArray(maybeTopLevelObject ++ existingGraphElements ++ entitiesToAddToTopLevel),
+          ),
         )
       } else {
         // No. Just keep the existing @graph, if there is one, with the existing top-level entity.
@@ -977,7 +977,7 @@ case class JsonLDDocument(
 
       copy(
         body = allContent,
-        isFlat = true
+        isFlat = true,
       )
     }
 
@@ -1082,7 +1082,7 @@ object JsonLDUtil {
    */
   def makeContext(
     fixedPrefixes: Map[String, String],
-    knoraOntologiesNeedingPrefixes: Set[SmartIri] = Set.empty
+    knoraOntologiesNeedingPrefixes: Set[SmartIri] = Set.empty,
   ): JsonLDObject = {
 
     /**
@@ -1122,7 +1122,7 @@ object JsonLDUtil {
         // Yes. This shouldn't happen, so throw InconsistentRepositoryDataException.
         throw InconsistentRepositoryDataException(
           s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes
-              .map(_.toString)).mkString(", ")}"
+              .map(_.toString)).mkString(", ")}",
         )
       } else {
         // No. Use the long prefixes.
@@ -1159,8 +1159,8 @@ object JsonLDUtil {
     JsonLDObject(
       Map(
         JsonLDKeywords.VALUE    -> JsonLDString(obj),
-        JsonLDKeywords.LANGUAGE -> JsonLDString(lang)
-      )
+        JsonLDKeywords.LANGUAGE -> JsonLDString(lang),
+      ),
     )
 
   /**
@@ -1182,8 +1182,8 @@ object JsonLDUtil {
     JsonLDObject(
       Map(
         JsonLDKeywords.VALUE -> JsonLDString(strValue),
-        JsonLDKeywords.TYPE  -> JsonLDString(datatype.toString)
-      )
+        JsonLDKeywords.TYPE  -> JsonLDString(datatype.toString),
+      ),
     )
   }
 
@@ -1199,7 +1199,7 @@ object JsonLDUtil {
     val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.sortBy(_._1).map { case (lang, obj) =>
       objectWithLangToJsonLDObject(
         obj = obj,
-        lang = lang
+        lang = lang,
       )
     }
 
@@ -1348,7 +1348,7 @@ object JsonLDUtil {
             model = model,
             topLevelEntities = topLevelEntities,
             processedSubjects = processedSubjects,
-            flatJsonLD = flatJsonLD
+            flatJsonLD = flatJsonLD,
           )
 
           // Add it to the collection of top-level entities.
@@ -1386,7 +1386,7 @@ object JsonLDUtil {
     model: RdfModel,
     topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
     processedSubjects: collection.mutable.Set[RdfResource],
-    flatJsonLD: Boolean
+    flatJsonLD: Boolean,
   )(implicit stringFormatter: StringFormatter): JsonLDObject = {
     // Mark the subject as processed.
     processedSubjects += subj
@@ -1434,7 +1434,7 @@ object JsonLDUtil {
                 topLevelEntities = topLevelEntities,
                 referrerIsBlankNode = idContent.isEmpty,
                 processedSubjects = processedSubjects,
-                flatJsonLD = flatJsonLD
+                flatJsonLD = flatJsonLD,
               )
 
             case literal: RdfLiteral => rdfLiteralToJsonLDValue(literal)
@@ -1480,14 +1480,14 @@ object JsonLDUtil {
             JsonLDInt(
               allCatch
                 .opt(datatypeValue.toInt)
-                .getOrElse(throw InvalidRdfException(s"Invalid integer: $datatypeValue"))
+                .getOrElse(throw InvalidRdfException(s"Invalid integer: $datatypeValue")),
             )
 
           case OntologyConstants.Xsd.Boolean =>
             JsonLDBoolean(
               allCatch
                 .opt(datatypeValue.toBoolean)
-                .getOrElse(throw InvalidRdfException(s"Invalid boolean: $datatypeValue"))
+                .getOrElse(throw InvalidRdfException(s"Invalid boolean: $datatypeValue")),
             )
 
           case _ =>
@@ -1517,7 +1517,7 @@ object JsonLDUtil {
     topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
     referrerIsBlankNode: Boolean,
     processedSubjects: collection.mutable.Set[RdfResource],
-    flatJsonLD: Boolean
+    flatJsonLD: Boolean,
   )(implicit stringFormatter: StringFormatter): JsonLDValue = {
 
     /**
@@ -1550,7 +1550,7 @@ object JsonLDUtil {
               model = model,
               topLevelEntities = topLevelEntities,
               processedSubjects = processedSubjects,
-              flatJsonLD = flatJsonLD
+              flatJsonLD = flatJsonLD,
             )
           } else {
             // No. Do something else with it.

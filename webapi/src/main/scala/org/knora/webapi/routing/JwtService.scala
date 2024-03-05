@@ -75,7 +75,7 @@ trait JwtService {
 
 final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
-  private val dspIngestConfig: DspIngestConfig
+  private val dspIngestConfig: DspIngestConfig,
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -92,7 +92,7 @@ final case class JwtServiceLive(
       jwtConfig.issuerAsString(),
       jwtConfig.issuerAsString(),
       Set(dspIngestConfig.audience),
-      expiration = Some(10.minutes)
+      expiration = Some(10.minutes),
     )
 
   private def createJwtToken(
@@ -100,7 +100,7 @@ final case class JwtServiceLive(
     subject: String,
     audience: Set[String],
     content: Option[JsObject] = None,
-    expiration: Option[Duration] = None
+    expiration: Option[Duration] = None,
   ) =
     for {
       now  <- Clock.instant
@@ -113,7 +113,7 @@ final case class JwtServiceLive(
                 audience = Some(audience),
                 issuedAt = Some(now.getEpochSecond),
                 expiration = Some(exp.getEpochSecond),
-                jwtId = Some(UuidUtil.base64Encode(uuid))
+                jwtId = Some(UuidUtil.base64Encode(uuid)),
               ).toJson
     } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
 
@@ -159,7 +159,7 @@ final case class JwtServiceLive(
           claim.jwtId.isDefined,
           claim.issuedAt.isDefined,
           claim.expiration.isDefined,
-          claim.audience.isDefined
+          claim.audience.isDefined,
         ).contains(false)
 
         if (!missingRequiredContent) {

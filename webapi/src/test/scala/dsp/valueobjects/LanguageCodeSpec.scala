@@ -20,14 +20,14 @@ object LanguageCodeSpec extends ZIOSpecDefault {
   private val languageCodeTest = suite("LanguageCode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        LanguageCode.make("") == Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))
+        LanguageCode.make("") == Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing)),
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(invalidLanguageCode))
-        )
+          ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(invalidLanguageCode)),
+        ),
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -73,8 +73,8 @@ object LanguageCodeSpec extends ZIOSpecDefault {
           default = LanguageCode.rm
         } yield assertTrue(manual == default) &&
           assertTrue(default.value == lang)).toZIO
-      }
-    )
+      },
+    ),
   )
 
 }

@@ -43,7 +43,7 @@ final case class AppConfig(
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
-  dspIngest: DspIngestConfig
+  dspIngest: DspIngestConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
   val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
@@ -53,15 +53,15 @@ final case class AppConfig(
       c.overflowToDisk,
       c.eternal,
       c.timeToLiveSeconds,
-      c.timeToIdleSeconds
+      c.timeToIdleSeconds,
     )
   }
 }
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
   def issuerAsString(): String = issuer.getOrElse(
     throw new IllegalStateException(
-      "This should never happen, the issuer may be left blank in application.conf but the default is taken from external host and port."
-    )
+      "This should never happen, the issuer may be left blank in application.conf but the default is taken from external host and port.",
+    ),
   )
 }
 final case class DspIngestConfig(baseUrl: String, audience: String)
@@ -72,7 +72,7 @@ final case class KnoraApi(
   externalProtocol: String,
   externalHost: String,
   externalPort: Int,
-  externalZioPort: Int
+  externalZioPort: Int,
 ) {
   val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort
@@ -114,7 +114,7 @@ final case class Sipi(
   textMimeTypes: List[String],
   videoMimeTypes: List[String],
   audioMimeTypes: List[String],
-  archiveMimeTypes: List[String]
+  archiveMimeTypes: List[String],
 ) {
   val internalBaseUrl: String =
     internalProtocol + "://" + internalHost + (if (internalPort != 80) ":" + internalPort else "")
@@ -124,12 +124,12 @@ final case class Sipi(
 
 final case class Ark(
   resolver: String,
-  assignedNumber: Int
+  assignedNumber: Int,
 )
 
 final case class Salsah1(
   baseUrl: String,
-  projectIconsBasepath: String
+  projectIconsBasepath: String,
 )
 
 final case class CacheConfig(
@@ -138,36 +138,36 @@ final case class CacheConfig(
   overflowToDisk: Boolean,
   eternal: Boolean,
   timeToLiveSeconds: Int,
-  timeToIdleSeconds: Int
+  timeToIdleSeconds: Int,
 )
 
 final case class V2(
   resourcesSequence: ResourcesSequence,
   fulltextSearch: FulltextSearch,
-  graphRoute: GraphRoute
+  graphRoute: GraphRoute,
 )
 
 final case class ResourcesSequence(
-  resultsPerPage: Int
+  resultsPerPage: Int,
 )
 
 final case class FulltextSearch(
-  searchValueMinLength: Int
+  searchValueMinLength: Int,
 )
 
 final case class GraphRoute(
   defaultGraphDepth: Int,
   maxGraphDepth: Int,
-  maxGraphBreadth: Int
+  maxGraphBreadth: Int,
 )
 
 final case class Gui(
-  defaultIconSize: DefaultIconSize
+  defaultIconSize: DefaultIconSize,
 )
 
 final case class DefaultIconSize(
   dimX: Int,
-  dimY: Int
+  dimY: Int,
 )
 
 final case class Triplestore(
@@ -178,7 +178,7 @@ final case class Triplestore(
   gravsearchTimeout: Duration,
   autoInit: Boolean,
   fuseki: Fuseki,
-  profileQueries: Boolean
+  profileQueries: Boolean,
 )
 
 final case class Fuseki(
@@ -186,20 +186,20 @@ final case class Fuseki(
   repositoryName: String,
   username: String,
   password: String,
-  queryLoggingThreshold: Duration = Duration.ofMillis(1000)
+  queryLoggingThreshold: Duration = Duration.ofMillis(1000),
 )
 
 final case class CacheService(
-  enabled: Boolean
+  enabled: Boolean,
 )
 
 final case class ClientTestDataService(
-  collectClientTestData: Boolean
+  collectClientTestData: Boolean,
 )
 
 final case class InstrumentationServerConfig(
   port: Int,
-  interval: Duration
+  interval: Duration,
 )
 
 object AppConfig {

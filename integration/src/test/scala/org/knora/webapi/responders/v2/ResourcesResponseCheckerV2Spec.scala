@@ -20,7 +20,7 @@ class ResourcesResponseCheckerV2Spec extends CoreSpec {
 
       compareReadResourcesSequenceV2Response(
         expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-        received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein
+        received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
       )
 
     }
@@ -29,7 +29,7 @@ class ResourcesResponseCheckerV2Spec extends CoreSpec {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise
+          received = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
         )
       }
     }
@@ -38,7 +38,7 @@ class ResourcesResponseCheckerV2Spec extends CoreSpec {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein
+          received = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
         )
       }
     }
@@ -47,7 +47,7 @@ class ResourcesResponseCheckerV2Spec extends CoreSpec {
       assertThrows[AssertionError] {
         compareReadResourcesSequenceV2Response(
           expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-          received = resourcesResponderCheckerV2SpecFullData.expectedFullResourceResponseForReiseWrong
+          received = resourcesResponderCheckerV2SpecFullData.expectedFullResourceResponseForReiseWrong,
         )
       }
     }

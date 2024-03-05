@@ -75,7 +75,7 @@ object FileModelUtil {
     internalMimeType: Option[String],
     originalFilename: Option[String],
     originalMimeType: Option[String],
-    comment: Option[String]
+    comment: Option[String],
   ): FileValueContentV2 =
     fileType match {
       case FileType.DocumentFile(pageCount, dimX, dimY) =>
@@ -91,12 +91,12 @@ object FileModelUtil {
             originalMimeType = originalMimeType match {
               case Some(_) => originalMimeType
               case None    => Some("application/pdf")
-            }
+            },
           ),
           pageCount = pageCount,
           dimX = dimX,
           dimY = dimY,
-          comment = comment
+          comment = comment,
         )
       case FileType.StillImageFile(dimX, dimY) =>
         StillImageFileValueContentV2(
@@ -108,11 +108,11 @@ object FileModelUtil {
               case None    => "image/jp2"
             },
             originalFilename = originalFilename,
-            originalMimeType = originalMimeType
+            originalMimeType = originalMimeType,
           ),
           dimX = dimX,
           dimY = dimY,
-          comment = comment
+          comment = comment,
         )
       case FileType.MovingImageFile(_, _) =>
         MovingImageFileValueContentV2(
@@ -121,8 +121,8 @@ object FileModelUtil {
             internalFilename = internalFilename,
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
+            originalMimeType = internalMimeType,
+          ),
         )
       case FileType.TextFile =>
         TextFileValueContentV2(
@@ -131,8 +131,8 @@ object FileModelUtil {
             internalFilename = internalFilename,
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
+            originalMimeType = internalMimeType,
+          ),
         )
       case FileType.AudioFile =>
         AudioFileValueContentV2(
@@ -141,8 +141,8 @@ object FileModelUtil {
             internalFilename = internalFilename,
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
+            originalMimeType = internalMimeType,
+          ),
         )
       case FileType.ArchiveFile =>
         ArchiveFileValueContentV2(
@@ -154,9 +154,9 @@ object FileModelUtil {
               case None    => "application/zip"
             },
             originalFilename = originalFilename,
-            originalMimeType = internalMimeType
+            originalMimeType = internalMimeType,
           ),
-          comment = comment
+          comment = comment,
         )
     }
 
@@ -196,7 +196,7 @@ object FileModelConstants {
     "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
+    "xsd"       -> "http://www.w3.org/2001/XMLSchema#",
   )
 }
 
@@ -205,7 +205,7 @@ object FileType {
   case class DocumentFile(
     pageCount: Option[Int] = Some(1),
     dimX: Option[Int] = Some(100),
-    dimY: Option[Int] = Some(100)
+    dimY: Option[Int] = Some(100),
   ) extends FileType
   case class StillImageFile(dimX: Int = 100, dimY: Int = 100)  extends FileType
   case class MovingImageFile(dimX: Int = 100, dimY: Int = 100) extends FileType

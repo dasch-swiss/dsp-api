@@ -100,7 +100,7 @@ object Codecs {
     implicit val projectIri: StringCodec[ProjectIri]                  = stringCodec(ProjectIri.from)
     implicit val restrictedViewSize: StringCodec[RestrictedView.Size] = stringCodec(RestrictedView.Size.from)
     implicit val restrictedViewWatermark: StringCodec[RestrictedView.Watermark] = booleanCodec(
-      RestrictedView.Watermark.from
+      RestrictedView.Watermark.from,
     )
     implicit val selfJoin: StringCodec[SelfJoin]                       = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode]                     = stringCodec(Shortcode.from)

@@ -22,8 +22,8 @@ object GroupIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/groups/0001/40-characters-iri-for-testing-purposes-1",
           "http://rdfh.ch/groups/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
           "http://rdfh.ch/groups/0111/UUID1",
-          "http://rdfh.ch/groups/0111/1234"
-        )
+          "http://rdfh.ch/groups/0111/1234",
+        ),
       )
       check(validIris)(i => assertTrue(GroupIri.from(i).isRight))
     },
@@ -34,10 +34,10 @@ object GroupIriSpec extends ZIOSpecDefault {
           "http://rdfh.ch/groups/0111/123",
           "http://rdfh.ch/groups/0001/41-characters-iri-for-testing-purposes-12",
           "http://rdfh.ch/groups/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
-          "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ"
-        )
+          "http://rdfh.ch/groups/jDEEitJESRi3pDaDjjQ1WQ",
+        ),
       )
       check(invalidIris)(i => assertTrue(GroupIri.from(i) == Left(s"Group IRI is invalid.")))
-    }
+    },
   )
 }

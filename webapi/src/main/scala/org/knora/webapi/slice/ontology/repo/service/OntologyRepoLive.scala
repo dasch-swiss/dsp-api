@@ -77,7 +77,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   private def findAllSubclassesBy(
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
-    cache: OntologyCacheData
+    cache: OntologyCacheData,
   ): List[ReadClassInfoV2] = {
     val subclassesWithSelf = findDirectSubclassesBy(classIris, cache)
     val subclasses         = subclassesWithSelf.filter(it => !classIris.contains(it.entityInfoContent.classIri))
@@ -111,12 +111,12 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findAllSuperClassesBy(
     classIris: List[InternalIri],
-    upToClass: InternalIri
+    upToClass: InternalIri,
   ): Task[List[ReadClassInfoV2]] =
     for {
       upToClassIri <- toSmartIri(upToClass)
       result <- smartIrisMapCache(classIris)((iris, cache) =>
-                  findAllSuperClassesBy(iris, List.empty, cache, Some(upToClassIri))
+                  findAllSuperClassesBy(iris, List.empty, cache, Some(upToClassIri)),
                 )
     } yield result.distinct
 
@@ -125,7 +125,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
     classIris: List[SmartIri],
     acc: List[ReadClassInfoV2],
     cache: OntologyCacheData,
-    upToClassIri: Option[SmartIri] = None
+    upToClassIri: Option[SmartIri] = None,
   ): List[ReadClassInfoV2] = {
     val superClassesWithSelf = findDirectSuperClassesBy(classIris, cache)
     val superClasses         = superClassesWithSelf.filter(it => !classIris.contains(it.entityInfoContent.classIri))

@@ -25,7 +25,7 @@ class ErrorHandlingMap[A, B](
   private val errorTemplateFun: A => String,
   private val errorFun: String => B = { (errorMessage: String) =>
     throw InconsistentRepositoryDataException(errorMessage)
-  }
+  },
 ) extends Map[A, B] {
 
   // As an optimization, if the Map we're supposed to wrap is another ErrorHandlingMap, wrap its underlying wrapped Map instead.

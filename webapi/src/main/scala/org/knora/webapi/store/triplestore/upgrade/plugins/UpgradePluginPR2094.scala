@@ -33,11 +33,11 @@ class UpgradePluginPR2094(log: Logger) extends UpgradePlugin {
               subj = statement.subj,
               pred = statement.pred,
               obj = newObjectValue(node.iri),
-              context = statement.context
+              context = statement.context,
             )
 
             log.info(
-              s"Transformed valueHasUri $node to ${newObjectValue(node.iri)}."
+              s"Transformed valueHasUri $node to ${newObjectValue(node.iri)}.",
             )
 
           case _ => ()

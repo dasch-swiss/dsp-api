@@ -75,7 +75,7 @@ object RouteUtilV2 {
       .orElse(fromHeader)
       .map(toMarkupRendering)
       .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
-        Validation.fromEither(_)
+        Validation.fromEither(_),
       )
   }
 
@@ -86,7 +86,7 @@ object RouteUtilV2 {
     firstHeaderValue(ctx, xKnoraJsonLdRendering)
       .map(JsonLdRendering.from(_).left.map(BadRequestException(_)).map(Some(_)))
       .fold[Validation[BadRequestException, Option[JsonLdRendering]]](Validation.succeed(None))(
-        Validation.fromEither
+        Validation.fromEither,
       )
 
   /**
@@ -99,7 +99,7 @@ object RouteUtilV2 {
     Validation
       .validateWith(
         getStandoffRendering(requestContext),
-        getJsonLDRendering(requestContext)
+        getJsonLDRendering(requestContext),
       )((standoff, jsonLd) => Set(standoff, jsonLd).flatten)
       .toZIO
 
@@ -116,7 +116,7 @@ object RouteUtilV2 {
     ZIO.foreach(maybeProjectIriStr)(iri =>
       IriConverter
         .asSmartIri(iri)
-        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader"))
+        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader")),
     )
   }
 
@@ -134,7 +134,7 @@ object RouteUtilV2 {
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none,
   )(implicit runtime: Runtime[R & MessageRelay & AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
@@ -161,7 +161,7 @@ object RouteUtilV2 {
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none,
   )(implicit runtime: Runtime[R & AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       targetSchema      <- targetSchemaTask
@@ -186,7 +186,7 @@ object RouteUtilV2 {
    */
   def runTEIXMLRoute[R](
     requestTask: ZIO[R, Throwable, KnoraRequestV2],
-    requestContext: RequestContext
+    requestContext: RequestContext,
   )(implicit runtime: Runtime[R & MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture {
       for {
@@ -200,7 +200,7 @@ object RouteUtilV2 {
 
   private def extractMediaTypeFromHeaderItem(
     headerValueItem: String,
-    headerValue: String
+    headerValue: String,
   ): Task[Option[MediaRange.One]] = {
     val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
 
@@ -217,7 +217,7 @@ object RouteUtilV2 {
       mediaTypeStr <- ZIO
                         .fromOption(mediaRangeParts.headOption)
                         .orElseFail(
-                          BadRequestException(s"Invalid Accept header: $headerValue")
+                          BadRequestException(s"Invalid Accept header: $headerValue"),
                         )
       maybeMediaType = RdfMediaTypes.registry.get(mediaTypeStr) match {
                          case Some(mediaType: MediaType) => Some(mediaType)
@@ -237,7 +237,7 @@ object RouteUtilV2 {
    * @return A [[Future]] containing the [[RouteResult]] for Pekko HTTP.
    */
   def complete[R](ctx: RequestContext, task: ZIO[R, Throwable, HttpResponse])(implicit
-    runtime: Runtime[R]
+    runtime: Runtime[R],
   ): Future[RouteResult] = ctx.complete(UnsafeZioRun.runToFuture(task))
 
   /**

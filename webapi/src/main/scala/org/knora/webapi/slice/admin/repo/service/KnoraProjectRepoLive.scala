@@ -29,7 +29,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
-  private val triplestore: TriplestoreService
+  private val triplestore: TriplestoreService,
 ) extends KnoraProjectRepo {
 
   override def findAll(): Task[List[KnoraProject]] =
@@ -38,8 +38,8 @@ final case class KnoraProjectRepoLive(
       resources <- model.getSubjectResources
       projects <- ZIO.foreach(resources)(res =>
                     toKnoraProject(res).logError.orElseFail(
-                      InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject")
-                    )
+                      InconsistentRepositoryDataException(s"Failed to convert $res to KnoraProject"),
+                    ),
                   )
     } yield projects.toList
 
@@ -78,7 +78,7 @@ final case class KnoraProjectRepoLive(
       for {
         size <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
         watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(b =>
-                       Right(RestrictedView.Watermark.from(b))
+                       Right(RestrictedView.Watermark.from(b)),
                      )
       } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 
@@ -103,7 +103,7 @@ final case class KnoraProjectRepoLive(
       logo = logo,
       status = status,
       selfjoin = selfjoin,
-      restrictedView = restrictedView
+      restrictedView = restrictedView,
     )
   }
 
@@ -126,7 +126,7 @@ object KnoraProjectRepoLive {
             |  BIND(IRI("${iri.value}") as ?project)
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findOneByShortcode(shortcode: Shortcode): Construct =
@@ -141,7 +141,7 @@ object KnoraProjectRepoLive {
             |  ?project knora-admin:projectShortcode "${shortcode.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findOneByShortname(shortname: Shortname): Construct =
@@ -155,7 +155,7 @@ object KnoraProjectRepoLive {
             |  ?project knora-admin:projectShortname "${shortname.value}"^^xsd:string .
             |  ?project a knora-admin:knoraProject .
             |  ?project ?p ?o .
-            |}""".stripMargin
+            |}""".stripMargin,
       )
 
     def findAll: Construct = {
@@ -178,7 +178,7 @@ object KnoraProjectRepoLive {
         .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, project.selfjoin.value)
       project.longname.foreach(longname => pattern.andHas(Vocabulary.KnoraAdmin.projectLongname, longname.value))
       project.description.foreach(description =>
-        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, description.value.toRdfLiteral)
+        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, description.value.toRdfLiteral),
       )
       project.keywords.foreach(keyword => pattern.andHas(Vocabulary.KnoraAdmin.projectKeyword, keyword.value))
       project.logo.foreach(logo => pattern.andHas(Vocabulary.KnoraAdmin.projectLogo, logo.value))
@@ -209,7 +209,7 @@ object KnoraProjectRepoLive {
           knoraProjectProperties.zipWithIndex
             .foldLeft(id.has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject).optional()) { case (p, (iri, index)) =>
               p.and(id.has(iri, variable(s"n$index")).optional())
-            }
+            },
         )
       Update(query)
     }
@@ -224,7 +224,7 @@ object KnoraProjectRepoLive {
       Vocabulary.KnoraAdmin.projectShortname,
       Vocabulary.KnoraAdmin.status,
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
-      Vocabulary.KnoraAdmin.projectRestrictedViewWatermark
+      Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
     )
 
   }

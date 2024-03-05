@@ -20,7 +20,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 final case class MaintenanceRestService(
   securityService: AuthorizationRestService,
-  maintenanceService: MaintenanceService
+  maintenanceService: MaintenanceService,
 ) {
 
   private val fixTopLeftAction = "fix-top-left"
@@ -33,7 +33,7 @@ final case class MaintenanceRestService(
     }
 
   private def getParamsAs[A](paramsMaybe: Option[Json], actionName: String)(implicit
-    a: JsonDecoder[A]
+    a: JsonDecoder[A],
   ): IO[BadRequestException, A] = {
     val missingArgsMsg                 = s"Missing arguments for $actionName"
     def invalidArgsMsg(reason: String) = s"Invalid arguments for $actionName: $reason"

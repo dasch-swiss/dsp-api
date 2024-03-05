@@ -34,7 +34,7 @@ trait GroupsRestService {
 final case class GroupsRestServiceLive(
   auth: AuthorizationRestService,
   responder: GroupsResponderADM,
-  format: KnoraResponseRenderer
+  format: KnoraResponseRenderer,
 ) extends GroupsRestService {
   override def getGroups: Task[GroupsGetResponseADM] = for {
     internal <- responder.groupsGetADM.map(GroupsGetResponseADM)

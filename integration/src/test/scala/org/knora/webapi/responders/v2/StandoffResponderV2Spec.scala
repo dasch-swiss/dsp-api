@@ -86,7 +86,7 @@ class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
            |""".stripMargin
       val message = mapping.toMessage(
         xml = xmlContent,
-        user = SharedTestDataADM.rootUser
+        user = SharedTestDataADM.rootUser,
       )
       appActor ! message
       val response = expectMsgPF(timeout) {

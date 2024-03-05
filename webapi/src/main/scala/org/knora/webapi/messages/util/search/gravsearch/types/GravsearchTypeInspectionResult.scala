@@ -27,7 +27,7 @@ case class PropertyTypeInfo(
   objectTypeIri: SmartIri,
   objectIsResourceType: Boolean = false,
   objectIsValueType: Boolean = false,
-  objectIsStandoffTagType: Boolean = false
+  objectIsStandoffTagType: Boolean = false,
 ) extends GravsearchEntityTypeInfo {
   override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
 
@@ -38,7 +38,7 @@ case class PropertyTypeInfo(
     typeIri = objectTypeIri,
     isResourceType = objectIsResourceType,
     isValueType = objectIsValueType,
-    isStandoffTagType = objectIsStandoffTagType
+    isStandoffTagType = objectIsStandoffTagType,
   )
 }
 
@@ -55,7 +55,7 @@ case class NonPropertyTypeInfo(
   typeIri: SmartIri,
   isResourceType: Boolean = false,
   isValueType: Boolean = false,
-  isStandoffTagType: Boolean = false
+  isStandoffTagType: Boolean = false,
 ) extends GravsearchEntityTypeInfo {
   override def toString: String = s"rdf:type ${IriRef(typeIri).toSparql}"
 
@@ -66,7 +66,7 @@ case class NonPropertyTypeInfo(
     objectTypeIri = typeIri,
     objectIsResourceType = isResourceType,
     objectIsValueType = isValueType,
-    objectIsStandoffTagType = isStandoffTagType
+    objectIsStandoffTagType = isStandoffTagType,
   )
 }
 
@@ -100,7 +100,7 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity {
  */
 case class GravsearchTypeInspectionResult(
   entities: Map[TypeableEntity, GravsearchEntityTypeInfo],
-  entitiesInferredFromProperties: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty
+  entitiesInferredFromProperties: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = Map.empty,
 ) {
 
   /**

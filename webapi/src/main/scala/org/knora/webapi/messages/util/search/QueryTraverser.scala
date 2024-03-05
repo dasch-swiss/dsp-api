@@ -53,7 +53,7 @@ trait WhereVisitor[Acc] {
  */
 case class TransformedOrderBy(
   statementPatterns: Seq[StatementPattern] = Vector.empty[StatementPattern],
-  orderBy: Seq[OrderCriterion] = Vector.empty[OrderCriterion]
+  orderBy: Seq[OrderCriterion] = Vector.empty[OrderCriterion],
 )
 
 /**
@@ -62,7 +62,7 @@ case class TransformedOrderBy(
 final case class QueryTraverser(
   private val messageRelay: MessageRelay,
   private val ontologyCache: OntologyCache,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
 ) {
 
   /**
@@ -78,7 +78,7 @@ final case class QueryTraverser(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]],
   ): Task[Seq[QueryPattern]] =
     for {
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
@@ -89,7 +89,7 @@ final case class QueryTraverser(
                                  whereTransformer.transformStatementInWhere(
                                    statementPattern = statementPattern,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   limitInferenceToOntologies = limitInferenceToOntologies,
                                  )
 
                                case filterPattern: FilterPattern =>
@@ -100,7 +100,7 @@ final case class QueryTraverser(
                                    patterns = filterNotExistsPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   limitInferenceToOntologies = limitInferenceToOntologies,
                                  ).map(patterns => Seq(FilterNotExistsPattern(patterns)))
 
                                case minusPattern: MinusPattern =>
@@ -108,7 +108,7 @@ final case class QueryTraverser(
                                    patterns = minusPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   limitInferenceToOntologies = limitInferenceToOntologies,
                                  ).map(patterns => Seq(MinusPattern(patterns)))
 
                                case optionalPattern: OptionalPattern =>
@@ -116,7 +116,7 @@ final case class QueryTraverser(
                                    patterns = optionalPattern.patterns,
                                    whereTransformer = whereTransformer,
                                    inputOrderBy = inputOrderBy,
-                                   limitInferenceToOntologies = limitInferenceToOntologies
+                                   limitInferenceToOntologies = limitInferenceToOntologies,
                                  ).map(patterns => Seq(OptionalPattern(patterns)))
 
                                case unionPattern: UnionPattern =>
@@ -129,11 +129,11 @@ final case class QueryTraverser(
                                            patterns = blockPatterns,
                                            whereTransformer = whereTransformer,
                                            inputOrderBy = inputOrderBy,
-                                           limitInferenceToOntologies = limitInferenceToOntologies
-                                         )
+                                           limitInferenceToOntologies = limitInferenceToOntologies,
+                                         ),
                                        )
                                        .zipLeft(
-                                         whereTransformer.leavingUnionBlock()
+                                         whereTransformer.leavingUnionBlock(),
                                        )
                                  }
                                  ZIO.collectAll(transformedBlocks).map(blocks => Seq(UnionPattern(blocks)))
@@ -165,21 +165,21 @@ final case class QueryTraverser(
         visitWherePatterns(
           patterns = filterNotExistsPattern.patterns,
           whereVisitor = whereVisitor,
-          initialAcc = acc
+          initialAcc = acc,
         )
 
       case (acc, minusPattern: MinusPattern) =>
         visitWherePatterns(
           patterns = minusPattern.patterns,
           whereVisitor = whereVisitor,
-          initialAcc = acc
+          initialAcc = acc,
         )
 
       case (acc, optionalPattern: OptionalPattern) =>
         visitWherePatterns(
           patterns = optionalPattern.patterns,
           whereVisitor = whereVisitor,
-          initialAcc = acc
+          initialAcc = acc,
         )
 
       case (acc, unionPattern: UnionPattern) =>
@@ -187,7 +187,7 @@ final case class QueryTraverser(
           visitWherePatterns(
             patterns = blockPatterns,
             whereVisitor = whereVisitor,
-            initialAcc = unionAcc
+            initialAcc = unionAcc,
           )
         }
 
@@ -228,7 +228,7 @@ final case class QueryTraverser(
    */
   private def ensureNotOnlyNegationPatterns(
     patterns: Seq[QueryPattern],
-    inputQuery: ConstructQuery
+    inputQuery: ConstructQuery,
   ): Task[Seq[QueryPattern]] =
     patterns match {
       case MinusPattern(_) +: Nil =>
@@ -237,16 +237,16 @@ final case class QueryTraverser(
           .mapBoth(
             _ =>
               GravsearchOptimizationException(
-                s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+                s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}",
               ),
             { statement =>
               val notDeletedPattern = StatementPattern(
                 subj = statement.subj,
                 pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
-                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean)),
               )
               patterns.appendedAll(Seq(statement, notDeletedPattern))
-            }
+            },
           )
       case FilterNotExistsPattern(_) +: Nil =>
         ZIO
@@ -254,16 +254,16 @@ final case class QueryTraverser(
           .mapBoth(
             _ =>
               GravsearchOptimizationException(
-                s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+                s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}",
               ),
             { statement =>
               val notDeletedPattern = StatementPattern(
                 subj = statement.subj,
                 pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
-                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean)),
               )
               patterns.appendedAll(Seq(statement, notDeletedPattern))
-            }
+            },
           )
       case _ => ZIO.succeed(patterns)
     }
@@ -279,13 +279,13 @@ final case class QueryTraverser(
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
     transformer: AbstractPrequeryGenerator,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[SelectQuery] = for {
     transformedWherePatterns <- transformWherePatterns(
                                   patterns = inputQuery.whereClause.patterns,
                                   inputOrderBy = inputQuery.orderBy,
                                   whereTransformer = transformer,
-                                  limitInferenceToOntologies = limitInferenceToOntologies
+                                  limitInferenceToOntologies = limitInferenceToOntologies,
                                 )
     transformedOrderBy              <- transformer.getOrderBy(inputQuery.orderBy)
     patterns                         = transformedWherePatterns ++ transformedOrderBy.statementPatterns
@@ -300,13 +300,13 @@ final case class QueryTraverser(
     groupBy = groupBy,
     orderBy = transformedOrderBy.orderBy,
     limit = Some(limit),
-    offset = offset
+    offset = offset,
   )
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
     transformer: SelectTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]],
   ): Task[SelectQuery] =
     for {
       fromClause <- transformer.getFromClause
@@ -314,7 +314,7 @@ final case class QueryTraverser(
                     patterns = inputQuery.whereClause.patterns,
                     inputOrderBy = inputQuery.orderBy,
                     whereTransformer = transformer,
-                    limitInferenceToOntologies = limitInferenceToOntologies
+                    limitInferenceToOntologies = limitInferenceToOntologies,
                   )
       whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)

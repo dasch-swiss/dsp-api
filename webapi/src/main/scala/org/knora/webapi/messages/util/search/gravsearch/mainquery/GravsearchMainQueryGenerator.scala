@@ -45,7 +45,7 @@ object GravsearchMainQueryGenerator {
 
     // SPARQL variable representing the predicates of value objects of the main and dependent resources
     val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable(
-      "mainAndDependentResourceValueObjectProp"
+      "mainAndDependentResourceValueObjectProp",
     )
 
     // SPARQL variable representing the objects of value objects of the main and dependent resources
@@ -90,7 +90,7 @@ object GravsearchMainQueryGenerator {
    * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
    */
   case class ValueObjectVariablesAndValueObjectIris(
-    valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]]
+    valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]],
   )
 
   /**
@@ -105,7 +105,7 @@ object GravsearchMainQueryGenerator {
   def getDependentResourceIrisPerMainResource(
     prequeryResponse: SparqlSelectResult,
     transformer: GravsearchToPrequeryTransformer,
-    mainResourceVar: QueryVariable
+    mainResourceVar: QueryVariable,
   ): DependentResourcesPerMainResource = {
 
     // variables representing dependent resources
@@ -147,8 +147,8 @@ object GravsearchMainQueryGenerator {
     DependentResourcesPerMainResource(
       new ErrorHandlingMap(
         dependentResourcesPerMainRes,
-        key => throw GravsearchException(s"main resource not found: $key")
-      )
+        key => throw GravsearchException(s"main resource not found: $key"),
+      ),
     )
   }
 
@@ -164,7 +164,7 @@ object GravsearchMainQueryGenerator {
   def getValueObjectVarsAndIrisPerMainResource(
     prequeryResponse: SparqlSelectResult,
     transformer: GravsearchToPrequeryTransformer,
-    mainResourceVar: QueryVariable
+    mainResourceVar: QueryVariable,
   ): ValueObjectVariablesAndValueObjectIris = {
 
     // value objects variables present in the prequery's WHERE clause
@@ -204,13 +204,13 @@ object GravsearchMainQueryGenerator {
             valueObjVarToIris,
             { (key: QueryVariable) =>
               throw GravsearchException(s"variable not found: $key")
-            }
+            },
           )
           acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
       }
 
     ValueObjectVariablesAndValueObjectIris(
-      new ErrorHandlingMap(valueObjVarsAndIris, key => throw GravsearchException(s"main resource not found: $key"))
+      new ErrorHandlingMap(valueObjVarsAndIris, key => throw GravsearchException(s"main resource not found: $key")),
     )
   }
 
@@ -230,7 +230,7 @@ object GravsearchMainQueryGenerator {
     dependentResourceIris: Set[IriRef],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): ConstructQuery = {
     import GravsearchConstants.*
 
@@ -240,18 +240,18 @@ object GravsearchMainQueryGenerator {
     val wherePatternsForMainResource = Seq(
       ValuesPattern(
         mainResourceVar,
-        mainResourceIris
+        mainResourceIris,
       ), // a ValuePattern that binds the main resources' IRIs to the main resource variable
       StatementPattern(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
       StatementPattern(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-      )
+        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+      ),
     )
 
     // mark main resource variable in CONSTRUCT clause
@@ -259,8 +259,8 @@ object GravsearchMainQueryGenerator {
       StatementPattern(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsMainResource.toSmartIri),
-        obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-      )
+        obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+      ),
     )
 
     // since a CONSTRUCT query returns a flat list of triples, we can handle main and dependent resources in the same way
@@ -269,23 +269,23 @@ object GravsearchMainQueryGenerator {
     val wherePatternsForMainAndDependentResources = Seq(
       ValuesPattern(
         mainAndDependentResourceVar,
-        mainResourceIris ++ dependentResourceIris
+        mainResourceIris ++ dependentResourceIris,
       ), // a ValuePattern that binds the main and dependent resources' IRIs to a variable
       StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
       StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
       ),
       StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = mainAndDependentResourcePropVar,
-        obj = mainAndDependentResourceObjectVar
-      )
+        obj = mainAndDependentResourceObjectVar,
+      ),
     )
 
     // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
@@ -293,13 +293,13 @@ object GravsearchMainQueryGenerator {
       StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
       StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = mainAndDependentResourcePropVar,
-        obj = mainAndDependentResourceObjectVar
-      )
+        obj = mainAndDependentResourceObjectVar,
+      ),
     )
 
     if (valueObjectIris.nonEmpty) {
@@ -315,30 +315,30 @@ object GravsearchMainQueryGenerator {
         StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-          obj = mainAndDependentResourceValueObject
+          obj = mainAndDependentResourceValueObject,
         ),
         StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = mainAndDependentResourceValueProp,
-          obj = mainAndDependentResourceValueObject
+          obj = mainAndDependentResourceValueObject,
         ),
         StatementPattern(
           subj = mainAndDependentResourceValueObject,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
         ),
         StatementPattern(
           subj = mainAndDependentResourceValueObject,
           pred = mainAndDependentResourceValueObjectProp,
-          obj = mainAndDependentResourceValueObjectObj
+          obj = mainAndDependentResourceValueObjectObj,
         ),
         FilterPattern(
           CompareExpression(
             leftArg = mainAndDependentResourceValueObjectProp,
             operator = CompareExpressionOperator.NOT_EQUALS,
-            rightArg = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
-          )
-        )
+            rightArg = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
+          ),
+        ),
       )
 
       // return assertions about the main and dependent resources' values in CONSTRUCT clause
@@ -346,18 +346,18 @@ object GravsearchMainQueryGenerator {
         StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-          obj = mainAndDependentResourceValueObject
+          obj = mainAndDependentResourceValueObject,
         ),
         StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = mainAndDependentResourceValueProp,
-          obj = mainAndDependentResourceValueObject
+          obj = mainAndDependentResourceValueObject,
         ),
         StatementPattern(
           subj = mainAndDependentResourceValueObject,
           pred = mainAndDependentResourceValueObjectProp,
-          obj = mainAndDependentResourceValueObjectObj
-        )
+          obj = mainAndDependentResourceValueObjectObj,
+        ),
       )
 
       // Check whether the response should include standoff.
@@ -370,35 +370,35 @@ object GravsearchMainQueryGenerator {
           StatementPattern(
             subj = mainAndDependentResourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar
+            obj = standoffNodeVar,
           ),
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
           StatementPattern(
             subj = standoffNodeVar,
             pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
-            obj = standoffStartIndexVar
+            obj = standoffStartIndexVar,
           ),
           OptionalPattern(
             Seq(
               StatementPattern(
                 subj = standoffNodeVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri),
-                obj = targetStandoffTagVar
+                obj = targetStandoffTagVar,
               ),
               StatementPattern(
                 subj = targetStandoffTagVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID.toSmartIri),
-                obj = targetOriginalXMLIDVar
-              )
-            )
+                obj = targetOriginalXMLIDVar,
+              ),
+            ),
           ),
           FilterPattern(
             CompareExpression(
               leftArg = standoffStartIndexVar,
               operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
-            )
-          )
+              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri),
+            ),
+          ),
         )
       } else {
         Seq.empty[QueryPattern]
@@ -410,14 +410,14 @@ object GravsearchMainQueryGenerator {
           StatementPattern(
             subj = mainAndDependentResourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar
+            obj = standoffNodeVar,
           ),
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
           StatementPattern(
             subj = standoffNodeVar,
             pred = IriRef(OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri),
-            obj = targetOriginalXMLIDVar
-          )
+            obj = targetOriginalXMLIDVar,
+          ),
         )
       } else {
         Seq.empty[StatementPattern]
@@ -426,7 +426,7 @@ object GravsearchMainQueryGenerator {
       ConstructQuery(
         constructClause = ConstructClause(
           statements =
-            constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+            constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff,
         ),
         whereClause = WhereClause(
           Seq(
@@ -435,11 +435,11 @@ object GravsearchMainQueryGenerator {
                 wherePatternsForMainResource,
                 wherePatternsForMainAndDependentResources,
                 wherePatternsForMainAndDependentResourcesValues,
-                wherePatternsForStandoff
-              ).filter(_.nonEmpty)
-            )
-          )
-        )
+                wherePatternsForStandoff,
+              ).filter(_.nonEmpty),
+            ),
+          ),
+        ),
       )
 
     } else {
@@ -447,15 +447,15 @@ object GravsearchMainQueryGenerator {
 
       ConstructQuery(
         constructClause = ConstructClause(
-          statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources
+          statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources,
         ),
         whereClause = WhereClause(
           Seq(
             UnionPattern(
-              Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources)
-            )
-          )
-        )
+              Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources),
+            ),
+          ),
+        ),
       )
     }
   }

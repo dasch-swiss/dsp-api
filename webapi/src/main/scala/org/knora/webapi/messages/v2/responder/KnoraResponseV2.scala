@@ -32,7 +32,7 @@ trait KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[Rendering],
-    appConfig: AppConfig
+    appConfig: AppConfig,
   ): String
 
   def format(opts: KnoraResponseRenderer.FormatOptions, config: AppConfig): String =
@@ -48,7 +48,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[Rendering],
-    appConfig: AppConfig
+    appConfig: AppConfig,
   ): String = {
     val targetApiV2Schema = targetSchema match {
       case apiV2Schema: ApiV2Schema => apiV2Schema
@@ -59,7 +59,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     val jsonLDDocument: JsonLDDocument = toJsonLDDocument(
       targetSchema = targetApiV2Schema,
       appConfig = appConfig,
-      schemaOptions = schemaOptions
+      schemaOptions = schemaOptions,
     )
 
     // Which response format was requested?
@@ -76,7 +76,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
         RdfFormatUtil.format(
           rdfModel = rdfModel,
           rdfFormat = nonJsonLD,
-          schemaOptions = schemaOptions
+          schemaOptions = schemaOptions,
         )
     }
   }
@@ -90,7 +90,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
   protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument
 }
 
@@ -109,7 +109,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[Rendering],
-    appConfig: AppConfig
+    appConfig: AppConfig,
   ): String = {
     if (targetSchema != InternalSchema) {
       throw AssertionException(s"Response can be returned only in the internal schema")
@@ -129,7 +129,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
         RdfFormatUtil.format(
           rdfModel = rdfModel,
           rdfFormat = rdfFormat,
-          schemaOptions = schemaOptions
+          schemaOptions = schemaOptions,
         )
     }
   }
@@ -144,7 +144,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
     val (ontologyPrefixExpansion, resultProp) = targetSchema match {
       case ApiV2Simple =>
@@ -155,11 +155,11 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
 
     JsonLDDocument(
       body = JsonLDObject(
-        Map(resultProp -> JsonLDString(message))
+        Map(resultProp -> JsonLDString(message)),
       ),
       context = JsonLDObject(
-        Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(ontologyPrefixExpansion))
-      )
+        Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(ontologyPrefixExpansion)),
+      ),
     )
   }
 }
@@ -172,7 +172,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
 final case class CanDoResponseV2(
   canDo: JsonLDBoolean,
   cannotDoReason: Option[JsonLDString] = None,
-  cannotDoReasonContext: Option[JsonLDObject] = None
+  cannotDoReasonContext: Option[JsonLDObject] = None,
 ) extends KnoraJsonLDResponseV2 {
   require((cannotDoReason.nonEmpty && !canDo.value) || cannotDoReason.isEmpty)
   require((cannotDoReasonContext.nonEmpty && !canDo.value) || cannotDoReasonContext.isEmpty)
@@ -180,7 +180,7 @@ final case class CanDoResponseV2(
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw BadRequestException(s"Response is available only in the complex schema")
@@ -198,9 +198,9 @@ final case class CanDoResponseV2(
     val context = JsonLDObject(
       Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-        )
-      )
+          OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+        ),
+      ),
     )
     JsonLDDocument(body, context)
   }
@@ -217,13 +217,13 @@ object CanDoResponseV2 {
     CanDoResponseV2(
       canDo = JsonLDBoolean.FALSE,
       cannotDoReason = Some(JsonLDString(reason)),
-      cannotDoReasonContext = None
+      cannotDoReasonContext = None,
     )
   def no(reason: String, context: JsonLDObject): CanDoResponseV2 =
     CanDoResponseV2(
       canDo = JsonLDBoolean.FALSE,
       cannotDoReason = Some(JsonLDString(reason)),
-      cannotDoReasonContext = Some(context)
+      cannotDoReasonContext = Some(context),
     )
 }
 

@@ -24,7 +24,7 @@ case class UserProfile(
   groups: Seq[IRI] = Seq.empty[IRI],
   projects_info: Map[IRI, ProjectInfo] = Map.empty[IRI, ProjectInfo],
   isSystemUser: Boolean = false,
-  permissionData: PermissionsDataADM = PermissionsDataADM()
+  permissionData: PermissionsDataADM = PermissionsDataADM(),
 )
 object UserProfile {
   def from(userADM: User): UserProfile =
@@ -47,8 +47,8 @@ object UserProfile {
         projects_info = projects_info_v1,
         permissionData = PermissionsDataADM(
           groupsPerProject = userADM.permissions.groupsPerProject,
-          administrativePermissionsPerProject = userADM.permissions.administrativePermissionsPerProject
-        )
+          administrativePermissionsPerProject = userADM.permissions.administrativePermissionsPerProject,
+        ),
       )
     }
 
@@ -64,7 +64,7 @@ object UserProfile {
       firstname = Some(userADM.givenName),
       lastname = Some(userADM.familyName),
       status = Some(userADM.status),
-      lang = userADM.lang
+      lang = userADM.lang,
     )
 }
 
@@ -88,5 +88,5 @@ case class UserData(
   firstname: Option[String] = None,
   lastname: Option[String] = None,
   status: Option[Boolean] = Some(true),
-  lang: String
+  lang: String,
 )

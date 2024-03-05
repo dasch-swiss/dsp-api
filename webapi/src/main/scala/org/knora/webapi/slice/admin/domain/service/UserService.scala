@@ -19,7 +19,7 @@ import org.knora.webapi.store.cache.CacheService
 final case class UserService(
   private val userRepo: KnoraUserRepo,
   private val userToKnoraUserConverter: KnoraUserToUserConverter,
-  private val cacheService: CacheService
+  private val cacheService: CacheService,
 ) {
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
@@ -40,7 +40,7 @@ final case class UserService(
   private def fromCacheOrRepo[A](
     id: A,
     fromCache: A => Task[Option[User]],
-    fromRepo: A => Task[Option[KnoraUser]]
+    fromRepo: A => Task[Option[KnoraUser]],
   ): Task[Option[User]] =
     fromCache(id).flatMap {
       case Some(user) => ZIO.some(user)

@@ -46,6 +46,6 @@ object ZipUtilitySpec extends ZIOSpecDefault {
         unzipped    <- ZipUtility.unzipFile(zipped, tmpUnzipped)
         result      <- verifyUnzipped(unzipped)
       } yield assertTrue(result)
-    }
+    },
   )
 }

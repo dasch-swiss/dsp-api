@@ -32,7 +32,7 @@ object GravsearchQueryChecker {
     statementPattern: StatementPattern,
     querySchema: ApiV2Schema,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    inConstructClause: Boolean = false
+    inConstructClause: Boolean = false,
   ): Unit = {
     // Check each entity in the statement.
     for (entity <- Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)) {
@@ -122,7 +122,7 @@ object GravsearchQueryChecker {
    */
   def checkConstructClause(
     constructClause: ConstructClause,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): Task[Unit] =
     for {
       querySchema <-
@@ -135,9 +135,9 @@ object GravsearchQueryChecker {
                  statementPattern = statementPattern,
                  querySchema = querySchema,
                  typeInspectionResult = typeInspectionResult,
-                 inConstructClause = true
+                 inConstructClause = true,
                )
-             }
+             },
            )
     } yield ()
 
@@ -171,6 +171,6 @@ object GravsearchQueryChecker {
     OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri,
     OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
     OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl,
   )
 }

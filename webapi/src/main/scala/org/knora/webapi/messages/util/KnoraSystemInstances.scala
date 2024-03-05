@@ -32,7 +32,7 @@ object KnoraSystemInstances {
       password = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      permissions = PermissionsDataADM()
+      permissions = PermissionsDataADM(),
     )
 
     /**
@@ -49,7 +49,7 @@ object KnoraSystemInstances {
       password = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      permissions = PermissionsDataADM()
+      permissions = PermissionsDataADM(),
     )
   }
 }

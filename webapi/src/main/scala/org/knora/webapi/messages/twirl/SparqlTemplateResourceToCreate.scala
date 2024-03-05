@@ -25,5 +25,5 @@ case class SparqlTemplateResourceToCreate(
   sparqlForValues: String,
   resourceClassIri: IRI,
   resourceLabel: String,
-  resourceCreationDate: Instant
+  resourceCreationDate: Instant,
 )

@@ -30,7 +30,7 @@ object ZipUtility {
   def zipFolder(
     srcFolder: Path,
     destinationFolder: Path,
-    zipFilename: Option[String] = None
+    zipFilename: Option[String] = None,
   ): Task[Path] = ZIO.scoped {
     val zipFile = destinationFolder / zipFilename.getOrElse(s"${srcFolder.filename.toString}.zip")
     for {

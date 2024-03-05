@@ -21,7 +21,7 @@ object PermissionsMessagesUtilADM {
     ViewPermission           -> 2,
     ModifyPermission         -> 6,
     DeletePermission         -> 7,
-    ChangeRightsPermission   -> 8
+    ChangeRightsPermission   -> 8,
   )
 
   ////////////////////
@@ -38,12 +38,12 @@ object PermissionsMessagesUtilADM {
       if (!AdministrativePermissionAbbreviations.contains(permission.name))
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
-            s"${AdministrativePermissionAbbreviations.toString}"
+            s"${AdministrativePermissionAbbreviations.toString}",
         )
       PermissionADM(
         name = permission.name,
         additionalInformation = None,
-        permissionCode = None
+        permissionCode = None,
       )
     }
     updatedPermissions
