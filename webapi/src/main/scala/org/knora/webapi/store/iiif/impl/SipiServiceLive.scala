@@ -91,7 +91,9 @@ final case class SipiServiceLive(
 
   override def getFileMetadataFromDspIngest(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse] =
     for {
-      response <- dspIngestClient.getAssetInfo(shortcode, assetId)
+      response <- dspIngestClient
+                    .getAssetInfo(shortcode, assetId)
+                    .debug("dspIngestClient.getFileMetadataFromDspIngest - getAssetInfo response")
     } yield FileMetadataSipiResponse(
       Some(response.originalFilename),
       response.originalMimeType,

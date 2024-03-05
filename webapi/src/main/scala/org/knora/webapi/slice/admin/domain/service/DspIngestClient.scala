@@ -79,11 +79,13 @@ final case class DspIngestClientLive(
 
   override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
-      request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
-      response <- ZIO.blocking(request.send(backend = sttpBackend)).logError
+      request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId")).debug("request")
+      response <- ZIO.blocking(request.send(backend = sttpBackend)).logError.debug("response")
       result <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
+                  .debug("result from either")
                   .mapError(err => new IOException(s"Error parsing response: $err"))
+                  .debug("result mapped")
     } yield result
 
   override def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
