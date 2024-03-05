@@ -29,8 +29,8 @@ final case class DspIngestClientMock() extends DspIngestClient {
         "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
         "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
         internalMimeType = Some("text/plain"),
-        originalMimeType = Some("text/plain")
-      )
+        originalMimeType = Some("text/plain"),
+      ),
     )
 }
 

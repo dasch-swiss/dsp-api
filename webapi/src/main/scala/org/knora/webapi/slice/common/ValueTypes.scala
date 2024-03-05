@@ -35,7 +35,7 @@ object ToValidation {
   def validateOneWithFrom[A, B <: Value[?], E](
     a: A,
     validator: A => Either[String, B],
-    err: String => E
+    err: String => E,
   ): Validation[E, B] =
     Validation.fromEither(validator(a)).mapError(err.apply)
 
@@ -57,7 +57,7 @@ object ToValidation {
   def validateOptionWithFrom[A, B <: Value[?], E](
     maybeA: Option[A],
     validator: A => Either[String, B],
-    err: String => E
+    err: String => E,
   ): Validation[E, Option[B]] = maybeA match {
     case Some(a) => Validation.fromEither(validator(a)).map(Some(_)).mapError(err.apply)
     case None    => Validation.succeed(None)

@@ -42,7 +42,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.isEmpty
+          internalOntologyIri.getProjectCode.isEmpty,
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
@@ -51,7 +51,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
           externalOntologyIri.isKnoraOntologyIri &&
           externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.isEmpty
+          externalOntologyIri.getProjectCode.isEmpty,
       )
     }
 
@@ -61,7 +61,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty
+          internalEntityIri.getProjectCode.isEmpty,
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
@@ -70,7 +70,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.isEmpty
+          externalEntityIri.getProjectCode.isEmpty,
       )
     }
 
@@ -80,7 +80,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.isEmpty
+          internalOntologyIri.getProjectCode.isEmpty,
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
@@ -89,7 +89,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
           externalOntologyIri.isKnoraOntologyIri &&
           externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.isEmpty
+          externalOntologyIri.getProjectCode.isEmpty,
       )
     }
 
@@ -99,7 +99,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty
+          internalEntityIri.getProjectCode.isEmpty,
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
@@ -108,7 +108,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.isEmpty
+          externalEntityIri.getProjectCode.isEmpty,
       )
     }
 
@@ -118,7 +118,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
           externalOntologyIri.isKnoraOntologyIri &&
           externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.isEmpty
+          externalOntologyIri.getProjectCode.isEmpty,
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -127,7 +127,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.isEmpty
+          internalOntologyIri.getProjectCode.isEmpty,
       )
     }
 
@@ -137,7 +137,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.isEmpty
+          externalEntityIri.getProjectCode.isEmpty,
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -146,7 +146,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty
+          internalEntityIri.getProjectCode.isEmpty,
       )
     }
 
@@ -156,7 +156,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
           externalOntologyIri.isKnoraOntologyIri &&
           externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.isEmpty
+          externalOntologyIri.getProjectCode.isEmpty,
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -165,7 +165,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.isEmpty
+          internalOntologyIri.getProjectCode.isEmpty,
       )
     }
 
@@ -175,7 +175,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.isEmpty
+          externalEntityIri.getProjectCode.isEmpty,
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -184,7 +184,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty
+          internalEntityIri.getProjectCode.isEmpty,
       )
     }
 
@@ -197,7 +197,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("00FF")
+          internalOntologyIri.getProjectCode.contains("00FF"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
@@ -206,7 +206,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("00FF")
+          externalOntologyIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -216,7 +216,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("00FF")
+          internalEntityIri.getProjectCode.contains("00FF"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
@@ -225,7 +225,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("00FF")
+          externalEntityIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -235,7 +235,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("00FF")
+          internalOntologyIri.getProjectCode.contains("00FF"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
@@ -244,7 +244,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("00FF")
+          externalOntologyIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -254,7 +254,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("00FF")
+          internalEntityIri.getProjectCode.contains("00FF"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
@@ -263,7 +263,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("00FF")
+          externalEntityIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -273,7 +273,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("00FF")
+          externalOntologyIri.getProjectCode.contains("00FF"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -282,7 +282,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("00FF")
+          internalOntologyIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -292,7 +292,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("00FF")
+          externalEntityIri.getProjectCode.contains("00FF"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -301,7 +301,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("00FF")
+          internalEntityIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -311,7 +311,7 @@ class StringFormatterSpec extends CoreSpec {
         externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("00FF")
+          externalOntologyIri.getProjectCode.contains("00FF"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -320,7 +320,7 @@ class StringFormatterSpec extends CoreSpec {
         internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("00FF")
+          internalOntologyIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -330,7 +330,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("00FF")
+          externalEntityIri.getProjectCode.contains("00FF"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -339,7 +339,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("00FF")
+          internalEntityIri.getProjectCode.contains("00FF"),
       )
     }
 
@@ -349,7 +349,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&
           internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty
+          internalEntityIri.getProjectCode.isEmpty,
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
@@ -366,7 +366,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0000")
+          internalOntologyIri.getProjectCode.contains("0000"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
@@ -376,7 +376,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0000")
+          externalOntologyIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -386,7 +386,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0000")
+          internalEntityIri.getProjectCode.contains("0000"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
@@ -396,7 +396,7 @@ class StringFormatterSpec extends CoreSpec {
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0000")
+          externalEntityIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -407,7 +407,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0000")
+          internalOntologyIri.getProjectCode.contains("0000"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
@@ -417,7 +417,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0000")
+          externalOntologyIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -427,7 +427,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0000")
+          internalEntityIri.getProjectCode.contains("0000"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
@@ -437,7 +437,7 @@ class StringFormatterSpec extends CoreSpec {
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0000")
+          externalEntityIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -448,7 +448,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0000")
+          externalOntologyIri.getProjectCode.contains("0000"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -458,7 +458,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0000")
+          internalOntologyIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -468,7 +468,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0000")
+          externalEntityIri.getProjectCode.contains("0000"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -477,7 +477,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0000")
+          internalEntityIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -488,7 +488,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0000")
+          externalOntologyIri.getProjectCode.contains("0000"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -498,7 +498,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0000")
+          internalOntologyIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -508,7 +508,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0000")
+          externalEntityIri.getProjectCode.contains("0000"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -517,7 +517,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0000")
+          internalEntityIri.getProjectCode.contains("0000"),
       )
     }
 
@@ -531,7 +531,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0111")
+          internalOntologyIri.getProjectCode.contains("0111"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
@@ -541,7 +541,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0111")
+          externalOntologyIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -551,7 +551,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0111")
+          internalEntityIri.getProjectCode.contains("0111"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
@@ -561,7 +561,7 @@ class StringFormatterSpec extends CoreSpec {
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0111")
+          externalEntityIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -572,7 +572,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0111")
+          internalOntologyIri.getProjectCode.contains("0111"),
       )
 
       val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
@@ -582,7 +582,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0111")
+          externalOntologyIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -592,7 +592,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0111")
+          internalEntityIri.getProjectCode.contains("0111"),
       )
 
       val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
@@ -602,7 +602,7 @@ class StringFormatterSpec extends CoreSpec {
           externalEntityIri.isKnoraApiV2EntityIri &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0111")
+          externalEntityIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -613,7 +613,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0111")
+          externalOntologyIri.getProjectCode.contains("0111"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -623,7 +623,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0111")
+          internalOntologyIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -633,7 +633,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0111")
+          externalEntityIri.getProjectCode.contains("0111"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -642,7 +642,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0111")
+          internalEntityIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -653,7 +653,7 @@ class StringFormatterSpec extends CoreSpec {
           externalOntologyIri.isKnoraOntologyIri &&
           !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
           externalOntologyIri.isKnoraSharedDefinitionIri &&
-          externalOntologyIri.getProjectCode.contains("0111")
+          externalOntologyIri.getProjectCode.contains("0111"),
       )
 
       val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -663,7 +663,7 @@ class StringFormatterSpec extends CoreSpec {
           internalOntologyIri.isKnoraOntologyIri &&
           !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
           internalOntologyIri.isKnoraSharedDefinitionIri &&
-          internalOntologyIri.getProjectCode.contains("0111")
+          internalOntologyIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -673,7 +673,7 @@ class StringFormatterSpec extends CoreSpec {
         externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
           !externalEntityIri.isKnoraBuiltInDefinitionIri &&
           externalEntityIri.isKnoraSharedDefinitionIri &&
-          externalEntityIri.getProjectCode.contains("0111")
+          externalEntityIri.getProjectCode.contains("0111"),
       )
 
       val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
@@ -682,7 +682,7 @@ class StringFormatterSpec extends CoreSpec {
         internalEntityIri.isKnoraInternalEntityIri &&
           !internalEntityIri.isKnoraBuiltInDefinitionIri &&
           internalEntityIri.isKnoraSharedDefinitionIri &&
-          internalEntityIri.getProjectCode.contains("0111")
+          internalEntityIri.getProjectCode.contains("0111"),
       )
     }
 
@@ -712,7 +712,7 @@ class StringFormatterSpec extends CoreSpec {
         !xsdIri.isKnoraOntologyIri &&
           !xsdIri.isKnoraDataIri &&
           xsdIri.getOntologySchema.isEmpty &&
-          xsdIri.getProjectCode.isEmpty
+          xsdIri.getProjectCode.isEmpty,
       )
     }
 
@@ -808,7 +808,7 @@ class StringFormatterSpec extends CoreSpec {
     "reject http://api.knora.org/ontology/00FF/images/simple/v2 (wrong hostname)" in {
       assertThrows[AssertionException] {
         "http://api.knora.org/ontology/00FF/images/simple/v2".toSmartIriWithErr(
-          throw AssertionException(s"Invalid IRI")
+          throw AssertionException(s"Invalid IRI"),
         )
       }
     }

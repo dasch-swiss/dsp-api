@@ -67,19 +67,19 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument =
     JsonLDDocument(
       body = JsonLDObject(
         Map(
-          OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources)
-        )
+          OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources),
+        ),
       ),
       context = JsonLDObject(
         Map(
-          "schema" -> JsonLDString(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion)
-        )
-      )
+          "schema" -> JsonLDString(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion),
+        ),
+      ),
     )
 }
 @accessible
@@ -96,7 +96,7 @@ trait SearchResponderV2 {
   def gravsearchV2(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
-    user: User
+    user: User,
   ): Task[ReadResourcesSequenceV2]
 
   def gravsearchV2(query: IRI, rendering: SchemaRendering, user: User): Task[ReadResourcesSequenceV2] = for {
@@ -133,7 +133,7 @@ trait SearchResponderV2 {
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
-    limitToStandoffClass: Option[SmartIri]
+    limitToStandoffClass: Option[SmartIri],
   ): Task[ResourceCountV2]
 
   /**
@@ -157,7 +157,7 @@ trait SearchResponderV2 {
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -171,7 +171,7 @@ trait SearchResponderV2 {
   def searchResourcesByLabelCountV2(
     searchValue: String,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri]
+    limitToResourceClass: Option[SmartIri],
   ): Task[ResourceCountV2]
 
   /**
@@ -191,7 +191,7 @@ trait SearchResponderV2 {
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 
   /**
@@ -211,7 +211,7 @@ trait SearchResponderV2 {
     orderByProperty: Option[SmartIri],
     page: RuntimeFlags,
     schemaAndOptions: SchemaRendering,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2]
 }
 
@@ -228,7 +228,7 @@ final case class SearchResponderV2Live(
   private val inferenceOptimizationService: InferenceOptimizationService,
   private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
-  private val constructTransformer: ConstructTransformer
+  private val constructTransformer: ConstructTransformer,
 ) extends SearchResponderV2
     with LazyLogging {
 
@@ -250,7 +250,7 @@ final case class SearchResponderV2Live(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
-    limitToStandoffClass: Option[SmartIri]
+    limitToStandoffClass: Option[SmartIri],
   ): Task[ResourceCountV2] =
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
@@ -268,8 +268,8 @@ final case class SearchResponderV2Live(
                            separator = None,    // no separator needed for count query
                            limit = 1,
                            offset = 0,
-                           countQuery = true // do not get the resources themselves, but the sum of results
-                         )
+                           countQuery = true, // do not get the resources themselves, but the sum of results
+                         ),
                      )
       bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
@@ -302,7 +302,7 @@ final case class SearchResponderV2Live(
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
@@ -322,8 +322,8 @@ final case class SearchResponderV2Live(
               separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
               limit = appConfig.v2.resourcesSequence.resultsPerPage,
               offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
-              countQuery = false
-            )
+              countQuery = false,
+            ),
         )
 
       prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
@@ -370,7 +370,7 @@ final case class SearchResponderV2Live(
             resourceIris = resourceIris.toSet,
             valueObjectIris = allValueObjectIris,
             targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.rendering
+            schemaOptions = schemaAndOptions.rendering,
           )
 
           for {
@@ -388,7 +388,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.rendering
+                                 schemaOptions = schemaAndOptions.rendering,
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
@@ -396,7 +396,7 @@ final case class SearchResponderV2Live(
         if (queryStandoff) {
           constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
             mainResourcesAndValueRdfData.resources,
-            requestingUser
+            requestingUser,
           )
         } else {
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
@@ -412,7 +412,7 @@ final case class SearchResponderV2Live(
           calculateMayHaveMoreResults = true,
           versionDate = None,
           targetSchema = schemaAndOptions.schema,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
     } yield apiResponse
@@ -440,23 +440,23 @@ final case class SearchResponderV2Live(
         new GravsearchToCountPrequeryTransformer(
           constructClause = query.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = querySchema
+          querySchema = querySchema,
         )
 
       prequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = query.copy(
             whereClause = whereClauseWithoutAnnotations,
-            orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
+            orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
           ),
-          transformer = gravsearchToCountTransformer
+          transformer = gravsearchToCountTransformer,
         )
 
       selectTransformer: SelectTransformer =
         new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
-          stringFormatter
+          stringFormatter,
         )
 
       ontologiesForInferenceMaybe <-
@@ -465,7 +465,7 @@ final case class SearchResponderV2Live(
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,
                       transformer = selectTransformer,
-                      ontologiesForInferenceMaybe
+                      ontologiesForInferenceMaybe,
                     )
 
       countResponse <- triplestore.query(Select(countQuery.toSparql, isGravsearch = true))
@@ -474,8 +474,8 @@ final case class SearchResponderV2Live(
         ZIO
           .fail(
             GravsearchException(
-              s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
-            )
+              s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given",
+            ),
           )
           .when(countResponse.results.bindings.size != 1)
 
@@ -486,7 +486,7 @@ final case class SearchResponderV2Live(
   override def gravsearchV2(
     query: ConstructQuery,
     schemaAndOptions: SchemaRendering,
-    user: User
+    user: User,
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -505,8 +505,8 @@ final case class SearchResponderV2Live(
                                              constructClause = query.constructClause,
                                              typeInspectionResult = typeInspectionResult,
                                              querySchema = querySchema,
-                                             appConfig = appConfig
-                                           )
+                                             appConfig = appConfig,
+                                           ),
                                          )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
@@ -518,7 +518,7 @@ final case class SearchResponderV2Live(
       prequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
-          transformer = gravsearchToPrequeryTransformer
+          transformer = gravsearchToPrequeryTransformer,
         )
 
       // variable representing the main resources
@@ -528,7 +528,7 @@ final case class SearchResponderV2Live(
         new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
-          stringFormatter
+          stringFormatter,
         )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
@@ -537,7 +537,7 @@ final case class SearchResponderV2Live(
         queryTraverser.transformSelectToSelect(
           inputQuery = prequery,
           transformer = selectTransformer,
-          limitInferenceToOntologies = ontologiesForInferenceMaybe
+          limitInferenceToOntologies = ontologiesForInferenceMaybe,
         )
 
       prequerySparql = transformedPrequery.toSparql
@@ -553,7 +553,7 @@ final case class SearchResponderV2Live(
       prequeryResponse =
         mergePrequeryResults(
           prequeryResponseNotMerged = prequeryResponseNotMerged,
-          mainResourceVar = mainResourceVar
+          mainResourceVar = mainResourceVar,
         )
 
       // a sequence of resource IRIs that match the search criteria
@@ -572,7 +572,7 @@ final case class SearchResponderV2Live(
             GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
               prequeryResponse = prequeryResponse,
               transformer = gravsearchToPrequeryTransformer,
-              mainResourceVar = mainResourceVar
+              mainResourceVar = mainResourceVar,
             )
 
           // collect all variables representing resources
@@ -599,13 +599,13 @@ final case class SearchResponderV2Live(
             GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
               prequeryResponse = prequeryResponse,
               transformer = gravsearchToPrequeryTransformer,
-              mainResourceVar = mainResourceVar
+              mainResourceVar = mainResourceVar,
             )
 
           // collect all value objects IRIs (for all main resources and for all value object variables)
           val allValueObjectIris: Set[IRI] =
             valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris.values.foldLeft(
-              Set.empty[IRI]
+              Set.empty[IRI],
             ) { case (acc: Set[IRI], valObjIrisForQueryVar: Map[QueryVariable, Set[IRI]]) =>
               acc ++ valObjIrisForQueryVar.values.flatten.toSet
             }
@@ -617,7 +617,7 @@ final case class SearchResponderV2Live(
             dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
             valueObjectIris = allValueObjectIris,
             targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.rendering
+            schemaOptions = schemaAndOptions.rendering,
           )
 
           for {
@@ -631,17 +631,17 @@ final case class SearchResponderV2Live(
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
             queryResWithFullGraphPatternOnlyRequestedValues: Map[
               IRI,
-              ConstructResponseUtilV2.ResourceWithValueRdfData
+              ConstructResponseUtilV2.ResourceWithValueRdfData,
             ] = MainQueryResultProcessor
                   .getRequestedValuesFromResultsWithFullGraphPattern(
                     queryResultsFilteredForPermissions.resources,
                     valueObjectVarsAndIrisPerMainResource,
                     allResourceVariablesFromTypeInspection,
                     dependentResourceIrisFromTypeInspection,
-                    gravsearchToPrequeryTransformer
+                    gravsearchToPrequeryTransformer,
                   )
           } yield queryResultsFilteredForPermissions.copy(
-            resources = queryResWithFullGraphPatternOnlyRequestedValues
+            resources = queryResWithFullGraphPatternOnlyRequestedValues,
           )
 
         } else {
@@ -653,7 +653,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.rendering
+                                 schemaOptions = schemaAndOptions.rendering,
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
@@ -673,7 +673,7 @@ final case class SearchResponderV2Live(
                        versionDate = None,
                        calculateMayHaveMoreResults = true,
                        targetSchema = schemaAndOptions.schema,
-                       requestingUser = user
+                       requestingUser = user,
                      )
     } yield apiResponse
   }
@@ -695,7 +695,7 @@ final case class SearchResponderV2Live(
     orderByProperty: Option[SmartIri],
     page: Int,
     schemaAndOptions: SchemaRendering,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val internalClassIri = resourceClass.toOntologySchema(InternalSchema)
     val maybeInternalOrderByPropertyIri: Option[SmartIri] =
@@ -707,8 +707,8 @@ final case class SearchResponderV2Live(
                               EntityInfoGetRequestV2(
                                 classIris = Set(internalClassIri),
                                 propertyIris = maybeInternalOrderByPropertyIri.toSet,
-                                requestingUser = requestingUser
-                              )
+                                requestingUser = requestingUser,
+                              ),
                             )
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
@@ -720,7 +720,7 @@ final case class SearchResponderV2Live(
                                         case Some(internalOrderByPropertyIri) =>
                                           val internalOrderByPropertyDef: ReadPropertyInfoV2 =
                                             entityInfoResponse.propertyInfoMap(
-                                              internalOrderByPropertyIri
+                                              internalOrderByPropertyIri,
                                             )
 
                                           // Ensure that the ORDER BY property is one that we can sort by.
@@ -728,18 +728,18 @@ final case class SearchResponderV2Live(
                                             !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
                                           ) {
                                             throw BadRequestException(
-                                              s"Cannot sort by property <$orderByProperty>"
+                                              s"Cannot sort by property <$orderByProperty>",
                                             )
                                           }
 
                                           // Ensure that the resource class has a cardinality on the ORDER BY property.
                                           if (
                                             !classDef.knoraResourceProperties.contains(
-                                              internalOrderByPropertyIri
+                                              internalOrderByPropertyIri,
                                             )
                                           ) {
                                             throw BadRequestException(
-                                              s"Class <$resourceClass> has no cardinality on property <$orderByProperty>"
+                                              s"Class <$resourceClass> has no cardinality on property <$orderByProperty>",
                                             )
                                           }
 
@@ -749,8 +749,8 @@ final case class SearchResponderV2Live(
                                               .requireIriObject(
                                                 OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
                                                 throw InconsistentRepositoryDataException(
-                                                  s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"
-                                                )
+                                                  s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint",
+                                                ),
                                               )
 
                                           // Determine which subproperty of knora-base:valueHas corresponds to that value class.
@@ -789,7 +789,7 @@ final case class SearchResponderV2Live(
                      maybeOrderByProperty = maybeInternalOrderByPropertyIri,
                      maybeOrderByValuePredicate = maybeOrderByValuePredicate,
                      limit = appConfig.v2.resourcesSequence.resultsPerPage,
-                     offset = page * appConfig.v2.resourcesSequence.resultsPerPage
+                     offset = page * appConfig.v2.resourcesSequence.resultsPerPage,
                    )
       sparqlSelectResponse      <- triplestore.query(Select(prequery))
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
@@ -798,7 +798,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = ApiV2Complex,
-                                 schemaOptions = schemaAndOptions.rendering
+                                 schemaOptions = schemaAndOptions.rendering,
                                )
 
       // Are there any matching resources?
@@ -816,8 +816,8 @@ final case class SearchResponderV2Live(
                   queryAllNonStandoff = true,
                   queryStandoff = queryStandoff,
                   maybePropertyIri = None,
-                  maybeVersionDate = None
-                )
+                  maybeVersionDate = None,
+                ),
             )
 
           for {
@@ -826,7 +826,7 @@ final case class SearchResponderV2Live(
             // separate resources and values
             mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
                                              resourceRequestResponse,
-                                             requestingUser
+                                             requestingUser,
                                            )
 
             // If we're querying standoff, get XML-to standoff mappings.
@@ -834,7 +834,7 @@ final case class SearchResponderV2Live(
               if (queryStandoff) {
                 constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
                   mainResourcesAndValueRdfData.resources,
-                  requestingUser
+                  requestingUser,
                 )
               } else {
                 ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
@@ -850,7 +850,7 @@ final case class SearchResponderV2Live(
                                        versionDate = None,
                                        calculateMayHaveMoreResults = true,
                                        targetSchema = schemaAndOptions.schema,
-                                       requestingUser = requestingUser
+                                       requestingUser = requestingUser,
                                      )
           } yield readResourcesSequence
         } else {
@@ -862,7 +862,7 @@ final case class SearchResponderV2Live(
   override def searchResourcesByLabelCountV2(
     searchValue: String,
     limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[SmartIri]
+    limitToResourceClass: Option[SmartIri],
   ): Task[ResourceCountV2] =
     for {
       searchValue          <- validateSearchString(searchValue)
@@ -877,8 +877,8 @@ final case class SearchResponderV2Live(
         ZIO
           .fail(
             GravsearchException(
-              s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given"
-            )
+              s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given",
+            ),
           )
           .when(countResponse.results.bindings.length != 1)
           .as(countResponse.results.bindings.head.rowMap("count"))
@@ -922,7 +922,7 @@ final case class SearchResponderV2Live(
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
-    requestingUser: User
+    requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
@@ -936,7 +936,7 @@ final case class SearchResponderV2Live(
                                       limitToResourceClass.map(_.toIri),
                                       limitToProject.map(_.value),
                                       searchLimit,
-                                      searchOffset
+                                      searchOffset,
                                     )
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
@@ -945,14 +945,14 @@ final case class SearchResponderV2Live(
                             searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
                               case (
                                     acc: Set[IRI],
-                                    (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])
+                                    (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]]),
                                   ) =>
                                 // check if the assertions represent a main resource and include its IRI if so
                                 val subjectIsMainResource: Boolean =
                                   assertions
                                     .getOrElse(
                                       OntologyConstants.KnoraBase.IsMainResource.toSmartIri,
-                                      Seq.empty
+                                      Seq.empty,
                                     )
                                     .headOption match {
                                     case Some(BooleanLiteralV2(booleanVal)) => booleanVal
@@ -964,7 +964,7 @@ final case class SearchResponderV2Live(
                                     case IriSubjectV2(value) => value
                                     case other =>
                                       throw InconsistentRepositoryDataException(
-                                        s"Unexpected subject of resource: $other"
+                                        s"Unexpected subject of resource: $other",
                                       )
                                   }
 
@@ -986,7 +986,7 @@ final case class SearchResponderV2Live(
                        versionDate = None,
                        calculateMayHaveMoreResults = true,
                        targetSchema = targetSchema,
-                       requestingUser = requestingUser
+                       requestingUser = requestingUser,
                      )
 
     } yield apiResponse
@@ -1002,7 +1002,7 @@ final case class SearchResponderV2Live(
    */
   private def mergePrequeryResults(
     prequeryResponseNotMerged: SparqlSelectResult,
-    mainResourceVar: QueryVariable
+    mainResourceVar: QueryVariable,
   ): SparqlSelectResult = {
     // Make a Map of merged results per main resource IRI.
     val prequeryRowsMergedMap: Map[IRI, VariableResultsRow] = prequeryResponseNotMerged.results.bindings.groupBy {
@@ -1036,8 +1036,8 @@ final case class SearchResponderV2Live(
           mergedRowMap,
           { (key: String) =>
             s"No value found for SPARQL query variable '$key' in query result row"
-          }
-        )
+          },
+        ),
       )
     }
 
@@ -1053,7 +1053,7 @@ final case class SearchResponderV2Live(
     }
 
     prequeryResponseNotMerged.copy(
-      results = SparqlSelectResultBody(prequeryRowsMerged)
+      results = SparqlSelectResultBody(prequeryRowsMerged),
     )
   }
 }

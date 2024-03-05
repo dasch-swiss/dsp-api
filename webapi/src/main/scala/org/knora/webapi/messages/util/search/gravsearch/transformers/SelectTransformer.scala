@@ -16,7 +16,7 @@ import SparqlTransformer.*
 class SelectTransformer(
   simulateInference: Boolean,
   sparqlTransformerLive: OntologyInferencer,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends WhereTransformer {
 
   /**
@@ -31,12 +31,12 @@ class SelectTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformStatementInWhere(
       statementPattern = statementPattern,
       simulateInference = simulateInference,
-      limitInferenceToOntologies = limitInferenceToOntologies
+      limitInferenceToOntologies = limitInferenceToOntologies,
     )
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))

@@ -67,7 +67,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                        |""".stripMargin
             result <- TriplestoreService.query(Ask(query))
           } yield assertTrue(!result)
-        }
+        },
       ),
       suite("CONSTRUCT")(
         test("sparqlHttpConstruct should return some values") {
@@ -89,10 +89,10 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                 "http://anArticle" -> Seq(
                   (
                     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-                    "http://www.knora.org/ontology/0801/biblio#Article"
-                  )
-                )
-              )
+                    "http://www.knora.org/ontology/0801/biblio#Article",
+                  ),
+                ),
+              ),
           )
         },
         test("sparqlHttpExtendedConstruct should return some values") {
@@ -115,13 +115,13 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
               response.statements == Map(
                 subject -> Map(
                   "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(sf) -> Seq(
-                    IriLiteralV2(value = "http://www.knora.org/ontology/0801/biblio#Article")
-                  )
-                )
-              )
+                    IriLiteralV2(value = "http://www.knora.org/ontology/0801/biblio#Article"),
+                  ),
+                ),
+              ),
             )
           }
-        }
+        },
       ),
       suite("UPDATE")(test("update") {
         val updateQuery = s"""
@@ -170,7 +170,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
           for {
             result <- TriplestoreService.query(Ask(query)).negate
           } yield assertTrue(result)
-        }
+        },
       ),
       suite("SELECT")(
         suite("subclass relation querying")(
@@ -189,7 +189,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             for {
               result <- TriplestoreService.query(Select(query))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
-              hasSameElements(List("http://anArticle"))
+              hasSameElements(List("http://anArticle")),
             )
           },
           test("should find all subclasses (rdfs:subClassOf*)") {
@@ -207,9 +207,9 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
             for {
               result <- TriplestoreService.query(Select(query))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
-              hasSameElements(List("http://anArticle", "http://aJournalArticle"))
+              hasSameElements(List("http://anArticle", "http://aJournalArticle")),
             )
-          }
+          },
         ),
         test("not find non-existing thing") {
           val query = """
@@ -243,14 +243,14 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                   VariableResultsRow(
                     Map(
                       "p" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-                      "o" -> s"${Biblio.Class.JournalArticle.value}"
-                    )
-                  )
-                )
-              )
-            )
+                      "o" -> s"${Biblio.Class.JournalArticle.value}",
+                    ),
+                  ),
+                ),
+              ),
+            ),
           )
-        }
+        },
       ),
       suite("insertDataIntoTriplestore")(
         test("given an empty list insertDataIntoTriplestore will insert the defaults") {
@@ -266,16 +266,16 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    List(
                      RdfDataObject(
                        path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
-                       name = "http://www.knora.org/ontology/knora-admin"
-                     )
+                       name = "http://www.knora.org/ontology/knora-admin",
+                     ),
                    ),
-                   prependDefaults = false
+                   prependDefaults = false,
                  )
             ds                <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
             containsAdmin      = namedModelExists(ds, "http://www.knora.org/ontology/knora-admin")
             doesNotContainBase = !namedModelExists(ds, "http://www.knora.org/ontology/knora-base")
           } yield assertTrue(containsAdmin && doesNotContainBase)
-        }
+        },
       ),
       suite("sparqlHttpGraphFile")(test("sparqlHttpGraphFile should create the file") {
         val tempDir = Files.createTempDirectory(UUID.randomUUID().toString)
@@ -287,19 +287,19 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    List(
                      RdfDataObject(
                        path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
-                       name = "http://www.knora.org/ontology/knora-base"
-                     )
+                       name = "http://www.knora.org/ontology/knora-base",
+                     ),
                    ),
-                   prependDefaults = false
+                   prependDefaults = false,
                  )
             _ <- TriplestoreService.downloadGraph(
                    InternalIri("http://www.knora.org/ontology/knora-base"),
                    testFile,
-                   TriG
+                   TriG,
                  )
           } yield assertTrue({ val fileExists = Files.exists(testFile.toFile.toPath); fileExists })
         }
-      })
+      }),
     ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
 
   private def namedModelExists(ds: Dataset, name: String) = {

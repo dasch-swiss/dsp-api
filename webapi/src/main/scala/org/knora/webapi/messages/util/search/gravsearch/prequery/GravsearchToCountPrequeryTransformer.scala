@@ -24,11 +24,11 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 class GravsearchToCountPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema
+  querySchema: ApiV2Schema,
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
-      querySchema = querySchema
+      querySchema = querySchema,
     ) {
 
   override def getSelectColumns: Task[Seq[SelectQueryColumn]] =

@@ -31,8 +31,8 @@ object ListPropertiesSpec extends ZIOSpecDefault {
           "http://rdfh.ch/lists/0001/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_",
           "http://rdfh.ch/lists/ABCD/jDEEitJESRi3pDaDjjQ1WQ",
           "http://rdfh.ch/lists/0111/UUID1",
-          "http://rdfh.ch/lists/0111/1234"
-        )
+          "http://rdfh.ch/lists/0111/1234",
+        ),
       )
       check(validIris)(i => assertTrue(ListIri.from(i).isRight))
     },
@@ -43,11 +43,11 @@ object ListPropertiesSpec extends ZIOSpecDefault {
           "http://rdfh.ch/lists/0111/123",
           "http://rdfh.ch/lists/0001/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_1",
           "http://rdfh.ch/lists/EFGH/jDEEitJESRi3pDaDjjQ1WQ",
-          "http://rdfh.ch/lists/jDEEitJESRi3pDaDjjQ1WQ"
-        )
+          "http://rdfh.ch/lists/jDEEitJESRi3pDaDjjQ1WQ",
+        ),
       )
       check(invalidIris)(i => assertTrue(ListIri.from(i) == Left(s"List IRI is invalid.")))
-    }
+    },
   )
 
   private val listNameSuite = suite("ListName")(
@@ -59,7 +59,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(ListName.from("Valid list name").map(_.value) == Right("Valid list name"))
-    }
+    },
   )
 
   private val positionSuite = suite("Position")(
@@ -70,11 +70,11 @@ object ListPropertiesSpec extends ZIOSpecDefault {
           case i if i >= -1 => assertTrue(actual.map(_.value) == Right(i))
           case _ =>
             assertTrue(
-              actual == Left("Invalid position value is given. Position should be either a positive value, 0 or -1.")
+              actual == Left("Invalid position value is given. Position should be either a positive value, 0 or -1."),
             )
         }
       }
-    }
+    },
   )
 
   private val labelsTest = suite("Labels")(
@@ -88,7 +88,7 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     test("pass a valid object and successfully create value object") {
       val valid = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
       assertTrue(Labels.from(valid).map(_.value) == Right(valid))
-    }
+    },
   )
 
   private val commentsTest = suite("Comments")(
@@ -102,6 +102,6 @@ object ListPropertiesSpec extends ZIOSpecDefault {
     test("pass a valid object and successfully create value object") {
       val valid = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
       assertTrue(Comments.from(valid).map(_.value) == Right(valid))
-    }
+    },
   )
 }

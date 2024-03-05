@@ -24,7 +24,7 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec with LazyLogging {
       // Check that the datatype was fixed.
       val subj =
         JenaNodeFactory.makeIriNode(
-          "http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2"
+          "http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2",
         )
       val pred = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
 
@@ -32,7 +32,7 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec with LazyLogging {
         .find(
           subj = Some(subj),
           pred = Some(pred),
-          obj = None
+          obj = None,
         )
         .toSet
         .headOption match {

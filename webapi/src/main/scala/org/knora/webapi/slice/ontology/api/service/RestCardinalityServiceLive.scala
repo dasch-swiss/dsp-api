@@ -40,7 +40,7 @@ trait RestCardinalityService {
     classIri: String,
     user: User,
     propertyIri: Option[String],
-    newCardinality: Option[String]
+    newCardinality: Option[String],
   ): Task[CanDoResponseV2] =
     (propertyIri, newCardinality) match {
       case (None, Some(_))                           => ZIO.fail(missingQueryParamValue(propertyIriKey))
@@ -55,7 +55,7 @@ trait RestCardinalityService {
     classIri: String,
     propertyIri: String,
     cardinality: String,
-    user: User
+    user: User,
   ): Task[CanDoResponseV2]
 }
 
@@ -78,7 +78,7 @@ object RestCardinalityService {
 case class RestCardinalityServiceLive(
   cardinalityService: CardinalityService,
   iriConverter: IriConverter,
-  ontologyRepo: OntologyRepo
+  ontologyRepo: OntologyRepo,
 ) extends RestCardinalityService {
 
   private val permissionService: PermissionService = PermissionService(ontologyRepo)
@@ -103,7 +103,7 @@ case class RestCardinalityServiceLive(
     } yield hasWriteAccess
     ZIO.ifZIO(hasWriteAccess)(
       onTrue = ZIO.unit,
-      onFalse = ZIO.fail(ForbiddenException(s"User has no write access to ontology"))
+      onFalse = ZIO.fail(ForbiddenException(s"User has no write access to ontology")),
     )
   }
 
@@ -111,7 +111,7 @@ case class RestCardinalityServiceLive(
     classIri: String,
     propertyIri: String,
     cardinality: String,
-    user: User
+    user: User,
   ): Task[CanDoResponseV2] =
     for {
       classIri       <- iriConverter.asInternalIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
@@ -126,7 +126,7 @@ case class RestCardinalityServiceLive(
     ZIO.fromOption(Cardinality.fromString(cardinality))
 
   private def toCanDoResponseV2(
-    result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]
+    result: Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type],
   ): Task[CanDoResponseV2] = result match {
     case Right(_) => ZIO.succeed(CanDoResponseV2.yes)
     case Left(failures) =>
@@ -135,7 +135,7 @@ case class RestCardinalityServiceLive(
         context <- ZIO.foreach(failures)(toExternalContext)
       } yield CanDoResponseV2.no(
         reason,
-        JsonLDObject(Map(s"${canSetResponsePrefix}CheckFailure" -> JsonLDArray(context)))
+        JsonLDObject(Map(s"${canSetResponsePrefix}CheckFailure" -> JsonLDArray(context))),
       )
   }
 
@@ -161,8 +161,8 @@ case class RestCardinalityServiceLive(
       messageKey          = getMessageKeyKey(failure)
     } yield JsonLDObject(
       Map[String, JsonLDValue](
-        messageKey -> externalIrisValues
-      )
+        messageKey -> externalIrisValues,
+      ),
     )
 
   private def getMessageKeyKey(failure: CanSetCardinalityCheckResult.Failure): String = {

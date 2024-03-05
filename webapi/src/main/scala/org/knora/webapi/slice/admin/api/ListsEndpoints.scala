@@ -122,7 +122,7 @@ case class ListsEndpoints(baseEndpoints: BaseEndpoints) extends ListADMJsonProto
       putListsByIriPosistion,
       putListsByIri,
       deleteListsByIri,
-      deleteListsComment
+      deleteListsComment,
     ).map(_.endpoint)
 
   private val public = List(getListsQueryByProjectIriOption, getListsByIri, getListsByIriInfo, getListsCanDeleteByIri)
@@ -140,7 +140,7 @@ object Requests {
     comments: Comments,
     labels: Labels,
     name: Option[ListName],
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ) extends ListCreateRequest
   object ListCreateRootNodeRequest {
     implicit val jsonCodec: JsonCodec[ListCreateRootNodeRequest] = DeriveJsonCodec.gen[ListCreateRootNodeRequest]
@@ -153,7 +153,7 @@ object Requests {
     name: Option[ListName],
     parentNodeIri: ListIri,
     position: Option[Position],
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ) extends ListCreateRequest
   object ListCreateChildNodeRequest {
     implicit val jsonCodec: JsonCodec[ListCreateChildNodeRequest] = DeriveJsonCodec.gen[ListCreateChildNodeRequest]
@@ -166,7 +166,7 @@ object Requests {
     position: Option[Position] = None,
     name: Option[ListName] = None,
     labels: Option[Labels] = None,
-    comments: Option[Comments] = None
+    comments: Option[Comments] = None,
   )
   object ListChangeRequest {
     implicit val jsonCodec: JsonCodec[ListChangeRequest] = DeriveJsonCodec.gen[ListChangeRequest]

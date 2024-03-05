@@ -40,7 +40,7 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
       oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
       oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
       oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
-      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException]))
+      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
     )
 
   private val secureDefaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
@@ -53,7 +53,7 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
       oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
       // plus security
       oneOfVariant[BadCredentialsException](statusCode(StatusCode.Unauthorized).and(jsonBody[BadCredentialsException])),
-      oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException]))
+      oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException])),
     )
 
   val publicEndpoint = endpoint.errorOut(defaultErrorOutputs)
@@ -83,7 +83,7 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, User]] =
     UnsafeZioRun.runToFuture(
-      authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either
+      authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either,
     )
 
   private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, User]] =
@@ -93,7 +93,7 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
         id     = CredentialsIdentifier.EmailIdentifier(email)
         creds  = KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))
         user  <- authenticator.getUserADMThroughCredentialsV2(Some(creds)).asRight
-      } yield user
+      } yield user,
     )
 }
 
@@ -102,6 +102,6 @@ object BaseEndpoints {
     for {
       auth <- ZIO.service[Authenticator]
       r    <- ZIO.runtime[Any]
-    } yield BaseEndpoints(auth, r)
+    } yield BaseEndpoints(auth, r),
   )
 }

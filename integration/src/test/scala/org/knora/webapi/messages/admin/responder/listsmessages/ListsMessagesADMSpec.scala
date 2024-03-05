@@ -28,12 +28,12 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
           Vector(
             StringLiteralV2("Title", Some("en")),
             StringLiteralV2("Titel", Some("de")),
-            StringLiteralV2("Titre", Some("fr"))
-          )
+            StringLiteralV2("Titre", Some("fr")),
+          ),
         ),
         comments = StringLiteralSequenceV2(
-          Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
-        )
+          Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))),
+        ),
       )
 
       val json = listInfo.toJson.compactPrint
@@ -52,7 +52,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
         comments = StringLiteralSequenceV2.empty,
         position = 0,
-        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
+        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
       )
 
       val json = listNodeInfo.toJson.compactPrint
@@ -72,7 +72,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         comments = StringLiteralSequenceV2.empty,
         children = Seq.empty[ListChildNodeADM],
         position = 0,
-        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
+        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
       )
 
       val json = listNode.toJson.compactPrint

@@ -26,7 +26,7 @@ object ProjectsEndpointsRequestsAndResponses {
     keywords: List[Keyword],
     logo: Option[Logo] = None,
     status: Status,
-    selfjoin: SelfJoin
+    selfjoin: SelfJoin,
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]
@@ -39,7 +39,7 @@ object ProjectsEndpointsRequestsAndResponses {
     keywords: Option[List[Keyword]] = None,
     logo: Option[Logo] = None,
     status: Option[Status] = None,
-    selfjoin: Option[SelfJoin] = None
+    selfjoin: Option[SelfJoin] = None,
   )
   object ProjectUpdateRequest {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
@@ -47,7 +47,7 @@ object ProjectsEndpointsRequestsAndResponses {
 
   final case class SetRestrictedViewRequest(
     size: Option[RestrictedView.Size],
-    watermark: Option[RestrictedView.Watermark]
+    watermark: Option[RestrictedView.Watermark],
   ) {
     def toRestrictedView: IO[BadRequestException, RestrictedView] =
       (size, watermark) match {
@@ -64,7 +64,7 @@ object ProjectsEndpointsRequestsAndResponses {
 
   final case class RestrictedViewResponse(
     size: Option[RestrictedView.Size],
-    watermark: Option[RestrictedView.Watermark]
+    watermark: Option[RestrictedView.Watermark],
   )
   object RestrictedViewResponse {
     implicit val codec: JsonCodec[RestrictedViewResponse] = DeriveJsonCodec.gen[RestrictedViewResponse]

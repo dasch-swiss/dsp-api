@@ -1,5 +1,5 @@
 resolvers ++= Seq(
-  Resolver.typesafeRepo("releases")
+  Resolver.typesafeRepo("releases"),
 )
 
 // please don't remove or merge uncommented to main

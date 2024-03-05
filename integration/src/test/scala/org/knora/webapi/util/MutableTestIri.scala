@@ -21,7 +21,7 @@ class MutableTestIri {
    */
   def set(iri: IRI): Unit =
     maybeIri = Some(
-      Iri.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>"))
+      Iri.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>")),
     )
 
   /**

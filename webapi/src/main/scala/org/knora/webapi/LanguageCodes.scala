@@ -20,6 +20,6 @@ object LanguageCodes {
     EN,
     FR,
     IT,
-    RM
+    RM,
   )
 }

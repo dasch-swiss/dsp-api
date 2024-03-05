@@ -46,7 +46,7 @@ object SparqlConstructResponse {
 }
 
 case class SparqlExtendedConstructResponse(
-  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]
+  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects],
 )
 object SparqlExtendedConstructResponse {
 
@@ -56,12 +56,12 @@ object SparqlExtendedConstructResponse {
   type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
 
   def make(turtle: String)(implicit
-    stringFormatter: StringFormatter
+    stringFormatter: StringFormatter,
   ): IO[DataConversionException, SparqlExtendedConstructResponse] =
     make(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
 
   def make(
-    rdfModel: RdfModel
+    rdfModel: RdfModel,
   )(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
     ZIO.attempt {
       val statementMap = mutable.Map.empty[SubjectV2, ConstructPredicateObjects]
@@ -86,9 +86,9 @@ object SparqlExtendedConstructResponse {
                     IntLiteralV2(
                       datatypeLiteral
                         .integerValue(
-                          throw InconsistentRepositoryDataException(s"Invalid integer: ${datatypeLiteral.value}")
+                          throw InconsistentRepositoryDataException(s"Invalid integer: ${datatypeLiteral.value}"),
                         )
-                        .toInt
+                        .toInt,
                     )
 
                   case OntologyConstants.Xsd.DateTime =>
@@ -96,15 +96,15 @@ object SparqlExtendedConstructResponse {
                       ValuesValidator
                         .xsdDateTimeStampToInstant(datatypeLiteral.value)
                         .getOrElse(
-                          throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}")
-                        )
+                          throw InconsistentRepositoryDataException(s"Invalid xsd:dateTime: ${datatypeLiteral.value}"),
+                        ),
                     )
 
                   case OntologyConstants.Xsd.Boolean =>
                     BooleanLiteralV2(
                       datatypeLiteral.booleanValue(
-                        throw InconsistentRepositoryDataException(s"Invalid xsd:boolean: ${datatypeLiteral.value}")
-                      )
+                        throw InconsistentRepositoryDataException(s"Invalid xsd:boolean: ${datatypeLiteral.value}"),
+                      ),
                     )
 
                   case OntologyConstants.Xsd.String => StringLiteralV2(value = datatypeLiteral.value, language = None)
@@ -112,8 +112,8 @@ object SparqlExtendedConstructResponse {
                   case OntologyConstants.Xsd.Decimal =>
                     DecimalLiteralV2(
                       datatypeLiteral.decimalValue(
-                        throw InconsistentRepositoryDataException(s"Invalid xsd:decimal: ${datatypeLiteral.value}")
-                      )
+                        throw InconsistentRepositoryDataException(s"Invalid xsd:decimal: ${datatypeLiteral.value}"),
+                      ),
                     )
 
                   case OntologyConstants.Xsd.Uri => IriLiteralV2(datatypeLiteral.value)
@@ -138,7 +138,7 @@ object SparqlExtendedConstructResponse {
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
       _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
-      ZIO.succeed(_)
+      ZIO.succeed(_),
     )
 }
 
@@ -459,8 +459,8 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
       VariableResultsRow(
         new ErrorHandlingMap(
           mapToWrap,
-          { (key: String) => s"No value found for SPARQL query variable '$key' in query result row" }
-        )
+          { (key: String) => s"No value found for SPARQL query variable '$key' in query result row" },
+        ),
       )
     }
 
@@ -506,15 +506,15 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         JsObject(
           Map(
             "value"    -> string.value.toJson,
-            "language" -> string.language.toJson
-          )
+            "language" -> string.language.toJson,
+          ),
         )
       } else {
         // no language tag
         JsObject(
           Map(
-            "value" -> string.value.toJson
-          )
+            "value" -> string.value.toJson,
+          ),
         )
       }
 
@@ -530,12 +530,12 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           case Seq(JsString(value), JsString(language)) =>
             StringLiteralV2(
               value = value,
-              language = Some(language)
+              language = Some(language),
             )
           case Seq(JsString(value)) =>
             StringLiteralV2(
               value = value,
-              language = None
+              language = None,
             )
           case _ =>
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
@@ -562,15 +562,15 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         JsObject(
           Map(
             "value"    -> string.value.toJson,
-            "language" -> string.language.toJson
-          )
+            "language" -> string.language.toJson,
+          ),
         )
       } else {
         // no language tag
         JsObject(
           Map(
-            "value" -> string.value.toJson
-          )
+            "value" -> string.value.toJson,
+          ),
         )
       }
 
@@ -586,12 +586,12 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           case Seq(JsString(value), JsString(language)) =>
             V2.StringLiteralV2(
               value = value,
-              language = Some(language)
+              language = Some(language),
             )
           case Seq(JsString(value)) =>
             V2.StringLiteralV2(
               value = value,
-              language = None
+              language = None,
             )
           case _ =>
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")

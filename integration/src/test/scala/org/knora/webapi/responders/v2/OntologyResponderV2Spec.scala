@@ -63,24 +63,24 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     List(
       RdfDataObject(
         path = "test_data/project_ontologies/example-box.ttl",
-        name = "http://www.knora.org/ontology/shared/example-box"
+        name = "http://www.knora.org/ontology/shared/example-box",
       ),
       RdfDataObject(
         path = "test_data/project_data/anything-data.ttl",
-        name = "http://www.knora.org/data/0001/anything"
+        name = "http://www.knora.org/data/0001/anything",
       ),
       RdfDataObject(
         path = "test_data/project_ontologies/anything-onto.ttl",
-        name = "http://www.knora.org/ontology/0001/anything"
+        name = "http://www.knora.org/ontology/0001/anything",
       ),
       RdfDataObject(
         path = "test_data/project_ontologies/freetest-onto.ttl",
-        name = "http://www.knora.org/ontology/0001/freetest"
+        name = "http://www.knora.org/ontology/0001/freetest",
       ),
       RdfDataObject(
         path = "test_data/project_data/freetest-data.ttl",
-        name = "http://www.knora.org/data/0001/freetest"
-      )
+        name = "http://www.knora.org/data/0001/freetest",
+      ),
     )
 
   // The default timeout for receiving reply messages from actors.
@@ -132,7 +132,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.imagesUser02
+        requestingUser = SharedTestDataADM.imagesUser02,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -147,7 +147,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -156,7 +156,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
       fooIri.set(metadata.ontologyIri.toString)
       fooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
     }
 
@@ -173,7 +173,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo-two ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
       expectMsgType[ReadOntologyMetadataV2](timeout)
       // ensure that the project is no longer cached
@@ -190,7 +190,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -199,7 +199,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
       assert(metadata.label.contains(newLabel))
       val newFooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newFooLastModDate.isAfter(fooLastModDate))
       fooLastModDate = newFooLastModDate
@@ -213,7 +213,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -222,7 +222,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri == fooIri.get.toSmartIri)
       assert(metadata.comment.contains(aComment))
       val newFooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newFooLastModDate.isAfter(fooLastModDate))
       fooLastModDate = newFooLastModDate
@@ -238,7 +238,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -248,7 +248,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.label.contains(aLabel))
       assert(metadata.comment.contains(aComment))
       val newFooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newFooLastModDate.isAfter(fooLastModDate))
       fooLastModDate = newFooLastModDate
@@ -262,7 +262,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -272,7 +272,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.label.contains(newLabel))
       assert(metadata.comment.contains("a changed comment"))
       val newFooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newFooLastModDate.isAfter(fooLastModDate))
       fooLastModDate = newFooLastModDate
@@ -283,7 +283,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -293,7 +293,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.label.contains("a label changed again"))
       assert(metadata.comment.isEmpty)
       val newFooLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newFooLastModDate.isAfter(fooLastModDate))
       fooLastModDate = newFooLastModDate
@@ -306,7 +306,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "The bär ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -321,7 +321,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         label = "The bar ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -333,7 +333,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(returnedComment == "some comment")
       barIri.set(metadata.ontologyIri.toString)
       barLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
     }
 
@@ -345,7 +345,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         comment = Some(newComment),
         lastModificationDate = barLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -354,7 +354,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri == barIri.get.toSmartIri)
       assert(metadata.comment.contains(newComment))
       val newBarLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newBarLastModDate.isAfter(barLastModDate))
       barLastModDate = newBarLastModDate
@@ -366,7 +366,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -380,7 +380,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologyIri = "http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri,
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -394,7 +394,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.imagesUser02
+        requestingUser = SharedTestDataADM.imagesUser02,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -408,7 +408,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -416,7 +416,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val cachedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -426,7 +426,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       val loadedMetadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -436,7 +436,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -453,7 +453,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         ontologyIri = AnythingOntologyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -466,7 +466,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           "<http://rdfh.ch/0001/a-thing>",                                   // rdf:type anything:Thing
           "<http://rdfh.ch/0001/a-blue-thing>",                              // rdf:type anything:BlueThing, a subclass of anything:Thing
           "<http://www.knora.org/ontology/0001/something#Something>",        // a subclass of anything:Thing in another ontology
-          "<http://www.knora.org/ontology/0001/something#hasOtherSomething>" // a subproperty of anything:hasOtherThing in another ontology
+          "<http://www.knora.org/ontology/0001/something#hasOtherSomething>",// a subproperty of anything:hasOtherThing in another ontology
         )
 
         expectedSubjects.forall(s => errorMsg.contains(s)) should ===(true)
@@ -479,7 +479,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The rdfs ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -495,7 +495,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The 0000 ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -511,7 +511,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The -foo ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -527,7 +527,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The v3 ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -543,7 +543,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The ontology ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -559,7 +559,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The wrong knora ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -575,7 +575,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The simple ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -591,7 +591,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -608,7 +608,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         isShared = true,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser
+        requestingUser = imagesUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -623,7 +623,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
         label = "The invalid non-shared ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.superUser
+        requestingUser = SharedTestDataADM.superUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -639,7 +639,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         isShared = true,
         label = "a chaired ontology",
         apiRequestID = UUID.randomUUID,
-        requestingUser = SharedTestDataADM.superUser
+        requestingUser = SharedTestDataADM.superUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -648,7 +648,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
       chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
       metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
     }
 
@@ -656,7 +656,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -676,41 +676,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("has name", Some("en")),
-              StringLiteralV2("hat Namen", Some("de"))
-            )
+              StringLiteralV2("hat Namen", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("The name of a Thing", Some("en")),
-              StringLiteralV2("Der Name eines Dinges", Some("de"))
-            )
-          )
+              StringLiteralV2("Der Name eines Dinges", Some("de")),
+            ),
+          ),
         ),
         subPropertyOf =
           Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -723,7 +723,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -743,41 +743,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("has name", Some("en")),
-              StringLiteralV2("hat Namen", Some("de"))
-            )
+              StringLiteralV2("hat Namen", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("The name of a Thing", Some("en")),
-              StringLiteralV2("Der Name eines Dinges", Some("de"))
-            )
-          )
+              StringLiteralV2("Der Name eines Dinges", Some("de")),
+            ),
+          ),
         ),
         subPropertyOf =
           Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -786,7 +786,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -798,7 +798,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -813,7 +813,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -833,38 +833,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has interesting thing", Some("en"))
-            )
+              StringLiteralV2("has interesting thing", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("an interesting Thing", Some("en"))
-            )
-          )
+              StringLiteralV2("an interesting Thing", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -875,7 +875,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         externalOntology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -888,7 +888,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(linkValuePropIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -906,7 +906,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -921,7 +921,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(linkValuePropIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -939,7 +939,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -961,34 +961,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Comic Book", Some("en")))
+            objects = Seq(StringLiteralV2("Comic Book", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A comic book", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A comic book", Some("en"))),
+          ),
         ),
         directCardinalities = Map(),
         subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Book")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = comicBookClassInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreetestLastModDate
@@ -1003,34 +1003,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Comic Author", Some("en")))
+            objects = Seq(StringLiteralV2("Comic Author", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A comic author", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A comic author", Some("en"))),
+          ),
         ),
         directCardinalities = Map(),
         subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Author")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = comicAuthorClassInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreetestLastModDate
@@ -1045,38 +1045,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicBook")))
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicBook"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicAuthor")))
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicAuthor"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Comic author", Some("en"))
-            )
+              StringLiteralV2("Comic author", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("A comic author of a comic book", Some("en"))
-            )
-          )
+              StringLiteralV2("A comic author of a comic book", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(FreeTestOntologyIri.makeEntityIri("hasAuthor")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = comicAuthorPropertyInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -1085,11 +1085,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(property.isLinkProp)
         assert(!property.isLinkValueProp)
         externalOntology.properties(comicAuthorPropertyIri).entityInfoContent should ===(
-          comicAuthorPropertyInfoContent
+          comicAuthorPropertyInfoContent,
         )
         val metadata = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreetestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreetestLastModDate
@@ -1102,20 +1102,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#ComicBook".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -1125,23 +1125,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val linkValueProperties = comicBookClass.linkValueProperties
         assert(
           linkProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasComicAuthor".toSmartIri
-          )
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthor".toSmartIri,
+          ),
         )
         assert(
           linkValueProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasComicAuthorValue".toSmartIri
-          )
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthorValue".toSmartIri,
+          ),
         )
         assert(
           !linkProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasAuthor".toSmartIri
-          )
+            "http://www.knora.org/ontology/0001/freetest#hasAuthor".toSmartIri,
+          ),
         )
         assert(
           !linkValueProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasAuthorValue".toSmartIri
-          )
+            "http://www.knora.org/ontology/0001/freetest#hasAuthorValue".toSmartIri,
+          ),
         )
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
@@ -1160,34 +1160,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1205,38 +1205,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1254,38 +1254,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1303,38 +1303,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("nonexistentProperty")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1352,38 +1352,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set("http://xmlns.com/foaf/0.1/name".toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1401,41 +1401,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(
           AnythingOntologyIri.makeEntityIri("hasText"),
-          AnythingOntologyIri.makeEntityIri("hasOtherThing")
+          AnythingOntologyIri.makeEntityIri("hasOtherThing"),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1453,38 +1453,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("NonexistentClass")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("NonexistentClass"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1502,42 +1502,42 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
             objects = Seq(
               SmartIriLiteralV2(
-                (OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion + "NonexistentClass").toSmartIri
-              )
-            )
+                (OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion + "NonexistentClass").toSmartIri,
+              ),
+            ),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1555,38 +1555,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.Representation.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.Representation.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasInteger")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1604,38 +1604,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.FileValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.FileValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasFileValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1653,38 +1653,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1702,38 +1702,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1751,38 +1751,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Xsd.String.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Xsd.String.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1800,38 +1800,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1849,38 +1849,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1898,38 +1898,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1947,38 +1947,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasText")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -1997,38 +1997,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasBlueThing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2045,7 +2045,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newObjects = Seq(
         StringLiteralV2("has name", Some("en")),
         StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de"))
+        StringLiteralV2("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2054,7 +2054,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2070,7 +2070,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newObjects = Seq(
         StringLiteralV2("has name", Some("en")),
         StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de"))
+        StringLiteralV2("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2079,7 +2079,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2087,12 +2087,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
-          newObjects
+          newObjects,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2105,7 +2105,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val newObjects = Seq(
         StringLiteralV2("has name", Some("en")),
         StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de"))
+        StringLiteralV2("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2114,7 +2114,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2122,12 +2122,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
-          newObjects
+          newObjects,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2142,9 +2142,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2("The name of a Thing", Some("en")),
         StringLiteralV2(
           "Le nom d\\'une chose",
-          Some("fr")
+          Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de"))
+        StringLiteralV2("Der Name eines Dinges", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2153,7 +2153,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2170,9 +2170,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2("The name of a Thing", Some("en")),
         StringLiteralV2(
           "Le nom d\\'une chose",
-          Some("fr")
+          Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de"))
+        StringLiteralV2("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
@@ -2186,7 +2186,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2194,12 +2194,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped
+          newObjectsUnescaped,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2213,9 +2213,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         StringLiteralV2("The name of a Thing", Some("en")),
         StringLiteralV2(
           "Le nom d\\'une chose",
-          Some("fr")
+          Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de"))
+        StringLiteralV2("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
@@ -2229,7 +2229,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2237,12 +2237,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped
+          newObjectsUnescaped,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2255,7 +2255,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2263,11 +2263,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreeTestLastModDate
@@ -2280,7 +2280,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2288,11 +2288,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         // the ontology was not changed and thus should not have a new last modification date
         assert(newFreeTestLastModDate == freetestLastModDate)
@@ -2306,7 +2306,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2314,11 +2314,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreeTestLastModDate
@@ -2331,7 +2331,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2339,11 +2339,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         // the ontology was not changed and thus should not have a new last modification date
         assert(newFreeTestLastModDate == freetestLastModDate)
@@ -2360,7 +2360,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = linkPropertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2369,12 +2369,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkPropertyIri)
         propertyReadPropertyInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
 
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreeTestLastModDate
@@ -2384,7 +2384,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(linkValueIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2392,7 +2392,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
 
         linkValueReadPropertyInfo.entityInfoContent.predicates.contains(
-          OntologyConstants.Rdfs.Comment.toSmartIri
+          OntologyConstants.Rdfs.Comment.toSmartIri,
         ) should ===(false)
       }
     }
@@ -2406,33 +2406,33 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en")))
+            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(20)
-          )
+            guiOrder = Some(20),
+          ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2450,32 +2450,32 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid thing", Some("en")))
+            objects = Seq(StringLiteralV2("invalid thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is invalid", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that is invalid", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(ExactlyOne),
           AnythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(
-            cardinality = ExactlyOne
-          )
+            cardinality = ExactlyOne,
+          ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2493,29 +2493,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en")))
+            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -2532,29 +2532,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("thing with cardinalities", Some("en")))
+            objects = Seq(StringLiteralV2("thing with cardinalities", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that has cardinalities", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that has cardinalities", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2563,13 +2563,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val readClassInfo = externalOntology.classes(classIri)
         Set(
           AnythingOntologyIri.makeEntityIri("hasInterestingThing"),
-          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")
+          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue"),
         )
           .subsetOf(readClassInfo.allResourcePropertyCardinalities.keySet) should ===(true)
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2587,33 +2587,33 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing as part", Some("en")))
+            objects = Seq(StringLiteralV2("Thing as part", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en"))),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = partThingClassInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         anythingLastModDate = newAnythingLastModDate
       }
@@ -2627,33 +2627,33 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing as a whole", Some("en")))
+            objects = Seq(StringLiteralV2("Thing as a whole", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en"))),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = wholeThingClassInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         anythingLastModDate = newAnythingLastModDate
       }
@@ -2667,44 +2667,44 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("partThing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("partThing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("wholeThing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("wholeThing"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("is part of", Some("en")),
-              StringLiteralV2("ist Teil von", Some("de"))
-            )
+              StringLiteralV2("ist Teil von", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("Represents a part of a whole relation", Some("en")),
-              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
-            )
+              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de")),
+            ),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri)),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraBase.IsPartOf.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = partOfPropertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2713,11 +2713,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(partOfPropertyIri)
         // check that partOf is a subproperty of knora-api:isPartOf
         property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri
+          OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri,
         ) should ===(true)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2729,7 +2729,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val partOfValuePropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(partOfValuePropertyIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       appActor ! partOfValuePropGetRequest
@@ -2740,11 +2740,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(partOfValuePropertyIri)
         // check that partOfValue is a subproperty of knora-api:isPartOfValue
         property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsPartOfValue.toSmartIri
+          OntologyConstants.KnoraApiV2Complex.IsPartOfValue.toSmartIri,
         ) should ===(true)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         anythingLastModDate = newAnythingLastModDate
       }
@@ -2758,7 +2758,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -2767,7 +2767,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(metadata.ontologyIri.toOntologySchema(ApiV2Complex) == AnythingOntologyIri)
       assert(metadata.label.contains(newLabel))
       val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-        throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
       assert(newAnythingLastModDate.isAfter(anythingLastModDate))
       anythingLastModDate = newAnythingLastModDate
@@ -2780,14 +2780,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2802,33 +2802,33 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en")))
+            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(20)
-          )
+            guiOrder = Some(20),
+          ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties: Set[SmartIri] = Set(
@@ -2856,13 +2856,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
-        anythingHasStandoffLinkToValue
+        anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
         (anythingOntology + "WildThing").toSmartIri,
         anythingThing.toSmartIri,
-        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2877,7 +2877,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2892,29 +2892,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("sub thing", Some("en")))
+            objects = Seq(StringLiteralV2("sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties: Set[SmartIri] = Set(
@@ -2942,13 +2942,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
-        anythingHasStandoffLinkToValue
+        anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
         (anythingOntology + "SubThing").toSmartIri,
         anythingThing.toSmartIri,
-        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -2962,7 +2962,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -2973,29 +2973,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("sub thing", Some("en")))
+            objects = Seq(StringLiteralV2("sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CanDeleteCardinalitiesFromClassRequestV2(
         classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
@@ -3011,29 +3011,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("other sub thing", Some("en")))
+            objects = Seq(StringLiteralV2("other sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties: Set[SmartIri] = Set(
@@ -3061,13 +3061,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
-        anythingHasStandoffLinkToValue
+        anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
         (anythingOntology + "OtherSubThing").toSmartIri,
         anythingThing.toSmartIri,
-        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3081,7 +3081,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3092,29 +3092,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("other sub thing", Some("en")))
+            objects = Seq(StringLiteralV2("other sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en"))),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CanDeleteCardinalitiesFromClassRequestV2(
         classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
@@ -3130,37 +3130,37 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("nothing", Some("en")),
-              StringLiteralV2("Nichts", Some("de"))
-            )
+              StringLiteralV2("Nichts", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("Represents nothing", Some("en")),
-              StringLiteralV2("Stellt nichts dar", Some("de"))
-            )
-          )
+              StringLiteralV2("Stellt nichts dar", Some("de")),
+            ),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties = Set(
         anythingHasStandoffLinkTo,
-        anythingHasStandoffLinkToValue
+        anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3172,7 +3172,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3185,7 +3185,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr"))
+        StringLiteralV2("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3194,7 +3194,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3208,7 +3208,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr"))
+        StringLiteralV2("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3217,7 +3217,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3225,12 +3225,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
-          newObjects
+          newObjects,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3242,7 +3242,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr"))
+        StringLiteralV2("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3251,7 +3251,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3259,12 +3259,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
-          newObjects
+          newObjects,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3277,7 +3277,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr"))
+        StringLiteralV2("ne représente rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3286,7 +3286,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3300,7 +3300,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr"))
+        StringLiteralV2("ne représente rien", Some("fr")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
@@ -3314,7 +3314,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3322,12 +3322,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped
+          newObjectsUnescaped,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3339,7 +3339,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val newObjects = Seq(
         StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr"))
+        StringLiteralV2("ne représente rien", Some("fr")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
@@ -3353,7 +3353,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3361,12 +3361,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(externalOntology.classes.size == 1)
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped
+          newObjectsUnescaped,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3381,30 +3381,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3421,30 +3421,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3461,30 +3461,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("NonexistentClass")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3501,30 +3501,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         subClassOf = Set("http://xmlns.com/foaf/0.1/Person".toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3541,32 +3541,32 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         directCardinalities =
           Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(ZeroOrOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3583,31 +3583,31 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(ZeroOrOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3624,31 +3624,31 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("restrictive thing", Some("en"))
-            )
+              StringLiteralV2("restrictive thing", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("A more restrictive Thing", Some("en"))
-            )
-          )
+              StringLiteralV2("A more restrictive Thing", Some("en")),
+            ),
+          ),
         ),
         directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(ExactlyOne)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3657,12 +3657,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")).cardinality should ===(
-          ExactlyOne
+          ExactlyOne,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3677,31 +3677,31 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Unbounded)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3718,7 +3718,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasInterestingThingValue,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -3736,14 +3736,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = linkPropIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3754,7 +3754,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val linkPropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(linkPropIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
@@ -3762,7 +3762,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val linkValuePropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(linkValuePropIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       appActor ! linkPropGetRequest
@@ -3806,44 +3806,44 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("has nothingness", Some("en")),
-              StringLiteralV2("hat Nichtsein", Some("de"))
-            )
+              StringLiteralV2("hat Nichtsein", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("Indicates whether a Nothing has nothingness", Some("en")),
-              StringLiteralV2("Anzeigt, ob ein Nichts Nichtsein hat", Some("de"))
-            )
+              StringLiteralV2("Anzeigt, ob ein Nichts Nichtsein hat", Some("de")),
+            ),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Checkbox".toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Checkbox".toSmartIri)),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3854,7 +3854,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3875,7 +3875,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           .map(attribute =>
             Schema.GuiAttribute
               .make(attribute)
-              .fold(e => throw e.head, v => v)
+              .fold(e => throw e.head, v => v),
           )
       val guiObject =
         Schema.GuiObject
@@ -3887,7 +3887,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3906,30 +3906,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         val guiElementPropComplex = property.entityInfoContent.predicates(
-          SalsahGui.External.GuiElementProp.toSmartIri
+          SalsahGui.External.GuiElementProp.toSmartIri,
         )
 
         val guiElementPropComplexExpected = PredicateInfoV2(
           predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-          objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
+          objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri)),
         )
 
         guiElementPropComplex should equal(guiElementPropComplexExpected)
 
         val guiAttributeComplex = property.entityInfoContent.predicates(
-          SalsahGui.External.GuiAttribute.toSmartIri
+          SalsahGui.External.GuiAttribute.toSmartIri,
         )
 
         val guiAttributeComplexExpected = PredicateInfoV2(
           predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-          objects = Seq(StringLiteralV2("size=80"))
+          objects = Seq(StringLiteralV2("size=80")),
         )
 
         guiAttributeComplex should equal(guiAttributeComplexExpected)
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3953,7 +3953,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3969,7 +3969,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -3984,38 +3984,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
+              StringLiteralV2("wrong property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4032,30 +4032,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en"))
-            )
+              StringLiteralV2("wrong class", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid class definition", Some("en")),
+            ),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4072,26 +4072,26 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("void", Some("en")))
+            objects = Seq(StringLiteralV2("void", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a void", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents a void", Some("en"))),
+          ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Nothing")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4102,7 +4102,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4117,20 +4117,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(ExactlyOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(ExactlyOne),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4139,7 +4139,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4149,14 +4149,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4170,7 +4170,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4185,14 +4185,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4208,23 +4208,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4242,45 +4242,45 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(classIri))
+            objects = Seq(SmartIriLiteralV2(classIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(classIri))
+            objects = Seq(SmartIriLiteralV2(classIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has other nothing", Some("en"))
-            )
+              StringLiteralV2("has other nothing", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Indicates whether a Nothing has another Nothing", Some("en"))
-            )
-          )
+              StringLiteralV2("Indicates whether a Nothing has another Nothing", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4291,40 +4291,40 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
-          propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0))
+          propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0)),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedDirectCardinalities = Map(
         propertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne, guiOrder = Some(0)),
         propertyIri.fromLinkPropToLinkValueProp -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
-        )
+          guiOrder = Some(0),
+        ),
       )
 
       val expectedProperties = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
         propertyIri,
-        propertyIri.fromLinkPropToLinkValueProp
+        propertyIri.fromLinkPropToLinkValueProp,
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
         (anythingOntology + "Nothing").toSmartIri,
-        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4337,7 +4337,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4352,23 +4352,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
             cardinality = Unbounded,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4384,38 +4384,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
-        )
+          guiOrder = Some(0),
+        ),
       )
 
       val expectedProperties = Set(
@@ -4423,7 +4423,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
         AnythingOntologyIri.makeEntityIri("hasOtherNothing"),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
-        AnythingOntologyIri.makeEntityIri("hasNothingness")
+        AnythingOntologyIri.makeEntityIri("hasNothingness"),
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4435,7 +4435,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4450,20 +4450,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(AtLeastOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(AtLeastOne),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4480,20 +4480,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4502,7 +4502,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4517,40 +4517,40 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("has emptiness", Some("en")),
-              StringLiteralV2("hat Leerheit", Some("de"))
-            )
+              StringLiteralV2("hat Leerheit", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("Indicates whether a Nothing has emptiness", Some("en")),
-              StringLiteralV2("Anzeigt, ob ein Nichts Leerheit hat", Some("de"))
-            )
-          )
+              StringLiteralV2("Anzeigt, ob ein Nichts Leerheit hat", Some("de")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4561,7 +4561,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4576,42 +4576,42 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(1)
-          )
+            guiOrder = Some(1),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(1)
-        )
+          guiOrder = Some(1),
+        ),
       )
 
       val expectedProperties = Set(
@@ -4620,7 +4620,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         AnythingOntologyIri.makeEntityIri("hasOtherNothing"),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
         AnythingOntologyIri.makeEntityIri("hasNothingness"),
-        AnythingOntologyIri.makeEntityIri("hasEmptiness")
+        AnythingOntologyIri.makeEntityIri("hasEmptiness"),
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4632,7 +4632,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4648,23 +4648,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4681,50 +4681,50 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(1)
+            guiOrder = Some(1),
           ),
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(2)
+            guiOrder = Some(2),
           ),
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(3)
-          )
+            guiOrder = Some(3),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ChangeGuiOrderRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(1)
+          guiOrder = Some(1),
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(1)
+          guiOrder = Some(1),
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(2)
+          guiOrder = Some(2),
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(3)
-        )
+          guiOrder = Some(3),
+        ),
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4735,7 +4735,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4750,34 +4750,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-        AnythingOntologyIri.makeEntityIri("hasEmptiness")
+        AnythingOntologyIri.makeEntityIri("hasEmptiness"),
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
         (anythingOntology + "Nothing").toSmartIri,
-        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4790,7 +4790,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4804,7 +4804,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4820,14 +4820,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasNothingness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4841,7 +4841,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasNothingness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4859,17 +4859,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4886,22 +4886,22 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val expectedProperties = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -4913,7 +4913,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4927,7 +4927,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate.minusSeconds(60),
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4943,7 +4943,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingNonAdminUser
+        requestingUser = anythingNonAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -4959,14 +4959,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasOtherNothing,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4978,14 +4978,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -4999,14 +4999,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5021,26 +5021,26 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid class", Some("en")))
+            objects = Seq(StringLiteralV2("invalid class", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en"))),
+          ),
         ),
         subClassOf = Set(IncunabulaOntologyIri.makeEntityIri("book")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -5057,28 +5057,28 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid class", Some("en")))
+            objects = Seq(StringLiteralV2("invalid class", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en"))),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         directCardinalities =
           Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(ZeroOrOne)),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -5096,34 +5096,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en"))
-            )
+              StringLiteralV2("invalid property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(IncunabulaOntologyIri.makeEntityIri("description")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -5141,38 +5141,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book")))
+            objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en"))
-            )
+              StringLiteralV2("invalid property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -5190,34 +5190,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book")))
+            objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en"))
-            )
+              StringLiteralV2("invalid property", Some("en")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          )
+              StringLiteralV2("An invalid property definition", Some("en")),
+            ),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
@@ -5234,26 +5234,26 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("any box", Some("en")))
+            objects = Seq(StringLiteralV2("any box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents any box", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents any box", Some("en"))),
+          ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5264,7 +5264,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5278,14 +5278,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5300,27 +5300,27 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("any box", Some("en")))
+            objects = Seq(StringLiteralV2("any box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents any box", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents any box", Some("en"))),
+          ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
         directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5331,7 +5331,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5345,14 +5345,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5367,30 +5367,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has any shared name", Some("en")))
+            objects = Seq(StringLiteralV2("has any shared name", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a shared name", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents a shared name", Some("en"))),
+          ),
         ),
         subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasName")),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5401,7 +5401,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5415,14 +5415,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5437,34 +5437,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
+            objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box"))),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has boolean", Some("en")))
+            objects = Seq(StringLiteralV2("has boolean", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a boolean", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Represents a boolean", Some("en"))),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5475,7 +5475,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5489,14 +5489,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5511,30 +5511,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
+            objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box"))),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has box", Some("en")))
+            objects = Seq(StringLiteralV2("has box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Has a box", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Has a box", Some("en"))),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5545,7 +5545,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5559,14 +5559,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyMetadataV2 =>
         assert(msg.ontologies.size == 1)
         val metadata = msg.ontologies.head
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -5584,31 +5584,31 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "test class",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A test class",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
-          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
+          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5629,39 +5629,39 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "test text property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A test text property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
           ),
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex
+          ontologySchema = ApiV2Complex,
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5682,39 +5682,39 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "test int property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A test int property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
           ),
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex
+          ontologySchema = ApiV2Complex,
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5735,38 +5735,38 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "test link property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A test link property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri)),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
           ),
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasLinkTo".toSmartIri),
-          ontologySchema = ApiV2Complex
+          ontologySchema = ApiV2Complex,
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5783,26 +5783,26 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
+              cardinality = ZeroOrOne,
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
+              cardinality = ZeroOrOne,
             ),
             (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5819,23 +5819,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
+              cardinality = ZeroOrOne,
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5857,16 +5857,16 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
               |  FILTER isBlank(?restriction)
               |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin
-          )
-        )
+              |}""".stripMargin,
+          ),
+        ),
       )
 
       assert(
         actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
           "http://www.knora.org/ontology/0001/anything#testIntProp",
-          "http://www.knora.org/ontology/0001/anything#testTextProp"
-        )
+          "http://www.knora.org/ontology/0001/anything#testTextProp",
+        ),
       )
     }
 
@@ -5882,31 +5882,31 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "A Blue Free Test class",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A Blue Free Test class used for testing cardinalities",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
           ontologySchema = ApiV2Complex,
-          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
+          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5927,41 +5927,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "blue test text property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
               objects = Vector(
-                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri)
-              )
+                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri),
+              ),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A blue test text property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
           ),
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex
+          ontologySchema = ApiV2Complex,
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -5982,41 +5982,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               objects = Vector(
                 StringLiteralV2(
                   value = "blue test integer property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
               objects = Vector(
-                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri)
-              )
+                SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri),
+              ),
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
                   value = "A blue test integer property",
-                  language = Some("en")
-                )
-              )
+                  language = Some("en"),
+                ),
+              ),
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri)),
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+            ),
           ),
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
-          ontologySchema = ApiV2Complex
+          ontologySchema = ApiV2Complex,
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6033,23 +6033,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
+              cardinality = ZeroOrOne,
             ),
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6069,11 +6069,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             valueContent = IntegerValueContentV2(
               ontologySchema = ApiV2Complex,
               valueHasInteger = 5,
-              comment = Some("this is the number five")
+              comment = Some("this is the number five"),
             ),
-            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
-          )
-        )
+            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
+          ),
+        ),
       )
 
       val inputResource = CreateResourceV2(
@@ -6081,15 +6081,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
         label = "my blue test class thing instance",
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = SharedTestDataADM.anythingProject,
       )
 
       appActor.ask(
         CreateResourceRequestV2(
           createResource = inputResource,
           requestingUser = anythingAdminUser,
-          apiRequestID = UUID.randomUUID
-        )
+          apiRequestID = UUID.randomUUID,
+        ),
       )(timeout)
 
       // Successfully check if the cardinality can be deleted
@@ -6099,20 +6099,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
@@ -6126,20 +6126,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           predicates = Map(
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri)),
+            ),
           ),
           classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = ZeroOrOne
-            )
-          )
+              cardinality = ZeroOrOne,
+            ),
+          ),
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6161,15 +6161,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
               |  FILTER isBlank(?restriction)
               |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin
-          )
-        )
+              |}""".stripMargin,
+          ),
+        ),
       )
 
       assert(
         actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
-          "http://www.knora.org/ontology/0001/freetest#hasBlueTestIntProp"
-        )
+          "http://www.knora.org/ontology/0001/freetest#hasBlueTestIntProp",
+        ),
       )
     }
 
@@ -6182,30 +6182,30 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("FOAF person", Some("en")))
+            objects = Seq(StringLiteralV2("FOAF person", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("FOAF person with reference to foaf:Person", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("FOAF person with reference to foaf:Person", Some("en"))),
+          ),
         ),
         subClassOf = Set(
           "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-          "http://xmlns.com/foaf/0.1/Person".toSmartIri
+          "http://xmlns.com/foaf/0.1/Person".toSmartIri,
         ),
         directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       // check if class was created correctly
@@ -6217,7 +6217,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6232,7 +6232,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       // create the property anything:hasFoafName
       appActor ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       val metadataResponse: ReadOntologyMetadataV2 = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -6252,41 +6252,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(classIri))
+            objects = Seq(SmartIriLiteralV2(classIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
               StringLiteralV2("has foaf name", Some("en")),
-              StringLiteralV2("hat foaf Namen", Some("de"))
-            )
+              StringLiteralV2("hat foaf Namen", Some("de")),
+            ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
               StringLiteralV2("The foaf name of something", Some("en")),
-              StringLiteralV2("Der foaf Name eines Dinges", Some("de"))
-            )
-          )
+              StringLiteralV2("Der foaf Name eines Dinges", Some("de")),
+            ),
+          ),
         ),
         subPropertyOf =
           Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, "http://xmlns.com/foaf/0.1/name".toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       // check if property was created correctly
@@ -6296,7 +6296,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         property.entityInfoContent should ===(propertyInfoContent)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6316,41 +6316,41 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! AddCardinalitiesToClassRequestV2(
         classInfoContent = classWithNewCardinalityInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       // check if cardinality was added correctly
       val expectedDirectCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map(
         propertyIri -> KnoraCardinalityInfo(
           cardinality = ZeroOrOne,
-          guiOrder = Some(0)
+          guiOrder = Some(0),
         ),
         ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(
-          cardinality = ZeroOrOne
-        )
+          cardinality = ZeroOrOne,
+        ),
       )
 
       val expectedProperties: Set[SmartIri] = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
         ExampleSharedOntologyIri.makeEntityIri("hasName"),
-        propertyIri
+        propertyIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6362,7 +6362,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6382,23 +6382,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
             cardinality = ZeroOrOne,
-            guiOrder = Some(0)
-          )
+            guiOrder = Some(0),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CanDeleteCardinalitiesFromClassRequestV2(
         classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
@@ -6411,23 +6411,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ReplaceClassCardinalitiesRequestV2(
         classInfoContent = classChangeInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       // check if cardinalities were removed correctly
       val expectedPropertiesAfterDeletion: Set[SmartIri] = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6439,7 +6439,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6456,20 +6456,20 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
+          ),
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasText") -> newCardinality
+          AnythingOntologyIri.makeEntityIri("hasText") -> newCardinality,
         ),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! ChangeGuiOrderRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6478,12 +6478,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val readClassInfo = externalOntology.classes(classIri)
         assert(
           readClassInfo.entityInfoContent
-            .directCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality
+            .directCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality,
         )
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6492,7 +6492,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ClassesGetRequestV2(
         classIris = Set(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum")),
         allLanguages = false,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6514,29 +6514,29 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Different Video Sequence Thing", Some("en")))
-          )
+            objects = Seq(StringLiteralV2("Different Video Sequence Thing", Some("en"))),
+          ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreateClassRequestV2(
         classInfoContent = sequenceClassInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         val metadata         = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         anythingLastModDate = newAnythingLastModDate
       }
@@ -6548,34 +6548,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(sequenceClassIri))
+            objects = Seq(SmartIriLiteralV2(sequenceClassIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(videoThingIri))
+            objects = Seq(SmartIriLiteralV2(videoThingIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("is sequence of", Some("en")))
+            objects = Seq(StringLiteralV2("is sequence of", Some("en"))),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri)),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraBase.IsSequenceOf.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = sequenceOfPropertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6584,11 +6584,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(sequenceOfPropertyIri)
         // check that sequenceOf is a subproperty of knora-api:isSequenceOf
         property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsSequenceOf.toSmartIri
+          OntologyConstants.KnoraApiV2Complex.IsSequenceOf.toSmartIri,
         ) should ===(true)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
@@ -6599,7 +6599,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val sequenceOfValuePropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(sequenceOfValuePropertyIri),
         allLanguages = true,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
       appActor ! sequenceOfValuePropGetRequest
 
@@ -6609,11 +6609,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(sequenceOfValuePropertyIri)
         // check that sequenceOfValue is a subproperty of knora-api:isSequenceOfValue
         property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue.toSmartIri
+          OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue.toSmartIri,
         ) should ===(true)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         anythingLastModDate = newAnythingLastModDate
       }
@@ -6625,34 +6625,34 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(sequenceClassIri))
+            objects = Seq(SmartIriLiteralV2(sequenceClassIri)),
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.IntervalValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.IntervalValue.toSmartIri)),
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has sequence bounds", Some("en")))
+            objects = Seq(StringLiteralV2("has sequence bounds", Some("en"))),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Interval".toSmartIri))
-          )
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Interval".toSmartIri)),
+          ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraBase.HasSequenceBounds.toSmartIri),
-        ontologySchema = ApiV2Complex
+        ontologySchema = ApiV2Complex,
       )
 
       appActor ! CreatePropertyRequestV2(
         propertyInfoContent = sequenceBoundsPropertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
+        requestingUser = anythingAdminUser,
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -6661,11 +6661,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         val property = externalOntology.properties(sequenceBoundsPropertyIri)
         // check that sequenceBounds is a subproperty of knora-api:hasSequenceBounds
         property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.HasSequenceBounds.toSmartIri
+          OntologyConstants.KnoraApiV2Complex.HasSequenceBounds.toSmartIri,
         ) should ===(true)
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate

@@ -77,7 +77,7 @@ abstract class CoreSpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          routerAndConfig
+          routerAndConfig,
         )
         .getOrThrowFiberFailure()
     }
@@ -102,7 +102,7 @@ abstract class CoreSpec
           (for {
             _ <- AppServer.testWithoutSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ())
+          } yield ()),
         )
         .getOrThrow()
 

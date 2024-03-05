@@ -92,7 +92,7 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     putPermissionsProjectIriGroup,
     putPerrmissionsHasPermissions,
     putPermisssionsResourceClass,
-    putPermissionsProperty
+    putPermissionsProperty,
   ).map(_.endpoint.tag("Admin Permissions"))
 }
 

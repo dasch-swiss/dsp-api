@@ -57,16 +57,16 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-groups-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return the group's information" in {
         val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc") ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass)
+          BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -76,10 +76,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -101,15 +101,15 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-group-with-custom-Iri-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createGroupWithCustomIriRequest
-          )
+            text = createGroupWithCustomIriRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/groups",
-          HttpEntity(ContentTypes.`application/json`, createGroupWithCustomIriRequest)
+          HttpEntity(ContentTypes.`application/json`, createGroupWithCustomIriRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -124,10 +124,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-group-with-custom-Iri-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -143,7 +143,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(imagesUser01Email, testPass)
+            BasicHttpCredentials(imagesUser01Email, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -172,15 +172,15 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-group-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createGroupRequest
-          )
+            text = createGroupRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + "/admin/groups",
-          HttpEntity(ContentTypes.`application/json`, createGroupRequest)
+          HttpEntity(ContentTypes.`application/json`, createGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -199,10 +199,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
         val iri = groupInfo.id
@@ -222,15 +222,15 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-group-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateGroupRequest
-          )
+            text = updateGroupRequest,
+          ),
         )
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
         val request = Put(
           baseApiUrl + "/admin/groups/" + groupIriEnc,
-          HttpEntity(ContentTypes.`application/json`, updateGroupRequest)
+          HttpEntity(ContentTypes.`application/json`, updateGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -249,17 +249,17 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "DELETE a group" in {
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
         val request = Delete(baseApiUrl + "/admin/groups/" + groupIriEnc) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass)
+          BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -278,10 +278,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "delete-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
       }
@@ -297,16 +297,16 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "change-group-status-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = changeGroupStatusRequest
-          )
+            text = changeGroupStatusRequest,
+          ),
         )
 
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
         val request = Put(
           baseApiUrl + "/admin/groups/" + groupIriEnc + "/status",
-          HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest)
+          HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -325,10 +325,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "change-group-status-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -336,7 +336,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
     "used to query members" should {
       "return all members of a group" in {
         val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass)
+          BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -346,10 +346,10 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-group-members-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }

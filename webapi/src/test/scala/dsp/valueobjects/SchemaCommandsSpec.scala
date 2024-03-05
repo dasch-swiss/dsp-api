@@ -47,9 +47,9 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
             label = label,
             comment = comment,
             superProperties = scala.collection.immutable.List(superProperty),
-            guiObject = guiObject
+            guiObject = guiObject,
           )
       } yield assert(command.toEither)(isRight))
-    }
+    },
   )
 }

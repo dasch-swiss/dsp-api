@@ -34,7 +34,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema
+  querySchema: ApiV2Schema,
 ) extends WhereTransformer {
 
   /**
@@ -126,7 +126,7 @@ abstract class AbstractPrequeryGenerator(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[Seq[QueryPattern]] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
@@ -195,7 +195,7 @@ abstract class AbstractPrequeryGenerator(
   private def addGeneratedVariableForValueLiteral(
     valueVar: QueryVariable,
     generatedVar: QueryVariable,
-    useInOrderBy: Boolean = true
+    useInOrderBy: Boolean = true,
   ): Boolean = {
     val currentGeneratedVarsForBlock: Map[QueryVariable, Set[GeneratedQueryVariable]] =
       valueVariablesAutomaticallyGenerated.head
@@ -209,7 +209,7 @@ abstract class AbstractPrequeryGenerator(
       ) {
         currentGeneratedVarsForBlock + (valueVar -> (currentGeneratedVarsForValueVar + GeneratedQueryVariable(
           generatedVar,
-          useInOrderBy
+          useInOrderBy,
         )))
       } else {
         currentGeneratedVarsForBlock
@@ -233,7 +233,7 @@ abstract class AbstractPrequeryGenerator(
 
         if (generatedVarsForOrderBy.size > 1) {
           throw AssertionException(
-            s"More than one variable was generated for the literal values of ${valueVar.toSparql} and marked for use in ORDER BY: ${generatedVarsForOrderBy.map(_.toSparql).mkString(", ")}"
+            s"More than one variable was generated for the literal values of ${valueVar.toSparql} and marked for use in ORDER BY: ${generatedVarsForOrderBy.map(_.toSparql).mkString(", ")}",
           )
         }
 
@@ -298,7 +298,7 @@ abstract class AbstractPrequeryGenerator(
    */
   private def createAdditionalStatementsForNonPropertyType(
     nonPropertyTypeInfo: NonPropertyTypeInfo,
-    inputEntity: Entity
+    inputEntity: Entity,
   ): Seq[QueryPattern] =
     if (nonPropertyTypeInfo.isResourceType) {
 
@@ -309,8 +309,8 @@ abstract class AbstractPrequeryGenerator(
         StatementPattern(
           subj = inputEntity,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-        )
+          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+        ),
       )
     } else {
       // inputEntity is target of a value property
@@ -330,15 +330,15 @@ abstract class AbstractPrequeryGenerator(
   private def generateStatementsForLinkValue(
     linkSource: Entity,
     linkPred: Entity,
-    linkTarget: Entity
+    linkTarget: Entity,
   ): Seq[StatementPattern] = {
     // Generate a variable name representing the link value
     val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
       baseStatement = StatementPattern(
         subj = linkSource,
         pred = linkPred,
-        obj = linkTarget
-      )
+        obj = linkTarget,
+      ),
     )
 
     // create an Entity that connects the subject of the linking property with the link value object
@@ -370,25 +370,25 @@ abstract class AbstractPrequeryGenerator(
       StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri),
       ),
       StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
       ),
       StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri),
-        obj = linkTarget
-      )
+        obj = linkTarget,
+      ),
     )
   }
 
   private def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(
     propertyTypeInfo: PropertyTypeInfo,
     statementPattern: StatementPattern,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): Seq[QueryPattern] = {
 
     /**
@@ -404,7 +404,7 @@ abstract class AbstractPrequeryGenerator(
             mainResourceVariable != subjectVar && inputOrderBy.exists(criterion => criterion.queryVariable == objectVar)
           ) {
             throw GravsearchException(
-              s"Variable ${objectVar.toSparql} is used in ORDER BY, but does not represent a value of the main resource"
+              s"Variable ${objectVar.toSparql} is used in ORDER BY, but does not represent a value of the main resource",
             )
           }
 
@@ -428,7 +428,7 @@ abstract class AbstractPrequeryGenerator(
       // variable representing the list node to match for
       val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatement(
         baseStatement = statementPattern,
-        suffix = "listNodeVar"
+        suffix = "listNodeVar",
       )
 
       // transforms the statement given in the input query so the list node and any of its subnodes are matched
@@ -437,8 +437,8 @@ abstract class AbstractPrequeryGenerator(
         StatementPattern(
           subj = listNode,
           pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
-          obj = listNodeVar
-        )
+          obj = listNodeVar,
+        ),
       )
 
     }
@@ -459,7 +459,7 @@ abstract class AbstractPrequeryGenerator(
           case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
           case other =>
             throw GravsearchException(
-              s"Object of a linking statement must be an IRI or a variable, but ${other.toSparql} given."
+              s"Object of a linking statement must be an IRI or a variable, but ${other.toSparql} given.",
             )
         }
 
@@ -467,7 +467,7 @@ abstract class AbstractPrequeryGenerator(
         val linkValueStatements = generateStatementsForLinkValue(
           linkSource = statementPattern.subj,
           linkPred = statementPattern.pred,
-          linkTarget = statementPattern.obj
+          linkTarget = statementPattern.obj,
         )
 
         // Add the input statement, which uses the link property, to the generated statements about the link value.
@@ -501,7 +501,7 @@ abstract class AbstractPrequeryGenerator(
 
               case other =>
                 throw GravsearchException(
-                  s"Object of a value property statement must be a QueryVariable, but ${other.toSparql} given."
+                  s"Object of a value property statement must be a QueryVariable, but ${other.toSparql} given.",
                 )
             }
 
@@ -519,7 +519,7 @@ abstract class AbstractPrequeryGenerator(
               val valueObjectIsNotDeleted = StatementPattern(
                 subj = statementPattern.obj,
                 pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-                obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+                obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
               )
 
               // check if the object var is used as a sort criterion
@@ -535,13 +535,13 @@ abstract class AbstractPrequeryGenerator(
                     valueTypesToValuePredsForOrderBy
                       .getOrElse(
                         nonPropertyTypeInfo.typeIri.toString,
-                        throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")
+                        throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY"),
                       )
                       .toSmartIri
 
                   case Some(_) =>
                     throw GravsearchException(
-                      s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY"
+                      s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY",
                     )
 
                   case None =>
@@ -551,7 +551,7 @@ abstract class AbstractPrequeryGenerator(
                 // Generate the variable name.
                 val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
                   criterion.queryVariable,
-                  propertyIri.toString
+                  propertyIri.toString,
                 )
 
                 // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
@@ -564,7 +564,7 @@ abstract class AbstractPrequeryGenerator(
                   val statementPatternForSortCriterion = StatementPattern(
                     subj = criterion.queryVariable,
                     pred = IriRef(propertyIri),
-                    obj = variableForLiteral
+                    obj = variableForLiteral,
                   )
                   Some(statementPatternForSortCriterion)
                 } else {
@@ -578,7 +578,7 @@ abstract class AbstractPrequeryGenerator(
 
               Seq(
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult),
-                valueObjectIsNotDeleted
+                valueObjectIsNotDeleted,
               ) ++ orderByStatement
             } else {
               // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
@@ -593,7 +593,7 @@ abstract class AbstractPrequeryGenerator(
         // has to use the knora-api:standoffLink function instead.
         if (maybeSubjectType.exists(_.isStandoffTagType) && propertyTypeInfo.objectIsResourceType) {
           throw GravsearchException(
-            s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}"
+            s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}",
           )
         } else {
           // Is the object of the statement a list node?
@@ -672,7 +672,7 @@ abstract class AbstractPrequeryGenerator(
 
   private def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion]
+    inputOrderBy: Seq[OrderCriterion],
   ): Task[Seq[QueryPattern]] = ZIO.attempt(
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {
@@ -690,7 +690,7 @@ abstract class AbstractPrequeryGenerator(
           entity = statementPattern.subj,
           typeInspectionResult = typeInspectionResult,
           processedTypeInfo = processedTypeInformationKeysWhereClause,
-          conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+          conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType,
         )
 
         // check if there exists type information for the given statement's object
@@ -698,14 +698,14 @@ abstract class AbstractPrequeryGenerator(
           entity = statementPattern.obj,
           typeInspectionResult = typeInspectionResult,
           processedTypeInfo = processedTypeInformationKeysWhereClause,
-          conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+          conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType,
         )
 
         // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
         val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
           statementPattern = statementPattern,
           typeInspectionResult = typeInspectionResult,
-          conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
+          conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy),
         )
 
         // If we're in a UNION block, record any variables that are used in the statement,
@@ -715,7 +715,7 @@ abstract class AbstractPrequeryGenerator(
         recordLiteralVariables(statementPattern)
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
-    }
+    },
   )
 
   /**
@@ -732,7 +732,7 @@ abstract class AbstractPrequeryGenerator(
     entity: Entity,
     typeInspectionResult: GravsearchTypeInspectionResult,
     processedTypeInfo: mutable.Set[TypeableEntity],
-    conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]
+    conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern],
   ): Seq[QueryPattern] = {
     val typesNotYetProcessed = typeInspectionResult.copy(entities = typeInspectionResult.entities -- processedTypeInfo)
 
@@ -762,8 +762,8 @@ abstract class AbstractPrequeryGenerator(
     conversionFuncForPropertyType: (
       PropertyTypeInfo,
       StatementPattern,
-      GravsearchTypeInspectionResult
-    ) => Seq[QueryPattern]
+      GravsearchTypeInspectionResult,
+    ) => Seq[QueryPattern],
   ): Seq[QueryPattern] =
     typeInspectionResult.getTypeOfEntity(statementPattern.pred) match {
       case Some(propInfo: PropertyTypeInfo) =>
@@ -798,7 +798,7 @@ abstract class AbstractPrequeryGenerator(
     OntologyConstants.Xsd.Decimal                    -> OntologyConstants.KnoraBase.ValueHasDecimal,
     OntologyConstants.Xsd.Integer                    -> OntologyConstants.KnoraBase.ValueHasInteger,
     OntologyConstants.Xsd.String                     -> OntologyConstants.KnoraBase.ValueHasString,
-    OntologyConstants.Xsd.Uri                        -> OntologyConstants.KnoraBase.ValueHasUri
+    OntologyConstants.Xsd.Uri                        -> OntologyConstants.KnoraBase.ValueHasUri,
   )
 
   /**
@@ -810,12 +810,12 @@ abstract class AbstractPrequeryGenerator(
    */
   private def statementPatternToInternalSchema(
     statementPattern: StatementPattern,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): StatementPattern = {
     GravsearchQueryChecker.checkStatement(
       statementPattern = statementPattern,
       querySchema = querySchema,
-      typeInspectionResult = typeInspectionResult
+      typeInspectionResult = typeInspectionResult,
     )
 
     statementPattern.toOntologySchema(InternalSchema)
@@ -828,11 +828,11 @@ abstract class AbstractPrequeryGenerator(
    * @return variable representing the corresponding link value property.
    */
   private def createLinkValuePropertyVariableFromLinkingPropertyVariable(
-    linkingPropertyQueryVariable: QueryVariable
+    linkingPropertyQueryVariable: QueryVariable,
   ): QueryVariable =
     SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = linkingPropertyQueryVariable,
-      propertyIri = OntologyConstants.KnoraBase.HasLinkToValue
+      propertyIri = OntologyConstants.KnoraBase.HasLinkToValue,
     )
 
   /**
@@ -844,7 +844,7 @@ abstract class AbstractPrequeryGenerator(
    */
   private case class TransformedFilterPattern(
     expression: Option[Expression],
-    additionalPatterns: Seq[QueryPattern] = Seq.empty[QueryPattern]
+    additionalPatterns: Seq[QueryPattern] = Seq.empty[QueryPattern],
   )
 
   /**
@@ -858,7 +858,7 @@ abstract class AbstractPrequeryGenerator(
   private def handlePropertyIriQueryVar(
     queryVar: QueryVariable,
     comparisonOperator: CompareExpressionOperator.Value,
-    iriRef: IriRef
+    iriRef: IriRef,
   ) = {
     if (!iriRef.iri.isApiV2Schema(querySchema))
       throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
@@ -866,11 +866,11 @@ abstract class AbstractPrequeryGenerator(
     // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
     if (comparisonOperator != CompareExpressionOperator.EQUALS)
       throw GravsearchException(
-        s"Comparison operator in a CompareExpression for a property type must be ${CompareExpressionOperator.EQUALS}, but '$comparisonOperator' given (for negations use 'FILTER NOT EXISTS')"
+        s"Comparison operator in a CompareExpression for a property type must be ${CompareExpressionOperator.EQUALS}, but '$comparisonOperator' given (for negations use 'FILTER NOT EXISTS')",
       )
 
     TransformedFilterPattern(
-      Some(CompareExpression(queryVar, comparisonOperator, iriRef.toOntologySchema(InternalSchema)))
+      Some(CompareExpression(queryVar, comparisonOperator, iriRef.toOntologySchema(InternalSchema))),
     )
   }
 
@@ -884,7 +884,7 @@ abstract class AbstractPrequeryGenerator(
   private def handleListQueryVar(
     queryVar: QueryVariable,
     comparisonOperator: CompareExpressionOperator.Value,
-    literalValueExpression: Expression
+    literalValueExpression: Expression,
   ): TransformedFilterPattern = {
 
     // make sure that the expression is a literal of the expected type
@@ -903,19 +903,19 @@ abstract class AbstractPrequeryGenerator(
       throw GravsearchException(
         s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators
             .map(op => "'" + op + "'")
-            .mkString(", ")})"
+            .mkString(", ")})",
       )
 
     // Generate a variable name representing the list node pointed to by the list value object
     val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = queryVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasListNode
+      propertyIri = OntologyConstants.KnoraBase.ValueHasListNode,
     )
 
     // Generate variable name representing the label of the list node pointed to
     val listNodeLabel: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = queryVar,
-      propertyIri = OntologyConstants.Rdfs.Label
+      propertyIri = OntologyConstants.Rdfs.Label,
     )
 
     TransformedFilterPattern(
@@ -924,22 +924,22 @@ abstract class AbstractPrequeryGenerator(
         CompareExpression(
           StrFunction(listNodeLabel),
           comparisonOperator,
-          XsdLiteral(nodeLabel, OntologyConstants.Xsd.String.toSmartIri)
-        )
+          XsdLiteral(nodeLabel, OntologyConstants.Xsd.String.toSmartIri),
+        ),
       ), // compares the provided literal to the value object's literal value
       Seq(
         // connects the query variable with the list node label
         StatementPattern(
           subj = queryVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri),
-          listNodeVar
+          listNodeVar,
         ),
         StatementPattern(
           subj = listNodeVar,
           pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri),
-          obj = listNodeLabel
-        )
-      )
+          obj = listNodeLabel,
+        ),
+      ),
     )
   }
 
@@ -960,7 +960,7 @@ abstract class AbstractPrequeryGenerator(
     literalValueExpression: Expression,
     xsdType: Set[IRI],
     valueHasProperty: IRI,
-    validComparisonOperators: Set[CompareExpressionOperator.Value] = Set.empty[CompareExpressionOperator.Value]
+    validComparisonOperators: Set[CompareExpressionOperator.Value] = Set.empty[CompareExpressionOperator.Value],
   ): TransformedFilterPattern = {
 
     // make sure that the expression is a literal of the expected type
@@ -969,7 +969,7 @@ abstract class AbstractPrequeryGenerator(
 
       case other =>
         throw GravsearchException(
-          s"Invalid right argument ${other.toSparql} in comparison (allowed types in this context are ${xsdType.map(_.toSmartIri.toSparql).mkString(", ")})"
+          s"Invalid right argument ${other.toSparql} in comparison (allowed types in this context are ${xsdType.map(_.toSmartIri.toSparql).mkString(", ")})",
         )
     }
 
@@ -978,7 +978,7 @@ abstract class AbstractPrequeryGenerator(
       throw GravsearchException(
         s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators
             .map(op => "'" + op + "'")
-            .mkString(", ")})"
+            .mkString(", ")})",
       )
 
     // Does the variable refer to resource metadata?
@@ -986,14 +986,14 @@ abstract class AbstractPrequeryGenerator(
       // Yes. Leave the expression as is.
       TransformedFilterPattern(
         Some(CompareExpression(queryVar, comparisonOperator, literal)),
-        Seq.empty
+        Seq.empty,
       )
     } else {
       // The variable does not refer to resource metadata.
       // Generate a variable name representing the literal attached to the value object.
       val valueObjectLiteralVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
         base = queryVar,
-        propertyIri = valueHasProperty
+        propertyIri = valueHasProperty,
       )
 
       // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
@@ -1006,8 +1006,8 @@ abstract class AbstractPrequeryGenerator(
             StatementPattern(
               subj = queryVar,
               pred = IriRef(valueHasProperty.toSmartIri),
-              valueObjectLiteralVar
-            )
+              valueObjectLiteralVar,
+            ),
           )
         } else {
           Seq.empty[StatementPattern]
@@ -1015,9 +1015,9 @@ abstract class AbstractPrequeryGenerator(
 
       TransformedFilterPattern(
         Some(
-          CompareExpression(valueObjectLiteralVar, comparisonOperator, literal)
+          CompareExpression(valueObjectLiteralVar, comparisonOperator, literal),
         ), // compares the provided literal to the value object's literal value
-        statementToAddForValueHas
+        statementToAddForValueHas,
       )
     }
   }
@@ -1033,7 +1033,7 @@ abstract class AbstractPrequeryGenerator(
   private def handleDateQueryVar(
     queryVar: QueryVariable,
     comparisonOperator: CompareExpressionOperator.Value,
-    dateValueExpression: Expression
+    dateValueExpression: Expression,
   ): TransformedFilterPattern = {
 
     // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
@@ -1048,7 +1048,7 @@ abstract class AbstractPrequeryGenerator(
     val dateStr: String = ValuesValidator
       .validateDate(dateStringLiteral.value)
       .getOrElse(
-        throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string")
+        throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"),
       )
 
     // Convert it to Julian Day Numbers.
@@ -1057,7 +1057,7 @@ abstract class AbstractPrequeryGenerator(
     // Generate a variable name representing the period's start
     val dateValueHasStartVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = queryVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN
+      propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN,
     )
 
     // sort dates by their period's start (in the prequery)
@@ -1067,7 +1067,7 @@ abstract class AbstractPrequeryGenerator(
     // Generate a variable name representing the period's end
     val dateValueHasEndVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = queryVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN
+      propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN,
     )
 
     // connects the value object with the periods start variable
@@ -1077,8 +1077,8 @@ abstract class AbstractPrequeryGenerator(
         StatementPattern(
           subj = queryVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
-          obj = dateValueHasStartVar
-        )
+          obj = dateValueHasStartVar,
+        ),
       )
     } else {
       None
@@ -1088,7 +1088,7 @@ abstract class AbstractPrequeryGenerator(
     val dateValEndStatement = StatementPattern(
       subj = queryVar,
       pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
-      obj = dateValueHasEndVar
+      obj = dateValueHasEndVar,
     )
 
     // process filter expression based on given comparison operator
@@ -1099,25 +1099,25 @@ abstract class AbstractPrequeryGenerator(
         val leftArgFilter = CompareExpression(
           XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
           CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
-          dateValueHasEndVar
+          dateValueHasEndVar,
         )
 
         val rightArgFilter = CompareExpression(
           XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
           CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-          dateValueHasStartVar
+          dateValueHasStartVar,
         )
 
         val filter = AndExpression(leftArgFilter, rightArgFilter)
 
         val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement =>
-          generatedDateStatements.contains(statement)
+          generatedDateStatements.contains(statement),
         )
         generatedDateStatements ++= statementsToAdd
 
         TransformedFilterPattern(
           Some(filter),
-          statementsToAdd
+          statementsToAdd,
         )
 
       case CompareExpressionOperator.NOT_EQUALS =>
@@ -1125,25 +1125,25 @@ abstract class AbstractPrequeryGenerator(
         val leftArgFilter = CompareExpression(
           XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
           CompareExpressionOperator.GREATER_THAN,
-          dateValueHasEndVar
+          dateValueHasEndVar,
         )
 
         val rightArgFilter = CompareExpression(
           XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
           CompareExpressionOperator.LESS_THAN,
-          dateValueHasStartVar
+          dateValueHasStartVar,
         )
 
         val filter = OrExpression(leftArgFilter, rightArgFilter)
 
         val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement =>
-          generatedDateStatements.contains(statement)
+          generatedDateStatements.contains(statement),
         )
         generatedDateStatements ++= statementsToAdd
 
         TransformedFilterPattern(
           Some(filter),
-          statementsToAdd
+          statementsToAdd,
         )
 
       case CompareExpressionOperator.LESS_THAN =>
@@ -1151,17 +1151,17 @@ abstract class AbstractPrequeryGenerator(
         val filter = CompareExpression(
           dateValueHasEndVar,
           CompareExpressionOperator.LESS_THAN,
-          XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri)
+          XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
         )
 
         val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement =>
-          generatedDateStatements.contains(statement)
+          generatedDateStatements.contains(statement),
         ) // dateValStartStatement may be used as ORDER BY statement
         generatedDateStatements ++= statementsToAdd
 
         TransformedFilterPattern(
           Some(filter),
-          statementsToAdd
+          statementsToAdd,
         )
 
       case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
@@ -1169,7 +1169,7 @@ abstract class AbstractPrequeryGenerator(
         val filter = CompareExpression(
           dateValueHasStartVar,
           CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
-          XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri)
+          XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
         )
 
         val statementToAdd =
@@ -1184,7 +1184,7 @@ abstract class AbstractPrequeryGenerator(
 
         TransformedFilterPattern(
           Some(filter),
-          statementToAdd
+          statementToAdd,
         )
 
       case CompareExpressionOperator.GREATER_THAN =>
@@ -1192,7 +1192,7 @@ abstract class AbstractPrequeryGenerator(
         val filter = CompareExpression(
           dateValueHasStartVar,
           CompareExpressionOperator.GREATER_THAN,
-          XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri)
+          XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
         )
 
         val statementToAdd =
@@ -1207,7 +1207,7 @@ abstract class AbstractPrequeryGenerator(
 
         TransformedFilterPattern(
           Some(filter),
-          statementToAdd
+          statementToAdd,
         )
 
       case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
@@ -1215,17 +1215,17 @@ abstract class AbstractPrequeryGenerator(
         val filter = CompareExpression(
           dateValueHasEndVar,
           CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-          XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri)
+          XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri),
         )
 
         val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement =>
-          generatedDateStatements.contains(statement)
+          generatedDateStatements.contains(statement),
         ) // dateValStartStatement may be used as ORDER BY statement
         generatedDateStatements ++= statementsToAdd
 
         TransformedFilterPattern(
           Some(filter),
-          statementsToAdd
+          statementsToAdd,
         )
 
       case other => throw GravsearchException(s"Invalid operator '$other' in date comparison")
@@ -1245,7 +1245,7 @@ abstract class AbstractPrequeryGenerator(
   private def handleQueryVar(
     queryVar: QueryVariable,
     compareExpression: CompareExpression,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): TransformedFilterPattern = {
 
     typeInspectionResult.getTypeOfEntity(queryVar) match {
@@ -1259,12 +1259,12 @@ abstract class AbstractPrequeryGenerator(
                 handlePropertyIriQueryVar(
                   queryVar = queryVar,
                   comparisonOperator = compareExpression.operator,
-                  iriRef = iriRef
+                  iriRef = iriRef,
                 )
 
               case other =>
                 throw GravsearchException(
-                  s"Invalid right argument ${other.toSparql} in comparison (expected a property IRI)"
+                  s"Invalid right argument ${other.toSparql} in comparison (expected a property IRI)",
                 )
             }
 
@@ -1277,7 +1277,7 @@ abstract class AbstractPrequeryGenerator(
                 case _: QueryVariable | _: IriRef => TransformedFilterPattern(Some(compareExpression))
                 case other =>
                   throw GravsearchException(
-                    s"Invalid right argument ${other.toSparql} in comparison (expected a variable or IRI representing a resource)"
+                    s"Invalid right argument ${other.toSparql} in comparison (expected a variable or IRI representing a resource)",
                   )
               }
             } else if (querySchema == ApiV2Simple) { // The left operand doesn't represent a resource. Is the query using the API v2 simple schema?
@@ -1292,7 +1292,7 @@ abstract class AbstractPrequeryGenerator(
                     comparisonOperator = compareExpression.operator,
                     literalValueExpression = compareExpression.rightArg,
                     xsdType = Set(OntologyConstants.Xsd.Integer),
-                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger
+                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger,
                   )
 
                 case OntologyConstants.Xsd.Decimal =>
@@ -1302,9 +1302,9 @@ abstract class AbstractPrequeryGenerator(
                     literalValueExpression = compareExpression.rightArg,
                     xsdType = Set(
                       OntologyConstants.Xsd.Decimal,
-                      OntologyConstants.Xsd.Integer
+                      OntologyConstants.Xsd.Integer,
                     ), // an integer literal is also valid
-                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
+                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal,
                   )
 
                 case OntologyConstants.Xsd.DateTimeStamp =>
@@ -1313,7 +1313,7 @@ abstract class AbstractPrequeryGenerator(
                     comparisonOperator = compareExpression.operator,
                     literalValueExpression = compareExpression.rightArg,
                     xsdType = Set(OntologyConstants.Xsd.DateTimeStamp),
-                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasTimeStamp
+                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasTimeStamp,
                   )
 
                 case OntologyConstants.Xsd.Boolean =>
@@ -1324,7 +1324,7 @@ abstract class AbstractPrequeryGenerator(
                     xsdType = Set(OntologyConstants.Xsd.Boolean),
                     valueHasProperty = OntologyConstants.KnoraBase.ValueHasBoolean,
                     validComparisonOperators =
-                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS),
                   )
 
                 case OntologyConstants.Xsd.String =>
@@ -1335,7 +1335,7 @@ abstract class AbstractPrequeryGenerator(
                     xsdType = Set(OntologyConstants.Xsd.String),
                     valueHasProperty = OntologyConstants.KnoraBase.ValueHasString,
                     validComparisonOperators =
-                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS),
                   )
 
                 case OntologyConstants.Xsd.Uri =>
@@ -1346,21 +1346,21 @@ abstract class AbstractPrequeryGenerator(
                     xsdType = Set(OntologyConstants.Xsd.Uri),
                     valueHasProperty = OntologyConstants.KnoraBase.ValueHasUri,
                     validComparisonOperators =
-                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                      Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS),
                   )
 
                 case OntologyConstants.KnoraApiV2Simple.Date =>
                   handleDateQueryVar(
                     queryVar = queryVar,
                     comparisonOperator = compareExpression.operator,
-                    dateValueExpression = compareExpression.rightArg
+                    dateValueExpression = compareExpression.rightArg,
                   )
 
                 case OntologyConstants.KnoraApiV2Simple.ListNode =>
                   handleListQueryVar(
                     queryVar = queryVar,
                     comparisonOperator = compareExpression.operator,
-                    literalValueExpression = compareExpression.rightArg
+                    literalValueExpression = compareExpression.rightArg,
                   )
 
                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
@@ -1387,12 +1387,12 @@ abstract class AbstractPrequeryGenerator(
   private def handleLangFunctionCall(
     langFunctionCall: LangFunction,
     compareExpression: CompareExpression,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): TransformedFilterPattern = {
 
     if (querySchema == ApiV2Complex) {
       throw GravsearchException(
-        s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema"
+        s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema",
       )
     }
 
@@ -1427,14 +1427,14 @@ abstract class AbstractPrequeryGenerator(
 
       case _ =>
         throw GravsearchException(
-          s"Right argument of comparison statement must be a string literal for use with 'lang' function call"
+          s"Right argument of comparison statement must be a string literal for use with 'lang' function call",
         )
     }
 
     // Generate a variable name representing the language of the text value
     val textValHasLanguage: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       langFunctionCall.textValueVar,
-      OntologyConstants.KnoraBase.ValueHasLanguage
+      OntologyConstants.KnoraBase.ValueHasLanguage,
     )
 
     // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
@@ -1444,7 +1444,7 @@ abstract class AbstractPrequeryGenerator(
         addGeneratedVariableForValueLiteral(
           valueVar = langFunctionCall.textValueVar,
           generatedVar = textValHasLanguage,
-          useInOrderBy = false
+          useInOrderBy = false,
         )
       ) {
         Seq(
@@ -1452,8 +1452,8 @@ abstract class AbstractPrequeryGenerator(
           StatementPattern(
             subj = langFunctionCall.textValueVar,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri),
-            textValHasLanguage
-          )
+            textValHasLanguage,
+          ),
         )
       } else {
         Seq.empty[StatementPattern]
@@ -1461,7 +1461,7 @@ abstract class AbstractPrequeryGenerator(
 
     TransformedFilterPattern(
       Some(CompareExpression(textValHasLanguage, compareExpression.operator, langLiteral)),
-      statementToAddForValueHasLanguage
+      statementToAddForValueHasLanguage,
     )
 
   }
@@ -1475,7 +1475,7 @@ abstract class AbstractPrequeryGenerator(
    */
   private def handleRegexFunctionCall(
     regexFunctionCall: RegexFunction,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): TransformedFilterPattern =
     // If the query uses the API v2 complex schema, leave the function call as it is.
     if (querySchema == ApiV2Complex) {
@@ -1515,13 +1515,13 @@ abstract class AbstractPrequeryGenerator(
         // Yes. Leave the expression as is.
         TransformedFilterPattern(
           Some(RegexFunction(regexQueryVar, regexFunctionCall.pattern, regexFunctionCall.modifier)),
-          Seq.empty
+          Seq.empty,
         )
       } else {
         // No, it refers to a TextValue. Generate a variable name representing the string literal.
         val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
           base = regexQueryVar,
-          propertyIri = OntologyConstants.KnoraBase.ValueHasString
+          propertyIri = OntologyConstants.KnoraBase.ValueHasString,
         )
 
         // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
@@ -1533,8 +1533,8 @@ abstract class AbstractPrequeryGenerator(
               StatementPattern(
                 subj = regexQueryVar,
                 pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-                textValHasString
-              )
+                textValHasString,
+              ),
             )
           } else {
             Seq.empty[StatementPattern]
@@ -1542,7 +1542,7 @@ abstract class AbstractPrequeryGenerator(
 
         TransformedFilterPattern(
           Some(RegexFunction(textValHasString, regexFunctionCall.pattern, regexFunctionCall.modifier)),
-          statementToAddForValueHasString
+          statementToAddForValueHasString,
         )
 
       }
@@ -1559,13 +1559,13 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchTextFunctionInSimpleSchema(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Complex) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchTextFunction.toSmartIri.toSparql} instead"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchTextFunction.toSmartIri.toSparql} instead",
       )
     }
 
@@ -1601,7 +1601,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value)
+      lucenePattern(textValueVar, searchTerm.value),
     )
   }
 
@@ -1616,13 +1616,13 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchTextFunctionInComplexSchema(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Simple) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchTextFunction.toSmartIri.toSparql} instead"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchTextFunction.toSmartIri.toSparql} instead",
       )
     }
 
@@ -1658,7 +1658,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value)
+      lucenePattern(textValueVar, searchTerm.value),
     )
   }
 
@@ -1673,13 +1673,13 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchTextInStandoffFunction(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Simple) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema",
       )
     }
 
@@ -1712,7 +1712,7 @@ abstract class AbstractPrequeryGenerator(
 
     val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
       base = textValueVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasString
+      propertyIri = OntologyConstants.KnoraBase.ValueHasString,
     )
 
     // Generate a statement to assign the literal to a variable, if that statement hasn't been added already.
@@ -1721,8 +1721,8 @@ abstract class AbstractPrequeryGenerator(
         StatementPattern(
           subj = textValueVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-          textValHasString
-        )
+          textValHasString,
+        ),
       )
     } else {
       None
@@ -1754,14 +1754,14 @@ abstract class AbstractPrequeryGenerator(
         StatementPattern(
           standoffTagVar,
           IriRef(OntologyConstants.KnoraBase.StandoffTagHasStart.toSmartIri),
-          startVariable
+          startVariable,
         ),
         // ?standoffTag knora-base:standoffTagHasEnd ?standoffTag__end .
         StatementPattern(
           standoffTagVar,
           IriRef(OntologyConstants.KnoraBase.StandoffTagHasEnd.toSmartIri),
-          endVariable
-        )
+          endVariable,
+        ),
       )
     } else {
       Seq.empty[QueryPattern]
@@ -1779,23 +1779,23 @@ abstract class AbstractPrequeryGenerator(
             startExpression = ArithmeticExpression(
               leftArg = startVariable,
               operator = PlusOperator,
-              rightArg = IntegerLiteral(1)
+              rightArg = IntegerLiteral(1),
             ),
             lengthExpression = ArithmeticExpression(
               leftArg = endVariable,
               operator = MinusOperator,
-              rightArg = startVariable
-            )
+              rightArg = startVariable,
+            ),
           ),
           pattern = term, // TODO: Ignore Lucene operators
-          modifier = Some("i")
-        )
+          modifier = Some("i"),
+        ),
       )
     }
 
     TransformedFilterPattern(
       expression = None, // The expression has been replaced by additional patterns.
-      additionalPatterns = valueHasStringStatement.toSeq ++ luceneStatement ++ markedUpPatternsToAdd ++ regexFilters
+      additionalPatterns = valueHasStringStatement.toSeq ++ luceneStatement ++ markedUpPatternsToAdd ++ regexFilters,
     )
   }
 
@@ -1810,20 +1810,20 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchLabelFunctionInSimpleSchema(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Complex) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchLabelFunction.toSmartIri.toSparql} instead"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchLabelFunction.toSmartIri.toSparql} instead",
       )
     }
 
     handleMatchLabelFunction(
       functionCallExpression = functionCallExpression,
       typeInspectionResult = typeInspectionResult,
-      isTopLevel = isTopLevel
+      isTopLevel = isTopLevel,
     )
   }
 
@@ -1838,20 +1838,20 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchLabelFunctionInComplexSchema(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Simple) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchLabelFunction.toSmartIri.toSparql} instead"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchLabelFunction.toSmartIri.toSparql} instead",
       )
     }
 
     handleMatchLabelFunction(
       functionCallExpression = functionCallExpression,
       typeInspectionResult = typeInspectionResult,
-      isTopLevel = isTopLevel
+      isTopLevel = isTopLevel,
     )
   }
 
@@ -1866,7 +1866,7 @@ abstract class AbstractPrequeryGenerator(
   private def handleMatchLabelFunction(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
@@ -1899,7 +1899,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
       None, // The FILTER has been replaced by statements.
-      lucenePattern(resourceVar, searchTerm.value)
+      lucenePattern(resourceVar, searchTerm.value),
     )
   }
 
@@ -1910,9 +1910,9 @@ abstract class AbstractPrequeryGenerator(
         pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
         obj = XsdLiteral(
           value = queryString,
-          datatype = OntologyConstants.Xsd.String.toSmartIri
-        )
-      )
+          datatype = OntologyConstants.Xsd.String.toSmartIri,
+        ),
+      ),
     )
 
   /**
@@ -1926,13 +1926,13 @@ abstract class AbstractPrequeryGenerator(
   private def handleStandoffLinkFunction(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
     if (querySchema == ApiV2Simple) {
       throw GravsearchException(
-        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema"
+        s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema",
       )
     }
 
@@ -1969,7 +1969,7 @@ abstract class AbstractPrequeryGenerator(
 
       case _ =>
         throw GravsearchException(
-          s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag"
+          s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag",
         )
     }
 
@@ -1996,20 +1996,20 @@ abstract class AbstractPrequeryGenerator(
       StatementPattern(
         subj = standoffTagVar,
         pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri),
-        obj = linkTargetEntity
-      )
+        obj = linkTargetEntity,
+      ),
     )
 
     // Generate statements matching the link value that describes the standoff link between the source and target resources.
     val statementsForLinkValue: Seq[StatementPattern] = generateStatementsForLinkValue(
       linkSource = linkSourceEntity,
       linkPred = hasStandoffLinkToIriRef,
-      linkTarget = linkTargetEntity
+      linkTarget = linkTargetEntity,
     )
 
     TransformedFilterPattern(
       None, // FILTER has been replaced with statements
-      linkStatements ++ statementsForLinkValue ++ statementsForTargetResource
+      linkStatements ++ statementsForLinkValue ++ statementsForTargetResource,
     )
   }
 
@@ -2024,7 +2024,7 @@ abstract class AbstractPrequeryGenerator(
   private def handleKnoraFunctionCall(
     functionCallExpression: FunctionCallExpression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
@@ -2048,7 +2048,7 @@ abstract class AbstractPrequeryGenerator(
     functionFunction(
       functionCallExpression,
       typeInspectionResult,
-      isTopLevel
+      isTopLevel,
     )
   }
 
@@ -2063,11 +2063,11 @@ abstract class AbstractPrequeryGenerator(
   private def handleToSimpleDateFunction(
     filterCompare: CompareExpression,
     functionCallExpr: FunctionCallExpression,
-    typeInspectionResult: GravsearchTypeInspectionResult
+    typeInspectionResult: GravsearchTypeInspectionResult,
   ): TransformedFilterPattern = {
     if (querySchema == ApiV2Simple) {
       throw GravsearchException(
-        s"Function ${functionCallExpr.functionIri.toSparql} cannot be used in a query written in the simple schema"
+        s"Function ${functionCallExpr.functionIri.toSparql} cannot be used in a query written in the simple schema",
       )
     }
 
@@ -2083,20 +2083,20 @@ abstract class AbstractPrequeryGenerator(
           !(nonPropInfo.isStandoffTagType || nonPropInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.DateValue)
         ) {
           throw GravsearchException(
-            s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag"
+            s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag",
           )
         }
 
       case _ =>
         throw GravsearchException(
-          s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag"
+          s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag",
         )
     }
 
     handleDateQueryVar(
       queryVar = dateBaseVar,
       comparisonOperator = filterCompare.operator,
-      dateValueExpression = filterCompare.rightArg
+      dateValueExpression = filterCompare.rightArg,
     )
   }
 
@@ -2111,7 +2111,7 @@ abstract class AbstractPrequeryGenerator(
   private def transformFilterPattern(
     filterExpression: Expression,
     typeInspectionResult: GravsearchTypeInspectionResult,
-    isTopLevel: Boolean
+    isTopLevel: Boolean,
   ): TransformedFilterPattern = {
     // Are we looking at a top-level filter expression in a UNION block?
     if (isTopLevel && inUnionBlock) {
@@ -2120,7 +2120,7 @@ abstract class AbstractPrequeryGenerator(
 
       if (unboundVariables.nonEmpty) {
         throw GravsearchException(
-          s"One or more variables used in a filter have not been bound in the same UNION block: ${unboundVariables.map(_.toSparql).mkString(", ")}"
+          s"One or more variables used in a filter have not been bound in the same UNION block: ${unboundVariables.map(_.toSparql).mkString(", ")}",
         )
       }
     }
@@ -2135,7 +2135,7 @@ abstract class AbstractPrequeryGenerator(
             handleQueryVar(
               queryVar = queryVar,
               compareExpression = filterCompare,
-              typeInspectionResult = typeInspectionResult
+              typeInspectionResult = typeInspectionResult,
             )
 
           case functionCallExpr: FunctionCallExpression
@@ -2143,14 +2143,14 @@ abstract class AbstractPrequeryGenerator(
             handleToSimpleDateFunction(
               filterCompare = filterCompare,
               functionCallExpr = functionCallExpr,
-              typeInspectionResult = typeInspectionResult
+              typeInspectionResult = typeInspectionResult,
             )
 
           case lang: LangFunction =>
             handleLangFunctionCall(
               langFunctionCall = lang,
               compareExpression = filterCompare,
-              typeInspectionResult = typeInspectionResult
+              typeInspectionResult = typeInspectionResult,
             )
 
           case other => throw GravsearchException(s"Invalid left argument ${other.toSparql} in comparison")
@@ -2168,14 +2168,14 @@ abstract class AbstractPrequeryGenerator(
           Some(
             OrExpression(
               filterExpressionLeft.expression.getOrElse(
-                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")
+                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given"),
               ),
               filterExpressionRight.expression.getOrElse(
-                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")
-              )
-            )
+                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given"),
+              ),
+            ),
           ),
-          filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns
+          filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns,
         )
 
       case filterAnd: AndExpression =>
@@ -2190,14 +2190,14 @@ abstract class AbstractPrequeryGenerator(
           Some(
             AndExpression(
               filterExpressionLeft.expression.getOrElse(
-                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")
+                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given"),
               ),
               filterExpressionRight.expression.getOrElse(
-                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")
-              )
-            )
+                throw DataConversionException("Expression was expected from previous FILTER conversion, but None given"),
+              ),
+            ),
           ),
-          filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns
+          filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns,
         )
 
       case regexFunction: RegexFunction =>

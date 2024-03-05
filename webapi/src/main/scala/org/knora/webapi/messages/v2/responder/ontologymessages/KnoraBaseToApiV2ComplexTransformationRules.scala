@@ -26,12 +26,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
     ontologyIri = OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri.toSmartIri,
     projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
-    label = Some("The knora-api ontology in the complex schema")
+    label = Some("The knora-api ontology in the complex schema"),
   )
 
   private val Label: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.Rdfs.Label,
-    propertyType = OntologyConstants.Owl.DatatypeProperty
+    propertyType = OntologyConstants.Owl.DatatypeProperty,
   )
 
   private val Result: ReadPropertyInfoV2 = makeProperty(
@@ -44,17 +44,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
           LanguageCodes.DE -> "Ergebnis",
           LanguageCodes.EN -> "result",
           LanguageCodes.FR -> "résultat",
-          LanguageCodes.IT -> "risultato"
-        )
+          LanguageCodes.IT -> "risultato",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides a message indicating that an operation was successful"
-        )
-      )
+          LanguageCodes.EN -> "Provides a message indicating that an operation was successful",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val Error: ReadPropertyInfoV2 = makeProperty(
@@ -64,17 +64,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "error"
-        )
+          LanguageCodes.EN -> "error",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides an error message"
-        )
-      )
+          LanguageCodes.EN -> "Provides an error message",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val CanDo: ReadPropertyInfoV2 = makeProperty(
@@ -84,17 +84,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "can do"
-        )
+          LanguageCodes.EN -> "can do",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether an operation can be performed"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether an operation can be performed",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
@@ -104,17 +104,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "May have more results"
-        )
+          LanguageCodes.EN -> "May have more results",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether more results may be available for a search query"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether more results may be available for a search query",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val UserHasPermission: ReadPropertyInfoV2 = makeProperty(
@@ -124,17 +124,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "user has permission"
-        )
+          LanguageCodes.EN -> "user has permission",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the requesting user's maximum permission on a resource or value."
-        )
-      )
+          LanguageCodes.EN -> "Provides the requesting user's maximum permission on a resource or value.",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
@@ -144,17 +144,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "ARK URL"
-        )
+          LanguageCodes.EN -> "ARK URL",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the ARK URL of a resource or value."
-        )
-      )
+          LanguageCodes.EN -> "Provides the ARK URL of a resource or value.",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Uri)
+    objectType = Some(OntologyConstants.Xsd.Uri),
   )
 
   private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
@@ -164,17 +164,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "version ARK URL"
-        )
+          LanguageCodes.EN -> "version ARK URL",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource or value."
-        )
-      )
+          LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource or value.",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Uri)
+    objectType = Some(OntologyConstants.Xsd.Uri),
   )
 
   private val VersionDate: ReadPropertyInfoV2 = makeProperty(
@@ -184,17 +184,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "version date"
-        )
+          LanguageCodes.EN -> "version date",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Provides the date of a particular version of a resource."
-        )
-      )
+          LanguageCodes.EN -> "Provides the date of a particular version of a resource.",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Uri)
+    objectType = Some(OntologyConstants.Xsd.Uri),
   )
 
   private val Author: ReadPropertyInfoV2 = makeProperty(
@@ -204,17 +204,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "author"
-        )
+          LanguageCodes.EN -> "author",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the author of a particular version of a resource."
-        )
-      )
+          LanguageCodes.EN -> "Specifies the author of a particular version of a resource.",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.KnoraApiV2Complex.User)
+    objectType = Some(OntologyConstants.KnoraApiV2Complex.User),
   )
 
   private val IsShared: ReadPropertyInfoV2 = makeProperty(
@@ -224,17 +224,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is shared"
-        )
+          LanguageCodes.EN -> "is shared",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether an ontology can be shared by multiple projects"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether an ontology can be shared by multiple projects",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsBuiltIn: ReadPropertyInfoV2 = makeProperty(
@@ -244,17 +244,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is shared"
-        )
+          LanguageCodes.EN -> "is shared",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether an ontology is built into Knora"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether an ontology is built into Knora",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsEditable: ReadPropertyInfoV2 = makeProperty(
@@ -264,18 +264,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is editable"
-        )
+          LanguageCodes.EN -> "is editable",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether a property's values can be updated via the Knora API."
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether a property's values can be updated via the Knora API.",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Rdf.Property),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsResourceClass: ReadPropertyInfoV2 = makeProperty(
@@ -285,18 +285,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is resource class"
-        )
+          LanguageCodes.EN -> "is resource class",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether class is a subclass of Resource."
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether class is a subclass of Resource.",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsValueClass: ReadPropertyInfoV2 = makeProperty(
@@ -306,18 +306,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is value class"
-        )
+          LanguageCodes.EN -> "is value class",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether class is a subclass of Value."
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether class is a subclass of Value.",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsStandoffClass: ReadPropertyInfoV2 = makeProperty(
@@ -327,18 +327,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is standoff class"
-        )
+          LanguageCodes.EN -> "is standoff class",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether class is a subclass of StandoffTag."
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether class is a subclass of StandoffTag.",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.Class),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
@@ -348,18 +348,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is link property"
-        )
+          LanguageCodes.EN -> "is link property",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether a property points to a resource"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether a property points to a resource",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.ObjectProperty),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsLinkValueProperty: ReadPropertyInfoV2 = makeProperty(
@@ -369,18 +369,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is link value property"
-        )
+          LanguageCodes.EN -> "is link value property",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether a property points to a link value (reification)"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether a property points to a link value (reification)",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.ObjectProperty),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val IsInherited: ReadPropertyInfoV2 = makeProperty(
@@ -390,18 +390,18 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "is inherited"
-        )
+          LanguageCodes.EN -> "is inherited",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates whether a cardinality has been inherited from a base class"
-        )
-      )
+          LanguageCodes.EN -> "Indicates whether a cardinality has been inherited from a base class",
+        ),
+      ),
     ),
     subjectType = Some(OntologyConstants.Owl.Restriction),
-    objectType = Some(OntologyConstants.Xsd.Boolean)
+    objectType = Some(OntologyConstants.Xsd.Boolean),
   )
 
   private val NewModificationDate: ReadPropertyInfoV2 = makeProperty(
@@ -411,17 +411,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "new modification date"
-        )
+          LanguageCodes.EN -> "new modification date",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the new modification date of a resource"
-        )
-      )
+          LanguageCodes.EN -> "Specifies the new modification date of a resource",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
+    objectType = Some(OntologyConstants.Xsd.DateTimeStamp),
   )
 
   private val OntologyName: ReadPropertyInfoV2 = makeProperty(
@@ -431,17 +431,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "ontology name"
-        )
+          LanguageCodes.EN -> "ontology name",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the short name of an ontology"
-        )
-      )
+          LanguageCodes.EN -> "Represents the short name of an ontology",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val MappingHasName: ReadPropertyInfoV2 = makeProperty(
@@ -451,17 +451,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Name of a mapping (will be part of the mapping's Iri)"
-        )
+          LanguageCodes.EN -> "Name of a mapping (will be part of the mapping's Iri)",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the name of a mapping"
-        )
-      )
+          LanguageCodes.EN -> "Represents the name of a mapping",
+        ),
+      ),
     ),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val HasIncomingLinkValue: ReadPropertyInfoV2 = makeProperty(
@@ -477,16 +477,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
           LanguageCodes.DE -> "hat eingehenden Verweis",
-          LanguageCodes.EN -> "has incoming link"
-        )
+          LanguageCodes.EN -> "has incoming link",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates that this resource referred to by another resource"
-        )
-      )
-    )
+          LanguageCodes.EN -> "Indicates that this resource referred to by another resource",
+        ),
+      ),
+    ),
   )
 
   private val ValueAsString: ReadPropertyInfoV2 = makeProperty(
@@ -495,11 +495,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     predicates = Seq(
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(LanguageCodes.EN -> "A plain string representation of a value")
-      )
+        objectsWithLang = Map(LanguageCodes.EN -> "A plain string representation of a value"),
+      ),
     ),
     subjectType = Some(OntologyConstants.KnoraApiV2Complex.Value),
-    objectType = Some(OntologyConstants.Xsd.String)
+    objectType = Some(OntologyConstants.Xsd.String),
   )
 
   private val SubjectType: ReadPropertyInfoV2 = makeProperty(
@@ -509,16 +509,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Subject type"
-        )
+          LanguageCodes.EN -> "Subject type",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the required type of the subjects of a property"
-        )
-      )
-    )
+          LanguageCodes.EN -> "Specifies the required type of the subjects of a property",
+        ),
+      ),
+    ),
   )
 
   private val ObjectType: ReadPropertyInfoV2 = makeProperty(
@@ -528,16 +528,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Object type"
-        )
+          LanguageCodes.EN -> "Object type",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Specifies the required type of the objects of a property"
-        )
-      )
-    )
+          LanguageCodes.EN -> "Specifies the required type of the objects of a property",
+        ),
+      ),
+    ),
   )
 
   private val TextValueHasMarkup: ReadPropertyInfoV2 = makeProperty(
@@ -550,16 +550,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "text value has markup"
-        )
+          LanguageCodes.EN -> "text value has markup",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "True if a text value has markup."
-        )
-      )
-    )
+          LanguageCodes.EN -> "True if a text value has markup.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
@@ -572,16 +572,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "text value has standoff"
-        )
+          LanguageCodes.EN -> "text value has standoff",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Standoff markup attached to a text value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Standoff markup attached to a text value.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueHasMaxStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
@@ -594,16 +594,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "text value has max standoff start index"
-        )
+          LanguageCodes.EN -> "text value has max standoff start index",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The maximum knora-api:standoffTagHasStartIndex in a text value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The maximum knora-api:standoffTagHasStartIndex in a text value.",
+        ),
+      ),
+    ),
   )
 
   private val NextStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
@@ -614,16 +614,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "next standoff start index"
-        )
+          LanguageCodes.EN -> "next standoff start index",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff.",
+        ),
+      ),
+    ),
   )
 
   private val StandoffTagHasStartParentIndex: ReadPropertyInfoV2 = makeProperty(
@@ -635,16 +635,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "standoff tag has start parent index"
-        )
+          LanguageCodes.EN -> "standoff tag has start parent index",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag.",
+        ),
+      ),
+    ),
   )
 
   private val StandoffTagHasEndParentIndex: ReadPropertyInfoV2 = makeProperty(
@@ -656,16 +656,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "standoff tag has end parent index"
-        )
+          LanguageCodes.EN -> "standoff tag has end parent index",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueHasLanguage: ReadPropertyInfoV2 = makeProperty(
@@ -678,16 +678,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "text value has language"
-        )
+          LanguageCodes.EN -> "text value has language",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Language code attached to a text value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Language code attached to a text value.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueAsXml: ReadPropertyInfoV2 = makeProperty(
@@ -700,16 +700,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Text value as XML"
-        )
+          LanguageCodes.EN -> "Text value as XML",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "A Text value represented in XML."
-        )
-      )
-    )
+          LanguageCodes.EN -> "A Text value represented in XML.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueAsHtml: ReadPropertyInfoV2 = makeProperty(
@@ -722,16 +722,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Text value as HTML"
-        )
+          LanguageCodes.EN -> "Text value as HTML",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "A text value represented in HTML."
-        )
-      )
-    )
+          LanguageCodes.EN -> "A text value represented in HTML.",
+        ),
+      ),
+    ),
   )
 
   private val TextValueHasMapping: ReadPropertyInfoV2 = makeProperty(
@@ -744,16 +744,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Text value has mapping"
-        )
+          LanguageCodes.EN -> "Text value has mapping",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Indicates the mapping that is used to convert a text value's markup from from XML to standoff."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Indicates the mapping that is used to convert a text value's markup from from XML to standoff.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasStartYear: ReadPropertyInfoV2 = makeProperty(
@@ -766,16 +766,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has start year"
-        )
+          LanguageCodes.EN -> "Date value has start year",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the start year of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the start year of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasEndYear: ReadPropertyInfoV2 = makeProperty(
@@ -788,16 +788,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has end year"
-        )
+          LanguageCodes.EN -> "Date value has end year",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the end year of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the end year of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasStartMonth: ReadPropertyInfoV2 = makeProperty(
@@ -810,16 +810,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has start month"
-        )
+          LanguageCodes.EN -> "Date value has start month",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the start month of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the start month of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasEndMonth: ReadPropertyInfoV2 = makeProperty(
@@ -832,16 +832,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has end month"
-        )
+          LanguageCodes.EN -> "Date value has end month",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the end month of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the end month of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasStartDay: ReadPropertyInfoV2 = makeProperty(
@@ -854,16 +854,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has start day"
-        )
+          LanguageCodes.EN -> "Date value has start day",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the start day of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the start day of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasEndDay: ReadPropertyInfoV2 = makeProperty(
@@ -876,16 +876,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has end day"
-        )
+          LanguageCodes.EN -> "Date value has end day",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the end day of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the end day of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasStartEra: ReadPropertyInfoV2 = makeProperty(
@@ -898,16 +898,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has start era"
-        )
+          LanguageCodes.EN -> "Date value has start era",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the start era of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the start era of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasEndEra: ReadPropertyInfoV2 = makeProperty(
@@ -920,16 +920,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has end era"
-        )
+          LanguageCodes.EN -> "Date value has end era",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the end era of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the end era of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val DateValueHasCalendar: ReadPropertyInfoV2 = makeProperty(
@@ -942,16 +942,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Date value has calendar"
-        )
+          LanguageCodes.EN -> "Date value has calendar",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the calendar of a date value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the calendar of a date value.",
+        ),
+      ),
+    ),
   )
 
   private val LinkValueHasSource: ReadPropertyInfoV2 = makeProperty(
@@ -964,16 +964,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Link value has source"
-        )
+          LanguageCodes.EN -> "Link value has source",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the source resource of a link value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the source resource of a link value.",
+        ),
+      ),
+    ),
   )
 
   private val LinkValueHasSourceIri: ReadPropertyInfoV2 = makeProperty(
@@ -986,16 +986,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Link value has source IRI"
-        )
+          LanguageCodes.EN -> "Link value has source IRI",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the IRI of the source resource of a link value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the IRI of the source resource of a link value.",
+        ),
+      ),
+    ),
   )
 
   private val LinkValueHasTarget: ReadPropertyInfoV2 = makeProperty(
@@ -1008,16 +1008,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Link value has target"
-        )
+          LanguageCodes.EN -> "Link value has target",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the target resource of a link value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the target resource of a link value.",
+        ),
+      ),
+    ),
   )
 
   private val LinkValueHasTargetIri: ReadPropertyInfoV2 = makeProperty(
@@ -1030,16 +1030,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Link value has target IRI"
-        )
+          LanguageCodes.EN -> "Link value has target IRI",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the IRI of the target resource of a link value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the IRI of the target resource of a link value.",
+        ),
+      ),
+    ),
   )
 
   private val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
@@ -1052,16 +1052,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Integer value as integer"
-        )
+          LanguageCodes.EN -> "Integer value as integer",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal integer value of an IntValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal integer value of an IntValue.",
+        ),
+      ),
+    ),
   )
 
   private val DecimalValueAsDecimal: ReadPropertyInfoV2 = makeProperty(
@@ -1074,16 +1074,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Decimal value as decimal"
-        )
+          LanguageCodes.EN -> "Decimal value as decimal",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal decimal value of a DecimalValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal decimal value of a DecimalValue.",
+        ),
+      ),
+    ),
   )
 
   private val IntervalValueHasStart: ReadPropertyInfoV2 = makeProperty(
@@ -1096,16 +1096,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "interval value has start"
-        )
+          LanguageCodes.EN -> "interval value has start",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the start position of an interval."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the start position of an interval.",
+        ),
+      ),
+    ),
   )
 
   private val IntervalValueHasEnd: ReadPropertyInfoV2 = makeProperty(
@@ -1118,16 +1118,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "interval value has end"
-        )
+          LanguageCodes.EN -> "interval value has end",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the end position of an interval."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the end position of an interval.",
+        ),
+      ),
+    ),
   )
 
   private val BooleanValueAsBoolean: ReadPropertyInfoV2 = makeProperty(
@@ -1140,16 +1140,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Boolean value as decimal"
-        )
+          LanguageCodes.EN -> "Boolean value as decimal",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal boolean value of a BooleanValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal boolean value of a BooleanValue.",
+        ),
+      ),
+    ),
   )
 
   private val GeometryValueAsGeometry: ReadPropertyInfoV2 = makeProperty(
@@ -1162,16 +1162,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Geometry value as JSON"
-        )
+          LanguageCodes.EN -> "Geometry value as JSON",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a 2D geometry value as JSON."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents a 2D geometry value as JSON.",
+        ),
+      ),
+    ),
   )
 
   private val ListValueAsListNode: ReadPropertyInfoV2 = makeProperty(
@@ -1184,16 +1184,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Hierarchical list value as list node"
-        )
+          LanguageCodes.EN -> "Hierarchical list value as list node",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents a reference to a hierarchical list node."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents a reference to a hierarchical list node.",
+        ),
+      ),
+    ),
   )
 
   private val ColorValueAsColor: ReadPropertyInfoV2 = makeProperty(
@@ -1206,16 +1206,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Color value as color"
-        )
+          LanguageCodes.EN -> "Color value as color",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal RGB value of a ColorValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal RGB value of a ColorValue.",
+        ),
+      ),
+    ),
   )
 
   private val UriValueAsUri: ReadPropertyInfoV2 = makeProperty(
@@ -1228,16 +1228,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "URI value as URI"
-        )
+          LanguageCodes.EN -> "URI value as URI",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal URI value of a UriValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal URI value of a UriValue.",
+        ),
+      ),
+    ),
   )
 
   private val GeonameValueAsGeonameCode: ReadPropertyInfoV2 = makeProperty(
@@ -1250,16 +1250,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Geoname value as Geoname code"
-        )
+          LanguageCodes.EN -> "Geoname value as Geoname code",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Represents the literal Geoname code of a GeonameValue."
-        )
-      )
-    )
+          LanguageCodes.EN -> "Represents the literal Geoname code of a GeonameValue.",
+        ),
+      ),
+    ),
   )
 
   private val FileValueAsUrl: ReadPropertyInfoV2 = makeProperty(
@@ -1272,16 +1272,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "File value as URL"
-        )
+          LanguageCodes.EN -> "File value as URL",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The URL at which the file can be accessed."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The URL at which the file can be accessed.",
+        ),
+      ),
+    ),
   )
 
   private val FileValueHasFilename: ReadPropertyInfoV2 = makeProperty(
@@ -1294,16 +1294,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "File value has filename"
-        )
+          LanguageCodes.EN -> "File value has filename",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The name of the file that a file value represents."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The name of the file that a file value represents.",
+        ),
+      ),
+    ),
   )
 
   private val StillImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
@@ -1316,16 +1316,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Still image file value has X dimension"
-        )
+          LanguageCodes.EN -> "Still image file value has X dimension",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The horizontal dimension of a still image file value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The horizontal dimension of a still image file value.",
+        ),
+      ),
+    ),
   )
 
   private val StillImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
@@ -1338,16 +1338,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Still image file value has Y dimension"
-        )
+          LanguageCodes.EN -> "Still image file value has Y dimension",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The vertical dimension of a still image file value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The vertical dimension of a still image file value.",
+        ),
+      ),
+    ),
   )
 
   private val StillImageFileValueHasIIIFBaseUrl: ReadPropertyInfoV2 = makeProperty(
@@ -1360,16 +1360,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Label,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "Still image file value has IIIF base URL"
-        )
+          LanguageCodes.EN -> "Still image file value has IIIF base URL",
+        ),
       ),
       makePredicate(
         predicateIri = OntologyConstants.Rdfs.Comment,
         objectsWithLang = Map(
-          LanguageCodes.EN -> "The IIIF base URL of a still image file value."
-        )
-      )
-    )
+          LanguageCodes.EN -> "The IIIF base URL of a still image file value.",
+        ),
+      ),
+    ),
   )
 
   private val ResourceCardinalities = Map(
@@ -1378,7 +1378,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.VersionArkUrl        -> ExactlyOne,
     OntologyConstants.KnoraApiV2Complex.VersionDate          -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.UserHasPermission    -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Complex.IsDeleted            -> ZeroOrOne
+    OntologyConstants.KnoraApiV2Complex.IsDeleted            -> ZeroOrOne,
   )
 
   private val DateBaseCardinalities = Map(
@@ -1390,32 +1390,32 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay     -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra   -> ExactlyOne,
     OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra     -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar   -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar   -> ExactlyOne,
   )
 
   private val UriBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.UriValueAsUri -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.UriValueAsUri -> ExactlyOne,
   )
 
   private val BooleanBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean -> ExactlyOne,
   )
 
   private val IntBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.IntValueAsInt -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.IntValueAsInt -> ExactlyOne,
   )
 
   private val DecimalBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal -> ExactlyOne,
   )
 
   private val IntervalBaseCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd   -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd   -> ExactlyOne,
   )
 
   private val ColorBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ColorValueAsColor -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.ColorValueAsColor -> ExactlyOne,
   )
 
   private val ValueCardinalities = Map(
@@ -1425,7 +1425,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.ArkUrl            -> ExactlyOne,
     OntologyConstants.KnoraApiV2Complex.VersionArkUrl     -> ExactlyOne,
     OntologyConstants.KnoraApiV2Complex.IsDeleted         -> ZeroOrOne,
-    OntologyConstants.KnoraApiV2Complex.ValueHasUUID      -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.ValueHasUUID      -> ExactlyOne,
   )
 
   private val TextValueCardinalities = Map(
@@ -1435,42 +1435,42 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.TextValueAsXml                    -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.TextValueAsHtml                   -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.TextValueHasMapping               -> ZeroOrOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> ZeroOrOne
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> ZeroOrOne,
   )
 
   private val StandoffTagCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> ZeroOrOne,
-    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex   -> ZeroOrOne
+    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex   -> ZeroOrOne,
   )
 
   private val LinkValueCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.LinkValueHasSource    -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget    -> ZeroOrOne,
     OntologyConstants.KnoraApiV2Complex.LinkValueHasSourceIri -> ZeroOrOne,
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> ZeroOrOne
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> ZeroOrOne,
   )
 
   private val GeomValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry -> ExactlyOne,
   )
 
   private val ListValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> ExactlyOne,
   )
 
   private val GeonameValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode -> ExactlyOne,
   )
 
   private val FileValueCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.FileValueAsUrl       -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> ExactlyOne,
   )
 
   private val StillImageFileValueCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX        -> ExactlyOne,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY        -> ExactlyOne,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne,
   )
 
   /**
@@ -1540,7 +1540,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraBase.HasExtResValue,
     OntologyConstants.KnoraBase.ExtResAccessInfo,
     OntologyConstants.KnoraBase.ExtResId,
-    OntologyConstants.KnoraBase.ExtResProvider
+    OntologyConstants.KnoraBase.ExtResProvider,
   ).map(_.toSmartIri)
 
   /**
@@ -1553,7 +1553,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraBase.MappingXMLAttribute,
     OntologyConstants.KnoraBase.XMLToStandoffMapping,
     OntologyConstants.KnoraBase.ExternalResource,
-    OntologyConstants.KnoraBase.ExternalResValue
+    OntologyConstants.KnoraBase.ExternalResValue,
   ).map(_.toSmartIri)
 
   /**
@@ -1577,7 +1577,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.ListValue           -> ListValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.GeonameValue        -> GeonameValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.FileValue           -> FileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
@@ -1657,7 +1657,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     FileValueHasFilename,
     StillImageFileValueHasDimX,
     StillImageFileValueHasDimY,
-    StillImageFileValueHasIIIFBaseUrl
+    StillImageFileValueHasIIIFBaseUrl,
   ).map { propertyInfo =>
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo
   }.toMap
@@ -1676,13 +1676,13 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   private def makePredicate(
     predicateIri: IRI,
     objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
-    objectsWithLang: Map[String, String] = Map.empty[String, String]
+    objectsWithLang: Map[String, String] = Map.empty[String, String],
   ): PredicateInfoV2 =
     PredicateInfoV2(
       predicateIri = predicateIri.toSmartIri,
       objects = objects ++ objectsWithLang.map { case (lang, str) =>
         StringLiteralV2(str, Some(lang))
-      }
+      },
     )
 
   /**
@@ -1709,24 +1709,24 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     isLinkValueProp: Boolean = false,
     predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
     subjectType: Option[IRI] = None,
-    objectType: Option[IRI] = None
+    objectType: Option[IRI] = None,
   ): ReadPropertyInfoV2 = {
     val propTypePred = makePredicate(
       predicateIri = OntologyConstants.Rdf.Type,
-      objects = Seq(SmartIriLiteralV2(propertyType.toSmartIri))
+      objects = Seq(SmartIriLiteralV2(propertyType.toSmartIri)),
     )
 
     val maybeSubjectTypePred = subjectType.map { subjType =>
       makePredicate(
         predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType,
-        objects = Seq(SmartIriLiteralV2(subjType.toSmartIri))
+        objects = Seq(SmartIriLiteralV2(subjType.toSmartIri)),
       )
     }
 
     val maybeObjectTypePred = objectType.map { objType =>
       makePredicate(
         predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType,
-        objects = Seq(SmartIriLiteralV2(objType.toSmartIri))
+        objects = Seq(SmartIriLiteralV2(objType.toSmartIri)),
       )
     }
 
@@ -1739,12 +1739,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         predicates = predsWithTypes.map { pred =>
           pred.predicateIri -> pred
         }.toMap,
-        subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri)
+        subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri),
       ),
       isResourceProp = isResourceProp,
       isEditable = isEditable,
       isLinkProp = isLinkProp,
-      isLinkValueProp = isLinkValueProp
+      isLinkValueProp = isLinkValueProp,
     )
   }
 }

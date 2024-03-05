@@ -22,7 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 final case class GravsearchTypeInspectionRunner(
   private val queryTraverser: QueryTraverser,
   private val messageRelay: MessageRelay,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
 ) {
   private val inferringInspector: InferringGravsearchTypeInspector =
     InferringGravsearchTypeInspector(messageRelay, queryTraverser)
@@ -32,7 +32,7 @@ final case class GravsearchTypeInspectionRunner(
   private def typeInspectionPipeline(
     whereClause: WhereClause,
     initial: IntermediateTypeInspectionResult,
-    requestingUser: User
+    requestingUser: User,
   ) = for {
     annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause)
     inferredTypes  <- inferringInspector.inspectTypes(annotatedTypes, whereClause, requestingUser)
@@ -53,7 +53,7 @@ final case class GravsearchTypeInspectionRunner(
                             queryTraverser.visitWherePatterns(
                               patterns = whereClause.patterns,
                               whereVisitor = new TypeableEntityCollectingWhereVisitor,
-                              initialAcc = Set.empty[TypeableEntity]
+                              initialAcc = Set.empty[TypeableEntity],
                             )
                           }
 
@@ -67,8 +67,8 @@ final case class GravsearchTypeInspectionRunner(
       _ <- ZIO
              .fail(
                GravsearchException(
-                 s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}"
-               )
+                 s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}",
+               ),
              )
              .when(untypedEntities.nonEmpty)
 
@@ -96,7 +96,7 @@ final case class GravsearchTypeInspectionRunner(
      */
     override def visitStatementInWhere(
       statementPattern: StatementPattern,
-      acc: Set[TypeableEntity]
+      acc: Set[TypeableEntity],
     ): Set[TypeableEntity] =
       statementPattern.pred match {
         case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type =>
@@ -106,7 +106,7 @@ final case class GravsearchTypeInspectionRunner(
         case _ =>
           // Otherwise, the subject, the predicate, and the object could all be typeable.
           acc ++ GravsearchTypeInspectionUtil.toTypeableEntities(
-            Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)
+            Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj),
           )
       }
 

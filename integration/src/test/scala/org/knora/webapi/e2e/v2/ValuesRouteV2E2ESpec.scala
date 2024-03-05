@@ -71,7 +71,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private var linkValueUUID    = UUID.randomUUID
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.
@@ -134,13 +134,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private def getResourceWithValues(
     resourceIri: IRI,
     propertyIrisForGravsearch: Seq[SmartIri],
-    userEmail: String
+    userEmail: String,
   ): JsonLDDocument = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
         resourceIri = resourceIri,
-        propertyIris = propertyIrisForGravsearch
+        propertyIris = propertyIrisForGravsearch,
       )
       .toString()
 
@@ -148,7 +148,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     val request = Post(
       baseApiUrl + "/v2/searchextended",
-      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery),
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, response.toString)
@@ -161,7 +161,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private def getValueFromResource(
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
-    expectedValueIri: IRI
+    expectedValueIri: IRI,
   ): JsonLDObject = {
     val resourceIri: IRI = resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
     val propertyValues: JsonLDArray =
@@ -175,13 +175,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     if (matchingValues.isEmpty) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"
+        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>",
       )
     }
 
     if (matchingValues.size > 1) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>"
+        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>",
       )
     }
 
@@ -194,17 +194,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       .fold(e => throw BadRequestException(e), identity)
       .map { jsonLDObject =>
         jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, validationFun) should ===(
-          OntologyConstants.Xsd.DateTimeStamp
+          OntologyConstants.Xsd.DateTimeStamp,
         )
         jsonLDObject.requireStringWithValidation(
           JsonLDKeywords.VALUE,
-          (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
       }
 
   private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
     val request = Get(
-      baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+      baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, response.toString)
@@ -215,7 +215,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private def checkLastModDate(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
-    maybeUpdatedLastModDate: Option[Instant]
+    maybeUpdatedLastModDate: Option[Instant],
   ): Assertion =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
@@ -233,12 +233,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-    userEmail: String
+    userEmail: String,
   ): JsonLDObject = {
     val resource: JsonLDDocument = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
-      userEmail = userEmail
+      userEmail = userEmail,
     )
 
     val receivedResourceIri: IRI = UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString
@@ -252,13 +252,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     checkLastModDate(
       resourceIri = resourceIri,
       maybePreviousLastModDate = maybePreviousLastModDate,
-      maybeUpdatedLastModDate = resourceLastModDate
+      maybeUpdatedLastModDate = resourceLastModDate,
     )
 
     getValueFromResource(
       resource = resource,
       propertyIriInResult = propertyIriInResult,
-      expectedValueIri = expectedValueIri
+      expectedValueIri = expectedValueIri,
     )
   }
 
@@ -289,7 +289,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
   private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String)(implicit
-    stringFormatter: StringFormatter
+    stringFormatter: StringFormatter,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -317,7 +317,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasEndYear: Int,
     dateValueHasEndMonth: Int,
     dateValueHasEndDay: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -349,7 +349,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasStartDay: Int,
     dateValueHasEndYear: Int,
     dateValueHasEndMonth: Int,
-    dateValueHasEndDay: Int
+    dateValueHasEndDay: Int,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -379,7 +379,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasStartEra: String,
     dateValueHasEndYear: Int,
     dateValueHasEndMonth: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -407,7 +407,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasStartYear: Int,
     dateValueHasStartEra: String,
     dateValueHasEndYear: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -452,7 +452,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     resourceIri: IRI,
     valueIri: IRI,
     valueAsString: String,
-    valueHasComment: String
+    valueHasComment: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -480,7 +480,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasEndYear: Int,
     dateValueHasEndMonth: Int,
     dateValueHasEndDay: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -514,7 +514,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasStartEra: String,
     dateValueHasEndYear: Int,
     dateValueHasEndMonth: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -544,7 +544,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     dateValueHasStartYear: Int,
     dateValueHasStartEra: String,
     dateValueHasEndYear: Int,
-    dateValueHasEndEra: String
+    dateValueHasEndEra: String,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -572,7 +572,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     resourceIri: IRI,
     valueIri: IRI,
     targetResourceIri: IRI,
-    comment: Option[String] = None
+    comment: Option[String] = None,
   ): String =
     comment match {
       case Some(definedComment) =>
@@ -649,7 +649,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     resourceIri: IRI,
     valueIri: IRI,
     intValue: Int,
-    newValueVersionIri: IRI
+    newValueVersionIri: IRI,
   ): String =
     s"""{
        |  "@id" : "$resourceIri",
@@ -680,7 +680,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private def testValue(resourceIri: IRI, valueUuid: String, fileBasename: String): Unit = {
     val resourceIriEncoded = URLEncoder.encode(resourceIri, "UTF-8")
     val request = Get(s"$baseApiUrl/v2/values/$resourceIriEncoded/$valueUuid") ~> addCredentials(
-      BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass)
+      BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass),
     )
     val response: HttpResponse = singleAwaitingRequest(request)
     val responseStr            = responseToString(response)
@@ -695,10 +695,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         filePath = TestDataFilePath(
           directoryPath = clientTestDataPath,
           filename = fileBasename,
-          fileExtension = "json"
+          fileExtension = "json",
         ),
-        text = responseStr
-      )
+        text = responseStr,
+      ),
     )
   }
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
@@ -721,21 +721,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "text-value-with-standoff"    -> TestDing.textValueWithStandoffUuid,
         "text-value-without-standoff" -> TestDing.textValueWithoutStandoffUuid,
         "list-value"                  -> TestDing.listValueUuid,
-        "link-value"                  -> TestDing.linkValueUuid
+        "link-value"                  -> TestDing.linkValueUuid,
       )
 
       testDingValues.foreach { case (valueTypeName, valueUuid) =>
         testValue(
           resourceIri = TestDing.iri,
           valueUuid = valueUuid,
-          fileBasename = s"get-$valueTypeName-response"
+          fileBasename = s"get-$valueTypeName-response",
         )
       }
 
       testValue(
         resourceIri = AThingPicture.iri,
         valueUuid = AThingPicture.stillImageFileValueUuid,
-        fileBasename = "get-still-image-file-value-response"
+        fileBasename = "get-still-image-file-value-response",
       )
     }
 
@@ -745,7 +745,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val timestamp   = "20190212T090510Z"
 
       val request = Get(baseApiUrl + s"/v2/values/$resourceIri/$valueUuid?version=$timestamp") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -754,7 +754,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val value: JsonLDObject = getValueFromResource(
         resource = responseJsonDoc,
         propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-        expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b"
+        expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
       )
 
       val intValueAsInt: Int = value
@@ -788,15 +788,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
@@ -809,7 +809,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
       integerValueUUID = responseJsonDoc.body.requireStringWithValidation(
         KnoraApiV2Complex.ValueHasUUID,
-        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -818,7 +818,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedIntValue: Int = savedValue
@@ -831,10 +831,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-value-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseStr
-        )
+          text = responseStr,
+        ),
       )
     }
 
@@ -863,15 +863,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-with-custom-Iri-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -904,7 +904,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request =
         Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -940,15 +940,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-with-custom-UUID-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -987,7 +987,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -1023,15 +1023,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-with-custom-creationDate-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1043,7 +1043,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1082,15 +1082,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-with-custom-Iri-UUID-CreationDate-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1105,7 +1105,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1128,7 +1128,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -1162,15 +1162,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-int-value-with-custom-permissions-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1187,7 +1187,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueWithCustomPermissionsIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int = savedValue
@@ -1208,7 +1208,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity: String = createTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
-        valueAsString = valueAsString
+        valueAsString = valueAsString,
       )
 
       clientTestDataCollector.addFile(
@@ -1216,15 +1216,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-text-value-without-standoff-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1241,7 +1241,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1257,12 +1257,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString
+        valueAsString = valueAsString,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1275,12 +1275,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString
+        valueAsString = valueAsString,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1295,7 +1295,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString
+        valueAsString = valueAsString,
       )
 
       clientTestDataCollector.addFile(
@@ -1303,15 +1303,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-text-value-without-standoff-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1328,7 +1328,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1347,7 +1347,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
-        valueHasComment = "Adding a comment"
+        valueHasComment = "Adding a comment",
       )
 
       clientTestDataCollector.addFile(
@@ -1355,15 +1355,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-text-value-with-comment-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1380,7 +1380,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1397,12 +1397,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
-        valueHasComment = "Adding a comment"
+        valueHasComment = "Adding a comment",
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1418,12 +1418,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
-        valueHasComment = "Updated comment"
+        valueHasComment = "Updated comment",
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1440,7 +1440,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1476,15 +1476,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-text-value-with-comment-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1501,7 +1501,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -1522,7 +1522,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValue1AsXmlWithStandardMapping,
-        mappingIri = standardMappingIri
+        mappingIri = standardMappingIri,
       )
 
       clientTestDataCollector.addFile(
@@ -1530,15 +1530,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-text-value-with-standoff-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr            = responseToString(response)
@@ -1556,7 +1556,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1590,12 +1590,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
-        mappingIri = standardMappingIri
+        mappingIri = standardMappingIri,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1612,7 +1612,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1641,12 +1641,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
-        mappingIri = standardMappingIri
+        mappingIri = standardMappingIri,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1662,7 +1662,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1678,7 +1678,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1693,7 +1693,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1728,18 +1728,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
           "json",
-          HttpEntity(ContentTypes.`application/json`, mappingParams)
+          HttpEntity(ContentTypes.`application/json`, mappingParams),
         ),
         Multipart.FormData.BodyPart(
           "xml",
           HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
-          Map("filename" -> "HTMLMapping.xml")
-        )
+          Map("filename" -> "HTMLMapping.xml"),
+        ),
       )
 
       // create standoff from XML
       val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
       assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
@@ -1759,12 +1759,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
         textValueAsXml = textValueAsXml,
-        mappingIri = s"${SharedTestDataADM.anythingProjectIri}/mappings/HTMLMapping"
+        mappingIri = s"${SharedTestDataADM.anythingProjectIri}/mappings/HTMLMapping",
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1778,7 +1778,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -1793,12 +1793,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity = createTextValueWithoutStandoffRequest(
         resourceIri = resourceIri,
-        valueAsString = valueAsString
+        valueAsString = valueAsString,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1833,15 +1833,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-decimal-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1858,13 +1858,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedDecimalValueAsDecimal: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedDecimalValueAsDecimal should ===(decimalValueAsDecimal)
@@ -1894,7 +1894,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndMonth = dateValueHasEndMonth,
         dateValueHasEndDay = dateValueHasEndDay,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -1902,15 +1902,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-date-value-with-day-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1927,18 +1927,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018-10-05 CE:2018-10-06 CE"
+        "GREGORIAN:2018-10-05 CE:2018-10-06 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -1952,7 +1952,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -1988,7 +1988,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndMonth = dateValueHasEndMonth,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -1996,15 +1996,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-date-value-with-month-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2021,18 +2021,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018-10 CE:2018-11 CE"
+        "GREGORIAN:2018-10 CE:2018-11 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2040,7 +2040,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
         .fold(e => throw BadRequestException(e), identity) should ===(
-        dateValueHasStartMonth
+        dateValueHasStartMonth,
       )
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
@@ -2048,7 +2048,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -2080,7 +2080,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartYear = dateValueHasStartYear,
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -2088,15 +2088,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-date-value-with-year-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2113,18 +2113,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018 CE:2019 CE"
+        "GREGORIAN:2018 CE:2019 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2172,12 +2172,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndYear = dateValueHasStartYear,
         dateValueHasEndMonth = dateValueHasStartMonth,
         dateValueHasEndDay = dateValueHasStartDay,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2194,7 +2194,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2203,7 +2203,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2248,12 +2248,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasStartYear,
         dateValueHasEndMonth = dateValueHasStartMonth,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2270,7 +2270,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2279,7 +2279,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2293,7 +2293,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -2323,12 +2323,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartYear = dateValueHasStartYear,
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasStartYear,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2345,7 +2345,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2354,7 +2354,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2399,12 +2399,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartDay = dateValueHasStartDay,
         dateValueHasEndYear = dateValueHasStartYear,
         dateValueHasEndMonth = dateValueHasStartMonth,
-        dateValueHasEndDay = dateValueHasStartDay
+        dateValueHasEndDay = dateValueHasStartDay,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2422,7 +2422,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -2431,7 +2431,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2473,12 +2473,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartDay = dateValueHasStartDay,
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndMonth = dateValueHasEndMonth,
-        dateValueHasEndDay = dateValueHasEndDay
+        dateValueHasEndDay = dateValueHasEndDay,
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2496,18 +2496,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "ISLAMIC:1407-01-15:1407-01-26"
+        "ISLAMIC:1407-01-15:1407-01-26",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -2554,15 +2554,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-boolean-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2580,7 +2580,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val booleanValueAsBoolean = savedValue
@@ -2613,15 +2613,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-geometry-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2639,7 +2639,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val geometryValueAsGeometry: String =
@@ -2683,15 +2683,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-interval-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2709,13 +2709,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedIntervalValueHasStart should ===(intervalStart)
@@ -2723,7 +2723,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)
@@ -2758,15 +2758,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-time-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2784,13 +2784,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       savedTimeStamp should ===(timeStamp)
@@ -2824,15 +2824,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-list-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2850,13 +2850,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedListValueHasListNode: IRI =
         savedValue.requireIriInObject(
           KnoraApiV2Complex.ListValueAsListNode,
-          validationFun
+          validationFun,
         )
       savedListValueHasListNode should ===(listNode)
     }
@@ -2887,15 +2887,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-color-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2913,7 +2913,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedColor: String = savedValue
@@ -2951,15 +2951,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-uri-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -2977,13 +2977,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.UriValueAsUri,
         expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-        validationFun = validationFun
+        validationFun = validationFun,
       )
 
       savedUri should ===(uri)
@@ -3015,15 +3015,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-geoname-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3041,7 +3041,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedGeonameCode: String =
@@ -3079,15 +3079,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-link-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3101,7 +3101,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
       linkValueUUID = responseJsonDoc.body.requireStringWithValidation(
         KnoraApiV2Complex.ValueHasUUID,
-        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -3110,7 +3110,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -3156,15 +3156,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "create-link-value-with-custom-Iri-UUID-CreationDate-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3180,7 +3180,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -3212,15 +3212,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-int-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
@@ -3235,7 +3235,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newIntegerValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
         )
       assert(newIntegerValueUUID == integerValueUUID) // The new version should have the same UUID.
 
@@ -3245,7 +3245,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3257,10 +3257,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-value-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseStr
-        )
+          text = responseStr,
+        ),
       )
     }
 
@@ -3296,15 +3296,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-int-value-request-with-custom-creation-date",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3322,7 +3322,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3332,7 +3332,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       savedCreationDate should ===(valueCreationDate)
@@ -3349,12 +3349,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
-        newValueVersionIri = newValueVersionIri
+        newValueVersionIri = newValueVersionIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -3371,7 +3371,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueForRsyncIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3388,12 +3388,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
-        newValueVersionIri = newValueVersionIri
+        newValueVersionIri = newValueVersionIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -3409,12 +3409,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
-        newValueVersionIri = newValueVersionIri
+        newValueVersionIri = newValueVersionIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -3430,12 +3430,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
-        newValueVersionIri = newValueVersionIri
+        newValueVersionIri = newValueVersionIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -3451,12 +3451,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = intValueForRsyncIri.get,
         intValue = intValue,
-        newValueVersionIri = newValueVersionIri
+        newValueVersionIri = newValueVersionIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -3484,7 +3484,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -3519,15 +3519,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-int-value-with-custom-permissions-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3545,7 +3545,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueWithCustomPermissionsIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val intValueAsInt: Int =
@@ -3583,15 +3583,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-int-value-permissions-only-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3609,7 +3609,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val hasPermissions = savedValue
@@ -3648,15 +3648,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-decimal-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3674,13 +3674,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = decimalValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedDecimalValue should ===(decimalValue)
@@ -3700,7 +3700,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "@id" : "${textValueWithStandoffIri.get}",
            |    "@type" : "knora-api:TextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
-            textValue2AsXmlWithStandardMapping
+            textValue2AsXmlWithStandardMapping,
           )},
            |    "knora-api:textValueHasMapping" : {
            |      "@id": "$standardMappingIri"
@@ -3717,15 +3717,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-text-value-with-standoff-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3743,7 +3743,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -3761,7 +3761,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
       val request = Put(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3777,7 +3777,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = valueIri,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTextValueAsXml: String = savedValue
@@ -3802,12 +3802,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = valueAsString,
-        valueHasComment = valueHasComment
+        valueHasComment = valueHasComment,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3825,7 +3825,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedValueAsString: String = savedValue
@@ -3863,7 +3863,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndMonth = dateValueHasEndMonth,
         dateValueHasEndDay = dateValueHasEndDay,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -3871,15 +3871,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-date-value-with-day-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3897,18 +3897,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018-10-05 CE:2018-12-06 CE"
+        "GREGORIAN:2018-10-05 CE:2018-12-06 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -3922,7 +3922,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -3959,7 +3959,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
         dateValueHasEndMonth = dateValueHasEndMonth,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -3967,15 +3967,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-date-value-with-month-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3993,18 +3993,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018-09 CE:2018-12 CE"
+        "GREGORIAN:2018-09 CE:2018-12 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -4012,7 +4012,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
         .fold(e => throw BadRequestException(e), identity) should ===(
-        dateValueHasStartMonth
+        dateValueHasStartMonth,
       )
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
@@ -4020,7 +4020,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -4053,7 +4053,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartYear = dateValueHasStartYear,
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasEndYear,
-        dateValueHasEndEra = dateValueHasEndEra
+        dateValueHasEndEra = dateValueHasEndEra,
       )
 
       clientTestDataCollector.addFile(
@@ -4061,15 +4061,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-date-value-with-year-precision-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4087,18 +4087,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
         .getRequiredString(KnoraApiV2Complex.ValueAsString)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        "GREGORIAN:2018 CE:2020 CE"
+        "GREGORIAN:2018 CE:2020 CE",
       )
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -4112,7 +4112,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -4149,12 +4149,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndYear = dateValueHasStartYear,
         dateValueHasEndMonth = dateValueHasStartMonth,
         dateValueHasEndDay = dateValueHasStartDay,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4172,7 +4172,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -4181,7 +4181,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -4227,12 +4227,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasStartYear,
         dateValueHasEndMonth = dateValueHasStartMonth,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4250,7 +4250,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -4259,7 +4259,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -4267,7 +4267,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
         .fold(e => throw BadRequestException(e), identity) should ===(
-        dateValueHasStartMonth
+        dateValueHasStartMonth,
       )
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
@@ -4275,7 +4275,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -4306,12 +4306,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasStartYear = dateValueHasStartYear,
         dateValueHasStartEra = dateValueHasStartEra,
         dateValueHasEndYear = dateValueHasStartYear,
-        dateValueHasEndEra = dateValueHasStartEra
+        dateValueHasEndEra = dateValueHasStartEra,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4329,7 +4329,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = dateValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       savedValue
@@ -4338,7 +4338,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasCalendar
+        dateValueHasCalendar,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
@@ -4352,7 +4352,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
         .fold(msg => throw BadRequestException(msg), identity) should ===(
-        dateValueHasStartEra
+        dateValueHasStartEra,
       )
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
@@ -4394,15 +4394,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-boolean-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4420,7 +4420,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = booleanValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val booleanValueAsBoolean = savedValue
@@ -4454,15 +4454,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-geometry-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4480,7 +4480,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geometryValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val geometryValueAsGeometry: String =
@@ -4525,15 +4525,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-interval-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4551,13 +4551,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = intervalValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedIntervalValueHasStart should ===(intervalStart)
@@ -4565,7 +4565,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun),
       )
 
       savedIntervalValueHasEnd should ===(intervalEnd)
@@ -4601,15 +4601,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-time-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4627,13 +4627,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = timeValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       savedTimeStamp should ===(timeStamp)
@@ -4668,15 +4668,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-list-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4694,13 +4694,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = listValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedListValueHasListNode: IRI =
         savedValue.requireIriInObject(
           KnoraApiV2Complex.ListValueAsListNode,
-          validationFun
+          validationFun,
         )
       savedListValueHasListNode should ===(listNode)
     }
@@ -4732,15 +4732,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-color-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4758,7 +4758,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = colorValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedColor: String = savedValue
@@ -4797,15 +4797,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-uri-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4823,13 +4823,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = uriValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.UriValueAsUri,
         expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-        validationFun = validationFun
+        validationFun = validationFun,
       )
 
       savedUri should ===(uri)
@@ -4862,15 +4862,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-geoname-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4888,7 +4888,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
         expectedValueIri = geonameValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedGeonameCode: String =
@@ -4908,7 +4908,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
-        targetResourceIri = linkTargetIri
+        targetResourceIri = linkTargetIri,
       )
 
       clientTestDataCollector.addFile(
@@ -4916,15 +4916,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "update-link-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -4941,7 +4941,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
         )
       assert(newLinkValueUUID != linkValueUUID)
       linkValueUUID = newLinkValueUUID
@@ -4952,7 +4952,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -4970,12 +4970,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
-        targetResourceIri = linkTargetIri
+        targetResourceIri = linkTargetIri,
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -4993,12 +4993,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
-        comment = Some(comment)
+        comment = Some(comment),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -5015,7 +5015,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
         )
       assert(newLinkValueUUID == linkValueUUID)
 
@@ -5025,7 +5025,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedComment: String = savedValue
@@ -5046,12 +5046,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
-        comment = Some(comment)
+        comment = Some(comment),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -5068,7 +5068,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun),
         )
       assert(newLinkValueUUID == linkValueUUID)
 
@@ -5078,7 +5078,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedComment: String = savedValue
@@ -5096,12 +5096,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resourceIri = resourceIri,
         valueIri = linkValueIri.get,
         targetResourceIri = linkTargetIri,
-        comment = Some(comment)
+        comment = Some(comment),
       )
 
       val request =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -5134,7 +5134,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -5153,7 +5153,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        userEmail = anythingUserEmail
+        userEmail = anythingUserEmail,
       )
 
       val savedTarget: JsonLDObject = savedValue
@@ -5173,7 +5173,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = deleteIntValueRequest(
         resourceIri = AThing.iri,
         valueIri = intValueIri.get,
-        maybeDeleteComment = Some("this value was incorrect")
+        maybeDeleteComment = Some("this value was incorrect"),
       )
 
       clientTestDataCollector.addFile(
@@ -5181,15 +5181,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "delete-int-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -5222,15 +5222,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "delete-int-value-request-with-custom-delete-date",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -5253,7 +5253,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -5267,12 +5267,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity = deleteIntValueRequest(
         resourceIri = resourceIri,
         valueIri = valueIri,
-        maybeDeleteComment = None
+        maybeDeleteComment = None,
       )
 
       val deleteRequest = Post(
         baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
       val deleteResponse: HttpResponse = singleAwaitingRequest(deleteRequest)
       assert(deleteResponse.status == StatusCodes.OK, deleteResponse.toString)
@@ -5307,15 +5307,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "delete-link-value-request",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = jsonLDEntity
-        )
+          text = jsonLDEntity,
+        ),
       )
 
       val request = Post(
         baseApiUrl + "/v2/values/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)

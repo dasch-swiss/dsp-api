@@ -40,7 +40,7 @@ class UsersMessagesADMSpec extends CoreSpec {
         password = password,
         groups = groups,
         projects = projects,
-        permissions = permissions
+        permissions = permissions,
       )
       val rootUserRestricted = User(
         id = id,
@@ -53,7 +53,7 @@ class UsersMessagesADMSpec extends CoreSpec {
         password = None,
         groups = groups,
         projects = projects,
-        permissions = permissions.ofType(PermissionProfileType.Restricted)
+        permissions = permissions.ofType(PermissionProfileType.Restricted),
       )
 
       assert(rootUser.ofType(UserInformationType.Restricted) === rootUserRestricted)
@@ -62,14 +62,14 @@ class UsersMessagesADMSpec extends CoreSpec {
     "return true if user is ProjectAdmin in any project " in {
       assert(
         SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject() === true,
-        "user is not ProjectAdmin in any of his projects"
+        "user is not ProjectAdmin in any of his projects",
       )
     }
 
     "return false if user is not ProjectAdmin in any project " in {
       assert(
         SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false,
-        "user is ProjectAdmin in one of his projects"
+        "user is ProjectAdmin in one of his projects",
       )
     }
   }

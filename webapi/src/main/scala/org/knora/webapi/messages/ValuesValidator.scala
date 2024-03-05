@@ -109,9 +109,9 @@ object ValuesValidator {
               minute.toInt,
               second.toInt,
               nanoOfSecond,
-              ZoneOffset.UTC
-            )
-          )
+              ZoneOffset.UTC,
+            ),
+          ),
         ).toOption
       case _ => None
     }

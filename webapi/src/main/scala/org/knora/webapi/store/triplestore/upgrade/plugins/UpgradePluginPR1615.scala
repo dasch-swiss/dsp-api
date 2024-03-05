@@ -20,6 +20,6 @@ class UpgradePluginPR1615() extends UpgradePlugin {
     model.remove(
       subj = Some(ForbiddenResourceIri),
       pred = None,
-      obj = None
+      obj = None,
     )
 }

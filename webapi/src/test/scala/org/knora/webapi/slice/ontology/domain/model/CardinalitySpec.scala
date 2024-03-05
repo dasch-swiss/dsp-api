@@ -40,7 +40,7 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
       test("same upper and lower bound") {
         assertTrue(ExactlyOne.toString == "1")
-      }
+      },
     ),
     suite("Cardinality isIncludedIn")(
       test("Same cardinality is always included in itself") {
@@ -65,33 +65,33 @@ object CardinalitySpec extends ZIOSpecDefault {
         check(cardinalitiesGen()) { other =>
           assertTrue(ExactlyOne.isIncludedIn(other))
         }
-      }
+      },
     ),
     suite("toOwl")(
       test(s"AtLeastOne $AtLeastOne") {
         assertTrue(
           Cardinality
-            .toOwl(AtLeastOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 1)
+            .toOwl(AtLeastOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 1),
         )
       },
       test(s"ExactlyOne $ExactlyOne") {
         assertTrue(
           Cardinality
-            .toOwl(ExactlyOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#cardinality", 1)
+            .toOwl(ExactlyOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#cardinality", 1),
         )
       },
       test(s"ZeroOrOne $ZeroOrOne") {
         assertTrue(
           Cardinality
-            .toOwl(ZeroOrOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#maxCardinality", 1)
+            .toOwl(ZeroOrOne) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#maxCardinality", 1),
         )
       },
       test(s"Unbounded $Unbounded") {
         assertTrue(
           Cardinality
-            .toOwl(Unbounded) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 0)
+            .toOwl(Unbounded) == OwlCardinality.OwlCardinalityInfo("http://www.w3.org/2002/07/owl#minCardinality", 0),
         )
-      }
+      },
     ),
     suite("getIntersection")(
       test(s"$AtLeastOne <> $ZeroOrOne => $ExactlyOne") {
@@ -99,7 +99,7 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
       test(s"$Unbounded <> $AtLeastOne => $AtLeastOne") {
         assertTrue(Unbounded.getIntersection(AtLeastOne).contains(AtLeastOne))
-      }
+      },
     ),
     suite("fromString")(
       test("`0-n` => Unbounded") {
@@ -113,7 +113,7 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
       test("`1` => ExactlyOne") {
         assertTrue(Cardinality.fromString("1").contains(ExactlyOne))
-      }
+      },
     ),
     suite("isCountIncluded")(
       test(s"AtLeastOne ($AtLeastOne) does not include 0") {
@@ -137,7 +137,7 @@ object CardinalitySpec extends ZIOSpecDefault {
         check(cardinalitiesGen()) { cardinality =>
           assertTrue(!cardinality.isCountIncluded(-1))
         }
-      }
-    )
+      },
+    ),
   )
 }

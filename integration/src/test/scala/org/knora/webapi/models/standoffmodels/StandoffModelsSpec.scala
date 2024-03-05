@@ -35,7 +35,7 @@ class StandoffModelsSpec extends CoreSpec {
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,
           projectIRI = Some(projectIRI),
-          label = Some(customLabel)
+          label = Some(customLabel),
         )
 
         mapping.mappingName should equal(mappingName)
@@ -74,7 +74,7 @@ class StandoffModelsSpec extends CoreSpec {
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,
           projectIRI = Some(projectIRI),
-          label = Some(customLabel)
+          label = Some(customLabel),
         )
         val json = mapping.toJSONLD().parseJson
 

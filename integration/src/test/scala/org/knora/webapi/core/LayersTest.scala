@@ -239,7 +239,7 @@ object LayersTest {
       UsersEndpointsHandler.layer,
       UsersResponder.layer,
       UsersRestService.layer,
-      ValuesResponderV2Live.layer
+      ValuesResponderV2Live.layer,
     )
 
   private val fusekiAndSipiTestcontainers =
@@ -251,7 +251,7 @@ object LayersTest {
         with SharedVolumes.Images
         with SipiService
         with SipiTestContainer
-        with StringFormatter
+        with StringFormatter,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestClientLive.layer,
@@ -261,7 +261,7 @@ object LayersTest {
       SipiServiceLive.layer,
       JwtServiceLive.layer,
       SharedVolumes.Images.layer,
-      StringFormatter.test
+      StringFormatter.test,
     )
 
   private val fusekiTestcontainers =
@@ -270,7 +270,7 @@ object LayersTest {
       FusekiTestContainer.layer,
       SipiServiceMock.layer,
       JwtServiceLive.layer,
-      StringFormatter.test
+      StringFormatter.test,
     )
 
   /**
@@ -281,7 +281,7 @@ object LayersTest {
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */
   def integrationTestsWithFusekiTestcontainers(
-    system: Option[pekko.actor.ActorSystem] = None
+    system: Option[pekko.actor.ActorSystem] = None,
   ): ULayer[DefaultTestEnvironmentWithoutSipi] = {
     // Due to bug in Scala 2 compiler invoking methods with by-name parameters in provide/provideSome method does not work
     // assign the layer to a temp val and use it in the ZLayer.make
@@ -289,7 +289,7 @@ object LayersTest {
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
       commonLayersForAllIntegrationTests,
       fusekiTestcontainers,
-      temp
+      temp,
     )
   }
 
@@ -301,6 +301,6 @@ object LayersTest {
     ZLayer.make[DefaultTestEnvironmentWithSipi](
       commonLayersForAllIntegrationTests,
       fusekiAndSipiTestcontainers,
-      ActorSystem.layer
+      ActorSystem.layer,
     )
 }

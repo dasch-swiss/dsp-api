@@ -81,14 +81,14 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val documentSpecificIDs = Map(
         "s02" -> UUID.randomUUID,
         "s03" -> UUID.randomUUID,
-        "s04" -> UUID.randomUUID
+        "s04" -> UUID.randomUUID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(
         defaultXmlNamespace = Some("http://www.example.org/ns1"),
         xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
         writeUuidsToXml = false,
-        documentSpecificIDs = documentSpecificIDs
+        documentSpecificIDs = documentSpecificIDs,
       )
 
       // Convert the XML document to text with standoff.
@@ -110,7 +110,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val regionID = UUID.randomUUID
 
       val documentSpecificIDs = Map(
-        "1" -> regionID
+        "1" -> regionID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
@@ -143,13 +143,13 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diploTextWithStandoff.text,
-        derivedText = criticalTextWithStandoff.text
+        derivedText = criticalTextWithStandoff.text,
       )
 
       val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
-        standoffDiffs = criticalTextDiffs
+        standoffDiffs = criticalTextDiffs,
       )
 
       val expectedCriticalTextDiffsAsXml =
@@ -173,7 +173,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
         oldStandoff = diploTextWithStandoff.standoff,
-        newStandoff = criticalTextWithStandoff.standoff
+        newStandoff = criticalTextWithStandoff.standoff,
       )
 
       standoffAdded.exists(_.uuid == regionID) should be(false)
@@ -185,7 +185,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val regionID = UUID.randomUUID
 
       val documentSpecificIDs = Map(
-        "2" -> regionID
+        "2" -> regionID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
@@ -215,13 +215,13 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diploTextWithStandoff.text,
-        derivedText = criticalTextWithStandoff.text
+        derivedText = criticalTextWithStandoff.text,
       )
 
       val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
-        standoffDiffs = criticalTextDiffs
+        standoffDiffs = criticalTextDiffs,
       )
 
       // println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
@@ -245,7 +245,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
         oldStandoff = diploTextWithStandoff.standoff,
-        newStandoff = criticalTextWithStandoff.standoff
+        newStandoff = criticalTextWithStandoff.standoff,
       )
 
       standoffAdded.exists(_.uuid == regionID) should be(false)
@@ -261,7 +261,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val documentSpecificIDs = Map(
         "1" -> paragraphID,
         "2" -> strikeID,
-        "3" -> blueID
+        "3" -> blueID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
@@ -300,7 +300,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val editorialStandoffDiffs1: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diplo1TextWithStandoff.text,
-        derivedText = edito1TextWithStandoff.text
+        derivedText = edito1TextWithStandoff.text,
       )
 
       // Check that the editor's diffs are correct, by converting them to XML (which makes the test more readable).
@@ -313,7 +313,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val editorialDiffs1AsXml: String = standoffUtil.standoffDiffs2Xml(
         baseText = diplo1TextWithStandoff.text,
         derivedText = edito1TextWithStandoff.text,
-        standoffDiffs = editorialStandoffDiffs1
+        standoffDiffs = editorialStandoffDiffs1,
       )
 
       val xmlDiff1: Diff = DiffBuilder
@@ -339,7 +339,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diplo2TextWithStandoff.text,
-        derivedText = edito1TextWithStandoff.text
+        derivedText = edito1TextWithStandoff.text,
       )
 
       // Check that the editor's diffs are correct. Since the transcriber and editor now agree that 'ich' should
@@ -354,7 +354,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val editorialDiffs2AsXml: String = standoffUtil.standoffDiffs2Xml(
         baseText = diplo2TextWithStandoff.text,
         derivedText = edito1TextWithStandoff.text,
-        standoffDiffs = editorialStandoffDiffs2
+        standoffDiffs = editorialStandoffDiffs2,
       )
 
       val xmlDiff2: Diff = DiffBuilder
@@ -387,7 +387,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val editorialStandoffDiffs3: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diplo2TextWithStandoff.text,
-        derivedText = edito2TextWithStandoff.text
+        derivedText = edito2TextWithStandoff.text,
       )
 
       // Check that the editor's diffs are correct.
@@ -400,7 +400,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val editorialDiffs3AsXml: String = standoffUtil.standoffDiffs2Xml(
         baseText = diplo2TextWithStandoff.text,
         derivedText = edito2TextWithStandoff.text,
-        standoffDiffs = editorialStandoffDiffs3
+        standoffDiffs = editorialStandoffDiffs3,
       )
 
       val xmlDiff3: Diff = DiffBuilder
@@ -416,7 +416,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val regionID = UUID.randomUUID
 
       val documentSpecificIDs = Map(
-        "1" -> regionID
+        "1" -> regionID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
@@ -447,20 +447,20 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diploTextWithStandoff.text,
-        derivedText = criticalTextWithStandoff.text
+        derivedText = criticalTextWithStandoff.text,
       )
 
       standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
-        standoffDiffs = criticalTextDiffs
+        standoffDiffs = criticalTextDiffs,
       )
 
       assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
 
       val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
         oldStandoff = diploTextWithStandoff.standoff,
-        newStandoff = criticalTextWithStandoff.standoff
+        newStandoff = criticalTextWithStandoff.standoff,
       )
 
       standoffAdded.exists(_.uuid == regionID) should be(false)
@@ -473,7 +473,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val regionID = UUID.randomUUID
 
       val documentSpecificIDs = Map(
-        "2" -> regionID
+        "2" -> regionID,
       )
 
       val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
@@ -506,20 +506,20 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
       val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
         baseText = diploTextWithStandoff.text,
-        derivedText = criticalTextWithStandoff.text
+        derivedText = criticalTextWithStandoff.text,
       )
 
       standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
-        standoffDiffs = criticalTextDiffs
+        standoffDiffs = criticalTextDiffs,
       )
 
       assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
 
       val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
         oldStandoff = diploTextWithStandoff.standoff,
-        newStandoff = criticalTextWithStandoff.standoff
+        newStandoff = criticalTextWithStandoff.standoff,
       )
 
       standoffAdded.exists(_.uuid == regionID) should be(false)
@@ -545,7 +545,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       // after every paragraph, information separator two should be inserted
       val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(
         BEBBXML,
-        tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None))
+        tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None)),
       )
 
       // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
@@ -573,7 +573,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
       val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(
         testXML,
         tagsWithSeparator =
-          List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "div", maybeClassname = Some("paragraph")))
+          List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "div", maybeClassname = Some("paragraph"))),
       )
 
       // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)

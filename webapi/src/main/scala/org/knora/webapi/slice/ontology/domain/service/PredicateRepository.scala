@@ -24,7 +24,7 @@ trait PredicateRepository {
    */
   def getCountForPropertyUsedNumberOfTimesWithClass(
     propertyIri: InternalIri,
-    classIri: InternalIri
+    classIri: InternalIri,
   ): Task[List[(InternalIri, Int)]]
 
   /**
@@ -37,7 +37,7 @@ trait PredicateRepository {
    */
   def getCountForPropertyUsedNumberOfTimesWithClasses(
     propertyIri: InternalIri,
-    classIris: List[InternalIri]
+    classIris: List[InternalIri],
   ): Task[List[(InternalIri, Int)]] =
     ZIO.foreach(classIris)(getCountForPropertyUsedNumberOfTimesWithClass(propertyIri, _)).map(_.flatten)
 }

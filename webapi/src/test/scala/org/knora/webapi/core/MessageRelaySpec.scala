@@ -42,6 +42,6 @@ object MessageRelaySpec extends ZIOSpecDefault {
           _      <- ZIO.service[TestHandler]
           actual <- MessageRelay.ask[String](SomeRelayedMessage())
         } yield assertTrue(actual == "handled")
-      }
+      },
     ).provide(MessageRelayLive.layer, TestHandler.layer)
 }

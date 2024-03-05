@@ -28,7 +28,7 @@ final case class ResourceInfoDto private (
   creationDate: Instant,
   lastModificationDate: Instant,
   deleteDate: Option[Instant],
-  isDeleted: Boolean
+  isDeleted: Boolean,
 )
 
 object ResourceInfoDto {
@@ -39,7 +39,7 @@ object ResourceInfoDto {
       info.creationDate,
       info.lastModificationDate.getOrElse(info.creationDate),
       info.deleteDate,
-      info.isDeleted
+      info.isDeleted,
     )
 
   implicit val codec: JsonCodec[ResourceInfoDto] = DeriveJsonCodec.gen[ResourceInfoDto]

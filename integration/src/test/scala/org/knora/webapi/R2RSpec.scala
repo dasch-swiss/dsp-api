@@ -67,7 +67,7 @@ abstract class R2RSpec
 
   // the default timeout for route tests
   implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
   // main difference to other specs (no own systen and executionContext defined)
@@ -87,7 +87,7 @@ abstract class R2RSpec
           for {
             _ <- AppServer.testWithoutSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()
+          } yield (),
         )
         .getOrThrow()
     }
@@ -128,7 +128,7 @@ abstract class R2RSpec
     Files.createDirectories(adjustedFile.getParent)
     FileUtil.writeTextFile(
       adjustedFile,
-      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
+      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
     )
     responseAsString
   }

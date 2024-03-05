@@ -38,7 +38,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     Some(Logo.unsafeFrom("logo.png")),
     Status.Active,
     SelfJoin.CannotJoin,
-    RestrictedView.default
+    RestrictedView.default,
   )
 
   private val someProjectTrig =
@@ -88,7 +88,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         for {
           projects <- findAll
         } yield assertTrue(projects.isEmpty)
-      }
+      },
     ),
     suite("findById")(
       suite("find by IRI")(
@@ -102,7 +102,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           for {
             project <- findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234"))
           } yield assertTrue(project.isEmpty)
-        }
+        },
       ),
       suite("find by Shortcode")(
         test("return project if it exists") {
@@ -115,7 +115,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           for {
             project <- findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234"))
           } yield assertTrue(project.isEmpty)
-        }
+        },
       ),
       suite("find by Shortname")(
         test("return project if it exists") {
@@ -128,8 +128,8 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           for {
             project <- findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1"))
           } yield assertTrue(project.isEmpty)
-        }
-      )
-    )
+        },
+      ),
+    ),
   ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
 }

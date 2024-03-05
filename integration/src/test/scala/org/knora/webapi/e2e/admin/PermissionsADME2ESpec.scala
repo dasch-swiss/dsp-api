@@ -45,7 +45,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val groupIri =
           URLEncoder.encode(GroupIri.unsafeFrom(OntologyConstants.KnoraAdmin.ProjectMember).value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
@@ -63,10 +63,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-administrative-permission-for-project-group-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -74,7 +74,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
@@ -88,10 +88,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-administrative-permissions-for-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -99,7 +99,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
@@ -113,10 +113,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-defaultObjectAccess-permissions-for-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -124,7 +124,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val projectIri = URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
@@ -138,10 +138,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-permissions-for-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -160,15 +160,15 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-administrative-permission-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createAdministrativePermissionRequest
-          )
+            text = createAdministrativePermissionRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/ap",
-          HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest)
+          HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
 
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -187,7 +187,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissions = result
           .getOrElse(
             "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+            throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
           .toString()
 
@@ -198,10 +198,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-administrative-permission-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
         val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
         val createAdministrativePermissionWithCustomIriRequest: String =
@@ -217,10 +217,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-administrative-permission-withCustomIRI-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createAdministrativePermissionWithCustomIriRequest
-          )
+            text = createAdministrativePermissionWithCustomIriRequest,
+          ),
         )
 
         val createAdministrativePermissionWithCustomIriResponse: String =
@@ -244,10 +244,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-administrative-permission-withCustomIRI-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createAdministrativePermissionWithCustomIriResponse
-          )
+            text = createAdministrativePermissionWithCustomIriResponse,
+          ),
         )
       }
 
@@ -270,7 +270,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
         val request = Post(
           baseApiUrl + s"/admin/projects",
-          HttpEntity(ContentTypes.`application/json`, projectPayload)
+          HttpEntity(ContentTypes.`application/json`, projectPayload),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -284,7 +284,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
         val permissionRequest = Post(
           baseApiUrl + s"/admin/permissions/ap",
-          HttpEntity(ContentTypes.`application/json`, permissionPayload)
+          HttpEntity(ContentTypes.`application/json`, permissionPayload),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
 
         val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
@@ -306,15 +306,15 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-defaultObjectAccess-permission-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createDefaultObjectAccessPermissionRequest
-          )
+            text = createDefaultObjectAccessPermissionRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
-          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest)
+          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -332,7 +332,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissions = result
           .getOrElse(
             "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+            throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
           .toString()
 
@@ -343,10 +343,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-defaultObjectAccess-permission-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -367,15 +367,15 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-defaultObjectAccess-permission-withCustomIRI-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createDefaultObjectAccessPermissionWithCustomIriRequest
-          )
+            text = createDefaultObjectAccessPermissionWithCustomIriRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
-          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionWithCustomIriRequest)
+          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionWithCustomIriRequest),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -389,7 +389,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val forResourceClassIRI = result
           .getOrElse(
             "forResourceClass",
-            throw DeserializationException("The expected field 'forResourceClass' is missing.")
+            throw DeserializationException("The expected field 'forResourceClass' is missing."),
           )
           .convertTo[String]
         assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
@@ -400,7 +400,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissions = result
           .getOrElse(
             "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+            throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
           .toString()
 
@@ -411,10 +411,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-defaultObjectAccess-permission-withCustomIRI-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -433,14 +433,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-administrative-permission-forGroup-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updatePermissionGroup
-          )
+            text = updatePermissionGroup,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)
+          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -455,10 +455,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-administrative-permission-forGroup-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -475,14 +475,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forGroup-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updatePermissionGroup
-          )
+            text = updatePermissionGroup,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)
+          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -498,10 +498,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forGroup-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -517,14 +517,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-administrative-permission-hasPermissions-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateHasPermissions
-          )
+            text = updateHasPermissions,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)
+          HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -532,7 +532,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissions = result
           .getOrElse(
             "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+            throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
           .asInstanceOf[JsArray]
           .elements
@@ -543,10 +543,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-administrative-permission-hasPermissions-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -562,14 +562,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-hasPermissions-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateHasPermissions
-          )
+            text = updateHasPermissions,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)
+          HttpEntity(ContentTypes.`application/json`, updateHasPermissions),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -578,7 +578,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissions = result
           .getOrElse(
             "hasPermissions",
-            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+            throw DeserializationException("The expected field 'hasPermissions' is missing."),
           )
           .asInstanceOf[JsArray]
           .elements
@@ -587,17 +587,17 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           permissions.head.asJsObject
             .fields("additionalInformation")
             .toString
-            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember")
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"),
         )
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-hasPermissions-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -614,14 +614,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forResourceClass-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateResourceClass
-          )
+            text = updateResourceClass,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
-          HttpEntity(ContentTypes.`application/json`, updateResourceClass)
+          HttpEntity(ContentTypes.`application/json`, updateResourceClass),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -630,7 +630,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val forResourceClassIRI = result
           .getOrElse(
             "forResourceClass",
-            throw DeserializationException("The expected field 'forResourceClass' is missing.")
+            throw DeserializationException("The expected field 'forResourceClass' is missing."),
           )
           .convertTo[String]
         assert(forResourceClassIRI == resourceClassIri)
@@ -640,10 +640,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forResourceClass-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -660,14 +660,14 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forProperty-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateResourceClass
-          )
+            text = updateResourceClass,
+          ),
         )
         val request = Put(
           baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
-          HttpEntity(ContentTypes.`application/json`, updateResourceClass)
+          HttpEntity(ContentTypes.`application/json`, updateResourceClass),
         ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -683,10 +683,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forProperty-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -696,7 +696,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val permissionIri        = customDOAPIri
         val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -707,17 +707,17 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "delete-defaultObjectAccess-permission-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
       "erase an administrative permission" in {
         val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -728,10 +728,10 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "delete-administrative-permission-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }

@@ -49,7 +49,7 @@ object ApiRoutes {
    */
   val layer: URLayer[
     ActorSystem & AuthorizationRestService & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
-    ApiRoutes
+    ApiRoutes,
   ] =
     ZLayer {
       for {
@@ -62,7 +62,7 @@ object ApiRoutes {
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
-            AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2
+            AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
           ]
       } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, appConfig, runtime)
     }
@@ -82,8 +82,8 @@ private final case class ApiRoutesImpl(
   searchApiRoutes: SearchApiRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
-    AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2
-  ]
+    AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
+  ],
 ) extends ApiRoutes
     with AroundDirectives {
 
@@ -95,7 +95,7 @@ private final case class ApiRoutesImpl(
         DSPApiDirectives.handleErrors(appConfig) {
           CorsDirectives.cors(
             CorsSettings(routeData.system)
-              .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
+              .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
               (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes).reduce(_ ~ _) ~

@@ -45,7 +45,7 @@ object MetricsServer {
       metricsConfig      = MetricsConfig(interval)
       _ <- ZIO.logInfo(
              s"Starting api on ${knoraApiConfig.externalKnoraApiBaseUrl}, " +
-               s"find docs on ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs"
+               s"find docs on ${knoraApiConfig.externalProtocol}://${knoraApiConfig.externalHost}:$port/docs",
            )
       _ <- metricsServer
              .provideSome(
@@ -58,7 +58,7 @@ object MetricsServer {
                Runtime.enableRuntimeMetrics,
                Runtime.enableFiberRoots,
                DefaultJvmMetrics.live.unit,
-               PrometheusApp.layer
+               PrometheusApp.layer,
              )
     } yield ()
 }
@@ -75,16 +75,16 @@ object DocsServer {
                title = "DSP-API",
                version = BuildInfo.version,
                summary = Some(
-                 "DSP-API is part of the the DaSCH Service Platform, a repository for the long-term preservation and reuse of data in the humanities."
+                 "DSP-API is part of the the DaSCH Service Platform, a repository for the long-term preservation and reuse of data in the humanities.",
                ),
-               contact = Some(Contact(name = Some("DaSCH"), url = Some("https://www.dasch.swiss/")))
+               contact = Some(Contact(name = Some("DaSCH"), url = Some("https://www.dasch.swiss/"))),
              )
     } yield SwaggerInterpreter(customiseDocsModel = addServer(config))
       .fromEndpoints[Task](allEndpoints, info)
 
   private def addServer(config: KnoraApi) = (openApi: OpenAPI) => {
     openApi.copy(servers =
-      List(openapi.Server(url = config.externalKnoraApiBaseUrl, description = Some("The dsp-api server")))
+      List(openapi.Server(url = config.externalKnoraApiBaseUrl, description = Some("The dsp-api server"))),
     )
   }
 }

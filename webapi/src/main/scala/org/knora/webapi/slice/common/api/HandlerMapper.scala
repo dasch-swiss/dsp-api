@@ -26,7 +26,7 @@ object InputType {
 
 case class PublicEndpointHandler[INPUT, OUTPUT](
   endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, Any],
-  handler: INPUT => Task[OUTPUT]
+  handler: INPUT => Task[OUTPUT],
 )
 
 case class SecuredEndpointHandler[INPUT, OUTPUT](
@@ -37,20 +37,20 @@ case class SecuredEndpointHandler[INPUT, OUTPUT](
     RequestRejectedException,
     OUTPUT,
     Any,
-    Future
+    Future,
   ],
-  handler: User => INPUT => Task[OUTPUT]
+  handler: User => INPUT => Task[OUTPUT],
 )
 
 final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
   def mapSecuredEndpointHandler[INPUT, OUTPUT](
-    handlerAndEndpoint: SecuredEndpointHandler[INPUT, OUTPUT]
+    handlerAndEndpoint: SecuredEndpointHandler[INPUT, OUTPUT],
   ): Full[SecurityIn, User, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     handlerAndEndpoint.endpoint.serverLogic(user => in => { runToFuture(handlerAndEndpoint.handler(user)(in)) })
 
   def mapPublicEndpointHandler[INPUT, OUTPUT](
-    handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT]
+    handlerAndEndpoint: PublicEndpointHandler[INPUT, OUTPUT],
   ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     handlerAndEndpoint.endpoint.serverLogic[Future](in => runToFuture(handlerAndEndpoint.handler(in)))
 
