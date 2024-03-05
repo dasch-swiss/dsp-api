@@ -1,0 +1,12 @@
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://api.knora.org/ontology/knora-api/v2#isEditable> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://api.knora.org/ontology/knora-api/v2#isResourceProperty> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://api.knora.org/ontology/knora-api/v2#objectType> <http://api.knora.org/ontology/knora-api/v2#DateValue> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://api.knora.org/ontology/knora-api/v2#subjectType> <http://0.0.0.0:3333/ontology/0001/anything/v2#Thing> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://api.knora.org/ontology/salsah-gui/v2#guiElement> <http://api.knora.org/ontology/salsah-gui/v2#Date> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://www.w3.org/2000/01/rdf-schema#label> "Date" .
+<http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/v2#hasValue> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2> <http://api.knora.org/ontology/knora-api/v2#attachedToProject> <http://rdfh.ch/projects/0001> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2> <http://api.knora.org/ontology/knora-api/v2#lastModificationDate> "2017-12-19T15:23:42.166Z"^^<http://www.w3.org/2001/XMLSchema#dateTimeStamp> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://0.0.0.0:3333/ontology/0001/anything/v2> <http://www.w3.org/2000/01/rdf-schema#label> "The anything ontology" .

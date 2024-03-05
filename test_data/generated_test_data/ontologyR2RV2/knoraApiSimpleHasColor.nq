@@ -1,0 +1,8 @@
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Color> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Region> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#comment> "Specifies the color of a region." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#label> "Color" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/2000/01/rdf-schema#label> "The knora-api ontology in the simple schema" .

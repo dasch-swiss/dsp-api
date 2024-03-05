@@ -1,0 +1,8 @@
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a date as a period with different possible precisions." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2000/01/rdf-schema#label> "Date literal" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2002/07/owl#withRestrictions> _:B1536a423X2D893dX2D4023X2D83dcX2D462047ecd646 .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/2000/01/rdf-schema#label> "The knora-api ontology in the simple schema" .
+_:B1536a423X2D893dX2D4023X2D83dcX2D462047ecd646 <http://www.w3.org/2001/XMLSchema#pattern> "(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?" .

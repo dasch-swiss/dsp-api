@@ -1,0 +1,611 @@
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#comment> "A generic class for representing annotations" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#label> "Annotation" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B12971c93X2Df6b1X2D4893X2Dad65X2D7b13b0fa6ccb .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B3875170fX2Df53cX2D4e72X2D8a82X2Da51a9c5d8170 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B65fc68eeX2D26ccX2D4c5aX2D8e7fX2Dcdd48ebe462d .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6f9e50d5X2De72eX2D47a6X2Da209X2Dde1a39b259eb .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B85087df3X2Df07dX2D45e4X2Db254X2D294b04809e5f .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B86615a75X2D1066X2D4f8bX2Db22fX2D71b5979db3f2 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Annotation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B9ea808fdX2D7604X2D43fdX2D8ed5X2D3567f3262662 .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Zip)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B133f89a4X2D9482X2D473bX2Daf61X2D6591ea3f8201 .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B2cf3daf0X2Df6dfX2D4254X2Db862X2Df11d7446f4c5 .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B3f83698fX2Deb1eX2D4ddaX2Da9e2X2Da4d64abaedee .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B729d5b07X2Dca02X2D4b4dX2Dba27X2D3c58681c44cb .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B8833202eX2D58dbX2D48ecX2Db0c1X2D07af3c05865a .
+<http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bdd4d31d6X2D518bX2D4cc8X2Db25bX2Db2fe5f083f05 .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a file containing audio data" .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Audio)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B0e54017dX2D411dX2D49ebX2Dbb51X2D59f129b98a46 .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B236910beX2D4b01X2D4b86X2D9814X2D727efd329c21 .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B363ecdc6X2Dcaa5X2D4af0X2Db2c9X2Db16154c05d68 .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B54686264X2D58e3X2D4ea8X2D8c4cX2Dc462eecd1a51 .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B7df00ceeX2D1bc7X2D4c57X2D880aX2Dd304130e373a .
+<http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B91f9d170X2Dd6f9X2D41e4X2D9880X2D0dd4480a1757 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Color> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Color> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a color." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Color> <http://www.w3.org/2000/01/rdf-schema#label> "Color literal" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Color> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Color> <http://www.w3.org/2002/07/owl#withRestrictions> _:B21c7ba5eX2Dc26cX2D42daX2DbcccX2D6cce7dfb80f2 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a file containg 3D data" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (3D)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6c032142X2D65aaX2D4f85X2D824eX2D6308b3e316ab .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B88470b7bX2D2122X2D4b11X2D9dd3X2D3b08a4206bff .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B92037daeX2D5738X2D47c9X2Daf40X2D123b2173905f .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Ba30da8c6X2DacccX2D4ca6X2Daba5X2D8db5a2e1d2e1 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bb831fa48X2D6b18X2D4eefX2D8fc5X2D115e636cad3f .
+<http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bd00111d4X2D4459X2D47b5X2D8778X2D6c9464655140 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a date as a period with different possible precisions." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2000/01/rdf-schema#label> "Date literal" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> <http://www.w3.org/2002/07/owl#withRestrictions> _:B513762b4X2D9d73X2D494fX2D880aX2De5f5f22b4357 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#comment> "Generic representation of a deleted resource that can therefore not be displayed" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#label> "Deleted Resource" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B27758aefX2Dd218X2D46fbX2D8aa9X2D8b7fc34ff31c .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B4ec04c47X2D479aX2D4f33X2D89b7X2Da505cbb2b041 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B842c6b7cX2Df725X2D43c3X2D8f28X2Dcdd5f55abca0 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bba0c43edX2D279fX2D42e1X2D8831X2Db42c1b7482a2 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Be64d2341X2D6ee7X2D41f1X2Db4a0X2D26b4bca4112c .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedValue> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedValue> <http://www.w3.org/2000/01/rdf-schema#comment> "Generic representation of a deleted value that can therefore not be displayed" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DeletedValue> <http://www.w3.org/2000/01/rdf-schema#label> "Deleted Value" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Document)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B0ed79cf8X2D4897X2D4a19X2Da974X2Da156c02131ce .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B307eda63X2D304aX2D48f7X2Db1b0X2Daabeeea2b43f .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B4f334e79X2Dc03aX2D4260X2D85e3X2De7be7ae6bea4 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B670c6ef3X2D5ccaX2D4bb6X2D8c8fX2D08aa84fe7b46 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B7c1c9f1cX2D87e4X2D4c3cX2Da24cX2D7d8ec0a92d26 .
+<http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Baab9b21eX2Dd56bX2D40bcX2Da6edX2Dfc815730f252 .
+<http://api.knora.org/ontology/knora-api/simple/v2#File> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#File> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a file URI." .
+<http://api.knora.org/ontology/knora-api/simple/v2#File> <http://www.w3.org/2000/01/rdf-schema#label> "File URI" .
+<http://api.knora.org/ontology/knora-api/simple/v2#File> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#anyURI> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geom> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a geometry specification in JSON." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geom> <http://www.w3.org/2000/01/rdf-schema#label> "Geometry specification" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geom> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geoname> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geoname> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a Geoname code." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geoname> <http://www.w3.org/2000/01/rdf-schema#label> "Geoname code" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geoname> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Geoname> <http://www.w3.org/2002/07/owl#withRestrictions> _:B077b51f6X2D289bX2D46d3X2D833aX2Df4cd81426eb4 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Interval> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Interval> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents an interval." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Interval> <http://www.w3.org/2000/01/rdf-schema#label> "Interval literal" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Interval> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Interval> <http://www.w3.org/2002/07/owl#withRestrictions> _:Ba7d7fb08X2D6a27X2D4fa2X2D9f2cX2D4c42a47192d8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://api.knora.org/ontology/knora-api/simple/v2#resourceIcon> "link.gif" .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a generic link object" .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#label> "Link Object" .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B33997ae3X2De3b5X2D4929X2D891bX2D0f0dc4e4ceba .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Ba4bc46a5X2D6d04X2D4deeX2D8845X2Db547e239fa98 .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bad6323b6X2D61fcX2D426bX2D972eX2D9a46dc3dccb8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bcaf5adb9X2D1581X2D4948X2D843dX2Dcfd5f20e29f1 .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bdf25e2f6X2D6f64X2D470cX2D8877X2D9a38ed750a52 .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bf44b79d1X2D7ba3X2D4213X2D9d21X2D4aa1d079cb2e .
+<http://api.knora.org/ontology/knora-api/simple/v2#LinkObj> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bff3f56fbX2D6322X2D4df7X2DadefX2D5cf4d3ac0e45 .
+<http://api.knora.org/ontology/knora-api/simple/v2#ListNode> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Datatype> .
+<http://api.knora.org/ontology/knora-api/simple/v2#ListNode> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a list node." .
+<http://api.knora.org/ontology/knora-api/simple/v2#ListNode> <http://www.w3.org/2000/01/rdf-schema#label> "List Node" .
+<http://api.knora.org/ontology/knora-api/simple/v2#ListNode> <http://www.w3.org/2002/07/owl#onDatatype> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "A resource containing moving image data" .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Movie)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B033300e1X2Dc056X2D4d3aX2Db2e3X2D93023f7ce917 .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6d2febbaX2Df0edX2D4a23X2Db17eX2D1534381276c6 .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B850e9393X2D44d3X2D465cX2D9115X2D9d1a1a2ba396 .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B8834f9d5X2De8e7X2D4f61X2D8b1aX2D4f62c66077fa .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B89b58da3X2De0bcX2D4924X2D8a3cX2D8d5947446df4 .
+<http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bf383e160X2D3d6cX2D4514X2D8910X2D367e0dcd9fa8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://api.knora.org/ontology/knora-api/simple/v2#resourceIcon> "region.gif" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a geometric region of a resource. The geometry is represented currently as JSON string." .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#label> "Region" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B11687b7dX2D5ef9X2D4e28X2D8827X2Db12a1349abc8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B46072eeeX2Dba39X2D4725X2Db47aX2Dcd1fff492223 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B53b74675X2D5d0dX2D481eX2Dac21X2D469c261f17ad .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6927844eX2Dc7b8X2D4501X2D82e4X2D9b24a2ab69ae .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6d4407bbX2Db7daX2D45ceX2DbcbaX2D0a02b503eaed .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B9db7b995X2Db795X2D4e0eX2D91d8X2D3e4749aac2d9 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bc453dc1dX2Ddb44X2D40a6X2D9398X2D67702fafa2a9 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bece79297X2Da641X2D4f0aX2D9f33X2Dfdd1a77cc1ad .
+<http://api.knora.org/ontology/knora-api/simple/v2#Region> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Beff995beX2DbccfX2D4c61X2Dbb3aX2D51b84b87a10d .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#comment> "A resource that can store a file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B53479efcX2D11a2X2D41f5X2Da455X2D7e974699127a .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B801db8f9X2Dbb19X2D46b4X2D87eeX2D8e150df1812f .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B872b98abX2Da759X2D4d56X2D8f1aX2D2a066c868baf .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bce10f513X2D1474X2D44dfX2Db4a8X2D47d054e30293 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bdf55654eX2D0e11X2D4b49X2D8602X2D884054e8ec58 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Representation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bdfdc80c9X2D66a5X2D4ba1X2D9f66X2D5c7ad4b224d2 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents something in the world, or an abstract thing" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#label> "Resource" .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B5cbd18d0X2D1dcfX2D410aX2Da907X2D513fccfc2156 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B694eee5fX2D9112X2D4fe4X2Da33fX2D193ea991a1ff .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6d323b6aX2D99fcX2D46c1X2Db4a1X2Df9a0fe78d7f8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B9d9041bdX2D9875X2D4216X2D8eb6X2Dc7ef824a0fcd .
+<http://api.knora.org/ontology/knora-api/simple/v2#Resource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Be11705d5X2D8b11X2D4d55X2D8e15X2D0afdddd37c51 .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "A resource that can contain a two-dimensional still image file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Image)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B325b3617X2D00a0X2D44f3X2D84e9X2D242e7d426834 .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B3fe4975dX2D00fdX2D4addX2Da3adX2D16f87ad3a463 .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B67b16cb7X2Db285X2D4116X2D97adX2D984c85b21964 .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B6c182373X2D416bX2D4740X2D8613X2D92ed3b8b4804 .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Ba79aacc1X2De04fX2D4415X2D95b7X2D40a2a19dd0ef .
+<http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bf0e3e821X2De3a3X2D4fe0X2Dab87X2Dd98fa8bb7fb6 .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "A resource containing a text file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "Representation (Text)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B4a190b0fX2D914fX2D4e40X2Da4abX2D2cbd5191ce62 .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B5fdf132dX2Db289X2D4375X2Da939X2D6a04f4eeb5ce .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Ba4d88229X2D2379X2D4f6dX2Dbf5aX2Da8612c700739 .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bc799dcbbX2DceefX2D4da8X2D89a5X2D066482b1fa89 .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bde58ca66X2DceaeX2D47ffX2D8f9fX2D8070218019d8 .
+<http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bee6a9060X2DaefcX2D4c23X2D976eX2D0891328352b5 .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#comment> "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML." .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#label> "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML." .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B561c8ad3X2D8c31X2D48ceX2Dbc1aX2D07dfcb23ffdd .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B880c9c0dX2D533dX2D4110X2Da2c8X2D9fff82923f62 .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B89e725b4X2D8523X2D407dX2Da5a9X2D0c726994441e .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B8b2b9cdbX2DccbbX2D42d1X2D855bX2Dfffcda7b427b .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:B96c0a457X2D1148X2D4f46X2D83fcX2Dca6681468ad4 .
+<http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> _:Bcff3820eX2D9402X2D4bb2X2Db5ceX2D5e1bc67456f0 .
+<http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#anyURI> .
+<http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> <http://www.w3.org/2000/01/rdf-schema#comment> "Provides the ARK URL of a resource." .
+<http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> <http://www.w3.org/2000/01/rdf-schema#label> "ARK URL" .
+<http://api.knora.org/ontology/knora-api/simple/v2#error> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#error> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#error> <http://www.w3.org/2000/01/rdf-schema#comment> "Provides a message indicating that an operation was unsuccessful" .
+<http://api.knora.org/ontology/knora-api/simple/v2#error> <http://www.w3.org/2000/01/rdf-schema#label> "error" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a zip archive" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://www.w3.org/2000/01/rdf-schema#label> "has zip" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to an audio file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://www.w3.org/2000/01/rdf-schema#label> "has audio file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Color> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Region> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#comment> "Specifies the color of a region." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#label> "Color" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasColor> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a comment on a resource as a knora-base:TextValue" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://www.w3.org/2000/01/rdf-schema#label> "Comment" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasComment> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a 3D-file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://www.w3.org/2000/01/rdf-schema#label> "has 3D-file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a document" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://www.w3.org/2000/01/rdf-schema#label> "has document" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://www.w3.org/2000/01/rdf-schema#label> "has file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Geom> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Region> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a geometrical shape." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://www.w3.org/2000/01/rdf-schema#label> "Geometry" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that this resource referred to by another resource" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://www.w3.org/2000/01/rdf-schema#label> "has incoming link" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a direct connection between two resources" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://www.w3.org/2000/01/rdf-schema#label> "has Link to" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a movie file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://www.w3.org/2000/01/rdf-schema#label> "has movie file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "has Representation" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasRepresentation> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Interval> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds> <http://www.w3.org/2000/01/rdf-schema#label> "Sequence Bounds" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://www.w3.org/2000/01/rdf-schema#comment> "Represents a link in standoff markup from one resource to another." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://www.w3.org/2000/01/rdf-schema#label> "has Standoff Link to" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to an image file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://www.w3.org/2000/01/rdf-schema#label> "has image file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#File> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://www.w3.org/2000/01/rdf-schema#comment> "Connects a Representation to a text file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://www.w3.org/2000/01/rdf-schema#label> "has text file" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasValue> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasValue> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasValue> <http://www.w3.org/2000/01/rdf-schema#comment> "The base property of properties that point from Knora resources to Knora values." .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasValue> <http://www.w3.org/2000/01/rdf-schema#label> "has value" .
+<http://api.knora.org/ontology/knora-api/simple/v2#hasValue> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Annotation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> <http://www.w3.org/2000/01/rdf-schema#label> "is Annotation of" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isMainResource> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#boolean> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isMainResource> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isMainResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isMainResource> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates if the given resource is the main resource of a request or a resource referred to by a link property." .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that this resource is part of another resource" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://www.w3.org/2000/01/rdf-schema#label> "is part of" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isPartOf> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Representation> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Region> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://www.w3.org/2000/01/rdf-schema#comment> "Region of interest within a digital object (e.g. an image)" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://www.w3.org/2000/01/rdf-schema#label> "is region of" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that this resource is a sequence of a video or audio resource" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://www.w3.org/2000/01/rdf-schema#label> "is sequence of" .
+<http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+<http://api.knora.org/ontology/knora-api/simple/v2#mayHaveMoreResults> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#boolean> .
+<http://api.knora.org/ontology/knora-api/simple/v2#mayHaveMoreResults> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#mayHaveMoreResults> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates whether more results may be available for a search query" .
+<http://api.knora.org/ontology/knora-api/simple/v2#mayHaveMoreResults> <http://www.w3.org/2000/01/rdf-schema#label> "May have more results" .
+<http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2000/01/rdf-schema#comment> "Specifies the required type of the objects of a property" .
+<http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2000/01/rdf-schema#label> "Object type" .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceIcon> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceIcon> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://www.w3.org/2002/07/owl#Class> .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceIcon> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> <http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://api.knora.org/ontology/knora-api/simple/v2#Resource> .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> <http://www.w3.org/2000/01/rdf-schema#comment> "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used." .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> <http://www.w3.org/2000/01/rdf-schema#label> "Resource property" .
+<http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#resourceProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#result> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#string> .
+<http://api.knora.org/ontology/knora-api/simple/v2#result> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#result> <http://www.w3.org/2000/01/rdf-schema#comment> "Provides a message indicating that an operation was successful" .
+<http://api.knora.org/ontology/knora-api/simple/v2#result> <http://www.w3.org/2000/01/rdf-schema#label> "result" .
+<http://api.knora.org/ontology/knora-api/simple/v2#seqnum> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#integer> .
+<http://api.knora.org/ontology/knora-api/simple/v2#seqnum> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#seqnum> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource." .
+<http://api.knora.org/ontology/knora-api/simple/v2#seqnum> <http://www.w3.org/2000/01/rdf-schema#label> "Sequence number" .
+<http://api.knora.org/ontology/knora-api/simple/v2#seqnum> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://api.knora.org/ontology/knora-api/simple/v2#hasValue> .
+<http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://www.w3.org/2000/01/rdf-schema#comment> "Specifies the required type of the subjects of a property" .
+<http://api.knora.org/ontology/knora-api/simple/v2#subjectType> <http://www.w3.org/2000/01/rdf-schema#label> "Subject type" .
+<http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> <http://api.knora.org/ontology/knora-api/simple/v2#objectType> <http://www.w3.org/2001/XMLSchema#anyURI> .
+<http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> <http://www.w3.org/2000/01/rdf-schema#comment> "Provides the ARK URL of a particular version of a resource." .
+<http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> <http://www.w3.org/2000/01/rdf-schema#label> "version ARK URL" .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://api.knora.org/ontology/knora-api/simple/v2> <http://www.w3.org/2000/01/rdf-schema#label> "The knora-api ontology in the simple schema" .
+<http://www.w3.org/2000/01/rdf-schema#label> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+_:B033300e1X2Dc056X2D4d3aX2Db2e3X2D93023f7ce917 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B033300e1X2Dc056X2D4d3aX2Db2e3X2D93023f7ce917 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B033300e1X2Dc056X2D4d3aX2Db2e3X2D93023f7ce917 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B077b51f6X2D289bX2D46d3X2D833aX2Df4cd81426eb4 <http://www.w3.org/2001/XMLSchema#pattern> "\\d{1,8}" .
+_:B0e54017dX2D411dX2D49ebX2Dbb51X2D59f129b98a46 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B0e54017dX2D411dX2D49ebX2Dbb51X2D59f129b98a46 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B0e54017dX2D411dX2D49ebX2Dbb51X2D59f129b98a46 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B0ed79cf8X2D4897X2D4a19X2Da974X2Da156c02131ce <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B0ed79cf8X2D4897X2D4a19X2Da974X2Da156c02131ce <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B0ed79cf8X2D4897X2D4a19X2Da974X2Da156c02131ce <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B11687b7dX2D5ef9X2D4e28X2D8827X2Db12a1349abc8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B11687b7dX2D5ef9X2D4e28X2D8827X2Db12a1349abc8 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B11687b7dX2D5ef9X2D4e28X2D8827X2Db12a1349abc8 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B12971c93X2Df6b1X2D4893X2Dad65X2D7b13b0fa6ccb <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B12971c93X2Df6b1X2D4893X2Dad65X2D7b13b0fa6ccb <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B12971c93X2Df6b1X2D4893X2Dad65X2D7b13b0fa6ccb <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B133f89a4X2D9482X2D473bX2Daf61X2D6591ea3f8201 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B133f89a4X2D9482X2D473bX2Daf61X2D6591ea3f8201 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B133f89a4X2D9482X2D473bX2Daf61X2D6591ea3f8201 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B21c7ba5eX2Dc26cX2D42daX2DbcccX2D6cce7dfb80f2 <http://www.w3.org/2001/XMLSchema#pattern> "#([0-9a-fA-F]{3}){1,2}" .
+_:B236910beX2D4b01X2D4b86X2D9814X2D727efd329c21 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B236910beX2D4b01X2D4b86X2D9814X2D727efd329c21 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B236910beX2D4b01X2D4b86X2D9814X2D727efd329c21 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B27758aefX2Dd218X2D46fbX2D8aa9X2D8b7fc34ff31c <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B27758aefX2Dd218X2D46fbX2D8aa9X2D8b7fc34ff31c <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B27758aefX2Dd218X2D46fbX2D8aa9X2D8b7fc34ff31c <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B2cf3daf0X2Df6dfX2D4254X2Db862X2Df11d7446f4c5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B2cf3daf0X2Df6dfX2D4254X2Db862X2Df11d7446f4c5 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B2cf3daf0X2Df6dfX2D4254X2Db862X2Df11d7446f4c5 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasArchiveFile> .
+_:B307eda63X2D304aX2D48f7X2Db1b0X2Daabeeea2b43f <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B307eda63X2D304aX2D48f7X2Db1b0X2Daabeeea2b43f <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B307eda63X2D304aX2D48f7X2Db1b0X2Daabeeea2b43f <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B325b3617X2D00a0X2D44f3X2D84e9X2D242e7d426834 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B325b3617X2D00a0X2D44f3X2D84e9X2D242e7d426834 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B325b3617X2D00a0X2D44f3X2D84e9X2D242e7d426834 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B33997ae3X2De3b5X2D4929X2D891bX2D0f0dc4e4ceba <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B33997ae3X2De3b5X2D4929X2D891bX2D0f0dc4e4ceba <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B33997ae3X2De3b5X2D4929X2D891bX2D0f0dc4e4ceba <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasComment> .
+_:B363ecdc6X2Dcaa5X2D4af0X2Db2c9X2Db16154c05d68 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B363ecdc6X2Dcaa5X2D4af0X2Db2c9X2Db16154c05d68 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B363ecdc6X2Dcaa5X2D4af0X2Db2c9X2Db16154c05d68 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B3875170fX2Df53cX2D4e72X2D8a82X2Da51a9c5d8170 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B3875170fX2Df53cX2D4e72X2D8a82X2Da51a9c5d8170 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B3875170fX2Df53cX2D4e72X2D8a82X2Da51a9c5d8170 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B3f83698fX2Deb1eX2D4ddaX2Da9e2X2Da4d64abaedee <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B3f83698fX2Deb1eX2D4ddaX2Da9e2X2Da4d64abaedee <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B3f83698fX2Deb1eX2D4ddaX2Da9e2X2Da4d64abaedee <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B3fe4975dX2D00fdX2D4addX2Da3adX2D16f87ad3a463 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B3fe4975dX2D00fdX2D4addX2Da3adX2D16f87ad3a463 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B3fe4975dX2D00fdX2D4addX2Da3adX2D16f87ad3a463 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B46072eeeX2Dba39X2D4725X2Db47aX2Dcd1fff492223 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B46072eeeX2Dba39X2D4725X2Db47aX2Dcd1fff492223 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B46072eeeX2Dba39X2D4725X2Db47aX2Dcd1fff492223 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B4a190b0fX2D914fX2D4e40X2Da4abX2D2cbd5191ce62 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B4a190b0fX2D914fX2D4e40X2Da4abX2D2cbd5191ce62 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B4a190b0fX2D914fX2D4e40X2Da4abX2D2cbd5191ce62 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B4ec04c47X2D479aX2D4f33X2D89b7X2Da505cbb2b041 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B4ec04c47X2D479aX2D4f33X2D89b7X2Da505cbb2b041 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B4ec04c47X2D479aX2D4f33X2D89b7X2Da505cbb2b041 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B4f334e79X2Dc03aX2D4260X2D85e3X2De7be7ae6bea4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B4f334e79X2Dc03aX2D4260X2D85e3X2De7be7ae6bea4 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B4f334e79X2Dc03aX2D4260X2D85e3X2De7be7ae6bea4 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B513762b4X2D9d73X2D494fX2D880aX2De5f5f22b4357 <http://www.w3.org/2001/XMLSchema#pattern> "(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?" .
+_:B53479efcX2D11a2X2D41f5X2Da455X2D7e974699127a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B53479efcX2D11a2X2D41f5X2Da455X2D7e974699127a <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B53479efcX2D11a2X2D41f5X2Da455X2D7e974699127a <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B53b74675X2D5d0dX2D481eX2Dac21X2D469c261f17ad <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B53b74675X2D5d0dX2D481eX2Dac21X2D469c261f17ad <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B53b74675X2D5d0dX2D481eX2Dac21X2D469c261f17ad <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B54686264X2D58e3X2D4ea8X2D8c4cX2Dc462eecd1a51 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B54686264X2D58e3X2D4ea8X2D8c4cX2Dc462eecd1a51 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B54686264X2D58e3X2D4ea8X2D8c4cX2Dc462eecd1a51 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B561c8ad3X2D8c31X2D48ceX2Dbc1aX2D07dfcb23ffdd <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B561c8ad3X2D8c31X2D48ceX2Dbc1aX2D07dfcb23ffdd <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B561c8ad3X2D8c31X2D48ceX2Dbc1aX2D07dfcb23ffdd <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B5cbd18d0X2D1dcfX2D410aX2Da907X2D513fccfc2156 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B5cbd18d0X2D1dcfX2D410aX2Da907X2D513fccfc2156 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B5cbd18d0X2D1dcfX2D410aX2Da907X2D513fccfc2156 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B5fdf132dX2Db289X2D4375X2Da939X2D6a04f4eeb5ce <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B5fdf132dX2Db289X2D4375X2Da939X2D6a04f4eeb5ce <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B5fdf132dX2Db289X2D4375X2Da939X2D6a04f4eeb5ce <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B65fc68eeX2D26ccX2D4c5aX2D8e7fX2Dcdd48ebe462d <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B65fc68eeX2D26ccX2D4c5aX2D8e7fX2Dcdd48ebe462d <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B65fc68eeX2D26ccX2D4c5aX2D8e7fX2Dcdd48ebe462d <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B670c6ef3X2D5ccaX2D4bb6X2D8c8fX2D08aa84fe7b46 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B670c6ef3X2D5ccaX2D4bb6X2D8c8fX2D08aa84fe7b46 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B670c6ef3X2D5ccaX2D4bb6X2D8c8fX2D08aa84fe7b46 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile> .
+_:B67b16cb7X2Db285X2D4116X2D97adX2D984c85b21964 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B67b16cb7X2Db285X2D4116X2D97adX2D984c85b21964 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B67b16cb7X2Db285X2D4116X2D97adX2D984c85b21964 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile> .
+_:B6927844eX2Dc7b8X2D4501X2D82e4X2D9b24a2ab69ae <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6927844eX2Dc7b8X2D4501X2D82e4X2D9b24a2ab69ae <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6927844eX2Dc7b8X2D4501X2D82e4X2D9b24a2ab69ae <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B694eee5fX2D9112X2D4fe4X2Da33fX2D193ea991a1ff <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B694eee5fX2D9112X2D4fe4X2Da33fX2D193ea991a1ff <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B694eee5fX2D9112X2D4fe4X2Da33fX2D193ea991a1ff <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B6c032142X2D65aaX2D4f85X2D824eX2D6308b3e316ab <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6c032142X2D65aaX2D4f85X2D824eX2D6308b3e316ab <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6c032142X2D65aaX2D4f85X2D824eX2D6308b3e316ab <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile> .
+_:B6c182373X2D416bX2D4740X2D8613X2D92ed3b8b4804 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6c182373X2D416bX2D4740X2D8613X2D92ed3b8b4804 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6c182373X2D416bX2D4740X2D8613X2D92ed3b8b4804 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B6d2febbaX2Df0edX2D4a23X2Db17eX2D1534381276c6 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6d2febbaX2Df0edX2D4a23X2Db17eX2D1534381276c6 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6d2febbaX2Df0edX2D4a23X2Db17eX2D1534381276c6 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B6d323b6aX2D99fcX2D46c1X2Db4a1X2Df9a0fe78d7f8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6d323b6aX2D99fcX2D46c1X2Db4a1X2Df9a0fe78d7f8 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6d323b6aX2D99fcX2D46c1X2Db4a1X2Df9a0fe78d7f8 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B6d4407bbX2Db7daX2D45ceX2DbcbaX2D0a02b503eaed <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6d4407bbX2Db7daX2D45ceX2DbcbaX2D0a02b503eaed <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6d4407bbX2Db7daX2D45ceX2DbcbaX2D0a02b503eaed <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasColor> .
+_:B6f9e50d5X2De72eX2D47a6X2Da209X2Dde1a39b259eb <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B6f9e50d5X2De72eX2D47a6X2Da209X2Dde1a39b259eb <http://www.w3.org/2002/07/owl#minCardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B6f9e50d5X2De72eX2D47a6X2Da209X2Dde1a39b259eb <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf> .
+_:B729d5b07X2Dca02X2D4b4dX2Dba27X2D3c58681c44cb <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B729d5b07X2Dca02X2D4b4dX2Dba27X2D3c58681c44cb <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B729d5b07X2Dca02X2D4b4dX2Dba27X2D3c58681c44cb <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B7c1c9f1cX2D87e4X2D4c3cX2Da24cX2D7d8ec0a92d26 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B7c1c9f1cX2D87e4X2D4c3cX2Da24cX2D7d8ec0a92d26 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B7c1c9f1cX2D87e4X2D4c3cX2Da24cX2D7d8ec0a92d26 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B7df00ceeX2D1bc7X2D4c57X2D880aX2Dd304130e373a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B7df00ceeX2D1bc7X2D4c57X2D880aX2Dd304130e373a <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B7df00ceeX2D1bc7X2D4c57X2D880aX2Dd304130e373a <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B801db8f9X2Dbb19X2D46b4X2D87eeX2D8e150df1812f <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B801db8f9X2Dbb19X2D46b4X2D87eeX2D8e150df1812f <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B801db8f9X2Dbb19X2D46b4X2D87eeX2D8e150df1812f <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B842c6b7cX2Df725X2D43c3X2D8f28X2Dcdd5f55abca0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B842c6b7cX2Df725X2D43c3X2D8f28X2Dcdd5f55abca0 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B842c6b7cX2Df725X2D43c3X2D8f28X2Dcdd5f55abca0 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B85087df3X2Df07dX2D45e4X2Db254X2D294b04809e5f <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B85087df3X2Df07dX2D45e4X2Db254X2D294b04809e5f <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B85087df3X2Df07dX2D45e4X2Db254X2D294b04809e5f <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B850e9393X2D44d3X2D465cX2D9115X2D9d1a1a2ba396 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B850e9393X2D44d3X2D465cX2D9115X2D9d1a1a2ba396 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B850e9393X2D44d3X2D465cX2D9115X2D9d1a1a2ba396 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile> .
+_:B86615a75X2D1066X2D4f8bX2Db22fX2D71b5979db3f2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B86615a75X2D1066X2D4f8bX2Db22fX2D71b5979db3f2 <http://www.w3.org/2002/07/owl#minCardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B86615a75X2D1066X2D4f8bX2Db22fX2D71b5979db3f2 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasComment> .
+_:B872b98abX2Da759X2D4d56X2D8f1aX2D2a066c868baf <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B872b98abX2Da759X2D4d56X2D8f1aX2D2a066c868baf <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B872b98abX2Da759X2D4d56X2D8f1aX2D2a066c868baf <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:B880c9c0dX2D533dX2D4110X2Da2c8X2D9fff82923f62 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B880c9c0dX2D533dX2D4110X2Da2c8X2D9fff82923f62 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B880c9c0dX2D533dX2D4110X2Da2c8X2D9fff82923f62 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B8833202eX2D58dbX2D48ecX2Db0c1X2D07af3c05865a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B8833202eX2D58dbX2D48ecX2Db0c1X2D07af3c05865a <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B8833202eX2D58dbX2D48ecX2Db0c1X2D07af3c05865a <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B8834f9d5X2De8e7X2D4f61X2D8b1aX2D4f62c66077fa <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B8834f9d5X2De8e7X2D4f61X2D8b1aX2D4f62c66077fa <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B8834f9d5X2De8e7X2D4f61X2D8b1aX2D4f62c66077fa <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B88470b7bX2D2122X2D4b11X2D9dd3X2D3b08a4206bff <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B88470b7bX2D2122X2D4b11X2D9dd3X2D3b08a4206bff <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B88470b7bX2D2122X2D4b11X2D9dd3X2D3b08a4206bff <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B89b58da3X2De0bcX2D4924X2D8a3cX2D8d5947446df4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B89b58da3X2De0bcX2D4924X2D8a3cX2D8d5947446df4 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B89b58da3X2De0bcX2D4924X2D8a3cX2D8d5947446df4 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B89e725b4X2D8523X2D407dX2Da5a9X2D0c726994441e <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B89e725b4X2D8523X2D407dX2Da5a9X2D0c726994441e <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B89e725b4X2D8523X2D407dX2Da5a9X2D0c726994441e <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B8b2b9cdbX2DccbbX2D42d1X2D855bX2Dfffcda7b427b <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B8b2b9cdbX2DccbbX2D42d1X2D855bX2Dfffcda7b427b <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B8b2b9cdbX2DccbbX2D42d1X2D855bX2Dfffcda7b427b <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B91f9d170X2Dd6f9X2D41e4X2D9880X2D0dd4480a1757 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B91f9d170X2Dd6f9X2D41e4X2D9880X2D0dd4480a1757 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B91f9d170X2Dd6f9X2D41e4X2D9880X2D0dd4480a1757 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasAudioFile> .
+_:B92037daeX2D5738X2D47c9X2Daf40X2D123b2173905f <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B92037daeX2D5738X2D47c9X2Daf40X2D123b2173905f <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B92037daeX2D5738X2D47c9X2Daf40X2D123b2173905f <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:B96c0a457X2D1148X2D4f46X2D83fcX2Dca6681468ad4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B96c0a457X2D1148X2D4f46X2D83fcX2Dca6681468ad4 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B96c0a457X2D1148X2D4f46X2D83fcX2Dca6681468ad4 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:B9d9041bdX2D9875X2D4216X2D8eb6X2Dc7ef824a0fcd <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B9d9041bdX2D9875X2D4216X2D8eb6X2Dc7ef824a0fcd <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B9d9041bdX2D9875X2D4216X2D8eb6X2Dc7ef824a0fcd <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:B9db7b995X2Db795X2D4e0eX2D91d8X2D3e4749aac2d9 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B9db7b995X2Db795X2D4e0eX2D91d8X2D3e4749aac2d9 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B9db7b995X2Db795X2D4e0eX2D91d8X2D3e4749aac2d9 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:B9ea808fdX2D7604X2D43fdX2D8ed5X2D3567f3262662 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:B9ea808fdX2D7604X2D43fdX2D8ed5X2D3567f3262662 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:B9ea808fdX2D7604X2D43fdX2D8ed5X2D3567f3262662 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Ba30da8c6X2DacccX2D4ca6X2Daba5X2D8db5a2e1d2e1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Ba30da8c6X2DacccX2D4ca6X2Daba5X2D8db5a2e1d2e1 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Ba30da8c6X2DacccX2D4ca6X2Daba5X2D8db5a2e1d2e1 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:Ba4bc46a5X2D6d04X2D4deeX2D8845X2Db547e239fa98 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Ba4bc46a5X2D6d04X2D4deeX2D8845X2Db547e239fa98 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Ba4bc46a5X2D6d04X2D4deeX2D8845X2Db547e239fa98 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:Ba4d88229X2D2379X2D4f6dX2Dbf5aX2Da8612c700739 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Ba4d88229X2D2379X2D4f6dX2Dbf5aX2Da8612c700739 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Ba4d88229X2D2379X2D4f6dX2Dbf5aX2Da8612c700739 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:Ba79aacc1X2De04fX2D4415X2D95b7X2D40a2a19dd0ef <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Ba79aacc1X2De04fX2D4415X2D95b7X2D40a2a19dd0ef <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Ba79aacc1X2De04fX2D4415X2D95b7X2D40a2a19dd0ef <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Ba7d7fb08X2D6a27X2D4fa2X2D9f2cX2D4c42a47192d8 <http://www.w3.org/2001/XMLSchema#pattern> "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?" .
+_:Baab9b21eX2Dd56bX2D40bcX2Da6edX2Dfc815730f252 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Baab9b21eX2Dd56bX2D40bcX2Da6edX2Dfc815730f252 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Baab9b21eX2Dd56bX2D40bcX2Da6edX2Dfc815730f252 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Bad6323b6X2D61fcX2D426bX2D972eX2D9a46dc3dccb8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bad6323b6X2D61fcX2D426bX2D972eX2D9a46dc3dccb8 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bad6323b6X2D61fcX2D426bX2D972eX2D9a46dc3dccb8 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Bb831fa48X2D6b18X2D4eefX2D8fc5X2D115e636cad3f <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bb831fa48X2D6b18X2D4eefX2D8fc5X2D115e636cad3f <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bb831fa48X2D6b18X2D4eefX2D8fc5X2D115e636cad3f <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Bba0c43edX2D279fX2D42e1X2D8831X2Db42c1b7482a2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bba0c43edX2D279fX2D42e1X2D8831X2Db42c1b7482a2 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bba0c43edX2D279fX2D42e1X2D8831X2Db42c1b7482a2 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:Bc453dc1dX2Ddb44X2D40a6X2D9398X2D67702fafa2a9 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bc453dc1dX2Ddb44X2D40a6X2D9398X2D67702fafa2a9 <http://www.w3.org/2002/07/owl#minCardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bc453dc1dX2Ddb44X2D40a6X2D9398X2D67702fafa2a9 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasGeometry> .
+_:Bc799dcbbX2DceefX2D4da8X2D89a5X2D066482b1fa89 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bc799dcbbX2DceefX2D4da8X2D89a5X2D066482b1fa89 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bc799dcbbX2DceefX2D4da8X2D89a5X2D066482b1fa89 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:Bcaf5adb9X2D1581X2D4948X2D843dX2Dcfd5f20e29f1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bcaf5adb9X2D1581X2D4948X2D843dX2Dcfd5f20e29f1 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bcaf5adb9X2D1581X2D4948X2D843dX2Dcfd5f20e29f1 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:Bce10f513X2D1474X2D44dfX2Db4a8X2D47d054e30293 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bce10f513X2D1474X2D44dfX2Db4a8X2D47d054e30293 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bce10f513X2D1474X2D44dfX2Db4a8X2D47d054e30293 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Bcff3820eX2D9402X2D4bb2X2Db5ceX2D5e1bc67456f0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bcff3820eX2D9402X2D4bb2X2Db5ceX2D5e1bc67456f0 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bcff3820eX2D9402X2D4bb2X2Db5ceX2D5e1bc67456f0 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> .
+_:Bd00111d4X2D4459X2D47b5X2D8778X2D6c9464655140 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bd00111d4X2D4459X2D47b5X2D8778X2D6c9464655140 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bd00111d4X2D4459X2D47b5X2D8778X2D6c9464655140 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Bdd4d31d6X2D518bX2D4cc8X2Db25bX2Db2fe5f083f05 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bdd4d31d6X2D518bX2D4cc8X2Db25bX2Db2fe5f083f05 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bdd4d31d6X2D518bX2D4cc8X2Db25bX2Db2fe5f083f05 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Bde58ca66X2DceaeX2D47ffX2D8f9fX2D8070218019d8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bde58ca66X2DceaeX2D47ffX2D8f9fX2D8070218019d8 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bde58ca66X2DceaeX2D47ffX2D8f9fX2D8070218019d8 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile> .
+_:Bdf25e2f6X2D6f64X2D470cX2D8877X2D9a38ed750a52 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bdf25e2f6X2D6f64X2D470cX2D8877X2D9a38ed750a52 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bdf25e2f6X2D6f64X2D470cX2D8877X2D9a38ed750a52 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl> .
+_:Bdf55654eX2D0e11X2D4b49X2D8602X2D884054e8ec58 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bdf55654eX2D0e11X2D4b49X2D8602X2D884054e8ec58 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bdf55654eX2D0e11X2D4b49X2D8602X2D884054e8ec58 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasFile> .
+_:Bdfdc80c9X2D66a5X2D4ba1X2D9f66X2D5c7ad4b224d2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bdfdc80c9X2D66a5X2D4ba1X2D9f66X2D5c7ad4b224d2 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bdfdc80c9X2D66a5X2D4ba1X2D9f66X2D5c7ad4b224d2 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo> .
+_:Be11705d5X2D8b11X2D4d55X2D8e15X2D0afdddd37c51 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Be11705d5X2D8b11X2D4d55X2D8e15X2D0afdddd37c51 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Be11705d5X2D8b11X2D4d55X2D8e15X2D0afdddd37c51 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Be64d2341X2D6ee7X2D41f1X2Db4a0X2D26b4bca4112c <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Be64d2341X2D6ee7X2D41f1X2Db4a0X2D26b4bca4112c <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Be64d2341X2D6ee7X2D41f1X2Db4a0X2D26b4bca4112c <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
+_:Bece79297X2Da641X2D4f0aX2D9f33X2Dfdd1a77cc1ad <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bece79297X2Da641X2D4f0aX2D9f33X2Dfdd1a77cc1ad <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bece79297X2Da641X2D4f0aX2D9f33X2Dfdd1a77cc1ad <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf> .
+_:Bee6a9060X2DaefcX2D4c23X2D976eX2D0891328352b5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bee6a9060X2DaefcX2D4c23X2D976eX2D0891328352b5 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bee6a9060X2DaefcX2D4c23X2D976eX2D0891328352b5 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Beff995beX2DbccfX2D4c61X2Dbb3aX2D51b84b87a10d <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Beff995beX2DbccfX2D4c61X2Dbb3aX2D51b84b87a10d <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Beff995beX2DbccfX2D4c61X2Dbb3aX2D51b84b87a10d <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasComment> .
+_:Bf0e3e821X2De3a3X2D4fe0X2Dab87X2Dd98fa8bb7fb6 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bf0e3e821X2De3a3X2D4fe0X2Dab87X2Dd98fa8bb7fb6 <http://www.w3.org/2002/07/owl#minCardinality> "0"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bf0e3e821X2De3a3X2D4fe0X2Dab87X2Dd98fa8bb7fb6 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink> .
+_:Bf383e160X2D3d6cX2D4514X2D8910X2D367e0dcd9fa8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bf383e160X2D3d6cX2D4514X2D8910X2D367e0dcd9fa8 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bf383e160X2D3d6cX2D4514X2D8910X2D367e0dcd9fa8 <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#arkUrl> .
+_:Bf44b79d1X2D7ba3X2D4213X2D9d21X2D4aa1d079cb2e <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bf44b79d1X2D7ba3X2D4213X2D9d21X2D4aa1d079cb2e <http://www.w3.org/2002/07/owl#minCardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bf44b79d1X2D7ba3X2D4213X2D9d21X2D4aa1d079cb2e <http://www.w3.org/2002/07/owl#onProperty> <http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo> .
+_:Bff3f56fbX2D6322X2D4df7X2DadefX2D5cf4d3ac0e45 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction> .
+_:Bff3f56fbX2D6322X2D4df7X2DadefX2D5cf4d3ac0e45 <http://www.w3.org/2002/07/owl#cardinality> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bff3f56fbX2D6322X2D4df7X2DadefX2D5cf4d3ac0e45 <http://www.w3.org/2002/07/owl#onProperty> <http://www.w3.org/2000/01/rdf-schema#label> .
