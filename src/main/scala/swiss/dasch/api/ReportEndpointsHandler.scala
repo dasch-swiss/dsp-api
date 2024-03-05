@@ -28,7 +28,7 @@ final class ReportEndpointsHandler(
                    .mapZIO(prj => reportService.assetsOverviewReport(prj))
                    .runCollect
                    .map(_.flatten)
-      report <- reportService.saveReport("asset-overview", reports).flatMap(_.toAbsolutePath)
+      report <- reportService.saveReports(reports).flatMap(_.toAbsolutePath)
       _      <- ZIO.logInfo(s"Created $report asset overview reports")
     } yield ()
 

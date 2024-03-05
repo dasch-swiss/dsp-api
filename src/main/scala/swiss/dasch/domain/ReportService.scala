@@ -6,7 +6,7 @@
 package swiss.dasch.domain
 import swiss.dasch.domain.SizeInBytesPerType.{SizeInBytesMovingImages, SizeInBytesOther}
 import zio.*
-import zio.json.{DeriveJsonEncoder, JsonEncoder, JsonFieldDecoder, JsonFieldEncoder}
+import zio.json.JsonEncoder
 import zio.nio.file.Path
 
 final case class ChecksumReport(results: Map[AssetInfo, Chunk[ChecksumResult]], nrOfAssets: Int)
@@ -26,14 +26,6 @@ final case class AssetOverviewReport(
 }
 
 object AssetOverviewReport {
-
-  import zio.json.*
-  import zio.json.interop.refined.encodeRefined
-
-  given JsonFieldEncoder[SupportedFileType] = JsonFieldEncoder[String].contramap(_.toString)
-
-  given JsonEncoder[AssetOverviewReport] = DeriveJsonEncoder.gen[AssetOverviewReport]
-
   def make(shortcode: ProjectShortcode) =
     AssetOverviewReport(shortcode, 0, Map.empty, SizeInBytesReport(Map.empty[SupportedFileType, SizeInBytesPerType]))
 }
@@ -45,19 +37,12 @@ final case class SizeInBytesReport(sizes: Map[SupportedFileType, SizeInBytesPerT
       case Some(existingSize) => Some(existingSize.add(size))
     })
 }
-object SizeInBytesReport {
-
-  given JsonFieldEncoder[SupportedFileType] = JsonFieldEncoder[String].contramap(_.toString)
-  given JsonFieldDecoder[SupportedFileType] = JsonFieldDecoder[String].map(s => SupportedFileType.valueOf(s))
-  given JsonEncoder[SizeInBytesReport]      = DeriveJsonEncoder.gen[SizeInBytesReport]
-}
 
 final case class FileSize(sizeInBytes: BigDecimal) {
   def +(other: FileSize): FileSize = FileSize(sizeInBytes + other.sizeInBytes)
 
 }
 object FileSize {
-  given JsonEncoder[FileSize] = JsonEncoder[String].contramap(prettyPrint)
 
   def apply(sizeInBytes: Long): FileSize = FileSize(BigDecimal.exact(sizeInBytes))
 
@@ -80,7 +65,6 @@ sealed trait SizeInBytesPerType {
   def add(other: SizeInBytesPerType): SizeInBytesPerType
 }
 object SizeInBytesPerType {
-  given JsonEncoder[SizeInBytesPerType] = DeriveJsonEncoder.gen[SizeInBytesPerType]
 
   final case class SizeInBytesOther(fileType: SupportedFileType, sizeOrig: FileSize, sizeDerivative: FileSize)
       extends SizeInBytesPerType { self =>
@@ -117,7 +101,8 @@ object SizeInBytesPerType {
 final case class ReportService(
   projectService: ProjectService,
   assetService: FileChecksumService,
-  storageService: StorageService
+  storageService: StorageService,
+  csvService: CsvService
 ) {
 
   def checksumReport(projectShortcode: ProjectShortcode): Task[Option[ChecksumReport]] =
@@ -149,13 +134,27 @@ final case class ReportService(
           case None => ZIO.none
         } <* ZIO.logInfo(s"Finished overview report for project $projectShortcode")
 
-  def saveReport[A](name: String, report: A)(using encoder: JsonEncoder[A]): Task[Path] = for {
-    tmpDir    <- storageService.getTempFolder()
-    reportDir  = tmpDir / "reports"
-    _         <- storageService.createDirectories(reportDir)
-    now       <- Clock.instant
-    reportFile = reportDir / s"${name}_$now.json"
-    _         <- storageService.saveJsonFile(reportFile, report)
+  def saveReports(reports: Seq[AssetOverviewReport]): Task[Path] =
+    for {
+      reportsPath    <- getReportsPath
+      reportFilename <- timedReportName("asset_overview_report", "csv")
+      created        <- csvService.writeReportToCsv(reports, reportsPath / reportFilename)
+    } yield created
+
+  private def getReportsPath: Task[Path] = for {
+    tmpDir   <- storageService.getTempFolder()
+    reportDir = tmpDir / "reports"
+    _        <- storageService.createDirectories(reportDir)
+  } yield reportDir
+
+  private def timedReportName(filename: String, fileExtension: String): UIO[String] =
+    Clock.instant.map(now => s"${filename}_$now.$fileExtension")
+
+  def saveJsonReport[A](name: String, report: A)(using encoder: JsonEncoder[A]): Task[Path] = for {
+    reportsDir <- getReportsPath
+    now        <- Clock.instant
+    reportFile  = reportsDir / s"${name}_$now.json"
+    _          <- storageService.saveJsonFile(reportFile, report)
   } yield reportFile
 
   private def updateAssetOverviewReport(

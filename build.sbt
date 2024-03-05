@@ -92,6 +92,9 @@ lazy val root = (project in file("."))
       // [error] undefined: new com.github.ghik.silencer.silent #
       "com.github.ghik" % "silencer-lib_2.13.11" % "1.17.13",
 
+      // csv for reports
+      "com.github.tototoshi" %% "scala-csv" % "1.3.10",
+
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
       "dev.zio" %% "zio-logging-slf4j2-bridge" % zioLoggingVersion,

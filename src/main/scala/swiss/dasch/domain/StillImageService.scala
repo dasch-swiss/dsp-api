@@ -55,8 +55,7 @@ final case class StillImageService(
 
   def createDerivative(orig: OrigFile): Task[JpxDerivativeFile] = {
     val jpxFile = JpxDerivativeFile.unsafeFrom(orig.path.parent.head / s"${orig.assetId}.${Jpx.extension}")
-    ZIO.logInfo(s"Creating derivative for ${orig.path}") *>
-      sipiClient.transcodeImageFile(orig.path, jpxFile.path, Jpx) *>
+    sipiClient.transcodeImageFile(orig.path, jpxFile.path, Jpx) *>
       ZIO
         .fail(new IOException(s"Sipi failed creating derivative for ${orig.path}"))
         .whenZIO(Files.notExists(jpxFile.path))
