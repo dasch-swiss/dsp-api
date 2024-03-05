@@ -122,9 +122,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.OK)
 
         val settings =
-          ProjectRestrictedViewSettingsADM.codec
+          ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
             .getOrElse(throw new AssertionError("Could not decode response"))
+            .settings
 
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
@@ -149,9 +150,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.OK)
 
         val settings: ProjectRestrictedViewSettingsADM =
-          ProjectRestrictedViewSettingsADM.codec
+          ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
             .getOrElse(throw new AssertionError("Could not decode response"))
+            .settings
 
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
@@ -165,9 +167,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.OK)
 
         val settings: ProjectRestrictedViewSettingsADM =
-          ProjectRestrictedViewSettingsADM.codec
+          ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
             .getOrElse(throw new AssertionError("Could not decode response"))
+            .settings
 
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
