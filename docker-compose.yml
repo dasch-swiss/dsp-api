@@ -69,6 +69,8 @@ services:
     volumes:
       - ${LOCAL_HOME}/sipi/images:/opt/images:delegated
       - ${LOCAL_HOME}/sipi/tmp-dsp-ingest:/opt/temp:delegated
+    networks:
+      - knora-net
     environment:
       - SERVICE_HOST=0.0.0.0
       - SERVICE_PORT=3340
