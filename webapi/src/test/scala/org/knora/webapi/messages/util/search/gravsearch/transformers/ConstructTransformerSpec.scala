@@ -26,7 +26,7 @@ object ConstructTransformerSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Any] = suite("ConstructTransformerLive")(
     test(
-      "Given an optional pattern in the Where clause it should transform the inner but not split the pattern"
+      "Given an optional pattern in the Where clause it should transform the inner but not split the pattern",
     ) {
       val query = ConstructQuery(
         constructClause = ConstructClause(
@@ -34,9 +34,9 @@ object ConstructTransformerSpec extends ZIOSpecDefault {
             StatementPattern(
               subj = QueryVariable("letter"),
               pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
-              obj = XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
-            )
-          )
+              obj = XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
+            ),
+          ),
         ),
         whereClause = WhereClause(
           patterns = Vector(
@@ -45,27 +45,27 @@ object ConstructTransformerSpec extends ZIOSpecDefault {
                 StatementPattern(
                   subj = QueryVariable("person1"),
                   pred = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
-                  obj = QueryVariable("name")
+                  obj = QueryVariable("name"),
                 ),
                 StatementPattern(
                   subj = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
                   pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
-                  obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri)
-                )
-              )
-            )
-          )
-        )
+                  obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+                ),
+              ),
+            ),
+          ),
+        ),
       )
       for {
         transformed <- constructTransformerTransform(query)
       } yield assertTrue(transformed.whereClause.patterns.count(_.isInstanceOf[OptionalPattern]) == 1)
-    }
+    },
   ).provide(
     ConstructTransformer.layer,
     IriConverter.layer,
     StringFormatter.test,
     OntologyInferencer.layer,
-    OntologyCacheFake.emptyCache
+    OntologyCacheFake.emptyCache,
   )
 }

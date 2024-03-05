@@ -51,7 +51,7 @@ case class CreateMappingRequestV2(
   metadata: CreateMappingRequestMetadataV2,
   xml: CreateMappingRequestXMLV2,
   requestingUser: User,
-  apiRequestID: UUID
+  apiRequestID: UUID,
 ) extends StandoffResponderRequestV2
 
 /**
@@ -71,7 +71,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     apiRequestID: UUID,
     requestingUser: User,
     appActor: ActorRef,
-    log: Logger
+    log: Logger,
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
     Future {
       fromJsonLDSync(jsonLDDocument = jsonLDDocument)
@@ -88,7 +88,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
 
     val projectIri: SmartIri = jsonLDDocument.body.requireIriInObject(
       OntologyConstants.KnoraApiV2Complex.AttachedToProject,
-      stringFormatter.toSmartIriWithErr
+      stringFormatter.toSmartIriWithErr,
     )
 
     val mappingName: String =
@@ -97,7 +97,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     CreateMappingRequestMetadataV2(
       label = label,
       projectIri = projectIri,
-      mappingName = mappingName
+      mappingName = mappingName,
     )
   }
 }
@@ -121,7 +121,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -130,13 +130,13 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
       Map(
         JsonLDKeywords.ID -> JsonLDString(mappingIri),
         JsonLDKeywords.TYPE -> JsonLDString(
-          OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString
+          OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString,
         ),
         OntologyConstants.Rdfs.Label -> JsonLDString(label),
         OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri
           .toOntologySchema(targetSchema)
-          .toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
-      )
+          .toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString),
+      ),
     )
 
     val context = JsonLDObject(
@@ -144,8 +144,8 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
         "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
         "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
-      )
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#"),
+      ),
     )
 
     JsonLDDocument(body, context)
@@ -170,7 +170,7 @@ case class GetMappingRequestV2(mappingIri: IRI, requestingUser: User) extends St
 case class GetMappingResponseV2(
   mappingIri: IRI,
   mapping: MappingXMLtoStandoff,
-  standoffEntities: StandoffEntityInfoGetResponseV2
+  standoffEntities: StandoffEntityInfoGetResponseV2,
 ) // TODO: there should be a route to obtain a mapping
 
 /**
@@ -181,7 +181,7 @@ case class GetMappingResponseV2(
  */
 case class GetXSLTransformationRequestV2(
   xsltTextRepresentationIri: IRI,
-  requestingUser: User
+  requestingUser: User,
 ) extends StandoffResponderRequestV2
 
 /**
@@ -205,7 +205,7 @@ case class GetXSLTransformationResponseV2(xslt: String)
  */
 case class MappingXMLtoStandoff(
   namespace: Map[String, Map[String, Map[String, XMLTag]]],
-  defaultXSLTransformation: Option[IRI]
+  defaultXSLTransformation: Option[IRI],
 )
 
 /**
@@ -232,7 +232,7 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequire
 case class XMLTagToStandoffClass(
   standoffClassIri: IRI,
   attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]],
-  dataType: Option[XMLStandoffDataTypeClass]
+  dataType: Option[XMLStandoffDataTypeClass],
 )
 
 /**
@@ -303,7 +303,7 @@ object StandoffProperties {
     OntologyConstants.KnoraBase.StandoffTagHasEndParent,
     OntologyConstants.KnoraBase.StandoffTagHasUUID,
     OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
-    OntologyConstants.KnoraBase.TargetHasOriginalXMLID
+    OntologyConstants.KnoraBase.TargetHasOriginalXMLID,
   )
 
   // represents the standoff properties defined on the date standoff tag
@@ -312,18 +312,18 @@ object StandoffProperties {
     OntologyConstants.KnoraBase.ValueHasStartJDN,
     OntologyConstants.KnoraBase.ValueHasEndJDN,
     OntologyConstants.KnoraBase.ValueHasStartPrecision,
-    OntologyConstants.KnoraBase.ValueHasEndPrecision
+    OntologyConstants.KnoraBase.ValueHasEndPrecision,
   )
 
   // represents the standoff properties defined on the interval standoff tag
   val intervalProperties: Set[IRI] = Set(
     OntologyConstants.KnoraBase.ValueHasIntervalStart,
-    OntologyConstants.KnoraBase.ValueHasIntervalEnd
+    OntologyConstants.KnoraBase.ValueHasIntervalEnd,
   )
 
   // represents the standoff properties defined on the time standoff tag
   val timeProperties: Set[IRI] = Set(
-    OntologyConstants.KnoraBase.ValueHasTimeStamp
+    OntologyConstants.KnoraBase.ValueHasTimeStamp,
   )
 
   // represents the standoff properties defined on the boolean standoff tag
@@ -410,7 +410,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
   override def toJsonLD: (IRI, JsonLDValue) =
     standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
       value = value,
-      datatype = OntologyConstants.Xsd.Uri.toSmartIri
+      datatype = OntologyConstants.Xsd.Uri.toSmartIri,
     )
 }
 
@@ -491,7 +491,7 @@ case class StandoffTagDecimalAttributeV2(standoffPropertyIri: SmartIri, value: B
   override def toJsonLD: (IRI, JsonLDValue) =
     standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
       value = value.toString,
-      datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+      datatype = OntologyConstants.Xsd.Decimal.toSmartIri,
     )
 }
 
@@ -532,7 +532,7 @@ case class StandoffTagTimeAttributeV2(standoffPropertyIri: SmartIri, value: Inst
   override def toJsonLD: (IRI, JsonLDValue) =
     standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
       value = value.toString,
-      datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
     )
 }
 
@@ -563,7 +563,7 @@ case class StandoffTagV2(
   endIndex: Option[Int] = None,
   startParentIndex: Option[Int] = None,
   endParentIndex: Option[Int] = None,
-  attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2]
+  attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2],
 ) extends KnoraContentV2[StandoffTagV2] {
   override def toOntologySchema(targetSchema: OntologySchema): StandoffTagV2 = {
     if (targetSchema != ApiV2Complex) {
@@ -572,7 +572,7 @@ case class StandoffTagV2(
 
     copy(
       standoffTagClassIri = standoffTagClassIri.toOntologySchema(targetSchema),
-      attributes = attributes.map(_.toOntologySchema(targetSchema))
+      attributes = attributes.map(_.toOntologySchema(targetSchema)),
     )
   }
 
@@ -588,7 +588,7 @@ case class StandoffTagV2(
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(UuidUtil.base64Encode(uuid)),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart      -> JsonLDInt(startPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd        -> JsonLDInt(endPosition),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex),
     )
 
     val endIndexStatement: Option[(IRI, JsonLDInt)] = endIndex.map { definedEndIndex =>
@@ -613,7 +613,7 @@ case class StandoffTagV2(
         endIndexStatement ++
         startParentIndexStatement ++
         endParentIndexStatement ++
-        originalXMLIDStatement
+        originalXMLIDStatement,
     )
   }
 

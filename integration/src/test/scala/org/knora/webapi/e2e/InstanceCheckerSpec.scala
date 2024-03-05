@@ -26,7 +26,7 @@ class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
   private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
@@ -39,7 +39,7 @@ class InstanceCheckerSpec extends E2ESpec {
       jsonLDInstanceChecker.check(
         instanceResponse = testDing,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -48,12 +48,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.complexThingWithExtraProperty,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "One or more instance properties are not allowed by cardinalities: http://0.0.0.0:3333/ontology/0001/anything/v2#hasExtraProperty"
+        exception.getMessage == "One or more instance properties are not allowed by cardinalities: http://0.0.0.0:3333/ontology/0001/anything/v2#hasExtraProperty",
       )
     }
 
@@ -62,12 +62,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.complexThingWithExtraPropertyObject,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean has 2 objects, but its cardinality is 0-1"
+        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean has 2 objects, but its cardinality is 0-1",
       )
     }
 
@@ -76,12 +76,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.complexThingWithInvalidLiteralType,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean has an object of type http://www.w3.org/2001/XMLSchema#string with literal content 'invalid literal', but type http://www.w3.org/2001/XMLSchema#boolean was expected"
+        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean has an object of type http://www.w3.org/2001/XMLSchema#string with literal content 'invalid literal', but type http://www.w3.org/2001/XMLSchema#boolean was expected",
       )
     }
 
@@ -90,12 +90,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.complexThingWithInvalidObjectType,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Instance type http://api.knora.org/ontology/knora-api/v2#DateValue is not compatible with expected class IRI http://api.knora.org/ontology/knora-api/v2#BooleanValue"
+        exception.getMessage == "Instance type http://api.knora.org/ontology/knora-api/v2#DateValue is not compatible with expected class IRI http://api.knora.org/ontology/knora-api/v2#BooleanValue",
       )
     }
 
@@ -104,12 +104,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.complexThingWithInvalidUseOfObjectInsteadOfIri,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#textValueHasMapping requires an IRI referring to an instance of http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping, but object content was received instead"
+        exception.getMessage == "Property http://api.knora.org/ontology/knora-api/v2#textValueHasMapping requires an IRI referring to an instance of http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping, but object content was received instead",
       )
     }
 
@@ -118,12 +118,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.simpleThingWithInvalidDatatype,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDecimal has an object of type http://api.knora.org/ontology/knora-api/simple/v2#Date with literal content 'GREGORIAN:1489 CE', but type http://www.w3.org/2001/XMLSchema#decimal was expected"
+        exception.getMessage == "Property http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDecimal has an object of type http://api.knora.org/ontology/knora-api/simple/v2#Date with literal content 'GREGORIAN:1489 CE', but type http://www.w3.org/2001/XMLSchema#decimal was expected",
       )
     }
 
@@ -132,12 +132,12 @@ class InstanceCheckerSpec extends E2ESpec {
         jsonLDInstanceChecker.check(
           instanceResponse = InstanceCheckerSpec.simpleThingWithMissingLabel,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
 
       assert(
-        exception.getMessage == "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1"
+        exception.getMessage == "Property http://www.w3.org/2000/01/rdf-schema#label has 0 objects, but its cardinality is 1",
       )
     }
   }

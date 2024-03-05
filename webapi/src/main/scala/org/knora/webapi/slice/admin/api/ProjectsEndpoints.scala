@@ -28,7 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
-  baseEndpoints: BaseEndpoints
+  baseEndpoints: BaseEndpoints,
 ) extends ProjectsADMJsonProtocol {
 
   private val projectsBase        = "admin" / "projects"
@@ -104,7 +104,7 @@ final case class ProjectsEndpoints(
             "of the extracted region. 1<= n <= 100.\n\n" +
             "If the watermark is set to `true`, the returned image will be watermarked, " +
             "otherwise the default size " + RestrictedView.Size.default.value + " is set.\n\n" +
-            "It is only possible to set either the size or the watermark, not both at the same time."
+            "It is only possible to set either the size or the watermark, not both at the same time.",
         )
         .example(SetRestrictedViewRequest(Some(RestrictedView.Size.default), None))
 
@@ -199,7 +199,7 @@ final case class ProjectsEndpoints(
       Public.getAdminProjectsByProjectShortname,
       Public.getAdminProjectsByProjectShortnameRestrictedViewSettings,
       Public.getAdminProjectsKeywords,
-      Public.getAdminProjectsKeywordsByProjectIri
+      Public.getAdminProjectsKeywordsByProjectIri,
     ) ++ Seq(
       Secured.deleteAdminProjectsByIri,
       Secured.getAdminProjectsByIriAllData,
@@ -215,7 +215,7 @@ final case class ProjectsEndpoints(
       Secured.postAdminProjectsByShortcodeImport,
       Secured.putAdminProjectsByIri,
       Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
-      Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings
+      Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings,
     ).map(_.endpoint)).map(_.tag("Admin Projects"))
 }
 

@@ -40,7 +40,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 543212345,
-                comment = Some("second hidden int value in visible resource")
+                comment = Some("second hidden int value in visible resource"),
               ),
               valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
               permissions = "M knora-admin:ProjectMember",
@@ -49,13 +49,13 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("F2xCr0S2QfWRQxJDWY9L0g"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
+              deletionInfo = None,
             ),
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 123454321,
-                comment = Some("first hidden int value in visible resource")
+                comment = Some("first hidden int value in visible resource"),
               ),
               valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
               permissions = "M knora-admin:ProjectMember",
@@ -64,17 +64,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("yVTqO37cRkCSvXbFc3vTyw"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser = ReadResourcesSequenceV2(
@@ -91,11 +91,11 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         values = Map(),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceForAnythingThingWithOneHiddenThingAnythingAdmin = ReadResourcesSequenceV2(
@@ -131,9 +131,9 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     values = Map(),
                     projectADM = SharedTestDataADM.anythingProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
@@ -143,15 +143,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("UgSp5mXTTSKdI02ZU1KIAA"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 123454321,
-                comment = Some("visible int value in main resource")
+                comment = Some("visible int value in main resource"),
               ),
               valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
@@ -160,17 +160,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceForAnythingThingWithOneHiddenThingAnonymousUser = ReadResourcesSequenceV2(
@@ -190,7 +190,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 123454321,
-                comment = Some("visible int value in main resource")
+                comment = Some("visible int value in main resource"),
               ),
               valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
@@ -199,17 +199,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
               userPermission = ViewPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceSequenceV2WithStandoffAnythingAdminUser = ReadResourcesSequenceV2(
@@ -239,7 +239,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     endIndex = None,
                     dataType = None,
                     startPosition = 0,
-                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
                   ),
                   StandoffTagV2(
                     endParentIndex = None,
@@ -251,15 +251,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                       StandoffTagIriAttributeV2(
                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                         value = "http://rdfh.ch/0001/a-thing",
-                        targetExists = true
-                      )
+                        targetExists = true,
+                      ),
                     ),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                     startPosition = 14,
-                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri
-                  )
+                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri,
+                  ),
                 ),
                 mapping = None,
                 valueHasLanguage = None,
@@ -267,7 +267,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 maybeValueHasString = Some("Ich liebe die Dinge, sie sind alles f\u00FCr mich."),
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
               permissions = "CR knora-admin:Creator",
@@ -277,7 +277,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("1"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
+              deletionInfo = None,
             ),
             ReadTextValueV2(
               valueContent = TextValueContentV2(
@@ -293,7 +293,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     endIndex = None,
                     dataType = None,
                     startPosition = 0,
-                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
+                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
                   ),
                   StandoffTagV2(
                     endParentIndex = None,
@@ -305,15 +305,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                       StandoffTagIriAttributeV2(
                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                         value = "http://rdfh.ch/0001/a-thing",
-                        targetExists = true
-                      )
+                        targetExists = true,
+                      ),
                     ),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                     startPosition = 11,
-                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri
-                  )
+                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri,
+                  ),
                 ),
                 mapping = None,
                 valueHasLanguage = None,
@@ -321,7 +321,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 maybeValueHasString = Some("Na ja, die Dinge sind OK."),
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
               permissions = "CR knora-admin:Creator",
@@ -331,8 +331,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("2"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -355,9 +355,9 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     values = Map(),
                     projectADM = SharedTestDataADM.anythingProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 2,
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
@@ -367,17 +367,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("0"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceSequenceV2ForMainQuery1 = ReadResourcesSequenceV2(
@@ -419,7 +419,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
                             maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                            comment = None
+                            comment = None,
                           ),
                           valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
                           permissions =
@@ -430,15 +430,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("d9a522845006"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
-                      )
+                          deletionInfo = None,
+                        ),
+                      ),
                     ),
                     projectADM = SharedTestDataADM.incunabulaProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
@@ -449,15 +449,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 10,
-                comment = None
+                comment = None,
               ),
               valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
               permissions =
@@ -467,13 +467,13 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("fae17f4f6106"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
-        deletionInfo = None
+        deletionInfo = None,
       ),
       ReadResourceV2(
         versionDate = None,
@@ -512,7 +512,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
                             maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                            comment = None
+                            comment = None,
                           ),
                           valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
                           permissions =
@@ -523,15 +523,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("c3295339"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
-                      )
+                          deletionInfo = None,
+                        ),
+                      ),
                     ),
                     projectADM = SharedTestDataADM.incunabulaProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
@@ -542,15 +542,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasInteger = 10,
-                comment = None
+                comment = None,
               ),
               valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
               permissions =
@@ -560,17 +560,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("53feeaf80a"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 
   val expectedReadResourceSequenceV2ForMainQuery2 = ReadResourcesSequenceV2(
@@ -592,7 +592,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                comment = None
+                comment = None,
               ),
               valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
               permissions =
@@ -603,8 +603,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("c3295339"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/knora-base#hasIncomingLinkValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -634,7 +634,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,
-                            nestedResource = None
+                            nestedResource = None,
                           ),
                           valueHasRefCount = 1,
                           valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
@@ -645,15 +645,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
+                          deletionInfo = None,
+                        ),
                       ),
                       "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
                         ReadOtherValueV2(
                           valueContent = IntegerValueContentV2(
                             ontologySchema = InternalSchema,
                             valueHasInteger = 10,
-                            comment = None
+                            comment = None,
                           ),
                           valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
                           permissions =
@@ -663,15 +663,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("53feeaf80a"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
-                      )
+                          deletionInfo = None,
+                        ),
+                      ),
                     ),
                     projectADM = SharedTestDataADM.incunabulaProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
@@ -682,13 +682,13 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
-        deletionInfo = None
+        deletionInfo = None,
       ),
       ReadResourceV2(
         versionDate = None,
@@ -707,7 +707,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                comment = None
+                comment = None,
               ),
               valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               permissions =
@@ -718,8 +718,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("d9a522845006"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
+              deletionInfo = None,
+            ),
           ),
           "http://www.knora.org/ontology/knora-base#hasIncomingLinkValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -749,7 +749,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                             ontologySchema = InternalSchema,
                             comment = None,
                             referredResourceExists = true,
-                            nestedResource = None
+                            nestedResource = None,
                           ),
                           valueHasRefCount = 1,
                           valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
@@ -760,15 +760,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
+                          deletionInfo = None,
+                        ),
                       ),
                       "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
                         ReadOtherValueV2(
                           valueContent = IntegerValueContentV2(
                             ontologySchema = InternalSchema,
                             valueHasInteger = 10,
-                            comment = None
+                            comment = None,
                           ),
                           valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
                           permissions =
@@ -778,15 +778,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("fae17f4f6106"),
                           userPermission = ChangeRightsPermission,
-                          deletionInfo = None
-                        )
-                      )
+                          deletionInfo = None,
+                        ),
+                      ),
                     ),
                     projectADM = SharedTestDataADM.incunabulaProject,
                     lastModificationDate = None,
-                    deletionInfo = None
-                  )
-                )
+                    deletionInfo = None,
+                  ),
+                ),
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
@@ -797,16 +797,16 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
-              deletionInfo = None
-            )
-          )
+              deletionInfo = None,
+            ),
+          ),
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
-        deletionInfo = None
-      )
+        deletionInfo = None,
+      ),
     ),
     hiddenResourceIris = Set(),
-    mayHaveMoreResults = false
+    mayHaveMoreResults = false,
   )
 }

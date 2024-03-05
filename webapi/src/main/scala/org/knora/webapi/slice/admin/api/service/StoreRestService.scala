@@ -20,7 +20,7 @@ final case class StoreRestService(
   appConfig: AppConfig,
   cacheService: CacheService,
   triplestoreService: TriplestoreService,
-  ontologyCache: OntologyCache
+  ontologyCache: OntologyCache,
 ) {
 
   /**
@@ -32,7 +32,7 @@ final case class StoreRestService(
    */
   def resetTriplestoreContent(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean = true
+    prependDefaults: Boolean = true,
   ): Task[MessageResponse] =
     for {
       _ <- ZIO.when(!appConfig.allowReloadOverHttp) {

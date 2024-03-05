@@ -125,7 +125,7 @@ object GravsearchParser {
           StatementPattern(
             subj = makeEntityFromVar(nameToVar(constructStatementWithConstant.subj)),
             pred = makeEntityFromVar(nameToVar(constructStatementWithConstant.pred)),
-            obj = makeEntityFromVar(nameToVar(constructStatementWithConstant.obj))
+            obj = makeEntityFromVar(nameToVar(constructStatementWithConstant.obj)),
           )
       }
 
@@ -140,11 +140,11 @@ object GravsearchParser {
         whereClause = WhereClause(
           patterns = getWherePatterns,
           positiveEntities = positiveEntities.toSet,
-          querySchema = Some(querySchema)
+          querySchema = Some(querySchema),
         ),
         orderBy = orderBy.toSeq,
         offset = offset,
-        querySchema = Some(querySchema)
+        querySchema = Some(querySchema),
       )
     }
 
@@ -378,7 +378,7 @@ object GravsearchParser {
       }
 
       constructStatementsWithConstants.append(
-        ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get)
+        ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get),
       )
     }
 
@@ -484,7 +484,7 @@ object GravsearchParser {
 
                 val bindPattern = BindPattern(
                   variable = variable,
-                  expression = iriValue
+                  expression = iriValue,
                 )
 
                 wherePatterns.append(bindPattern)
@@ -589,9 +589,9 @@ object GravsearchParser {
             leftArg = leftArg,
             operator = CompareExpressionOperator.lookup(
               operator,
-              throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")
+              throw GravsearchException(s"Operator $operator is not supported in a CompareExpression"),
             ),
-            rightArg = rightArg
+            rightArg = rightArg,
           )
 
         case and: algebra.And =>
@@ -600,7 +600,7 @@ object GravsearchParser {
 
           AndExpression(
             leftArg = leftArg,
-            rightArg = rightArg
+            rightArg = rightArg,
           )
 
         case or: algebra.Or =>
@@ -609,7 +609,7 @@ object GravsearchParser {
 
           OrExpression(
             leftArg = leftArg,
-            rightArg = rightArg
+            rightArg = rightArg,
           )
 
         case valueConstant: algebra.ValueConstant => makeEntityFromValue(valueConstant.getValue)
@@ -629,7 +629,7 @@ object GravsearchParser {
 
           FunctionCallExpression(
             functionIri = functionIri,
-            args = args
+            args = args,
           )
 
         case regex: algebra.Regex =>
@@ -642,12 +642,12 @@ object GravsearchParser {
                 case queryVar: QueryVariable => queryVar
                 case _ =>
                   throw GravsearchException(
-                    s"Entity $objVar not allowed in regex function as the first argument, a variable is required"
+                    s"Entity $objVar not allowed in regex function as the first argument, a variable is required",
                   )
               }
             case other =>
               throw GravsearchException(
-                s"$other is not allowed in regex function as first argument, a variable is required"
+                s"$other is not allowed in regex function as first argument, a variable is required",
               )
           }
 
@@ -659,7 +659,7 @@ object GravsearchParser {
               valConstant.getValue.stringValue()
             case other =>
               throw GravsearchException(
-                s"$other not allowed in regex function as the second argument, a string is expected"
+                s"$other not allowed in regex function as the second argument, a string is expected",
               )
 
           }
@@ -670,7 +670,7 @@ object GravsearchParser {
             case None                                     => None
             case other =>
               throw GravsearchException(
-                s"$other not allowed in regex function as the third argument, a string is expected"
+                s"$other not allowed in regex function as the third argument, a string is expected",
               )
 
           }
@@ -678,7 +678,7 @@ object GravsearchParser {
           RegexFunction(
             textExpr = textValueVar,
             pattern = pattern,
-            modifier = modifier
+            modifier = modifier,
           )
 
         case lang: algebra.Lang =>
@@ -688,12 +688,12 @@ object GravsearchParser {
                 case queryVar: QueryVariable => queryVar
                 case _ =>
                   throw GravsearchException(
-                    s"Entity $objVar not allowed in lang function as an argument, a variable is required"
+                    s"Entity $objVar not allowed in lang function as an argument, a variable is required",
                   )
               }
             case other =>
               throw GravsearchException(
-                s"$other is not allowed in lang function as an argument, a variable is required"
+                s"$other is not allowed in lang function as an argument, a variable is required",
               )
           }
 

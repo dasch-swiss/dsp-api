@@ -54,8 +54,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   s"The Projects Route 'admin/projects'" when {
@@ -76,16 +76,16 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-projects-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return the information for a single project identified by iri" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -95,16 +95,16 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return the information for a single project identified by shortname" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -113,7 +113,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return the information for a single project identified by shortcode" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -122,7 +122,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return the project's restricted view settings using its IRI" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -138,16 +138,16 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-project-restricted-view-settings-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return the project's restricted view settings using its shortname" in {
         val request = Get(
-          baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings"
+          baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings",
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -161,7 +161,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return the project's restricted view settings using its shortcode" in {
         val request = Get(
-          baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings"
+          baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings",
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -196,15 +196,15 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-project-with-custom-Iri-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createProjectWithCustomIRIRequest
-          )
+            text = createProjectWithCustomIRIRequest,
+          ),
         )
 
         val request = Post(
           baseApiUrl + s"/admin/projects",
-          HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest)
+          HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest),
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -226,10 +226,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-project-with-custom-Iri-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
       }
@@ -250,7 +250,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -283,14 +283,14 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-project-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = createProjectRequest
-          )
+            text = createProjectRequest,
+          ),
         )
         val request = Post(
           baseApiUrl + s"/admin/projects",
-          HttpEntity(ContentTypes.`application/json`, createProjectRequest)
+          HttpEntity(ContentTypes.`application/json`, createProjectRequest),
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
@@ -311,10 +311,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
 
         newProjectIri.set(result.id)
@@ -337,7 +337,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -360,7 +360,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -382,7 +382,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -405,7 +405,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val request =
           Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -429,15 +429,15 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-project-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateProjectRequest
-          )
+            text = updateProjectRequest,
+          ),
         )
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
-          HttpEntity(ContentTypes.`application/json`, updateProjectRequest)
+          HttpEntity(ContentTypes.`application/json`, updateProjectRequest),
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -447,7 +447,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
-          Seq(V2.StringLiteralV2(value = "updated project description", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "updated project description", language = Some("en"))),
         )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
@@ -459,10 +459,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -480,15 +480,15 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-project-with-multiple-description-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateProjectMultipleDescriptionRequest
-          )
+            text = updateProjectMultipleDescriptionRequest,
+          ),
         )
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
-          HttpEntity(ContentTypes.`application/json`, updateProjectMultipleDescriptionRequest)
+          HttpEntity(ContentTypes.`application/json`, updateProjectMultipleDescriptionRequest),
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -503,17 +503,17 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-project-with-multiple-description-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "DELETE a project" in {
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -526,10 +526,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "delete-project-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -538,7 +538,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
     "used to query members [FUNCTIONALITY]" should {
       "return all members of a project identified by iri" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -552,16 +552,16 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-project-members-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return all members of a project identified by shortname" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -573,7 +573,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return all members of a project identified by shortcode" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -585,7 +585,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return all admin members of a project identified by iri" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -598,16 +598,16 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-project-admin-members-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return all admin members of a project identified by shortname" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/admin-members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -619,7 +619,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return all admin members of a project identified by shortcode" in {
         val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/admin-members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -633,7 +633,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
     "used to query members [PERMISSIONS]" should {
       "return members of a project to a SystemAdmin" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -641,7 +641,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return members of a project to a ProjectAdmin" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass)
+          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -649,7 +649,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return `Forbidden` for members of a project to a normal user" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.Forbidden)
@@ -657,7 +657,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return admin-members of a project to a SystemAdmin" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -665,7 +665,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return admin-members of a project to a ProjectAdmin" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass)
+          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -673,7 +673,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
       "return `Forbidden` for admin-members of a project to a normal user" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.Forbidden)
@@ -695,17 +695,17 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-keywords-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return all keywords for a single project" in {
         val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -718,17 +718,17 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-project-keywords-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
       "return empty list for a project without keywords" in {
         val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -741,7 +741,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
       "return 'NotFound' when the project IRI is unknown" in {
         val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass)
+          BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
@@ -753,7 +753,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
       "return a TriG file containing all data from a project" in {
         val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
         val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingProjectIriEnc/AllData") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass)
+          BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -768,8 +768,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             "http://www.knora.org/ontology/0001/anything",
             "http://www.knora.org/data/0001/anything",
             "http://www.knora.org/data/permissions",
-            "http://www.knora.org/data/admin"
-          )
+            "http://www.knora.org/data/admin",
+          ),
         )
       }
     }
@@ -781,9 +781,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -796,9 +796,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         val result: String         = responseToString(response)
@@ -812,9 +812,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.Forbidden)
@@ -831,9 +831,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -846,9 +846,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(rootEmail, testPass)
+            BasicHttpCredentials(rootEmail, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         val result: String         = responseToString(response)
@@ -862,9 +862,9 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            HttpEntity(ContentTypes.`application/json`, payload)
+            HttpEntity(ContentTypes.`application/json`, payload),
           ) ~> addCredentials(
-            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass),
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.Forbidden)

@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 final case class KnoraUserToUserConverter(
   private val projectsService: ProjectADMService,
   private val groupsResponder: GroupsResponderADM,
-  private val permissionService: PermissionsResponderADM
+  private val permissionService: PermissionsResponderADM,
 ) {
 
   def toUser(kUser: KnoraUser): Task[User] = for {
@@ -28,7 +28,7 @@ final case class KnoraUserToUserConverter(
         kUser.isInProject.map(_.value),
         kUser.isInGroup.map(_.value),
         kUser.isInProjectAdminGroup.map(_.value),
-        kUser.isInSystemAdminGroup.value
+        kUser.isInSystemAdminGroup.value,
       )
   } yield User(
     kUser.id.value,
@@ -41,7 +41,7 @@ final case class KnoraUserToUserConverter(
     Some(kUser.password.value),
     groups,
     projects,
-    permissionData
+    permissionData,
   )
 }
 object KnoraUserToUserConverter {

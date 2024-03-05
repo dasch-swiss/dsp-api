@@ -55,7 +55,7 @@ trait HealthCheck {
         case AppState.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
         case AppState.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
         case AppState.Running                => healthy
-      }
+      },
     )
 
   private def createResponse(result: HealthCheckResult): UIO[HttpResponse] =
@@ -65,9 +65,9 @@ trait HealthCheck {
           status = statusCode(result.status),
           entity = HttpEntity(
             ContentTypes.`application/json`,
-            result.toJson
-          )
-        )
+            result.toJson,
+          ),
+        ),
       )
       .orDie
 
@@ -84,7 +84,7 @@ trait HealthCheck {
       name = "AppState",
       severity = "non fatal",
       status = false,
-      message = message
+      message = message,
     )
 
   private val healthy =
@@ -92,7 +92,7 @@ trait HealthCheck {
       name = "AppState",
       severity = "non fatal",
       status = true,
-      message = "Application is healthy"
+      message = "Application is healthy",
     )
 }
 
@@ -100,7 +100,7 @@ trait HealthCheck {
  * Provides the '/health' endpoint serving the health status.
  */
 final case class HealthRoute()(
-  private implicit val runtime: Runtime[Authenticator & State]
+  private implicit val runtime: Runtime[Authenticator & State],
 ) extends HealthCheck {
 
   /**

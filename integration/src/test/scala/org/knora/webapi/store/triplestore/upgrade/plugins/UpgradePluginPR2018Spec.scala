@@ -42,8 +42,8 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
       val expectedResultBody: SparqlSelectResultBody = expectedResult(
         Seq(
           Map("ontology" -> "http://www.knora.org/ontology/7777/test"),
-          Map("ontology" -> "http://www.knora.org/ontology/6666/test")
-        )
+          Map("ontology" -> "http://www.knora.org/ontology/6666/test"),
+        ),
       )
 
       assert(queryResult.results == expectedResultBody)

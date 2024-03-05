@@ -29,12 +29,12 @@ class OntologyHelpersSpec extends CoreSpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+      name = "http://www.knora.org/ontology/0001/anything",
+    ),
   )
 
   val freetestOntologyIri: SmartIri =
@@ -70,7 +70,7 @@ class OntologyHelpersSpec extends CoreSpec {
         (Set(unbounded, atLeastOne, exactlyOne), Some(ExactlyOne)),
         (Set(unbounded, zeroOrOne, exactlyOne), Some(ExactlyOne)),
         (Set(atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne)),
-        (Set(unbounded, atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne))
+        (Set(unbounded, atLeastOne, zeroOrOne, exactlyOne), Some(ExactlyOne)),
       )
 
       def getStrictest(classes: Set[SmartIri]): Option[Cardinality] =

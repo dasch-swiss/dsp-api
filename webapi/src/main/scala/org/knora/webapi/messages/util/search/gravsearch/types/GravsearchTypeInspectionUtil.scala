@@ -42,7 +42,7 @@ object GravsearchTypeInspectionUtil {
     private val valueMap = Map(
       OntologyConstants.Rdf.Type                     -> RdfType,
       OntologyConstants.KnoraApiV2Simple.ObjectType  -> ObjectType,
-      OntologyConstants.KnoraApiV2Complex.ObjectType -> ObjectType
+      OntologyConstants.KnoraApiV2Complex.ObjectType -> ObjectType,
     )
 
     /**
@@ -88,7 +88,7 @@ object GravsearchTypeInspectionUtil {
     OntologyConstants.KnoraApiV2Complex.ColorValue,
     OntologyConstants.KnoraApiV2Complex.IntervalValue,
     OntologyConstants.KnoraApiV2Complex.TimeValue,
-    OntologyConstants.KnoraApiV2Complex.FileValue
+    OntologyConstants.KnoraApiV2Complex.FileValue,
   )
 
   /**
@@ -98,7 +98,7 @@ object GravsearchTypeInspectionUtil {
     OntologyConstants.KnoraApiV2Simple.Resource,
     OntologyConstants.KnoraApiV2Complex.Resource,
     OntologyConstants.KnoraApiV2Complex.StandoffTag,
-    OntologyConstants.KnoraApiV2Complex.KnoraProject
+    OntologyConstants.KnoraApiV2Complex.KnoraProject,
   )
 
   /**
@@ -108,7 +108,7 @@ object GravsearchTypeInspectionUtil {
     OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
     OntologyConstants.KnoraApiV2Complex.GravsearchOptions,
     OntologyConstants.KnoraApiV2Simple.UseInference,
-    OntologyConstants.KnoraApiV2Complex.UseInference
+    OntologyConstants.KnoraApiV2Complex.UseInference,
   )
 
   /**
@@ -212,7 +212,7 @@ object GravsearchTypeInspectionUtil {
             // for anything other than type annotations in Gravsearch queries.
             if (!isValidTypeInAnnotation(statementPattern.obj)) {
               throw GravsearchException(
-                s"Object of ${statementPattern.pred} is not a valid type: ${statementPattern.obj}"
+                s"Object of ${statementPattern.pred} is not a valid type: ${statementPattern.obj}",
               )
             }
 

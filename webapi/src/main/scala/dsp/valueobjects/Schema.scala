@@ -35,7 +35,7 @@ object Schema {
     SalsahGui.Interval,
     SalsahGui.TimeStamp,
     SalsahGui.Geonames,
-    SalsahGui.Fileupload
+    SalsahGui.Fileupload,
   )
 
   /**
@@ -50,7 +50,7 @@ object Schema {
     (SalsahGui.Textarea, Set(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)),
     (SalsahGui.Spinbox, Set(SalsahGui.Min, SalsahGui.Max)),
     (SalsahGui.Searchbox, Set(SalsahGui.Numprops)),
-    (SalsahGui.Colorpicker, Set(SalsahGui.Ncolors))
+    (SalsahGui.Colorpicker, Set(SalsahGui.Ncolors)),
   )
 
   /**
@@ -79,7 +79,7 @@ object Schema {
     (SalsahGui.Cols, SalsahGui.SalsahGuiAttributeType.Integer),
     (SalsahGui.Rows, SalsahGui.SalsahGuiAttributeType.Integer),
     (SalsahGui.Width, SalsahGui.SalsahGuiAttributeType.Percent),
-    (SalsahGui.Wrap, SalsahGui.SalsahGuiAttributeType.Str)
+    (SalsahGui.Wrap, SalsahGui.SalsahGuiAttributeType.Str),
   )
 
   /**
@@ -96,7 +96,7 @@ object Schema {
 
     def makeFromStrings(
       guiAttributes: Set[String],
-      guiElement: Option[String]
+      guiElement: Option[String],
     ): Validation[ValidationException, GuiObject] = {
 
       // create GuiElement value object from raw inputs
@@ -115,7 +115,7 @@ object Schema {
         : ZValidation[Nothing, ValidationException, (List[GuiAttribute], Option[GuiElement])] =
         Validation.validate(
           validatedGuiAttributes,
-          validatedGuiElement
+          validatedGuiElement,
         )
 
       // if there were errors in creating gui attributes or gui element, all of the errors are returned
@@ -128,7 +128,7 @@ object Schema {
 
     def make(
       guiAttributes: Set[GuiAttribute],
-      guiElement: Option[GuiElement]
+      guiElement: Option[GuiElement],
     ): Validation[ValidationException, GuiObject] = {
 
       // Check if the correct gui attributes are provided for a given gui element
@@ -158,7 +158,7 @@ object Schema {
 
       Validation.validateWith(
         validatedGuiAttributes,
-        Validation.succeed(guiElement)
+        Validation.succeed(guiElement),
       )((a, b) => new GuiObject(a, b) {})
 
     }
@@ -185,7 +185,7 @@ object Schema {
       } else {
         validateGuiAttributeValue(k, v).fold(
           e => Validation.fail(e.head),
-          validValue => Validation.succeed(new GuiAttribute(k, validValue) {})
+          validValue => Validation.succeed(new GuiAttribute(k, validValue) {}),
         )
       }
     }
@@ -216,7 +216,7 @@ object Schema {
    */
   private def validateGuiAttributes(
     guiElement: GuiElement,
-    guiAttributes: Set[GuiAttribute]
+    guiAttributes: Set[GuiAttribute],
   ): Validation[ValidationException, Set[GuiAttribute]] = {
 
     val expectedGuiAttributes: Set[String] = guiElementToGuiAttributes.getOrElse(guiElement.value, Set())
@@ -233,8 +233,8 @@ object Schema {
     ) {
       Validation.fail(
         ValidationException(
-          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes)
-        )
+          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes),
+        ),
       )
     } else if (
       !isGuiAttributeRequired &&
@@ -242,8 +242,8 @@ object Schema {
     ) {
       Validation.fail(
         ValidationException(
-          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes)
-        )
+          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes),
+        ),
       )
     } else {
       Validation.succeed(guiAttributes)
@@ -261,7 +261,7 @@ object Schema {
    */
   private def validateGuiAttributeValue(
     key: String,
-    value: String
+    value: String,
   ): Validation[ValidationException, String] = {
 
     val expectedValueType = guiAttributeToType.get(key)

@@ -69,7 +69,7 @@ case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
   queryHttpClient: CloseableHttpClient,
   targetHost: HttpHost,
-  implicit val sf: StringFormatter
+  implicit val sf: StringFormatter,
 ) extends TriplestoreService
     with FusekiTriplestore {
 
@@ -78,7 +78,7 @@ case class TriplestoreServiceLive(
       "fuseki_request_duration",
       ChronoUnit.MILLIS,
       // 7 buckets for upper bounds 10ms, 100ms, 1s, 10s, 1.6m, 16.6m, inf
-      Chunk.iterate(10.0, 6)(_ * 10)
+      Chunk.iterate(10.0, 6)(_ * 10),
     )
 
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
@@ -136,7 +136,7 @@ case class TriplestoreServiceLive(
     query: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
+    outputFormat: QuadFormat,
   ): Task[Unit] =
     executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
       .map(RdfStringSource)
@@ -176,7 +176,7 @@ case class TriplestoreServiceLive(
    */
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[Unit] =
     for {
       _ <- ZIO.logDebug("resetTripleStoreContent")
@@ -223,7 +223,7 @@ case class TriplestoreServiceLive(
    */
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[Unit] = {
     val calculateCompleteRdfDataObjectList: Task[NonEmptyChunk[RdfDataObject]] =
       if (prependDefaults) {
@@ -232,9 +232,9 @@ case class TriplestoreServiceLive(
         NonEmptyChunk
           .fromIterableOption(rdfDataObjects)
           .fold[Task[NonEmptyChunk[RdfDataObject]]](
-            ZIO.fail(BadRequestException("Cannot insert list with empty data into triplestore."))
+            ZIO.fail(BadRequestException("Cannot insert list with empty data into triplestore.")),
           )(
-            ZIO.succeed(_)
+            ZIO.succeed(_),
           )
       }
 
@@ -268,7 +268,7 @@ case class TriplestoreServiceLive(
                 httpPost
               }
             responseHandler <- ZIO.attempt(returnInsertGraphDataResponse(graphName)(_))
-          } yield (httpPost, responseHandler)
+          } yield (httpPost, responseHandler),
         )
       _ <- ZIO.foreachDiscard(request)(elem => doHttpRequest(request = elem._1, processResponse = elem._2))
       _ <- ZIO.logDebug("==>> Loading Data End")
@@ -303,11 +303,11 @@ case class TriplestoreServiceLive(
           ZIO
             .ifZIO(initJenaFusekiTriplestore() *> checkTriplestoreInitialized())(
               ZIO.succeed(Available),
-              ZIO.succeed(notInitialized)
+              ZIO.succeed(notInitialized),
             )
         } else {
           ZIO.succeed(notInitialized)
-        }
+        },
       )
       .catchAll(ex => ZIO.succeed(unavailable(ex.getMessage)))
   }
@@ -381,7 +381,7 @@ case class TriplestoreServiceLive(
   override def downloadGraph(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
+    outputFormat: QuadFormat,
   ): Task[Unit] = {
     val request = new HttpGet(makeNamedGraphDownloadUri(graphIri.value))
     request.addHeader("Accept", mimeTypeTextTurtle)
@@ -390,7 +390,7 @@ case class TriplestoreServiceLive(
 
   private def executeSparqlQuery(
     query: SparqlQuery,
-    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
+    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
   ) = {
     // in case of a gravsearch query, a longer timeout is set
     val timeout =
@@ -420,7 +420,7 @@ case class TriplestoreServiceLive(
              val duration = Duration.fromNanos(endTime - startTime)
              ZIO.when(duration >= trackingThreshold) {
                ZIO.logInfo(
-                 s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}"
+                 s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}",
                )
              }
            }.ignore
@@ -470,7 +470,7 @@ case class TriplestoreServiceLive(
    */
   private def doHttpRequest[T](
     request: HttpRequest,
-    processResponse: CloseableHttpResponse => Task[T]
+    processResponse: CloseableHttpResponse => Task[T],
   ): Task[T] = {
 
     def executeQuery(): Task[CloseableHttpResponse] = {
@@ -544,7 +544,7 @@ case class TriplestoreServiceLive(
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[Unit]].
    */
   private def returnInsertGraphDataResponse(
-    graphName: String
+    graphName: String,
   )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case None    => ZIO.fail(TriplestoreResponseException(s"$graphName could not be inserted into Triplestore."))
@@ -559,7 +559,7 @@ case class TriplestoreServiceLive(
    * @return a [[Unit]].
    */
   private def writeResponseFileAsPlainContent(
-    outputFile: Path
+    outputFile: Path,
   )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
@@ -584,7 +584,7 @@ case class TriplestoreServiceLive(
   private def writeResponseFileAsTurtleContent(
     outputFile: Path,
     graphIri: IRI,
-    quadFormat: QuadFormat
+    quadFormat: QuadFormat,
   )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
@@ -597,7 +597,7 @@ case class TriplestoreServiceLive(
             RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(tempTurtleFile))),
             graphIri,
             outputFile,
-            quadFormat
+            quadFormat,
           )
 
           Files.delete(tempTurtleFile)
@@ -624,7 +624,7 @@ object TriplestoreServiceLive {
       val credentialsProvider = new BasicCredentialsProvider
       credentialsProvider.setCredentials(
         new AuthScope(host.getHostName, host.getPort),
-        new UsernamePasswordCredentials(config.fuseki.username, config.fuseki.password)
+        new UsernamePasswordCredentials(config.fuseki.username, config.fuseki.password),
       )
 
       // the client config used for queries to the triplestore. The timeout has to be larger than

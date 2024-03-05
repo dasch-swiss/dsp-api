@@ -42,7 +42,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       IriLocker.runWithIriLock(
         apiRequestID = firstApiRequestID,
         iri = testIri,
-        task = () => runLongTask()
+        task = () => runLongTask(),
       )
 
       // Wait a bit to allow the first request to get the lock.
@@ -53,7 +53,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val secondTaskResultFuture = IriLocker.runWithIriLock(
         apiRequestID = secondApiRequestID,
         iri = testIri,
-        task = () => runShortTask()
+        task = () => runShortTask(),
       )
 
       val secondTaskFailedWithLockTimeout =
@@ -73,7 +73,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
           IriLocker.runWithIriLock(
             apiRequestID = apiRequestID,
             iri = iri,
-            task = () => runRecursiveTask(iri, apiRequestID, count - 1)
+            task = () => runRecursiveTask(iri, apiRequestID, count - 1),
           )
         } else {
           Future(SUCCESS)
@@ -106,7 +106,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val firstTaskResultFuture = IriLocker.runWithIriLock(
         apiRequestID = firstApiRequestID,
         iri = testIri,
-        task = () => runTask(false)
+        task = () => runTask(false),
       )
 
       val firstTaskFailed =
@@ -124,7 +124,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val secondTaskResultFuture = IriLocker.runWithIriLock(
         apiRequestID = secondApiRequestID,
         iri = testIri,
-        task = () => runTask(true)
+        task = () => runTask(true),
       )
 
       val secondTaskResult = Await.result(secondTaskResultFuture, 1.second)
@@ -148,7 +148,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val firstTaskResultFuture = IriLocker.runWithIriLock(
         apiRequestID = firstApiRequestID,
         iri = testIri,
-        task = () => runTask(false)
+        task = () => runTask(false),
       )
 
       val firstTaskFailed =
@@ -166,7 +166,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val secondTaskResultFuture = IriLocker.runWithIriLock(
         apiRequestID = secondApiRequestID,
         iri = testIri,
-        task = () => runTask(true)
+        task = () => runTask(true),
       )
 
       val secondTaskResult = Await.result(secondTaskResultFuture, 1.second)

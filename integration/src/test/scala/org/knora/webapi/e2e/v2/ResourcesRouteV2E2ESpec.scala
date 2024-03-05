@@ -74,25 +74,25 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
+      name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
+      name = "http://www.knora.org/ontology/0001/anything",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/sequences-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/sequences"
+      name = "http://www.knora.org/ontology/0001/sequences",
     ),
     RdfDataObject(
       path = "test_data/project_data/sequences-data.ttl",
-      name = "http://www.knora.org/data/0001/sequences"
-    )
+      name = "http://www.knora.org/data/0001/sequences",
+    ),
   )
 
   private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
@@ -109,10 +109,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         filePath = TestDataFilePath(
           directoryPath = clientTestDataPath,
           filename = fileName,
-          fileExtension = fileExtension
+          fileExtension = fileExtension,
         ),
-        text = fileContent
-      )
+        text = fileContent,
+      ),
     )
 
   private def successResponse(message: String): String =
@@ -127,7 +127,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     newLastModificationDate: Instant,
     maybeNewLabel: String,
     resourceIri: String,
-    maybeNewPermissions: String
+    maybeNewPermissions: String,
   ): String =
     s"""{
        |    "knora-api:lastModificationDate": {
@@ -166,7 +166,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -175,7 +175,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val acceptHeader: Accept = Accept(
         MediaRange.One(RdfMediaTypes.`application/ld+json`, 0.5f),
         MediaRange.One(RdfMediaTypes.`text/turtle`, 0.8f),
-        MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2f)
+        MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2f),
       )
 
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
@@ -229,7 +229,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -267,7 +267,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
       val request = Get(
-        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?schema=simple"
+        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?schema=simple",
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -299,7 +299,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -316,7 +316,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -333,7 +333,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -351,7 +351,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -368,7 +368,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -386,7 +386,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -403,7 +403,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -421,7 +421,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -439,7 +439,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -457,7 +457,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -474,7 +474,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -491,7 +491,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = responseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
     }
 
@@ -552,7 +552,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
               key = KnoraApiV2Complex.VersionDate,
               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-              validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+              validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
             )
 
             val arkTimestamp                  = stringFormatter.formatArkTimestamp(versionDate)
@@ -626,7 +626,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "return a graph of resources reachable via links to/from a given resource, excluding a specified property" in {
       val request = Get(
         s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&excludeProperty=${URLEncoder
-            .encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}"
+            .encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}",
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -667,7 +667,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "not accept a graph request with an invalid depth (> max)" in {
       val request = Get(
         s"$baseApiUrl/v2/graph/${URLEncoder
-            .encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${appConfig.v2.graphRoute.maxGraphBreadth + 1}"
+            .encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${appConfig.v2.graphRoute.maxGraphBreadth + 1}",
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -688,7 +688,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val request =
         Get(s"$baseApiUrl/v2/resources?resourceClass=$resourceClass&orderByProperty=$orderByProperty&page=0")
           .addHeader(new ProjectHeader(SharedTestDataADM.incunabulaProject.id)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.incunabulaProjectAdminUser.email, password)
+          BasicHttpCredentials(SharedTestDataADM.incunabulaProjectAdminUser.email, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -806,7 +806,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -817,7 +817,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
       val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
@@ -825,13 +825,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceComplexGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
         .addHeader(SchemaHeader.simple) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
@@ -839,7 +839,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceSimpleGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Check that the text value with standoff is correct in the simple schema.
@@ -874,7 +874,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithRefToFoaf)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithRefToFoaf),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -885,7 +885,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
       val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
@@ -893,13 +893,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceComplexGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
         .addHeader(SchemaHeader.simple) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
@@ -908,7 +908,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         instanceResponse = resourceSimpleGetResponseAsString,
         expectedClassIri =
           "http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Check that the value is correct in the simple schema.
@@ -923,11 +923,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "create a resource whose label contains a Unicode escape and quotation marks" in {
       val jsonLDEntity: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"),
         )
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -968,7 +968,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -980,7 +980,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(savedCreationDate == creationDate)
@@ -1015,7 +1015,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1030,7 +1030,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1041,7 +1041,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1073,7 +1073,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request =
         Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
+          BasicHttpCredentials(anythingUserEmail, password),
         )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -1113,7 +1113,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1121,7 +1121,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
       // Get the value from the response.
@@ -1161,7 +1161,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1169,7 +1169,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
       // Get the value from the response.
@@ -1213,7 +1213,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1221,7 +1221,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
 
@@ -1233,7 +1233,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
       assert(savedCreationDate == creationDate)
 
@@ -1274,12 +1274,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       collectClientTestData(
         "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
-        jsonLDEntity
+        jsonLDEntity,
       )
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1288,7 +1288,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
 
@@ -1309,7 +1309,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(savedCreationDate == customCreationDate)
@@ -1321,7 +1321,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         .requireDatatypeValueInObject(
           key = KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
         )
       assert(savedValueCreationDate == customCreationDate)
 
@@ -1355,7 +1355,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1364,7 +1364,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val savedAttachedToUser: IRI =
         responseJsonDoc.body.requireIriInObject(
           KnoraApiV2Complex.AttachedToUser,
-          validationFun
+          validationFun,
         )
       assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
     }
@@ -1395,7 +1395,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.Forbidden, "should be forbidden")
@@ -1404,11 +1404,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "create a resource containing escaped text" in {
       val jsonLDEntity =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"),
         )
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1444,7 +1444,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val updateResponseAsString: String = getResponseAsString(updateRequest)
       assert(
@@ -1453,15 +1453,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             resourceIri = aThingIri,
             maybeNewLabel = newLabel,
             newLastModificationDate = newModificationDate,
-            maybeNewPermissions = newPermissions
-          )
-        )
+            maybeNewPermissions = newPermissions,
+          ),
+        ),
       )
 
       collectClientTestData("update-resource-metadata-response", updateResponseAsString)
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
       val previewJsonLD = getResponseAsJsonLD(previewRequest)
@@ -1474,13 +1474,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           .getRequiredString(KnoraApiV2Complex.HasPermissions)
           .fold(msg => throw BadRequestException(msg), identity)
       assert(
-        PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
+        PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions),
       )
 
       val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(lastModificationDate == newModificationDate)
@@ -1519,7 +1519,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
@@ -1530,15 +1530,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             resourceIri = aThingIri,
             maybeNewLabel = newLabel,
             newLastModificationDate = newModificationDate,
-            maybeNewPermissions = newPermissions
-          )
-        )
+            maybeNewPermissions = newPermissions,
+          ),
+        ),
       )
 
       collectClientTestData("update-resource-metadata-response-with-last-mod-date", updateResponseAsString)
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString       = responseToString(previewResponse)
@@ -1554,13 +1554,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           .getRequiredString(KnoraApiV2Complex.HasPermissions)
           .fold(msg => throw BadRequestException(msg), identity)
       assert(
-        PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
+        PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions),
       )
 
       val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
         key = KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
       )
 
       assert(lastModificationDate == newModificationDate)
@@ -1590,7 +1590,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
@@ -1600,7 +1600,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       collectClientTestData("delete-resource-response", updateResponseAsString)
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       previewResponse.status should equal(StatusCodes.OK)
@@ -1644,7 +1644,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.superUser.email, password))
       val updateResponse: HttpResponse   = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
@@ -1652,7 +1652,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString       = responseToString(previewResponse)
@@ -1703,7 +1703,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val resourceCreateRequest = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceCreateResponseAsJsonLD: JsonLDDocument = getResponseAsJsonLD(resourceCreateRequest)
       val validationFun: (String, => Nothing) => String  = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
@@ -1718,7 +1718,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceGetResponseAsString = getResponseAsString(resourceGetRequest)
 
@@ -1726,7 +1726,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Get the XML from the response.
@@ -1746,7 +1746,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the resource without markup.
       val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
         .addHeader(MarkupHeader.standoff) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)
+        BasicHttpCredentials(anythingUserEmail, password),
       )
       val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
       val resourceGetResponseAsString       = responseToString(resourceGetResponse)
@@ -1755,7 +1755,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Get the standoff markup separately.
@@ -1782,7 +1782,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         // Get a page of standoff.
 
         val standoffGetRequest = Get(
-          s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset"
+          s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset",
         ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
         val standoffGetResponse: HttpResponse         = singleAwaitingRequest(standoffGetRequest)
         val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
@@ -1816,7 +1816,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           instanceResponse = docForValidation,
           expectedClassIri =
             jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr),
-          knoraRouteGet = doGetRequest
+          knoraRouteGet = doGetRequest,
         )
       }
     }
@@ -1845,14 +1845,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/erase",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
       val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
       val updateResponseAsString       = responseToString(updateResponse)
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/$aThingWithHistoryIriEncoded"
+        s"$baseApiUrl/v2/resourcespreview/$aThingWithHistoryIriEncoded",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString       = responseToString(previewResponse)
@@ -1884,7 +1884,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1895,7 +1895,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
       val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
@@ -1903,7 +1903,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       instanceChecker.check(
         instanceResponse = resourceComplexGetResponseAsString,
         expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        knoraRouteGet = doGetRequest
+        knoraRouteGet = doGetRequest,
       )
 
       // Check that it has the property knora-api:hasStandoffLinkToValue.
@@ -1936,7 +1936,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity),
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
@@ -1947,7 +1947,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
       val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
       val resourceComplexGetResponseAsString       = responseToString(resourceComplexGetResponse)
@@ -2021,7 +2021,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val createResourceClassRequest = Post(
         s"$baseApiUrl/v2/ontologies/classes",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceClass)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceClass),
       ) ~> addCredentials(auth)
       val createResourceClassResponse: HttpResponse = singleAwaitingRequest(createResourceClassRequest)
 
@@ -2050,7 +2050,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val resourceRequest = Post(
         s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues),
       ) ~> addCredentials(auth)
       val resourceResponse: HttpResponse = singleAwaitingRequest(resourceRequest)
 
@@ -2061,7 +2061,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // get resource back
       val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}",
       ) ~> addCredentials(auth)
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
 
@@ -2093,7 +2093,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val editValueRequest =
         Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, editValue)) ~> addCredentials(
-          auth
+          auth,
         )
       val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
       assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
@@ -2178,7 +2178,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           createSequenceResponseBody
             .getRequiredString(JsonLDKeywords.ID)
             .fold(msg => throw BadRequestException(msg), identity),
-          "UTF-8"
+          "UTF-8",
         )
 
       // get the newly created sequence resource
@@ -2255,7 +2255,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           createSequenceResponseBody
             .getRequiredString(JsonLDKeywords.ID)
             .fold(msg => throw BadRequestException(msg), identity),
-          "UTF-8"
+          "UTF-8",
         )
 
       // get the newly created sequence reource

@@ -49,7 +49,7 @@ object SharedVolumes {
     private def copyFileToAssetFolder(
       assetDir: Path,
       source: Path,
-      shortcode: Shortcode
+      shortcode: Shortcode,
     ) =
       ZIO.fail(new FileNotFoundException(s"File not found $source")).whenZIO(Files.notExists(source)).logError *> {
         val filename  = source.filename.toString()

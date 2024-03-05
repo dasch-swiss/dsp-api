@@ -94,21 +94,21 @@ object KnoraExceptionHandler extends LazyLogging {
 
     val jsonLDDocument = JsonLDDocument(
       body = JsonLDObject(
-        Map(OntologyConstants.KnoraApiV2Complex.Error -> JsonLDString(makeClientErrorMessage(ex, appConfig)))
+        Map(OntologyConstants.KnoraApiV2Complex.Error -> JsonLDString(makeClientErrorMessage(ex, appConfig))),
       ),
       context = JsonLDObject(
         Map(
           OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
-            OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-          )
-        )
-      )
+            OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+          ),
+        ),
+      ),
     )
 
     // ... and the HTTP status code.
     HttpResponse(
       status = httpStatus,
-      entity = HttpEntity(ContentType(MediaTypes.`application/json`), jsonLDDocument.toCompactString(false))
+      entity = HttpEntity(ContentType(MediaTypes.`application/json`), jsonLDDocument.toCompactString(false)),
     )
   }
 
@@ -125,13 +125,13 @@ object KnoraExceptionHandler extends LazyLogging {
 
     // Generate an HTTP response containing the error message ...
     val responseFields: Map[String, JsValue] = Map(
-      "error" -> JsString(makeClientErrorMessage(ex, appConfig))
+      "error" -> JsString(makeClientErrorMessage(ex, appConfig)),
     )
 
     // ... and the HTTP status code.
     HttpResponse(
       status = httpStatus,
-      entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint)
+      entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint),
     )
   }
 

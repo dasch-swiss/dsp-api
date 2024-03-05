@@ -69,7 +69,7 @@ object FullTextMainQueryGenerator {
     resourceIris: Set[IRI],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering]
+    schemaOptions: Set[Rendering],
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -79,19 +79,19 @@ object FullTextMainQueryGenerator {
     val wherePatternsForResources = Seq(
       ValuesPattern(
         resourceVar,
-        resourceIris.map(iri => IriRef(iri.toSmartIri))
+        resourceIris.map(iri => IriRef(iri.toSmartIri)),
       ), // a ValuePattern that binds the resource IRIs to the resource variable
       StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
       StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
       ),
-      StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
+      StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar),
     )
 
     //  mark resources as the main resource and a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
@@ -99,14 +99,14 @@ object FullTextMainQueryGenerator {
       StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsMainResource.toSmartIri),
-        obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+        obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
       ),
       StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
       ),
-      StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
+      StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar),
     )
 
     if (valueObjectIris.nonEmpty) {
@@ -118,19 +118,19 @@ object FullTextMainQueryGenerator {
         StatementPattern(
           subj = resourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-          obj = resourceValueObject
+          obj = resourceValueObject,
         ),
         StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
         StatementPattern(
           subj = resourceValueObject,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+          obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
         ),
         StatementPattern(
           subj = resourceValueObject,
           pred = resourceValueObjectProp,
-          obj = resourceValueObjectObj
-        )
+          obj = resourceValueObjectObj,
+        ),
       )
 
       // return assertions about value objects
@@ -138,10 +138,10 @@ object FullTextMainQueryGenerator {
         StatementPattern(
           subj = resourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-          obj = resourceValueObject
+          obj = resourceValueObject,
         ),
         StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
-        StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
+        StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj),
       )
 
       // Check whether the response should include a page of standoff.
@@ -154,21 +154,21 @@ object FullTextMainQueryGenerator {
           StatementPattern(
             subj = resourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar
+            obj = standoffNodeVar,
           ),
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
           StatementPattern(
             subj = standoffNodeVar,
             pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
-            obj = standoffStartIndexVar
+            obj = standoffStartIndexVar,
           ),
           FilterPattern(
             CompareExpression(
               leftArg = standoffStartIndexVar,
               operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
-            )
-          )
+              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri),
+            ),
+          ),
         )
       } else {
         Seq.empty[QueryPattern]
@@ -180,9 +180,9 @@ object FullTextMainQueryGenerator {
           StatementPattern(
             subj = resourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar
+            obj = standoffNodeVar,
           ),
-          StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+          StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
         )
       } else {
         Seq.empty[StatementPattern]
@@ -190,15 +190,15 @@ object FullTextMainQueryGenerator {
 
       ConstructQuery(
         constructClause = ConstructClause(
-          statements = constructPatternsForResources ++ constructPatternsForValueObjects ++ constructPatternsForStandoff
+          statements = constructPatternsForResources ++ constructPatternsForValueObjects ++ constructPatternsForStandoff,
         ),
         whereClause = WhereClause(
           Seq(
             UnionPattern(
-              Seq(wherePatternsForResources, wherePatternsForValueObjects, wherePatternsForStandoff).filter(_.nonEmpty)
-            )
-          )
-        )
+              Seq(wherePatternsForResources, wherePatternsForValueObjects, wherePatternsForStandoff).filter(_.nonEmpty),
+            ),
+          ),
+        ),
       )
 
     } else {
@@ -206,15 +206,15 @@ object FullTextMainQueryGenerator {
 
       ConstructQuery(
         constructClause = ConstructClause(
-          statements = constructPatternsForResources
+          statements = constructPatternsForResources,
         ),
         whereClause = WhereClause(
           Seq(
             UnionPattern(
-              Seq(wherePatternsForResources)
-            )
-          )
-        )
+              Seq(wherePatternsForResources),
+            ),
+          ),
+        ),
       )
     }
 

@@ -35,7 +35,7 @@ trait RestResourceInfoService {
     projectIri: IriIdentifier,
     resourceClass: IRI,
     order: Order,
-    orderBy: OrderBy
+    orderBy: OrderBy,
   ): Task[ListResponseDto]
 }
 
@@ -63,7 +63,7 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
     projectIri: IriIdentifier,
     resourceClass: IRI,
     order: Order,
-    orderBy: OrderBy
+    orderBy: OrderBy,
   ): Task[ListResponseDto] =
     for {
       rc <- iriConverter

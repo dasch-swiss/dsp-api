@@ -179,20 +179,20 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
       JenaContextFactory.contextNodeOrDefaultGraph(context),
       JenaConversions.asJenaNode(subj),
       JenaConversions.asJenaNode(pred),
-      JenaConversions.asJenaNode(obj)
+      JenaConversions.asJenaNode(obj),
     )
 
   override def remove(
     subj: Option[RdfResource],
     pred: Option[IriNode],
     obj: Option[RdfNode],
-    context: Option[IRI] = None
+    context: Option[IRI] = None,
   ): Unit =
     datasetGraph.deleteAny(
       JenaContextFactory.contextNodeOrWildcard(context),
       asJenaNodeOrWildcard(subj),
       asJenaNodeOrWildcard(pred),
-      asJenaNodeOrWildcard(obj)
+      asJenaNodeOrWildcard(obj),
     )
 
   override def removeStatement(statement: Statement): Unit =
@@ -202,15 +202,15 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
     subj: Option[RdfResource],
     pred: Option[IriNode],
     obj: Option[RdfNode],
-    context: Option[IRI] = None
+    context: Option[IRI] = None,
   ): Iterator[Statement] =
     new StatementIterator(
       datasetGraph.find(
         JenaContextFactory.contextNodeOrWildcard(context),
         asJenaNodeOrWildcard(subj),
         asJenaNodeOrWildcard(pred),
-        asJenaNodeOrWildcard(obj)
-      )
+        asJenaNodeOrWildcard(obj),
+      ),
     )
 
   override def contains(statement: Statement): Boolean =
@@ -384,8 +384,8 @@ object JenaNodeFactory {
         JenaContextFactory.contextNodeOrDefaultGraph(context),
         JenaConversions.asJenaNode(subj),
         JenaConversions.asJenaNode(pred),
-        JenaConversions.asJenaNode(obj)
-      )
+        JenaConversions.asJenaNode(obj),
+      ),
     )
 
   def makeBooleanLiteral(value: Boolean): DatatypeLiteral =
@@ -453,9 +453,9 @@ class JenaRepository(private val dataset: jena.query.Dataset) {
             rowMap,
             { (key: String) =>
               s"No value found for SPARQL query variable '$key' in query result row"
-            }
-          )
-        )
+            },
+          ),
+        ),
       )
     }
 
@@ -463,7 +463,7 @@ class JenaRepository(private val dataset: jena.query.Dataset) {
 
     SparqlSelectResult(
       head = header,
-      results = SparqlSelectResultBody(bindings = rowBuffer.toSeq)
+      results = SparqlSelectResultBody(bindings = rowBuffer.toSeq),
     )
   }
 

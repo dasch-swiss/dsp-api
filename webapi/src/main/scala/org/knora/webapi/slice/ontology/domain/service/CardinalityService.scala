@@ -47,7 +47,7 @@ trait CardinalityService {
   def canSetCardinality(
     classIri: InternalIri,
     propertyIri: InternalIri,
-    newCardinality: Cardinality
+    newCardinality: Cardinality,
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]]
 
   /**
@@ -137,35 +137,35 @@ final case class CardinalityServiceLive(
   private val tripleStore: TriplestoreService,
   private val predicateRepository: PredicateRepository,
   private val ontologyRepo: OntologyRepo,
-  private val iriConverter: IriConverter
+  private val iriConverter: IriConverter,
 ) extends CardinalityService {
 
   private case class CheckCardinalitySubject(
     classIri: InternalIri,
     propertyIri: InternalIri,
-    newCardinality: Cardinality
+    newCardinality: Cardinality,
   )
 
   override def canSetCardinality(
     classIri: InternalIri,
     propertyIri: InternalIri,
-    newCardinality: Cardinality
+    newCardinality: Cardinality,
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
       onTrue = ZIO.succeed(Left(List(CanSetCardinalityCheckResult.KnoraOntologyCheckFailure))),
-      onFalse = doCanSetCheck(CheckCardinalitySubject(classIri, propertyIri, newCardinality))
+      onFalse = doCanSetCheck(CheckCardinalitySubject(classIri, propertyIri, newCardinality)),
     )
 
   private val knoraAdminAndBaseOntologies = Seq(
     "http://www.knora.org/ontology/knora-base",
-    "http://www.knora.org/ontology/knora-admin"
+    "http://www.knora.org/ontology/knora-admin",
   ).map(InternalIri)
 
   private def isPartOfKnoraOntology(classIri: InternalIri): Task[Boolean] =
     iriConverter.getOntologyIriFromClassIri(classIri).map(knoraAdminAndBaseOntologies.contains)
 
   private def doCanSetCheck(
-    check: CheckCardinalitySubject
+    check: CheckCardinalitySubject,
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
       a <- ontologyCheck(check)
@@ -173,7 +173,7 @@ final case class CardinalityServiceLive(
     } yield joinOnLeftList(a, b)
 
   private def ontologyCheck(
-    check: CheckCardinalitySubject
+    check: CheckCardinalitySubject,
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     for {
       a <- superClassCheck(check)
@@ -203,7 +203,7 @@ final case class CardinalityServiceLive(
     getClasses: Task[List[ReadClassInfoV2]],
     propertyIri: InternalIri,
     predicate: Cardinality => Boolean,
-    errorFactory: List[InternalIri] => CanSetCardinalityCheckResult.Failure
+    errorFactory: List[InternalIri] => CanSetCardinalityCheckResult.Failure,
   ): ZIO[Any, Throwable, Either[CanSetCardinalityCheckResult.Failure, CanSetCardinalityCheckResult.Success.type]] =
     getClasses
       .flatMap(filterPropertyCardinalityIsCompatible(propertyIri, predicate))
@@ -214,7 +214,7 @@ final case class CardinalityServiceLive(
 
   private def filterPropertyCardinalityIsCompatible(
     propertyIri: InternalIri,
-    predicate: Cardinality => Boolean
+    predicate: Cardinality => Boolean,
   ): List[ReadClassInfoV2] => Task[List[InternalIri]] = { classes =>
     for {
       propSmartIri <- iriConverter.asInternalSmartIri(propertyIri)
@@ -229,19 +229,19 @@ final case class CardinalityServiceLive(
     classInfo.directCardinalities.get(propertyIri).map(_.cardinality)
 
   private def checkIsCurrentCardinalityIncludedOrPersistentEntitiesAreCompatible(
-    check: CheckCardinalitySubject
+    check: CheckCardinalitySubject,
   ): Task[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]] =
     ZIO
       .ifZIO(checkIsCurrentCardinalityIncluded(check))(
         onTrue = ZIO.succeed(List.empty),
-        onFalse = getInstancesWhichAreNonCompliantWithNewCardinality(check)
+        onFalse = getInstancesWhichAreNonCompliantWithNewCardinality(check),
       )
       .map(nonCompliantInstances =>
         if (nonCompliantInstances.isEmpty) {
           Right(CanSetCardinalityCheckResult.Success)
         } else {
           Left(List(CanSetCardinalityCheckResult.CurrentClassFailure(check.classIri :: nonCompliantInstances)))
-        }
+        },
       )
 
   private def checkIsCurrentCardinalityIncluded(check: CheckCardinalitySubject) =
@@ -253,14 +253,14 @@ final case class CardinalityServiceLive(
     } yield isIncluded
 
   private def getInstancesWhichAreNonCompliantWithNewCardinality(
-    check: CheckCardinalitySubject
+    check: CheckCardinalitySubject,
   ): Task[List[InternalIri]] =
     for {
       subclassIris <- ontologyRepo.findAllSubclassesBy(check.classIri).map(toClassIris)
       instancesAndTheirUsage <-
         predicateRepository.getCountForPropertyUsedNumberOfTimesWithClasses(
           check.propertyIri,
-          check.classIri :: subclassIris
+          check.classIri :: subclassIris,
         )
       nonCompliantInstances = instancesAndTheirUsage.filter { case (_, count) =>
                                 !check.newCardinality.isCountIncluded(count)
@@ -293,7 +293,7 @@ final case class CardinalityServiceLive(
 
     ZIO.ifZIO(isPartOfKnoraOntology(classIri))(
       onTrue = ZIO.succeed(CanReplaceCardinalityCheckResult.KnoraOntologyCheckFailure),
-      onFalse = doCheck
+      onFalse = doCheck,
     )
   }
 }
@@ -302,6 +302,6 @@ object CardinalityService {
   val layer: ZLayer[
     StringFormatter & TriplestoreService & PredicateRepository & OntologyRepo & IriConverter,
     Nothing,
-    CardinalityServiceLive
+    CardinalityServiceLive,
   ] = ZLayer.fromFunction(CardinalityServiceLive.apply _)
 }

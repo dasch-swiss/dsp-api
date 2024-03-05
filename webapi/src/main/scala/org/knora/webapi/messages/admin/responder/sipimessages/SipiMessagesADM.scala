@@ -23,7 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
  */
 case class PermissionCodeAndProjectRestrictedViewSettings(
   permissionCode: Int,
-  restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM]
+  restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
 ) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
 }

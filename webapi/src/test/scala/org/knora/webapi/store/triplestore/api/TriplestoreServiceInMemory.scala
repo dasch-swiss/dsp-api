@@ -128,7 +128,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
                         } else {
                           ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
                         },
-                      ZIO.succeed(_)
+                      ZIO.succeed(_),
                     )
     } yield SparqlConstructResponse.make(rdfModel)
 
@@ -151,7 +151,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     query: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
+    outputFormat: QuadFormat,
   ): Task[Unit] = ZIO.scoped {
     for {
       model  <- execConstruct(query.sparql)
@@ -172,7 +172,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def downloadGraph(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
+    outputFormat: QuadFormat,
   ): Task[Unit] = ZIO.scoped {
     for {
       fos <- fileOutputStream(outputFile)
@@ -188,7 +188,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[Unit] = for {
     _ <- dropDataGraphByGraph()
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
@@ -198,13 +198,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[Unit] =
     getListToInsert(rdfDataObjects, prependDefaults).flatMap(ZIO.foreachDiscard(_)(insertRdfDataObject))
 
   private def getListToInsert(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[List[RdfDataObject]] = {
     val listToInsert = if (prependDefaults) { DefaultRdfData.data.toList ::: rdfDataObjects }
     else { rdfDataObjects }
@@ -229,7 +229,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   private def loadRdfUrl(path: String): ZIO[Any & Scope, Throwable, InputStream] =
     ZIO
       .attemptBlocking(
-        Option(getClass.getClassLoader.getResourceAsStream(path)).getOrElse(throw new Exception("can't find resource"))
+        Option(getClass.getClassLoader.getResourceAsStream(path)).getOrElse(throw new Exception("can't find resource")),
       )
       .orElse(fileInputStream(Paths.get("..", path)))
 

@@ -38,7 +38,7 @@ object AdminPathVariables {
     Codec.string.mapDecode(str =>
       ShortcodeIdentifier
         .fromString(str)
-        .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_))
+        .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_)),
     )(_.value.value)
 
   val projectShortcode: EndpointInput.PathCapture[ShortcodeIdentifier] =
@@ -51,7 +51,7 @@ object AdminPathVariables {
     Codec.string.mapDecode(str =>
       ShortnameIdentifier
         .fromString(str)
-        .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_))
+        .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_)),
     )(_.value.value)
 
   val projectShortname: EndpointInput.PathCapture[ShortnameIdentifier] =

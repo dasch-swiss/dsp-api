@@ -29,7 +29,7 @@ sealed abstract case class CreatePropertyCommand private (
   label: LangString,
   comment: Option[LangString],
   superProperties: List[SmartIri],
-  guiObject: Schema.GuiObject
+  guiObject: Schema.GuiObject,
 )
 
 object CreatePropertyCommand {
@@ -42,7 +42,7 @@ object CreatePropertyCommand {
     label: LangString,
     comment: Option[LangString],
     superProperties: List[SmartIri],
-    guiObject: Schema.GuiObject
+    guiObject: Schema.GuiObject,
   ): Validation[ValidationException, CreatePropertyCommand] =
     Validation.succeed(
       new CreatePropertyCommand(
@@ -54,7 +54,7 @@ object CreatePropertyCommand {
         label = label,
         comment = comment,
         superProperties = superProperties,
-        guiObject = guiObject
-      ) {}
+        guiObject = guiObject,
+      ) {},
     )
 }

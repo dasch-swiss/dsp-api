@@ -21,7 +21,7 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
  */
 class ServerVersionE2ESpec extends E2ESpec {
   implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
   "The Server" should {

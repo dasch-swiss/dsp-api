@@ -96,7 +96,7 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService
       isInProjectIris,
       isInGroupIris,
       isInSystemAdminGroup,
-      isInProjectAdminGroupIris
+      isInProjectAdminGroupIris,
     )
   }.mapError(e => TriplestoreResponseException(e.toString))
 
@@ -128,7 +128,7 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(s.has(p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+            .from(Vocabulary.NamedGraphs.knoraAdminIri),
         )
       Construct(query.getQueryString)
     }
@@ -143,7 +143,7 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(tp(s, p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+            .from(Vocabulary.NamedGraphs.knoraAdminIri),
         )
       Construct(query)
     }
@@ -164,7 +164,7 @@ object KnoraUserRepoLive {
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .andHas(property, Rdf.literalOf(propertyValue))
             .andHas(p, o)
-            .from(Vocabulary.NamedGraphs.knoraAdminIri)
+            .from(Vocabulary.NamedGraphs.knoraAdminIri),
         )
       Construct(query)
     }
@@ -173,7 +173,7 @@ object KnoraUserRepoLive {
       id: Iri,
       rdfType: Iri,
       query: ModifyQuery,
-      iris: List[Iri]
+      iris: List[Iri],
     ): ModifyQuery =
       query
         .delete(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType)) { case (p, (iri, index)) =>
@@ -205,7 +205,7 @@ object KnoraUserRepoLive {
       Vocabulary.KnoraAdmin.isInSystemAdminGroup,
       Vocabulary.KnoraAdmin.isInProject,
       Vocabulary.KnoraAdmin.isInGroup,
-      Vocabulary.KnoraAdmin.isInProjectAdminGroup
+      Vocabulary.KnoraAdmin.isInProjectAdminGroup,
     )
 
     private def toTriples(u: KnoraUser) = {

@@ -61,42 +61,42 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiAttributeTest = suite("gui attribute")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Schema.GuiAttribute.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing))
+        Schema.GuiAttribute.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing)),
       )
     },
     test("pass an invalid key and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("invalid") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("invalid"))
-        )
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("invalid")),
+        ),
       )
     },
     test("pass an unknown key and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("unknown=10") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("unknown"))
-        )
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("unknown")),
+        ),
       )
     },
     test("pass an invalid value for gui attribute 'wrap' and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("wrap=invalid") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("wrap", "invalid"))
-        )
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("wrap", "invalid")),
+        ),
       )
     },
     test("pass an invalid value type for gui attribute 'rows' and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("rows=20.5") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("rows", "20.5"))
-        )
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("rows", "20.5")),
+        ),
       )
     },
     test("pass an invalid value type for gui attribute 'hlist' and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("hlist=notAnIri") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("hlist", "notAnIri"))
-        )
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("hlist", "notAnIri")),
+        ),
       )
     },
     test("pass a valid value with whitespace and successfully create value object") {
@@ -111,7 +111,7 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.value == "size=80")
     },
     test(
-      "pass a valid value for 'hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and successfully create value object"
+      "pass a valid value for 'hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and successfully create value object",
     ) {
       val guiAttributeHlistString = "hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
       assertTrue(Schema.GuiAttribute.make(guiAttributeHlistString).toOption.get.k == "hlist") &&
@@ -120,45 +120,45 @@ object SchemaSpec extends ZIOSpecDefault {
           .make(guiAttributeHlistString)
           .toOption
           .get
-          .v == "<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
+          .v == "<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>",
       ) &&
       assertTrue(
         Schema.GuiAttribute
           .make(guiAttributeHlistString)
           .toOption
           .get
-          .value == "hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
+          .value == "hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>",
       )
-    }
+    },
   )
 
   private val guiElementTest = suite("gui element")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Schema.GuiElement.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiElementMissing))
+        Schema.GuiElement.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiElementMissing)),
       )
     },
     test("pass an unknown value and return an error") {
       val unknownGuiElement = "http://www.knora.org/ontology/salsah-gui#Unknown"
       assertTrue(
         Schema.GuiElement.make(unknownGuiElement) == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiElementUnknown(unknownGuiElement))
-        )
+          ValidationException(SchemaErrorMessages.GuiElementUnknown(unknownGuiElement)),
+        ),
       )
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(Schema.GuiElement.make(SalsahGui.List).toOption.get.value == SalsahGui.List)
-    }
+    },
   )
 
   private val guiObjectTest = suite("gui object - makeFromStrings")(
     test(
-      "pass valid gui element with valid gui attributes and successfully create value object"
+      "pass valid gui element with valid gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .makeFromStrings(
           Set("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"),
-          Some(guiElementList.value)
+          Some(guiElementList.value),
         )
         .fold(e => throw e.head, v => v)
 
@@ -166,63 +166,63 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementList))
     },
     test(
-      "pass valid gui element with multiple wrong gui attributes and return multiple errors"
+      "pass valid gui element with multiple wrong gui attributes and return multiple errors",
     ) {
       assertTrue(
         Schema.GuiObject
           .makeFromStrings(
             Set("mini", "maxi"),
-            Some(guiElementSlider.value)
-          ) == Validation.failNonEmptyChunk(
-          NonEmptyChunk(
-            ValidationException(SchemaErrorMessages.GuiAttributeUnknown("mini")),
-            ValidationException(SchemaErrorMessages.GuiAttributeUnknown("maxi"))
-          )
-        )
-      )
-    },
-    test(
-      "pass invalid gui element with multiple wrong gui attributes and return multiple errors"
-    ) {
-      assertTrue(
-        Schema.GuiObject
-          .makeFromStrings(
-            Set("mini", "maxi"),
-            Some("unknown")
+            Some(guiElementSlider.value),
           ) == Validation.failNonEmptyChunk(
           NonEmptyChunk(
             ValidationException(SchemaErrorMessages.GuiAttributeUnknown("mini")),
             ValidationException(SchemaErrorMessages.GuiAttributeUnknown("maxi")),
-            ValidationException(SchemaErrorMessages.GuiElementUnknown("unknown"))
-          )
-        )
+          ),
+        ),
       )
     },
     test(
-      "pass no gui element but gui attributes and return an error"
+      "pass invalid gui element with multiple wrong gui attributes and return multiple errors",
+    ) {
+      assertTrue(
+        Schema.GuiObject
+          .makeFromStrings(
+            Set("mini", "maxi"),
+            Some("unknown"),
+          ) == Validation.failNonEmptyChunk(
+          NonEmptyChunk(
+            ValidationException(SchemaErrorMessages.GuiAttributeUnknown("mini")),
+            ValidationException(SchemaErrorMessages.GuiAttributeUnknown("maxi")),
+            ValidationException(SchemaErrorMessages.GuiElementUnknown("unknown")),
+          ),
+        ),
+      )
+    },
+    test(
+      "pass no gui element but gui attributes and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .makeFromStrings(
             Set(guiAttributeMin.value, guiAttributeMax.value),
-            None
+            None,
           ) == Validation.failNonEmptyChunk(
           NonEmptyChunk(
-            ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty)
-          )
-        )
+            ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectListTest = suite("gui object - List (mandatory gui attribute)")(
     test(
-      "pass gui element 'salsah-gui#List' with gui attribute 'hlist' and successfully create value object"
+      "pass gui element 'salsah-gui#List' with gui attribute 'hlist' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeHlist),
-          Some(guiElementList)
+          Some(guiElementList),
         )
         .fold(e => throw e.head, v => v)
 
@@ -230,72 +230,72 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementList))
     },
     test(
-      "pass gui element 'salsah-gui#List' without gui attribute and return an error"
+      "pass gui element 'salsah-gui#List' without gui attribute and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(),
-            Some(guiElementList)
+            Some(guiElementList),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
               Set(),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
+      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin, guiAttributeHlist),
-            Some(guiElementList)
+            Some(guiElementList),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
               Set("min", "hlist"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#List' with misfitting gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#List' with misfitting gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementList)
+            Some(guiElementList),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
               Set("size"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectRadioTest = suite("gui object - Radio (mandatory gui attribute)")(
     test(
-      "pass gui element 'salsah-gui#Radio' with gui attribute 'hlist' and successfully create value object"
+      "pass gui element 'salsah-gui#Radio' with gui attribute 'hlist' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeHlist),
-          Some(guiElementRadio)
+          Some(guiElementRadio),
         )
         .fold(e => throw e.head, v => v)
 
@@ -303,72 +303,72 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementRadio))
     },
     test(
-      "pass gui element 'salsah-gui#Radio' without gui attribute and return an error"
+      "pass gui element 'salsah-gui#Radio' without gui attribute and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(),
-            Some(guiElementRadio)
+            Some(guiElementRadio),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
               Set(),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
+      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin, guiAttributeHlist),
-            Some(guiElementRadio)
+            Some(guiElementRadio),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
               Set("min", "hlist"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Radio' with misfitting gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Radio' with misfitting gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementRadio)
+            Some(guiElementRadio),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
               Set("size"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectPulldownTest = suite("gui object - Pulldown (mandatory gui attribute)")(
     test(
-      "pass gui element 'salsah-gui#Pulldown' with gui attribute 'hlist' and successfully create value object"
+      "pass gui element 'salsah-gui#Pulldown' with gui attribute 'hlist' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeHlist),
-          Some(guiElementPulldown)
+          Some(guiElementPulldown),
         )
         .fold(e => throw e.head, v => v)
 
@@ -376,72 +376,72 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementPulldown))
     },
     test(
-      "pass gui element 'salsah-gui#Pulldown' without gui attribute and return an error"
+      "pass gui element 'salsah-gui#Pulldown' without gui attribute and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(),
-            Some(guiElementPulldown)
+            Some(guiElementPulldown),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
               Set(),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
+      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin, guiAttributeHlist),
-            Some(guiElementPulldown)
+            Some(guiElementPulldown),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
               Set("min", "hlist"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Pulldown' with misfitting gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Pulldown' with misfitting gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementPulldown)
+            Some(guiElementPulldown),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
               Set("size"),
-              Set("hlist")
-            )
-          )
-        )
+              Set("hlist"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectSliderTest = suite("gui object - Slider (mandatory gui attribute)")(
     test(
-      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1.0' and 'max=10.0' and successfully create value object"
+      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1.0' and 'max=10.0' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeMin, guiAttributeMax),
-          Some(guiElementSlider)
+          Some(guiElementSlider),
         )
         .fold(e => throw e.head, v => v)
 
@@ -449,72 +449,72 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSlider))
     },
     test(
-      "pass gui element 'salsah-gui#Slider' without gui attribute and return an error"
+      "pass gui element 'salsah-gui#Slider' without gui attribute and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(),
-            Some(guiElementSlider)
+            Some(guiElementSlider),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
               Set(),
-              Set("min", "max")
-            )
-          )
-        )
+              Set("min", "max"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1.0','max=10.0', and 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1.0','max=10.0', and 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin, guiAttributeMax, guiAttributeSize),
-            Some(guiElementSlider)
+            Some(guiElementSlider),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
               Set("min", "max", "size"),
-              Set("min", "max")
-            )
-          )
-        )
+              Set("min", "max"),
+            ),
+          ),
+        ),
       )
     },
     test(
-      "pass gui element 'salsah-gui#Slider' with misfitting gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Slider' with misfitting gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementSlider)
+            Some(guiElementSlider),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
               Set("size"),
-              Set("min", "max")
-            )
-          )
-        )
+              Set("min", "max"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectSpinboxTest = suite("gui object - Spinbox (optional gui attributes)")(
     test(
-      "pass gui element 'salsah-gui#Spinbox' without gui attributes and successfully create value object"
+      "pass gui element 'salsah-gui#Spinbox' without gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(),
-          Some(guiElementSpinbox)
+          Some(guiElementSpinbox),
         )
         .fold(e => throw e.head, v => v)
 
@@ -524,12 +524,12 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
-      "pass gui element 'salsah-gui#Spinbox' with one gui attribute 'min=1.0' and successfully create value object"
+      "pass gui element 'salsah-gui#Spinbox' with one gui attribute 'min=1.0' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeMin),
-          Some(guiElementSpinbox)
+          Some(guiElementSpinbox),
         )
         .fold(e => throw e.head, v => v)
 
@@ -537,12 +537,12 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
-      "pass gui element 'salsah-gui#Spinbox' with two gui attributes 'min=1.0', 'max=10.0' and successfully create value object"
+      "pass gui element 'salsah-gui#Spinbox' with two gui attributes 'min=1.0', 'max=10.0' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeMin, guiAttributeMax),
-          Some(guiElementSpinbox)
+          Some(guiElementSpinbox),
         )
         .fold(e => throw e.head, v => v)
 
@@ -550,35 +550,35 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
-      "pass gui element 'salsah-gui#Spinbox' with too many gui attributes 'min=1.0', 'max=10.0', 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Spinbox' with too many gui attributes 'min=1.0', 'max=10.0', 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin, guiAttributeMax, guiAttributeSize),
-            Some(guiElementSpinbox)
+            Some(guiElementSpinbox),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSpinbox.value,
               Set("min", "max", "size"),
-              Set("min", "max")
-            )
-          )
-        )
+              Set("min", "max"),
+            ),
+          ),
+        ),
       )
 
-    }
+    },
   )
 
   private val guiObjectSimpleTextTest = suite("gui object - SimpleText (optional gui attributes)")(
     test(
-      "pass gui element 'salsah-gui#SimpleText' without gui attributes and successfully create value object"
+      "pass gui element 'salsah-gui#SimpleText' without gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(),
-          Some(guiElementSimpleText)
+          Some(guiElementSimpleText),
         )
         .fold(e => throw e.head, v => v)
 
@@ -588,12 +588,12 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
-      "pass gui element 'salsah-gui#SimpleText' with one gui attribute 'size=80' and successfully create value object"
+      "pass gui element 'salsah-gui#SimpleText' with one gui attribute 'size=80' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeSize),
-          Some(guiElementSimpleText)
+          Some(guiElementSimpleText),
         )
         .fold(e => throw e.head, v => v)
 
@@ -601,12 +601,12 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
-      "pass gui element 'salsah-gui#SimpleText' with two gui attributes 'size=80', 'maxlength=80' and successfully create value object"
+      "pass gui element 'salsah-gui#SimpleText' with two gui attributes 'size=80', 'maxlength=80' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeSize, guiAttributeMaxlength),
-          Some(guiElementSimpleText)
+          Some(guiElementSimpleText),
         )
         .fold(e => throw e.head, v => v)
 
@@ -614,34 +614,34 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
-      "pass gui element 'salsah-gui#SimpleText' with too many gui attributes 'size=80', 'maxlength=80', 'max=10.0' and return an error"
+      "pass gui element 'salsah-gui#SimpleText' with too many gui attributes 'size=80', 'maxlength=80', 'max=10.0' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize, guiAttributeMaxlength, guiAttributeMax),
-            Some(guiElementSimpleText)
+            Some(guiElementSimpleText),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSimpleText.value,
               Set("size", "maxlength", "max"),
-              Set("size", "maxlength")
-            )
-          )
-        )
+              Set("size", "maxlength"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectTextareaTest = suite("gui object - Textarea (optional gui attributes)")(
     test(
-      "pass gui element 'salsah-gui#Textarea' without gui attributes and successfully create value object"
+      "pass gui element 'salsah-gui#Textarea' without gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(),
-          Some(guiElementTextarea)
+          Some(guiElementTextarea),
         )
         .fold(e => throw e.head, v => v)
 
@@ -651,27 +651,27 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
     test(
-      "pass gui element 'salsah-gui#Textarea' with four gui attributes 'width=80%', 'cols=100', 'rows=10', 'wrap=soft' and successfully create value object"
+      "pass gui element 'salsah-gui#Textarea' with four gui attributes 'width=80%', 'cols=100', 'rows=10', 'wrap=soft' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap),
-          Some(guiElementTextarea)
+          Some(guiElementTextarea),
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == Set(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap)
+        guiObject.guiAttributes == Set(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap),
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
     test(
-      "pass gui element 'salsah-gui#Textarea' with two gui attributes 'cols=100', 'rows=10' and successfully create value object"
+      "pass gui element 'salsah-gui#Textarea' with two gui attributes 'cols=100', 'rows=10' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeCols, guiAttributeRows),
-          Some(guiElementTextarea)
+          Some(guiElementTextarea),
         )
         .fold(e => throw e.head, v => v)
 
@@ -679,34 +679,34 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
     test(
-      "pass gui element 'salsah-gui#Textarea' with wrong gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Textarea' with wrong gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementTextarea)
+            Some(guiElementTextarea),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementTextarea.value,
               Set("size"),
-              Set("cols", "rows", "width", "wrap")
-            )
-          )
-        )
+              Set("cols", "rows", "width", "wrap"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectSearchboxTest = suite("gui object - Searchbox (optional gui attributes)")(
     test(
-      "pass gui element 'salsah-gui#Searchbox' without gui attributes and successfully create value object"
+      "pass gui element 'salsah-gui#Searchbox' without gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(),
-          Some(guiElementSearchbox)
+          Some(guiElementSearchbox),
         )
         .fold(e => throw e.head, v => v)
 
@@ -716,49 +716,49 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementSearchbox))
     },
     test(
-      "pass gui element 'salsah-gui#Searchbox' with a gui attribute 'numprops=3' and successfully create value object"
+      "pass gui element 'salsah-gui#Searchbox' with a gui attribute 'numprops=3' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeNumprops),
-          Some(guiElementSearchbox)
+          Some(guiElementSearchbox),
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == Set(guiAttributeNumprops)
+        guiObject.guiAttributes == Set(guiAttributeNumprops),
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementSearchbox))
     },
     test(
-      "pass gui element 'salsah-gui#Searchbox' with wrong gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Searchbox' with wrong gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementSearchbox)
+            Some(guiElementSearchbox),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSearchbox.value,
               Set("size"),
-              Set("numprops")
-            )
-          )
-        )
+              Set("numprops"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectColorpickerTest = suite("gui object - Colorpicker (optional gui attributes)")(
     test(
-      "pass gui element 'salsah-gui#Colorpicker' without gui attributes and successfully create value object"
+      "pass gui element 'salsah-gui#Colorpicker' without gui attributes and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set.empty,
-          Some(guiElementColorpicker)
+          Some(guiElementColorpicker),
         )
         .fold(e => throw e.head, v => v)
 
@@ -767,49 +767,49 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementColorpicker))
     },
     test(
-      "pass gui element 'salsah-gui#Colorpicker' with a gui attribute 'ncolors=12' and successfully create value object"
+      "pass gui element 'salsah-gui#Colorpicker' with a gui attribute 'ncolors=12' and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(guiAttributeNcolors),
-          Some(guiElementColorpicker)
+          Some(guiElementColorpicker),
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == Set(guiAttributeNcolors)
+        guiObject.guiAttributes == Set(guiAttributeNcolors),
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementColorpicker))
     },
     test(
-      "pass gui element 'salsah-gui#Colorpicker' with wrong gui attribute 'size=80' and return an error"
+      "pass gui element 'salsah-gui#Colorpicker' with wrong gui attribute 'size=80' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeSize),
-            Some(guiElementColorpicker)
+            Some(guiElementColorpicker),
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementColorpicker.value,
               Set("size"),
-              Set("ncolors")
-            )
-          )
-        )
+              Set("ncolors"),
+            ),
+          ),
+        ),
       )
-    }
+    },
   )
 
   private val guiObjectCheckboxTest = suite("gui object - Checkbox (no gui attributes allowed)")(
     test(
-      "pass gui element 'salsah-gui#Checkbox' without gui attribute and successfully create value object"
+      "pass gui element 'salsah-gui#Checkbox' without gui attribute and successfully create value object",
     ) {
       val guiObject = Schema.GuiObject
         .make(
           Set(),
-          Some(guiElementCheckbox)
+          Some(guiElementCheckbox),
         )
         .fold(e => throw e.head, v => v)
 
@@ -818,19 +818,19 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(guiObject.guiElement == Some(guiElementCheckbox))
     },
     test(
-      "pass gui element 'salsah-gui#Checkbox' with gui attribute 'min=1.0' and return an error"
+      "pass gui element 'salsah-gui#Checkbox' with gui attribute 'min=1.0' and return an error",
     ) {
       assertTrue(
         Schema.GuiObject
           .make(
             Set(guiAttributeMin),
-            Some(guiElementCheckbox)
+            Some(guiElementCheckbox),
           ) == Validation.fail(
           ValidationException(
-            SchemaErrorMessages.GuiAttributeNotEmpty
-          )
-        )
+            SchemaErrorMessages.GuiAttributeNotEmpty,
+          ),
+        ),
       )
-    }
+    },
   )
 }

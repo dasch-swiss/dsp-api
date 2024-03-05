@@ -47,7 +47,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
   "Creating a `StringLiteralV2`" should {
     "fail when language tag is given but value is missing" in {
       val caught = intercept[BadRequestException](
-        StringLiteralV2("", Some("de"))
+        StringLiteralV2("", Some("de")),
       )
       assert(caught.getMessage === "String value is missing.")
     }

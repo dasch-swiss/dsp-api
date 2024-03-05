@@ -26,15 +26,15 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   "The lists responder v2" should {
     "return a list" in {
       appActor ! ListGetRequestV2(
         listIri = "http://rdfh.ch/lists/0001/treeList",
-        requestingUser = SharedTestDataADM.anythingUser2
+        requestingUser = SharedTestDataADM.anythingUser2,
       )
 
       expectMsgPF(timeout) { case response: ListGetResponseV2 =>
@@ -45,7 +45,7 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
     "return a node" in {
       appActor ! NodeGetRequestV2(
         nodeIri = "http://rdfh.ch/lists/0001/treeList11",
-        requestingUser = SharedTestDataADM.anythingUser2
+        requestingUser = SharedTestDataADM.anythingUser2,
       )
 
       expectMsgPF(timeout) { case response: NodeGetResponseV2 =>

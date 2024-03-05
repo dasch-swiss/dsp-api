@@ -27,17 +27,17 @@ class SearchResponderV2Spec extends CoreSpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
+      name = "http://www.knora.org/data/0803/incunabula",
     ),
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
+      name = "http://www.knora.org/data/0001/anything",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/books-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/books"
+      name = "http://www.knora.org/ontology/0001/books",
     ),
-    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
@@ -54,8 +54,8 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = false,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = anonymousUser
-        )
+          requestingUser = anonymousUser,
+        ),
       )
 
       assert(result.resources.size == 25)
@@ -71,8 +71,8 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = false,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
+          requestingUser = SharedTestDataADM.anythingUser1,
+        ),
       )
 
       assert(result.resources.size == 1)
@@ -88,8 +88,8 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = false,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
+          requestingUser = SharedTestDataADM.anythingUser1,
+        ),
       )
       assertFailsWithA[BadRequestException](result)
     }
@@ -105,8 +105,8 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = true,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
+          requestingUser = SharedTestDataADM.anythingUser1,
+        ),
       )
 
       val hasImageFileValues: Boolean =
@@ -127,14 +127,14 @@ class SearchResponderV2Spec extends CoreSpec {
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          anonymousUser
-        )
+          anonymousUser,
+        ),
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
       compareReadResourcesSequenceV2Response(
         expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
-        received = searchResult
+        received = searchResult,
       )
     }
 
@@ -143,8 +143,8 @@ class SearchResponderV2Spec extends CoreSpec {
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          anonymousUser
-        )
+          anonymousUser,
+        ),
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
@@ -164,7 +164,7 @@ class SearchResponderV2Spec extends CoreSpec {
                       limitToProject = None,
                       limitToResourceClass,
                       targetSchema = ApiV2Complex,
-                      requestingUser = anonymousUser
+                      requestingUser = anonymousUser,
                     )
         } yield result
       }
@@ -185,7 +185,7 @@ class SearchResponderV2Spec extends CoreSpec {
                       limitToProject = None,
                       limitToResourceClass,
                       targetSchema = ApiV2Complex,
-                      requestingUser = anonymousUser
+                      requestingUser = anonymousUser,
                     )
         } yield result
       }
@@ -204,7 +204,7 @@ class SearchResponderV2Spec extends CoreSpec {
           result <- SearchResponderV2.searchResourcesByLabelCountV2(
                       searchValue = "Narrenschiff",
                       limitToProject = None,
-                      limitToResourceClass
+                      limitToResourceClass,
                     )
         } yield result
       }
@@ -224,7 +224,7 @@ class SearchResponderV2Spec extends CoreSpec {
           result <- SearchResponderV2.searchResourcesByLabelCountV2(
                       searchValue = "Passio sancti Meynrhadi martyris et heremite",
                       limitToProject = None,
-                      limitToResourceClass
+                      limitToResourceClass,
                     )
         } yield result
       }
@@ -240,8 +240,8 @@ class SearchResponderV2Spec extends CoreSpec {
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
           page = 0,
           schemaAndOptions = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
-        )
+          requestingUser = SharedTestDataADM.incunabulaProjectAdminUser,
+        ),
       )
       result.resources.size should ===(19)
     }
@@ -257,13 +257,13 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = false,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
+          requestingUser = SharedTestDataADM.anythingUser1,
+        ),
       )
 
       compareReadResourcesSequenceV2Response(
         expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
-        received = result
+        received = result,
       )
     }
 
@@ -277,13 +277,13 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToStandoffClass = None,
           returnFiles = false,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
+          requestingUser = SharedTestDataADM.anythingUser1,
+        ),
       )
 
       compareReadResourcesSequenceV2Response(
         expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
-        received = result
+        received = result,
       )
     }
 
@@ -292,8 +292,8 @@ class SearchResponderV2Spec extends CoreSpec {
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject,
           apiV2SchemaWithOption(MarkupRendering.Xml),
-          anonymousUser
-        )
+          anonymousUser,
+        ),
       )
       searchResult.resources.length should equal(25)
     }
@@ -301,7 +301,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform an extended search ordered asc by label" in {
       val queryAsc = searchResponderV2SpecFullData.constructQuerySortByLabel
       val ascResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser)
+        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser),
       )
       assert(ascResult.resources.head.label == "A blue thing")
     }
@@ -309,7 +309,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform an extended search ordered desc by label" in {
       val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
       val descResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser)
+        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser),
       )
       assert(descResult.resources.head.label == "visible thing with hidden int values")
     }

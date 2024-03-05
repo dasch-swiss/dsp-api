@@ -51,10 +51,10 @@ object SharedTestDataADM {
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
+          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
         ),
-        administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
-      )
+        administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]],
+      ),
     )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -72,9 +72,9 @@ object SharedTestDataADM {
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
-        )
-      )
+          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
+        ),
+      ),
     )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -90,7 +90,7 @@ object SharedTestDataADM {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      permissions = PermissionsDataADM()
+      permissions = PermissionsDataADM(),
     )
 
   /* represents the user profile of 'inactive user' as found in admin-data.ttl */
@@ -106,7 +106,7 @@ object SharedTestDataADM {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      permissions = PermissionsDataADM()
+      permissions = PermissionsDataADM(),
     )
 
   /* represents an anonymous user */
@@ -129,25 +129,25 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin
+            OntologyConstants.KnoraAdmin.ProjectAdmin,
           ),
           imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
             OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin
-          )
+            OntologyConstants.KnoraAdmin.ProjectAdmin,
+          ),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission
+            PermissionADM.ProjectResourceCreateAllPermission,
           ),
           imagesProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents the full ProjectADM of the Knora System project */
@@ -163,10 +163,10 @@ object SharedTestDataADM {
       OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
       OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri,
       SalsahGui.SalsahGuiOntologyIri,
-      OntologyConstants.Standoff.StandoffOntologyIri
+      OntologyConstants.Standoff.StandoffOntologyIri,
     ),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
@@ -180,7 +180,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq.empty[IRI],
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -209,16 +209,16 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           imagesProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin
-          )
+            OntologyConstants.KnoraAdmin.ProjectAdmin,
+          ),
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents 'user02' as found in admin-data.ttl  */
@@ -236,14 +236,14 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents 'images-reviewer-user' as found in admin-data.ttl  */
@@ -263,20 +263,20 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
-            OntologyConstants.KnoraAdmin.ProjectMember
-          )
+            OntologyConstants.KnoraAdmin.ProjectMember,
+          ),
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
             PermissionADM.projectResourceCreateRestrictedPermission(
-              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"
+              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
             ),
             PermissionADM.projectResourceCreateRestrictedPermission(
-              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat"
-            )
-          )
-        )
-      )
+              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat",
+            ),
+          ),
+        ),
+      ),
     )
 
   /* represents the full ProjectADM of the images project */
@@ -290,7 +290,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full ProjectADM of the images project in the external format */
@@ -304,7 +304,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
@@ -314,7 +314,7 @@ object SharedTestDataADM {
     descriptions = Seq(StringLiteralV2(value = "Default Project Admin Group", language = Some("en"))),
     project = imagesProject,
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full GroupADM of the images ProjectMember group */
@@ -324,7 +324,7 @@ object SharedTestDataADM {
     descriptions = Seq(StringLiteralV2(value = "Default Project Member Group", language = Some("en"))),
     project = imagesProject,
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full GroupADM of the images project reviewer group */
@@ -334,7 +334,7 @@ object SharedTestDataADM {
     descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
     project = imagesProject,
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full GroupADM of the images project reviewer group in the external format*/
@@ -344,7 +344,7 @@ object SharedTestDataADM {
     descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
     project = imagesProjectExternal,
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -373,16 +373,16 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin
-          )
+            OntologyConstants.KnoraAdmin.ProjectAdmin,
+          ),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
@@ -400,14 +400,14 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
@@ -425,14 +425,14 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   /* represents the ProjectADM of the incunabula project */
@@ -445,8 +445,8 @@ object SharedTestDataADM {
       V2.StringLiteralV2(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
-        language = None
-      )
+        language = None,
+      ),
     ),
     keywords = Seq(
       "Basler Frühdrucke",
@@ -462,12 +462,12 @@ object SharedTestDataADM {
       "Late Middle Ages",
       "Letterpress Printing",
       "Basel",
-      "Contectualisation of images"
+      "Contectualisation of images",
     ).sorted,
     logo = Some("incunabula_logo.png"),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
@@ -480,8 +480,8 @@ object SharedTestDataADM {
       V2.StringLiteralV2(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
-        language = None
-      )
+        language = None,
+      ),
     ),
     keywords = Seq(
       "Basler Frühdrucke",
@@ -497,12 +497,12 @@ object SharedTestDataADM {
       "Late Middle Ages",
       "Letterpress Printing",
       "Basel",
-      "Contectualisation of images"
+      "Contectualisation of images",
     ).sorted,
     logo = Some("incunabula_logo.png"),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI_LocalHost),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -541,16 +541,16 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           anythingProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin
-          )
+            OntologyConstants.KnoraAdmin.ProjectAdmin,
+          ),
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
             PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   def anythingUser1: User =
@@ -569,15 +569,15 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           anythingProjectIri -> List(
             OntologyConstants.KnoraAdmin.ProjectMember,
-            "http://rdfh.ch/groups/0001/thing-searcher"
-          )
+            "http://rdfh.ch/groups/0001/thing-searcher",
+          ),
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   def anythingUser2: User =
@@ -594,14 +594,14 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+          anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission
-          )
-        )
-      )
+            PermissionADM.ProjectResourceCreateAllPermission,
+          ),
+        ),
+      ),
     )
 
   def anythingProject: ProjectADM = ProjectADM(
@@ -614,7 +614,7 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   def anythingProjectExternal: ProjectADM = ProjectADM(
@@ -627,10 +627,10 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq(
       SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost,
-      SharedOntologyTestDataADM.SomethingOntologyIriLocalhost
+      SharedOntologyTestDataADM.SomethingOntologyIriLocalhost,
     ),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the full GroupADM of the Thing searcher group */
@@ -640,7 +640,7 @@ object SharedTestDataADM {
     descriptions = Seq(StringLiteralV2(value = "A group for thing searchers.", language = Some("en"))),
     project = anythingProject,
     status = true,
-    selfjoin = true
+    selfjoin = true,
   )
 
   /**
@@ -664,10 +664,10 @@ object SharedTestDataADM {
       "http://www.knora.org/ontology/0801/beol",
       "http://www.knora.org/ontology/0801/biblio",
       "http://www.knora.org/ontology/0801/leibniz",
-      "http://www.knora.org/ontology/0801/newton"
+      "http://www.knora.org/ontology/0801/newton",
     ),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -684,14 +684,14 @@ object SharedTestDataADM {
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
-        beolProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
+        beolProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin),
       ),
       administrativePermissionsPerProject = Map(
         beolProjectIri -> Set(
-          PermissionADM.ProjectAdminAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectAdminAllPermission,
+        ),
+      ),
+    ),
   )
 
   /**
@@ -713,6 +713,6 @@ object SharedTestDataADM {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = false,
-    selfjoin = false
+    selfjoin = false,
   )
 }

@@ -89,7 +89,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   def singleAwaitingRequest(
     request: pekko.http.scaladsl.model.HttpRequest,
     timeout: Option[zio.Duration] = None,
-    printFailure: Boolean = false
+    printFailure: Boolean = false,
   ): Task[pekko.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[pekko.http.scaladsl.model.HttpResponse](_ =>
@@ -100,7 +100,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
             }
           }
           resp
-        }
+        },
       )
       .timeout(timeout.getOrElse(10.seconds))
       .some
@@ -120,11 +120,11 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           .attemptBlocking(
             Await.result(
               response.entity.toStrict(FiniteDuration(1, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8")),
-              FiniteDuration(1, TimeUnit.SECONDS)
-            )
+              FiniteDuration(1, TimeUnit.SECONDS),
+            ),
           )
           .mapError(error =>
-            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $error")
+            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $error"),
           )
       _ <- ZIO
              .fail(AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $body"))
@@ -182,7 +182,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
         "file",
         fileToUpload.path.toFile(),
         fileToUpload.mimeType,
-        fileToUpload.path.getFileName.toString
+        fileToUpload.path.getFileName.toString,
       )
     }
 
@@ -216,7 +216,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def uploadWithoutProcessingToSipi(
     loginToken: String,
-    filesToUpload: Seq[FileToUpload]
+    filesToUpload: Seq[FileToUpload],
   ): Task[SipiUploadWithoutProcessingResponse] = {
 
     // builds the url for the operation
@@ -233,7 +233,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
         "file",
         fileToUpload.path.toFile(),
         fileToUpload.mimeType,
-        fileToUpload.path.getFileName.toString
+        fileToUpload.path.getFileName.toString,
       )
     }
 

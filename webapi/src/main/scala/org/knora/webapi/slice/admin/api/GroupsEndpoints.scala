@@ -84,7 +84,7 @@ object GroupsRequests {
     descriptions: GroupDescriptions,
     project: ProjectIri,
     status: GroupStatus,
-    selfjoin: GroupSelfJoin
+    selfjoin: GroupSelfJoin,
   )
   object GroupCreateRequest {
     implicit val jsonCodec: JsonCodec[GroupCreateRequest] = DeriveJsonCodec.gen[GroupCreateRequest]
@@ -94,14 +94,14 @@ object GroupsRequests {
     name: Option[GroupName] = None,
     descriptions: Option[GroupDescriptions] = None,
     status: Option[GroupStatus] = None,
-    selfjoin: Option[GroupSelfJoin] = None
+    selfjoin: Option[GroupSelfJoin] = None,
   )
   object GroupUpdateRequest {
     implicit val jsonCodec: JsonCodec[GroupUpdateRequest] = DeriveJsonCodec.gen[GroupUpdateRequest]
   }
 
   final case class GroupStatusUpdateRequest(
-    status: GroupStatus
+    status: GroupStatus,
   )
   object GroupStatusUpdateRequest {
     implicit val jsonCodec: JsonCodec[GroupStatusUpdateRequest] = DeriveJsonCodec.gen[GroupStatusUpdateRequest]

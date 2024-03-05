@@ -134,7 +134,7 @@ object PermissionUtilADM extends LazyLogging {
     ViewPermission,
     ModifyPermission,
     DeletePermission,
-    ChangeRightsPermission
+    ChangeRightsPermission,
   ).map { level =>
     level.toString -> level
   }.toMap
@@ -145,7 +145,7 @@ object PermissionUtilADM extends LazyLogging {
   private val permissionRelevantAssertions = Set(
     OntologyConstants.KnoraBase.AttachedToUser,
     OntologyConstants.KnoraBase.AttachedToProject,
-    OntologyConstants.KnoraBase.HasPermissions
+    OntologyConstants.KnoraBase.HasPermissions,
   )
 
   /**
@@ -169,7 +169,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   private def calculateHighestGrantedPermissionLevel(
     entityPermissions: Map[EntityPermission, Set[IRI]],
-    userGroups: Set[IRI]
+    userGroups: Set[IRI],
   ): Option[EntityPermission] = {
     // Make a set of all the permissions the user can obtain for this entity.
     val permissionLevels: Set[EntityPermission] = entityPermissions.foldLeft(Set.empty[EntityPermission]) {
@@ -204,7 +204,7 @@ object PermissionUtilADM extends LazyLogging {
     entityCreator: IRI,
     entityProject: IRI,
     entityPermissionLiteral: String,
-    requestingUser: User
+    requestingUser: User,
   ): Option[EntityPermission] = {
     val maybePermissionLevel =
       if (
@@ -293,20 +293,20 @@ object PermissionUtilADM extends LazyLogging {
     entityProject: IRI,
     permissionLiteralA: String,
     permissionLiteralB: String,
-    requestingUser: User
+    requestingUser: User,
   ): PermissionComparisonResult = {
     val maybePermissionA: Option[EntityPermission] = getUserPermissionADM(
       entityCreator = requestingUser.id,
       entityProject = entityProject,
       entityPermissionLiteral = permissionLiteralA,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     val maybePermissionB: Option[EntityPermission] = getUserPermissionADM(
       entityCreator = requestingUser.id,
       entityProject = entityProject,
       entityPermissionLiteral = permissionLiteralB,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
 
     (maybePermissionA, maybePermissionB) match {
@@ -343,7 +343,7 @@ object PermissionUtilADM extends LazyLogging {
   def getUserPermissionFromConstructAssertionsADM(
     entityIri: IRI,
     assertions: ConstructPredicateObjects,
-    requestingUser: User
+    requestingUser: User,
   ): Option[EntityPermission] = {
     val assertionsAsStrings: Seq[(IRI, String)] = assertions.toSeq.flatMap {
       case (pred: SmartIri, objs: Seq[LiteralV2]) =>
@@ -355,7 +355,7 @@ object PermissionUtilADM extends LazyLogging {
     getUserPermissionFromAssertionsADM(
       entityIri = entityIri,
       assertions = assertionsAsStrings,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
   }
 
@@ -376,7 +376,7 @@ object PermissionUtilADM extends LazyLogging {
   def getUserPermissionFromAssertionsADM(
     entityIri: IRI,
     assertions: Seq[(IRI, String)],
-    requestingUser: User
+    requestingUser: User,
   ): Option[EntityPermission] = {
     // Get the entity's creator, project, and permissions.
     val assertionMap: Map[IRI, String] = assertions.toMap
@@ -384,22 +384,22 @@ object PermissionUtilADM extends LazyLogging {
     // Anything with permissions must have an creator and a project.
     val entityCreator: IRI = assertionMap.getOrElse(
       OntologyConstants.KnoraBase.AttachedToUser,
-      throw InconsistentRepositoryDataException(s"Entity $entityIri has no creator")
+      throw InconsistentRepositoryDataException(s"Entity $entityIri has no creator"),
     )
     val entityProject: IRI = assertionMap.getOrElse(
       OntologyConstants.KnoraBase.AttachedToProject,
-      throw InconsistentRepositoryDataException(s"Entity $entityIri has no project")
+      throw InconsistentRepositoryDataException(s"Entity $entityIri has no project"),
     )
     val entityPermissionLiteral: String = assertionMap.getOrElse(
       OntologyConstants.KnoraBase.HasPermissions,
-      throw InconsistentRepositoryDataException(s"Entity $entityIri has no knora-base:hasPermissions predicate")
+      throw InconsistentRepositoryDataException(s"Entity $entityIri has no knora-base:hasPermissions predicate"),
     )
 
     getUserPermissionADM(
       entityCreator = entityCreator,
       entityProject = entityProject,
       entityPermissionLiteral = entityPermissionLiteral,
-      requestingUser = requestingUser
+      requestingUser = requestingUser,
     )
   }
 
@@ -415,7 +415,7 @@ object PermissionUtilADM extends LazyLogging {
     permissionLiteral: String,
     errorFun: String => Nothing = { (permissionLiteral: String) =>
       throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral")
-    }
+    },
   ): Map[EntityPermission, Set[IRI]] = {
     val permissions: Seq[String] =
       permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter).toIndexedSeq
@@ -435,7 +435,7 @@ object PermissionUtilADM extends LazyLogging {
 
       val shortGroups: Set[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
       val groups = shortGroups.map(
-        _.replace(OntologyConstants.KnoraAdmin.KnoraAdminPrefix, OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion)
+        _.replace(OntologyConstants.KnoraAdmin.KnoraAdminPrefix, OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion),
       )
       (permissionStringsToPermissionLevels(abbreviation), groups)
     }.toMap
@@ -451,7 +451,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   def parsePermissionsWithType(
     maybePermissionListStr: Option[String],
-    permissionType: PermissionType
+    permissionType: PermissionType,
   ): Set[PermissionADM] =
     maybePermissionListStr match {
       case Some(permissionListStr) =>
@@ -477,8 +477,8 @@ object PermissionUtilADM extends LazyLogging {
                     .map(
                       _.replace(
                         OntologyConstants.KnoraAdmin.KnoraAdminPrefix,
-                        OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
-                      )
+                        OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion,
+                      ),
                     )
                     .toSet
                   buildPermissionObject(abbreviation, groups)
@@ -496,8 +496,8 @@ object PermissionUtilADM extends LazyLogging {
                   .map(
                     _.replace(
                       OntologyConstants.KnoraAdmin.KnoraAdminPrefix,
-                      OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
-                    )
+                      OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion,
+                    ),
                   )
                   .toSet
                 buildPermissionObject(abbreviation, groups)
@@ -641,12 +641,12 @@ object PermissionUtilADM extends LazyLogging {
                   if (acc.isEmpty) {
                     acc + perm.additionalInformation.get.replace(
                       OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion,
-                      OntologyConstants.KnoraAdmin.KnoraAdminPrefix
+                      OntologyConstants.KnoraAdmin.KnoraAdminPrefix,
                     )
                   } else {
                     acc + OntologyConstants.KnoraBase.GroupListDelimiter + perm.additionalInformation.get.replace(
                       OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion,
-                      OntologyConstants.KnoraAdmin.KnoraAdminPrefix
+                      OntologyConstants.KnoraAdmin.KnoraAdminPrefix,
                     )
                   }
               }
@@ -736,8 +736,8 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
             permissionLiteral = permissionLiteral,
             errorFun = { literal =>
               throw BadRequestException(s"Invalid permission literal: $literal")
-            }
-          )
+            },
+          ),
         )
 
       // Get the group IRIs that are mentioned, minus the built-in groups.
@@ -747,8 +747,8 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
       validatedProjectSpecificGroupIris <-
         ZIO.attempt(
           projectSpecificGroupIris.map(iri =>
-            Iri.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri"))
-          )
+            Iri.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri")),
+          ),
         )
 
       // Check that those groups exist.

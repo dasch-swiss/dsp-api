@@ -34,11 +34,11 @@ class GravsearchToPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
-  appConfig: AppConfig
+  appConfig: AppConfig,
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
-      querySchema = querySchema
+      querySchema = querySchema,
     ) {
 
   /**
@@ -152,7 +152,7 @@ class GravsearchToPrequeryTransformer(
 
     throw GravsearchException(
       s"One or more variables in the Gravsearch CONSTRUCT clause have unknown or invalid types: ${invalidVariablesWithTypes
-          .mkString(", ")}"
+          .mkString(", ")}",
     )
   }
 
@@ -171,7 +171,7 @@ class GravsearchToPrequeryTransformer(
       }.map { statementPattern =>
         // For each of those statements, make a variable representing a link value.
         statementPattern.subj -> SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
-          baseStatement = statementPattern
+          baseStatement = statementPattern,
         )
       }.groupBy { case (resourceEntity, _) =>
         resourceEntity
@@ -191,7 +191,7 @@ class GravsearchToPrequeryTransformer(
           GroupConcat(
             inputVariable = valueObjVar,
             separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
-            outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix
+            outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix,
           )
         }
 
@@ -226,7 +226,7 @@ class GravsearchToPrequeryTransformer(
       GroupConcat(
         inputVariable = dependentResVar,
         separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
-        outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix
+        outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix,
       )
   }
 
@@ -271,13 +271,13 @@ class GravsearchToPrequeryTransformer(
           // Yes. Use the already generated variable in the ORDER BY.
           acc.copy(
             orderBy =
-              acc.orderBy :+ OrderCriterion(queryVariable = generatedVariable, isAscending = criterion.isAscending)
+              acc.orderBy :+ OrderCriterion(queryVariable = generatedVariable, isAscending = criterion.isAscending),
           )
 
         case None =>
           // No.
           throw GravsearchException(
-            s"Variable ${criterion.queryVariable.toSparql} is used in ORDER by, but is not bound at the top level of the WHERE clause"
+            s"Variable ${criterion.queryVariable.toSparql} is used in ORDER by, but is not bound at the top level of the WHERE clause",
           )
 
       }
@@ -286,13 +286,13 @@ class GravsearchToPrequeryTransformer(
     // main resource variable as order by criterion
     val orderByMainResVar: OrderCriterion = OrderCriterion(
       queryVariable = mainResourceVariable,
-      isAscending = true
+      isAscending = true,
     )
 
     // order by: user provided variables and main resource variable
     // all variables present in the GROUP BY must be included in the order by statements to make the results predictable for paging
     transformedOrderBy.copy(
-      orderBy = transformedOrderBy.orderBy :+ orderByMainResVar
+      orderBy = transformedOrderBy.orderBy :+ orderByMainResVar,
     )
   }
 
@@ -329,6 +329,6 @@ class GravsearchToPrequeryTransformer(
       .when(inputQueryOffset < 0)
       .as(
         // determine offset for paging -> multiply given offset with limit (indicating the maximum amount of results per page).
-        inputQueryOffset * limit
+        inputQueryOffset * limit,
       )
 }

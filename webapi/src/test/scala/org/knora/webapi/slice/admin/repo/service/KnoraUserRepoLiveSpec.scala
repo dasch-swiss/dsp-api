@@ -60,13 +60,13 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     u.isInProject.foreach(prjIri => triples.andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(prjIri.value)))
     u.isInGroup.foreach(grpIri => triples.andHas(Vocabulary.KnoraAdmin.isInGroup, Rdf.iri(grpIri.value)))
     u.isInProjectAdminGroup.foreach(admGrp =>
-      triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(admGrp.value))
+      triples.andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(admGrp.value)),
     )
     Update(
       Queries
         .INSERT_DATA(triples)
         .into(Rdf.iri(adminDataNamedGraph.value))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS)),
     )
   }
 
@@ -86,7 +86,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _    <- storeUsersInTripleStore(testUser, testUserWithoutAnyGroups)
           user <- findById(UserIri.unsafeFrom("http://rdfh.ch/users/doesNotExist"))
         } yield assertTrue(user.isEmpty)
-      }
+      },
     ),
     suite("findByEmail")(
       test("findByEmail given an existing user should return that user") {
@@ -100,7 +100,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _    <- storeUsersInTripleStore(testUser, testUserWithoutAnyGroups)
           user <- findByEmail(Email.unsafeFrom("doesNotExist@example.com"))
         } yield assertTrue(user.isEmpty)
-      }
+      },
     ),
     suite("findByUsername")(
       test("findByUsername given an existing user should return that user") {
@@ -114,7 +114,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _    <- storeUsersInTripleStore(testUser, testUserWithoutAnyGroups)
           user <- findByUsername(Username.unsafeFrom("doesNotExistUsername"))
         } yield assertTrue(user.isEmpty)
-      }
+      },
     ),
     suite("findAll")(
       test("given existing users should return all user") {
@@ -127,7 +127,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         for {
           users <- findAll()
         } yield assertTrue(users.isEmpty)
-      }
+      },
     ),
     suite("save")(
       test("should create and find user") {
@@ -189,12 +189,12 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _           <- save(testUserWithoutAnyGroups.copy(isInGroup = Chunk.empty))
           updatedUser <- findById(testUserWithoutAnyGroups.id).someOrFail(new Exception("User not found"))
         } yield assertTrue(updatedUser.isInGroup.isEmpty)
-      }
-    )
+      },
+    ),
   ).provide(
     KnoraUserRepoLive.layer,
     TriplestoreServiceInMemory.emptyLayer,
     StringFormatter.test,
-    CacheService.layer
+    CacheService.layer,
   )
 }

@@ -38,6 +38,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
     apiRequestID: UUID,
     requestingUser: User,
     appActor: ActorRef,
-    log: Logger
+    log: Logger,
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

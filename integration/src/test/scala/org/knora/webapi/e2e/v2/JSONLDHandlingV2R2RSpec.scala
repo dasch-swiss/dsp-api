@@ -32,12 +32,12 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
+      name = "http://www.knora.org/data/0001/anything",
     ),
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    )
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
   )
 
   "The JSON-LD processor" should {
@@ -54,7 +54,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
       compareParsedJSONLDForResourcesResponse(
         expectedResponse = expectedJsonldExpandedParsed,
-        receivedResponse = jsonldParsedExpanded
+        receivedResponse = jsonldParsedExpanded,
       )
 
     }

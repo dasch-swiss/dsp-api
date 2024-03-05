@@ -16,7 +16,7 @@ final case class AdminApiEndpoints(
   projectsEndpoints: ProjectsEndpoints,
   storeEndpoints: StoreEndpoints,
   usersEndpoints: UsersEndpoints,
-  filesEndpoints: FilesEndpoints
+  filesEndpoints: FilesEndpoints,
 ) {
 
   val endpoints: Seq[AnyEndpoint] =

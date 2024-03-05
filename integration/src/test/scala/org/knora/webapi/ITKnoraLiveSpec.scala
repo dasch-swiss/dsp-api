@@ -106,7 +106,7 @@ abstract class ITKnoraLiveSpec
           for {
             _ <- AppServer.testWithSipi
             _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
-          } yield ()
+          } yield (),
         )
         .getOrThrow()
     }
@@ -124,7 +124,7 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseString(request)
-          } yield result
+          } yield result,
         )
         .getOrThrowFiberFailure()
     }
@@ -136,7 +136,7 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.checkResponseOK(request)
-          } yield result
+          } yield result,
         )
         .getOrThrowFiberFailure()
     }
@@ -148,7 +148,7 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJson(request)
-          } yield result
+          } yield result,
         )
         .getOrThrowFiberFailure()
     }
@@ -166,7 +166,7 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJsonLD(request)
-          } yield result
+          } yield result,
         )
         .getOrThrowFiberFailure()
     }
@@ -178,14 +178,14 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-          } yield result
+          } yield result,
         )
         .getOrThrow()
     }
 
   protected def uploadWithoutProcessingToSipi(
     loginToken: String,
-    filesToUpload: Seq[FileToUpload]
+    filesToUpload: Seq[FileToUpload],
   ): SipiUploadWithoutProcessingResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
@@ -193,7 +193,7 @@ abstract class ITKnoraLiveSpec
           for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.uploadWithoutProcessingToSipi(loginToken, filesToUpload)
-          } yield result
+          } yield result,
         )
         .getOrThrow()
     }

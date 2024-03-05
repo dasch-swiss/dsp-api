@@ -13,7 +13,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 final case class ConstructTransformer(
   sparqlTransformerLive: OntologyInferencer,
-  iriConverter: IriConverter
+  iriConverter: IriConverter,
 ) {
 
   /**
@@ -25,7 +25,7 @@ final case class ConstructTransformer(
    */
   def transform(
     inputQuery: ConstructQuery,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None,
   ): Task[ConstructQuery] =
     for {
       patterns <- optimizeAndTransformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
@@ -33,29 +33,29 @@ final case class ConstructTransformer(
 
   private def optimizeAndTransformPatterns(
     patterns: Seq[QueryPattern],
-    limit: Option[Set[SmartIri]]
+    limit: Option[Set[SmartIri]],
   ): Task[Seq[QueryPattern]] = for {
     optimisedPatterns <-
       ZIO.attempt(
         SparqlTransformer.moveBindToBeginning(
           SparqlTransformer.optimiseIsDeletedWithFilter(
-            SparqlTransformer.moveLuceneToBeginning(patterns)
-          )
-        )
+            SparqlTransformer.moveLuceneToBeginning(patterns),
+          ),
+        ),
       )
     transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
   } yield transformedPatterns.flatten
 
   private def transformPattern(
     pattern: QueryPattern,
-    limit: Option[Set[SmartIri]]
+    limit: Option[Set[SmartIri]],
   ): Task[Seq[QueryPattern]] =
     pattern match {
       case statementPattern: StatementPattern =>
         sparqlTransformerLive.transformStatementInWhere(
           statementPattern = statementPattern,
           simulateInference = true,
-          limitInferenceToOntologies = limit
+          limitInferenceToOntologies = limit,
         )
       case FilterNotExistsPattern(patterns) => transformInner(patterns, limit, FilterNotExistsPattern.apply)
       case MinusPattern(patterns)           => transformInner(patterns, limit, MinusPattern.apply)
@@ -68,7 +68,7 @@ final case class ConstructTransformer(
   private def transformInner[Outer <: QueryPattern](
     inner: Seq[QueryPattern],
     limit: Option[Set[SmartIri]],
-    outer: Seq[QueryPattern] => Outer
+    outer: Seq[QueryPattern] => Outer,
   ): Task[Seq[Outer]] =
     ZIO.foreach(inner)(transformPattern(_, limit)).map(t => Seq(outer.apply(t.flatten)))
 

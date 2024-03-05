@@ -20,8 +20,8 @@ class ResourcesMessagesV2Spec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ProjectResourcesWithHistoryGetRequestV2(
           projectIri = projectIri,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid project IRI: $projectIri")
     }
@@ -30,8 +30,8 @@ class ResourcesMessagesV2Spec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ProjectResourcesWithHistoryGetRequestV2(
           projectIri = "http://rdfh.ch/0001/thing-with-history", // resource IRI instead of project IRI
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === "Given IRI is not a project IRI.")
     }
@@ -43,8 +43,8 @@ class ResourcesMessagesV2Spec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Invalid resource IRI: $resourceIri")
     }
@@ -54,8 +54,8 @@ class ResourcesMessagesV2Spec extends CoreSpec {
       val caught = intercept[BadRequestException](
         ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
-          requestingUser = SharedTestDataADM.imagesUser01
-        )
+          requestingUser = SharedTestDataADM.imagesUser01,
+        ),
       )
       assert(caught.getMessage === s"Given IRI is not a resource IRI: $resourceIri")
     }

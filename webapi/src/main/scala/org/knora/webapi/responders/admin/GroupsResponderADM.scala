@@ -97,7 +97,7 @@ trait GroupsResponderADM {
    */
   def createGroup(
     request: GroupCreateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM]
 
   /**
@@ -111,7 +111,7 @@ trait GroupsResponderADM {
   def updateGroup(
     groupIri: GroupIri,
     request: GroupUpdateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM]
 
   /**
@@ -125,7 +125,7 @@ trait GroupsResponderADM {
   def updateGroupStatus(
     groupIri: GroupIri,
     request: GroupStatusUpdateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM]
 
   /**
@@ -137,7 +137,7 @@ trait GroupsResponderADM {
    */
   def deleteGroup(
     iri: GroupIri,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM]
 }
 
@@ -146,7 +146,7 @@ final case class GroupsResponderADMLive(
   messageRelay: MessageRelay,
   iriService: IriService,
   knoraUserService: KnoraUserService,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends GroupsResponderADM
     with MessageHandler
     with GroupsADMJsonProtocol
@@ -194,8 +194,8 @@ final case class GroupsResponderADMLive(
       projectADM <- findProjectByIriOrFail(
                       projectIri,
                       InconsistentRepositoryDataException(
-                        s"Project $projectIri was referenced by $groupIri but was not found in the triplestore."
-                      )
+                        s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.",
+                      ),
                     )
       name         <- getFirstValueOrFail[StringLiteralV2](GroupName).map(_.value)
       descriptions <- getOrFail[StringLiteralV2](GroupDescriptions)
@@ -246,7 +246,7 @@ final case class GroupsResponderADMLive(
    */
   private def groupMembersGetADM(
     groupIri: IRI,
-    requestingUser: User
+    requestingUser: User,
   ): Task[Seq[User]] =
     for {
       group <- groupGetADM(groupIri)
@@ -279,8 +279,8 @@ final case class GroupsResponderADMLive(
               UserGetByIriADM(
                 UserIri.unsafeFrom(userIri),
                 UserInformationType.Restricted,
-                KnoraSystemInstances.Users.SystemUser
-              )
+                KnoraSystemInstances.Users.SystemUser,
+              ),
             )
         }
       users <- ZioHelper.sequence(usersMaybeTasks).map(_.flatten)
@@ -306,7 +306,7 @@ final case class GroupsResponderADMLive(
    */
   override def createGroup(
     request: GroupCreateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
     val task = for {
       nameExists <- groupByNameAndProjectExists(request.name.value, request.project.value)
@@ -317,14 +317,14 @@ final case class GroupsResponderADMLive(
       projectADM <-
         findProjectByIriOrFail(
           request.project.value,
-          NotFoundException(s"Cannot create group inside project <${request.project}>. The project was not found.")
+          NotFoundException(s"Cannot create group inside project <${request.project}>. The project was not found."),
         )
 
       // check the custom IRI; if not given, create an unused IRI
       customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
       groupIri <- iriService.checkOrCreateEntityIri(
                     customGroupIri,
-                    GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value
+                    GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value,
                   )
 
       /* create the group */
@@ -338,7 +338,7 @@ final case class GroupsResponderADMLive(
             descriptions = request.descriptions.value,
             projectIri = request.project.value,
             status = request.status.value,
-            hasSelfJoinEnabled = request.selfjoin.value
+            hasSelfJoinEnabled = request.selfjoin.value,
           )
 
       _ <- triplestore.query(Update(createNewGroupSparqlString))
@@ -363,7 +363,7 @@ final case class GroupsResponderADMLive(
   override def updateGroup(
     groupIri: GroupIri,
     request: GroupUpdateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
     val task = for {
       result <- updateGroupHelper(groupIri, request)
@@ -382,7 +382,7 @@ final case class GroupsResponderADMLive(
   override def updateGroupStatus(
     groupIri: GroupIri,
     request: GroupStatusUpdateRequest,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
     val task = for {
       // update group status
@@ -396,7 +396,7 @@ final case class GroupsResponderADMLive(
 
   override def deleteGroup(
     iri: GroupIri,
-    apiRequestID: UUID
+    apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
     val task = for {
       updated <- updateGroupHelper(iri, GroupUpdateRequest(None, None, Some(GroupStatus.inactive), None))
@@ -422,8 +422,8 @@ final case class GroupsResponderADMLive(
                  request.name,
                  request.descriptions,
                  request.status,
-                 request.selfjoin
-               ).flatten.isEmpty
+                 request.selfjoin,
+               ).flatten.isEmpty,
              )
 
       /* Verify that the group exists. */
@@ -450,7 +450,7 @@ final case class GroupsResponderADMLive(
             maybeDescriptions = request.descriptions.map(_.value),
             maybeProject = None, // maybe later we want to allow moving of a group to another project
             maybeStatus = request.status.map(_.value),
-            maybeSelfjoin = request.selfjoin.map(_.value)
+            maybeSelfjoin = request.selfjoin.map(_.value),
           )
       _ <- triplestore.query(Update(updateGroupSparqlString))
 
@@ -492,7 +492,7 @@ final case class GroupsResponderADMLive(
       for {
         members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
         _ <- ZIO.foreachDiscard(members)(user =>
-               knoraUserService.removeUserFromGroup(user, changedGroup).mapError(BadRequestException.apply)
+               knoraUserService.removeUserFromGroup(user, changedGroup).mapError(BadRequestException.apply),
              )
       } yield GroupGetResponseADM(group = changedGroup)
     }

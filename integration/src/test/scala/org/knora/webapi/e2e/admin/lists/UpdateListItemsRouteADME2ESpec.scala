@@ -43,28 +43,28 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   val rootCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.rootUser,
-    "test"
+    "test",
   )
 
   val normalUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.normalUser,
-    "test"
+    "test",
   )
 
   val anythingUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingUser1,
-    "test"
+    "test",
   )
 
   val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
-    "test"
+    "test",
   )
 
   val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
@@ -84,16 +84,16 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-name-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -110,10 +110,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-name-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -127,16 +127,16 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-labels-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeLabels
-          )
+            text = updateNodeLabels,
+          ),
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
-          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)
+          HttpEntity(ContentTypes.`application/json`, updateNodeLabels),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -155,10 +155,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-labels-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -172,16 +172,16 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-comments-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateCommentsLabels
-          )
+            text = updateCommentsLabels,
+          ),
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, updateCommentsLabels)
+          HttpEntity(ContentTypes.`application/json`, updateCommentsLabels),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -200,10 +200,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-rootNode-comments-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -216,7 +216,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, deleteComments)
+          HttpEntity(ContentTypes.`application/json`, deleteComments),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
@@ -236,17 +236,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-name-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -261,10 +261,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-name-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -279,17 +279,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-labels-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeLabels
-          )
+            text = updateNodeLabels,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
-          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)
+          HttpEntity(ContentTypes.`application/json`, updateNodeLabels),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -306,10 +306,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-labels-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -324,17 +324,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-comments-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeComments
-          )
+            text = updateNodeComments,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, updateNodeComments)
+          HttpEntity(ContentTypes.`application/json`, updateNodeComments),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -351,10 +351,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-comments-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -369,17 +369,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "not-update-childNode-comments-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = deleteNodeComments
-          )
+            text = deleteNodeComments,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, deleteNodeComments)
+          HttpEntity(ContentTypes.`application/json`, deleteNodeComments),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -400,7 +400,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -422,17 +422,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -446,10 +446,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -468,17 +468,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-to-end-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -492,10 +492,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-to-end-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -514,17 +514,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-new-parent-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -538,10 +538,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-new-parent-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -560,17 +560,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-new-parent-to-end-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateNodeName
-          )
+            text = updateNodeName,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+          HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -584,10 +584,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-childNode-position-new-parent-to-end-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
     }
@@ -607,16 +607,16 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-info-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateListInfo
-          )
+            text = updateListInfo,
+          ),
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, updateListInfo)
+          HttpEntity(ContentTypes.`application/json`, updateListInfo),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -637,10 +637,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-info-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -656,16 +656,16 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-name-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateListName
-          )
+            text = updateListName,
+          ),
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, updateListName)
+          HttpEntity(ContentTypes.`application/json`, updateListName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -682,10 +682,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-name-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -711,17 +711,17 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-info-comment-label-multiple-languages-request",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = updateListInfoWithRepeatedCommentAndLabelValuesRequest
-          )
+            text = updateListInfoWithRepeatedCommentAndLabelValuesRequest,
+          ),
         )
 
         val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)
+          HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
@@ -742,10 +742,10 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-list-info-comment-label-multiple-languages-response",
-              fileExtension = "json"
+              fileExtension = "json",
             ),
-            text = responseToString(response)
-          )
+            text = responseToString(response),
+          ),
         )
       }
 
@@ -764,7 +764,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, params)
+          HttpEntity(ContentTypes.`application/json`, params),
         ) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.Forbidden)
@@ -786,7 +786,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request01 = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, params01)
+          HttpEntity(ContentTypes.`application/json`, params01),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response01: HttpResponse = singleAwaitingRequest(request01)
         response01.status should be(StatusCodes.BadRequest)
@@ -804,7 +804,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request02 = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, params02)
+          HttpEntity(ContentTypes.`application/json`, params02),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response02: HttpResponse = singleAwaitingRequest(request02)
         response02.status should be(StatusCodes.BadRequest)
@@ -822,7 +822,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val request03 = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, params03)
+          HttpEntity(ContentTypes.`application/json`, params03),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response03: HttpResponse = singleAwaitingRequest(request03)
         response03.status should be(StatusCodes.BadRequest)

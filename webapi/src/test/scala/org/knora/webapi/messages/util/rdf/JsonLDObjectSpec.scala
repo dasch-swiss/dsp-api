@@ -27,7 +27,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         booleanValueSuite +
         idValueSuite +
         uuidValueSuite +
-        smartIriValueSuite
+        smartIriValueSuite,
     ).provide(IriConverter.layer, StringFormatter.test)
 
   private val emptyJsonLdObject                            = JsonLDObject(Map.empty)
@@ -39,20 +39,20 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   private val iriValueSuite = suite("getting iri values")(
     iriValueWhenGivenAnEmptyMap,
     iriValueWhenGivenCorrectValues,
-    iriValueWhenGivenInvalidValues
+    iriValueWhenGivenInvalidValues,
   )
 
   private def iriValueWhenGivenAnEmptyMap = suite("when given an empty map")(
     test("getIri should fail") {
       assertTrue(
-        emptyJsonLdObject.getIri == Left("This JSON-LD object does not represent an IRI: JsonLDObject(Map())")
+        emptyJsonLdObject.getIri == Left("This JSON-LD object does not represent an IRI: JsonLDObject(Map())"),
       )
     },
     test("toIri should fail") {
       for {
         actual <- ZIO.attempt(emptyJsonLdObject.toIri(noValidation)).exit
       } yield assertTrue(
-        actual == Exit.fail(BadRequestException("This JSON-LD object does not represent an IRI: JsonLDObject(Map())"))
+        actual == Exit.fail(BadRequestException("This JSON-LD object does not represent an IRI: JsonLDObject(Map())")),
       )
     },
     test("maybeIriInObject should return None") {
@@ -69,13 +69,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       for {
         actual <- emptyJsonLdObject.getIriInObject(someKey)
       } yield assertTrue(actual.isEmpty)
-    }
+    },
   )
 
   private def iriValueWhenGivenCorrectValues = {
     val jsonLdObject = JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri)))
     val jsonLdObjectWithIriInObject = JsonLDObject(
-      Map(someKey -> JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri))))
+      Map(someKey -> JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri)))),
     )
     suite("when given a correct value")(
       test("getIri returns expected value")(assertTrue(jsonLdObject.getIri == Right(someResourceIri))),
@@ -94,7 +94,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObjectWithIriInObject.getIriInObject(someKey)
         } yield assertTrue(actual.contains(someResourceIri))
-      }
+      },
     )
   }
 
@@ -105,42 +105,42 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val expectedError               = "Invalid @id: JsonLDBoolean(true) (string expected)"
     suite("when given an invalid value")(
       test("getIri returns should fail with correct error message")(
-        assertTrue(jsonLdObject.getIri == Left(expectedError))
+        assertTrue(jsonLdObject.getIri == Left(expectedError)),
       ),
       test("toIri should fail with a BadRequestException")(
         for {
           actual <- ZIO.attempt(jsonLdObject.toIri(noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
-        )
+          actual == Exit.fail(BadRequestException(expectedError)),
+        ),
       ),
       test("maybeIriInObject should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObjectWithIriInObject.maybeIriInObject(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
+          actual == Exit.fail(BadRequestException(expectedError)),
         )
       },
       test("requireIriInObject  should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObjectWithIriInObject.requireIriInObject(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
+          actual == Exit.fail(BadRequestException(expectedError)),
         )
       },
       test("getIdIriInObject fails with correct error messageexpected value") {
         for {
           actual <- jsonLdObjectWithIriInObject.getIriInObject(someKey).exit
         } yield assertTrue(
-          actual == Exit.fail(expectedError)
+          actual == Exit.fail(expectedError),
         )
-      }
+      },
     )
   }
 
   // String value related tests
   private val stringValueSuite = suite("getting string values")(
-    stringValueWhenGivenAnEmptyMap + stringValueWhenGivenValidString + stringValueWhenGivenInvalidString
+    stringValueWhenGivenAnEmptyMap + stringValueWhenGivenValidString + stringValueWhenGivenInvalidString,
   )
 
   private def stringValueWhenGivenAnEmptyMap = suite("when given an empty map")(
@@ -157,7 +157,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     },
     test("getRequiredString should fail with correct message") {
       assertTrue(emptyJsonLdObject.getRequiredString(someKey) == Left("No someKey provided"))
-    }
+    },
   )
 
   def stringValueWhenGivenValidString: Spec[Any, Serializable] = {
@@ -177,7 +177,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredString should return correct value") {
         assertTrue(jsonLdObject.getRequiredString(someKey) == Right(someString))
-      }
+      },
     )
   }
 
@@ -189,7 +189,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- ZIO.attempt(jsonLdObject.maybeStringWithValidation(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
+          actual == Exit.fail(BadRequestException(expectedError)),
         )
       },
       test("getString should fail with correct error message") {
@@ -199,12 +199,12 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- ZIO.attempt(jsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
         } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
+          actual == Exit.fail(BadRequestException(expectedError)),
         )
       },
       test("getRequiredString should return correct value") {
         assertTrue(jsonLdObject.getRequiredString(someKey) == Left(expectedError))
-      }
+      },
     )
   }
 
@@ -216,13 +216,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredObject should fail") {
         assertTrue(emptyJsonLdObject.getRequiredObject(someKey) == Left("No someKey provided"))
-      }
-    )
+      },
+    ),
   )
 
   // array value related tests
   private val arrayValueSuite = suite("getting array values")(
-    arrayValueSuiteWhenGivenEmptyMap + arrayValueSuiteWhenGivenValidArray
+    arrayValueSuiteWhenGivenEmptyMap + arrayValueSuiteWhenGivenValidArray,
   )
 
   private def arrayValueSuiteWhenGivenEmptyMap = suite("when given an empty map")(
@@ -231,7 +231,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     },
     test("getRequiredArray should fail with correct error message") {
       assertTrue(emptyJsonLdObject.getRequiredArray(someKey) == Left("No someKey provided"))
-    }
+    },
   )
 
   private def arrayValueSuiteWhenGivenValidArray = {
@@ -245,7 +245,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         },
         test("getRequiredArray should return value in List") {
           assertTrue(jsonLdObjectWithArray.getRequiredArray(someKey) == Right(jsonLdArray))
-        }
+        },
       )
     }
     val suiteWithSingleValue = {
@@ -256,7 +256,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         },
         test("getRequiredArray should return value in List") {
           assertTrue(jsonLdObjectWithSingleValue.getRequiredArray(someKey) == Right(jsonLdArray))
-        }
+        },
       )
     }
     suiteWithArray + suiteWithSingleValue
@@ -264,7 +264,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   // int value related tests
   private val intValueSuite = suite("getting int values")(
-    intValueSuiteWhenGivenAnEmptyMap + intValueSuiteWhenGivenValidValue + intValueSuiteWhenGivenInvalidValue
+    intValueSuiteWhenGivenAnEmptyMap + intValueSuiteWhenGivenValidValue + intValueSuiteWhenGivenInvalidValue,
   )
 
   private def intValueSuiteWhenGivenAnEmptyMap =
@@ -274,7 +274,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredInt should fail with correct error message") {
         assertTrue(emptyJsonLdObject.getRequiredInt(someKey) == Left("No someKey provided"))
-      }
+      },
     )
 
   private def intValueSuiteWhenGivenValidValue = {
@@ -286,7 +286,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredInt return int value") {
         assertTrue(jsonLdObject.getRequiredInt(someKey) == Right(intValue))
-      }
+      },
     )
   }
 
@@ -299,13 +299,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredInt should fail with correct error message") {
         assertTrue(jsonLdObject.getRequiredInt(someKey) == Left(expectedError))
-      }
+      },
     )
   }
 
   // boolean value related tests
   private val booleanValueSuite = suite("getting boolean values")(
-    booleanValueSuiteWhenGivenAnEmptyMap + booleanValueSuiteWhenGivenValidValue + booleanValueSuiteWhenGivenInvalidValue
+    booleanValueSuiteWhenGivenAnEmptyMap + booleanValueSuiteWhenGivenValidValue + booleanValueSuiteWhenGivenInvalidValue,
   )
 
   private def booleanValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
@@ -314,7 +314,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     },
     test("getRequiredBoolean should fail with correct error message") {
       assertTrue(emptyJsonLdObject.getRequiredBoolean(someKey) == Left("No someKey provided"))
-    }
+    },
   )
 
   private def booleanValueSuiteWhenGivenValidValue = {
@@ -326,7 +326,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredBoolean should return value") {
         assertTrue(jsonLdObject.getRequiredBoolean(someKey) == Right(booleanValue))
-      }
+      },
     )
   }
 
@@ -339,13 +339,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getRequiredBoolean should fail with correct error message") {
         assertTrue(jsonLdObject.getRequiredBoolean(someKey) == Left(expectedError))
-      }
+      },
     )
   }
 
   // id value related tests
   private val idValueSuite = suite("getting id values")(
-    knoraDataIdValueSuiteWhenGivenAnEmptyMap + knoraDataIdValueSuiteWhenGivenValidValue + knoraDataIdValueSuiteWhenGivenInvalidValue
+    knoraDataIdValueSuiteWhenGivenAnEmptyMap + knoraDataIdValueSuiteWhenGivenValidValue + knoraDataIdValueSuiteWhenGivenInvalidValue,
   )
 
   private def knoraDataIdValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
@@ -358,7 +358,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       for {
         actual <- emptyJsonLdObject.getRequiredIdValueAsKnoraDataIri.exit
       } yield assertTrue(actual == Exit.fail("No @id provided"))
-    }
+    },
   )
 
   private def knoraDataIdValueSuiteWhenGivenValidValue = {
@@ -375,7 +375,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObject.getRequiredIdValueAsKnoraDataIri
         } yield assertTrue(actual == validSmartIri)
-      }
+      },
     )
   }
 
@@ -392,13 +392,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObject.getRequiredIdValueAsKnoraDataIri.exit
         } yield assertTrue(actual == Exit.fail(expectedError))
-      }
+      },
     )
   }
 
   // uuid value related tests
   private val uuidValueSuite = suite("getting uuid values")(
-    uuidValueSuiteGivenAnEmptyMap + uuidValueSuiteGivenValidValue + uuidValueSuiteGivenInvalidValue
+    uuidValueSuiteGivenAnEmptyMap + uuidValueSuiteGivenValidValue + uuidValueSuiteGivenInvalidValue,
   )
 
   private def uuidValueSuiteGivenAnEmptyMap =
@@ -407,7 +407,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- emptyJsonLdObject.getUuid(someKey)
         } yield assertTrue(actual.isEmpty)
-      }
+      },
     )
 
   private def uuidValueSuiteGivenValidValue = {
@@ -418,7 +418,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObject.getUuid(someKey)
         } yield assertTrue(actual.contains(someUuid))
-      }
+      },
     )
   }
 
@@ -432,13 +432,13 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObject.getUuid(someKey).exit
         } yield assertTrue(actual == Exit.fail(expectedError))
-      }
+      },
     )
   }
 
   // smartIri related tests
   private val smartIriValueSuite = suite("getting smart iri values")(
-    smartIriValueSuiteGivenEmptyMap + smartIriValueSuiteGivenValidValue + smartIriValueSuiteGivenInvalidValue
+    smartIriValueSuiteGivenEmptyMap + smartIriValueSuiteGivenValidValue + smartIriValueSuiteGivenInvalidValue,
   )
 
   private def smartIriValueSuiteGivenEmptyMap = suite("when given an empty map")(
@@ -451,7 +451,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       for {
         actual <- emptyJsonLdObject.getRequiredResourcePropertyApiV2ComplexValue.exit
       } yield assertTrue(actual == Exit.fail("No value submitted"))
-    }
+    },
   )
 
   private def smartIriValueSuiteGivenValidValue = {
@@ -477,7 +477,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLDObjectWithPropertyIri.getRequiredResourcePropertyApiV2ComplexValue
         } yield assertTrue(actual == (smartPropertyIri, textJsonLdObject))
-      }
+      },
     )
   }
 
@@ -491,7 +491,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
           for {
             actual <- jsonLDObjectWithInvalidTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
           } yield assertTrue(actual == Exit.fail(expectedError))
-        }
+        },
       )
     }
 
@@ -512,7 +512,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
               for {
                 actual <- jsonLDObjectWithMoreThanOnePropertyIri.getRequiredResourcePropertyApiV2ComplexValue.exit
               } yield assertTrue(actual == Exit.fail(expectedError))
-            }
+            },
           )
         }, {
           val jsonLDObjectWithInvalidPropertyValue = JsonLDObject(Map(invalidPropIri -> textJsonLdObject))
@@ -522,9 +522,9 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
               for {
                 actual <- jsonLDObjectWithInvalidPropertyValue.getRequiredResourcePropertyApiV2ComplexValue.exit
               } yield assertTrue(actual == Exit.fail(expectedError2))
-            }
+            },
           )
-        }
+        },
       )
     }
     typeIriSuite + propertyIriSuite

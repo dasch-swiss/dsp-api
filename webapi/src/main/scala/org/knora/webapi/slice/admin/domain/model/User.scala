@@ -41,7 +41,7 @@ final case class KnoraUser(
   isInProject: Chunk[ProjectIri],
   isInGroup: Chunk[GroupIri],
   isInSystemAdminGroup: SystemAdmin,
-  isInProjectAdminGroup: Chunk[ProjectIri]
+  isInProjectAdminGroup: Chunk[ProjectIri],
 )
 
 /**
@@ -71,7 +71,7 @@ final case class User(
   password: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
-  permissions: PermissionsDataADM = PermissionsDataADM()
+  permissions: PermissionsDataADM = PermissionsDataADM(),
 ) extends Ordered[User] { self =>
 
   def userIri     = UserIri.unsafeFrom(id)
@@ -99,14 +99,14 @@ final case class User(
           password = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          permissions = PermissionsDataADM()
+          permissions = PermissionsDataADM(),
         )
       case UserInformationType.Short =>
         self.copy(
           password = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          permissions = PermissionsDataADM()
+          permissions = PermissionsDataADM(),
         )
       case UserInformationType.Restricted =>
         self.copy(password = None)
@@ -163,7 +163,7 @@ object UserIri extends StringValueCompanion[UserIri] {
   private val builtInIris = Seq(
     OntologyConstants.KnoraAdmin.SystemUser,
     OntologyConstants.KnoraAdmin.AnonymousUser,
-    OntologyConstants.KnoraAdmin.SystemAdmin
+    OntologyConstants.KnoraAdmin.SystemAdmin,
   )
 
   private def isValid(iri: String) =

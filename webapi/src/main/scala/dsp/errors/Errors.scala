@@ -234,7 +234,7 @@ object InternalServerException {
  */
 case class AuthenticationException(
   message: String = "Error during authentication. Please report this as a possible bug.",
-  cause: Option[Throwable] = None
+  cause: Option[Throwable] = None,
 ) extends InternalServerException(message)
 
 object AuthenticationException {
@@ -266,7 +266,7 @@ case class FileUploadException(message: String = "Error during file upload. Plea
  * @param message a description of the error.
  */
 case class UpdateNotPerformedException(
-  message: String = "A requested update was not performed. Please report this as a possible bug."
+  message: String = "A requested update was not performed. Please report this as a possible bug.",
 ) extends InternalServerException(message)
 
 /**
@@ -276,7 +276,7 @@ case class UpdateNotPerformedException(
  * @param message a description of the error.
  */
 case class UnsupportedValueException(
-  message: String = "An unsupported value was given. Please report this as a possible bug."
+  message: String = "An unsupported value was given. Please report this as a possible bug.",
 ) extends InternalServerException(message)
 
 /**

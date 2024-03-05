@@ -47,7 +47,7 @@ case class GroupGetADM(groupIri: IRI) extends GroupsResponderRequestADM
  * @param groupIris            the IRIs of the groups being requested
  */
 case class MultipleGroupsGetRequestADM(
-  groupIris: Set[IRI]
+  groupIris: Set[IRI],
 ) extends GroupsResponderRequestADM
 
 /**
@@ -96,7 +96,7 @@ case class GroupADM(
   descriptions: Seq[StringLiteralV2],
   project: ProjectADM,
   status: Boolean,
-  selfjoin: Boolean
+  selfjoin: Boolean,
 ) extends Ordered[GroupADM] {
 
   def groupIri: GroupIri = GroupIri.unsafeFrom(id)

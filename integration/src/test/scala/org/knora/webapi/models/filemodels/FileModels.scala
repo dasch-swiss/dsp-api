@@ -20,7 +20,7 @@ sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
   label: String,
-  resourceIRI: Option[String] = None
+  resourceIRI: Option[String] = None,
 ) {
 
   /**
@@ -36,7 +36,7 @@ sealed abstract case class UploadFileRequest private (
     shortcode: String = "0001",
     ontologyName: String = "knora-api",
     className: Option[String] = None,
-    ontologyIRI: Option[String] = None
+    ontologyIRI: Option[String] = None,
   ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType         = FileModelUtil.getFileValueType(fileType)
@@ -103,7 +103,7 @@ sealed abstract case class UploadFileRequest private (
     resourceCreationDate: Option[Instant] = None,
     resourceClassIRI: Option[SmartIri] = None,
     valuePropertyIRI: Option[SmartIri] = None,
-    project: Option[ProjectADM] = None
+    project: Option[ProjectADM] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -129,7 +129,7 @@ sealed abstract case class UploadFileRequest private (
       internalMimeType = internalMimeType,
       originalFilename = originalFilename,
       originalMimeType = originalMimeType,
-      comment = comment
+      comment = comment,
     )
 
     val values = List(
@@ -138,8 +138,8 @@ sealed abstract case class UploadFileRequest private (
         customValueIri = customValueIri,
         customValueUUID = customValueUUID,
         customValueCreationDate = customValueCreationDate,
-        permissions = valuePermissions
-      )
+        permissions = valuePermissions,
+      ),
     )
     val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIRIOrDefault -> values)
 
@@ -150,7 +150,7 @@ sealed abstract case class UploadFileRequest private (
       values = inputValues,
       projectADM = projectOrDefault,
       permissions = resourcePermissions,
-      creationDate = resourceCreationDate
+      creationDate = resourceCreationDate,
     )
   }
 }
@@ -180,13 +180,13 @@ object UploadFileRequest {
     fileType: FileType,
     internalFilename: String,
     label: String = "test label",
-    resourceIRI: Option[String] = None
+    resourceIRI: Option[String] = None,
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
       label = label,
-      resourceIRI = resourceIRI
+      resourceIRI = resourceIRI,
     ) {}
 }
 
@@ -196,7 +196,7 @@ sealed abstract case class ChangeFileRequest private (
   resourceIRI: String,
   valueIRI: String,
   className: String,
-  ontologyName: String
+  ontologyName: String,
 ) {
 
   /**
@@ -249,7 +249,7 @@ object ChangeFileRequest {
     resourceIri: String,
     valueIri: String,
     className: Option[String] = None,
-    ontologyName: String = "knora-api"
+    ontologyName: String = "knora-api",
   ): ChangeFileRequest = {
     val classNameWithDefaults = className match {
       case Some(v) => v
@@ -261,7 +261,7 @@ object ChangeFileRequest {
       resourceIRI = resourceIri,
       valueIRI = valueIri,
       className = classNameWithDefaults,
-      ontologyName = ontologyName
+      ontologyName = ontologyName,
     ) {}
   }
 }

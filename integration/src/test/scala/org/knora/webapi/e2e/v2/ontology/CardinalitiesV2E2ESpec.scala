@@ -47,7 +47,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/admin/projects",
-      HttpEntity(RdfMediaTypes.`application/json`, payload)
+      HttpEntity(RdfMediaTypes.`application/json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, responseToString(response))
@@ -76,7 +76,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/v2/ontologies",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, responseToString(response))
@@ -95,7 +95,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     ontologyName: String,
     className: String,
     superClass: Option[String],
-    lastModificationDate: String
+    lastModificationDate: String,
   ) = {
     val sp = superClass match {
       case None        => "knora-api:Resource"
@@ -133,7 +133,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/v2/ontologies/classes",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, responseToString(response))
@@ -144,7 +144,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     ontologyIri: String,
     ontologyName: String,
     propertyName: String,
-    lastModificationDate: String
+    lastModificationDate: String,
   ) = {
     val payload =
       s"""|{
@@ -182,7 +182,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/v2/ontologies/properties",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, responseToString(response))
@@ -194,7 +194,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     ontologyName: String,
     className: String,
     propertyName: String,
-    lastModificationDate: String
+    lastModificationDate: String,
   ) = {
     val payload =
       s"""|{
@@ -228,7 +228,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/v2/ontologies/cardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, responseToString(response))
@@ -240,7 +240,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     ontologyIri: String,
     ontologyName: String,
     className: String,
-    propertyNames: List[String]
+    propertyNames: List[String],
   ) = {
     val propDefinitions =
       propertyNames
@@ -268,7 +268,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           |""".stripMargin
     val request = Post(
       s"$baseApiUrl/v2/resources",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, payload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, payload),
     ) ~> addCredentials(rootCredentials)
     val response = singleAwaitingRequest(request)
     (response.status, responseToString(response))
@@ -300,7 +300,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = superClassName,
         superClass = None,
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val subClassName = "SubClass"
@@ -309,7 +309,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val superClassProperty1 = "superClassProperty1"
@@ -321,7 +321,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -330,7 +330,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (superClassName, superClassProperty1),
         (superClassName, superClassProperty2),
         (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2)
+        (subClassName, subClassProperty2),
       )
       for ((cls, prop) <- clsAndProps) {
         lastModificationDate = addRequiredCardinalityToClass(
@@ -338,7 +338,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyName = ontologyName,
           className = cls,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -347,7 +347,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = superClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2)
+        propertyNames = List(superClassProperty1, superClassProperty2),
       )
       assert(superStatus == StatusCodes.OK, superResponse)
 
@@ -356,7 +356,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = subClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
+        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
       )
       assert(subStatus == StatusCodes.OK, subResponse)
     }
@@ -375,7 +375,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = superClassName,
         superClass = None,
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val subClassName = "SubClass"
@@ -384,7 +384,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val superClassProperty1 = "superClassProperty1"
@@ -396,7 +396,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -405,7 +405,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (subClassName, subClassProperty1),
         (subClassName, subClassProperty2),
         (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2)
+        (superClassName, superClassProperty2),
       )
       for ((cls, prop) <- clsAndProps) {
         lastModificationDate = addRequiredCardinalityToClass(
@@ -413,7 +413,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyName = ontologyName,
           className = cls,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -422,7 +422,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = superClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2)
+        propertyNames = List(superClassProperty1, superClassProperty2),
       )
       assert(superStatus == StatusCodes.OK, superResponse)
 
@@ -431,7 +431,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyIri = ontologyIri,
         ontologyName = ontologyName,
         className = subClassName,
-        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2)
+        propertyNames = List(superClassProperty1, superClassProperty2, subClassProperty1, subClassProperty2),
       )
       assert(subStatus == StatusCodes.OK, subResponse)
     }
@@ -450,7 +450,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = superClassName,
         superClass = None,
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val subClassName = "SubClass"
@@ -459,7 +459,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val superClassProperty1 = "superClassProperty1"
@@ -471,7 +471,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -480,7 +480,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (superClassName, superClassProperty1),
         (superClassName, superClassProperty2),
         (subClassName, subClassProperty1),
-        (subClassName, subClassProperty2)
+        (subClassName, subClassProperty2),
       )
       for ((cls, prop) <- clsAndProps) {
         lastModificationDate = addRequiredCardinalityToClass(
@@ -488,7 +488,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyName = ontologyName,
           className = cls,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -498,7 +498,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         // missing mandatory props defined on super class
-        propertyNames = List(subClassProperty1, subClassProperty2)
+        propertyNames = List(subClassProperty1, subClassProperty2),
       )
       assert(status == StatusCodes.BadRequest, response)
     }
@@ -517,7 +517,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = superClassName,
         superClass = None,
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val subClassName = "SubClass"
@@ -526,7 +526,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         superClass = Some(superClassName),
-        lastModificationDate = lastModificationDate
+        lastModificationDate = lastModificationDate,
       )
 
       val superClassProperty1 = "superClassProperty1"
@@ -538,7 +538,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyIri = ontologyIri,
           ontologyName = ontologyName,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -547,7 +547,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         (subClassName, subClassProperty1),
         (subClassName, subClassProperty2),
         (superClassName, superClassProperty1),
-        (superClassName, superClassProperty2)
+        (superClassName, superClassProperty2),
       )
       for ((cls, prop) <- clsAndProps) {
         lastModificationDate = addRequiredCardinalityToClass(
@@ -555,7 +555,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
           ontologyName = ontologyName,
           className = cls,
           propertyName = prop,
-          lastModificationDate = lastModificationDate
+          lastModificationDate = lastModificationDate,
         )
       }
 
@@ -565,7 +565,7 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
         ontologyName = ontologyName,
         className = subClassName,
         // missing mandatory props defined on super class
-        propertyNames = List(subClassProperty1, subClassProperty2)
+        propertyNames = List(subClassProperty1, subClassProperty2),
       )
       assert(status == StatusCodes.BadRequest, response)
     }

@@ -81,7 +81,7 @@ trait Authenticator {
    */
   def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[User]
   def verifyJwt(jwtToken: String): Task[User] = getUserADMThroughCredentialsV2(
-    Some(KnoraJWTTokenCredentialsV2(jwtToken))
+    Some(KnoraJWTTokenCredentialsV2(jwtToken)),
   )
 
   /**
@@ -145,7 +145,7 @@ final case class AuthenticatorLive(
   private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
-  private implicit val stringFormatter: StringFormatter
+  private implicit val stringFormatter: StringFormatter,
 ) extends Authenticator {
 
   /**
@@ -174,17 +174,17 @@ final case class AuthenticatorLive(
                              jwtString,
                              domain = cookieDomain,
                              path = Some("/"),
-                             httpOnly = true
-                           )
-                         )
+                             httpOnly = true,
+                           ),
+                         ),
                        ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
                        status = StatusCodes.OK,
                        entity = HttpEntity(
                          ContentTypes.`application/json`,
                          JsObject(
-                           "token" -> JsString(jwtString)
-                         ).compactPrint
-                       )
+                           "token" -> JsString(jwtString),
+                         ).compactPrint,
+                       ),
                      )
 
     } yield httpResponse
@@ -229,8 +229,8 @@ final case class AuthenticatorLive(
       status = StatusCodes.OK,
       entity = HttpEntity(
         ContentTypes.`text/html(UTF-8)`,
-        form
-      )
+        form,
+      ),
     )
 
     ZIO.succeed(httpResponse)
@@ -253,9 +253,9 @@ final case class AuthenticatorLive(
         entity = HttpEntity(
           ContentTypes.`application/json`,
           JsObject(
-            "message" -> JsString("credentials are OK")
-          ).compactPrint
-        )
+            "message" -> JsString("credentials are OK"),
+          ).compactPrint,
+        ),
       )
     }
 
@@ -288,18 +288,18 @@ final case class AuthenticatorLive(
                 path = Some("/"),
                 httpOnly = true,
                 expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
-                maxAge = Some(0)
-              )
-            )
+                maxAge = Some(0),
+              ),
+            ),
           ),
           status = StatusCodes.OK,
           entity = HttpEntity(
             ContentTypes.`application/json`,
             JsObject(
               "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK")
-            ).compactPrint
-          )
+              "message" -> JsString("Logout OK"),
+            ).compactPrint,
+          ),
         )
       case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
         CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, jwtToken, jwtToken)
@@ -313,18 +313,18 @@ final case class AuthenticatorLive(
                 domain = cookieDomain,
                 path = Some("/"),
                 httpOnly = true,
-                expires = Some(DateTime(1970, 1, 1, 0, 0, 0))
-              )
-            )
+                expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
+              ),
+            ),
           ),
           status = StatusCodes.OK,
           entity = HttpEntity(
             ContentTypes.`application/json`,
             JsObject(
               "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK")
-            ).compactPrint
-          )
+              "message" -> JsString("Logout OK"),
+            ).compactPrint,
+          ),
         )
       case _ =>
         // nothing to do
@@ -334,9 +334,9 @@ final case class AuthenticatorLive(
             ContentTypes.`application/json`,
             JsObject(
               "status"  -> JsNumber(0),
-              "message" -> JsString("Logout OK")
-            ).compactPrint
-          )
+              "message" -> JsString("Logout OK"),
+            ).compactPrint,
+          ),
         )
     }
   }
@@ -403,7 +403,7 @@ final case class AuthenticatorLive(
                     ZIO
                       .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
                       .whenZIO(
-                        jwtService.validateToken(sessionToken).map(!_)
+                        jwtService.validateToken(sessionToken).map(!_),
                       )
                       .as(true)
                   case None =>
@@ -598,7 +598,7 @@ final case class AuthenticatorLive(
                         .extractUserIriFromToken(jwtToken)
                         .some
                         .orElseFail(
-                          AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                          AuthenticationException("No IRI found inside token. Please report this as a possible bug."),
                         )
                     iri <- ZIO
                              .fromEither(UserIri.from(userIri))
@@ -612,7 +612,7 @@ final case class AuthenticatorLive(
                         .extractUserIriFromToken(sessionToken)
                         .some
                         .orElseFail(
-                          AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                          AuthenticationException("No IRI found inside token. Please report this as a possible bug."),
                         )
                     iri <- ZIO
                              .fromEither(UserIri.from(userIri))

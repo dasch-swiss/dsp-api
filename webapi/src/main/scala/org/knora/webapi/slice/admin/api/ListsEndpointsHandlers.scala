@@ -32,7 +32,7 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 final case class ListRestService(
   auth: AuthorizationRestService,
   listsResponder: ListsResponder,
-  projectRepo: KnoraProjectRepo
+  projectRepo: KnoraProjectRepo,
 ) {
   def listChange(iri: ListIri, request: ListChangeRequest, user: User): Task[NodeInfoGetResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
@@ -66,7 +66,7 @@ final case class ListRestService(
   def nodePositionChangeRequest(
     iri: ListIri,
     request: ListChangePositionRequest,
-    user: User
+    user: User,
   ): Task[NodePositionChangeResponseADM] = for {
     // authorization is currently done in the responder
     uuid     <- Random.nextUUID
@@ -107,39 +107,39 @@ final case class ListsEndpointsHandlers(
   listsEndpoints: ListsEndpoints,
   listsResponder: ListsResponder,
   listRestService: ListRestService,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
 
   private val getListsQueryByProjectIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsQueryByProjectIriOption,
-    (iri: Option[ProjectIri]) => listsResponder.getLists(iri)
+    (iri: Option[ProjectIri]) => listsResponder.getLists(iri),
   )
 
   private val getListsByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsByIri,
-    (iri: ListIri) => listsResponder.listGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listGetRequestADM(iri.value),
   )
 
   private val getListsByIriInfoHandler = PublicEndpointHandler(
     listsEndpoints.getListsByIriInfo,
-    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   private val getListsInfosByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsInfosByIri,
-    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   private val getListsNodesByIriHandler = PublicEndpointHandler(
     listsEndpoints.getListsNodesByIri,
-    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value)
+    (iri: ListIri) => listsResponder.listNodeInfoGetRequestADM(iri.value),
   )
 
   // Creates
   private val postListsCreateRootNodeHandler =
     SecuredEndpointHandler[ListCreateRootNodeRequest, ListGetResponseADM](
       listsEndpoints.postLists,
-      user => req => listRestService.listCreateRootNode(req, user)
+      user => req => listRestService.listCreateRootNode(req, user),
     )
 
   private val postListsCreateChildNodeHandler =
@@ -150,7 +150,7 @@ final case class ListsEndpointsHandlers(
           .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
           .when(iri != req.parentNodeIri) *>
           listRestService.listCreateChildNode(req, user)
-      }
+      },
     )
 
   // Updates
@@ -159,7 +159,7 @@ final case class ListsEndpointsHandlers(
       listsEndpoints.putListsByIriName,
       (user: User) => { case (iri: ListIri, newName: ListChangeNameRequest) =>
         listRestService.listChangeName(iri, newName, user)
-      }
+      },
     )
 
   private val putListsByIriLabelsHandler =
@@ -167,7 +167,7 @@ final case class ListsEndpointsHandlers(
       listsEndpoints.putListsByIriLabels,
       (user: User) => { case (iri: ListIri, request: ListChangeLabelsRequest) =>
         listRestService.listChangeLabels(iri, request, user)
-      }
+      },
     )
 
   private val putListsByIriCommentsHandler =
@@ -175,7 +175,7 @@ final case class ListsEndpointsHandlers(
       listsEndpoints.putListsByIriComments,
       (user: User) => { case (iri: ListIri, request: ListChangeCommentsRequest) =>
         listRestService.listChangeComments(iri, request, user)
-      }
+      },
     )
 
   private val putListsByIriPositionHandler =
@@ -183,30 +183,30 @@ final case class ListsEndpointsHandlers(
       listsEndpoints.putListsByIriPosistion,
       (user: User) => { case (iri: ListIri, request: ListChangePositionRequest) =>
         listRestService.nodePositionChangeRequest(iri, request, user)
-      }
+      },
     )
 
   private val putListsByIriHandler = SecuredEndpointHandler[(ListIri, ListChangeRequest), NodeInfoGetResponseADM](
     listsEndpoints.putListsByIri,
     (user: User) => { case (iri: ListIri, request: ListChangeRequest) =>
       listRestService.listChange(iri, request, user)
-    }
+    },
   )
 
   // Deletes
   private val deleteListsByIriHandler = SecuredEndpointHandler[ListIri, ListItemDeleteResponseADM](
     listsEndpoints.deleteListsByIri,
-    user => listIri => listRestService.deleteListItemRequestADM(listIri, user)
+    user => listIri => listRestService.deleteListItemRequestADM(listIri, user),
   )
 
   private val getListsCanDeleteByIriHandler = PublicEndpointHandler[ListIri, CanDeleteListResponseADM](
     listsEndpoints.getListsCanDeleteByIri,
-    listsResponder.canDeleteListRequestADM
+    listsResponder.canDeleteListRequestADM,
   )
 
   private val deleteListsCommentHandler = SecuredEndpointHandler[ListIri, ListNodeCommentsDeleteResponseADM](
     listsEndpoints.deleteListsComment,
-    _ => listIri => listsResponder.deleteListNodeCommentsADM(listIri)
+    _ => listIri => listsResponder.deleteListNodeCommentsADM(listIri),
   )
 
   private val public = List(
@@ -215,7 +215,7 @@ final case class ListsEndpointsHandlers(
     getListsByIriInfoHandler,
     getListsInfosByIriHandler,
     getListsNodesByIriHandler,
-    getListsCanDeleteByIriHandler
+    getListsCanDeleteByIriHandler,
   ).map(mapper.mapPublicEndpointHandler(_))
 
   private val secured = List(
@@ -227,7 +227,7 @@ final case class ListsEndpointsHandlers(
     putListsByIriPositionHandler,
     putListsByIriHandler,
     deleteListsByIriHandler,
-    deleteListsCommentHandler
+    deleteListsCommentHandler,
   ).map(mapper.mapSecuredEndpointHandler(_))
 
   val allHandlers = public ++ secured

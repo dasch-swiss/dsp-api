@@ -27,7 +27,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     keywordsTest,
     logoTest,
     projectStatusTest,
-    projectSelfJoinTest
+    projectSelfJoinTest,
   )
 
   private val projectIriSuite = suite("ProjectIri")(
@@ -41,7 +41,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
       assertTrue(
         ProjectIri.from(projectIriWithUUIDVersion3) ==
-          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
+          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported."),
       )
     },
     test("pass a valid project IRI and successfully create value object") {
@@ -51,11 +51,11 @@ object KnoraProjectSpec extends ZIOSpecDefault {
             "http://rdfh.ch/projects/0001",
             "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg",
             "http://www.knora.org/ontology/knora-admin#SystemProject",
-            "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
-          )
+            "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject",
+          ),
         )
       check(validIris)(iri => assertTrue(ProjectIri.unsafeFrom(iri).value == iri))
-    }
+    },
   )
 
   private val shortcodeTest = suite("Shortcode")(
@@ -70,7 +70,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(Shortcode.from("FFFF").map(_.value).contains("FFFF"))
-    }
+    },
   )
 
   private val shortnameTest = suite("Shortname")(
@@ -91,8 +91,8 @@ object KnoraProjectSpec extends ZIOSpecDefault {
           "invalid shortname",
           "a",
           "ab",
-          "just-21char-shortname"
-        )
+          "just-21char-shortname",
+        ),
       )
       check(gen) { param =>
         assertTrue(Shortname.from(param) == Left(s"Shortname is invalid: $param"))
@@ -107,11 +107,11 @@ object KnoraProjectSpec extends ZIOSpecDefault {
           "validshortname-",
           "validshortname_",
           "abc",
-          "a20charLongShortname"
-        )
+          "a20charLongShortname",
+        ),
       )
       check(gen)(param => assertTrue(Shortname.from(param).map(_.value).contains(param)))
-    }
+    },
   )
 
   private val longnameTest = suite("Longname")(
@@ -127,28 +127,28 @@ object KnoraProjectSpec extends ZIOSpecDefault {
       check(validNames) { name =>
         assertTrue(Longname.from(name).map(_.value).contains(name))
       }
-    }
+    },
   )
 
   private val descriptionTest = suite("Description")(
     test("pass an object containing too short Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2("Ab", Some("en"))) ==
-          Left("Description must be 3 to 40960 characters long.")
+          Left("Description must be 3 to 40960 characters long."),
       )
     },
     test("pass an object containing too long Description and expect an error to be returned") {
       assertTrue(
         Description.from(V2.StringLiteralV2(new Random().nextString(40961), Some("en"))) ==
-          Left("Description must be 3 to 40960 characters long.")
+          Left("Description must be 3 to 40960 characters long."),
       )
     },
     test("pass a valid object and successfully create value object") {
       assertTrue(
         Description.from(V2.StringLiteralV2(value = "Valid project description", language = Some("en"))).map(_.value) ==
-          Right(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
+          Right(V2.StringLiteralV2(value = "Valid project description", language = Some("en"))),
       )
-    }
+    },
   )
 
   private val keywordsTest = suite("Keywords")(
@@ -161,7 +161,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     },
     test("pass a valid object and successfully create value object") {
       assertTrue(Keyword.from("validKeyword").map(_.value).contains("validKeyword"))
-    }
+    },
   )
 
   private val logoTest = suite("Logo")(
@@ -171,30 +171,30 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     test("pass a valid object and successfully create value object") {
       val validLogo = "/foo/bar/baz.jpg"
       assertTrue(Logo.from(validLogo).map(_.value).contains(validLogo))
-    }
+    },
   )
 
   private val projectStatusTest = suite("ProjectStatus")(
     test("pass a valid object and successfully create value object") {
       assertTrue(
         Status.from(true) == Status.Active,
-        Status.from(false) == Status.Inactive
+        Status.from(false) == Status.Inactive,
       )
     },
     test("value should be the correct boolean") {
       assertTrue(Status.Active.value, !Status.Inactive.value)
-    }
+    },
   )
 
   private val projectSelfJoinTest = suite("ProjectSelfJoin")(
     test("pass a valid object and successfully create value object") {
       assertTrue(
         SelfJoin.from(true) == SelfJoin.CanJoin,
-        SelfJoin.from(false) == SelfJoin.CannotJoin
+        SelfJoin.from(false) == SelfJoin.CannotJoin,
       )
     },
     test("value should be the correct boolean") {
       assertTrue(SelfJoin.CanJoin.value, !SelfJoin.CannotJoin.value)
-    }
+    },
   )
 }

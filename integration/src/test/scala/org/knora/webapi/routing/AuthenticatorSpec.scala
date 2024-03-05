@@ -61,7 +61,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
               JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
-          } yield result
+          } yield result,
         )
         assert(isAuthenticated)
       }

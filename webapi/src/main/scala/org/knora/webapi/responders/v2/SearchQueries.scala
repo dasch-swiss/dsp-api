@@ -14,7 +14,7 @@ object SearchQueries {
   def selectCountByLabel(
     searchTerm: String,
     limitToProject: Option[IRI],
-    limitToResourceClass: Option[IRI]
+    limitToResourceClass: Option[IRI],
   ): Select =
     Select(
       s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -28,7 +28,7 @@ object SearchQueries {
           |    ${limitToProject.fold("")(project => s"?resource knora-base:attachedToProject <$project> .")}
           |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
           |}
-          |""".stripMargin
+          |""".stripMargin,
     )
 
   def constructSearchByLabel(
@@ -36,7 +36,7 @@ object SearchQueries {
     limitToResourceClass: Option[IRI] = None,
     limitToProject: Option[IRI] = None,
     limit: Int,
-    offset: Int = 0
+    offset: Int = 0,
   ): Construct = {
     val limitToClassOrProject =
       (limitToResourceClass, limitToProject) match {
@@ -94,7 +94,7 @@ object SearchQueries {
           |        FILTER NOT EXISTS { ?valueObjectValue a knora-base:StandoffTag . }
           |    }
           |}
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 

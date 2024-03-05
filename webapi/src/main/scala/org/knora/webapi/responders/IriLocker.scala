@@ -75,7 +75,7 @@ object IriLocker {
    * @return the result of the task.
    */
   def runWithIriLock[T](apiRequestID: UUID, iri: IRI, task: () => Future[T])(implicit
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
   ): Future[T] =
     // Try to acquire the lock in a future. If we can't acquire the lock, this future will fail without running
     // the task.
@@ -143,7 +143,7 @@ object IriLocker {
           // Another API request has it, so leave it as is.
           currentLock
         }
-      })
+      }),
     )
     // Do we have the lock?
     if (newLock.apiRequestID == apiRequestID) {
@@ -160,7 +160,7 @@ object IriLocker {
       } else {
         // No, we've run out of retries, so throw an exception.
         throw ApplicationLockException(
-          s"Could not acquire update lock on $iri for API request $apiRequestID within $MAX_LOCK_RETRY_MILLIS ms, because API request ${newLock.apiRequestID} is holding it"
+          s"Could not acquire update lock on $iri for API request $apiRequestID within $MAX_LOCK_RETRY_MILLIS ms, because API request ${newLock.apiRequestID} is holding it",
         )
       }
     }
@@ -193,17 +193,17 @@ object IriLocker {
             } else {
               // Another API request has the lock. This shouldn't happen.
               throw ApplicationLockException(
-                s"API request $apiRequestID was supposed to have an update lock on $iri, but API request ${currentLock.apiRequestID} has it"
+                s"API request $apiRequestID was supposed to have an update lock on $iri, but API request ${currentLock.apiRequestID} has it",
               )
             }
 
           case None =>
             // The lock is unused. This shouldn't happen.
             throw ApplicationLockException(
-              s"API request $apiRequestID was supposed to have an update lock on $iri, but the lock is unused"
+              s"API request $apiRequestID was supposed to have an update lock on $iri, but the lock is unused",
             )
         }
-      })
+      }),
     )
   }
 }

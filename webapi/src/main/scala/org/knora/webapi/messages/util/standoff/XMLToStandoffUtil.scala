@@ -110,7 +110,7 @@ case class HierarchicalStandoffTag(
   startPosition: Int,
   endPosition: Int,
   index: Int,
-  parentIndex: Option[Int] = None
+  parentIndex: Option[Int] = None,
 ) extends IndexedStandoffTag
 
 /**
@@ -143,7 +143,7 @@ case class FreeStandoffTag(
   startIndex: Int,
   startParentIndex: Option[Int] = None,
   endIndex: Int,
-  endParentIndex: Option[Int] = None
+  endParentIndex: Option[Int] = None,
 ) extends StandoffTag
 
 /**
@@ -182,7 +182,7 @@ case class StandoffDiffEqual(
   baseStartPosition: Int,
   baseEndPosition: Int,
   derivedStartPosition: Int,
-  derivedEndPosition: Int
+  derivedEndPosition: Int,
 ) extends StandoffDiff
 
 /**
@@ -303,7 +303,7 @@ class XMLToStandoffUtil(
   defaultXmlNamespace: Option[IRI] = None,
   writeUuidsToXml: Boolean = true,
   writeBase64IDs: Boolean = true,
-  documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]
+  documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID],
 ) {
 
   import XMLToStandoffUtil.*
@@ -323,7 +323,7 @@ class XMLToStandoffUtil(
     xmlNamespaces.map(_.swap),
     { (key: String) =>
       s"No prefix defined for XML namespace $key"
-    }
+    },
   )
 
   /**
@@ -341,7 +341,7 @@ class XMLToStandoffUtil(
     endPosition: Int,
     index: Int,
     parentIndex: Option[Int] = None,
-    isStartTag: Boolean
+    isStartTag: Boolean,
   ) extends IndexedStandoffTag
 
   /**
@@ -390,7 +390,7 @@ class XMLToStandoffUtil(
    */
   def xml2TextWithStandoff(
     xmlStr: String,
-    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]
+    tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired],
   ): TextWithStandoff = {
 
     // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
@@ -447,7 +447,7 @@ class XMLToStandoffUtil(
 
     val finishedConversionState = xmlNodes2Standoff(
       nodes = nodes,
-      startState = Xml2StandoffState()
+      startState = Xml2StandoffState(),
     )
 
     if (finishedConversionState.clixStartMilestones.nonEmpty) {
@@ -466,7 +466,7 @@ class XMLToStandoffUtil(
 
     TextWithStandoff(
       text = textWithInformationSeparatorTwo,
-      standoff = finishedConversionState.standoffTags
+      standoff = finishedConversionState.standoffTags,
     )
   }
 
@@ -490,7 +490,7 @@ class XMLToStandoffUtil(
           endPosition = freeTag.startPosition,
           index = freeTag.startIndex,
           parentIndex = freeTag.startParentIndex,
-          isStartTag = true
+          isStartTag = true,
         )
 
         val endTag = ClixMilestoneTag(
@@ -502,7 +502,7 @@ class XMLToStandoffUtil(
           endPosition = freeTag.endPosition,
           index = freeTag.endIndex,
           parentIndex = freeTag.endParentIndex,
-          isStartTag = false
+          isStartTag = false,
         )
 
         acc :+ startTag :+ endTag
@@ -527,18 +527,18 @@ class XMLToStandoffUtil(
         standoffTags2XmlString(
           text = textWithStandoff.text.replace(
             StringFormatter.INFORMATION_SEPARATOR_TWO.toString,
-            StringFormatter.PARAGRAPH_SEPARATOR.toString
+            StringFormatter.PARAGRAPH_SEPARATOR.toString,
           ), // replace information separator (which is an invalid XML character) with paragraph separator
           groupedTags = groupedTags,
           posBeforeSiblings = 0,
           siblings = children,
           writeNamespaces = true,
-          xmlString = stringBuilder
+          xmlString = stringBuilder,
         )
 
       case Some(_) =>
         throw InvalidStandoffException(
-          "The standoff cannot be serialised to XML because it would have multiple root nodes"
+          "The standoff cannot be serialised to XML because it would have multiple root nodes",
         )
 
       case None =>
@@ -574,7 +574,7 @@ class XMLToStandoffUtil(
     case class DiffConversionState(
       standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],
       basePos: Int = 0,
-      derivedPos: Int = 0
+      derivedPos: Int = 0,
     )
 
     val diffList = diffMatchPatch.diff_main(baseText, derivedText)
@@ -588,39 +588,39 @@ class XMLToStandoffUtil(
             baseStartPosition = conversionState.basePos,
             baseEndPosition = conversionState.basePos + diff.text.length,
             derivedStartPosition = conversionState.derivedPos,
-            derivedEndPosition = conversionState.derivedPos + diff.text.length
+            derivedEndPosition = conversionState.derivedPos + diff.text.length,
           )
 
           DiffConversionState(
             standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
             basePos = standoffDiff.baseEndPosition,
-            derivedPos = standoffDiff.derivedEndPosition
+            derivedPos = standoffDiff.derivedEndPosition,
           )
 
         case Operation.DELETE =>
           val standoffDiff = StandoffDiffDelete(
             baseStartPosition = conversionState.basePos,
             baseEndPosition = conversionState.basePos + diff.text.length,
-            derivedStartPosition = conversionState.derivedPos
+            derivedStartPosition = conversionState.derivedPos,
           )
 
           DiffConversionState(
             standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
             basePos = standoffDiff.baseEndPosition,
-            derivedPos = conversionState.derivedPos
+            derivedPos = conversionState.derivedPos,
           )
 
         case Operation.INSERT =>
           val standoffDiff = StandoffDiffInsert(
             baseStartPosition = conversionState.basePos,
             derivedStartPosition = conversionState.derivedPos,
-            derivedEndPosition = conversionState.derivedPos + diff.text.length
+            derivedEndPosition = conversionState.derivedPos + diff.text.length,
           )
 
           DiffConversionState(
             standoffDiffs = conversionState.standoffDiffs :+ standoffDiff,
             basePos = conversionState.basePos,
-            derivedPos = standoffDiff.derivedEndPosition
+            derivedPos = standoffDiff.derivedEndPosition,
           )
       }
     }
@@ -644,7 +644,7 @@ class XMLToStandoffUtil(
       standoffDiff match {
         case equal: StandoffDiffEqual =>
           stringBuilder.append(
-            StringEscapeUtils.escapeXml11(baseText.substring(equal.baseStartPosition, equal.baseEndPosition))
+            StringEscapeUtils.escapeXml11(baseText.substring(equal.baseStartPosition, equal.baseEndPosition)),
           )
 
         case delete: StandoffDiffDelete =>
@@ -658,8 +658,8 @@ class XMLToStandoffUtil(
             .append("<ins>")
             .append(
               StringEscapeUtils.escapeXml11(
-                derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition)
-              )
+                derivedText.substring(insert.derivedStartPosition, insert.derivedEndPosition),
+              ),
             )
             .append("</ins>")
       }
@@ -679,7 +679,7 @@ class XMLToStandoffUtil(
    */
   def findChangedStandoffTags(
     oldStandoff: Seq[StandoffTag],
-    newStandoff: Seq[StandoffTag]
+    newStandoff: Seq[StandoffTag],
   ): (Set[StandoffTag], Set[StandoffTag]) = {
     def makeStandoffTagUuidMap(standoff: Seq[StandoffTag]): Map[UUID, StandoffTag] =
       standoff.map { tag =>
@@ -720,7 +720,7 @@ class XMLToStandoffUtil(
     parentId: Option[Int] = None,
     nextIndex: Int = 0,
     standoffTags: Vector[StandoffTag] = Vector.empty[StandoffTag],
-    clixStartMilestones: Map[String, ClixMilestoneTag] = Map.empty[String, ClixMilestoneTag]
+    clixStartMilestones: Map[String, ClixMilestoneTag] = Map.empty[String, ClixMilestoneTag],
   )
 
   /**
@@ -764,7 +764,7 @@ class XMLToStandoffUtil(
           acc + StandoffTagAttribute(
             key = xmlAttr.key,
             xmlNamespace = Option(xmlAttr.getNamespace(element)),
-            value = xmlAttr.value.text
+            value = xmlAttr.value.text,
           )
 
         case (acc, _) => acc
@@ -795,12 +795,12 @@ class XMLToStandoffUtil(
             index = newTagIndex,
             parentIndex = startState.parentId,
             uuid = id2Uuid(sID),
-            isStartTag = true
+            isStartTag = true,
           )
 
           acc.copy(
             nextIndex = newTagIndex + 1,
-            clixStartMilestones = acc.clixStartMilestones + (sID -> tag)
+            clixStartMilestones = acc.clixStartMilestones + (sID -> tag),
           )
         } else if (isEmptyElement && attrMap.contains(XmlClixEndIdAttrName)) {
           // It's a CLIX end milestone. Combine it with the start milestone to make a FreeStandoffTag.
@@ -810,19 +810,19 @@ class XMLToStandoffUtil(
           val startMilestone: ClixMilestoneTag = acc.clixStartMilestones.getOrElse(
             eID,
             throw InvalidStandoffException(
-              s"Found a CLIX milestone with $XmlClixEndIdAttrName $eID, but there was no start milestone with that $XmlClixStartIdAttrName"
-            )
+              s"Found a CLIX milestone with $XmlClixEndIdAttrName $eID, but there was no start milestone with that $XmlClixStartIdAttrName",
+            ),
           )
 
           if (startMilestone.tagName != elem.label) {
             throw InvalidStandoffException(
-              s"The CLIX start milestone with $XmlClixStartIdAttrName $eID has tag name <${startMilestone.tagName}>, but the end milestone with that $XmlClixEndIdAttrName has tag name ${elem.label}"
+              s"The CLIX start milestone with $XmlClixStartIdAttrName $eID has tag name <${startMilestone.tagName}>, but the end milestone with that $XmlClixEndIdAttrName has tag name ${elem.label}",
             )
           }
 
           if (startMilestone.xmlNamespace != Option(elem.namespace)) {
             throw InvalidStandoffException(
-              s"The CLIX start milestone with $XmlClixStartIdAttrName $eID is in namespace ${startMilestone.xmlNamespace}, but the end milestone with that $XmlClixEndIdAttrName is in namespace ${elem.namespace}"
+              s"The CLIX start milestone with $XmlClixStartIdAttrName $eID is in namespace ${startMilestone.xmlNamespace}, but the end milestone with that $XmlClixEndIdAttrName is in namespace ${elem.namespace}",
             )
           }
 
@@ -837,13 +837,13 @@ class XMLToStandoffUtil(
             startIndex = startMilestone.index,
             startParentIndex = startMilestone.parentIndex,
             endIndex = newTagIndex,
-            endParentIndex = startState.parentId
+            endParentIndex = startState.parentId,
           )
 
           acc.copy(
             nextIndex = newTagIndex + 1,
             standoffTags = acc.standoffTags :+ freeTag,
-            clixStartMilestones = acc.clixStartMilestones - eID
+            clixStartMilestones = acc.clixStartMilestones - eID,
           )
         } else {
           // It's an ordinary hierarchical element.
@@ -859,7 +859,7 @@ class XMLToStandoffUtil(
             uuid = attrMap.get(XmlHierarchicalIdAttrName) match {
               case Some(id) => id2Uuid(id)
               case None     => UUID.randomUUID
-            }
+            },
           )
 
           // Process the element's child nodes.
@@ -868,8 +868,8 @@ class XMLToStandoffUtil(
             acc.copy(
               parentId = Some(newTagIndex),
               nextIndex = newTagIndex + 1,
-              standoffTags = acc.standoffTags :+ tag
-            )
+              standoffTags = acc.standoffTags :+ tag,
+            ),
           )
         }
 
@@ -878,7 +878,7 @@ class XMLToStandoffUtil(
 
         // We got an XML text node. Just skip it.
         acc.copy(
-          currentPos = acc.currentPos + textData.length
+          currentPos = acc.currentPos + textData.length,
         )
 
       case (_, other) =>
@@ -904,7 +904,7 @@ class XMLToStandoffUtil(
     posBeforeSiblings: Int,
     siblings: Seq[IndexedStandoffTag],
     writeNamespaces: Boolean = false,
-    xmlString: StringBuilder
+    xmlString: StringBuilder,
   ): Int = {
 
     /**
@@ -1021,7 +1021,7 @@ class XMLToStandoffUtil(
               groupedTags = groupedTags,
               posBeforeSiblings = tag.startPosition,
               siblings = children,
-              xmlString = xmlString
+              xmlString = xmlString,
             )
 
           case None => tag.startPosition
@@ -1050,7 +1050,7 @@ class XMLToStandoffUtil(
               groupedTags = groupedTags,
               posBeforeSiblings = tag.startPosition,
               siblings = children,
-              xmlString = xmlString
+              xmlString = xmlString,
             )
 
             // Make an end tag.
