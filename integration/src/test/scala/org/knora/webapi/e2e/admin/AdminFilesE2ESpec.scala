@@ -9,6 +9,8 @@ import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.routing.Authenticator
@@ -43,33 +45,32 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         addCredentials(BasicHttpCredentials(anythingAdminEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      println(response.toString)
+      assert(response.status == StatusCodes.OK)
+
+      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
+        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
+
+      assert(result == Right(PermissionCodeAndProjectRestrictedViewSettings(8, None)))
+    }
+
+    "return RV (1) permission code" in {
+      /* anything image */
+      val request =
+        Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~>
+          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
+      val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.OK)
 
-//      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-//        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
-//
-//      fr.permissionCode shouldEqual 8
-      // TODO: fix this test
-    }
+      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
+        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
 
-//    "return RV (1) permission code" in {
-//      /* anything image */
-//      val request =
-//        Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~>
-//          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
-//      val response: HttpResponse = singleAwaitingRequest(request)
-//
-//      // println(response.toString)
-//
-//      assert(response.status == StatusCodes.OK)
-//
-//      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-//        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
-//
-//      (fr.permissionCode === 1) should be(true)
-//    }
+      assert(
+        result == Right(
+          PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+        ),
+      )
+    }
 
     "return 404 Not Found if a file value is in a deleted resource" in {
       val request =
@@ -80,19 +81,22 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       assert(response.status == StatusCodes.NotFound)
     }
 
-//    "return permissions for a previous version of a file value" in {
-//      val request =
-//        Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2") ~>
-//          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
-//      val response: HttpResponse = singleAwaitingRequest(request)
-//
-//      assert(response.status == StatusCodes.OK)
-//
-//      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-//        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
-//
-//      (fr.permissionCode === 1) should be(true)
-//
-//    }
+    "return permissions for a previous version of a file value" in {
+      val request =
+        Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2") ~>
+          addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
+      val response: HttpResponse = singleAwaitingRequest(request)
+
+      assert(response.status == StatusCodes.OK)
+
+      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
+        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
+
+      assert(
+        result == Right(
+          PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+        ),
+      )
+    }
   }
 }
