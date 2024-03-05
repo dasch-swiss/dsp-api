@@ -5,15 +5,11 @@
 
 package org.knora.webapi.messages.admin.responder.sipimessages
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
-import spray.json.NullOptions
-import spray.json.RootJsonFormat
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
-import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 
 /**
  * Represents the JSON response to a request for a information about a `FileValue`.
@@ -24,19 +20,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 case class PermissionCodeAndProjectRestrictedViewSettings(
   permissionCode: Int,
   restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
-) extends AdminKnoraResponseADM {
-  def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
-}
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
- */
-object SipiResponderResponseADMJsonProtocol
-    extends SprayJsonSupport
-    with DefaultJsonProtocol
-    with NullOptions
-    with ProjectsADMJsonProtocol {
-
-  implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[PermissionCodeAndProjectRestrictedViewSettings] =
-    jsonFormat2(PermissionCodeAndProjectRestrictedViewSettings)
+) extends AdminResponse
+object PermissionCodeAndProjectRestrictedViewSettings {
+  implicit val codec: JsonCodec[PermissionCodeAndProjectRestrictedViewSettings] =
+    DeriveJsonCodec.gen[PermissionCodeAndProjectRestrictedViewSettings]
 }

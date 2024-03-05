@@ -77,17 +77,17 @@ final case class ProjectsEndpoints(
 
     val getAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByIri / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the IRI.")
 
     val getAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByShortcode / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the shortcode.")
 
     val getAdminProjectsByProjectShortnameRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByShortname / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the shortname.")
   }
 

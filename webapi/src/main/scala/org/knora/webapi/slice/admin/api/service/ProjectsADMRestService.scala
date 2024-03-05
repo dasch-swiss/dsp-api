@@ -264,7 +264,7 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
       internal <- responder.projectRestrictedViewSettingsGetRequestADM(id)
-      external <- format.toExternalADM(internal)
+      external <- format.toExternal(internal)
     } yield external
 
   /**

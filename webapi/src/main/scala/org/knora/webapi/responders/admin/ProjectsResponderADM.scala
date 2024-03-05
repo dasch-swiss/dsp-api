@@ -398,7 +398,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
       .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      .map(ProjectRestrictedViewSettingsGetResponseADM)
+      .map(ProjectRestrictedViewSettingsGetResponseADM.apply)
 
   /**
    * Update project's basic information.
