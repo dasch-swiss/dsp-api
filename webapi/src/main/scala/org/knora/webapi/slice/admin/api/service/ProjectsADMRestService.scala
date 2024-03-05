@@ -64,7 +64,7 @@ trait ProjectADMRestService {
 
   def getProjectAdminMembers(user: User, id: ProjectIdentifierADM): Task[ProjectAdminMembersGetResponseADM]
 
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM]
+  def listAllKeywords(): Task[ProjectsKeywordsGetResponse]
 
   def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
 
@@ -229,13 +229,13 @@ final case class ProjectsADMRestServiceLive(
    * Returns all keywords of all projects.
    *
    * @return
-   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponseADM]]
+   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] = for {
+  def listAllKeywords(): Task[ProjectsKeywordsGetResponse] = for {
     internal <- responder.projectsKeywordsGetRequestADM()
-    external <- format.toExternalADM(internal)
+    external <- format.toExternal(internal)
   } yield external
 
   /**

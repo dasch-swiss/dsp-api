@@ -100,9 +100,9 @@ object RouteUtilADM {
       }
 
       response match {
-        case ProjectsGetResponseADM(projects) => ProjectsGetResponseADM(projects.map(projectAsExternalRepresentation))
-        case ProjectGetResponse(project)      => ProjectGetResponse(projectAsExternalRepresentation(project))
-        case _                                => response
+        case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
+        case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
+        case _                             => response
       }
     }
   }

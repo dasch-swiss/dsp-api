@@ -96,9 +96,9 @@ trait ProjectsResponderADM {
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
    *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
    */
-  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM]
+  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse]
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
@@ -323,9 +323,9 @@ final case class ProjectsResponderADMLive(
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
    *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
    */
-  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
+  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse] =
     projectService.findAllProjectsKeywords
 
   /**

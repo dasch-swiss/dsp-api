@@ -148,10 +148,9 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[User])
  *
  * @param keywords a list of keywords.
  */
-case class ProjectsKeywordsGetResponseADM(keywords: Seq[String])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
+case class ProjectsKeywordsGetResponse(keywords: Seq[String]) extends AdminResponse
+object ProjectsKeywordsGetResponse {
+  implicit val codec: JsonCodec[ProjectsKeywordsGetResponse] = DeriveJsonCodec.gen[ProjectsKeywordsGetResponse]
 }
 
 /**
@@ -418,8 +417,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")),
   )
-  implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] =
-    jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
+
   implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] =
     jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] =
