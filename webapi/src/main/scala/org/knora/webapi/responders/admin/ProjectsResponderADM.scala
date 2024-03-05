@@ -104,9 +104,9 @@ trait ProjectsResponderADM {
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
    */
-  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
+  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse]
 
   /**
    * Get project's restricted view settings.
@@ -332,9 +332,9 @@ final case class ProjectsResponderADMLive(
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri           the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
    */
-  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM] =
+  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse] =
     for {
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService

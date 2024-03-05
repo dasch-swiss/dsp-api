@@ -66,7 +66,7 @@ trait ProjectADMRestService {
 
   def listAllKeywords(): Task[ProjectsKeywordsGetResponse]
 
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
+  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse]
 
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
@@ -243,13 +243,13 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param iri      the [[ProjectIri]] of the project
    * @return
-   *     '''success''': ist of all keywords as a [[ProjectKeywordsGetResponseADM]]
+   *     '''success''': ist of all keywords as a [[ProjectKeywordsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM] = for {
+  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse] = for {
     internal <- responder.projectKeywordsGetRequestADM(iri)
-    external <- format.toExternalADM(internal)
+    external <- format.toExternal(internal)
   } yield external
 
   /**

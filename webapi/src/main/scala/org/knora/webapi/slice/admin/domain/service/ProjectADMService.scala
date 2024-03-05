@@ -10,7 +10,7 @@ import zio.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -82,11 +82,11 @@ final case class ProjectADMService(
       keywords  = projects.flatMap(_.keywords.map(_.value)).distinct.sorted
     } yield ProjectsKeywordsGetResponse(keywords)
 
-  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
+  def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponse]] =
     for {
       projectMaybe <- projectRepo.findById(id)
       keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
-      result        = keywordsMaybe.map(ProjectKeywordsGetResponseADM(_))
+      result        = keywordsMaybe.map(ProjectKeywordsGetResponse(_))
     } yield result
 
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
