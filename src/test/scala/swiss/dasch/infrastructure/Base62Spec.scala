@@ -21,6 +21,6 @@ object Base62Spec extends ZIOSpecDefault {
         val decoded: UUID              = Base62.decode(encoded)
         assertTrue(uuid == decoded)
       }
-    }
+    },
   )
 }

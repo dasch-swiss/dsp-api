@@ -17,7 +17,7 @@ import swiss.dasch.api.ProjectsEndpointsResponses.{
   AssetCheckResultResponse,
   AssetInfoResponse,
   ProjectResponse,
-  UploadResponse
+  UploadResponse,
 }
 import swiss.dasch.domain.*
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
@@ -50,7 +50,7 @@ object ProjectsEndpointsResponses {
   final case class AssetCheckResultEntry(
     assetId: String,
     originalFilename: String,
-    results: List[SingleFileCheckResultResponse]
+    results: List[SingleFileCheckResultResponse],
   )
 
   private object AssetCheckResultEntry {
@@ -59,7 +59,7 @@ object ProjectsEndpointsResponses {
       AssetCheckResultEntry(
         assetInfo.assetRef.id.value,
         assetInfo.originalFilename.toString,
-        results.map(SingleFileCheckResultResponse.from).toList
+        results.map(SingleFileCheckResultResponse.from).toList,
       )
 
     given codec: JsonCodec[AssetCheckResultEntry] = DeriveJsonCodec.gen[AssetCheckResultEntry]
@@ -70,7 +70,7 @@ object ProjectsEndpointsResponses {
   final case class AssetCheckResultSummary(
     numberOfAssets: Int,
     numberOfFiles: Int,
-    numberOfChecksumMatches: Int
+    numberOfChecksumMatches: Int,
   )
 
   private object AssetCheckResultSummary {
@@ -92,7 +92,7 @@ object ProjectsEndpointsResponses {
       val summary = AssetCheckResultSummary(
         reportResults.keys.size,
         reportResults.values.map(_.size).sum,
-        reportResults.values.map(_.count(_.checksumMatches)).sum
+        reportResults.values.map(_.count(_.checksumMatches)).sum,
       )
       AssetCheckResultResponse(summary, results)
     }
@@ -109,7 +109,7 @@ object ProjectsEndpointsResponses {
     duration: Option[Double] = None,
     fps: Option[Double] = None,
     internalMimeType: Option[String] = None,
-    originalMimeType: Option[String] = None
+    originalMimeType: Option[String] = None,
   )
   object AssetInfoResponse {
 
@@ -127,7 +127,7 @@ object ProjectsEndpointsResponses {
         metadata.durationOpt.map(_.value),
         metadata.fpsOpt.map(_.value),
         metadata.internalMimeType.map(_.stringValue),
-        metadata.originalMimeType.map(_.stringValue)
+        metadata.originalMimeType.map(_.stringValue),
       )
     }
 
@@ -176,7 +176,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Triggers an ingest on the project with the given shortcode. " +
         "Currently only supports ingest of images. " +
-        "The files are expected to be in the `tmp/<project_shortcode>` directory."
+        "The files are expected to be in the `tmp/<project_shortcode>` directory.",
     )
     .tag("bulk-ingest")
 
@@ -186,7 +186,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Finalizes the bulk ingest. " +
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
-        "This will remove also the mapping.csv file."
+        "This will remove also the mapping.csv file.",
     )
     .tag("bulk-ingest")
 
@@ -195,7 +195,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Get the current result of the bulk ingest, may be incomplete. " +
         "The result is a csv with the following structure: " +
-        "original,derivative"
+        "original,derivative",
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
@@ -225,7 +225,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       postBulkIngestFinalize,
       getBulkIngestMappingCsv,
       postExport,
-      getImport
+      getImport,
     )
 }
 

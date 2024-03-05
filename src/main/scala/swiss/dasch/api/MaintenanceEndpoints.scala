@@ -57,7 +57,7 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     query[List[ProjectShortcode]]("restrictToProjects")
       .description(
         "Restrict the action to a list of projects, " +
-          "if no project is given apply the action to all projects."
+          "if no project is given apply the action to all projects.",
       )
   }
 
@@ -97,7 +97,7 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     postMaintenanceActionEndpoint,
     createOriginalsEndpoint,
     needsTopLeftCorrectionEndpoint,
-    needsOriginalsEndpoint
+    needsOriginalsEndpoint,
   )
 }
 

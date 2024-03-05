@@ -30,6 +30,6 @@ object SipiCommandSpec extends ZIOSpecDefault {
         for {
           cmd <- TopLeftArgument(Path("/tmp/example"), Path("/tmp/example2")).render()
         } yield assertTrue(cmd == List("--topleft", "/tmp/example", "/tmp/example2"))
-      }
+      },
     )
 }

@@ -48,13 +48,13 @@ object ApiProblem {
     def invalidHeader(
       key: String,
       value: String,
-      reason: String
+      reason: String,
     ): BadRequest = BadRequest(s"Header: '$key''", s"'$value' is invalid: $reason")
 
     def invalidPathVariable(
       key: String,
       value: String,
-      reason: String
+      reason: String,
     ): BadRequest = BadRequest(s"Path variable: '$key''", s"'$value' is invalid: $reason")
   }
 

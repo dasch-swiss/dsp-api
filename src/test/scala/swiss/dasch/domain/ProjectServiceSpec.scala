@@ -22,7 +22,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           for {
             projects <- ProjectService.listAllProjects()
           } yield assertTrue(projects.map(_.shortcode) == Chunk(existingProject))
-        }
+        },
       ),
       suite("findProject path")(
         test("should find existing projects which contain at least one non hidden regular file") {
@@ -34,7 +34,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           for {
             project <- ProjectService.findProject(nonExistentProject)
           } yield assertTrue(project.isEmpty)
-        }
+        },
       ),
       suite("findAssetsOfProject path")(
         test("should find asset infos from existing project") {
@@ -46,7 +46,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           for {
             infos <- ProjectService.findAssetInfosOfProject(nonExistentProject).runCollect
           } yield assertTrue(infos.isEmpty)
-        }
+        },
       ),
       suite("zipping a project")(
         test("given it does not exist, should return None") {
@@ -59,13 +59,13 @@ object ProjectServiceSpec extends ZIOSpecDefault {
             tempDir <- ZIO.serviceWith[StorageConfig](_.tempPath)
             zip     <- ProjectService.zipProject(existingProject)
           } yield assertTrue(zip.contains(tempDir / "zipped" / "0001.zip"))
-        }
-      )
+        },
+      ),
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
       ProjectService.layer,
       SpecConfigurations.storageConfigLayer,
-      StorageServiceLive.layer
+      StorageServiceLive.layer,
     )
 }

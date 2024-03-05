@@ -41,7 +41,7 @@ object MimeTypeGuesserSpec extends ZIOSpecDefault {
     "txt" -> MimeType.unsafeFrom("text/plain"),
     "xml" -> MimeType.unsafeFrom("application/xml"),
     "xsd" -> MimeType.unsafeFrom("application/xsd+xml"),
-    "xsl" -> MimeType.unsafeFrom("application/xslt+xml")
+    "xsl" -> MimeType.unsafeFrom("application/xslt+xml"),
   )
 
   private def guess(file: Path): URIO[MimeTypeGuesser, Option[MimeType]] =
@@ -56,6 +56,6 @@ object MimeTypeGuesserSpec extends ZIOSpecDefault {
     },
     test("should return None if it cannot guess the MIME type") {
       guess(Path("test")).map(result => assertTrue(result.isEmpty))
-    }
+    },
   ).provide(MimeTypeGuesser.layer)
 }

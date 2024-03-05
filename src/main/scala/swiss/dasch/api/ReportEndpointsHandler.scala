@@ -13,12 +13,12 @@ import zio.{ZIO, ZLayer}
 final class ReportEndpointsHandler(
   reportEndpoints: ReportEndpoints,
   reportService: ReportService,
-  projectService: ProjectService
+  projectService: ProjectService,
 ) {
 
   private val postAssetOverviewReportHandler: ZServerEndpoint[Any, Any] =
     reportEndpoints.postAssetOverviewReport.serverLogic(_ =>
-      _ => createAssetOverReports.forkDaemon.logError.as("work in progress")
+      _ => createAssetOverReports.forkDaemon.logError.as("work in progress"),
     )
 
   private val createAssetOverReports: ZIO[Any, Throwable, Unit] =

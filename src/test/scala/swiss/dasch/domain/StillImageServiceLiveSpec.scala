@@ -46,8 +46,8 @@ object StillImageServiceLiveSpec extends ZIOSpecDefault {
                  originalFilename = info.originalFilename,
                  checksumOriginal = info.original.checksum,
                  checksumDerivative = // this should not be updated
-                   Sha256Hash.unsafeFrom("3c9194324cc5921bef9a19fc8f9f7874114904cc25d43801cdb9364cfa363412")
-               )
+                   Sha256Hash.unsafeFrom("3c9194324cc5921bef9a19fc8f9f7874114904cc25d43801cdb9364cfa363412"),
+               ),
              )
         _                 <- StillImageService.applyTopLeftCorrection(image)
         backupExists      <- Files.exists(backup)
@@ -98,9 +98,9 @@ object StillImageServiceLiveSpec extends ZIOSpecDefault {
       for {
         actual <- StillImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2"))).exit
       } yield assert(actual)(
-        fails(isSubtype[IOException](hasMessage(equalTo("Could not get dimensions from 'images/some-file.jp2'"))))
+        fails(isSubtype[IOException](hasMessage(equalTo("Could not get dimensions from 'images/some-file.jp2'")))),
       )
-    }
+    },
   ).provide(
     AssetInfoServiceLive.layer,
     FileChecksumServiceLive.layer,
@@ -108,7 +108,7 @@ object StillImageServiceLiveSpec extends ZIOSpecDefault {
     StillImageService.layer,
     SipiClientMock.layer,
     SpecConfigurations.storageConfigLayer,
-    StorageServiceLive.layer
+    StorageServiceLive.layer,
   )
 }
 

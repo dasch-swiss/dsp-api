@@ -13,7 +13,7 @@ import zio.logging.slf4j.bridge.Slf4jBridge
 object Logger {
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
-    LogLevel.Info
+    LogLevel.Info,
       // Uncomment the following lines to change the log level for specific loggers:
       // , ("zio.logging.slf4j", LogLevel.Debug)
       // , ("SLF4J-LOGGER", LogLevel.Warning)
@@ -29,7 +29,7 @@ object Logger {
       (space + label("cause", cause).highlight).filter(LogFilter.causeNonEmpty)
 
   private val textLogger: ZLayer[Any, Nothing, Unit] = consoleLogger(
-    ConsoleLoggerConfig(logFormatText, logFilter)
+    ConsoleLoggerConfig(logFormatText, logFilter),
   )
 
   private val logFormatJson: LogFormat =
@@ -39,7 +39,7 @@ object Logger {
       LogFormat.spans
 
   private val jsonLogger: ZLayer[Any, Nothing, Unit] = consoleJsonLogger(
-    ConsoleLoggerConfig(logFormatJson, logFilter)
+    ConsoleLoggerConfig(logFormatJson, logFilter),
   )
 
   private val logger: ZLayer[ServiceConfig, Nothing, Unit] = ZLayer.service[ServiceConfig].flatMap { config =>

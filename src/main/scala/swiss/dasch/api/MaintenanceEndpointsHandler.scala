@@ -16,7 +16,7 @@ final case class MaintenanceEndpointsHandler(
   maintenanceActions: MaintenanceActions,
   maintenanceEndpoints: MaintenanceEndpoints,
   projectService: ProjectService,
-  sipiClient: SipiClient
+  sipiClient: SipiClient,
 ) extends HandlerFunctions {
 
   private val postMaintenanceEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.postMaintenanceActionEndpoint
@@ -26,7 +26,7 @@ final case class MaintenanceEndpointsHandler(
           ZIO
             .ifZIO(ZIO.succeed(shortcodes.isEmpty))(
               projectService.listAllProjects(),
-              projectService.findProjects(shortcodes)
+              projectService.findProjects(shortcodes),
             )
             .mapError(ApiProblem.InternalServerError(_))
         _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
@@ -48,10 +48,10 @@ final case class MaintenanceEndpointsHandler(
               .createOriginals(projectPath, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
               .tap(count => ZIO.logInfo(s"Created $count originals for ${projectPath.path}"))
               .logError
-              .forkDaemon
+              .forkDaemon,
           )
           .mapError(projectNotFoundOrServerError(_, shortcode))
-          .unit
+          .unit,
     )
 
   val needsOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsOriginalsEndpoint
@@ -61,7 +61,7 @@ final case class MaintenanceEndpointsHandler(
           .createNeedsOriginalsReport(imagesOnlyMaybe.getOrElse(true))
           .forkDaemon
           .logError
-          .as("work in progress")
+          .as("work in progress"),
     )
 
   val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsTopLeftCorrectionEndpoint
@@ -71,7 +71,7 @@ final case class MaintenanceEndpointsHandler(
           .createNeedsTopLeftCorrectionReport()
           .forkDaemon
           .logError
-          .as("work in progress")
+          .as("work in progress"),
     )
 
   val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] =
@@ -82,7 +82,7 @@ final case class MaintenanceEndpointsHandler(
             .createWasTopLeftCorrectionAppliedReport()
             .forkDaemon
             .logError
-            .as("work in progress")
+            .as("work in progress"),
       )
 
   val endpoints: List[ZServerEndpoint[Any, Any]] =
@@ -91,7 +91,7 @@ final case class MaintenanceEndpointsHandler(
       createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
-      wasTopLeftCorrectionAppliedEndpoint
+      wasTopLeftCorrectionAppliedEndpoint,
     )
 }
 

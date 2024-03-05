@@ -19,7 +19,7 @@ object SpecConfigurations {
 
   val jwtConfigDisableAuthLayer: ULayer[JwtConfig] =
     ZLayer.succeed(
-      JwtConfig("secret-key", "https://dsp-ingest.dev.dasch.swiss", "https://admin.dev.dasch.swiss", disableAuth = true)
+      JwtConfig("secret-key", "https://dsp-ingest.dev.dasch.swiss", "https://admin.dev.dasch.swiss", disableAuth = true),
     )
 
   val storageConfigLayer: Layer[IOException, StorageConfig] = ZLayer.scoped {

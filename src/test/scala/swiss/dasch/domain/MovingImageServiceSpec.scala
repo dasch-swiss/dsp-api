@@ -53,9 +53,9 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
         derivChecksum <- FileChecksumService.createSha256Hash(derivative)
       } yield assertTrue(
         derivative.path == expectedDerivativePath,
-        origChecksum == derivChecksum // moving image derivative is just a copy
+        origChecksum == derivChecksum, // moving image derivative is just a copy
       )
-    }
+    },
   )
 
   private val extractMetaDataSuite = suite("extractMetaData")(
@@ -81,8 +81,8 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
                              |}
                              |""".stripMargin,
                  "",
-                 0
-               )
+                 0,
+               ),
              )
         // when
         metadata <- MovingImageService.extractMetadata(c.original, d)
@@ -93,8 +93,8 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
           duration = DurationSecs.unsafeFrom(170.84),
           fps = Fps.unsafeFrom(25.0),
           Some(MimeType.unsafeFrom("video/mp4")),
-          Some(MimeType.unsafeFrom("video/mp4"))
-        )
+          Some(MimeType.unsafeFrom("video/mp4")),
+        ),
       )
     },
     test("given invalid metadata it should not extract") {
@@ -111,7 +111,7 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
                       |}
                       |""".stripMargin,
           "",
-          0
+          0,
         ),
         ProcessOutput(
           stdout = s"""
@@ -127,8 +127,8 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
                       |}
                       |""".stripMargin,
           "",
-          0
-        )
+          0,
+        ),
       )
       check(Gen.fromIterable(invalidProcessOut)) { processOutput =>
         for {
@@ -141,7 +141,7 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
           // then
         } yield assertTrue(exit.isFailure)
       }
-    }
+    },
   )
 
   val spec = suite("MovingImageService")(createDerivativeSuite, extractMetaDataSuite)
@@ -150,6 +150,6 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
       MimeTypeGuesser.layer,
       MovingImageService.layer,
       SpecConfigurations.storageConfigLayer,
-      StorageServiceLive.layer
+      StorageServiceLive.layer,
     )
 }

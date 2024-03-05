@@ -44,7 +44,7 @@ final case class MaintenanceActionsLive(
   otherFilesService: OtherFilesService,
   projectService: ProjectService,
   sipiClient: SipiClient,
-  storageService: StorageService
+  storageService: StorageService,
 ) extends MaintenanceActions {
 
   override def updateAssetMetadata(projects: Iterable[ProjectFolder]): Task[Unit] = {
@@ -95,7 +95,7 @@ final case class MaintenanceActionsLive(
                  .mapZIOPar(8)(originalNotPresent(imagesOnly))
                  .filter(identity)
                  .as(prj.shortcode)
-                 .runHead
+                 .runHead,
              )
              .map(_.flatten.map(_.toString))
              .flatMap(saveReport(tmpDir, reportName, _))
@@ -125,7 +125,7 @@ final case class MaintenanceActionsLive(
   private def saveReport[A](
     tmpDir: Path,
     name: String,
-    report: A
+    report: A,
   )(implicit encoder: JsonEncoder[A]): Task[Unit] =
     Files.createDirectories(tmpDir / "reports") *>
       Files.deleteIfExists(tmpDir / "reports" / s"$name.json") *>
@@ -145,7 +145,7 @@ final case class MaintenanceActionsLive(
               .mapZIOPar(8)(imageService.needsTopLeftCorrection)
               .filter(identity)
               .runHead
-              .map(_.map(_ => prj.shortcode))
+              .map(_.map(_ => prj.shortcode)),
           )
           .map(_.flatten)
           .map(_.map(_.toString))
@@ -181,7 +181,7 @@ final case class MaintenanceActionsLive(
               .map { assetIdDimensions =>
                 ProjectWithBakFiles(
                   prj.shortcode,
-                  assetIdDimensions.map { case (id: AssetId, dim: Dimensions) => ReportAsset(id, dim) }
+                  assetIdDimensions.map { case (id: AssetId, dim: Dimensions) => ReportAsset(id, dim) },
                 )
               }
           }
@@ -210,7 +210,7 @@ final case class MaintenanceActionsLive(
         // None.type errors are just a sign that the path should be ignored. Some.type errors are real errors.
         .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing $path: $e") }
         // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
-        .orElseFail(None)
+        .orElseFail(None),
     )
   }
 
@@ -234,14 +234,14 @@ final case class MaintenanceActionsLive(
     assetId: AssetId,
     jpxPath: Path,
     targetFormat: SipiImageFormat,
-    originalFilename: String
+    originalFilename: String,
   ) {
     def originalPath: Path = jpxPath.parent.map(_ / s"$assetId.${targetFormat.extension}.orig").orNull
   }
 
   private def findAssetsWithoutOriginal(
     jpxPath: Path,
-    mapping: Map[String, String]
+    mapping: Map[String, String],
   ): ZStream[Any, Throwable, CreateOriginalFor] =
     AssetId.fromPath(jpxPath) match {
       case Some(assetId) => filterWithoutOriginal(assetId, jpxPath, mapping)
@@ -251,7 +251,7 @@ final case class MaintenanceActionsLive(
   private def filterWithoutOriginal(
     assetId: AssetId,
     jpxPath: Path,
-    mapping: Map[String, String]
+    mapping: Map[String, String],
   ): ZStream[Any, Throwable, CreateOriginalFor] = {
     val createThis = makeCreateOriginalFor(assetId, jpxPath, mapping)
     ZStream
@@ -267,7 +267,7 @@ final case class MaintenanceActionsLive(
   private def makeCreateOriginalFor(
     assetId: AssetId,
     jpxPath: Path,
-    mapping: Map[String, String]
+    mapping: Map[String, String],
   ) = {
     val fallBackFormat             = Tif
     val originalFilenameMaybe      = mapping.get(jpxPath.filename.toString)
@@ -312,7 +312,7 @@ final case class MaintenanceActionsLive(
       originalInternalFilename = NonEmptyString.unsafeFrom(c.originalPath.filename.toString),
       originalFilename = NonEmptyString.unsafeFrom(c.originalFilename),
       checksumOriginal = checksumOriginal,
-      checksumDerivative = checksumDerivative
+      checksumDerivative = checksumDerivative,
     )
 }
 object MaintenanceActionsLive {

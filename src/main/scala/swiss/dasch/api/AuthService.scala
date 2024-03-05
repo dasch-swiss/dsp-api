@@ -65,10 +65,10 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
           (
             _,
             _,
-            _
-          ) => claim
+            _,
+          ) => claim,
         )
-        .toEither
+        .toEither,
     )
   }
 }

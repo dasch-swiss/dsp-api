@@ -28,7 +28,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
           actual.original.checksum == testChecksumOriginal,
           actual.derivative.file == assetDir / s"${assetDir.assetId}.pdf",
           actual.derivative.checksum == testChecksumDerivative,
-          actual.metadata == OtherMetadata(None, None)
+          actual.metadata == OtherMetadata(None, None),
         )
       },
       test("parsing an info file for a moving image with complete metadata info works") {
@@ -44,7 +44,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
                                                  |"duration": 3.14,
                                                  |"internalMimeType": "video/mp4",
                                                  |"originalMimeType": "video/mp4"
-                                                 |""".stripMargin)
+                                                 |""".stripMargin),
                       )
           // when
           actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
@@ -62,8 +62,8 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
               duration = DurationSecs.unsafeFrom(3.14),
               fps = Fps.unsafeFrom(60),
               internalMimeType = Some(MimeType.unsafeFrom("video/mp4")),
-              originalMimeType = Some(MimeType.unsafeFrom("video/mp4"))
-            )
+              originalMimeType = Some(MimeType.unsafeFrom("video/mp4")),
+            ),
         )
       },
       test("parsing an info file for a still image with complete metadata info works") {
@@ -77,7 +77,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
                                                  |"height": 480,
                                                  |"internalMimeType": "image/jpx",
                                                  |"originalMimeType": "image/png"
-                                                 |""".stripMargin)
+                                                 |""".stripMargin),
                       )
           // when
           actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
@@ -93,8 +93,8 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
             StillImageMetadata(
               Dimensions.unsafeFrom(640, 480),
               internalMimeType = Some(MimeType.unsafeFrom("image/jpx")),
-              originalMimeType = Some(MimeType.unsafeFrom("image/png"))
-            )
+              originalMimeType = Some(MimeType.unsafeFrom("image/png")),
+            ),
         )
       },
       test("parsing an info file for a other file type with complete metadata info works") {
@@ -106,7 +106,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
                         customJsonProps = Some("""
                                                  |"internalMimeType": "application/pdf",
                                                  |"originalMimeType": "application/pdf"
-                                                 |""".stripMargin)
+                                                 |""".stripMargin),
                       )
           // when
           actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
@@ -121,10 +121,10 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
           actual.metadata ==
             OtherMetadata(
               internalMimeType = Some(MimeType.unsafeFrom("application/pdf")),
-              originalMimeType = Some(MimeType.unsafeFrom("application/pdf"))
-            )
+              originalMimeType = Some(MimeType.unsafeFrom("application/pdf")),
+            ),
         )
-      }
+      },
     )
   }
 
@@ -132,6 +132,6 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
     suite("AssetInfoServiceSpec")(findByAssetRefSuite).provide(
       AssetInfoServiceLive.layer,
       StorageServiceLive.layer,
-      SpecConfigurations.storageConfigLayer
+      SpecConfigurations.storageConfigLayer,
     )
 }

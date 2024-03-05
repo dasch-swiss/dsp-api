@@ -48,7 +48,7 @@ trait CommandExecutor {
    */
   final def executeOrFail(command: Command): IO[IOException, ProcessOutput] =
     execute(command).filterOrElseWith(_.exitCode == 0)(out =>
-      ZIO.fail(new IOException(s"Command failed: '${command.cmd}' $out"))
+      ZIO.fail(new IOException(s"Command failed: '${command.cmd}' $out")),
     )
 }
 
@@ -69,8 +69,8 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
             List("docker", "run", "--entrypoint", command),
             List("-v", s"$assetDir:$assetDir"),
             List(s"daschswiss/knora-sipi:${BuildInfo.sipiVersion}"),
-            params
-          ).flatten
+            params,
+          ).flatten,
         )
       }
 

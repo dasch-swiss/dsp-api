@@ -74,7 +74,7 @@ object StorageService {
   def findInPath(
     path: Path,
     filter: FileFilter,
-    maxDepth: Int = Int.MaxValue
+    maxDepth: Int = Int.MaxValue,
   ): ZStream[Any, IOException, Path] =
     Files.walk(path, maxDepth).filterZIO(filter)
   def maxParallelism(): Int = 10
@@ -90,7 +90,7 @@ object StorageService {
     ZIO.serviceWithZIO[StorageService](_.createDirectories(path, attrs: _*))
   def createTempDirectoryScoped(
     directoryName: String,
-    prefix: Option[String] = None
+    prefix: Option[String] = None,
   ): ZIO[Scope with StorageService, IOException, Path] =
     ZIO.serviceWithZIO[StorageService](_.createTempDirectoryScoped(directoryName, prefix))
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A] =
@@ -118,14 +118,14 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def createTempDirectoryScoped(
     directoryName: String,
-    prefix: Option[String]
+    prefix: Option[String],
   ): ZIO[Scope, IOException, Path] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss") withZone ZoneId.from(ZoneOffset.UTC)
     Clock.instant.flatMap { now =>
       val basePath      = prefix.map(config.tempPath / _).getOrElse(config.tempPath)
       val directoryPath = basePath / s"${formatter.format(now)}" / directoryName
       ZIO.acquireRelease(Files.createDirectories(directoryPath).as(directoryPath))(path =>
-        ZIO.attemptBlockingIO(FileUtils.deleteDirectory(path.toFile)).logError.ignore
+        ZIO.attemptBlockingIO(FileUtils.deleteDirectory(path.toFile)).logError.ignore,
       )
     }
   }
@@ -136,7 +136,7 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
       .flatMap(lines =>
         ZIO
           .fromEither(lines.mkString.fromJson[A])
-          .mapError(e => new ParseException(s"Unable to parse $file, reason: $e", -1))
+          .mapError(e => new ParseException(s"Unable to parse $file, reason: $e", -1)),
       )
 
   override def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit] = {

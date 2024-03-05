@@ -25,7 +25,7 @@ trait ImportService {
 object ImportService {
   def importZipStream(
     shortcode: ProjectShortcode,
-    stream: ZStream[Any, Nothing, Byte]
+    stream: ZStream[Any, Nothing, Byte],
   ): ZIO[ImportService, ImportFailed, Unit] =
     ZIO.serviceWithZIO[ImportService](_.importZipStream(shortcode, stream))
   def importZipFile(shortcode: ProjectShortcode, tempFile: Path): ZIO[ImportService, ImportFailed, Unit] =
@@ -36,7 +36,7 @@ final case class ImportServiceLive(
   assetService: FileChecksumService,
   assetInfos: AssetInfoService,
   projectService: ProjectService,
-  storageService: StorageService
+  storageService: StorageService,
 ) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
@@ -50,7 +50,7 @@ final case class ImportServiceLive(
       .tap(zipFile =>
         stream
           .run(ZSink.fromFile(zipFile.toFile))
-          .tap(size => ZIO.logDebug(s"Saved $zipFile with size $size bytes"))
+          .tap(size => ZIO.logDebug(s"Saved $zipFile with size $size bytes")),
       )
       .logError
       .mapError(IoError.apply)

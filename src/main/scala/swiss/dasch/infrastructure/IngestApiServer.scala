@@ -20,7 +20,7 @@ object IngestApiServer {
   private val serverOptions = ZioHttpServerOptions.customiseInterceptors
     .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
     .corsInterceptor(
-      CORSInterceptor.customOrThrow(CORSConfig.default.copy(allowedOrigin = AllowedOrigin.All).exposeAllHeaders)
+      CORSInterceptor.customOrThrow(CORSConfig.default.copy(allowedOrigin = AllowedOrigin.All).exposeAllHeaders),
     )
     .options
 
@@ -29,7 +29,7 @@ object IngestApiServer {
     app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
     _   <- Server.install(app)
     _ <- ZIO.serviceWithZIO[ServiceConfig](c =>
-           ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
+           ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs"),
          )
   } yield ()
 

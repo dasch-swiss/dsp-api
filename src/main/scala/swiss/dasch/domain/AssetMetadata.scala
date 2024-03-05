@@ -39,7 +39,7 @@ object AssetMetadata {
 final case class StillImageMetadata(
   dimensions: Dimensions,
   internalMimeType: Option[MimeType],
-  originalMimeType: Option[MimeType]
+  originalMimeType: Option[MimeType],
 ) extends AssetMetadata
 
 final case class MovingImageMetadata(
@@ -47,7 +47,7 @@ final case class MovingImageMetadata(
   duration: DurationSecs,
   fps: Fps,
   internalMimeType: Option[MimeType],
-  originalMimeType: Option[MimeType]
+  originalMimeType: Option[MimeType],
 ) extends AssetMetadata
 
 final case class OtherMetadata(internalMimeType: Option[MimeType], originalMimeType: Option[MimeType])

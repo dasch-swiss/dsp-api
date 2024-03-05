@@ -19,20 +19,20 @@ object Configuration {
     service: ServiceConfig,
     storage: StorageConfig,
     sipi: SipiConfig,
-    ingest: IngestConfig
+    ingest: IngestConfig,
   )
 
   final case class JwtConfig(
     secret: String,
     audience: String,
     issuer: String,
-    disableAuth: Boolean = false
+    disableAuth: Boolean = false,
   )
 
   final case class ServiceConfig(
     host: String,
     port: Int,
-    logFormat: String
+    logFormat: String,
   )
 
   final case class SipiConfig(useLocalDev: Boolean)
@@ -50,7 +50,7 @@ object Configuration {
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(
-      read(configDescriptor from ConfigProvider.fromTypesafeConfig(ConfigFactory.defaultApplication().resolve()))
+      read(configDescriptor from ConfigProvider.fromTypesafeConfig(ConfigFactory.defaultApplication().resolve())),
     )
     applicationConf.project(_.service) ++
       applicationConf.project(_.storage) ++

@@ -19,7 +19,7 @@ final case class AssetOverviewReport(
   shortcode: ProjectShortcode,
   totalNrOfAssets: Int,
   nrOfAssetsPerType: Map[SupportedFileType, Int],
-  sizesPerType: SizeInBytesReport
+  sizesPerType: SizeInBytesReport,
 ) { self =>
   def add(someSize: SizeInBytesPerType): AssetOverviewReport =
     self.copy(sizesPerType = sizesPerType.add(someSize))
@@ -73,7 +73,7 @@ object SizeInBytesPerType {
         case otherSize: SizeInBytesOther =>
           self.copy(
             sizeOrig = sizeOrig + otherSize.sizeOrig,
-            sizeDerivative = sizeDerivative + otherSize.sizeDerivative
+            sizeDerivative = sizeDerivative + otherSize.sizeDerivative,
           )
         case _ => self
       }
@@ -82,7 +82,7 @@ object SizeInBytesPerType {
   final case class SizeInBytesMovingImages(
     sizeOrig: FileSize,
     sizeDerivative: FileSize,
-    sizeKeyframes: FileSize
+    sizeKeyframes: FileSize,
   ) extends SizeInBytesPerType { self =>
     val fileType: SupportedFileType = SupportedFileType.MovingImage
     def add(other: SizeInBytesPerType): SizeInBytesMovingImages =
@@ -91,7 +91,7 @@ object SizeInBytesPerType {
           self.copy(
             sizeOrig = sizeOrig + otherSize.sizeOrig,
             sizeDerivative = sizeDerivative + otherSize.sizeDerivative,
-            sizeKeyframes = sizeKeyframes + otherSize.sizeKeyframes
+            sizeKeyframes = sizeKeyframes + otherSize.sizeKeyframes,
           )
         case _ => this
       }
@@ -102,7 +102,7 @@ final case class ReportService(
   projectService: ProjectService,
   assetService: FileChecksumService,
   storageService: StorageService,
-  csvService: CsvService
+  csvService: CsvService,
 ) {
 
   def checksumReport(projectShortcode: ProjectShortcode): Task[Option[ChecksumReport]] =
@@ -159,7 +159,7 @@ final case class ReportService(
 
   private def updateAssetOverviewReport(
     report: AssetOverviewReport,
-    info: AssetInfo
+    info: AssetInfo,
   ): Task[AssetOverviewReport] =
     ZIO
       .fromOption(SupportedFileType.fromPath(Path(info.originalFilename.value)))
@@ -171,7 +171,7 @@ final case class ReportService(
   private def updateAssetOverviewReport(
     report: AssetOverviewReport,
     info: AssetInfo,
-    fileType: SupportedFileType
+    fileType: SupportedFileType,
   ): ZIO[Any, Throwable, AssetOverviewReport] =
     ZIO.logInfo(s"Calculating size for asset ${info.assetRef} of type $fileType") *>
       calculateSizeInBytes(fileType, info)
@@ -179,8 +179,8 @@ final case class ReportService(
           report.copy(
             totalNrOfAssets = report.totalNrOfAssets + 1,
             nrOfAssetsPerType = report.nrOfAssetsPerType.updatedWith(fileType)(_.map(_ + 1).orElse(Some(1))),
-            sizesPerType = report.sizesPerType.add(size)
-          )
+            sizesPerType = report.sizesPerType.add(size),
+          ),
         )
 
   private def calculateSizeInBytes(fileType: SupportedFileType, info: AssetInfo): Task[SizeInBytesPerType] =

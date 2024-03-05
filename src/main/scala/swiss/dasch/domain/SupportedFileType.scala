@@ -17,25 +17,25 @@ private val archive = Map(
   "tar.gz" -> MimeType.unsafeFrom("application/gzip"),
   "tgz"    -> MimeType.unsafeFrom("application/x-compress"),
   "z"      -> MimeType.unsafeFrom("application/x-compress"),
-  "zip"    -> MimeType.unsafeFrom("application/zip")
+  "zip"    -> MimeType.unsafeFrom("application/zip"),
 )
 private val audio =
   Map(
     "mp3"  -> MimeType.unsafeFrom("audio/mpeg"),
     "mpeg" -> MimeType.unsafeFrom("audio/mpeg"),
-    "wav"  -> MimeType.unsafeFrom("audio/wav")
+    "wav"  -> MimeType.unsafeFrom("audio/wav"),
   )
 private val office = Seq(
   "doc"  -> MimeType.unsafeFrom("application/msword"),
   "docx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
   "pdf"  -> MimeType.unsafeFrom("application/pdf"),
   "ppt"  -> MimeType.unsafeFrom("application/vnd.ms-powerpoint"),
-  "pptx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.presentationml.presentation")
+  "pptx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
 )
 private val tables = Map(
   "csv"  -> MimeType.unsafeFrom("text/csv"),
   "xls"  -> MimeType.unsafeFrom("application/vnd.ms-excel"),
-  "xlsx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  "xlsx" -> MimeType.unsafeFrom("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
 )
 private val text =
   Map(
@@ -47,7 +47,7 @@ private val text =
     // xml, xsd, xsl are XML files, schema and stylesheets
     "xml" -> MimeType.unsafeFrom("application/xml"),
     "xsd" -> MimeType.unsafeFrom("application/xsd+xml"),
-    "xsl" -> MimeType.unsafeFrom("application/xslt+xml")
+    "xsl" -> MimeType.unsafeFrom("application/xslt+xml"),
   )
 
 private val other = archive ++ audio ++ office ++ tables ++ text
@@ -61,7 +61,7 @@ private val stillImages = Map(
   "jpeg" -> MimeType.unsafeFrom("image/jpeg"),
   "tiff" -> MimeType.unsafeFrom("image/tiff"),
   "tif"  -> MimeType.unsafeFrom("image/tiff"),
-  "png"  -> MimeType.unsafeFrom("image/png")
+  "png"  -> MimeType.unsafeFrom("image/png"),
 )
 
 /**

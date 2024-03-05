@@ -21,7 +21,7 @@ object AssetId extends RefinedTypeOps[AssetId, String] {
   def makeNew: UIO[AssetId] = Random.nextUUID
     .map(uuid =>
       // the unsafeFrom is safe here because the [[Base62EncodedUuid]] is valid subset of AssetId
-      AssetId.unsafeFrom(Base62.encode(uuid).value)
+      AssetId.unsafeFrom(Base62.encode(uuid).value),
     )
 
   def fromPath(file: Path): Option[AssetId] = {
@@ -59,28 +59,28 @@ object Asset {
     ref: AssetRef,
     original: Original,
     derivative: JpxDerivativeFile,
-    metadata: StillImageMetadata
+    metadata: StillImageMetadata,
   ) extends Asset
 
   final case class MovingImageAsset(
     ref: AssetRef,
     original: Original,
     derivative: DerivativeFile,
-    metadata: MovingImageMetadata
+    metadata: MovingImageMetadata,
   ) extends Asset
 
   final case class OtherAsset(
     ref: AssetRef,
     original: Original,
     derivative: DerivativeFile,
-    metadata: OtherMetadata
+    metadata: OtherMetadata,
   ) extends Asset
 
   def makeStillImage(
     assetRef: AssetRef,
     original: Original,
     derivative: JpxDerivativeFile,
-    metadata: StillImageMetadata
+    metadata: StillImageMetadata,
   ): StillImageAsset =
     StillImageAsset(assetRef, original, derivative, metadata)
 
@@ -88,13 +88,13 @@ object Asset {
     assetRef: AssetRef,
     original: Original,
     derivative: DerivativeFile,
-    metadata: MovingImageMetadata
+    metadata: MovingImageMetadata,
   ): MovingImageAsset = MovingImageAsset(assetRef, original, derivative, metadata)
 
   def makeOther(
     assetRef: AssetRef,
     original: Original,
     derivative: DerivativeFile,
-    metadata: OtherMetadata
+    metadata: OtherMetadata,
   ): OtherAsset = OtherAsset(assetRef, original, derivative, metadata)
 }

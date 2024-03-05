@@ -24,7 +24,7 @@ final case class AssetOverviewReportCsvRow(
   sizeOfMovingImageDerivatives: FileSize,
   sizeOfMovingImageKeyframes: FileSize,
   sizeOfOtherOriginals: FileSize,
-  sizeOfOtherDerivatives: FileSize
+  sizeOfOtherDerivatives: FileSize,
 ) {
 
   def toList: List[String | Int] = List(
@@ -39,7 +39,7 @@ final case class AssetOverviewReportCsvRow(
     prettyPrint(sizeOfMovingImageDerivatives),
     prettyPrint(sizeOfMovingImageKeyframes),
     prettyPrint(sizeOfOtherOriginals),
-    prettyPrint(sizeOfOtherDerivatives)
+    prettyPrint(sizeOfOtherDerivatives),
   )
 }
 
@@ -56,7 +56,7 @@ object AssetOverviewReportCsvRow {
     "sizeOfMovingImageDerivatives",
     "sizeOfMovingImageKeyframes",
     "sizeOfOtherOriginals",
-    "sizeOfOtherDerivatives"
+    "sizeOfOtherDerivatives",
   )
   def fromReport(rep: AssetOverviewReport): AssetOverviewReportCsvRow = {
     def getFileSize(key: SupportedFileType, typ: String) =
@@ -89,7 +89,7 @@ object AssetOverviewReportCsvRow {
       getFileSize(MovingImage, "derivative"),
       getFileSize(MovingImage, "keyframes"),
       getFileSize(OtherFiles, "orig"),
-      getFileSize(OtherFiles, "derivative")
+      getFileSize(OtherFiles, "derivative"),
     )
   }
 }
@@ -108,7 +108,7 @@ final case class CsvService() {
         writer <- createWriter(path)
         _      <- ZIO.succeed(writer.writeRow(AssetOverviewReportCsvRow.headerRow))
         _ <- ZIO.foreachDiscard(report)(rep =>
-               ZIO.succeed(writer.writeRow(AssetOverviewReportCsvRow.fromReport(rep).toList))
+               ZIO.succeed(writer.writeRow(AssetOverviewReportCsvRow.fromReport(rep).toList)),
              )
       } yield path
     }

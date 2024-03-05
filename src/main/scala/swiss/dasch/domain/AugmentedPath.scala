@@ -120,7 +120,7 @@ object AugmentedPath {
   private def from[A <: AssetFile](
     path: Path,
     fileExtensionSupported: String => Boolean,
-    create: (Path, AssetId) => A
+    create: (Path, AssetId) => A,
   ): Either[String, A] =
     path match {
       case _ if path.isHidden => Left(hiddenFile)

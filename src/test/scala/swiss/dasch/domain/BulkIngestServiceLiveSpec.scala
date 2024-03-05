@@ -52,7 +52,7 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
 
   val spec = suite("BulkIngestServiceLive")(
     finalizeBulkIngestSuite,
-    getBulkIngestMappingCsvSuite
+    getBulkIngestMappingCsvSuite,
   ).provide(
     AssetInfoServiceLive.layer,
     BulkIngestServiceLive.layer,
@@ -65,6 +65,6 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
-    StorageServiceLive.layer
+    StorageServiceLive.layer,
   )
 }

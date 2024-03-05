@@ -46,7 +46,7 @@ object IngestServiceSpec extends ZIOSpecDefault {
         info.derivative.filename.toString == derivativeFilename,
         info.derivative.filename == asset.derivative.filename,
         originalExists,
-        derivativeExists
+        derivativeExists,
       )
     }
   }).provide(
@@ -60,6 +60,6 @@ object IngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
-    StorageServiceLive.layer
+    StorageServiceLive.layer,
   )
 }

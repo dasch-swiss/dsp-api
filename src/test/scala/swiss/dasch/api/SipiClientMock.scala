@@ -19,7 +19,7 @@ object SipiClientMockMethodInvocation {
   final case class TranscodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ) extends SipiClientMockMethodInvocation
   final case class ApplyTopLeftCorrection(fileIn: Path, fileOut: Path) extends SipiClientMockMethodInvocation
   final case class QueryImageFile(file: Path)                          extends SipiClientMockMethodInvocation
@@ -28,20 +28,20 @@ object SipiClientMockMethodInvocation {
 final case class SipiClientMock(
   invocations: Ref[List[SipiClientMockMethodInvocation]],
   queryImageFileReturnValue: Ref[ProcessOutput],
-  dontTranscode: Ref[Boolean]
+  dontTranscode: Ref[Boolean],
 ) extends SipiClient {
 
   override def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ): UIO[ProcessOutput] =
     ZIO.ifZIO(dontTranscode.get)(
       onTrue = ZIO.succeed(ProcessOutput("", "", 0)),
       onFalse = Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
         invocations
           .update(_.appended(TranscodeImageFile(fileIn, fileOut, outputFormat)))
-          .as(ProcessOutput("", "", 0))
+          .as(ProcessOutput("", "", 0)),
     )
 
   override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput] =
@@ -63,7 +63,7 @@ final case class SipiClientMock(
   def noInteractions(): UIO[Boolean] = getInvocations().map(_.isEmpty)
 
   def setQueryImageFileOrientation(orientation: OrientationValue): UIO[Unit] = queryImageFileReturnValue.set(
-    ProcessOutput(s"Exif.Image.Orientation                       0x0112 Short       ${orientation.value}", "", 0)
+    ProcessOutput(s"Exif.Image.Orientation                       0x0112 Short       ${orientation.value}", "", 0),
   )
 
   def setQueryImageDimensions(dimension: Dimensions): UIO[Unit] = queryImageFileReturnValue.set(
@@ -75,8 +75,8 @@ final case class SipiClientMock(
          |ny    = ${dimension.height}
          |""".stripMargin,
       "",
-      0
-    )
+      0,
+    ),
   )
 
   def setDontTranscode(newState: Boolean): UIO[Unit] = this.dontTranscode.set(newState)
@@ -86,7 +86,7 @@ object SipiClientMock {
   def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ): RIO[SipiClientMock, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClientMock](_.transcodeImageFile(fileIn, fileOut, outputFormat))
 

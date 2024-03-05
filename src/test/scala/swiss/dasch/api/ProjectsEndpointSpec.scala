@@ -22,7 +22,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[ProjectsEndpointsHandler](handler =>
-             ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+             ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),
            )
     response <- app.runZIO(request).logError
   } yield response
@@ -62,10 +62,10 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
             headers
               .get("Content-Disposition")
               .contains(s"attachment; filename=export-${existingProject.toString}.zip"),
-            headers.get("Content-Type").contains("application/zip")
+            headers.get("Content-Type").contains("application/zip"),
           )
         }
-      }
+      },
     )
   }
 
@@ -77,7 +77,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     def postImport(
       shortcode: String | ProjectShortcode,
       body: Body,
-      headers: Headers
+      headers: Headers,
     ) = {
       val url     = URL(Root / "projects" / shortcode.toString / "import")
       val request = Request.post(url, body).updateHeaders(_ => headers.addHeader("Authorization", "Bearer fakeToken"))
@@ -86,7 +86,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
     def validateImportedProjectExists(
       storageConfig: StorageConfig,
-      shortcode: String | ProjectShortcode
+      shortcode: String | ProjectShortcode,
     ): UIO[Boolean] = {
       val expectedFiles = List("info", "jp2", "jp2.orig").map("FGiLaT4zzuV-CqwbEDFAFeS." + _)
       val projectPath   = storageConfig.assetPath / shortcode.toString
@@ -107,7 +107,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           status = responseWrongHeader.status
         } yield {
           assertTrue(status == Status.UnsupportedMediaType)
-        }
+        },
       ),
       test("given the Content-Type header is not-present, return correct error")(
         for {
@@ -115,7 +115,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           status            = responseNoHeader.status
         } yield {
           assertTrue(status == Status.BadRequest)
-        }
+        },
       ),
       test("given the Body is empty, return 400")(for {
         response <- postImport(emptyProject, Body.empty, validContentTypeHeaders)
@@ -129,14 +129,14 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
           response <- postImport(
                         emptyProject,
                         bodyFromZipFile,
-                        validContentTypeHeaders
+                        validContentTypeHeaders,
                       )
           importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
                             && Files.isDirectory(storageConfig.assetPath / emptyProject.toString / "fg")
           status = response.status
         } yield {
           assertTrue(status == Status.Ok, importExists)
-        }
+        },
       ),
       test("given the Body is not a zip, will return 400") {
         for {
@@ -147,7 +147,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
         } yield {
           assertTrue(status == Status.BadRequest, importDoesNotExist)
         }
-      }
+      },
     )
   }
 
@@ -186,8 +186,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
             originalInternalFilename = s"${ref.id}.txt.orig",
             originalFilename = "test.txt",
             checksumOriginal = AssetInfoFileTestHelper.testChecksumOriginal.value,
-            checksumDerivative = AssetInfoFileTestHelper.testChecksumDerivative.value
-          )
+            checksumDerivative = AssetInfoFileTestHelper.testChecksumDerivative.value,
+          ),
         )
       },
       test("given a still image asset info file exists it should return the info") {
@@ -201,7 +201,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                                               |"height": 480,
                                               |"internalMimeType": "image/jpx",
                                               |"originalMimeType": "image/png"
-                                              |""".stripMargin)
+                                              |""".stripMargin),
                    )
                    .map(_.assetRef)
           req = Request
@@ -223,8 +223,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
             width = Some(640),
             height = Some(480),
             internalMimeType = Some("image/jpx"),
-            originalMimeType = Some("image/png")
-          )
+            originalMimeType = Some("image/png"),
+          ),
         )
       },
       test("given a moving image asset info file exists it should return the info") {
@@ -240,7 +240,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                                               |"duration": 3.14,
                                               |"internalMimeType": "video/mp4",
                                               |"originalMimeType": "video/mp4"
-                                              |""".stripMargin)
+                                              |""".stripMargin),
                    )
                    .map(_.assetRef)
           req = Request
@@ -264,10 +264,10 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
             duration = Some(3.14),
             fps = Some(60),
             internalMimeType = Some("video/mp4"),
-            originalMimeType = Some("video/mp4")
-          )
+            originalMimeType = Some("video/mp4"),
+          ),
         )
-      }
+      },
     )
 
   val spec = suite("ProjectsEndpoint")(
@@ -283,10 +283,10 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       } yield {
         assertTrue(
           status == Status.Ok,
-          body == Chunk(ProjectResponse("0001")).toJson
+          body == Chunk(ProjectResponse("0001")).toJson,
         )
       }
-    }
+    },
   ).provide(
     AssetInfoServiceLive.layer,
     AuthServiceLive.layer,
@@ -310,6 +310,6 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     SpecConfigurations.jwtConfigDisableAuthLayer,
     SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
-    StorageServiceLive.layer
+    StorageServiceLive.layer,
   )
 }

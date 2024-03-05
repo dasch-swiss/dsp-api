@@ -43,7 +43,7 @@ object IngestResult {
 final case class BulkIngestServiceLive(
   storage: StorageService,
   ingestService: IngestService,
-  config: IngestConfig
+  config: IngestConfig,
 ) extends BulkIngestService {
 
   override def startBulkIngest(project: ProjectShortcode): Task[IngestResult] =
@@ -68,7 +68,7 @@ final case class BulkIngestServiceLive(
         ZIO.logInfo(
           s"Finished bulk ingest for project $project. " +
             s"Found $countAssets assets from $total files. " +
-            s"Ingested $countSuccess assets successfully, failed $countFailed and skipped $countSkipped files (See logs above for more details)."
+            s"Ingested $countSuccess assets successfully, failed $countFailed and skipped $countSkipped files (See logs above for more details).",
         )
       }
     } yield sum
@@ -80,7 +80,7 @@ final case class BulkIngestServiceLive(
     val mappingFile = getMappingCsvFile(importDir, project)
     ZIO
       .unlessZIO(Files.exists(mappingFile))(
-        Files.createFile(mappingFile) *> Files.writeLines(mappingFile, List("original,derivative"))
+        Files.createFile(mappingFile) *> Files.writeLines(mappingFile, List("original,derivative")),
       )
       .as(mappingFile)
   }
@@ -94,7 +94,7 @@ final case class BulkIngestServiceLive(
       .flatMap(asset => updateMappingCsv(asset, file, importDir, mappingFile))
       .as(IngestResult.success)
       .catchNonFatalOrDie(e =>
-        ZIO.logErrorCause(s"Error ingesting file $file: ${e.getMessage}", Cause.fail(e)).as(IngestResult.failed)
+        ZIO.logErrorCause(s"Error ingesting file $file: ${e.getMessage}", Cause.fail(e)).as(IngestResult.failed),
       )
 
   private def updateMappingCsv(asset: Asset, fileToIngest: Path, importDir: Path, csv: Path) =
@@ -120,7 +120,7 @@ final case class BulkIngestServiceLive(
       mappingCsv = getMappingCsvFile(importDir, shortcode)
       mapping <- ZIO.ifZIO(Files.exists(mappingCsv))(
                    Files.readAllLines(mappingCsv).map(it => Some(it.mkString("\n"))),
-                   ZIO.none
+                   ZIO.none,
                  )
     } yield mapping
 }

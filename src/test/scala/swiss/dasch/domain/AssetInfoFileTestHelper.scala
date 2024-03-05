@@ -20,7 +20,7 @@ object AssetInfoFileTestHelper {
   def createInfoFile(
     originalFileExt: String,
     derivativeFileExt: String,
-    customJsonProps: Option[String] = None
+    customJsonProps: Option[String] = None,
   ): ZIO[StorageService, Throwable, AssetFolder] =
     for {
       assetRef <- AssetRef.makeNew(testProject)

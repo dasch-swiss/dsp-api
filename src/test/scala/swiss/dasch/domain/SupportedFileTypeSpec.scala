@@ -47,6 +47,6 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(withUpperCase(sampleUnknown))) { ext =>
         assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).isEmpty)
       }
-    }
+    },
   )
 }

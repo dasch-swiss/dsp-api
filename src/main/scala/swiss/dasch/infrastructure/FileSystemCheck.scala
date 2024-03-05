@@ -30,8 +30,8 @@ final case class FileSystemCheckLive(config: StorageConfig) extends FileSystemCh
     checkExpectedFoldersExist()
       .filterOrDie(identity)(
         new IllegalStateException(
-          s"Stopping the start up. Asset ${config.assetPath} and temp ${config.tempPath} directories not found."
-        )
+          s"Stopping the start up. Asset ${config.assetPath} and temp ${config.tempPath} directories not found.",
+        ),
       )
       .unit *> ZIO.logInfo(s"Serving from ${config.assetPath} and ${config.tempPath} directories.")
 }

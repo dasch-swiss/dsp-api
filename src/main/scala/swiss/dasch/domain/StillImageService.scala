@@ -18,7 +18,7 @@ import java.io.IOException
 final case class StillImageService(
   sipiClient: SipiClient,
   assetInfos: AssetInfoService,
-  mimeTypeGuesser: MimeTypeGuesser
+  mimeTypeGuesser: MimeTypeGuesser,
 ) {
 
   /**
@@ -38,7 +38,7 @@ final case class StillImageService(
       ZIO.logInfo(s"Applying top left correction to $image") *>
         Files.copy(image, image.parent.map(_ / s"${image.filename}.bak").orNull) *>
         sipiClient.applyTopLeftCorrection(image, image) *>
-        assetInfos.updateAssetInfoForDerivative(image).as(image)
+        assetInfos.updateAssetInfoForDerivative(image).as(image),
     )
 
   def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =

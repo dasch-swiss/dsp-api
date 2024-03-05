@@ -29,7 +29,7 @@ object ProjectShortcode extends RefinedTypeOps[ProjectShortcode, String] {
 final case class ProjectService(
   assetInfos: AssetInfoService,
   storage: StorageService,
-  checksum: FileChecksumService
+  checksum: FileChecksumService,
 ) {
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =

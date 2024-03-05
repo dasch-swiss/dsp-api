@@ -27,7 +27,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
 
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[MaintenanceEndpointsHandler](handler =>
-             ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+             ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),
            )
     response <- app.runZIO(request).logError
   } yield response
@@ -38,32 +38,32 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
   private val createOriginalsSuite = {
     def createOriginalsRequest(
       shortcode: ProjectShortcode | String,
-      body: List[MappingEntry] = List.empty
+      body: List[MappingEntry] = List.empty,
     ) =
       Request
         .post(URL(Root / "maintenance" / "create-originals" / shortcode.toString), Body.fromString(body.toJson))
         .updateHeaders(
           _.addHeader(Header.ContentType(MediaType.application.json))
-            .addHeader(Header.Authorization.name, "Bearer fakeToken")
+            .addHeader(Header.Authorization.name, "Bearer fakeToken"),
         )
 
     suite("/maintenance/create-originals")(
       test("should return 404 for a non-existent project") {
         executeRequestAndAssertStatus(
           createOriginalsRequest(nonExistentProject),
-          Status.NotFound
+          Status.NotFound,
         )
       },
       test("should return 400 for an invalid project shortcode") {
         executeRequestAndAssertStatus(
           createOriginalsRequest("invalid-shortcode"),
-          Status.BadRequest
+          Status.BadRequest,
         )
       },
       test("should return 204 for a project shortcode ") {
         executeRequestAndAssertStatus(
           createOriginalsRequest(existingProject),
-          Status.Accepted
+          Status.Accepted,
         )
       },
       test("should return 204 for a project shortcode and create originals for jp2 and jpx assets") {
@@ -105,9 +105,9 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           newOrigExistsJp2,
           assetInfoJpx.originalFilename.toString == "ORIGINAL.jpg",
           assetInfoJp2.originalFilename.toString == s"${assetJp2.id}.tif",
-          checksumsCorrect
+          checksumsCorrect,
         )
-      }
+      },
     ) @@ TestAspect.withLiveClock
   }
 
@@ -136,7 +136,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         } yield {
           assertTrue(status == Status.Accepted, projects == Chunk("0001"))
         }
-      }
+      },
     ) @@ TestAspect.withLiveClock
 
   private def loadReport(name: String) =
@@ -159,7 +159,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         } yield {
           assertTrue(status == Status.Accepted, projects == Chunk("0001"))
         }
-      }
+      },
     ) @@ TestAspect.withLiveClock
 
   val spec = suite("MaintenanceEndpoint")(createOriginalsSuite, needsOriginalsSuite, needsTopleftCorrectionSuite)
@@ -180,6 +180,6 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       SpecConfigurations.jwtConfigDisableAuthLayer,
       SpecConfigurations.storageConfigLayer,
       StillImageService.layer,
-      StorageServiceLive.layer
+      StorageServiceLive.layer,
     )
 }

@@ -56,7 +56,7 @@ object Main extends ZIOAppDefault {
         ReportService.layer,
         SipiClientLive.layer,
         StillImageService.layer,
-        StorageServiceLive.layer
+        StorageServiceLive.layer,
 //        ZLayer.Debug.mermaid ,
       )
 }

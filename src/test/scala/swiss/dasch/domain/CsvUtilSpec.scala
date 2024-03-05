@@ -25,7 +25,7 @@ object CsvUtilSpec extends ZIOSpecDefault {
       val result   = CsvUtil.escapeCsvValue("test\"test")
       val expected = "\"test\"\"test\""
       assertTrue(result == expected)
-    }
+    },
   )
 
   def spec: Spec[TestEnvironment with Scope, Any] = suite("CsvUtilSpec")(escapeCsvValueSuite)

@@ -43,11 +43,11 @@ object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
         assetInfo      <- AssetInfoService.findByAssetRef(existingAssetRef).map(_.head)
         checksumResult <- FileChecksumService.verifyChecksum(assetInfo)
       } yield assertTrue(checksumResult.forall(_.checksumMatches == true))
-    }
+    },
   ).provide(
     AssetInfoServiceLive.layer,
     FileChecksumServiceLive.layer,
     StorageServiceLive.layer,
-    SpecConfigurations.storageConfigLayer
+    SpecConfigurations.storageConfigLayer,
   )
 }

@@ -29,7 +29,7 @@ object SipiCommand {
   final case class FormatArgument(
     outputFormat: SipiImageFormat,
     fileIn: Path,
-    fileOut: Path
+    fileOut: Path,
   ) extends SipiCommand {
     def flag(): String = "--format"
     def render(): UIO[List[String]] =
@@ -55,7 +55,7 @@ object SipiCommand {
    */
   final case class TopLeftArgument(
     fileIn: Path,
-    fileOut: Path
+    fileOut: Path,
   ) extends SipiCommand {
     def flag(): String = "--topleft"
     def render(): UIO[List[String]] =
@@ -75,7 +75,7 @@ trait SipiClient {
   def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ): UIO[ProcessOutput]
 }
 
@@ -90,7 +90,7 @@ object SipiClient {
   def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ): RIO[SipiClient, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClient](_.transcodeImageFile(fileIn, fileOut, outputFormat))
 }
@@ -114,7 +114,7 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
   override def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
-    outputFormat: SipiImageFormat
+    outputFormat: SipiImageFormat,
   ): UIO[ProcessOutput] =
     execute(FormatArgument(outputFormat, fileIn, fileOut))
 

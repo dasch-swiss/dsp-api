@@ -30,7 +30,7 @@ object ZipUtility {
   def zipFolder(
     srcFolder: Path,
     destinationFolder: Path,
-    zipFilename: Option[String] = None
+    zipFilename: Option[String] = None,
   ): Task[Path] = ZIO.scoped {
     val zipFile = destinationFolder / zipFilename.getOrElse(s"${srcFolder.filename.toString}.zip")
     for {
@@ -55,7 +55,7 @@ object ZipUtility {
   private def addFolderRec(
     folderToAdd: Path,
     srcFolder: Path,
-    out: ZipOutputStream
+    out: ZipOutputStream,
   ): ZIO[Scope, Throwable, Unit] =
     Files
       .newDirectoryStream(folderToAdd)
@@ -65,7 +65,7 @@ object ZipUtility {
   private def addEntryToZip(
     entry: Path,
     srcFolder: Path,
-    out: ZipOutputStream
+    out: ZipOutputStream,
   ) = for {
     _ <- ZIO.whenZIO(Files.isRegularFile(entry))(addFile(entry, srcFolder, out))
     _ <- ZIO.whenZIO(Files.isDirectory(entry))(addFolderRec(entry, srcFolder, out))
@@ -74,7 +74,7 @@ object ZipUtility {
   private def addFile(
     entry: Path,
     srcFolder: Path,
-    out: ZipOutputStream
+    out: ZipOutputStream,
   ) = for {
     fis <- ScopedIoStreams.fileInputStream(entry)
     _ <- ZIO.attemptBlocking {
@@ -139,7 +139,7 @@ object ScopedIoStreams {
     ZIO.fromAutoCloseable(
       ZIO
         .attemptBlocking(new FileInputStream(path.toFile))
-        .refineOrDie { case e: FileNotFoundException => e }
+        .refineOrDie { case e: FileNotFoundException => e },
     )
 
   /**
@@ -191,7 +191,7 @@ object ScopedIoStreams {
     ZIO.fromAutoCloseable(
       ZIO
         .attemptBlocking(new FileOutputStream(path.toFile))
-        .refineOrDie { case e: FileNotFoundException => e }
+        .refineOrDie { case e: FileNotFoundException => e },
     )
 
   /**

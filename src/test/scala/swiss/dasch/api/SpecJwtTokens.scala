@@ -23,7 +23,7 @@ object SpecJwtTokens {
     subject: Option[String] = Some("some-subject"),
     audience: Option[Set[String]] = None,
     expiration: Option[Instant] = None,
-    secret: Option[String] = None
+    secret: Option[String] = None,
   ): URIO[JwtConfig, String] =
     for {
       now       <- Clock.instant
@@ -33,7 +33,7 @@ object SpecJwtTokens {
                 subject = subject,
                 audience = audience.orElse(Some(Set(jwtConfig.audience))),
                 issuedAt = Some(now.getEpochSecond),
-                expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond)
+                expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond),
               )
     } yield JwtZIOJson.encode(claim, secret.getOrElse(jwtConfig.secret), JwtAlgorithm.HS256)
 }

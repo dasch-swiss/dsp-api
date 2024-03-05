@@ -15,7 +15,7 @@ import scala.util.chaining.*
 case class MonitoringEndpointsHandler(
   monitoringEndpoints: MonitoringEndpoints,
   healthService: HealthCheckService,
-  metrics: PrometheusPublisher
+  metrics: PrometheusPublisher,
 ) {
 
   val infoEndpoint: ZServerEndpoint[Any, Any] =
@@ -27,7 +27,7 @@ case class MonitoringEndpointsHandler(
         healthService.check.flatMap {
           case it if it.isHealthy => ZIO.succeed(it)
           case _                  => ZIO.fail(ApiProblem.Unhealthy())
-        }
+        },
       )
 
   val metricsEndpoint: ZServerEndpoint[Any, Any] =

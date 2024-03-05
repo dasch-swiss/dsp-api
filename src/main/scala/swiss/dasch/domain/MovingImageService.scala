@@ -65,7 +65,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
         "-print_format",
         "json",
         "-i",
-        absPath.toString
+        absPath.toString,
       )
     outStr <- executor.executeOrFail(cmd).map(_.stdout)
     ffprobeOut <- ZIO
@@ -109,7 +109,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
 object MovingImageService {
   def createDerivative(
     original: Original,
-    assetRef: AssetRef
+    assetRef: AssetRef,
   ): ZIO[MovingImageService, Throwable, MovingImageDerivativeFile] =
     ZIO.serviceWithZIO(_.createDerivative(original, assetRef))
 
@@ -118,7 +118,7 @@ object MovingImageService {
 
   def extractMetadata(
     original: Original,
-    file: MovingImageDerivativeFile
+    file: MovingImageDerivativeFile,
   ): ZIO[MovingImageService, Throwable, MovingImageMetadata] =
     ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(original, file))
 

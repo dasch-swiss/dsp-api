@@ -20,7 +20,7 @@ object AssetIdSpec extends ZIOSpecDefault {
     },
     test("AssetId should not be created from an String containing invalid characters") {
       val invalid = Gen.stringBounded(1, 20)(
-        Gen.fromIterable(List('/', '!', '$', '%', '&', '(', ')', '=', '?', ' ', '+', '*', '#', '@', '€', '£', '§'))
+        Gen.fromIterable(List('/', '!', '$', '%', '&', '(', ')', '=', '?', ' ', '+', '*', '#', '@', '€', '£', '§')),
       )
       check(invalid)(s => assertTrue(AssetId.from(s).isLeft))
     },
@@ -34,6 +34,6 @@ object AssetIdSpec extends ZIOSpecDefault {
         _  <- Random.setSeed(1977)
         id <- AssetId.makeNew
       } yield assertTrue(id.value == uuid)
-    }
+    },
   )
 }

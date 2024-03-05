@@ -16,6 +16,6 @@ object Metrics {
       ZLayer.succeed(MetricsConfig(interval = 5.seconds)),
       prometheus.publisherLayer,
       prometheus.prometheusLayer,
-      DefaultJvmMetrics.live.unit.orDie
+      DefaultJvmMetrics.live.unit.orDie,
     )
 }

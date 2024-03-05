@@ -13,7 +13,7 @@ import swiss.dasch.domain.AugmentedPathSpec.ExpectedErrorMessages.{
   hiddenFile,
   noAssetIdInFilename,
   notAProjectFolder,
-  unsupportedFileType
+  unsupportedFileType,
 }
 import swiss.dasch.test.SpecConstants
 import zio.nio.file.Path
@@ -36,7 +36,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
       val actual = ProjectFolder.from(Path(s"/tmp/$someProjectId/"))
       assertTrue(
         actual.map(_.path).contains(Path(s"/tmp/$someProjectId/")),
-        actual.map(_.shortcode).contains(someProjectId)
+        actual.map(_.shortcode).contains(someProjectId),
       )
     },
     test("cannot be created from a Path which is hidden") {
@@ -44,7 +44,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
     },
     test("cannot be created from a Path which is not a project folder") {
       assertTrue(ProjectFolder.from(Path("/tmp/not-a-project-folder/")) == Left(notAProjectFolder))
-    }
+    },
   )
 
   private val jpxDerivativeFileSuite =
@@ -55,7 +55,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
           val actual = JpxDerivativeFile.from(Path(s"/tmp/$someAssetId.$extension"))
           assertTrue(
             actual.map(_.path).contains(Path(s"/tmp/$someAssetId.$extension")),
-            actual.map(_.assetId).contains(someAssetId)
+            actual.map(_.assetId).contains(someAssetId),
           )
         }
       },
@@ -73,7 +73,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
         check(hiddenFiles) { filename =>
           assertTrue(JpxDerivativeFile.from(Path(s"/tmp/$filename")) == Left(hiddenFile))
         }
-      }
+      },
     )
 
   private val movingImageDerivativeFileSuite = suite("MovingImageDerivativeFile")(
@@ -83,7 +83,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
         val actual = MovingImageDerivativeFile.from(Path(s"/tmp/$someAssetId.$extension"))
         assertTrue(
           actual.map(_.path).contains(Path(s"/tmp/$someAssetId.$extension")),
-          actual.map(_.assetId).contains(someAssetId)
+          actual.map(_.assetId).contains(someAssetId),
         )
       }
     },
@@ -101,7 +101,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
       check(hiddenFiles) { filename =>
         assertTrue(MovingImageDerivativeFile.from(Path(s"/tmp/$filename")) == Left(hiddenFile))
       }
-    }
+    },
   )
 
   private val origFileSuite = suite("OrigFile")(
@@ -110,7 +110,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
       val actual = OrigFile.from(path)
       assertTrue(
         actual.map(_.path).contains(path),
-        actual.map(_.assetId).contains(someAssetId)
+        actual.map(_.assetId).contains(someAssetId),
       )
     },
     test("cannot be created if filename is not a valid AssetId") {
@@ -127,7 +127,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
       check(hiddenFiles) { filename =>
         assertTrue(OrigFile.from(Path(s"/tmp/$filename")) == Left(hiddenFile))
       }
-    }
+    },
   )
 
   private val otherDerivativeFileSuite = suite("OtherDerivativeFile")(
@@ -137,7 +137,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
         val actual = OtherDerivativeFile.from(Path(s"/tmp/$someAssetId.$extension"))
         assertTrue(
           actual.map(_.path).contains(Path(s"/tmp/$someAssetId.$extension")),
-          actual.map(_.assetId).contains(someAssetId)
+          actual.map(_.assetId).contains(someAssetId),
         )
       }
     },
@@ -156,7 +156,7 @@ object AugmentedPathSpec extends ZIOSpecDefault {
       check(hiddenFiles) { filename =>
         assertTrue(OtherDerivativeFile.from(Path(s"/tmp/$filename")) == Left(hiddenFile))
       }
-    }
+    },
   )
 
   val spec: Spec[Any, Any] = suite("AugmentedPath")(
@@ -164,6 +164,6 @@ object AugmentedPathSpec extends ZIOSpecDefault {
     jpxDerivativeFileSuite,
     movingImageDerivativeFileSuite,
     origFileSuite,
-    otherDerivativeFileSuite
+    otherDerivativeFileSuite,
   )
 }

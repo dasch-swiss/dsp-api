@@ -37,7 +37,7 @@ object DocsGenerator extends ZIOAppDefault {
     Configuration.layer,
     MaintenanceEndpoints.layer,
     MonitoringEndpoints.layer,
-    ProjectsEndpoints.layer
+    ProjectsEndpoints.layer,
     //        ZLayer.Debug.mermaid ,
   )
 
@@ -47,8 +47,8 @@ object DocsGenerator extends ZIOAppDefault {
       .servers(
         List(
           Server(url = "http://localhost:3340", description = Some("Local development server")),
-          Server(url = "https://ingest.dev.dasch.swiss", description = Some("Production server"))
-        )
+          Server(url = "https://ingest.dev.dasch.swiss", description = Some("Production server")),
+        ),
       )
     for {
       _     <- ZIO.logInfo(s"Writing to $path")

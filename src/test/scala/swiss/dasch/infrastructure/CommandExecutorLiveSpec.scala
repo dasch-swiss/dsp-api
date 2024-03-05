@@ -30,9 +30,9 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
         cmd     <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](prodLayer)
         expected = "customCommand customParams"
       } yield assertTrue(cmd.cmd.mkString(" ") == expected)
-    }
+    },
   ).provide(
     SpecConfigurations.storageConfigLayer,
-    StorageServiceLive.layer
+    StorageServiceLive.layer,
   )
 }

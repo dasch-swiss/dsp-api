@@ -37,6 +37,6 @@ object FileSystemCheckLiveSpec extends ZIOSpecDefault {
       for {
         result <- FileSystemCheck.smokeTestOrDie().exit
       } yield assertTrue(result.isFailure)
-    }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemCheckLive.layer)
+    }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemCheckLive.layer),
   )
 }

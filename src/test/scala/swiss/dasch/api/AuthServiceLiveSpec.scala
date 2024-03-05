@@ -32,8 +32,8 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         result     <- AuthService.authenticate(token).exit
       } yield assertTrue(
         result == Exit.fail(
-          NonEmptyChunk(JwtProblem(s"The token is expired since ${expiration.truncatedTo(ChronoUnit.SECONDS)}"))
-        )
+          NonEmptyChunk(JwtProblem(s"The token is expired since ${expiration.truncatedTo(ChronoUnit.SECONDS)}")),
+        ),
       )
     },
     test("An invalid token should fail with JwtProblem") {
@@ -42,9 +42,9 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(
         result == Exit.fail(
           NonEmptyChunk(
-            JwtProblem("Expected token [invalid-token] to be composed of 2 or 3 parts separated by dots.")
-          )
-        )
+            JwtProblem("Expected token [invalid-token] to be composed of 2 or 3 parts separated by dots."),
+          ),
+        ),
       )
     },
     test("A token with invalid signature should fail with JwtProblem") {
@@ -52,7 +52,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         token  <- tokenWithInvalidSignature()
         result <- AuthService.authenticate(token).exit
       } yield assertTrue(
-        result == Exit.fail(NonEmptyChunk(JwtProblem("Invalid signature for this token or wrong algorithm.")))
+        result == Exit.fail(NonEmptyChunk(JwtProblem("Invalid signature for this token or wrong algorithm."))),
       )
     },
     test("A token with invalid audience should fail with JwtProblem") {
@@ -61,8 +61,8 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         result <- AuthService.authenticate(token).exit
       } yield assertTrue(
         result == Exit.fail(
-          NonEmptyChunk(InvalidAudience("Invalid audience: expected https://dsp-ingest.dev.dasch.swiss"))
-        )
+          NonEmptyChunk(InvalidAudience("Invalid audience: expected https://dsp-ingest.dev.dasch.swiss")),
+        ),
       )
     },
     test("A token with invalid issuer should fail with JwtProblem") {
@@ -70,7 +70,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         token  <- tokenWithInvalidIssuer()
         result <- AuthService.authenticate(token).exit
       } yield assertTrue(
-        result == Exit.fail(NonEmptyChunk(InvalidIssuer("Invalid issuer: expected https://admin.dev.dasch.swiss")))
+        result == Exit.fail(NonEmptyChunk(InvalidIssuer("Invalid issuer: expected https://admin.dev.dasch.swiss"))),
       )
     },
     test("A token without subject should fail with JwtProblem") {
@@ -78,9 +78,9 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
         token  <- tokenWithMissingSubject()
         result <- AuthService.authenticate(token).exit
       } yield assertTrue(
-        result == Exit.fail(NonEmptyChunk(SubjectMissing("Subject is missing.")))
+        result == Exit.fail(NonEmptyChunk(SubjectMissing("Subject is missing."))),
       )
-    }
+    },
   ).provide(jwtConfigLayer, AuthServiceLive.layer) @@ TestAspect.withLiveClock
 
 }

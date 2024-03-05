@@ -37,7 +37,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(
         actual.path == assetPath / "0001" / "fg" / "il",
         actual.shortcode == ref.belongsToProject,
-        actual.assetId == ref.id
+        actual.assetId == ref.id,
       )
     },
     test("should return asset path") {
@@ -74,7 +74,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
                   _.filename.toString == DateTimeFormatter
                     .ofPattern("yyyyMMdd_HHmmss")
                     .withZone(ZoneId.from(ZoneOffset.UTC))
-                    .format(now)
+                    .format(now),
                 )
           } yield assertTrue(exists, containsName, parentNameIsCorrect)
         }
@@ -84,11 +84,11 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
           testDirName <- Random.nextUUID.map(_.toString)
           tempDir <-
             ZIO.scoped(
-              StorageService.createTempDirectoryScoped(testDirName).tap(p => Files.createFile(p / "test.txt"))
+              StorageService.createTempDirectoryScoped(testDirName).tap(p => Files.createFile(p / "test.txt")),
             )
           isRemoved <- Files.notExists(tempDir)
         } yield assertTrue(isRemoved)
-      }
+      },
     ),
     suite("load and save json files")(
       test("should overwrite (i.e. create new) and load a json file") {
@@ -132,7 +132,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
             actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile).exit
           } yield assert(actual)(failsWithA[ParseException])
         }
-      }
-    )
+      },
+    ),
   ).provide(StorageServiceLive.layer, SpecConfigurations.storageConfigLayer)
 }

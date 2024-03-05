@@ -23,14 +23,14 @@ final case class IngestService(
   movingImageService: MovingImageService,
   otherFilesService: OtherFilesService,
   stillImageService: StillImageService,
-  storage: StorageService
+  storage: StorageService,
 ) {
 
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
     for {
       _ <- ZIO.logInfo(s"Ingesting file $fileToIngest")
       _ <- ZIO.unlessZIO(FileFilters.isSupported(fileToIngest))(
-             ZIO.fail(new IllegalArgumentException(s"File $fileToIngest is not a supported file."))
+             ZIO.fail(new IllegalArgumentException(s"File $fileToIngest is not a supported file.")),
            )
       ref      <- AssetRef.makeNew(project)
       assetDir <- ensureAssetDirectoryExists(ref)

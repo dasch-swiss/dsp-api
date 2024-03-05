@@ -12,7 +12,7 @@ import swiss.dasch.api.{
   MaintenanceEndpointsHandler,
   MonitoringEndpointsHandler,
   ProjectsEndpointsHandler,
-  ReportEndpointsHandler
+  ReportEndpointsHandler,
 }
 import swiss.dasch.version.BuildInfo
 import zio.{Task, ZLayer}
@@ -21,7 +21,7 @@ final case class Endpoints(
   private val monitoring: MonitoringEndpointsHandler,
   private val projects: ProjectsEndpointsHandler,
   private val maintenance: MaintenanceEndpointsHandler,
-  private val reports: ReportEndpointsHandler
+  private val reports: ReportEndpointsHandler,
 ) {
   val api = monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints ++ reports.endpoints
 

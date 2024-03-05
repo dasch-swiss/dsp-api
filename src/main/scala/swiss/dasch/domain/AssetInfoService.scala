@@ -33,7 +33,7 @@ final private case class AssetInfoFileContent(
   duration: Option[PositiveDouble] = None,
   fps: Option[PositiveDouble] = None,
   internalMimeType: Option[NonEmptyString] = None,
-  originalMimeType: Option[NonEmptyString] = None
+  originalMimeType: Option[NonEmptyString] = None,
 ) {
   def withDerivativeChecksum(checksum: Sha256Hash): AssetInfoFileContent = copy(checksumDerivative = checksum)
 }
@@ -53,7 +53,7 @@ private object AssetInfoFileContent {
       metadata.durationOpt,
       metadata.fpsOpt,
       metadata.internalMimeType.map(_.value),
-      metadata.originalMimeType.map(_.value)
+      metadata.originalMimeType.map(_.value),
     )
   }
 
@@ -69,7 +69,7 @@ final case class AssetInfo(
   original: FileAndChecksum,
   originalFilename: NonEmptyString,
   derivative: FileAndChecksum,
-  metadata: AssetMetadata
+  metadata: AssetMetadata,
 )
 
 trait AssetInfoService {
@@ -127,7 +127,7 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
   private def toAssetInfo(
     raw: AssetInfoFileContent,
     infoFileDirectory: Path,
-    asset: AssetRef
+    asset: AssetRef,
   ): AssetInfo = {
     val typ              = SupportedFileType.fromPath(Path(raw.originalFilename.value)).getOrElse(OtherFiles)
     val dim              = raw.width.flatMap(w => raw.height.flatMap(h => Dimensions.from(w, h).toOption))
@@ -147,7 +147,7 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
       original = FileAndChecksum(infoFileDirectory / raw.originalInternalFilename.toString, raw.checksumOriginal),
       originalFilename = raw.originalFilename,
       derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename.toString, raw.checksumDerivative),
-      metadata = metadata
+      metadata = metadata,
     )
   }
 

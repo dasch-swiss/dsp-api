@@ -20,7 +20,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) =
     for {
       app <- ZIO.serviceWith[MonitoringEndpointsHandler](handler =>
-               ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+               ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),
              )
       response <- app.runZIO(request).logError
     } yield response
@@ -34,7 +34,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         status    = response.status
       } yield assertTrue(
         status == Status.Ok,
-        bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json]
+        bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json],
       )
     },
     test("when unhealthy should return status DOWN") {
@@ -46,10 +46,10 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
       } yield {
         assertTrue(
           status == Status.ServiceUnavailable,
-          bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json]
+          bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json],
         )
       }
-    }
+    },
   )
   val infoEndpointSuite = suite("get /info")(
     test("should return 200") {
@@ -66,11 +66,11 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
             scalaVersion = BuildInfo.scalaVersion,
             sbtVersion = BuildInfo.sbtVersion,
             buildTime = BuildInfo.builtAtString,
-            gitCommit = BuildInfo.gitCommit
-          ).toJson
+            gitCommit = BuildInfo.gitCommit,
+          ).toJson,
         )
       }
-    }
+    },
   )
 
   val spec = suite("MonitoringEndpoints")(healthEndpointsSuite, infoEndpointSuite)
@@ -81,7 +81,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
       BaseEndpoints.layer,
       AuthServiceLive.layer,
       SpecConfigurations.jwtConfigLayer,
-      Metrics.layer
+      Metrics.layer,
     )
 }
 
