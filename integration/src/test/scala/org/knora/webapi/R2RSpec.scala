@@ -115,7 +115,10 @@ abstract class R2RSpec
     RdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
   protected def parseRdfXml(rdfXmlStr: String): RdfModel =
-    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
+    RdfFormatUtil.parseToRdfModel(rdfXmlStr, rdfFormat = RdfXml)
+
+  protected def parseRdfNquads(rdfContents: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfContents, rdfFormat = NQuads)
 
   private def adjustFilePath(file: Path): Path =
     Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()

@@ -79,6 +79,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
+  // Please inspect the test data with `git diff -I_:B` to check the actual difference sans blank notes.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   private val writeTestDataFiles = false
 
@@ -360,9 +361,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   // The media types that will be used in HTTP Accept headers in HTTP GET tests.
   private val mediaTypesForGetTests = Seq(
-    RdfMediaTypes.`application/ld+json`,
-    RdfMediaTypes.`text/turtle`,
-    RdfMediaTypes.`application/rdf+xml`,
+    RdfMediaTypes.`application/n-quads`,
   )
 
   private val fooIri                  = new MutableTestIri
@@ -422,7 +421,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                   val parsedResponse: RdfModel     = parseRdfXml(responseStr)
                   val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
                   if (parsedResponse != parsedExistingFile) httpGetTest.writeFile(responseStr, mediaType)
-                case _ => httpGetTest.writeFile(responseStr, mediaType)
+                case RdfMediaTypes.`application/n-quads` =>
+                  httpGetTest.writeFile(responseStr.split("\n").sorted.mkString("\n"), mediaType)
+                case _ =>
+                  httpGetTest.writeFile(responseStr, mediaType)
               }
             } else {
               // No. Compare the received response with the expected response.
@@ -436,6 +438,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                 case RdfMediaTypes.`application/rdf+xml` =>
                   assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
 
+                case RdfMediaTypes.`application/n-quads` =>
+                  assert(parseRdfNquads(responseStr) == parseRdfNquads(httpGetTest.readFile(mediaType)))
+
                 case _ => throw AssertionException(s"Unsupported media type for test: $mediaType")
               }
             }
@@ -447,6 +452,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           }
         }
       }
+      assert(!writeTestDataFiles)
     }
 
     "not allow the user to request the knora-base ontology" in {
