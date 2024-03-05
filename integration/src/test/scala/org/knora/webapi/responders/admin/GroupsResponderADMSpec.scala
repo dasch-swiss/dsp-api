@@ -8,10 +8,8 @@ package org.knora.webapi.responders.admin
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Group.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
@@ -19,7 +17,11 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -71,7 +73,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 ),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.impossible
+              selfjoin = GroupSelfJoin.disabled
             ),
             UUID.randomUUID
           )
@@ -101,7 +103,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.impossible
+              selfjoin = GroupSelfJoin.disabled
             ),
             UUID.randomUUID
           )
@@ -124,7 +126,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 )
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )
@@ -151,7 +153,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                   .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )
@@ -174,7 +176,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                   .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.impossible)
+              selfjoin = Some(GroupSelfJoin.disabled)
             ),
             UUID.randomUUID
           )
@@ -186,7 +188,17 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
 
       "return 'BadRequest' if nothing would be changed during the update" in {
-        an[BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
+        val exit = UnsafeZioRun.run(
+          GroupsResponderADM.updateGroup(
+            GroupIri.unsafeFrom(newGroupIri.get),
+            GroupUpdateRequest(None, None, None, None),
+            UUID.randomUUID
+          )
+        )
+        assertFailsWithA[BadRequestException](
+          exit,
+          "No data would be changed. Aborting update request."
+        )
       }
     }
 

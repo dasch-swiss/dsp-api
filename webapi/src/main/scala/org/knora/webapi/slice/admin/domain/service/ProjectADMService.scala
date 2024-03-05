@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.cache.CacheService
 
 final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,
@@ -96,10 +96,15 @@ final case class ProjectADMService(
       .map(_ :+ projectGraph)
   }
 
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
-    projectRepo.setProjectRestrictedView(project, settings)
+  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] = {
+    val newSettings = settings match {
+      case RestrictedView.Watermark(false) => RestrictedView.default
+      case s                               => s
+    }
+    projectRepo.setProjectRestrictedView(project, newSettings).as(newSettings)
+  }
 
-  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[Unit] =
+  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[RestrictedView] =
     setProjectRestrictedView(toKnoraProject(project), settings)
 }
 

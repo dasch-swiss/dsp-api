@@ -6,14 +6,9 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -23,52 +18,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to update
- * an existing group. There are two change cases that are covered with this
- * data structure:
- * (1) change of name, descriptions, and selfjoin
- * (2) change of status
- *
- * @param name          the new group's name.
- * @param descriptions  the new group's descriptions.
- * @param status        the new group's status.
- * @param selfjoin      the new group's self-join status.
- */
-case class ChangeGroupApiRequestADM(
-  name: Option[String] = None,
-  descriptions: Option[Seq[V2.StringLiteralV2]] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-) extends GroupsADMJsonProtocol {
-//  TODO-mpro: once status is separate route then it can be removed
-  private val parametersCount = List(
-    name,
-    descriptions,
-    status,
-    selfjoin
-  ).flatten.size
-
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-  /**
-   * check that only allowed information for the 2 cases is sent and not more.
-   */
-  // change status case
-  if (status.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for group status change.")
-  }
-
-  // change basic group information case
-  if (parametersCount > 3) throw BadRequestException("Too many parameters sent for basic group information change.")
-
-  def toJsValue: JsValue = changeGroupApiRequestADMFormat.write(this)
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -108,21 +57,6 @@ case class MultipleGroupsGetRequestADM(
  * @param requestingUser       the user initiating the request.
  */
 case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
-
-/**
- * Request changing the status (active/inactive) of an existing group.
- *
- * @param groupIri             the IRI of the group to be deleted.
- * @param changeGroupRequest   the data which needs to be update.
- * @param requestingUser       the user initiating the request.
- * @param apiRequestID         the ID of the API request.
- */
-case class GroupChangeStatusRequestADM(
-  groupIri: IRI,
-  changeGroupRequest: ChangeGroupApiRequestADM,
-  requestingUser: User,
-  apiRequestID: UUID
-) extends GroupsResponderRequestADM
 
 // Responses
 /**
@@ -184,6 +118,4 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
     jsonFormat(GroupsGetResponseADM, "groups")
   implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
-  implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] =
-    jsonFormat(ChangeGroupApiRequestADM, "name", "descriptions", "status", "selfjoin")
 }

@@ -12,7 +12,6 @@ import zio.macros.accessible
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.Group.GroupStatus
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -25,7 +24,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
@@ -40,9 +38,11 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
@@ -129,27 +129,23 @@ trait GroupsResponderADM {
   ): Task[GroupGetResponseADM]
 
   /**
-   * Change group's basic information.
+   * Delete a group by changing its status to 'false'.
    *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param changeGroupRequest the change request.
-   * @param requestingUser     the user making the request.
+   * @param iri                the IRI of the group to be deleted.
    * @param apiRequestID       the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
-  def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: User,
+  def deleteGroup(
+    iri: GroupIri,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM]
-
 }
 
 final case class GroupsResponderADMLive(
   triplestore: TriplestoreService,
   messageRelay: MessageRelay,
   iriService: IriService,
+  knoraUserService: KnoraUserService,
   implicit val stringFormatter: StringFormatter
 ) extends GroupsResponderADM
     with MessageHandler
@@ -166,14 +162,7 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
-    case r: GroupChangeStatusRequestADM =>
-      changeGroupStatusRequestADM(
-        r.groupIri,
-        r.changeGroupRequest,
-        r.requestingUser,
-        r.apiRequestID
-      )
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -218,14 +207,8 @@ final case class GroupsResponderADMLive(
   private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[ProjectADM] =
     for {
       id     <- IriIdentifier.fromString(iri).toZIO.mapError(e => BadRequestException(e.getMessage))
-      result <- findProjectByIdOrFail(id, failReason)
+      result <- messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id)).someOrFail(failReason)
     } yield result
-
-  private def findProjectByIdOrFail(id: ProjectIdentifierADM, failReason: Throwable): Task[ProjectADM] =
-    findProjectById(id).flatMap(ZIO.fromOption(_)).orElseFail(failReason)
-
-  private def findProjectById(id: ProjectIdentifierADM) =
-    messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id))
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
@@ -411,62 +394,15 @@ final case class GroupsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
 
-  /**
-   * Change group's basic information.
-   *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param changeGroupRequest the change request.
-   * @param requestingUser     the user making the request.
-   * @param apiRequestID       the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  override def changeGroupStatusRequestADM(
-    groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
-    requestingUser: User,
+  override def deleteGroup(
+    iri: GroupIri,
     apiRequestID: UUID
   ): Task[GroupGetResponseADM] = {
-
-    /**
-     * The actual change group task run with an IRI lock.
-     */
-    def changeGroupStatusTask(
-      groupIri: IRI,
-      changeGroupRequest: ChangeGroupApiRequestADM,
-      requestingUser: User
-    ): Task[GroupGetResponseADM] =
-      for {
-        /* Get the project IRI which also verifies that the group exists. */
-        groupADM <- groupGetADM(groupIri)
-                      .someOrFail(NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
-
-        /* check if the requesting user is allowed to perform updates */
-        _ <- ZIO
-               .fail(ForbiddenException("Group's status can only be changed by a project or system admin."))
-               .when {
-                 val userPermissions = requestingUser.permissions
-                 !userPermissions.isProjectAdmin(groupADM.project.id) &&
-                 !userPermissions.isSystemAdmin
-               }
-
-        maybeStatus = changeGroupRequest.status.map(GroupStatus.from)
-
-        /* create the update request */
-        groupUpdatePayload = GroupUpdateRequest(status = maybeStatus)
-
-        iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(BadRequestException(_))
-
-        // update group status
-        updateGroupResult <- updateGroupHelper(iri, groupUpdatePayload)
-
-        // remove all members from group if status is false
-        operationResponse <-
-          removeGroupMembersIfNecessary(changedGroup = updateGroupResult.group)
-
-      } yield operationResponse
-
-    val task = changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
-    IriLocker.runWithIriLock(apiRequestID, groupIri, task)
+    val task = for {
+      updated <- updateGroupHelper(iri, GroupUpdateRequest(None, None, Some(GroupStatus.inactive), None))
+      result  <- removeGroupMembersIfNecessary(updated.group)
+    } yield result
+    IriLocker.runWithIriLock(apiRequestID, iri.value, task)
   }
 
   /**
@@ -556,23 +492,21 @@ final case class GroupsResponderADMLive(
       for {
         members <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
         _ <- ZIO.foreachDiscard(members)(user =>
-               messageRelay.ask[UserResponseADM](UserGroupMembershipRemoveRequestADM(user, changedGroup))
+               knoraUserService.removeUserFromGroup(user, changedGroup).mapError(BadRequestException.apply)
              )
       } yield GroupGetResponseADM(group = changedGroup)
     }
 }
 
 object GroupsResponderADMLive {
-  val layer: URLayer[
-    MessageRelay & StringFormatter & IriService & TriplestoreService,
-    GroupsResponderADM
-  ] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       ts      <- ZIO.service[TriplestoreService]
       iris    <- ZIO.service[IriService]
       sf      <- ZIO.service[StringFormatter]
+      kus     <- ZIO.service[KnoraUserService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, sf))
+      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, sf))
     } yield handler
   }
 }

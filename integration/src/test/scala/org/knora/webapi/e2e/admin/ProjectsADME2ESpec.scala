@@ -787,7 +787,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           )
         val response = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        assert(responseToString(response) === """{"size":"pct:1","watermark":false}""")
+        assert(responseToString(response) === """{"size":"pct:1"}""")
       }
 
       "return the `BadRequest` if the size value is invalid" in {
@@ -822,12 +822,11 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
     }
 
     "used to set RestrictedViewSize by project Shortcode" should {
-      "return requested value to be set with 200 Response Status" in {
+      "when setting watermark to false return default size with 200 Response Status" in {
         val shortcode = SharedTestDataADM.imagesProject.shortcode
         val payload = """
                         |{
-                        |   "size":"!512,512",
-                        |   "watermark":true
+                        |   "watermark": false
                         |}""".stripMargin
         val request =
           Post(
@@ -838,7 +837,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        assert(responseToString(response) === """{"size":"!512,512","watermark":true}""")
+        assert(responseToString(response) === """{"size":"!128,128"}""")
       }
 
       "return the `BadRequest` if the size value is invalid" in {

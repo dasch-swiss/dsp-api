@@ -35,9 +35,16 @@ object Vocabulary {
     val isInGroup: Iri             = Rdf.iri(KnoraAdminPrefixExpansion, "isInGroup")
     val isInSystemAdminGroup: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "isInSystemAdminGroup")
     val isInProjectAdminGroup: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "isInProjectAdminGroup")
+    val hasSelfJoinEnabled: Iri    = Rdf.iri(KnoraAdminPrefixExpansion, "hasSelfJoinEnabled")
 
     // user group properties
-    val belongsToProject: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
+    val belongsToProject: Iri  = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToProject")
+    val groupName: Iri         = Rdf.iri(KnoraAdminPrefixExpansion, "groupName")
+    val groupDescriptions: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "groupDescriptions")
+
+    // project properties
+    val projectRestrictedViewSize: Iri      = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewSize")
+    val projectRestrictedViewWatermark: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewWatermark")
   }
 
   object KnoraBase {

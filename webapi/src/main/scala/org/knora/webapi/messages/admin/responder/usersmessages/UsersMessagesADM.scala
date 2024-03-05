@@ -33,19 +33,8 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessag
  * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UserGetByIriADM(
-  identifier: UserIri,
-  userInformationTypeADM: UserInformationType = UserInformationType.Short,
-  requestingUser: User
-) extends UsersResponderRequestADM
-
-/**
- * Requests removing the user from a group.
- *
- * @param user  the user to be updated.
- * @param group the group.
- */
-case class UserGroupMembershipRemoveRequestADM(user: User, group: GroupADM) extends UsersResponderRequestADM
+case class UserGetByIriADM(identifier: UserIri, userInformationTypeADM: UserInformationType, requestingUser: User)
+    extends UsersResponderRequestADM
 
 // Responses
 
