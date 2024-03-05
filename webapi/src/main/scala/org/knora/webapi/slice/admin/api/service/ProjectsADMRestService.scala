@@ -34,7 +34,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 @accessible
 trait ProjectADMRestService {
 
-  def listAllProjects(): Task[ProjectsGetResponseADM]
+  def listAllProjects(): Task[ProjectsGetResponse]
 
   def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse]
 
@@ -88,14 +88,14 @@ final case class ProjectsADMRestServiceLive(
 ) extends ProjectADMRestService {
 
   /**
-   * Returns all projects as a [[ProjectsGetResponseADM]].
+   * Returns all projects as a [[ProjectsGetResponse]].
    *
    * @return
-   *     '''success''': information about the projects as a [[ProjectsGetResponseADM]]
+   *     '''success''': information about the projects as a [[ProjectsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllProjects(): Task[ProjectsGetResponseADM] = for {
+  def listAllProjects(): Task[ProjectsGetResponse] = for {
     internal <- responder.getNonSystemProjects
     external <- format.toExternal(internal)
   } yield external
