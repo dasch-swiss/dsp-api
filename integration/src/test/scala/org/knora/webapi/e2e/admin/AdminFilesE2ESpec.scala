@@ -47,10 +47,12 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
-        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError("JSON decoding failed"))
 
-      assert(result == Right(PermissionCodeAndProjectRestrictedViewSettings(8, None)))
+      assert(result == PermissionCodeAndProjectRestrictedViewSettings(8, None))
     }
 
     "return RV (1) permission code" in {
@@ -62,13 +64,13 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
-        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError("JSON decoding failed"))
 
       assert(
-        result == Right(
-          PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
-        ),
+        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
       )
     }
 
@@ -89,13 +91,13 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val result: Either[String, PermissionCodeAndProjectRestrictedViewSettings] =
-        PermissionCodeAndProjectRestrictedViewSettings.codec.decoder.decodeJson(responseToString(response))
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError("JSON decoding failed"))
 
       assert(
-        result == Right(
-          PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
-        ),
+        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
       )
     }
   }
