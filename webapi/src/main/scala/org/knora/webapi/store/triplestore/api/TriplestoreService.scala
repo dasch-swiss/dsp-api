@@ -80,7 +80,7 @@ trait TriplestoreService {
     sparql: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
+    outputFormat: QuadFormat,
   ): Task[Unit]
 
   /**
@@ -101,7 +101,7 @@ trait TriplestoreService {
    */
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean = true
+    prependDefaults: Boolean = true,
   ): Task[Unit]
 
   /**
@@ -119,7 +119,7 @@ trait TriplestoreService {
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean
+    prependDefaults: Boolean,
   ): Task[Unit]
 
   /**

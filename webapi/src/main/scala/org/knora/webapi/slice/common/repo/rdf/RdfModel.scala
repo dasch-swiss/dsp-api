@@ -139,7 +139,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if the conversion fails.
    */
   def getStringLiterals[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: String => Either[String, A]): IO[RdfError, Chunk[A]] =
     for {
       literals      <- getLiterals(propertyIri)
@@ -158,7 +158,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if no literals are present or if the conversion fails.
    */
   def getStringLiteralsOrFail[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: String => Either[String, A]): IO[RdfError, NonEmptyChunk[A]] =
     for {
       chunk         <- getStringLiterals(propertyIri)
@@ -178,7 +178,7 @@ final case class RdfResource(private val res: Resource) {
    *                    an [[RdfError]] if the property does not contain a lang string literal or if the conversion fails.
    */
   def getLangStringLiteral[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, Option[A]] =
     for {
       literal      <- getLiteral(propertyIri).unsome
@@ -198,7 +198,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain object or an [[RdfError]] if the literal is not present or if the conversion fails.
    */
   def getLangStringLiteralOrFail[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, A] =
     getLangStringLiteral(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
 
@@ -214,7 +214,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if the conversion fails.
    */
   def getLangStringLiterals[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, Chunk[A]] =
     for {
       literals      <- getLiterals(propertyIri)
@@ -234,7 +234,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if no literals are present or if the conversion fails.
    */
   def getLangStringLiteralsOrFail[A](
-    propertyIri: String
+    propertyIri: String,
   )(implicit mapper: LangString => Either[String, A]): IO[RdfError, NonEmptyChunk[A]] =
     for {
       chunk         <- getLangStringLiterals(propertyIri)
@@ -253,7 +253,7 @@ final case class RdfResource(private val res: Resource) {
    *                    an [[RdfError]] if the property does not contain a string literal or if the conversion fails.
    */
   def getBooleanLiteral[A](propertyIri: String)(implicit
-    mapper: Boolean => Either[String, A]
+    mapper: Boolean => Either[String, A],
   ): IO[RdfError, Option[A]] =
     for {
       literal      <- getLiteral(propertyIri).unsome
@@ -272,7 +272,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain object or an [[RdfError]] if the literal is not present or if the conversion fails.
    */
   def getBooleanLiteralOrFail[A](propertyIri: String)(implicit
-    mapper: Boolean => Either[String, A]
+    mapper: Boolean => Either[String, A],
   ): IO[RdfError, A] =
     getBooleanLiteral(propertyIri).someOrFail(LiteralNotPresent(propertyIri))
 
@@ -287,7 +287,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if the conversion fails.
    */
   def getBooleanLiterals[A](propertyIri: String)(implicit
-    mapper: Boolean => Either[String, A]
+    mapper: Boolean => Either[String, A],
   ): IO[RdfError, Chunk[A]] =
     for {
       literals      <- getLiterals(propertyIri)
@@ -306,7 +306,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the domain objects or an [[RdfError]] if no literals are present or if the conversion fails.
    */
   def getBooleanLiteralsOrFail[A](propertyIri: String)(implicit
-    mapper: Boolean => Either[String, A]
+    mapper: Boolean => Either[String, A],
   ): IO[RdfError, NonEmptyChunk[A]] =
     for {
       chunk         <- getBooleanLiterals(propertyIri)

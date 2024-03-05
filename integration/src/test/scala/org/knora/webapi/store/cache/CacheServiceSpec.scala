@@ -24,7 +24,7 @@ object CacheServiceSpec extends ZIOSpecDefault {
     givenName = """M\\"Given 'Name""",
     familyName = """M\\tFamily Name""",
     status = true,
-    lang = "en"
+    lang = "en",
   )
 
   val project: ProjectADM = SharedTestDataADM.imagesProject
@@ -42,19 +42,19 @@ object CacheServiceSpec extends ZIOSpecDefault {
       for {
         _             <- cacheService(_.putUser(user))
         retrievedUser <- cacheService(_.getUserByUsername(Username.unsafeFrom(user.username)))
-      } yield assertTrue(retrievedUser.contains(user))
+      } yield assertTrue(retrievedUser.contains(user)),
     ),
     test("successfully store a user and retrieve by Email")(
       for {
         _             <- cacheService(_.putUser(user))
         retrievedUser <- cacheService(_.getUserByEmail(Email.unsafeFrom(user.email)))
-      } yield assertTrue(retrievedUser.contains(user))
+      } yield assertTrue(retrievedUser.contains(user)),
     ),
     test("successfully store and retrieve a user with special characters in their name")(
       for {
         _             <- cacheService(_.putUser(userWithApostrophe))
         retrievedUser <- cacheService(_.getUserByIri(userWithApostrophe.userIri))
-      } yield assertTrue(retrievedUser.contains(userWithApostrophe))
+      } yield assertTrue(retrievedUser.contains(userWithApostrophe)),
     ),
     test("given when successfully stored and invalidated a user then the cache should not contain the user")(
       for {
@@ -63,8 +63,8 @@ object CacheServiceSpec extends ZIOSpecDefault {
         userByIri      <- cacheService(_.getUserByIri(userWithApostrophe.userIri))
         userByEmail    <- cacheService(_.getUserByEmail(Email.unsafeFrom(userWithApostrophe.email)))
         userByUsername <- cacheService(_.getUserByUsername(Username.unsafeFrom(userWithApostrophe.username)))
-      } yield assertTrue(userByIri.isEmpty, userByEmail.isEmpty, userByUsername.isEmpty)
-    )
+      } yield assertTrue(userByIri.isEmpty, userByEmail.isEmpty, userByUsername.isEmpty),
+    ),
   )
 
   private val projectTests = suite("ProjectADM")(
@@ -72,20 +72,20 @@ object CacheServiceSpec extends ZIOSpecDefault {
       for {
         _                <- cacheService(_.putProjectADM(project))
         retrievedProject <- cacheService(_.getProjectADM(IriIdentifier.from(project.projectIri)))
-      } yield assertTrue(retrievedProject.contains(project))
+      } yield assertTrue(retrievedProject.contains(project)),
     ),
     test("successfully store a project and retrieve by SHORTCODE")(
       for {
         _                <- cacheService(_.putProjectADM(project))
         retrievedProject <- cacheService(_.getProjectADM(ShortcodeIdentifier.from(project.getShortcode)))
-      } yield assertTrue(retrievedProject.contains(project))
+      } yield assertTrue(retrievedProject.contains(project)),
     ),
     test("successfully store a project and retrieve by SHORTNAME")(
       for {
         _                <- cacheService(_.putProjectADM(project))
         retrievedProject <- cacheService(_.getProjectADM(ShortnameIdentifier.from(project.getShortname)))
-      } yield assertTrue(retrievedProject.contains(project))
-    )
+      } yield assertTrue(retrievedProject.contains(project)),
+    ),
   )
 
   private val clearCacheSuite = suite("clearCache")(
@@ -106,9 +106,9 @@ object CacheServiceSpec extends ZIOSpecDefault {
         userByEmail.isEmpty,
         projectByIri.isEmpty,
         projectByShortcode.isEmpty,
-        projectByShortname.isEmpty
-      )
-    )
+        projectByShortname.isEmpty,
+      ),
+    ),
   )
 
   def spec: Spec[Any, Throwable] =

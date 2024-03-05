@@ -55,6 +55,6 @@ case class VariableResultsRow(rowMap: Map[String, String]) {
     rowMap.forall { case (key, value) =>
       key.nonEmpty && value.nonEmpty
     },
-    "An empty string is not allowed as a variable name or value in a VariableResultsRow"
+    "An empty string is not allowed as a variable name or value in a VariableResultsRow",
   )
 }

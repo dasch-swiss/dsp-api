@@ -35,7 +35,7 @@ import pekko.event.LogSource
  */
 final case class InferringGravsearchTypeInspector(
   private val messageRelay: MessageRelay,
-  private val queryTraverser: QueryTraverser
+  private val queryTraverser: QueryTraverser,
 ) extends LazyLogging {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -65,7 +65,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult
 
     /**
@@ -81,7 +81,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult =
       // Is there another rule in the pipeline?
       nextRule match {
@@ -91,7 +91,7 @@ final case class InferringGravsearchTypeInspector(
             entityToType = entityToType,
             intermediateResult = intermediateResult,
             entityInfo = entityInfo,
-            usageIndex = usageIndex
+            usageIndex = usageIndex,
           )
 
         case None =>
@@ -109,7 +109,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
 
       // Has this entity been used as a subject?
@@ -178,7 +178,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -192,7 +192,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
 
       // Is this entity an IRI?
@@ -229,7 +229,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -244,12 +244,12 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
       // for standoff links it is necessary to refine the determined types first. TODO: why in this rule and not in all rules?
       val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
         intermediateResult = intermediateResult,
-        entityInfo = entityInfo
+        entityInfo = entityInfo,
       )
 
       /**
@@ -302,10 +302,10 @@ final case class InferringGravsearchTypeInspector(
           // predicates are variables.
 
           val typesInferredFromPropertyIris: Set[GravsearchEntityTypeInfo] = inferFromStatements(
-            statementsWithPropertyIris
+            statementsWithPropertyIris,
           )
           val typesInferredFromVariablesAsPredicates: Set[GravsearchEntityTypeInfo] = inferFromStatements(
-            statementsWithVariablesAsPredicates
+            statementsWithVariablesAsPredicates,
           )
 
           // If any types were inferred from statements whose predicates are IRIs, update the
@@ -315,7 +315,7 @@ final case class InferringGravsearchTypeInspector(
             updatedIntermediateResult.addTypes(
               entityToType,
               typesInferredFromPropertyIris,
-              inferredFromPropertyIri = true
+              inferredFromPropertyIri = true,
             )
           } else {
             updatedIntermediateResult
@@ -324,14 +324,14 @@ final case class InferringGravsearchTypeInspector(
           val intermediateResultWithTypesInferredFromVariablesAsPredicates =
             intermediateResultWithTypesInferredFromPropertyIris.addTypes(
               entityToType,
-              typesInferredFromVariablesAsPredicates
+              typesInferredFromVariablesAsPredicates,
             )
 
           runNextRule(
             entityToType = entityToType,
             intermediateResult = intermediateResultWithTypesInferredFromVariablesAsPredicates,
             entityInfo = entityInfo,
-            usageIndex = usageIndex
+            usageIndex = usageIndex,
           )
 
         case None =>
@@ -340,7 +340,7 @@ final case class InferringGravsearchTypeInspector(
             entityToType = entityToType,
             intermediateResult = updatedIntermediateResult,
             entityInfo = entityInfo,
-            usageIndex = usageIndex
+            usageIndex = usageIndex,
           )
       }
     }
@@ -356,7 +356,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
 
       // Has this entity been used as the subject of one or more statements?
@@ -398,7 +398,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes, inferredFromPropertyIri = true),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -412,12 +412,12 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
       // for standoff links it is necessary to refine the types first. TODO: why in this rule and not in all rules?
       val updatedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
         intermediateResult = intermediateResult,
-        entityInfo = entityInfo
+        entityInfo = entityInfo,
       )
 
       // Has this entity been used as a predicate?
@@ -486,7 +486,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = updatedIntermediateResult.addTypes(entityToType, inferredTypes),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -501,7 +501,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
       // Do we have one or more types for this entity from a FILTER?
       val typesFromFilters: Set[GravsearchEntityTypeInfo] = usageIndex.typedEntitiesInFilters.get(entityToType) match {
@@ -515,7 +515,7 @@ final case class InferringGravsearchTypeInspector(
               typeFromFilter,
               isResourceType = isResourceType,
               isValueType = isValueType,
-              isStandoffTagType = isStandoffTagType
+              isStandoffTagType = isStandoffTagType,
             )
             logger.debug("InferTypeOfEntityFromKnownTypeInFilter: {} {} .", entityToType, inferredType)
             inferredType
@@ -530,7 +530,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, typesFromFilters),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -544,7 +544,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
 
       val typesFromComparisons: Set[GravsearchEntityTypeInfo] = entityToType match {
@@ -592,7 +592,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, typesFromComparisons),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -606,7 +606,7 @@ final case class InferringGravsearchTypeInspector(
       entityToType: TypeableEntity,
       intermediateResult: IntermediateTypeInspectionResult,
       entityInfo: EntityInfoGetResponseV2,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): IntermediateTypeInspectionResult = {
       // Has this entity been compared with one or more other entities in a FILTER?
       val typesFromComparisons: Set[GravsearchEntityTypeInfo] =
@@ -619,7 +619,7 @@ final case class InferringGravsearchTypeInspector(
               logger.debug(
                 "InferTypeOfEntityFromComparisonWithOtherEntityInFilter: {} {} .",
                 entityToType,
-                inferredTypes
+                inferredTypes,
               )
             }
 
@@ -634,7 +634,7 @@ final case class InferringGravsearchTypeInspector(
         entityToType = entityToType,
         intermediateResult = intermediateResult.addTypes(entityToType, typesFromComparisons),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -676,14 +676,14 @@ final case class InferringGravsearchTypeInspector(
     def readPropertyInfoToSubjectType(
       readPropertyInfo: ReadPropertyInfoV2,
       entityInfo: EntityInfoGetResponseV2,
-      querySchema: ApiV2Schema
+      querySchema: ApiV2Schema,
     ): Option[PropertyTypeInfo] =
       // Get the knora-api:subjectType that the ontology responder provided.
       readPropertyInfo.entityInfoContent
         .getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri)
         .orElse(
           readPropertyInfo.entityInfoContent
-            .getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri)
+            .getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri),
         ) match {
         case Some(subjectType: SmartIri) =>
           val subjectTypeStr = subjectType.toString
@@ -717,7 +717,7 @@ final case class InferringGravsearchTypeInspector(
             } else {
               // It's not valid in a type inspection result. This must mean it's not allowed in Gravsearch queries.
               throw GravsearchException(
-                s"Type not allowed in Gravsearch queries: ${readPropertyInfo.entityInfoContent.propertyIri} knora-api:subjectType $subjectType"
+                s"Type not allowed in Gravsearch queries: ${readPropertyInfo.entityInfoContent.propertyIri} knora-api:subjectType $subjectType",
               )
             }
           }
@@ -740,7 +740,7 @@ final case class InferringGravsearchTypeInspector(
     def readPropertyInfoToObjectType(
       readPropertyInfo: ReadPropertyInfoV2,
       entityInfo: EntityInfoGetResponseV2,
-      querySchema: ApiV2Schema
+      querySchema: ApiV2Schema,
     ): Option[PropertyTypeInfo] =
       // Is this a file value property?
       if (readPropertyInfo.isFileValueProp) {
@@ -752,7 +752,7 @@ final case class InferringGravsearchTypeInspector(
           .getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri)
           .orElse(
             readPropertyInfo.entityInfoContent
-              .getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri)
+              .getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri),
           ) match {
           case Some(objectType: SmartIri) =>
             val objectTypeStr = objectType.toString
@@ -780,7 +780,7 @@ final case class InferringGravsearchTypeInspector(
               } else {
                 // No. This must mean it's not allowed in Gravsearch queries.
                 throw GravsearchException(
-                  s"Type not allowed in Gravsearch queries: ${readPropertyInfo.entityInfoContent.propertyIri} knora-api:objectType $objectType"
+                  s"Type not allowed in Gravsearch queries: ${readPropertyInfo.entityInfoContent.propertyIri} knora-api:objectType $objectType",
                 )
               }
             }
@@ -803,21 +803,21 @@ final case class InferringGravsearchTypeInspector(
               new InferTypeOfEntityFromKnownTypeInFilter(
                 Some(
                   new InferTypeOfVariableFromComparisonWithPropertyIriInFilter(
-                    Some(new InferTypeOfObjectFromPredicate(Some(new InferTypeOfPredicateFromObject(None))))
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
+                    Some(new InferTypeOfObjectFromPredicate(Some(new InferTypeOfPredicateFromObject(None)))),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   )
 
   // The inference rule pipeline for subsequent iterations. Excludes rules that cannot return additional
   // information if they are run more than once.
   private val subsequentIterationRulePipeline = new InferTypeOfObjectFromPredicate(
-    Some(new InferTypeOfPredicateFromObject(Some(new InferTypeOfEntityFromComparisonWithOtherEntityInFilter(None))))
+    Some(new InferTypeOfPredicateFromObject(Some(new InferTypeOfEntityFromComparisonWithOtherEntityInFilter(None)))),
   )
 
   /**
@@ -842,7 +842,7 @@ final case class InferringGravsearchTypeInspector(
     knoraPropertyVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty,
     typedEntitiesInFilters: Map[TypeableEntity, Set[SmartIri]] = Map.empty,
     entitiesComparedInFilters: Map[TypeableEntity, Set[TypeableEntity]] = Map.empty,
-    querySchema: ApiV2Schema
+    querySchema: ApiV2Schema,
   )
 
   /**
@@ -856,7 +856,7 @@ final case class InferringGravsearchTypeInspector(
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
     whereClause: WhereClause,
-    requestingUser: User
+    requestingUser: User,
   ): Task[IntermediateTypeInspectionResult] = {
     logger.debug("========== Starting type inference ==========")
 
@@ -871,7 +871,7 @@ final case class InferringGravsearchTypeInspector(
                              iterationNumber = 1,
                              intermediateResult = previousResult,
                              entityInfo = allEntityInfo,
-                             usageIndex = usageIndex
+                             usageIndex = usageIndex,
                            )
 
       // refine the determined types before sending to the next inspector
@@ -881,7 +881,7 @@ final case class InferringGravsearchTypeInspector(
       sanitizedResults = sanitizeInconsistentResourceTypes(
                            refinedIntermediateResult,
                            usageIndex.querySchema,
-                           entityInfo = allEntityInfo
+                           entityInfo = allEntityInfo,
                          )
     } yield sanitizedResults
   }
@@ -895,7 +895,7 @@ final case class InferringGravsearchTypeInspector(
    */
   def getUsageIndexAndEntityInfos(
     whereClause: WhereClause,
-    requestingUser: User
+    requestingUser: User,
   ): Task[(UsageIndex, EntityInfoGetResponseV2)] =
     for {
       // Make an index of entity usage in the query.
@@ -906,7 +906,7 @@ final case class InferringGravsearchTypeInspector(
       initialEntityInfoRequest = EntityInfoGetRequestV2(
                                    classIris = usageIndex.knoraClassIris,
                                    propertyIris = usageIndex.knoraPropertyIris,
-                                   requestingUser = requestingUser
+                                   requestingUser = requestingUser,
                                  )
 
       initialEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](initialEntityInfoRequest)
@@ -915,14 +915,14 @@ final case class InferringGravsearchTypeInspector(
       // definition back to the input schema.
       initialEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
                                                                    usageIndex = usageIndex,
-                                                                   entityInfo = initialEntityInfo
+                                                                   entityInfo = initialEntityInfo,
                                                                  )
 
       // Ask the ontology responder about all the Knora classes mentioned as subject or object types of the
       // properties returned.
 
       subjectAndObjectTypes: Set[SmartIri] = initialEntityInfoInInputSchemas.propertyInfoMap.foldLeft(
-                                               Set.empty[SmartIri]
+                                               Set.empty[SmartIri],
                                              ) { case (acc, (propertyIri, propertyDef)) =>
                                                val propertyIriSchema = propertyIri.getOntologySchema match {
                                                  case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
@@ -934,7 +934,7 @@ final case class InferringGravsearchTypeInspector(
                                                  propertyDef.entityInfoContent.getPredicateIriObject(
                                                    OntologyConstants.KnoraApi
                                                      .getSubjectTypePredicate(propertyIriSchema)
-                                                     .toSmartIri
+                                                     .toSmartIri,
                                                  ) match {
                                                    case Some(subjectType) if subjectType.isKnoraEntityIri =>
                                                      Some(subjectType)
@@ -945,7 +945,7 @@ final case class InferringGravsearchTypeInspector(
                                                  propertyDef.entityInfoContent.getPredicateIriObject(
                                                    OntologyConstants.KnoraApi
                                                      .getObjectTypePredicate(propertyIriSchema)
-                                                     .toSmartIri
+                                                     .toSmartIri,
                                                  ) match {
                                                    case Some(objectType) if objectType.isKnoraEntityIri =>
                                                      Some(objectType)
@@ -957,26 +957,26 @@ final case class InferringGravsearchTypeInspector(
 
       additionalEntityInfoRequest = EntityInfoGetRequestV2(
                                       classIris = subjectAndObjectTypes,
-                                      requestingUser = requestingUser
+                                      requestingUser = requestingUser,
                                     )
 
       additionalEntityInfo <- messageRelay.ask[EntityInfoGetResponseV2](additionalEntityInfoRequest)
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(
-                                          knoraClassIris = usageIndex.knoraClassIris ++ subjectAndObjectTypes
+                                          knoraClassIris = usageIndex.knoraClassIris ++ subjectAndObjectTypes,
                                         )
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
       additionalEntityInfoInInputSchemas = convertEntityInfoResponseToInputSchemas(
                                              usageIndex = usageIndexWithAdditionalClasses,
-                                             entityInfo = additionalEntityInfo
+                                             entityInfo = additionalEntityInfo,
                                            )
 
       // Combine all the entity info into one object.
       allEntityInfo = initialEntityInfoInInputSchemas.copy(classInfoMap =
-                        initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
+                        initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap,
                       )
 
     } yield (usageIndexWithAdditionalClasses, allEntityInfo)
@@ -992,7 +992,7 @@ final case class InferringGravsearchTypeInspector(
    */
   private def convertEntityInfoResponseToInputSchemas(
     usageIndex: UsageIndex,
-    entityInfo: EntityInfoGetResponseV2
+    entityInfo: EntityInfoGetResponseV2,
   ): EntityInfoGetResponseV2 = {
 
     /**
@@ -1006,7 +1006,7 @@ final case class InferringGravsearchTypeInspector(
      */
     def toInputSchema[C <: KnoraReadV2[C]](
       inputEntityIris: Set[SmartIri],
-      entityMap: Map[SmartIri, C]
+      entityMap: Map[SmartIri, C],
     ): Map[SmartIri, C] =
       inputEntityIris.flatMap { inputEntityIri =>
         val inputSchema = inputEntityIri.getOntologySchema.get match {
@@ -1025,7 +1025,7 @@ final case class InferringGravsearchTypeInspector(
 
     EntityInfoGetResponseV2(
       classInfoMap = toInputSchema(usageIndex.knoraClassIris, entityInfo.classInfoMap),
-      propertyInfoMap = toInputSchema(usageIndex.knoraPropertyIris, entityInfo.propertyInfoMap)
+      propertyInfoMap = toInputSchema(usageIndex.knoraPropertyIris, entityInfo.propertyInfoMap),
     )
   }
 
@@ -1051,7 +1051,7 @@ final case class InferringGravsearchTypeInspector(
   def sanitizeInconsistentResourceTypes(
     lastResults: IntermediateTypeInspectionResult,
     querySchema: ApiV2Schema,
-    entityInfo: EntityInfoGetResponseV2
+    entityInfo: EntityInfoGetResponseV2,
   ): IntermediateTypeInspectionResult = {
 
     /**
@@ -1063,7 +1063,7 @@ final case class InferringGravsearchTypeInspector(
      */
     def findCommonBaseClass(
       typesToBeChecked: Set[GravsearchEntityTypeInfo],
-      defaultBaseClassIri: SmartIri
+      defaultBaseClassIri: SmartIri,
     ): SmartIri = {
       val baseClassesOfFirstType: Seq[SmartIri] =
         entityInfo.classInfoMap.get(iriOfGravsearchTypeInfo(typesToBeChecked.head)) match {
@@ -1101,7 +1101,7 @@ final case class InferringGravsearchTypeInspector(
       acc: IntermediateTypeInspectionResult,
       typedEntity: TypeableEntity,
       typesToBeChecked: Set[GravsearchEntityTypeInfo],
-      newType: GravsearchEntityTypeInfo
+      newType: GravsearchEntityTypeInfo,
     ): IntermediateTypeInspectionResult = {
       val withoutInconsistentTypes: IntermediateTypeInspectionResult = typesToBeChecked.foldLeft(acc) {
         (sanitizeResults: IntermediateTypeInspectionResult, currType: GravsearchEntityTypeInfo) =>
@@ -1135,7 +1135,7 @@ final case class InferringGravsearchTypeInspector(
           acc = acc,
           typedEntity = typedEntity,
           typesToBeChecked = typesToBeChecked,
-          newType = newResourceType
+          newType = newResourceType,
         )
       } else if (
         typesToBeChecked.forall {
@@ -1152,7 +1152,7 @@ final case class InferringGravsearchTypeInspector(
           acc = acc,
           typedEntity = typedEntity,
           typesToBeChecked = typesToBeChecked,
-          newType = newStandoffTagType
+          newType = newStandoffTagType,
         )
       } else if (
         typesToBeChecked.forall {
@@ -1169,7 +1169,7 @@ final case class InferringGravsearchTypeInspector(
           acc = acc,
           typedEntity = typedEntity,
           typesToBeChecked = typesToBeChecked,
-          newType = newObjectType
+          newType = newObjectType,
         )
 
       } else if (
@@ -1187,7 +1187,7 @@ final case class InferringGravsearchTypeInspector(
           acc = acc,
           typedEntity = typedEntity,
           typesToBeChecked = typesToBeChecked,
-          newType = newObjectType
+          newType = newObjectType,
         )
       } else {
         // None of the above. Don't touch the determined inconsistent types, later an error is returned for this.
@@ -1204,7 +1204,7 @@ final case class InferringGravsearchTypeInspector(
    */
   def refineDeterminedTypes(
     intermediateResult: IntermediateTypeInspectionResult,
-    entityInfo: EntityInfoGetResponseV2
+    entityInfo: EntityInfoGetResponseV2,
   ): IntermediateTypeInspectionResult = {
 
     /**
@@ -1218,7 +1218,7 @@ final case class InferringGravsearchTypeInspector(
           case Some(classDef: ReadClassInfoV2) =>
             classDef.allBaseClasses.contains(currTypeIri)
           case _ => false
-        }
+        },
       )
     }
 
@@ -1251,7 +1251,7 @@ final case class InferringGravsearchTypeInspector(
     iterationNumber: Int,
     intermediateResult: IntermediateTypeInspectionResult,
     entityInfo: EntityInfoGetResponseV2,
-    usageIndex: UsageIndex
+    usageIndex: UsageIndex,
   ): IntermediateTypeInspectionResult = {
     if (iterationNumber > MAX_ITERATIONS) {
       throw GravsearchException(s"Too many type inference iterations")
@@ -1260,7 +1260,7 @@ final case class InferringGravsearchTypeInspector(
     // Run an iteration of type inference and get its result.
 
     logger.debug(
-      s"****** Inference iteration $iterationNumber (untyped ${intermediateResult.untypedEntities.size}, inconsistent ${intermediateResult.entitiesWithInconsistentTypes.size})"
+      s"****** Inference iteration $iterationNumber (untyped ${intermediateResult.untypedEntities.size}, inconsistent ${intermediateResult.entitiesWithInconsistentTypes.size})",
     )
 
     val iterationResult: IntermediateTypeInspectionResult =
@@ -1276,7 +1276,7 @@ final case class InferringGravsearchTypeInspector(
             entityToType = entityToType,
             intermediateResult = acc,
             entityInfo = entityInfo,
-            usageIndex = usageIndex
+            usageIndex = usageIndex,
           )
       }
 
@@ -1289,7 +1289,7 @@ final case class InferringGravsearchTypeInspector(
         iterationNumber = iterationNumber + 1,
         intermediateResult = refineDeterminedTypes(intermediateResult = iterationResult, entityInfo = entityInfo),
         entityInfo = entityInfo,
-        usageIndex = usageIndex
+        usageIndex = usageIndex,
       )
     }
   }
@@ -1311,21 +1311,21 @@ final case class InferringGravsearchTypeInspector(
       val subjectIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
         statementEntity = statementPattern.subj,
         statementPattern = statementPattern,
-        statementIndex = usageIndex.subjectIndex
+        statementIndex = usageIndex.subjectIndex,
       )
 
       // Index the statement by predicate.
       val predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
         statementEntity = statementPattern.pred,
         statementPattern = statementPattern,
-        statementIndex = usageIndex.predicateIndex
+        statementIndex = usageIndex.predicateIndex,
       )
 
       // Index the statement by object.
       val objectIndex: Map[TypeableEntity, Set[StatementPattern]] = addStatementIndexEntry(
         statementEntity = statementPattern.obj,
         statementPattern = statementPattern,
-        statementIndex = usageIndex.objectIndex
+        statementIndex = usageIndex.objectIndex,
       )
 
       // If the statement's predicate is rdf:type, and its object is a Knora entity, add it to the
@@ -1348,7 +1348,7 @@ final case class InferringGravsearchTypeInspector(
         case IriRef(predIri, _)
             if predIri.isKnoraEntityIri &&
               !(GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(
-                predIri.toString
+                predIri.toString,
               ) ||
                 GravsearchTypeInspectionUtil.GravsearchOptionIris.contains(predIri.toString)) =>
           Some(predIri)
@@ -1361,7 +1361,7 @@ final case class InferringGravsearchTypeInspector(
         knoraPropertyIris = knoraPropertyIris,
         subjectIndex = subjectIndex,
         predicateIndex = predicateIndex,
-        objectIndex = objectIndex
+        objectIndex = objectIndex,
       )
     }
 
@@ -1377,7 +1377,7 @@ final case class InferringGravsearchTypeInspector(
     private def addStatementIndexEntry(
       statementEntity: Entity,
       statementPattern: StatementPattern,
-      statementIndex: Map[TypeableEntity, Set[StatementPattern]]
+      statementIndex: Map[TypeableEntity, Set[StatementPattern]],
     ): Map[TypeableEntity, Set[StatementPattern]] =
       GravsearchTypeInspectionUtil.maybeTypeableEntity(statementEntity) match {
         case Some(typeableEntity) =>
@@ -1408,7 +1408,7 @@ final case class InferringGravsearchTypeInspector(
     private def addEntityComparisonIndexEntry(
       leftQueryVariable: QueryVariable,
       rightEntity: Entity,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): UsageIndex = {
       val leftTypeableVariable = TypeableVariable(leftQueryVariable.variableName)
 
@@ -1426,7 +1426,7 @@ final case class InferringGravsearchTypeInspector(
       usageIndex.copy(
         entitiesComparedInFilters = usageIndex.entitiesComparedInFilters +
           (leftTypeableVariable -> (currentComparisonsForLeftVariable + rightTypeableEntity)) +
-          (rightTypeableEntity  -> (currentComparisonsForRightEntity + leftTypeableVariable))
+          (rightTypeableEntity  -> (currentComparisonsForRightEntity + leftTypeableVariable)),
       )
     }
 
@@ -1442,7 +1442,7 @@ final case class InferringGravsearchTypeInspector(
         case CompareExpression(
               leftQueryVariable: QueryVariable,
               operator: CompareExpressionOperator.Value,
-              rightEntity: Entity
+              rightEntity: Entity,
             ) =>
           rightEntity match {
             case xsdLiteral: XsdLiteral =>
@@ -1453,7 +1453,7 @@ final case class InferringGravsearchTypeInspector(
 
               usageIndex.copy(
                 typedEntitiesInFilters =
-                  usageIndex.typedEntitiesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
+                  usageIndex.typedEntitiesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype)),
               )
 
             case rightIriRef: IriRef if rightIriRef.iri.isKnoraEntityIri =>
@@ -1471,7 +1471,7 @@ final case class InferringGravsearchTypeInspector(
               usageIndex.copy(
                 knoraPropertyIris = usageIndex.knoraPropertyIris + rightIriRef.iri,
                 knoraPropertyVariablesInFilters =
-                  usageIndex.knoraPropertyVariablesInFilters + (typeableVariable -> (currentIris + rightIriRef.iri))
+                  usageIndex.knoraPropertyVariablesInFilters + (typeableVariable -> (currentIris + rightIriRef.iri)),
               )
 
             case rightQueryVariable: QueryVariable =>
@@ -1479,7 +1479,7 @@ final case class InferringGravsearchTypeInspector(
               addEntityComparisonIndexEntry(
                 leftQueryVariable = leftQueryVariable,
                 rightEntity = rightQueryVariable,
-                usageIndex = usageIndex
+                usageIndex = usageIndex,
               )
 
             case rightIriRef: IriRef =>
@@ -1488,14 +1488,14 @@ final case class InferringGravsearchTypeInspector(
 
               if (!rightIriRef.iri.isKnoraResourceIri) {
                 throw GravsearchException(
-                  s"IRI ${rightIriRef.toSparql}, used in a comparison, is not a Knora resource IRI"
+                  s"IRI ${rightIriRef.toSparql}, used in a comparison, is not a Knora resource IRI",
                 )
               }
 
               addEntityComparisonIndexEntry(
                 leftQueryVariable = leftQueryVariable,
                 rightEntity = rightIriRef,
-                usageIndex = usageIndex
+                usageIndex = usageIndex,
               )
 
             case _ => throw GravsearchException(s"An invalid `rightEntity` with value: $rightEntity was used.")
@@ -1515,7 +1515,7 @@ final case class InferringGravsearchTypeInspector(
      */
     private def visitFunctionCallExpression(
       functionCallExpression: FunctionCallExpression,
-      usageIndex: UsageIndex
+      usageIndex: UsageIndex,
     ): UsageIndex =
       functionCallExpression.functionIri.iri.toString match {
         case OntologyConstants.KnoraApiV2Simple.MatchTextFunction =>
@@ -1526,7 +1526,7 @@ final case class InferringGravsearchTypeInspector(
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
-              (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
+              (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Complex.MatchTextFunction =>
@@ -1537,7 +1537,7 @@ final case class InferringGravsearchTypeInspector(
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
-              (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+              (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Simple.MatchLabelFunction =>
@@ -1548,7 +1548,7 @@ final case class InferringGravsearchTypeInspector(
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
-              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
+              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Complex.MatchLabelFunction =>
@@ -1559,7 +1559,7 @@ final case class InferringGravsearchTypeInspector(
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
-              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri))
+              (resourceVar -> (currentResourceVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Complex.MatchTextInStandoffFunction =>
@@ -1576,13 +1576,13 @@ final case class InferringGravsearchTypeInspector(
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
               (textVar        -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
-              (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
+              (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
           if (functionCallExpression.args.size != 3)
             throw GravsearchException(
-              s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}"
+              s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}",
             )
 
           // The first and third arguments are variables or IRIs representing resources.
@@ -1602,7 +1602,7 @@ final case class InferringGravsearchTypeInspector(
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters ++ resourceEntitiesAndTypes +
-              (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
+              (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)),
           )
 
         case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
@@ -1652,8 +1652,8 @@ final case class InferringGravsearchTypeInspector(
       patterns = whereClause.patterns,
       whereVisitor = new UsageIndexCollectingWhereVisitor,
       initialAcc = UsageIndex(
-        querySchema = whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
-      )
+        querySchema = whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+      ),
     )
 }
 

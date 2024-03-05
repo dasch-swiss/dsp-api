@@ -49,6 +49,6 @@ object PasswordService {
     ZIO
       .serviceWith[AppConfig](_.bcryptPasswordStrength)
       .map(PasswordStrength.unsafeFrom)
-      .map(PasswordService.apply)
+      .map(PasswordService.apply),
   )
 }

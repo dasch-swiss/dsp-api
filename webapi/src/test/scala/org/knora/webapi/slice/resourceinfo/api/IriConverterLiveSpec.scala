@@ -34,7 +34,7 @@ object IriConverterLiveSpec extends ZIOSpecDefault {
           for {
             actual <- IriConverter.asInternalIri("notAnIRI").exit
           } yield assertTrue(actual.isFailure)
-        }
+        },
       ),
       suite("asSmartIri(IRI)")(
         test("when provided an internal Iri should return correct SmartIri") {
@@ -46,7 +46,7 @@ object IriConverterLiveSpec extends ZIOSpecDefault {
           for {
             actual <- IriConverter.asSmartIri(someExternalIri)
           } yield assertTrue(actual.toIri == someExternalIri)
-        }
+        },
       ),
       suite("asInternalSmartIri(InternalIri)")(
         test("should return correct SmartIri") {
@@ -58,7 +58,7 @@ object IriConverterLiveSpec extends ZIOSpecDefault {
           for {
             actual <- IriConverter.asInternalSmartIri(someExternalIri)
           } yield assertTrue(actual.toIri == someInternalIri)
-        }
-      )
+        },
+      ),
     ).provide(IriConverter.layer, StringFormatter.test)
 }

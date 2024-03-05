@@ -152,7 +152,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       getSearchByLabel,
       getSearchByLabelCount,
       getFullTextSearch,
-      getFullTextSearchCount
+      getFullTextSearchCount,
     ).map(_.endpoint.tag("V2 Search"))
 }
 
@@ -165,76 +165,76 @@ final case class SearchApiRoutes(
   searchRestService: SearchRestService,
   mapper: HandlerMapper,
   tapirToPekko: TapirToPekkoInterpreter,
-  iriConverter: IriConverter
+  iriConverter: IriConverter,
 ) {
   private type GravsearchQuery = String
 
   private val postGravsearch =
     SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
-      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
+      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) },
     )
 
   private val getGravsearch =
     SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
-      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
+      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) },
     )
 
   private val postGravsearchCount =
     SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
-      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
+      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
     )
 
   private val getGravsearchCount =
     SecuredEndpointHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
-      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
+      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) },
     )
 
   private val getSearchByLabel =
     SecuredEndpointHandler[
       (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri]),
-      (RenderedResponse, MediaType)
+      (RenderedResponse, MediaType),
     ](
       searchEndpoints.getSearchByLabel,
       user => { case (query, opts, offset, project, resourceClass) =>
         searchRestService.searchResourcesByLabelV2(query, opts, offset, project, resourceClass, user)
-      }
+      },
     )
 
   private val getSearchByLabelCount =
     SecuredEndpointHandler[
       (String, FormatOptions, Option[ProjectIri], Option[InputIri]),
-      (RenderedResponse, MediaType)
+      (RenderedResponse, MediaType),
     ](
       searchEndpoints.getSearchByLabelCount,
       _ => { case (query, opts, project, resourceClass) =>
         searchRestService.searchResourcesByLabelCountV2(query, opts, project, resourceClass)
-      }
+      },
     )
 
   private val getFullTextSearch =
     SecuredEndpointHandler[
       (String, FormatOptions, Offset, Option[ProjectIri], Option[InputIri], Option[InputIri], Boolean),
-      (RenderedResponse, MediaType)
+      (RenderedResponse, MediaType),
     ](
       searchEndpoints.getFullTextSearch,
       user => { case (query, opts, offset, project, resourceClass, standoffClass, returnFiles) =>
         searchRestService.fullTextSearch(query, opts, offset, project, resourceClass, standoffClass, returnFiles, user)
-      }
+      },
     )
 
   private val getFullTextSearchCount =
     SecuredEndpointHandler[
       (String, FormatOptions, Option[ProjectIri], Option[InputIri], Option[InputIri]),
-      (RenderedResponse, MediaType)
+      (RenderedResponse, MediaType),
     ](
       searchEndpoints.getFullTextSearchCount,
       _ => { case (query, opts, project, resourceClass, standoffClass) =>
         searchRestService.fullTextSearchCount(query, opts, project, resourceClass, standoffClass)
-      }
+      },
     )
 
   val routes: Seq[Route] =
@@ -246,7 +246,7 @@ final case class SearchApiRoutes(
       postGravsearch,
       getGravsearch,
       postGravsearchCount,
-      getGravsearchCount
+      getGravsearchCount,
     )
       .map(it => mapper.mapSecuredEndpointHandler(it))
       .map(it => tapirToPekko.toRoute(it))
@@ -259,7 +259,7 @@ object SearchApiRoutes {
 final case class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
-  iriConverter: IriConverter
+  iriConverter: IriConverter,
 ) {
 
   def searchResourcesByLabelV2(
@@ -268,7 +268,7 @@ final case class SearchRestService(
     offset: Offset,
     project: Option[ProjectIri],
     limitByResourceClass: Option[InputIri],
-    user: User
+    user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
     searchResult <-
@@ -280,7 +280,7 @@ final case class SearchRestService(
     query: String,
     opts: FormatOptions,
     project: Option[ProjectIri],
-    limitByResourceClass: Option[InputIri]
+    limitByResourceClass: Option[InputIri],
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
     searchResult <-
@@ -306,7 +306,7 @@ final case class SearchRestService(
     resourceClass: Option[InputIri],
     standoffClass: Option[InputIri],
     returnFiles: Boolean,
-    user: User
+    user: User,
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
@@ -318,7 +318,7 @@ final case class SearchRestService(
                       standoffClass,
                       returnFiles,
                       opts.schemaRendering,
-                      user
+                      user,
                     )
     response <- renderer.render(searchResult, opts)
   } yield response
@@ -328,9 +328,9 @@ final case class SearchRestService(
     opts: FormatOptions,
     project: Option[ProjectIri],
     resourceClass: Option[InputIri],
-    standoffClass: Option[InputIri]
+    standoffClass: Option[InputIri],
   ): zio.Task[
-    (_root_.org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse, _root_.sttp.model.MediaType)
+    (_root_.org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse, _root_.sttp.model.MediaType),
   ] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)

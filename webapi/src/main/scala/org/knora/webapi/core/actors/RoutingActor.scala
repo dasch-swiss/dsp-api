@@ -28,14 +28,14 @@ final case class RoutingActor(
   messageRelay: MessageRelay,
   implicit val runtime: Runtime[
     CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers & OntologyRepo &
-      PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2
-  ]
+      PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
+  ],
 ) extends Actor {
   def receive: Receive = {
     case msg: RelayedMessage => ActorUtil.zio2Message(sender(), messageRelay.ask[Any](msg))
     case other =>
       throw UnexpectedMessageException(
-        s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
+        s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}",
       )
   }
 }

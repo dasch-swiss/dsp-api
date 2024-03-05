@@ -37,8 +37,8 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   "The Files Route ('admin/files') using token credentials" should {

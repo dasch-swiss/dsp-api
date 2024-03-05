@@ -88,18 +88,18 @@ object RepositoryUpdater {
                 foundRepositoryVersion match {
                   case Some(foundRepositoryVersion) =>
                     ZIO.logInfo(
-                      s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion"
+                      s"Repository not up to date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion",
                     )
                   case None =>
                     ZIO.logWarning(
-                      s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion"
+                      s"Repository not up to date. Found: None, Required: $requiredRepositoryVersion",
                     )
                 }
               _               <- deleteTmpDirectories()
               selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
               _ <-
                 ZIO.logInfo(
-                  s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}"
+                  s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}",
                 )
 
               // Update it with those plugins.
@@ -149,7 +149,7 @@ object RepositoryUpdater {
      * @return the plugins needed to update the repository.
      */
     private def selectPluginsForNeededUpdates(
-      maybeRepositoryVersionString: Option[String]
+      maybeRepositoryVersionString: Option[String],
     ): UIO[Seq[PluginForKnoraBaseVersion]] = {
 
       // A list of available plugins.
@@ -169,7 +169,7 @@ object RepositoryUpdater {
             val pluginForRepositoryVersion: PluginForKnoraBaseVersion =
               versionsToPluginsMap.getOrElse(
                 repositoryVersion,
-                throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
+                throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion"),
               )
 
             plugins.filter { plugin =>
@@ -190,7 +190,7 @@ object RepositoryUpdater {
      * @return a [[RepositoryUpdatedResponse]] indicating what was done.
      */
     private def updateRepositoryWithSelectedPlugins(
-      pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
+      pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion],
     ): UIO[RepositoryUpdatedResponse] =
       (for {
         downloadDir <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
@@ -211,7 +211,7 @@ object RepositoryUpdater {
         _ <- doTransformations(
                downloadedRepositoryFile = graphsBeforeMigrationFile,
                transformedRepositoryFile = graphsWithAppliedMigrationsFile,
-               pluginsForNeededUpdates = pluginsForNeededUpdates
+               pluginsForNeededUpdates = pluginsForNeededUpdates,
              )
 
         // Drop the graphs that need to be updated.
@@ -225,7 +225,7 @@ object RepositoryUpdater {
         _ <- ZIO.logInfo("Uploading transformed repository data...")
         _ <- triplestoreService.uploadRepository(graphsWithAppliedMigrationsFile)
       } yield RepositoryUpdatedResponse(
-        message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
+        message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}",
       )).orDie
 
     /**
@@ -238,7 +238,7 @@ object RepositoryUpdater {
     private def doTransformations(
       downloadedRepositoryFile: Path,
       transformedRepositoryFile: Path,
-      pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
+      pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion],
     ): UIO[Unit] = ZIO.attempt {
       // Parse the input file.
       log.info("Reading repository file...")
@@ -260,7 +260,7 @@ object RepositoryUpdater {
       RdfFormatUtil.rdfModelToFile(
         rdfModel = model,
         file = transformedRepositoryFile,
-        rdfFormat = NQuads
+        rdfFormat = NQuads,
       )
     }.orDie
 
@@ -279,7 +279,7 @@ object RepositoryUpdater {
           subj = None,
           pred = None,
           obj = None,
-          context = Some(context)
+          context = Some(context),
         )
 
         // Read the current named graph from a file.
@@ -291,7 +291,7 @@ object RepositoryUpdater {
             subj = statement.subj,
             pred = statement.pred,
             obj = statement.obj,
-            context = Some(context)
+            context = Some(context),
           )
         }
       }

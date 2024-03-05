@@ -33,7 +33,7 @@ object UserUtilADM {
   def switchToUser(
     requestingUser: User,
     requestedUserIri: IRI,
-    projectIri: IRI
+    projectIri: IRI,
   ): ZIO[UserService, Throwable, User] = {
     val userIri = UserIri.unsafeFrom(requestedUserIri)
     requestingUser match {
@@ -44,7 +44,7 @@ object UserUtilADM {
         ZIO.fail(ForbiddenException(msg))
       case _ =>
         ZIO.serviceWithZIO[UserService](
-          _.findUserByIri(userIri).someOrFail(NotFoundException(s"User '${userIri.value}' not found"))
+          _.findUserByIri(userIri).someOrFail(NotFoundException(s"User '${userIri.value}' not found")),
         )
     }
   }

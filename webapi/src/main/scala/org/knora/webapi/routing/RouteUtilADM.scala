@@ -41,7 +41,7 @@ object RouteUtilADM {
    * @return the transformed [[KnoraResponseADM]]
    */
   def transformResponseIntoExternalFormat(
-    response: KnoraResponseADM
+    response: KnoraResponseADM,
   ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
     ZIO.attempt {
       def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
@@ -99,25 +99,25 @@ object RouteUtilADM {
    */
   def runJsonRouteZ[R](
     requestTask: ZIO[R, Throwable, KnoraRequestADM],
-    requestContext: RequestContext
+    requestContext: RequestContext,
   )(implicit runtime: Runtime[R & StringFormatter & MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(requestTask.flatMap(doRunJsonRoute(_, requestContext)))
 
   private def doRunJsonRoute(
     request: KnoraRequestADM,
-    ctx: RequestContext
+    ctx: RequestContext,
   ): ZIO[StringFormatter & MessageRelay, Throwable, RouteResult] =
     createResponse(request).flatMap(completeContext(ctx, _))
 
   private def createResponse(
-    request: KnoraRequestADM
+    request: KnoraRequestADM,
   ): ZIO[StringFormatter & MessageRelay, Throwable, HttpResponse] =
     for {
       knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
       knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
     } yield HttpResponse(
       OK,
-      entity = HttpEntity(`application/json`, ByteString(knoraResponseExternal.toJsValue.asJsObject.compactPrint))
+      entity = HttpEntity(`application/json`, ByteString(knoraResponseExternal.toJsValue.asJsObject.compactPrint)),
     )
 
   private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
@@ -128,7 +128,7 @@ object RouteUtilADM {
 
   def getIriUserUuid(
     iri: String,
-    requestContext: RequestContext
+    requestContext: RequestContext,
   ): ZIO[Authenticator & StringFormatter, Throwable, IriUserUuid] =
     for {
       r    <- getIriUser(iri, requestContext)
@@ -137,7 +137,7 @@ object RouteUtilADM {
 
   def getIriUser(
     iri: String,
-    requestContext: RequestContext
+    requestContext: RequestContext,
   ): ZIO[Authenticator & StringFormatter, Throwable, IriUser] =
     for {
       validatedIri <- validateAndEscape(iri)

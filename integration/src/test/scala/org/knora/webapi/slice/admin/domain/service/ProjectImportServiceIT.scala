@@ -45,9 +45,9 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
             port = container.getFirstMappedPort,
             repositoryName = repositoryName,
             username = "admin",
-            password = "test"
+            password = "test",
           ),
-          profileQueries = false
+          profileQueries = false,
         )
     } yield ProjectImportServiceLive(config, exportStorageService, dspIngestClient))
       .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](DspIngestClientITMock.layer)
@@ -81,7 +81,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
                                          |    ?subject ?predicate ?object.
                                          |  }
                                          |}
-                                         |""".stripMargin
+                                         |""".stripMargin,
                                      )
                                      .map(_.rewindable.size())
           nrResultsInDefaultGraph <- ProjectImportService
@@ -91,7 +91,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
                                            |WHERE {
                                            |  ?subject ?predicate ?object.
                                            |}
-                                           |""".stripMargin
+                                           |""".stripMargin,
                                        )
                                        .map(_.rewindable.size())
           _ <- ZIO.logDebug("loaded")
@@ -125,8 +125,8 @@ final case class DspIngestClientITMock() extends DspIngestClient {
         "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
         "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
         internalMimeType = Some("text/plain"),
-        originalMimeType = Some("text/plain")
-      )
+        originalMimeType = Some("text/plain"),
+      ),
     )
 }
 object DspIngestClientITMock {

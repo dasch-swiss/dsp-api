@@ -40,17 +40,17 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
   override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/project_data/images-demo-data.ttl",
-      name = "http://www.knora.org/data/00FF/images"
+      name = "http://www.knora.org/data/00FF/images",
     ),
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
   )
 
   val rootCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.rootUser,
-    "test"
+    "test",
   )
 
   private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
@@ -73,16 +73,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-lists-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return all lists belonging to the images project" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF"
+        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -98,16 +98,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-image-project-lists-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return all lists belonging to the anything project" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
+        baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -123,16 +123,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-anything-project-lists-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return basic list information (w/o children)" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
+        baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -150,17 +150,17 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-list-info-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return basic list information (w/o children) for new merged GET route" in {
       // the same test as above, testing the new route
       val request = Get(
-        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info"
+        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -178,16 +178,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-list-info-response-new-merged-get-route",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return a complete list" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
+        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -202,16 +202,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-list-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return node info w/o children" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01"
+        baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
 
@@ -229,16 +229,16 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-list-node-info-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
 
     "return a complete node with children" in {
       val request = Get(
-        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03"
+        baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03",
       ) ~> addCredentials(rootCreds.basicHttpCredentials)
       val response: HttpResponse = singleAwaitingRequest(request)
       response.status should be(StatusCodes.OK)
@@ -253,10 +253,10 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "get-node-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseToString(response)
-        )
+          text = responseToString(response),
+        ),
       )
     }
   }

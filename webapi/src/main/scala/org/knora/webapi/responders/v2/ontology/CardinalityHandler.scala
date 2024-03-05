@@ -41,7 +41,7 @@ trait CardinalityHandler {
   def canDeleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[CanDoResponseV2]
 
   /**
@@ -57,7 +57,7 @@ trait CardinalityHandler {
   def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[ReadOntologyV2]
 
   /**
@@ -77,7 +77,7 @@ final case class CardinalityHandlerLive(
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
-  implicit val stringFormatter: StringFormatter
+  implicit val stringFormatter: StringFormatter,
 ) extends CardinalityHandler {
 
   /**
@@ -89,7 +89,7 @@ final case class CardinalityHandlerLive(
   override def canDeleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[CanDoResponseV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
@@ -98,7 +98,7 @@ final case class CardinalityHandlerLive(
       _ <- // Check that the ontology exists and has not been updated by another user since the client last read it.
         ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
           internalOntologyIri = internalOntologyIri,
-          expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
+          expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
         )
 
       _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
@@ -118,7 +118,7 @@ final case class CardinalityHandlerLive(
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed <- isPropertyUsedInResources(
                           internalClassIri.toInternalIri,
-                          submittedPropertyToDelete.toInternalIri
+                          submittedPropertyToDelete.toInternalIri,
                         )
 
       // Make an update class definition in which the cardinality to delete is removed
@@ -135,7 +135,7 @@ final case class CardinalityHandlerLive(
               // if we want to remove a link property, then we also need to remove the corresponding link property value
               currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
             } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
         )
 
       // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
@@ -146,7 +146,7 @@ final case class CardinalityHandlerLive(
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
           cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
-            Seq.empty[SmartIri]
+            Seq.empty[SmartIri],
           )
         }
 
@@ -163,10 +163,10 @@ final case class CardinalityHandlerLive(
             existingLinkPropsToKeep =
               newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
                 .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
+                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
                 )                                     // turn the propertyIri into a ReadPropertyInfoV2
                 .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
+                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -174,7 +174,7 @@ final case class CardinalityHandlerLive(
       _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { (msg: String) => throw BadRequestException(msg) }
+            errorFun = { (msg: String) => throw BadRequestException(msg) },
           )
 
       // response is true only when property is not used in data and cardinality is defined directly on that class
@@ -230,7 +230,7 @@ final case class CardinalityHandlerLive(
   override def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[ReadOntologyV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
@@ -240,7 +240,7 @@ final case class CardinalityHandlerLive(
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- ontologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
              internalOntologyIri,
-             deleteCardinalitiesFromClassRequest.lastModificationDate
+             deleteCardinalitiesFromClassRequest.lastModificationDate,
            )
       _ <- getRdfTypeAndEnsureSingleCardinality(internalClassInfo)
 
@@ -255,7 +255,7 @@ final case class CardinalityHandlerLive(
 
       _ = if (isDefinedOnClassList.contains(false)) {
             throw BadRequestException(
-              "The cardinality is not defined directly on the class and cannot be deleted."
+              "The cardinality is not defined directly on the class and cannot be deleted.",
             )
           }
 
@@ -282,7 +282,7 @@ final case class CardinalityHandlerLive(
               // if we want to remove a link property, then we also need to remove the corresponding link property value
               currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
             } else
-              currentClassDefinition.directCardinalities - submittedPropertyToDelete
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete,
         )
 
       // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
@@ -293,7 +293,7 @@ final case class CardinalityHandlerLive(
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
           cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
-            Seq.empty[SmartIri]
+            Seq.empty[SmartIri],
           )
         }
 
@@ -310,10 +310,10 @@ final case class CardinalityHandlerLive(
             existingLinkPropsToKeep =
               newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
                 .map(propertyIri =>
-                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
+                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri),
                 )                                     // turn the propertyIri into a ReadPropertyInfoV2
                 .filter(_.isLinkProp)                 // we are only interested in link properties
-                .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
+                .map(_.entityInfoContent.propertyIri),// turn whatever is left back to a propertyIri
           )
           .fold(e => throw e.head, v => v)
 
@@ -321,7 +321,7 @@ final case class CardinalityHandlerLive(
       _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { (msg: String) => throw BadRequestException(msg) }
+            errorFun = { (msg: String) => throw BadRequestException(msg) },
           )
 
       // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
@@ -340,17 +340,17 @@ final case class CardinalityHandlerLive(
                         canBeInstantiated = true,
                         inheritedCardinalities = inheritedCardinalities,
                         knoraResourceProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData)
+                          OntologyHelpers.isKnoraResourceProperty(propertyIri, cacheData),
                         ),
                         linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkProp(propertyIri, cacheData)
+                          OntologyHelpers.isLinkProp(propertyIri, cacheData),
                         ),
                         linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isLinkValueProp(propertyIri, cacheData)
+                          OntologyHelpers.isLinkValueProp(propertyIri, cacheData),
                         ),
                         fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri =>
-                          OntologyHelpers.isFileValueProp(propertyIri, cacheData)
-                        )
+                          OntologyHelpers.isFileValueProp(propertyIri, cacheData),
+                        ),
                       )
 
       // Add the cardinalities to the class definition in the triplestore.
@@ -363,7 +363,7 @@ final case class CardinalityHandlerLive(
                        classIri = internalClassIri,
                        newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
                        lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-                       currentTime = currentTime
+                       currentTime = currentTime,
                      )
 
       _ <- triplestoreService.query(Update(updateSparql))
@@ -377,7 +377,7 @@ final case class CardinalityHandlerLive(
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
             throw InconsistentRepositoryDataException(
-              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved"
+              s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved",
             )
           }
 
@@ -385,9 +385,9 @@ final case class CardinalityHandlerLive(
 
       updatedOntology = ontology.copy(
                           ontologyMetadata = ontology.ontologyMetadata.copy(
-                            lastModificationDate = Some(currentTime)
+                            lastModificationDate = Some(currentTime),
                           ),
-                          classes = ontology.classes + (internalClassIri -> readClassInfo)
+                          classes = ontology.classes + (internalClassIri -> readClassInfo),
                         )
 
       _ <- ontologyCache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
@@ -397,7 +397,7 @@ final case class CardinalityHandlerLive(
       response <- ontologyHelpers.getClassDefinitionsFromOntologyV2(
                     Set(internalClassIri),
                     allLanguages = true,
-                    deleteCardinalitiesFromClassRequest.requestingUser
+                    deleteCardinalitiesFromClassRequest.requestingUser,
                   )
 
     } yield response
@@ -428,13 +428,13 @@ final case class CardinalityHandlerLive(
     cacheData: OntologyCacheData,
     submittedClassInfoContentV2: ClassInfoContentV2,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[ClassInfoContentV2] =
     ZIO
       .fromOption(cacheData.ontologies(internalOntologyIri).classes.get(internalClassIri))
       .mapBoth(
         _ => BadRequestException(s"Class ${submittedClassInfoContentV2.classIri} does not exist"),
-        _.entityInfoContent
+        _.entityInfoContent,
       )
 
   /**
@@ -452,7 +452,7 @@ final case class CardinalityHandlerLive(
     propertyIri: SmartIri,
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
+    internalOntologyIri: SmartIri,
   ): Task[Boolean] = {
     val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
@@ -460,8 +460,8 @@ final case class CardinalityHandlerLive(
       .getOrElse(
         internalClassIri,
         throw BadRequestException(
-          s"Class $internalClassIri does not exist"
-        )
+          s"Class $internalClassIri does not exist",
+        ),
       )
 
     // if cardinality is inherited, it's not directly defined on that class
@@ -478,13 +478,13 @@ final case class CardinalityHandlerLive(
         } else {
           ZIO.fail(
             BadRequestException(
-              s"Submitted cardinality for property $propertyIri does not match existing cardinality."
-            )
+              s"Submitted cardinality for property $propertyIri does not match existing cardinality.",
+            ),
           )
         }
       case None =>
         throw BadRequestException(
-          s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri."
+          s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri.",
         )
     }
   }
@@ -493,6 +493,6 @@ final case class CardinalityHandlerLive(
 object CardinalityHandlerLive {
   val layer: URLayer[
     OntologyCache & TriplestoreService & MessageRelay & OntologyHelpers & StringFormatter,
-    CardinalityHandler
+    CardinalityHandler,
   ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

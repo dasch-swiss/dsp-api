@@ -24,7 +24,7 @@ object AppConfigForTestContainers {
     oldConfig: AppConfig,
     fusekiContainer: FusekiTestContainer,
     sipiContainer: SipiTestContainer,
-    dspIngestContainer: DspIngestTestContainer
+    dspIngestContainer: DspIngestTestContainer,
   ): UIO[AppConfig] = {
 
     val newFusekiPort    = fusekiContainer.getFirstMappedPort
@@ -42,7 +42,7 @@ object AppConfigForTestContainers {
         allowReloadOverHttp = true,
         triplestore = alteredTriplestore,
         sipi = alteredSipi,
-        dspIngest = alteredDspIngest
+        dspIngest = alteredDspIngest,
       )
 
     ZIO.succeed(newConfig)
@@ -50,7 +50,7 @@ object AppConfigForTestContainers {
 
   private def alterFusekiPort(
     oldConfig: AppConfig,
-    fusekiContainer: FusekiTestContainer
+    fusekiContainer: FusekiTestContainer,
   ): UIO[AppConfig] = {
 
     val newFusekiPort = fusekiContainer.getFirstMappedPort

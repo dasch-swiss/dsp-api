@@ -29,6 +29,6 @@ object OntologyCacheFakeSpec extends ZIOSpecDefault {
         _       <- OntologyCacheFake.set(newData)
         actual  <- OntologyCache.getCacheData
       } yield assertTrue(actual == newData)
-    }).provide(OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test)
+    }).provide(OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test),
   )
 }

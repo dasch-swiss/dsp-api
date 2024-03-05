@@ -24,7 +24,7 @@ import pekko.http.scaladsl.testkit.RouteTestTimeout
  */
 class HealthRouteE2ESpec extends E2ESpec {
   implicit def default: RouteTestTimeout = RouteTestTimeout(
-    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS),
   )
 
   // Directory path for generated client test data
@@ -49,10 +49,10 @@ class HealthRouteE2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "running-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseStr
-        )
+          text = responseStr,
+        ),
       )
 
       clientTestDataCollector.addFile(
@@ -60,10 +60,10 @@ class HealthRouteE2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "response-headers",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseHeadersStr
-        )
+          text = responseHeadersStr,
+        ),
       )
     }
 
@@ -75,7 +75,7 @@ class HealthRouteE2ESpec extends E2ESpec {
             for {
               state <- ZIO.service[State]
               _     <- state.set(AppState.Stopped)
-            } yield ()
+            } yield (),
           )
           .getOrThrow()
       }
@@ -95,10 +95,10 @@ class HealthRouteE2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "stopped-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseStr
-        )
+          text = responseStr,
+        ),
       )
     }
 
@@ -109,7 +109,7 @@ class HealthRouteE2ESpec extends E2ESpec {
             for {
               state <- ZIO.service[State]
               _     <- state.set(AppState.MaintenanceMode)
-            } yield ()
+            } yield (),
           )
           .getOrThrow()
       }
@@ -127,10 +127,10 @@ class HealthRouteE2ESpec extends E2ESpec {
           filePath = TestDataFilePath(
             directoryPath = clientTestDataPath,
             filename = "maintenance-mode-response",
-            fileExtension = "json"
+            fileExtension = "json",
           ),
-          text = responseStr
-        )
+          text = responseStr,
+        ),
       )
     }
 

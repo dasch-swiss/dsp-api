@@ -25,7 +25,7 @@ trait TestStartupUtils extends LazyLogging {
    * @param rdfDataObjects a list of [[RdfDataObject]]
    */
   def prepareRepository(
-    rdfDataObjects: List[RdfDataObject]
+    rdfDataObjects: List[RdfDataObject],
   ): ZIO[TriplestoreService with OntologyCache, Throwable, Unit] =
     for {
       _   <- ZIO.logInfo("Loading test data started ...")

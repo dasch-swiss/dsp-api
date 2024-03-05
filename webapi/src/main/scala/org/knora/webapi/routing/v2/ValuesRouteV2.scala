@@ -31,8 +31,8 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ValuesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & SipiService & StringFormatter & MessageRelay & ValuesResponderV2
-  ]
+    AppConfig & Authenticator & IriConverter & SipiService & StringFormatter & MessageRelay & ValuesResponderV2,
+  ],
 ) {
 
   private val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
@@ -53,7 +53,7 @@ final case class ValuesRouteV2()(
                              .fromOption(
                                ValuesValidator
                                  .xsdDateTimeStampToInstant(versionStr)
-                                 .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
+                                 .orElse(ValuesValidator.arkTimestampToInstant(versionStr)),
                              )
                              .orElseFail(BadRequestException(s"Invalid version date: $versionStr"))
                          }
@@ -64,14 +64,14 @@ final case class ValuesRouteV2()(
           valueUuid = Some(valueUuid),
           versionDate = versionDate,
           targetSchema = targetSchema,
-          requestingUser = requestingUser
+          requestingUser = requestingUser,
         )
 
         RouteUtilV2.runRdfRouteZ(
           requestTask,
           requestContext,
           targetSchemaTask,
-          RouteUtilV2.getSchemaOptions(requestContext).map(Some(_))
+          RouteUtilV2.getSchemaOptions(requestContext).map(Some(_)),
         )
       }
   }
@@ -87,7 +87,7 @@ final case class ValuesRouteV2()(
               valueToCreate  <- CreateValueV2.fromJsonLd(AssetIngestState.AssetInTemp, jsonLdString, requestingUser)
               response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
             } yield response,
-            ctx
+            ctx,
           )
         }
       }
@@ -105,7 +105,7 @@ final case class ValuesRouteV2()(
               updateValue    <- UpdateValueV2.fromJsonLd(jsonLdString, requestingUser)
               response       <- ValuesResponderV2.updateValueV2(updateValue, requestingUser, apiRequestId)
             } yield response,
-            ctx
+            ctx,
           )
         }
       }
@@ -123,7 +123,7 @@ final case class ValuesRouteV2()(
               deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
               response       <- ValuesResponderV2.deleteValueV2(deleteValue, requestingUser, apiRequestId)
             } yield response,
-            requestContext
+            requestContext,
           )
         }
       }

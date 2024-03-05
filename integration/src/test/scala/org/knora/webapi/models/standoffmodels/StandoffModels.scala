@@ -23,7 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed abstract case class DefineStandoffMapping private (
   mappingName: String,
   projectIRI: String,
-  label: String
+  label: String,
 ) {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -36,13 +36,13 @@ sealed abstract case class DefineStandoffMapping private (
     Map(
       "knora-api:mappingHasName" -> mappingName.toJson,
       "knora-api:attachedToProject" -> Map(
-        JsonLDKeywords.ID -> projectIRI
+        JsonLDKeywords.ID -> projectIRI,
       ).toJson,
       "rdfs:label" -> label.toJson,
       JsonLDKeywords.CONTEXT -> Map(
         "rdfs"      -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-      ).toJson
+        "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+      ).toJson,
     ).toJson.prettyPrint
 
   /**
@@ -55,18 +55,18 @@ sealed abstract case class DefineStandoffMapping private (
    */
   def toMessage(
     xml: String,
-    user: User
+    user: User,
   ): CreateMappingRequestV2 = {
     val mappingMetadata = CreateMappingRequestMetadataV2(
       label = label,
       projectIri = projectIRI.toSmartIri,
-      mappingName = mappingName
+      mappingName = mappingName,
     )
     CreateMappingRequestV2(
       metadata = mappingMetadata,
       xml = CreateMappingRequestXMLV2(xml),
       requestingUser = user,
-      apiRequestID = UUID.randomUUID()
+      apiRequestID = UUID.randomUUID(),
     )
   }
 
@@ -95,7 +95,7 @@ object DefineStandoffMapping {
   def make(
     mappingName: String,
     projectIRI: Option[String] = None,
-    label: Option[String] = None
+    label: Option[String] = None,
   ): DefineStandoffMapping =
     new DefineStandoffMapping(
       mappingName = mappingName,
@@ -106,7 +106,7 @@ object DefineStandoffMapping {
       label = label match {
         case Some(v) => v
         case None    => "custom mapping"
-      }
+      },
     ) {}
 }
 

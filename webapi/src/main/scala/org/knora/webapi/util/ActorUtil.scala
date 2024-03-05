@@ -33,7 +33,7 @@ object ActorUtil {
    */
   def handleUnexpectedMessage(sender: ActorRef, message: Any, who: String): Unit = {
     val unexpectedMessageException = UnexpectedMessageException(
-      s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
+      s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}",
     )
     sender ! pekko.actor.Status.Failure(unexpectedMessageException)
   }

@@ -56,7 +56,7 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], PredicateRepositoryLive](
     PredicateRepositoryLive.layer,
     StringFormatter.test,
-    TriplestoreServiceInMemory.layer
+    TriplestoreServiceInMemory.layer,
   )
 
   val spec: Spec[Any, Throwable] = suite("PredicateRepositoryLive")(
@@ -66,10 +66,10 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
-              Biblio.Class.Publication
+              Biblio.Class.Publication,
             )
         } yield assertTrue(result == List.empty)
-      }
+      },
     ).provide(commonLayers, emptyDataset),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used once")(
       test("given a property is in use by a single instance of the class return this instance with a count of one") {
@@ -77,10 +77,10 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
-              Biblio.Class.Publication
+              Biblio.Class.Publication,
             )
         } yield assertTrue(result == List((InternalIri("http://aPublication"), 1)))
-      }
+      },
     ).provide(commonLayers, datasetLayerFromTurtle(usedOnce)),
     suite("getCountForPropertyUseNumberOfTimesWithClass given used twice")(
       test("given a property is in use by multiple instances of the class return each instance and the times used") {
@@ -88,18 +88,18 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
           result <-
             PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
-              Biblio.Class.Publication
+              Biblio.Class.Publication,
             )
         } yield assert(result)(
           hasSameElements(
             List(
               (InternalIri("http://aPublicationWithZero"), 0),
               (InternalIri("http://aPublicationWithOne"), 1),
-              (InternalIri("http://aPublicationWithTwo"), 2)
-            )
-          )
+              (InternalIri("http://aPublicationWithTwo"), 2),
+            ),
+          ),
         )
-      }
-    ).provide(commonLayers, datasetLayerFromTurtle(usedTwice))
+      },
+    ).provide(commonLayers, datasetLayerFromTurtle(usedTwice)),
   )
 }

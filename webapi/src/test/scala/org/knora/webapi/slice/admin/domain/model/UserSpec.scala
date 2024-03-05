@@ -26,7 +26,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("Username has to be at most 50 characters long") {
       assertTrue(
-        Username.from("123456789012345678901234567890123456789012345678901") == Left("Username is invalid.")
+        Username.from("123456789012345678901234567890123456789012345678901") == Left("Username is invalid."),
       )
     },
     test("Username must not contain other characters") {
@@ -61,7 +61,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("Username must not contain two hyphen in a row") {
       assertTrue(Username.from("a--bc") == Left("Username is invalid."))
-    }
+    },
   )
 
   private val emailSuite = suite("Email")(
@@ -73,7 +73,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("Email must not be a username") {
       assertTrue(Email.from("j.doe") == Left("Email is invalid."))
-    }
+    },
   )
 
   private val iriSuite = suite("UserIri")(
@@ -88,8 +88,8 @@ object UserSpec extends ZIOSpecDefault {
         Seq(
           "http://www.knora.org/ontology/knora-admin#AnonymousUser",
           "http://www.knora.org/ontology/knora-admin#SystemUser",
-          "http://www.knora.org/ontology/knora-admin#AnonymousUser"
-        )
+          "http://www.knora.org/ontology/knora-admin#AnonymousUser",
+        ),
       )
       check(builtInIris) { i =>
         val userIri = UserIri.unsafeFrom(i)
@@ -100,8 +100,8 @@ object UserSpec extends ZIOSpecDefault {
       val builtInIris = Gen.fromIterable(
         Seq(
           "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ",
-          "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE"
-        )
+          "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
+        ),
       )
       check(builtInIris) { i =>
         val userIri = UserIri.unsafeFrom(i)
@@ -121,8 +121,8 @@ object UserSpec extends ZIOSpecDefault {
           "http://rdfh.ch/users/images-reviewer-user",
           "http://rdfh.ch/users/AnythingAdminUser",
           "http://rdfh.ch/users/subotic",
-          "http://rdfh.ch/users/_fH9FS-VRMiPPiIMRpjevA"
-        )
+          "http://rdfh.ch/users/_fH9FS-VRMiPPiIMRpjevA",
+        ),
       )
       check(validIris)(i => assertTrue(UserIri.from(i).isRight))
     },
@@ -131,11 +131,11 @@ object UserSpec extends ZIOSpecDefault {
         Seq(
           "Invalid IRI",
           "http://rdfh.ch/user/AnythingAdminUser",
-          "http://rdfh.ch/users/AnythingAdminUser/"
-        )
+          "http://rdfh.ch/users/AnythingAdminUser/",
+        ),
       )
       check(invalidIris)(i => assertTrue(UserIri.from(i) == Left(s"User IRI is invalid.")))
-    }
+    },
   )
 
   private val givenNameSuite = suite("GivenName")(
@@ -144,7 +144,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(GivenName.from(validGivenName).isRight)
-    }
+    },
   )
 
   private val familyNameSuite = suite("FamilyName")(
@@ -153,7 +153,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(FamilyName.from(validFamilyName).isRight)
-    }
+    },
   )
 
   private val passwordSuite = suite("Password")(
@@ -162,7 +162,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(Password.from(validPassword).isRight)
-    }
+    },
   )
 
   private val passwordHashSuite = suite("PasswordHash")(
@@ -174,7 +174,7 @@ object UserSpec extends ZIOSpecDefault {
     },
     test("pass a valid password strength value and create value object") {
       assertTrue(PasswordStrength.from(12).isRight)
-    }
+    },
   )
 
   val spec: Spec[Any, Any] = suite("UserSpec")(
@@ -185,6 +185,6 @@ object UserSpec extends ZIOSpecDefault {
     givenNameSuite,
     familyNameSuite,
     passwordSuite,
-    passwordHashSuite
+    passwordHashSuite,
   )
 }

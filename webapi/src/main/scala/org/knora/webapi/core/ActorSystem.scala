@@ -27,8 +27,8 @@ object ActorSystem {
           name = "webapi",
           config = None,
           classLoader = None,
-          defaultExecutionContext = Some(executionContext)
-        )
+          defaultExecutionContext = Some(executionContext),
+        ),
       )
       .zipLeft(ZIO.logInfo(">>> Acquire Actor System <<<"))
       .orDie

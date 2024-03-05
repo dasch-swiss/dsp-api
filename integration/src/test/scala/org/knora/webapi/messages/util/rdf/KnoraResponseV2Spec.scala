@@ -42,8 +42,8 @@ class KnoraResponseV2Spec() extends CoreSpec {
         "http://example.org/foo#hasBar" -> JsonLDObject(
           value = Map(
             "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-          )
+            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1"),
+          ),
         ),
         "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
         "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
@@ -55,13 +55,13 @@ class KnoraResponseV2Spec() extends CoreSpec {
             "http://example.org/foo#hasBar" -> JsonLDObject(value =
               Map(
                 "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
-              )
-            )
-          )
-        )
-      )
-    )
+                "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   )
 
   private val flatJsonLD = JsonLDDocument(
@@ -77,13 +77,13 @@ class KnoraResponseV2Spec() extends CoreSpec {
                 "http://example.org/foo#hasBar" -> JsonLDObject(value =
                   Map(
                     "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
-                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-                  )
+                    "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1"),
+                  ),
                 ),
                 "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-                  value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
-                )
-              )
+                  value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")),
+                ),
+              ),
             ),
             JsonLDObject(value =
               Map(
@@ -94,16 +94,16 @@ class KnoraResponseV2Spec() extends CoreSpec {
                 "http://example.org/foo#hasBar" -> JsonLDObject(value =
                   Map(
                     "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
-                    "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar")
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+                    "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     ),
-    isFlat = true
+    isFlat = true,
   )
 
   /**
@@ -119,7 +119,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
     override protected def toJsonLDDocument(
       targetSchema: ApiV2Schema,
       appConfig: AppConfig,
-      schemaOptions: Set[Rendering]
+      schemaOptions: Set[Rendering],
     ): JsonLDDocument = jsonLDDocument
   }
 
@@ -128,7 +128,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       // Read a Turtle file representing a resource. TODO: Use sample project metadata for this test.
       val turtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
 
       // Wrap it in a KnoraTurtleResponseV2.
@@ -139,7 +139,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set.empty,
-        appConfig = appConfig
+        appConfig = appConfig,
       )
 
       // Parse the JSON-LD to a JsonLDDocument.
@@ -148,7 +148,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       // Read an isomorphic JSON-LD file and parse it to a JsonLDDocument.
       val expectedJsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
       val parsedExpectedJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)
 
@@ -160,7 +160,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       // Read a JSON-LD file representing a resource.
       val jsonLD: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
         )
 
       // Wrap it in a KnoraJsonLDResponseV2.
@@ -171,7 +171,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
         rdfFormat = Turtle,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty,
-        appConfig = appConfig
+        appConfig = appConfig,
       )
 
       // Parse the Turtle to an RDF4J Model.
@@ -180,7 +180,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       // Read an isomorphic Turtle file and parse it to an RDF4J Model.
       val expectedTurtle: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         )
       val parsedExpectedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
 

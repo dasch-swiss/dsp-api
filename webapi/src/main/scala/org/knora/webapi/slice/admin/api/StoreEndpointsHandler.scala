@@ -17,7 +17,7 @@ final case class StoreEndpointsHandler(
   endpoints: StoreEndpoints,
   appConfig: AppConfig,
   storesResponder: StoreRestService,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
 
   private val postStoreResetTriplestoreContentHandler =
@@ -25,7 +25,7 @@ final case class StoreEndpointsHandler(
       endpoints.postStoreResetTriplestoreContent,
       { case (rdfObjs: Option[List[RdfDataObject]], prependDefaults: Boolean) =>
         storesResponder.resetTriplestoreContent(rdfObjs.getOrElse(List.empty), prependDefaults)
-      }
+      },
     )
 
   val allHandlers = {

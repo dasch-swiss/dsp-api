@@ -39,7 +39,7 @@ class SparqlTransformerSpec extends CoreSpec {
 
     "create a syntactically valid base name from a given ontology IRI" in {
       val baseName = SparqlTransformer.escapeEntityForVariable(
-        IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+        IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri),
       )
       baseName should ===("httpwwwknoraorgontology0803incunabulabook")
     }
@@ -54,7 +54,7 @@ class SparqlTransformerSpec extends CoreSpec {
       val generatedQueryVar =
         SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
           QueryVariable("linkingProp1"),
-          OntologyConstants.KnoraBase.HasLinkToValue
+          OntologyConstants.KnoraBase.HasLinkToValue,
         )
       generatedQueryVar should ===(QueryVariable("linkingProp1__hasLinkToValue"))
     }
@@ -63,22 +63,22 @@ class SparqlTransformerSpec extends CoreSpec {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI)
+        obj = IriRef(thingIRI),
       )
       val isDeletedStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
       )
       val linkStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(hasOtherThingIRI),
-        obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
+        obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri),
       )
       val patterns: Seq[StatementPattern] = Seq(
         typeStatement,
         isDeletedStatement,
-        linkStatement
+        linkStatement,
       )
       val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
       val expectedPatterns = Seq(
@@ -89,10 +89,10 @@ class SparqlTransformerSpec extends CoreSpec {
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-            )
-          )
-        )
+              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri),
+            ),
+          ),
+        ),
       )
       optimisedPatterns should ===(expectedPatterns)
     }
@@ -101,26 +101,26 @@ class SparqlTransformerSpec extends CoreSpec {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI)
+        obj = IriRef(thingIRI),
       )
       val hasValueStatement =
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
-          obj = QueryVariable("text")
+          obj = QueryVariable("text"),
         )
       val bindPattern =
         BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
       val patterns: Seq[QueryPattern] = Seq(
         typeStatement,
         hasValueStatement,
-        bindPattern
+        bindPattern,
       )
       val optimisedPatterns = SparqlTransformer.moveBindToBeginning(patterns)
       val expectedPatterns: Seq[QueryPattern] = Seq(
         bindPattern,
         typeStatement,
-        hasValueStatement
+        hasValueStatement,
       )
       optimisedPatterns should ===(expectedPatterns)
     }
@@ -130,32 +130,32 @@ class SparqlTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
-          obj = QueryVariable("text")
+          obj = QueryVariable("text"),
         )
       val valueHasStringStatement =
         StatementPattern(
           subj = QueryVariable("text"),
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-          QueryVariable("text__valueHasString")
+          QueryVariable("text__valueHasString"),
         )
       val luceneQueryPattern = StatementPattern(
         subj = QueryVariable("text"),
         pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
         obj = XsdLiteral(
           value = "Zeitglöcklein",
-          datatype = OntologyConstants.Xsd.String.toSmartIri
-        )
+          datatype = OntologyConstants.Xsd.String.toSmartIri,
+        ),
       )
       val patterns: Seq[QueryPattern] = Seq(
         hasValueStatement,
         valueHasStringStatement,
-        luceneQueryPattern
+        luceneQueryPattern,
       )
       val optimisedPatterns = SparqlTransformer.moveLuceneToBeginning(patterns)
       val expectedPatterns: Seq[QueryPattern] = Seq(
         luceneQueryPattern,
         hasValueStatement,
-        valueHasStringStatement
+        valueHasStringStatement,
       )
       optimisedPatterns should ===(expectedPatterns)
     }
@@ -164,20 +164,20 @@ class SparqlTransformerSpec extends CoreSpec {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(blueThingIRI)
+        obj = IriRef(blueThingIRI),
       )
 
       val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = typeStatement,
-        simulateInference = true
+        simulateInference = true,
       )
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-          obj = IriRef(blueThingIRI)
-        )
+          obj = IriRef(blueThingIRI),
+        ),
       )
 
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
@@ -187,7 +187,7 @@ class SparqlTransformerSpec extends CoreSpec {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI)
+        obj = IriRef(thingIRI),
       )
       val expectedUnionPattern = UnionPattern(
         Seq(
@@ -195,35 +195,35 @@ class SparqlTransformerSpec extends CoreSpec {
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(thingIRI)
-            )
+              obj = IriRef(thingIRI),
+            ),
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(blueThingIRI)
-            )
+              obj = IriRef(blueThingIRI),
+            ),
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri)
-            )
+              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
+            ),
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri)
-            )
-          )
-        )
+              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri),
+            ),
+          ),
+        ),
       )
       val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = typeStatement,
-        simulateInference = true
+        simulateInference = true,
       )
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
@@ -237,21 +237,21 @@ class SparqlTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
-          obj = QueryVariable("text")
+          obj = QueryVariable("text"),
         )
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
           subj = QueryVariable(variableName = "foo"),
           pred = IriRef(
             iri = hasTextIRI,
-            propertyPathOperator = None
+            propertyPathOperator = None,
           ),
-          obj = QueryVariable(variableName = "text")
-        )
+          obj = QueryVariable(variableName = "text"),
+        ),
       )
       val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = hasValueStatement,
-        simulateInference = true
+        simulateInference = true,
       )
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
@@ -261,7 +261,7 @@ class SparqlTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasOtherThingIRI),
-          obj = QueryVariable("text")
+          obj = QueryVariable("text"),
         )
       val expectedUnionPattern: UnionPattern = UnionPattern(
         Seq(
@@ -270,36 +270,36 @@ class SparqlTransformerSpec extends CoreSpec {
               subj = QueryVariable(variableName = "foo"),
               pred = IriRef(
                 iri = "http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri,
-                propertyPathOperator = None
+                propertyPathOperator = None,
               ),
-              obj = QueryVariable(variableName = "text")
-            )
+              obj = QueryVariable(variableName = "text"),
+            ),
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable(variableName = "foo"),
               pred = IriRef(
                 iri = hasOtherThingIRI,
-                propertyPathOperator = None
+                propertyPathOperator = None,
               ),
-              obj = QueryVariable(variableName = "text")
-            )
+              obj = QueryVariable(variableName = "text"),
+            ),
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable(variableName = "foo"),
               pred = IriRef(
                 iri = "http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri,
-                propertyPathOperator = None
+                propertyPathOperator = None,
               ),
-              obj = QueryVariable(variableName = "text")
-            )
-          )
-        )
+              obj = QueryVariable(variableName = "text"),
+            ),
+          ),
+        ),
       )
       val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = hasValueStatement,
-        simulateInference = true
+        simulateInference = true,
       )
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>

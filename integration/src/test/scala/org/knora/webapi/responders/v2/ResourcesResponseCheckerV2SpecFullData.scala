@@ -39,7 +39,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Extent: 1 Bd.; Dimensions: f\u00B0")
+            maybeValueHasString = Some("Extent: 1 Bd.; Dimensions: f\u00B0"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/e94fa8a09205",
@@ -50,8 +50,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -59,7 +59,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Van der Haegen I: 9,14")
+            maybeValueHasString = Some("Van der Haegen I: 9,14"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/7b4a9bf89305",
@@ -70,14 +70,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Goff M165")
+            maybeValueHasString = Some("Goff M165"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/3e74ee319405",
@@ -88,14 +88,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("C 3833")
+            maybeValueHasString = Some("C 3833"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/019e416b9405",
@@ -106,14 +106,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Klebs 651.2")
+            maybeValueHasString = Some("Klebs 651.2"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/c4c794a49405",
@@ -124,14 +124,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Schr 4799")
+            maybeValueHasString = Some("Schr 4799"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/87f1e7dd9405",
@@ -142,14 +142,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Schramm XXI p. 9 & 26")
+            maybeValueHasString = Some("Schramm XXI p. 9 & 26"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/4a1b3b179505",
@@ -160,14 +160,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("FairMur(G) 283")
+            maybeValueHasString = Some("FairMur(G) 283"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/0d458e509505",
@@ -178,14 +178,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("IBP 3556")
+            maybeValueHasString = Some("IBP 3556"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/d06ee1899505",
@@ -196,14 +196,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Borm 1751")
+            maybeValueHasString = Some("Borm 1751"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/939834c39505",
@@ -214,8 +214,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -223,7 +223,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Bernhard Richel")
+            maybeValueHasString = Some("Bernhard Richel"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
@@ -234,8 +234,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -243,7 +243,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Jean Mandeville")
+            maybeValueHasString = Some("Jean Mandeville"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/1a7f08829105",
@@ -253,8 +253,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -262,7 +262,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Katalogaufnahme anhand ISTC und v.d.Haegen")
+            maybeValueHasString = Some("Katalogaufnahme anhand ISTC und v.d.Haegen"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/56c287fc9505",
@@ -273,8 +273,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -283,7 +283,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             valueHasLanguage = None,
             comment = None,
             maybeValueHasString =
-              Some("http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320")
+              Some("http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",
@@ -294,8 +294,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -303,7 +303,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("deutsch von Otto von Diemeringen")
+            maybeValueHasString = Some("deutsch von Otto von Diemeringen"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/ac79fbd99205",
@@ -314,14 +314,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Rubr. mit Init. J zu Beginn")
+            maybeValueHasString = Some("Rubr. mit Init. J zu Beginn"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/6fa34e139305",
@@ -332,14 +332,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Holzschnitte nicht koloriert")
+            maybeValueHasString = Some("Holzschnitte nicht koloriert"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/32cda14c9305",
@@ -350,14 +350,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin")
+            maybeValueHasString = Some("Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f5f6f4859305",
@@ -368,7 +368,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -376,8 +376,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             valueHasLanguage = None,
             comment = None,
             maybeValueHasString = Some(
-              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
-            )
+              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516",
+            ),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/b82048bf9305",
@@ -388,8 +388,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -397,7 +397,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Basel UB, Sign: Aleph D III 13:1")
+            maybeValueHasString = Some("Basel UB, Sign: Aleph D III 13:1"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/262655679205",
@@ -408,8 +408,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -417,7 +417,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Basel")
+            maybeValueHasString = Some("Basel"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/a0d2aef49105",
@@ -428,8 +428,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(
         ReadOtherValueV2(
@@ -440,7 +440,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             valueHasStartPrecision = DatePrecisionYear,
             valueHasCalendar = CalendarNameJulian,
             comment = None,
-            valueHasEndPrecision = DatePrecisionYear
+            valueHasEndPrecision = DatePrecisionYear,
           ),
           valueIri = "http://rdfh.ch/2a6221216701/values/63fc012e9205",
           valueHasUUID = UuidUtil.decode("63fc012e9205"),
@@ -450,8 +450,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
+          deletionInfo = None,
+        ),
       ),
       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
         ReadTextValueV2(
@@ -459,7 +459,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Reise ins Heilige Land")
+            maybeValueHasString = Some("Reise ins Heilige Land"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/d1010fd69005",
@@ -470,14 +470,14 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
+          deletionInfo = None,
         ),
         ReadTextValueV2(
           valueContent = TextValueContentV2(
             ontologySchema = InternalSchema,
             valueHasLanguage = None,
             comment = None,
-            maybeValueHasString = Some("Reysen und wanderschafften durch das Gelobte Land")
+            maybeValueHasString = Some("Reysen und wanderschafften durch das Gelobte Land"),
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/942b620f9105",
@@ -488,17 +488,17 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
-          deletionInfo = None
-        )
-      )
+          deletionInfo = None,
+        ),
+      ),
     ),
     lastModificationDate = None,
     versionDate = None,
-    deletionInfo = None
+    deletionInfo = None,
   )
 
   val expectedFullResourceResponseForReiseWrong: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
-    resources = Vector(expectedReadResourceV2ForReiseInsHeiligelandWrong)
+    resources = Vector(expectedReadResourceV2ForReiseInsHeiligelandWrong),
   )
 
 }

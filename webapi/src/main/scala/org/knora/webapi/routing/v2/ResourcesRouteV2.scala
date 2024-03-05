@@ -45,8 +45,8 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & UserService
-  ]
+    AppConfig & Authenticator & IriConverter & MessageRelay & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & UserService,
+  ],
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi
   private val resultsPerPage: Int          = appConfig.v2.resourcesSequence.resultsPerPage
@@ -139,10 +139,10 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .fromOption(params.get("resourceClass"))
         .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
         .flatMap(iri =>
-          IriConverter.asSmartIri(iri).orElseFail(BadRequestException(s"Invalid resource class IRI: $iri"))
+          IriConverter.asSmartIri(iri).orElseFail(BadRequestException(s"Invalid resource class IRI: $iri")),
         )
         .filterOrElseWith(it => it.isKnoraApiV2EntityIri && it.isApiV2ComplexSchema)(it =>
-          ZIO.fail(BadRequestException(s"Invalid resource class IRI: $it"))
+          ZIO.fail(BadRequestException(s"Invalid resource class IRI: $it")),
         )
         .flatMap(IriConverter.asInternalSmartIri)
 
@@ -152,7 +152,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             .asSmartIri(orderByPropertyStr)
             .orElseFail(BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
             .filterOrFail(iri => iri.isKnoraApiV2EntityIri && iri.isApiV2ComplexSchema)(
-              BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+              BadRequestException(s"Invalid property IRI: $orderByPropertyStr"),
             )
             .flatMap(IriConverter.asInternalSmartIri)
         }
@@ -163,7 +163,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .flatMap(pageStr =>
           ZIO
             .fromOption(ValuesValidator.validateInt(pageStr))
-            .orElseFail(BadRequestException(s"Invalid page number: $pageStr"))
+            .orElseFail(BadRequestException(s"Invalid page number: $pageStr")),
         )
 
       val getProjectIri = RouteUtilV2
@@ -187,7 +187,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
                       maybeOrderByProperty,
                       page,
                       targetSchema,
-                      requestingUser
+                      requestingUser,
                     )
       } yield response
 
@@ -217,7 +217,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           withDeletedResource = false,
           startDate,
           endDate,
-          requestingUser
+          requestingUser,
         )
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -227,14 +227,14 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     params: Map[String, String],
     key: String,
     name: String,
-    dateParser: String => Option[Instant]
+    dateParser: String => Option[Instant],
   ): IO[BadRequestException, Option[Instant]] =
     params
       .get(key)
       .map(dateStr =>
         ZIO
           .fromOption(dateParser(dateStr))
-          .mapBoth(_ => BadRequestException(s"Invalid $name: $dateStr"), Some(_))
+          .mapBoth(_ => BadRequestException(s"Invalid $name: $dateStr"), Some(_)),
       )
       .getOrElse(ZIO.none)
 
@@ -274,7 +274,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         versionDate = versionDate,
         targetSchema = targetSchema,
         schemaOptions = schemaOptions,
-        requestingUser = requestingUser
+        requestingUser = requestingUser,
       )
       RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
@@ -337,7 +337,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           .succeed(params.get(Depth).flatMap(ValuesValidator.validateInt).getOrElse(graphRouteConfig.defaultGraphDepth))
           .filterOrFail(_ >= 1)(BadRequestException(s"$Depth must be at least 1"))
           .filterOrFail(_ <= graphRouteConfig.maxGraphDepth)(
-            BadRequestException(s"$Depth cannot be greater than ${graphRouteConfig.maxGraphDepth}")
+            BadRequestException(s"$Depth cannot be greater than ${graphRouteConfig.maxGraphDepth}"),
           )
 
       val getExcludeProperty: ZIO[IriConverter, BadRequestException, Option[SmartIri]] = params
@@ -345,7 +345,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .map(propIriStr =>
           IriConverter
             .asSmartIri(propIriStr)
-            .mapBoth(_ => BadRequestException(s"Invalid property IRI: <$propIriStr>"), Some(_))
+            .mapBoth(_ => BadRequestException(s"Invalid property IRI: <$propIriStr>"), Some(_)),
         )
         .getOrElse(ZIO.none)
 
@@ -416,7 +416,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           .asSmartIri(textPropIriStr)
           .orElseFail(BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
           .filterOrFail(_.isKnoraApiV2EntityIri)(
-            BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
+            BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI"),
           )
           .mapAttempt(_.toOntologySchema(InternalSchema))
       }
@@ -478,7 +478,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
    * @param values the values to be checked.
    */
   private def checkMimeTypesForFileValueContents(
-    values: Iterable[CreateValueInNewResourceV2]
+    values: Iterable[CreateValueInNewResourceV2],
   ): Task[Unit] = {
     def failBadRequest(fileValueContent: FileValueContentV2): IO[BadRequestException, Unit] = {
       val msg =

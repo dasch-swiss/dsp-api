@@ -45,7 +45,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- OntologyRepo.findById(ontologySmartIri.toInternalIri)
           } yield assertTrue(actual == cacheData.ontologies.get(ontologySmartIri))
-        }
+        },
       ),
       suite("findClassBy(InternalIri)")(
         test("when searching for a known iri => return Some(ReadClassInfoV2])") {
@@ -54,7 +54,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .addOntology(
               ReadOntologyV2Builder
                 .builder(ontologySmartIri)
-                .addClassInfo(knownClass)
+                .addClassInfo(knownClass),
             )
             .build
           for {
@@ -66,7 +66,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           for {
             actual <- OntologyRepo.findClassBy(anUnknownClassIri)
           } yield assertTrue(actual.isEmpty)
-        }
+        },
       ),
       suite("findAll()")(
         test("given cache is Empty => return empty List") {
@@ -81,7 +81,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- OntologyRepo.findAll()
           } yield assertTrue(actual == List(ontology))
-        }
+        },
       ),
       suite("findAllSubclassesBy")(
         test("findAllSubclassesBy is empty if no subclasses on class") {
@@ -90,7 +90,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
               ReadOntologyV2Builder
                 .builder(Biblio.Ontology)
                 .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
-                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article))
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article)),
             )
           for {
             _      <- OntologyCacheFake.set(data.build).debug
@@ -108,14 +108,14 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
               ReadClassInfoV2Builder
                 .builder(Biblio.Class.Article) // subclass Article should be found
                 .addSuperClass(Biblio.Class.Publication)
-                .addSuperClass(Anything.Class.Thing) // no subclass of Publication; Thing should NOT be found
+                .addSuperClass(Anything.Class.Thing), // no subclass of Publication; Thing should NOT be found
             )
             .addClassInfo(
               ReadClassInfoV2Builder
                 .builder(
-                  Biblio.Class.JournalArticle
+                  Biblio.Class.JournalArticle,
                 ) // subclass JournalArticle should be found, is subclass of Article which is subclass of Publication
-                .addSuperClass(Biblio.Class.Article)
+                .addSuperClass(Biblio.Class.Article),
             )
           val data = OntologyCacheDataBuilder.builder
             .addOntology(anythingOntologyDefinition)
@@ -125,7 +125,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             actual    <- OntologyRepo.findAllSubclassesBy(Biblio.Class.Publication)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Biblio.Class.JournalArticle))
-        }
+        },
       ),
       suite("findAllSuperClassesBy")(
         test("findAllSuperClassesBy is empty if no superclasses on class") {
@@ -134,7 +134,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
               ReadOntologyV2Builder
                 .builder(Biblio.Ontology)
                 .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Publication))
-                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article))
+                .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article)),
             )
           for {
             _      <- OntologyCacheFake.set(data.build).debug
@@ -152,12 +152,12 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
               ReadClassInfoV2Builder
                 .builder(Biblio.Class.Article)
                 .addSuperClass(Biblio.Class.Publication) // super-class Publication should be found
-                .addSuperClass(Anything.Class.Thing)     // super-class Thing should be found, defined in another ontology
+                .addSuperClass(Anything.Class.Thing),    // super-class Thing should be found, defined in another ontology
             )
             .addClassInfo(
               ReadClassInfoV2Builder
                 .builder(Biblio.Class.JournalArticle)
-                .addSuperClass(Biblio.Class.Article) // super-class Article should be found
+                .addSuperClass(Biblio.Class.Article), // super-class Article should be found
             )
           val data = OntologyCacheDataBuilder.builder
             .addOntology(anythingOntologyDefinition)
@@ -167,7 +167,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             actual    <- OntologyRepo.findAllSuperClassesBy(Biblio.Class.JournalArticle)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Anything.Class.Thing, Biblio.Class.Publication))
-        }
-      )
+        },
+      ),
     ).provide(OntologyRepoLive.layer, OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test)
 }

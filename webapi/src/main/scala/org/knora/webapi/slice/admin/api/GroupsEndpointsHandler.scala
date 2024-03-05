@@ -19,30 +19,30 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 case class GroupsEndpointsHandler(
   endpoints: GroupsEndpoints,
   restService: GroupsRestService,
-  mapper: HandlerMapper
+  mapper: HandlerMapper,
 ) {
   private val getGroupsHandler =
     PublicEndpointHandler(
       endpoints.getGroups,
-      (_: Unit) => restService.getGroups
+      (_: Unit) => restService.getGroups,
     )
 
   private val getGroupByIriHandler =
     PublicEndpointHandler(
       endpoints.getGroupByIri,
-      (iri: GroupIri) => restService.getGroupByIri(iri)
+      (iri: GroupIri) => restService.getGroupByIri(iri),
     )
 
   private val getGroupMembersHandler =
     SecuredEndpointHandler(
       endpoints.getGroupMembers,
-      user => iri => restService.getGroupMembers(iri, user)
+      user => iri => restService.getGroupMembers(iri, user),
     )
 
   private val postGroupHandler =
     SecuredEndpointHandler(
       endpoints.postGroup,
-      user => request => restService.postGroup(request, user)
+      user => request => restService.postGroup(request, user),
     )
 
   private val putGroupHandler =
@@ -50,7 +50,7 @@ case class GroupsEndpointsHandler(
       endpoints.putGroup,
       user => { case (iri, request) =>
         restService.putGroup(iri, request, user)
-      }
+      },
     )
 
   private val putGroupStatusHandler =
@@ -58,13 +58,13 @@ case class GroupsEndpointsHandler(
       endpoints.putGroupStatus,
       user => { case (iri, request) =>
         restService.putGroupStatus(iri, request, user)
-      }
+      },
     )
 
   private val deleteGroupHandler =
     SecuredEndpointHandler(
       endpoints.deleteGroup,
-      user => iri => restService.deleteGroup(iri, user)
+      user => iri => restService.deleteGroup(iri, user),
     )
 
   private val securedHandlers =

@@ -184,6 +184,6 @@ object LayersLive {
       UsersEndpointsHandler.layer,
       UsersResponder.layer,
       UsersRestService.layer,
-      ValuesResponderV2Live.layer
+      ValuesResponderV2Live.layer,
     )
 }

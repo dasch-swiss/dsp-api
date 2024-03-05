@@ -44,13 +44,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/Zeitglocklein.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/Zeitglocklein.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -62,9 +62,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = incunabulaUser
-              )
-            )
+                requestingUser = incunabulaUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -79,16 +79,16 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = incunabulaUser
-            )
-          )
+              requestingUser = incunabulaUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -96,13 +96,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -114,9 +114,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = anythingAdminUser
-              )
-            )
+                requestingUser = anythingAdminUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -131,9 +131,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = anythingAdminUser
-            )
-          )
+              requestingUser = anythingAdminUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -141,7 +141,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected =
           constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesAnythingAdmin,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -149,13 +149,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -167,9 +167,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = incunabulaUser
-              )
-            )
+                requestingUser = incunabulaUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -184,9 +184,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = incunabulaUser
-            )
-          )
+              requestingUser = incunabulaUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -194,7 +194,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected =
           constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingVisibleThingWithHiddenIntValuesIncunabulaUser,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -202,13 +202,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -220,9 +220,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = anythingAdminUser
-              )
-            )
+                requestingUser = anythingAdminUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -237,9 +237,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = anythingAdminUser
-            )
-          )
+              requestingUser = anythingAdminUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -247,7 +247,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected =
           constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnythingAdmin,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -255,13 +255,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -273,9 +273,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = anonymousUser
-              )
-            )
+                requestingUser = anonymousUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -290,9 +290,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = anonymousUser
-            )
-          )
+              requestingUser = anonymousUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
@@ -300,7 +300,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected =
           constructResponseUtilV2SpecFullData.expectedReadResourceForAnythingThingWithOneHiddenThingAnonymousUser,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -308,13 +308,13 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI = "http://rdfh.ch/0001/a-thing-with-text-values"
       val turtleStr: String =
         FileUtil.readTextFile(
-          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithStandoff.ttl")
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithStandoff.ttl"),
         )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -326,9 +326,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = anythingAdminUser
-              )
-            )
+                requestingUser = anythingAdminUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -343,16 +343,16 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = anythingAdminUser
-            )
-          )
+              requestingUser = anythingAdminUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected = constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2WithStandoffAnythingAdminUser,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -396,7 +396,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.make(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr),
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -408,9 +408,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
             .map(
               _.splitMainResourcesAndValueRdfData(
                 constructQueryResults = resourceRequestResponse,
-                requestingUser = incunabulaUser
-              )
-            )
+                requestingUser = incunabulaUser,
+              ),
+            ),
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -425,16 +425,16 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = incunabulaUser
-            )
-          )
+              requestingUser = incunabulaUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected = constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery1,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
 
@@ -479,7 +479,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         UnsafeZioRun.runOrThrow(
           SparqlExtendedConstructResponse.make(turtleStr).flatMap { resp =>
             ZIO.serviceWith[ConstructResponseUtilV2](_.splitMainResourcesAndValueRdfData(resp, incunabulaUser))
-          }
+          },
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
@@ -494,16 +494,16 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
               versionDate = None,
               calculateMayHaveMoreResults = false,
               targetSchema = ApiV2Complex,
-              requestingUser = incunabulaUser
-            )
-          )
+              requestingUser = incunabulaUser,
+            ),
+          ),
       )
 
       val resourceSequence: ReadResourcesSequenceV2 = Await.result(apiResponseFuture, 10.seconds)
 
       ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(
         expected = constructResponseUtilV2SpecFullData.expectedReadResourceSequenceV2ForMainQuery2,
-        received = resourceSequence
+        received = resourceSequence,
       )
     }
   }

@@ -70,7 +70,7 @@ case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsRespo
 case class ProjectCreateRequestADM(
   createRequest: ProjectCreateRequest,
   requestingUser: User,
-  apiRequestID: UUID
+  apiRequestID: UUID,
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -85,7 +85,7 @@ case class ProjectChangeRequestADM(
   projectIri: ProjectIri,
   projectUpdatePayload: ProjectUpdateRequest,
   requestingUser: User,
-  apiRequestID: UUID
+  apiRequestID: UUID,
 ) extends ProjectsResponderRequestADM
 
 // Responses
@@ -201,7 +201,7 @@ case class ProjectADM(
   logo: Option[String],
   ontologies: Seq[IRI],
   status: Boolean,
-  selfjoin: Boolean
+  selfjoin: Boolean,
 ) extends Ordered[ProjectADM] {
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
@@ -254,7 +254,7 @@ case class ProjectADM(
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
-      V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language)
+      V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
     )
     val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
     copy(
@@ -263,7 +263,7 @@ case class ProjectADM(
       longname = stringFormatter.unescapeOptionalString(longname),
       logo = stringFormatter.unescapeOptionalString(logo),
       description = unescapedDescriptions,
-      keywords = unescapedKeywords
+      keywords = unescapedKeywords,
     )
   }
 }
@@ -318,7 +318,7 @@ object ProjectIdentifierADM {
       Codec.string.mapDecode(str =>
         IriIdentifier
           .fromString(str)
-          .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_))
+          .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_)),
       )(_.value.value)
   }
 
@@ -394,23 +394,23 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       "logo",
       "ontologies",
       "status",
-      "selfjoin"
-    )
+      "selfjoin",
+    ),
   )
   implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects"))
+    lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")),
   )
   implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectGetResponseADM, "project"))
+    lazyFormat(jsonFormat(ProjectGetResponseADM, "project")),
   )
   implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
     jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
 
   implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members"))
+    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")),
   )
   implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members"))
+    lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")),
   )
   implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] =
     jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
@@ -419,6 +419,6 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] =
     jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectOperationResponseADM, "project"))
+    lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")),
   )
 }

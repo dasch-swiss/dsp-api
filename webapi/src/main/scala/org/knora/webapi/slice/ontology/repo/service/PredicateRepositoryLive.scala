@@ -27,7 +27,7 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
    */
   def getCountForPropertyUsedNumberOfTimesWithClass(
     propertyIri: InternalIri,
-    classIri: InternalIri
+    classIri: InternalIri,
   ): Task[List[(InternalIri, Int)]] =
     tripleStore
       .query(Select(countPropertyUsedWithClass(propertyIri, classIri)))

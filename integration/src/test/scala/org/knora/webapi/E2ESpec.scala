@@ -92,7 +92,7 @@ abstract class E2ESpec
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(
-          routerAndConfig
+          routerAndConfig,
         )
         .getOrThrowFiberFailure()
     }
@@ -111,7 +111,7 @@ abstract class E2ESpec
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
     UnsafeZioRun.runOrThrow(
-      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo"))
+      AppServer.testWithoutSipi *> (prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")),
     )
 
   final override def afterAll(): Unit =
@@ -121,10 +121,10 @@ abstract class E2ESpec
   protected def singleAwaitingRequest(
     request: HttpRequest,
     timeout: Option[zio.Duration] = None,
-    printFailure: Boolean = false
+    printFailure: Boolean = false,
   ): HttpResponse =
     UnsafeZioRun.runOrThrow(
-      ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure))
+      ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, timeout, printFailure)),
     )
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration): HttpResponse =
@@ -189,7 +189,7 @@ abstract class E2ESpec
       Files.createDirectories(adjustedFile.getParent)
       FileUtil.writeTextFile(
         adjustedFile,
-        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
+        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
       )
       responseAsString
     } else {
@@ -208,7 +208,7 @@ abstract class E2ESpec
     Files.createDirectories(adjustedFile.getParent)
     FileUtil.writeTextFile(
       adjustedFile,
-      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
+      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL"),
     )
     responseAsString
   }

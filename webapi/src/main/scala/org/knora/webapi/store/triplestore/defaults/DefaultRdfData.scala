@@ -23,47 +23,47 @@ object DefaultRdfData {
   val data: NonEmptyChunk[RdfDataObject] = NonEmptyChunk(
     RdfDataObject(
       path = "test_data/project_data/admin-data.ttl",
-      name = "http://www.knora.org/data/admin"
+      name = "http://www.knora.org/data/admin",
     ),
     RdfDataObject(
       path = "test_data/project_data/permissions-data.ttl",
-      name = "http://www.knora.org/data/permissions"
+      name = "http://www.knora.org/data/permissions",
     ),
     RdfDataObject(
       path = "test_data/project_data/system-data.ttl",
-      name = "http://www.knora.org/data/0000/SystemProject"
+      name = "http://www.knora.org/data/0000/SystemProject",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
+      name = "http://www.knora.org/ontology/0001/anything",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/something-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/something"
+      name = "http://www.knora.org/ontology/0001/something",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/images-onto.ttl",
-      name = "http://www.knora.org/ontology/00FF/images"
+      name = "http://www.knora.org/ontology/00FF/images",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/beol-onto.ttl",
-      name = "http://www.knora.org/ontology/0801/beol"
+      name = "http://www.knora.org/ontology/0801/beol",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/biblio-onto.ttl",
-      name = "http://www.knora.org/ontology/0801/biblio"
+      name = "http://www.knora.org/ontology/0801/biblio",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/incunabula-onto.ttl",
-      name = "http://www.knora.org/ontology/0803/incunabula"
+      name = "http://www.knora.org/ontology/0803/incunabula",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/dokubib-onto.ttl",
-      name = "http://www.knora.org/ontology/0804/dokubib"
+      name = "http://www.knora.org/ontology/0804/dokubib",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/webern-onto.ttl",
-      name = "http://www.knora.org/ontology/0806/webern"
-    )
+      name = "http://www.knora.org/ontology/0806/webern",
+    ),
   ) ++ Chunk(RepositoryUpdatePlan.builtInNamedGraphs.toSeq: _*)
 }

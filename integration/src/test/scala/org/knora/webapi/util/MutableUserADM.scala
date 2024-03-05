@@ -32,7 +32,7 @@ class MutableUserADM {
    */
   def get: User =
     maybeUserProfile.getOrElse(
-      throw TestUserProfileException("This test could not be run because a previous test failed")
+      throw TestUserProfileException("This test could not be run because a previous test failed"),
     )
 }
 

@@ -43,7 +43,7 @@ case class DateValue(
   dateval2: String,
   era1: String,
   era2: String,
-  calendar: KnoraCalendarType.Value
+  calendar: KnoraCalendarType.Value,
 ) {
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
@@ -123,7 +123,7 @@ case class JulianDayNumberValue(
   dateval2: Int,
   calendar: KnoraCalendarType.Value,
   dateprecision1: KnoraCalendarPrecision.Value,
-  dateprecision2: KnoraCalendarPrecision.Value
+  dateprecision2: KnoraCalendarPrecision.Value,
 ) {
 
   override def toString: String = {
@@ -176,7 +176,7 @@ object DateUtil {
       dateval2 = convertDateToJulianDayNumber(dateRange2.end),
       calendar = dateValueV1.calendar,
       dateprecision1 = dateRange1.precision,
-      dateprecision2 = dateRange2.precision
+      dateprecision2 = dateRange2.precision,
     )
   }
 
@@ -190,12 +190,12 @@ object DateUtil {
     val dateval1 = julianDayNumber2DateString(
       julianDayNumberValueV1.dateval1,
       julianDayNumberValueV1.calendar,
-      julianDayNumberValueV1.dateprecision1
+      julianDayNumberValueV1.dateprecision1,
     )
     val dateval2 = julianDayNumber2DateString(
       julianDayNumberValueV1.dateval2,
       julianDayNumberValueV1.calendar,
-      julianDayNumberValueV1.dateprecision2
+      julianDayNumberValueV1.dateprecision2,
     )
     val dateEra1 = dateval1.split(StringFormatter.EraSeparator)
     val dateEra2 = dateval2.split(StringFormatter.EraSeparator)
@@ -208,7 +208,7 @@ object DateUtil {
       dateval2 = dateEra2(0),
       era1 = dateEra1(1),
       era2 = dateEra2(1),
-      calendar = julianDayNumberValueV1.calendar
+      calendar = julianDayNumberValueV1.calendar,
     )
   }
 
@@ -278,7 +278,7 @@ object DateUtil {
             1,
             12,
             0,
-            0
+            0,
           )                    // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
           intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
@@ -292,7 +292,7 @@ object DateUtil {
             31,
             12,
             0,
-            0
+            0,
           )                  // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
@@ -318,7 +318,7 @@ object DateUtil {
             1,
             12,
             0,
-            0
+            0,
           )                    // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
           intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
@@ -332,7 +332,7 @@ object DateUtil {
             intervalStart.getActualMaximum(daysInMonth),
             12,
             0,
-            0
+            0,
           )                  // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
@@ -354,7 +354,7 @@ object DateUtil {
           exactDate.set(
             dateSegments(0).toInt,
             dateSegments(1).toInt - 1,
-            dateSegments(2).toInt
+            dateSegments(2).toInt,
           )                // Attention: in java.util.Calendar, month count starts with 0
           exactDate.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
@@ -369,7 +369,7 @@ object DateUtil {
 
       case _ =>
         throw BadRequestException(
-          s"Invalid date format: $dateString"
+          s"Invalid date format: $dateString",
         ) // should never be fulfilled due to previous regex checking
     }
   }
@@ -400,7 +400,7 @@ object DateUtil {
   def julianDayNumber2DateString(
     julianDay: Int,
     calendarType: KnoraCalendarType.Value,
-    precision: KnoraCalendarPrecision.Value
+    precision: KnoraCalendarPrecision.Value,
   ): String = {
     val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
     val year              = gregorianCalendar.get(Calendar.YEAR)
@@ -444,10 +444,10 @@ object DateUtil {
    */
   private def convertJulianDayNumberToJavaGregorianCalendar(
     julianDay: Int,
-    calendarType: KnoraCalendarType.Value
+    calendarType: KnoraCalendarType.Value,
   ): GregorianCalendar = {
     val gregorianCalendar = GregorianCalendar.from(
-      LocalDate.MIN.`with`(JulianFields.JULIAN_DAY, julianDay).atStartOfDay(UTC)
+      LocalDate.MIN.`with`(JulianFields.JULIAN_DAY, julianDay).atStartOfDay(UTC),
     )
 
     // Set the GregorianCalendar object to use the Gregorian calendar or the Julian calendar exclusively, depending on calendarType.
@@ -496,7 +496,7 @@ object DateUtil {
         dateval1 = dateval1,
         dateprecision1 = start.precision,
         dateval2 = dateval2,
-        dateprecision2 = end.precision
+        dateprecision2 = end.precision,
       )
 
     } else {
@@ -509,7 +509,7 @@ object DateUtil {
         dateval1 = convertDateToJulianDayNumber(date.start),
         dateval2 = convertDateToJulianDayNumber(date.end),
         dateprecision1 = date.precision,
-        dateprecision2 = date.precision
+        dateprecision2 = date.precision,
       )
 
     }

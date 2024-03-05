@@ -67,22 +67,22 @@ class GroupsResponderADMSpec extends CoreSpec {
                   Seq(
                     V2.StringLiteralV2(
                       value = """NewGroupDescription with "quotes" and <html tag>""",
-                      language = Some("en")
-                    )
-                  )
+                      language = Some("en"),
+                    ),
+                  ),
                 ),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.disabled
+              selfjoin = GroupSelfJoin.disabled,
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
 
         val newGroupInfo = response.group
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
-          Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
+          Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en"))),
         )
         newGroupInfo.project should equal(imagesProject)
         newGroupInfo.status should equal(true)
@@ -103,14 +103,14 @@ class GroupsResponderADMSpec extends CoreSpec {
                 .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
               project = ProjectIri.unsafeFrom(imagesProjectIri),
               status = GroupStatus.active,
-              selfjoin = GroupSelfJoin.disabled
+              selfjoin = GroupSelfJoin.disabled,
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[DuplicateValueException](
           exit,
-          s"Group with the name '${groupName.value}' already exists"
+          s"Group with the name '${groupName.value}' already exists",
         )
       }
 
@@ -122,19 +122,19 @@ class GroupsResponderADMSpec extends CoreSpec {
               name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
               descriptions = Some(
                 GroupDescriptions.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
-                )
+                  Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+                ),
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.disabled)
+              selfjoin = Some(GroupSelfJoin.disabled),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         val updatedGroupInfo = response.group
         updatedGroupInfo.name should equal("UpdatedGroupName")
         updatedGroupInfo.descriptions should equal(
-          Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en")))
+          Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
         )
         updatedGroupInfo.project should equal(imagesProject)
         updatedGroupInfo.status should equal(true)
@@ -150,17 +150,17 @@ class GroupsResponderADMSpec extends CoreSpec {
               name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
               descriptions = Some(
                 GroupDescriptions
-                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.disabled)
+              selfjoin = Some(GroupSelfJoin.disabled),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[NotFoundException](
           exit,
-          s"Group <$groupIri> not found. Aborting update request."
+          s"Group <$groupIri> not found. Aborting update request.",
         )
       }
 
@@ -173,17 +173,17 @@ class GroupsResponderADMSpec extends CoreSpec {
               name = Some(groupName),
               descriptions = Some(
                 GroupDescriptions
-                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
               ),
               status = Some(GroupStatus.active),
-              selfjoin = Some(GroupSelfJoin.disabled)
+              selfjoin = Some(GroupSelfJoin.disabled),
             ),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Group with the name '${groupName.value}' already exists."
+          s"Group with the name '${groupName.value}' already exists.",
         )
       }
 
@@ -192,12 +192,12 @@ class GroupsResponderADMSpec extends CoreSpec {
           GroupsResponderADM.updateGroup(
             GroupIri.unsafeFrom(newGroupIri.get),
             GroupUpdateRequest(None, None, None, None),
-            UUID.randomUUID
-          )
+            UUID.randomUUID,
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
-          "No data would be changed. Aborting update request."
+          "No data would be changed. Aborting update request.",
         )
       }
     }
@@ -210,7 +210,7 @@ class GroupsResponderADMSpec extends CoreSpec {
 
         received.members.map(_.id) should contain allElementsOf Seq(
           multiuserUser.ofType(UserInformationType.Restricted),
-          imagesReviewerUser.ofType(UserInformationType.Restricted)
+          imagesReviewerUser.ofType(UserInformationType.Restricted),
         ).map(_.id)
       }
 
@@ -218,8 +218,8 @@ class GroupsResponderADMSpec extends CoreSpec {
         val group = UnsafeZioRun.runOrThrow(
           GroupsResponderADM.groupMembersGetRequestADM(
             GroupIri.unsafeFrom(imagesReviewerGroup.id).value,
-            rootUser
-          )
+            rootUser,
+          ),
         )
         group.members.size shouldBe 2
 
@@ -227,16 +227,16 @@ class GroupsResponderADMSpec extends CoreSpec {
           GroupsResponderADM.updateGroupStatus(
             GroupIri.unsafeFrom(imagesReviewerGroup.id),
             GroupStatusUpdateRequest(GroupStatus.inactive),
-            UUID.randomUUID()
-          )
+            UUID.randomUUID(),
+          ),
         )
         statusChangeResponse.group.status shouldBe false
 
         val anotherGroup = UnsafeZioRun.runOrThrow(
           GroupsResponderADM.groupMembersGetRequest(
             GroupIri.unsafeFrom(imagesReviewerGroup.id),
-            rootUser
-          )
+            rootUser,
+          ),
         )
         anotherGroup.members.size shouldBe 0
       }
@@ -246,12 +246,12 @@ class GroupsResponderADMSpec extends CoreSpec {
         val exit = UnsafeZioRun.run(
           GroupsResponderADM.groupMembersGetRequest(
             GroupIri.unsafeFrom(groupIri),
-            rootUser
-          )
+            rootUser,
+          ),
         )
         assertFailsWithA[NotFoundException](
           exit,
-          s"Group <$groupIri> not found"
+          s"Group <$groupIri> not found",
         )
       }
     }

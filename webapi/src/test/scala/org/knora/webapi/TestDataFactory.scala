@@ -42,11 +42,11 @@ object TestDataFactory {
       UserStatus.Active,
       isInProject = Chunk(
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
-        ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
+        ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"),
       ),
       isInGroup = Chunk(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")),
       isInSystemAdminGroup = SystemAdmin.IsNotSystemAdmin,
-      isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
+      isInProjectAdminGroup = Chunk(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")),
     )
     val testUserWithoutAnyGroups: KnoraUser = KnoraUser(
       UserIri.unsafeFrom("http://rdfh.ch/users/exists2"),
@@ -60,7 +60,7 @@ object TestDataFactory {
       isInProject = Chunk.empty,
       isInGroup = Chunk.empty,
       isInSystemAdminGroup = SystemAdmin.IsSystemAdmin,
-      isInProjectAdminGroup = Chunk.empty
+      isInProjectAdminGroup = Chunk.empty,
     )
   }
 
@@ -71,7 +71,7 @@ object TestDataFactory {
       GroupDescriptions.unsafeFrom(List(V2.StringLiteralV2("one user group to rule them all", None))),
       GroupStatus.from(true),
       Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
-      GroupSelfJoin.from(false)
+      GroupSelfJoin.from(false),
     )
   }
 
@@ -85,7 +85,7 @@ object TestDataFactory {
     None,
     Status.Active,
     SelfJoin.CannotJoin,
-    RestrictedView.default
+    RestrictedView.default,
   )
 
   def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =

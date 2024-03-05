@@ -39,12 +39,12 @@ case class SipiServiceMock() extends SipiService {
         height = Some(256),
         numpages = None,
         duration = None,
-        fps = None
-      )
+        fps = None,
+      ),
     )
 
   def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
   ): Task[SuccessResponseV2] =
     if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
       ZIO.fail(SipiException("Sipi failed to move file to permanent storage"))
@@ -67,7 +67,7 @@ case class SipiServiceMock() extends SipiService {
 
   override def getFileMetadataFromDspIngest(
     shortcode: KnoraProject.Shortcode,
-    assetId: AssetId
+    assetId: AssetId,
   ): Task[FileMetadataSipiResponse] = ???
 }
 

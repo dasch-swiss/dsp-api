@@ -33,12 +33,12 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
+      name = "http://www.knora.org/ontology/0001/freetest",
     ),
     RdfDataObject(
       path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+      name = "http://www.knora.org/ontology/0001/anything",
+    ),
   )
 
   private def getCardinalityCountFromTriplestore(classIri: SmartIri, propertyIri: SmartIri) = {
@@ -85,14 +85,14 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
           predicates = Map(
             OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
               predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = OntologyConstants.Owl.Class.toSmartIri))
-            )
+              objects = Vector(SmartIriLiteralV2(value = OntologyConstants.Owl.Class.toSmartIri)),
+            ),
           ),
-          directCardinalities = Map(newPropertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne))
+          directCardinalities = Map(newPropertyIri -> KnoraCardinalityInfo(cardinality = ZeroOrOne)),
         ),
         lastModificationDate = ontologyLastModificationDate,
         apiRequestID = UUID.randomUUID,
-        requestingUser = user
+        requestingUser = user,
       )
       appActor ! addCardinalitiesRequest
       expectMsgType[ReadOntologyV2]

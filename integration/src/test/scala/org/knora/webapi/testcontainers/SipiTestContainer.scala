@@ -67,7 +67,7 @@ object SipiTestContainer {
       .withClasspathResourceMapping(
         "/sipi.docker-config.lua",
         "/sipi/config/sipi.docker-config.lua",
-        BindMode.READ_ONLY
+        BindMode.READ_ONLY,
       )
       .withFileSystemBind(imagesVolume.hostPath, imagesDir, BindMode.READ_WRITE)
       .withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
@@ -80,7 +80,7 @@ object SipiTestContainer {
              container.execInContainer("chmod", "777", s"$imagesDir/tmp")
            }
 
-    } yield container
+    } yield container,
   )
 
   val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {

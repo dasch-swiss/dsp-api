@@ -37,7 +37,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
         ontologyIri: InternalIri,
         classIri: InternalIri,
         subClassIri: InternalIri,
-        propertyIri: InternalIri
+        propertyIri: InternalIri,
       )
 
       val knoraOntologiesGen: Gen[Any, TestIris] = Gen.fromZIO {
@@ -47,14 +47,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             KnoraAdmin.Ontology,
             KnoraAdmin.Class.Permission,
             KnoraAdmin.Class.AdministrativePermission,
-            KnoraAdmin.Property.belongsToProject
-          )
+            KnoraAdmin.Property.belongsToProject,
+          ),
         )
         Random
           .nextIntBounded(values.length)
           .map(values(_))
           .map(iris =>
-            TestIris(ontologyIri = iris._1, classIri = iris._2, subClassIri = iris._3, propertyIri = iris._4)
+            TestIris(ontologyIri = iris._1, classIri = iris._2, subClassIri = iris._3, propertyIri = iris._4),
           )
       }
     }
@@ -69,7 +69,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       classIri: InternalIri,
       subclassIri: InternalIri,
       propertyIri: InternalIri,
-      data: OntologyCacheData
+      data: OntologyCacheData,
     )
 
     def createOntologyWithSuperClassCardinality(cardinality: Cardinality): DataCreated = {
@@ -85,7 +85,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       ontologyIntIri: InternalIri,
       classIntIri: InternalIri,
       subClassIntIri: InternalIri,
-      propertyIntIri: InternalIri
+      propertyIntIri: InternalIri,
     ): DataCreated = {
       val ontologyIri = sf.toSmartIri(ontologyIntIri.value, requireInternal = true)
       val classIri    = sf.toSmartIri(classIntIri.value, requireInternal = true)
@@ -99,7 +99,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       ontologyIri: SmartIri,
       classIri: SmartIri,
       subClassIri: SmartIri,
-      propertyIri: SmartIri
+      propertyIri: SmartIri,
     ): DataCreated = {
       val cardinalities = OntologyCacheDataBuilder.cardinalitiesMap(propertyIri, cardinality)
       val data =
@@ -110,14 +110,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(classIri)
-                  .addProperty(propertyIri.toInternalIri, cardinality)
+                  .addProperty(propertyIri.toInternalIri, cardinality),
               )
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(subClassIri)
                   .setSuperClassIri(classIri)
-                  .setInheritedCardinalities(cardinalities)
-              )
+                  .setInheritedCardinalities(cardinalities),
+              ),
           )
           .build
 
@@ -137,7 +137,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
       ontologyIri: SmartIri,
       classIri: SmartIri,
       subClassIri: SmartIri,
-      propertyIri: SmartIri
+      propertyIri: SmartIri,
     ): DataCreated = {
       val data =
         OntologyCacheDataBuilder.builder
@@ -146,14 +146,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
               .builder(ontologyIri)
               .addClassInfo(
                 ReadClassInfoV2Builder
-                  .builder(classIri)
+                  .builder(classIri),
               )
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(subClassIri)
                   .addSuperClass(classIri)
-                  .addProperty(propertyIri.toInternalIri, cardinality)
-              )
+                  .addProperty(propertyIri.toInternalIri, cardinality),
+              ),
           )
           .build
 
@@ -168,7 +168,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     OntologyRepoLive.layer,
     PredicateRepositoryLive.layer,
     StringFormatter.test,
-    TriplestoreServiceInMemory.layer
+    TriplestoreServiceInMemory.layer,
   )
 
   override def spec: Spec[Any, Throwable] =
@@ -182,7 +182,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 iris.ontologyIri,
                 iris.classIri,
                 iris.subClassIri,
-                iris.propertyIri
+                iris.propertyIri,
               )
               for {
                 _      <- OntologyCacheFake.set(d.data)
@@ -201,8 +201,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(classIri)
-                    .addProperty(propertyIri.toInternalIri, ExactlyOne)
-                )
+                    .addProperty(propertyIri.toInternalIri, ExactlyOne),
+                ),
             )
             .build
 
@@ -219,7 +219,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             test(
               s"""
                  |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'Unbounded $Unbounded', 'ZeroOrOne $ZeroOrOne'
-                 |then this is NOT possible""".stripMargin
+                 |then this is NOT possible""".stripMargin,
             ) {
               check(cardinalitiesGen(AtLeastOne, Unbounded, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
@@ -232,20 +232,20 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             test(
               s"""
                  |when checking new cardinality 'ExactlyOne $ExactlyOne'
-                 |then this is possible""".stripMargin
+                 |then this is possible""".stripMargin,
             ) {
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ExactlyOne)
               for {
                 _      <- OntologyCacheFake.set(d.data)
                 actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, ExactlyOne)
               } yield assertTrue(actual.isRight)
-            }
+            },
           ),
           suite(s"Given 'AtLeastOne $AtLeastOne' Cardinality on super-class property")(
             test(
               s"""
                  |when checking new cardinalities 'Unbounded $Unbounded', 'ZeroOrOne $ZeroOrOne'
-                 |then this is NOT possible""".stripMargin
+                 |then this is NOT possible""".stripMargin,
             ) {
               check(cardinalitiesGen(Unbounded, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
@@ -259,7 +259,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             test(
               s"""
                  |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'ExactlyOne $ExactlyOne'
-                 |then this is possible""".stripMargin
+                 |then this is possible""".stripMargin,
             ) {
               check(cardinalitiesGen(AtLeastOne, ExactlyOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(AtLeastOne)
@@ -268,13 +268,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
                 } yield assertTrue(actual.isRight)
               }
-            }
+            },
           ),
           suite(s"Given 'ZeroOrOne $ZeroOrOne' Cardinality on super-class property")(
             test(
               s"""
                  |when checking new cardinalities 'AtLeastOne $AtLeastOne', 'Unbounded $Unbounded'
-                 |then this is NOT possible""".stripMargin
+                 |then this is NOT possible""".stripMargin,
             ) {
               check(cardinalitiesGen(AtLeastOne, Unbounded)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
@@ -287,7 +287,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             test(
               s"""
                  |when checking new cardinalities 'ExactlyOne $ExactlyOne', 'ZeroOrOne $ZeroOrOne'
-                 |then this is possible""".stripMargin
+                 |then this is possible""".stripMargin,
             ) {
               check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
                 val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(ZeroOrOne)
@@ -296,13 +296,13 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                   actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
                 } yield assertTrue(actual.isRight)
               }
-            }
+            },
           ),
           test(
             s"""
                |Given 'Unbounded $Unbounded' Cardinality on super-class property'
                |when checking all cardinalities
-               |then this is always possible""".stripMargin
+               |then this is always possible""".stripMargin,
           ) {
             check(cardinalitiesGen()) { newCardinality =>
               val d = CanSetCardinalityTestData.createOntologyWithSuperClassCardinality(Unbounded)
@@ -311,14 +311,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 actual <- CardinalityService.canSetCardinality(d.subclassIri, d.propertyIri, newCardinality)
               } yield assertTrue(actual.isRight)
             }
-          }
+          },
         ),
         suite("Check subclass")(
           test(
             s"""
                |Given 'Unbounded $Unbounded' Cardinality on subclass property'
                |when checking $Unbounded cardinality
-               |then this is possible""".stripMargin
+               |then this is possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             for {
@@ -330,7 +330,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'Unbounded $Unbounded' Cardinality on subclass property'
                |when checking cardinalities $AtLeastOne, $ExactlyOne, $ZeroOrOne
-               |then this is NOT possible""".stripMargin
+               |then this is NOT possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(Unbounded)
             check(cardinalitiesGen(AtLeastOne, ExactlyOne, ZeroOrOne)) { newCardinality =>
@@ -344,7 +344,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'ExactlyOne $ExactlyOne' Cardinality on subclass property'
                |when checking cardinalities
-               |then this is always possible""".stripMargin
+               |then this is always possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ExactlyOne)
             check(cardinalitiesGen()) { newCardinality =>
@@ -358,7 +358,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'AtLeastOne $AtLeastOne' Cardinality on subclass property'
                |when checking cardinalities $Unbounded, $AtLeastOne
-               |then this is possible""".stripMargin
+               |then this is possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(Unbounded, AtLeastOne)) { newCardinality =>
@@ -372,7 +372,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'AtLeastOne $AtLeastOne' Cardinality on subclass property'
                |when checking cardinalities $ExactlyOne, $ZeroOrOne
-               |then this is NOT possible""".stripMargin
+               |then this is NOT possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(AtLeastOne)
             check(cardinalitiesGen(ExactlyOne, ZeroOrOne)) { newCardinality =>
@@ -386,7 +386,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'AtLeastOne $ZeroOrOne' Cardinality on subclass property'
                |when checking cardinalities $ZeroOrOne, $Unbounded
-               |then this is possible""".stripMargin
+               |then this is possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ZeroOrOne, Unbounded)) { newCardinality =>
@@ -400,7 +400,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
             s"""
                |Given 'AtLeastOne $ZeroOrOne' Cardinality on subclass property'
                |when checking cardinalities $ExactlyOne, $AtLeastOne
-               |then this is NOT possible""".stripMargin
+               |then this is NOT possible""".stripMargin,
           ) {
             val d = CanSetCardinalityTestData.createOntologyWithSubClassCardinality(ZeroOrOne)
             check(cardinalitiesGen(ExactlyOne, AtLeastOne)) { newCardinality =>
@@ -409,8 +409,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 actual <- CardinalityService.canSetCardinality(d.classIri, d.propertyIri, newCardinality)
               } yield assertTrue(actual == Left(List(SubclassCheckFailure(List(d.subclassIri)))))
             }
-          }
-        )
+          },
+        ),
       ).provide(commonLayers, emptyDataset),
       suite("canSetCardinality with property in use twice")(
         test(s"""
@@ -427,8 +427,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(Anything.Class.Thing)
-                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
-                )
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded),
+                ),
             )
           check(cardinalitiesGen(ZeroOrOne, ExactlyOne)) { newCardinality =>
             for {
@@ -437,7 +437,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 CardinalityService.canSetCardinality(
                   Anything.Class.Thing,
                   Anything.Property.hasOtherThing,
-                  newCardinality
+                  newCardinality,
                 )
             } yield assertTrue(
               actual == Left(
@@ -446,14 +446,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                     List(
                       Anything.Class.Thing,
                       InternalIri(value = "http://anotherThing"),
-                      InternalIri(value = "http://aThing")
-                    )
-                  )
-                )
-              )
+                      InternalIri(value = "http://aThing"),
+                    ),
+                  ),
+                ),
+              ),
             )
           }
-        }
+        },
       ).provide(
         commonLayers,
         datasetLayerFromTurtle(s"""
@@ -470,7 +470,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |  <${Anything.Property.hasOtherThing.value}> "theOther" ;
                                   |  <${Anything.Property.hasOtherThing.value}> "theOtherOther" .
                                   |
-                                  |""".stripMargin)
+                                  |""".stripMargin),
       ),
       suite("canSetCardinality with deleted object in property reference")(
         test("given a deleted property was used") {
@@ -481,8 +481,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(Anything.Class.Thing)
-                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
-                )
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded),
+                ),
             )
           check(cardinalitiesGen(AtLeastOne)) { newCardinality =>
             for {
@@ -491,7 +491,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 CardinalityService.canSetCardinality(
                   Anything.Class.Thing,
                   Anything.Property.hasOtherThing,
-                  newCardinality
+                  newCardinality,
                 )
             } yield assertTrue(actual.isLeft)
           }
@@ -510,8 +510,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                     |  a <${Anything.Class.Thing.value}> ;
                                     |  knora-base:isDeleted true .
                                     |
-                                    |""".stripMargin)
-        )
+                                    |""".stripMargin),
+        ),
       ),
       suite("canSetCardinality with property in use once")(
         test(s"""
@@ -528,8 +528,8 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(
                   ReadClassInfoV2Builder
                     .builder(Anything.Class.Thing)
-                    .addProperty(Anything.Property.hasOtherThing, Unbounded)
-                )
+                    .addProperty(Anything.Property.hasOtherThing, Unbounded),
+                ),
             )
           check(cardinalitiesGen(AtLeastOne, ZeroOrOne, ExactlyOne)) { newCardinality =>
             for {
@@ -538,11 +538,11 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 CardinalityService.canSetCardinality(
                   Anything.Class.Thing,
                   Anything.Property.hasOtherThing,
-                  newCardinality
+                  newCardinality,
                 )
             } yield assertTrue(actual.isRight)
           }
-        }
+        },
       ).provide(
         commonLayers,
         datasetLayerFromTurtle(s"""
@@ -553,7 +553,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |  a <${Anything.Class.Thing.value}> ;
                                   |  <${Anything.Property.hasOtherThing.value}> false .
                                   |
-                                  |""".stripMargin)
+                                  |""".stripMargin),
       ),
       suite("CardinalityServiceLive persistence check")(test(s"""
                                                                 |Given a three tier subclass hierarchy
@@ -568,14 +568,14 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                 ReadClassInfoV2Builder
                   .builder(Biblio.Class.Article)
                   .addSuperClass(Biblio.Class.Publication)
-                  .addProperty(Biblio.Property.hasTitle, Unbounded)
+                  .addProperty(Biblio.Property.hasTitle, Unbounded),
               )
               .addClassInfo(
                 ReadClassInfoV2Builder
                   .builder(Biblio.Class.JournalArticle)
                   .addSuperClass(Biblio.Class.Article)
-                  .addProperty(Biblio.Property.hasTitle, AtLeastOne)
-              )
+                  .addProperty(Biblio.Property.hasTitle, AtLeastOne),
+              ),
           )
           .build
         for {
@@ -598,7 +598,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
                                   |<http://aJournalArticle>
                                   |  a <${Biblio.Class.JournalArticle.value}> ;
                                   |  <${Biblio.Property.hasTitle.value}> "journal article title" .
-                                  |""".stripMargin)
-      )
+                                  |""".stripMargin),
+      ),
     )
 }

@@ -38,7 +38,7 @@ class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
             subj = statement.subj,
             pred = statement.pred,
             obj = newValue,
-            context = statement.context
+            context = statement.context,
           )
         case _ => ()
       }

@@ -15,7 +15,7 @@ object Responder {
   def handleUnexpectedMessage(message: Any, who: String): Task[Nothing] =
     ZIO.fail(
       UnexpectedMessageException(
-        s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
-      )
+        s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}",
+      ),
     )
 }

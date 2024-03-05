@@ -39,7 +39,7 @@ object CacheUtil {
     overflowToDisk: Boolean,
     eternal: Boolean,
     timeToLiveSeconds: Int,
-    timeToIdleSeconds: Int
+    timeToIdleSeconds: Int,
   )
 
   /**
@@ -58,7 +58,7 @@ object CacheUtil {
         cacheConfig.overflowToDisk,
         cacheConfig.eternal,
         cacheConfig.timeToLiveSeconds,
-        cacheConfig.timeToIdleSeconds
+        cacheConfig.timeToIdleSeconds,
       )
       cacheManager.addCache(cache)
       cache.getCacheEventNotificationService.registerListener(new LoggingCacheEventListener(log))
@@ -133,7 +133,7 @@ object CacheUtil {
         }
       case None =>
         throw ApplicationCacheException(
-          s"Can't find application cache '$cacheName'. Please check configuration of 'app.caches' in 'application.conf'"
+          s"Can't find application cache '$cacheName'. Please check configuration of 'app.caches' in 'application.conf'",
         )
     }
 

@@ -51,7 +51,7 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo, imagesProjectIri -> imagesProjectInfo),
@@ -59,25 +59,25 @@ object SharedTestDataADM2 {
       groupsPerProject = Map(
         incunabulaProjectIri -> List(
           s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}",
         ),
         imagesProjectIri -> List(
           "http://rdfh.ch/groups/00FF/images-reviewer",
           s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
-        )
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}",
+        ),
       ),
       administrativePermissionsPerProject = Map(
         incunabulaProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
+          PermissionADM.ProjectResourceCreateAllPermission,
         ),
         imagesProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /**
@@ -99,7 +99,7 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = List.empty[IRI],
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
@@ -107,16 +107,16 @@ object SharedTestDataADM2 {
       groupsPerProject = Map(
         imagesProjectIri -> List(
           OntologyConstants.KnoraAdmin.ProjectMember,
-          OntologyConstants.KnoraAdmin.ProjectAdmin
-        )
+          OntologyConstants.KnoraAdmin.ProjectAdmin,
+        ),
       ),
       administrativePermissionsPerProject = Map(
         imagesProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /* represents 'user02' as found in admin-data.ttl  */
@@ -129,20 +129,20 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = List.empty[IRI],
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+        imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
       ),
       administrativePermissionsPerProject = Map(
         imagesProjectIri -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /* represents 'images-reviewer-user' as found in admin-data.ttl  */
@@ -155,7 +155,7 @@ object SharedTestDataADM2 {
       password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
@@ -163,16 +163,16 @@ object SharedTestDataADM2 {
       groupsPerProject = Map(
         imagesProjectIri -> List(
           "http://rdfh.ch/groups/00FF/images-reviewer",
-          s"${OntologyConstants.KnoraAdmin.ProjectMember}"
-        )
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}",
+        ),
       ),
       administrativePermissionsPerProject = Map(
         imagesProjectIri -> Set(
           PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
-          PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
-        )
-      )
-    )
+          PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat"),
+        ),
+      ),
+    ),
   )
 
   /* represents the full project info of the images project */
@@ -186,7 +186,7 @@ object SharedTestDataADM2 {
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -208,7 +208,7 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
@@ -216,16 +216,16 @@ object SharedTestDataADM2 {
       groupsPerProject = Map(
         incunabulaProjectIri -> List(
           s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
-        )
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}",
+        ),
       ),
       administrativePermissionsPerProject = Map(
         incunabulaProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
@@ -238,20 +238,20 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
+        incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}"),
       ),
       administrativePermissionsPerProject = Map(
         incunabulaProjectIri -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
@@ -264,20 +264,20 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
+        incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}"),
       ),
       administrativePermissionsPerProject = Map(
         incunabulaProjectIri -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   /* represents the ProjectInfoV1 of the incunabula project */
@@ -287,15 +287,15 @@ object SharedTestDataADM2 {
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Some(
-      "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"
+      "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
     ),
     keywords = Some(
-      "Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"
+      "Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools",
     ),
     logo = Some("incunabula_logo.png"),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -316,7 +316,7 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Seq.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
@@ -324,16 +324,16 @@ object SharedTestDataADM2 {
       groupsPerProject = Map(
         anythingProjectIri -> List(
           OntologyConstants.KnoraAdmin.ProjectMember,
-          OntologyConstants.KnoraAdmin.ProjectAdmin
-        )
+          OntologyConstants.KnoraAdmin.ProjectAdmin,
+        ),
       ),
       administrativePermissionsPerProject = Map(
         anythingProjectIri -> Set(
           PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   def anythingUser1 = sharedtestdata.UserProfile(
@@ -345,20 +345,20 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Seq.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+        anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
       ),
       administrativePermissionsPerProject = Map(
         anythingProjectIri -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   def anythingUser2 = sharedtestdata.UserProfile(
@@ -370,20 +370,20 @@ object SharedTestDataADM2 {
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "de"
+      lang = "de",
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+        anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
       ),
       administrativePermissionsPerProject = Map(
         anythingProjectIri -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
+          PermissionADM.ProjectResourceCreateAllPermission,
+        ),
+      ),
+    ),
   )
 
   def anythingProjectInfo = sharedtestdata.ProjectInfo(
@@ -396,7 +396,7 @@ object SharedTestDataADM2 {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -418,7 +418,7 @@ object SharedTestDataADM2 {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
     status = true,
-    selfjoin = false
+    selfjoin = false,
   )
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
   def beolUser = sharedtestdata.UserProfile(
@@ -430,11 +430,11 @@ object SharedTestDataADM2 {
       password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
       token = None,
       status = Some(true),
-      lang = "en"
+      lang = "en",
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(beolProjectIri -> beolProjectInfo),
-    permissionData = PermissionsDataADM()
+    permissionData = PermissionsDataADM(),
   )
 
   /**
@@ -456,7 +456,7 @@ object SharedTestDataADM2 {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = false,
-    selfjoin = false
+    selfjoin = false,
   )
 
   /**
@@ -478,6 +478,6 @@ object SharedTestDataADM2 {
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0806/webern"),
     status = false,
-    selfjoin = false
+    selfjoin = false,
   )
 }

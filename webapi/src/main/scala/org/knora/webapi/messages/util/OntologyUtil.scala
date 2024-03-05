@@ -29,7 +29,7 @@ object OntologyUtil {
           baseDefsSequence ++ baseDefsSequence.flatMap { baseDef =>
             if (baseDef == initialIri) {
               throw InconsistentRepositoryDataException(
-                s"Entity $initialIri has an inheritance cycle with entity $baseDef"
+                s"Entity $initialIri has an inheritance cycle with entity $baseDef",
               )
             } else {
               getAllBaseDefsRec(initialIri, baseDef)

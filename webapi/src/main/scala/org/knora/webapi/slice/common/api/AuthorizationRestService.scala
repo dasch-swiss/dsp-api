@@ -59,14 +59,14 @@ trait AuthorizationRestService {
 
   def ensureSystemAdminSystemUserOrProjectAdmin(
     user: User,
-    project: KnoraProject
+    project: KnoraProject,
   ): IO[ForbiddenException, Unit]
 
   def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit]
 
   def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): IO[ForbiddenException, KnoraProject]
 }
 
@@ -99,7 +99,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
   }
   override def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
-    groupIri: GroupIri
+    groupIri: GroupIri,
   ): IO[ForbiddenException, KnoraProject] =
     for {
       group <- groupsRepo
@@ -114,7 +114,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
 
   override def ensureSystemAdminOrProjectAdmin(
     user: User,
-    projectIri: ProjectIri
+    projectIri: ProjectIri,
   ): IO[ForbiddenException, KnoraProject] =
     projectRepo
       .findById(projectIri)
@@ -129,7 +129,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
   }
   override def ensureSystemAdminSystemUserOrProjectAdmin(
     user: User,
-    project: KnoraProject
+    project: KnoraProject,
   ): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator, system user or project administrator has permissions for this operation."
@@ -149,7 +149,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
   private def checkActiveUser(
     user: User,
     condition: User => Boolean,
-    errorMsg: String
+    errorMsg: String,
   ): IO[ForbiddenException, Unit] =
     ensureIsActive(user) *> ZIO.fail(ForbiddenException(errorMsg)).unless(condition(user)).unit
 
