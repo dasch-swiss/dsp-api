@@ -80,13 +80,11 @@ trait GroupsResponderADM {
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
    * Only project and system admins are allowed to access this information.
    *
-   * @param groupIri       the IRI of the group.
-   * @param requestingUser the user initiating the request.
+   * @param iri       the IRI of the group.
+   * @param user      the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM]
-  final def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetRequestADM(iri.value, user)
+  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
 
   /**
    * Create a new group.
@@ -158,10 +156,8 @@ final case class GroupsResponderADMLive(
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case _: GroupsGetADM                => groupsGetADM
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
-    case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
     case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -290,12 +286,12 @@ final case class GroupsResponderADMLive(
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
    * Only project and system admins are allowed to access this information.
    *
-   * @param groupIri             the IRI of the group.
-   * @param requestingUser       the user initiating the request.
+   * @param iri             the IRI of the group.
+   * @param user       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  override def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetADM(groupIri, requestingUser).map(GroupMembersGetResponseADM)
+  override def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+    groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM)
 
   /**
    * Create a new group.

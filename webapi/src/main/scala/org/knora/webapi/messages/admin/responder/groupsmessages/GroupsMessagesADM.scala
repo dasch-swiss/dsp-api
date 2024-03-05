@@ -28,11 +28,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Get all information about all groups.      the user initiating the request.
- */
-case class GroupsGetADM() extends GroupsResponderRequestADM
-
-/**
  * Get everything about a single group identified through its IRI. A successful response will be
  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
  *
