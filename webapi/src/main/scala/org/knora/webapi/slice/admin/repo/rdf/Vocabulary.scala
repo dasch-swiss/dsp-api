@@ -45,6 +45,12 @@ object Vocabulary {
     // project properties
     val projectRestrictedViewSize: Iri      = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewSize")
     val projectRestrictedViewWatermark: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "projectRestrictedViewWatermark")
+    val projectDescription: Iri             = Rdf.iri(KnoraAdminPrefixExpansion, "projectDescription")
+    val projectKeyword: Iri                 = Rdf.iri(KnoraAdminPrefixExpansion, "projectKeyword")
+    val projectLogo: Iri                    = Rdf.iri(KnoraAdminPrefixExpansion, "projectLogo")
+    val projectLongname: Iri                = Rdf.iri(KnoraAdminPrefixExpansion, "projectLongname")
+    val projectShortcode: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "projectShortcode")
+    val projectShortname: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "projectShortname")
   }
 
   object KnoraBase {

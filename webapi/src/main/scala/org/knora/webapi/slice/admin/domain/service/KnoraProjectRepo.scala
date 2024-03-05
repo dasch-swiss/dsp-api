@@ -11,12 +11,11 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraProjectRepo extends Repository[KnoraProject, ProjectIri] {
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] =
     findById(ProjectIdentifierADM.ShortcodeIdentifier(code))
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit]
+  def save(project: KnoraProject): Task[KnoraProject]
 }
