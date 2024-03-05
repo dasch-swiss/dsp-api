@@ -96,8 +96,17 @@ object GroupsRequests {
     status: Option[GroupStatus] = None,
     selfjoin: Option[GroupSelfJoin] = None,
   )
+
   object GroupUpdateRequest {
-    implicit val jsonCodec: JsonCodec[GroupUpdateRequest] = DeriveJsonCodec.gen[GroupUpdateRequest]
+    implicit val jsonCodec: JsonCodec[GroupUpdateRequest] = DeriveJsonCodec
+      .gen[GroupUpdateRequest]
+      .transformOrFail(
+        request =>
+          if (List(request.name, request.descriptions, request.status, request.selfjoin).flatten.isEmpty)
+            Left("At least one field must be present.")
+          else Right(request),
+        identity,
+      )
   }
 
   final case class GroupStatusUpdateRequest(

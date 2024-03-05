@@ -186,20 +186,6 @@ class GroupsResponderADMSpec extends CoreSpec {
           s"Group with the name '${groupName.value}' already exists.",
         )
       }
-
-      "return 'BadRequest' if nothing would be changed during the update" in {
-        val exit = UnsafeZioRun.run(
-          GroupsResponderADM.updateGroup(
-            GroupIri.unsafeFrom(newGroupIri.get),
-            GroupUpdateRequest(None, None, None, None),
-            UUID.randomUUID,
-          ),
-        )
-        assertFailsWithA[BadRequestException](
-          exit,
-          "No data would be changed. Aborting update request.",
-        )
-      }
     }
 
     "used to query members" should {

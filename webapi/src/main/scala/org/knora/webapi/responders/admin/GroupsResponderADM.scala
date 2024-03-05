@@ -414,18 +414,6 @@ final case class GroupsResponderADMLive(
    */
   private def updateGroupHelper(groupIri: GroupIri, request: GroupUpdateRequest) =
     for {
-      _ <- ZIO
-             .fail(BadRequestException("No data would be changed. Aborting update request."))
-             .when(
-               // parameter list is empty
-               List(
-                 request.name,
-                 request.descriptions,
-                 request.status,
-                 request.selfjoin,
-               ).flatten.isEmpty,
-             )
-
       /* Verify that the group exists. */
       groupADM <-
         groupGetADM(groupIri.value)
