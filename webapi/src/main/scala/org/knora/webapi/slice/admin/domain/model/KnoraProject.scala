@@ -31,6 +31,7 @@ case class KnoraProject(
   logo: Option[Logo],
   status: Status,
   selfjoin: SelfJoin,
+  restrictedView: RestrictedView
 )
 
 object KnoraProject {

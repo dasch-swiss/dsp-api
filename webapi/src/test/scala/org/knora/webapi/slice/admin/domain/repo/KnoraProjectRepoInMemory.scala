@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.domain.repo
 import zio.Ref
 import zio.Task
 import zio.ULayer
-import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -17,7 +16,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 
@@ -32,9 +30,6 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
       case IriIdentifier(iri)             => _.id.value == iri.value
     }),
   )
-
-  override def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[Unit] =
-    ZIO.die(new UnsupportedOperationException("Not implemented yet"))
 }
 
 object KnoraProjectRepoInMemory {

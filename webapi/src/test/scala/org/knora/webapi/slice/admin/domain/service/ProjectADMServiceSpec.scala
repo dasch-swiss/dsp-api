@@ -14,6 +14,7 @@ import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectADMServiceSpec extends ZIOSpecDefault {
@@ -33,10 +34,10 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           logo = None,
           ontologies = List.empty,
           status = true,
-          selfjoin = true,
+          selfjoin = true
         )
         assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
+          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname"
         )
       },
       test("a KnoraProject") {
@@ -52,12 +53,13 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           logo = None,
           status = Status.Active,
           selfjoin = SelfJoin.CanJoin,
+          restrictedView = RestrictedView.default
         )
         assertTrue(
           ProjectADMService
             .projectDataNamedGraphV2(p)
-            .value == s"http://www.knora.org/data/$shortcode/$shortname",
+            .value == s"http://www.knora.org/data/$shortcode/$shortname"
         )
-      },
+      }
     )
 }
