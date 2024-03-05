@@ -36,7 +36,7 @@ trait ProjectADMRestService {
 
   def listAllProjects(): Task[ProjectsGetResponseADM]
 
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse]
 
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM]
 
@@ -101,15 +101,15 @@ final case class ProjectsADMRestServiceLive(
   } yield external
 
   /**
-   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
+   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponse]].
    *
    * @param id           a [[ProjectIdentifierADM]] instance
    * @return
-   *     '''success''': information about the project as a [[ProjectGetResponseADM]]
+   *     '''success''': information about the project as a [[ProjectGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    */
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
+  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse] = for {
     internal <- responder.getSingleProjectADMRequest(id)
     external <- format.toExternalNonSpray(internal)
   } yield external

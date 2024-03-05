@@ -101,8 +101,8 @@ object RouteUtilADM {
       }
 
       response match {
-        case ProjectGetResponseADM(project) => ProjectGetResponseADM(projectAsExternalRepresentation(project))
-        case _                              => response
+        case ProjectGetResponse(project) => ProjectGetResponse(projectAsExternalRepresentation(project))
+        case _                           => response
       }
     }
   }

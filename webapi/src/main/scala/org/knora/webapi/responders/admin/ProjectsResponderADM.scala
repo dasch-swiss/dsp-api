@@ -58,14 +58,14 @@ trait ProjectsResponderADM {
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponseADM]].
+   * as a [[ProjectGetResponse]].
    *
    * @param id the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponseADM]].
+   * @return Information about the project as a [[ProjectGetResponse]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse]
 
   /**
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
@@ -222,18 +222,18 @@ final case class ProjectsResponderADMLive(
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponseADM]].
+   * as a [[ProjectGetResponse]].
    *
    * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponseADM]].
+   * @return Information about the project as a [[ProjectGetResponse]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
+  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse] =
     projectService
       .findByProjectIdentifier(id)
       .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
-      .map(ProjectGetResponseADM.apply)
+      .map(ProjectGetResponse.apply)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list

@@ -57,17 +57,17 @@ final case class ProjectsEndpoints(
 
     val getAdminProjectsByProjectIri = baseEndpoints.publicEndpoint.get
       .in(projectsByIri)
-      .out(zioJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the IRI.")
 
     val getAdminProjectsByProjectShortcode = baseEndpoints.publicEndpoint.get
       .in(projectsByShortcode)
-      .out(zioJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the shortcode.")
 
     val getAdminProjectsByProjectShortname = baseEndpoints.publicEndpoint.get
       .in(projectsByShortname)
-      .out(zioJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the shortname.")
 
     val getAdminProjectsKeywordsByProjectIri = baseEndpoints.publicEndpoint.get

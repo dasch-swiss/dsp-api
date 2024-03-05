@@ -49,7 +49,7 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMes
 // Requests
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectGetResponseADM]]. External use.
+ * of [[ProjectGetResponse]]. External use.
  *
  * @param identifier           the IRI, email, or username of the project.
  */
@@ -109,10 +109,10 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponseADM(project: ProjectADM) extends AdminResponse
-object ProjectGetResponseADM {
-  implicit val projectCodec: JsonCodec[ProjectADM]     = DeriveJsonCodec.gen[ProjectADM]
-  implicit val codec: JsonCodec[ProjectGetResponseADM] = DeriveJsonCodec.gen[ProjectGetResponseADM]
+case class ProjectGetResponse(project: ProjectADM) extends AdminResponse
+object ProjectGetResponse {
+  implicit val projectCodec: JsonCodec[ProjectADM]  = DeriveJsonCodec.gen[ProjectADM]
+  implicit val codec: JsonCodec[ProjectGetResponse] = DeriveJsonCodec.gen[ProjectGetResponse]
 }
 
 /**
