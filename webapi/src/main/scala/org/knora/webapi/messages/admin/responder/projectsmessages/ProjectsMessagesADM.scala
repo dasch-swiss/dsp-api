@@ -175,6 +175,21 @@ object ProjectRestrictedViewSettingsGetResponseADM {
 }
 
 /**
+ * Represents the JSON response to a request for a information about a `FileValue`.
+ *
+ * @param permissionCode         a code representing the user's maximum permission on the file.
+ * @param restrictedViewSettings the project's restricted view settings.
+ */
+case class PermissionCodeAndProjectRestrictedViewSettings(
+  permissionCode: Int,
+  restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
+) extends AdminResponse
+object PermissionCodeAndProjectRestrictedViewSettings {
+  implicit val codec: JsonCodec[PermissionCodeAndProjectRestrictedViewSettings] =
+    DeriveJsonCodec.gen[PermissionCodeAndProjectRestrictedViewSettings]
+}
+
+/**
  * Represents an answer to a project creating/modifying operation.
  *
  * @param project the new project info of the created/modified project.

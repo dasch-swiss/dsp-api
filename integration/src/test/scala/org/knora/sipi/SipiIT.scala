@@ -23,7 +23,7 @@ import scala.util.Try
 
 import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.sipimessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
