@@ -49,14 +49,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 trait ProjectsResponderADM {
 
   /**
-   * Gets all the projects and returns them as a [[ProjectADM]].
-   *
-   * @return all the projects as a [[ProjectADM]].
-   *         [[NotFoundException]] if no projects are found.
-   */
-  def getNonSystemProjects: Task[ProjectsGetResponseADM]
-
-  /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponseADM]].
    *
@@ -206,19 +198,6 @@ final case class ProjectsResponderADMLive(
       )
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
-
-  /**
-   * Gets all the projects but not system projects.
-   * Filters out system projects in response.
-   *
-   * @return all non-system projects as a [[ProjectsGetResponseADM]].
-   *         [[NotFoundException]] if no projects are found.
-   */
-  override def getNonSystemProjects: Task[ProjectsGetResponseADM] =
-    projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
-      case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
-      case projects => ZIO.succeed(ProjectsGetResponseADM(projects))
-    }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information

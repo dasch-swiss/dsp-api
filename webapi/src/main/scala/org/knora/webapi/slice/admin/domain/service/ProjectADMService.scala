@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -41,6 +42,21 @@ final case class ProjectADMService(
           case None      => ZIO.unit
         }
     }
+
+  /**
+   * Gets all the projects that are not system projects and returns them as a [[ProjectADM]].
+   *
+   * @return all the projects as a [[ProjectADM]].
+   *         [[NotFoundException]] if no projects are found.
+   */
+  def getNonSystemProjects: Task[NonEmptyChunk[ProjectADM]] =
+    for {
+      projects         <- findAll
+      nonSystemProjects = projects.filter(_.id.startsWith("http://rdfh.ch/projects/"))
+      result <- ZIO
+                  .fromOption(NonEmptyChunk.fromIterableOption(nonSystemProjects))
+                  .orElseFail(NotFoundException(s"No projects found"))
+    } yield result
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
     ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))

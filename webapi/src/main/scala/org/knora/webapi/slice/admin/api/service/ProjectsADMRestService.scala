@@ -96,8 +96,8 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
   def listAllProjects(): Task[ProjectsGetResponseADM] = for {
-    internal <- responder.getNonSystemProjects
-    external <- format.toExternal(internal)
+    internal <- projectService.getNonSystemProjects
+    external <- format.toExternal(ProjectsGetResponseADM(internal))
   } yield external
 
   /**
