@@ -47,47 +47,47 @@ final case class ProjectsEndpoints(
 
     val getAdminProjects = baseEndpoints.publicEndpoint.get
       .in(projectsBase)
-      .out(sprayJsonBody[ProjectsGetResponseADM])
+      .out(zioJsonBody[ProjectsGetResponse])
       .description("Returns all projects.")
 
     val getAdminProjectsKeywords = baseEndpoints.publicEndpoint.get
       .in(projectsBase / keywords)
-      .out(sprayJsonBody[ProjectsKeywordsGetResponseADM])
+      .out(zioJsonBody[ProjectsKeywordsGetResponse])
       .description("Returns all unique keywords for all projects as a list.")
 
     val getAdminProjectsByProjectIri = baseEndpoints.publicEndpoint.get
       .in(projectsByIri)
-      .out(sprayJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the IRI.")
 
     val getAdminProjectsByProjectShortcode = baseEndpoints.publicEndpoint.get
       .in(projectsByShortcode)
-      .out(sprayJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the shortcode.")
 
     val getAdminProjectsByProjectShortname = baseEndpoints.publicEndpoint.get
       .in(projectsByShortname)
-      .out(sprayJsonBody[ProjectGetResponseADM])
+      .out(zioJsonBody[ProjectGetResponse])
       .description("Returns a single project identified by the shortname.")
 
     val getAdminProjectsKeywordsByProjectIri = baseEndpoints.publicEndpoint.get
       .in(projectsByIri / keywords)
-      .out(sprayJsonBody[ProjectKeywordsGetResponseADM])
+      .out(zioJsonBody[ProjectKeywordsGetResponse])
       .description("Returns all keywords for a single project.")
 
     val getAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByIri / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the IRI.")
 
     val getAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByShortcode / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the shortcode.")
 
     val getAdminProjectsByProjectShortnameRestrictedViewSettings = baseEndpoints.publicEndpoint.get
       .in(projectsByShortname / restrictedViewSettings)
-      .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .out(zioJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description("Returns the project's restricted view settings identified by the shortname.")
   }
 

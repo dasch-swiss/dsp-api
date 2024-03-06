@@ -25,7 +25,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
@@ -713,7 +713,7 @@ object CreateResourceRequestV2 {
                       )
         projectId <-
           IriIdentifier.fromString(projectIri.toString).toZIO.mapError(e => BadRequestException(e.getMessage))
-        projectInfoResponse <- MessageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
+        projectInfoResponse <- MessageRelay.ask[ProjectGetResponse](ProjectGetRequestADM(projectId))
 
         _ <- ZIO.attempt(maybeCustomResourceIri.foreach { iri =>
                if (!iri.isKnoraResourceIri) {
