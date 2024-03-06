@@ -821,13 +821,17 @@ Example response:
 
 ### Set Restricted View Settings
 
-Both routes take String parameter which sets restricted view size in one of two formats: as an image dimensions or a 
-percentage. The dimensions pattern looks like: `!X,X`, where X is the number representing scaled image dimensions in
-a square, so that the width and height of the returned image are not greater than the requested value.
-Example: `!512,512` means the image's bigger side will be set to 512 pixels, setting the other side respectively to
-image aspect ratio. The percentage pattern looks like: `pct:X`, where X is the number between 1-100 representing the
-percentage the image will be scaled to. Example: `pct:1` means the image will be scaled to 1% of the original image
-size.
+Set how all still image resources of a projects should be displayed when viewed as restricted. 
+This can be either a size restriction or a watermark. 
+
+For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:
+
+  * `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
+  * `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
+
+
+If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size `!128,128` is set.
+It is only possible to set either the size or the watermark, not both at the same time.
 
 Permissions: ProjectAdmin/SystemAdmin
 
@@ -838,37 +842,43 @@ Request definition:
 
 Description: Set the project's restricted view
 
-Required payload:
+The endpoint accepts either a size or a watermark but not both.
 
-- `size` string
+Size:
+```json
+{ "size": "!512,512" }
+```
 
-Optional payload:
-- `watermark` boolean
+Watermark:
+```json
+{ "watermark": true }
+```
 
-Example request:
+Examples :
 
+Request:
 ```bash
 curl --request POST 'http://0.0.0.0:5555/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
 --data '{"size": "!512,512"}
 ```
+Response:
+```json
+{ "size": "!512,512" }
+```
 
+Request:
 ```bash
 curl --request POST 'http://0.0.0.0:5555/admin/projects/shortcode/0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
---data '{"size": "!512,512", watermark: true}'
+--data '{"watermark": true}'
 ```
-
-Example response:
-
+Response:
 ```json
-{
-    "size": "!512,512",
-    "watermark": true
-}
+{ "watermark": true }
 ```
 
-Operates on the following properties:
+Operates on the following mutually exclusive properties:
 
 - `knora-admin:projectRestrictedViewSize`: the IIIF size value
 - `knora-admin:projectRestrictedViewWatermark`: whether images of a project should be protected with a watermark.
