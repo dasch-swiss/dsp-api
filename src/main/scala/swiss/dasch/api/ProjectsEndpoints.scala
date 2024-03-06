@@ -199,6 +199,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
+    .out(header(HeaderNames.ContentDisposition, "attachment; filename=mapping.csv"))
     .tag("bulk-ingest")
 
   val postExport = base.secureEndpoint.post
