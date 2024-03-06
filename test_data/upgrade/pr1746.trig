@@ -24,8 +24,6 @@
 
                                 knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
 
-                                knora-admin:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
-
                                 knora-admin:status "true"^^xsd:boolean ;
 
                                 knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .

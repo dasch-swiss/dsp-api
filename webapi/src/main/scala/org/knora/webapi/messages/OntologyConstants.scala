@@ -478,7 +478,6 @@ object OntologyConstants {
     val ProjectLogo: IRI                    = KnoraAdminPrefixExpansion + "projectLogo"
     val ProjectRestrictedViewSize: IRI      = KnoraAdminPrefixExpansion + "projectRestrictedViewSize"
     val ProjectRestrictedViewWatermark: IRI = KnoraAdminPrefixExpansion + "projectRestrictedViewWatermark"
-    val BelongsToInstitution: IRI           = KnoraAdminPrefixExpansion + "belongsToInstitution"
     val HasSelfJoinEnabled: IRI             = KnoraAdminPrefixExpansion + "hasSelfJoinEnabled"
 
     /* Group */

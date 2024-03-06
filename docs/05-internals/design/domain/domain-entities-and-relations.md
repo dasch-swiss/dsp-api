@@ -101,7 +101,6 @@ erDiagram
 
     - User.phone?
     - Institution? (name, description, website, phone, address, email)
-    - Project.belongsToInstitution?
 
 ### Overview V2
 

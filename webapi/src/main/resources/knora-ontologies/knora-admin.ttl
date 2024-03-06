@@ -27,16 +27,6 @@
 #################################################################
 
 
-###  http://www.knora.org/ontology/knora-admin#belongsToInstitution
-
-:belongsToInstitution
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:subPropertyOf                knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                      "Indicates which Institution a project belongs to."@en ;
-    knora-base:subjectClassConstraint :knoraProject ;
-    knora-base:objectClassConstraint  :Institution .
-
-
 ###  http://www.knora.org/ontology/knora-admin#belongsToProject
 
 :belongsToProject
@@ -464,9 +454,6 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :projectRestrictedViewWatermark ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :belongsToInstitution ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :status ;
