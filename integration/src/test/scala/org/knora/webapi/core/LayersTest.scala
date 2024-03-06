@@ -103,6 +103,7 @@ object LayersTest {
       with FilesEndpointsHandler
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
+      with GroupsService
       with HttpServer
       with IIIFRequestMessageHandler
       with InferenceOptimizationService
@@ -173,6 +174,7 @@ object LayersTest {
       GroupsEndpointsHandler.layer,
       GroupsResponderADMLive.layer,
       GroupsRestServiceLive.layer,
+      GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
