@@ -27,6 +27,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -50,7 +51,7 @@ object RouteUtilADM {
         project.copy(ontologies = ontologiesExternal)
       }
 
-      def groupAsExternalRepresentation(group: GroupADM): GroupADM = {
+      def groupAsExternalRepresentation(group: Group): Group = {
         val projectExternal = projectAsExternalRepresentation(group.project)
         group.copy(project = projectExternal)
       }

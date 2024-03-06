@@ -14,10 +14,10 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
@@ -115,7 +115,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         response.status should be(StatusCodes.OK)
 
-        val result: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+        val result: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         // check that the custom IRI is correctly assigned
         result.id should be(customGroupIri)
@@ -186,7 +186,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+        val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("NewGroup")
         groupInfo.descriptions should be(Seq(StringLiteralV2("NewGroupDescription", Some("en"))))
@@ -236,7 +236,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+        val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
@@ -265,7 +265,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+        val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
@@ -312,7 +312,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+        val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))

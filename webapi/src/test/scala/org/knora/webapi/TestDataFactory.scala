@@ -65,7 +65,7 @@ object TestDataFactory {
   }
 
   object UserGroup {
-    val testUserGroup: KnoraUserGroup = KnoraUserGroup(
+    val testUserGroup: KnoraGroup = KnoraGroup(
       GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"),
       GroupName.unsafeFrom("User Group"),
       GroupDescriptions.unsafeFrom(List(V2.StringLiteralV2("one user group to rule them all", None))),
