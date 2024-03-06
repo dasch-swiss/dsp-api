@@ -36,7 +36,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.admin.domain.service.UserChangeRequest
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -134,14 +133,14 @@ final case class UsersRestService(
     _    <- ensureNotABuiltInUser(userIri)
     _    <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
     user <- getKnoraUserOrNotFound(userIri)
-    theChange = UserChangeRequest(
-                  username = changeRequest.username,
-                  email = changeRequest.email,
-                  givenName = changeRequest.givenName,
-                  familyName = changeRequest.familyName,
-                  lang = changeRequest.lang,
-                )
-    updated  <- knoraUserService.updateUser(user, theChange)
+    updated <- knoraUserService.updateUser(
+                 user,
+                 changeRequest.username,
+                 changeRequest.email,
+                 changeRequest.givenName,
+                 changeRequest.familyName,
+                 changeRequest.lang,
+               )
     response <- asExternalUserResponseADM(requestingUser, updated)
   } yield response
 
@@ -176,7 +175,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
-      updated  <- knoraUserService.updateUser(user, UserChangeRequest(status = Some(changeRequest.status)))
+      updated  <- knoraUserService.updateUserStatus(user, changeRequest.status)
       response <- asExternalUserResponseADM(requestingUser, updated)
     } yield response
 
@@ -189,8 +188,7 @@ final case class UsersRestService(
       _        <- ensureNotABuiltInUser(userIri)
       _        <- auth.ensureSystemAdmin(requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
-      theUpdate = UserChangeRequest(systemAdmin = Some(changeRequest.systemAdmin))
-      updated  <- knoraUserService.updateUser(user, theUpdate)
+      updated  <- knoraUserService.updateSystemAdminStatus(user, changeRequest.systemAdmin)
       response <- asExternalUserResponseADM(requestingUser, updated)
     } yield response
 
