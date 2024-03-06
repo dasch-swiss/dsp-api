@@ -54,7 +54,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path =
-        "test_data/generated_test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
+        "test_data/generated_test_data/responders.admin.PermissionsResponderADMSpec/additional_permissions-data.ttl",
       name = "http://www.knora.org/data/permissions",
     ),
     RdfDataObject(
