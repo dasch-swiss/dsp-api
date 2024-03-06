@@ -7,12 +7,11 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.EndpointInput.PathCapture
 import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.spray.jsonBody
+import sttp.tapir.generic.auto.schemaForCaseClass
+import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.Codecs.TapirCodec.sparqlEncodedString
 import org.knora.webapi.slice.admin.api.FilesPathVar.filename

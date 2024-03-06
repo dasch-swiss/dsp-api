@@ -54,18 +54,18 @@ trait ProjectsResponderADM {
    * @return all the projects as a [[ProjectADM]].
    *         [[NotFoundException]] if no projects are found.
    */
-  def getNonSystemProjects: Task[ProjectsGetResponseADM]
+  def getNonSystemProjects: Task[ProjectsGetResponse]
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponseADM]].
+   * as a [[ProjectGetResponse]].
    *
    * @param id the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponseADM]].
+   * @return Information about the project as a [[ProjectGetResponse]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse]
 
   /**
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
@@ -96,17 +96,17 @@ trait ProjectsResponderADM {
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
    *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
    */
-  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM]
+  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse]
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
    */
-  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
+  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse]
 
   /**
    * Get project's restricted view settings.
@@ -211,29 +211,29 @@ final case class ProjectsResponderADMLive(
    * Gets all the projects but not system projects.
    * Filters out system projects in response.
    *
-   * @return all non-system projects as a [[ProjectsGetResponseADM]].
+   * @return all non-system projects as a [[ProjectsGetResponse]].
    *         [[NotFoundException]] if no projects are found.
    */
-  override def getNonSystemProjects: Task[ProjectsGetResponseADM] =
+  override def getNonSystemProjects: Task[ProjectsGetResponse] =
     projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
       case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
-      case projects => ZIO.succeed(ProjectsGetResponseADM(projects))
+      case projects => ZIO.succeed(ProjectsGetResponse(projects))
     }
 
   /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponseADM]].
+   * as a [[ProjectGetResponse]].
    *
    * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponseADM]].
+   * @return Information about the project as a [[ProjectGetResponse]].
    *
    *         [[NotFoundException]] When no project for the given IRI can be found.
    */
-  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
+  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse] =
     projectService
       .findByProjectIdentifier(id)
       .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
-      .map(ProjectGetResponseADM.apply)
+      .map(ProjectGetResponse.apply)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -323,18 +323,18 @@ final case class ProjectsResponderADMLive(
   /**
    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
    *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
    */
-  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
+  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse] =
     projectService.findAllProjectsKeywords
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
    *
    * @param projectIri           the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
    */
-  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM] =
+  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse] =
     for {
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
@@ -398,7 +398,7 @@ final case class ProjectsResponderADMLive(
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
       .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      .map(ProjectRestrictedViewSettingsGetResponseADM)
+      .map(ProjectRestrictedViewSettingsGetResponseADM.apply)
 
   /**
    * Update project's basic information.
