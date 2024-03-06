@@ -124,7 +124,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings =
           ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
-            .getOrElse(throw new AssertionError("Could not decode response"))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
             .settings
 
         settings.size should be(Some("!512,512"))
@@ -152,7 +152,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
-            .getOrElse(throw new AssertionError("Could not decode response"))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
             .settings
 
         settings.size should be(Some("!512,512"))
@@ -169,7 +169,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val settings: ProjectRestrictedViewSettingsADM =
           ProjectRestrictedViewSettingsGetResponseADM.codec
             .decodeJson(responseToString(response))
-            .getOrElse(throw new AssertionError("Could not decode response"))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
             .settings
 
         settings.size should be(Some("!512,512"))

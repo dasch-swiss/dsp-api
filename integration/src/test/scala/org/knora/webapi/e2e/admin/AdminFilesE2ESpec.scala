@@ -50,7 +50,7 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       val result: PermissionCodeAndProjectRestrictedViewSettings =
         PermissionCodeAndProjectRestrictedViewSettings.codec
           .decodeJson(responseToString(response))
-          .getOrElse(throw new AssertionError("JSON decoding failed"))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
       assert(result == PermissionCodeAndProjectRestrictedViewSettings(8, None))
     }
@@ -67,7 +67,7 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       val result: PermissionCodeAndProjectRestrictedViewSettings =
         PermissionCodeAndProjectRestrictedViewSettings.codec
           .decodeJson(responseToString(response))
-          .getOrElse(throw new AssertionError("JSON decoding failed"))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
       assert(
         result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
@@ -94,7 +94,7 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       val result: PermissionCodeAndProjectRestrictedViewSettings =
         PermissionCodeAndProjectRestrictedViewSettings.codec
           .decodeJson(responseToString(response))
-          .getOrElse(throw new AssertionError("JSON decoding failed"))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
       assert(
         result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
