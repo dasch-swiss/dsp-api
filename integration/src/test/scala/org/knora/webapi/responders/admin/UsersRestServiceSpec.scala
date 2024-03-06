@@ -16,7 +16,6 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -586,12 +585,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser,
+        val received = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            rootUser,
+          ),
         )
-        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-
         received.members.map(_.id) should contain(normalUser.id)
       }
 
@@ -610,13 +609,13 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate should equal(Seq())
 
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser,
+        val received = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            rootUser,
+          ),
         )
-        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-
-        received.members.map(_.id) should not contain normalUser.id
+        received.members.map(_.id) should not contain normalUser
       }
     }
   }

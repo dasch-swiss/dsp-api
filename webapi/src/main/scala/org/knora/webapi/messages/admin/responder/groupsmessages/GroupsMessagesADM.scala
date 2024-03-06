@@ -17,7 +17,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -44,14 +43,6 @@ case class GroupGetADM(groupIri: IRI) extends GroupsResponderRequestADM
 case class MultipleGroupsGetRequestADM(
   groupIris: Set[IRI],
 ) extends GroupsResponderRequestADM
-
-/**
- * Returns all members of the group identified by iri.
- *
- * @param groupIri             IRI of the group.
- * @param requestingUser       the user initiating the request.
- */
-case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: User) extends GroupsResponderRequestADM
 
 // Responses
 /**
