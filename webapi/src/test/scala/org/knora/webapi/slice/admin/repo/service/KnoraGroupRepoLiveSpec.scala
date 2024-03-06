@@ -30,7 +30,7 @@ object KnoraGroupRepoInMemory {
     ZLayer.derive[KnoraGroupRepoInMemory]
 }
 
-object KnoraGroupRepoLiveSpec$ extends ZIOSpecDefault {
+object KnoraGroupRepoLiveSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("KnoraUserGroupRepoLive")(
     suite("findById")(
       test("findById given a non existing user should return None") {
