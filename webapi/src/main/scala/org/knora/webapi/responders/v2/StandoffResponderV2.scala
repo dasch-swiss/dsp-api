@@ -83,7 +83,6 @@ final case class StandoffResponderV2Live(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case getStandoffPageRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) =>
       createMappingV2(
         xml.xml,
@@ -98,70 +97,6 @@ final case class StandoffResponderV2Live(
     case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) =>
       getXSLTransformation(xsltTextReprIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
-
-  private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Task[GetStandoffResponseV2] = {
-    val resourceRequestSparql =
-      Construct(
-        sparql.v2.txt.getResourcePropertiesAndValues(
-          resourceIris = Seq(getStandoffRequestV2.resourceIri),
-          preview = false,
-          withDeleted = false,
-          maybePropertyIri = None,
-          maybeVersionDate = None,
-          queryAllNonStandoff = false,
-          queryStandoff = true,
-          maybeValueIri = Some(getStandoffRequestV2.valueIri),
-        ),
-      )
-
-    for {
-      resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
-
-      // separate resources and values
-      mainResourcesAndValueRdfData =
-        constructResponseUtilV2.splitMainResourcesAndValueRdfData(
-          resourceRequestResponse,
-          getStandoffRequestV2.requestingUser,
-        )
-
-      readResourcesSequenceV2 <-
-        constructResponseUtilV2.createApiResponse(
-          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-          orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
-          pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
-          mappings = Map.empty,
-          queryStandoff = false,
-          calculateMayHaveMoreResults = false,
-          versionDate = None,
-          targetSchema = getStandoffRequestV2.targetSchema,
-          requestingUser = getStandoffRequestV2.requestingUser,
-        )
-
-      readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
-
-      valueObj =
-        readResourceV2.values.values.flatten
-          .find(_.valueIri == getStandoffRequestV2.valueIri)
-          .getOrElse(
-            throw NotFoundException(
-              s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)",
-            ),
-          )
-
-      textValueObj =
-        valueObj match {
-          case textVal: ReadTextValueV2 => textVal
-          case _ =>
-            throw BadRequestException(
-              s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value",
-            )
-        }
-
-    } yield GetStandoffResponseV2(
-      valueIri = textValueObj.valueIri,
-      standoff = textValueObj.valueContent.standoff,
-    )
   }
 
   /**
