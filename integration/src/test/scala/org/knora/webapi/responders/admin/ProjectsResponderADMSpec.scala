@@ -56,7 +56,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             .fromString(SharedTestDataADM.incunabulaProject.id)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
+        expectMsg(ProjectGetResponse(SharedTestDataADM.incunabulaProject))
 
       }
 
@@ -66,7 +66,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             .fromString(SharedTestDataADM.incunabulaProject.shortname)
             .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
         )
-        expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
+        expectMsg(ProjectGetResponse(SharedTestDataADM.incunabulaProject))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {

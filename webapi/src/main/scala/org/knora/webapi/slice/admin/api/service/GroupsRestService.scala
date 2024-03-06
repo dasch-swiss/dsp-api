@@ -38,7 +38,7 @@ final case class GroupsRestServiceLive(
 ) extends GroupsRestService {
   override def getGroups: Task[GroupsGetResponseADM] = for {
     internal <- responder.groupsGetADM.map(GroupsGetResponseADM)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   override def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
@@ -47,13 +47,13 @@ final case class GroupsRestServiceLive(
                     .groupGetADM(iri.value)
                     .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
                     .map(GroupGetResponseADM.apply)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   override def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     for {
       internal <- responder.groupMembersGetRequest(iri, user)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   override def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
@@ -61,7 +61,7 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
       uuid     <- Random.nextUUID
       internal <- responder.createGroup(request, uuid)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   override def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
@@ -69,7 +69,7 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
       internal <- responder.updateGroup(iri, request, uuid)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   override def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
@@ -77,7 +77,7 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
       internal <- responder.updateGroupStatus(iri, request, uuid)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 
   override def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
@@ -85,7 +85,7 @@ final case class GroupsRestServiceLive(
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
       internal <- responder.deleteGroup(iri, uuid)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
 }
 

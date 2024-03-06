@@ -14,13 +14,13 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -109,17 +109,17 @@ case class KnoraUserService(
       userCreated <- userRepo.save(newUser)
     } yield userCreated
 
-  def addUserToGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+  def addUserToGroup(user: KnoraUser, group: Group): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
            ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}.")),
          )
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
   } yield user
 
-  def removeUserFromGroup(user: User, group: GroupADM): IO[UserServiceError, KnoraUser] =
+  def removeUserFromGroup(user: User, group: Group): IO[UserServiceError, KnoraUser] =
     userRepo.findById(user.userIri).someOrFailException.orDie.flatMap(removeUserFromGroup(_, group))
 
-  def removeUserFromGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+  def removeUserFromGroup(user: KnoraUser, group: Group): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.groupIri.value}."))
            .when(!user.isInGroup.contains(group.groupIri))
