@@ -97,7 +97,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def listAllProjects(): Task[ProjectsGetResponseADM] = for {
     internal <- projectService.getNonSystemProjects
-    external <- format.toExternal(ProjectsGetResponseADM(internal))
+    external <- format.toExternal(internal)
   } yield external
 
   /**

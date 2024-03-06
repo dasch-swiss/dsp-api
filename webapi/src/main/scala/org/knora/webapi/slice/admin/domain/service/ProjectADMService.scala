@@ -12,6 +12,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
@@ -49,14 +50,14 @@ final case class ProjectADMService(
    * @return all the projects as a [[ProjectADM]].
    *         [[NotFoundException]] if no projects are found.
    */
-  def getNonSystemProjects: Task[NonEmptyChunk[ProjectADM]] =
+  def getNonSystemProjects: Task[ProjectsGetResponseADM] =
     for {
       projects         <- findAll
       nonSystemProjects = projects.filter(_.id.startsWith("http://rdfh.ch/projects/"))
       result <- ZIO
                   .fromOption(NonEmptyChunk.fromIterableOption(nonSystemProjects))
                   .orElseFail(NotFoundException(s"No projects found"))
-    } yield result
+    } yield ProjectsGetResponseADM(result)
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
     ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
