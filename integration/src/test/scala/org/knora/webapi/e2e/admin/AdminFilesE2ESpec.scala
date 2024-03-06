@@ -7,14 +7,10 @@ package org.knora.webapi.e2e.admin
 
 import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
-
-import scala.concurrent.Await
-import scala.concurrent.duration.*
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.sipimessages.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.routing.Authenticator
@@ -49,14 +45,14 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         addCredentials(BasicHttpCredentials(anythingAdminEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      // println(response.toString)
-
       assert(response.status == StatusCodes.OK)
 
-      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
-      fr.permissionCode shouldEqual 8
+      assert(result == PermissionCodeAndProjectRestrictedViewSettings(8, None))
     }
 
     "return RV (1) permission code" in {
@@ -66,14 +62,16 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           addCredentials(BasicHttpCredentials(normalUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      // println(response.toString)
-
       assert(response.status == StatusCodes.OK)
 
-      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
-      (fr.permissionCode === 1) should be(true)
+      assert(
+        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+      )
     }
 
     "return 404 Not Found if a file value is in a deleted resource" in {
@@ -93,11 +91,14 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
       assert(response.status == StatusCodes.OK)
 
-      val fr: PermissionCodeAndProjectRestrictedViewSettings =
-        Await.result(Unmarshal(response.entity).to[PermissionCodeAndProjectRestrictedViewSettings], 1.seconds)
+      val result: PermissionCodeAndProjectRestrictedViewSettings =
+        PermissionCodeAndProjectRestrictedViewSettings.codec
+          .decodeJson(responseToString(response))
+          .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
-      (fr.permissionCode === 1) should be(true)
-
+      assert(
+        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+      )
     }
   }
 }

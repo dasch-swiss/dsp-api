@@ -6,9 +6,9 @@
 package org.knora.webapi.messages.util
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -30,7 +30,7 @@ object KnoraSystemInstances {
       status = true,
       lang = "en",
       password = None,
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(),
     )
@@ -47,7 +47,7 @@ object KnoraSystemInstances {
       status = true,
       lang = "en",
       password = None,
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(),
     )
