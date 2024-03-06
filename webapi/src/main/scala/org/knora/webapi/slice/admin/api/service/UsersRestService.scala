@@ -87,7 +87,8 @@ final case class UsersRestService(
 
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserResponseADM] =
     for {
-      _        <- auth.ensureSystemAdmin(requestingUser)
+      _ <- if (userCreateRequest.systemAdmin.value) { auth.ensureSystemAdmin(requestingUser) }
+           else { auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser) }
       internal <- knoraUserService.createNewUser(userCreateRequest)
       external <- asExternalUserResponseADM(requestingUser, internal)
     } yield external

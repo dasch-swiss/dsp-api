@@ -460,6 +460,29 @@ class UsersADME2ESpec
     }
 
     "used to create a user" should {
+      "not allow a projectAdmin to create a System Admin" in {
+        val createUserRequest: String =
+          s"""{
+             |    "username": "daisy.duck",
+             |    "email": "daisy.duck@example.org",
+             |    "givenName": "Daisy",
+             |    "familyName": "Duck",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": true
+             |}""".stripMargin
+
+        val request = Post(
+          baseApiUrl + s"/admin/users",
+          HttpEntity(ContentTypes.`application/json`, createUserRequest),
+        ) ~> addProjectAdminUserCredentials()
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.Forbidden)
+      }
+
       "create the user if the supplied email and username are unique" in {
         val createUserRequest: String =
           s"""{
