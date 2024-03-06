@@ -23,7 +23,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
@@ -89,23 +88,24 @@ object RouteUtilADM {
     }
   }
 
-  def transformResponseIntoExternalFormat(
-    response: AdminResponse,
-  ): ZIO[StringFormatter, Throwable, AdminResponse] = ZIO.serviceWithZIO[StringFormatter] { sf =>
-    ZIO.attempt {
-      def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
-        val ontologiesExternal =
-          project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
-        project.copy(ontologies = ontologiesExternal)
-      }
+  def transformResponseIntoExternalFormat[A](response: A): ZIO[StringFormatter, Throwable, A] =
+    ZIO
+      .serviceWithZIO[StringFormatter] { sf =>
+        ZIO.attempt {
+          def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
+            val ontologiesExternal =
+              project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+            project.copy(ontologies = ontologiesExternal)
+          }
 
-      response match {
-        case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
-        case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
-        case _                             => response
+          response match {
+            case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
+            case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
+            case _                             => response
+          }
+        }
       }
-    }
-  }
+      .map(_.asInstanceOf[A])
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.

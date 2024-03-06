@@ -30,7 +30,6 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
@@ -102,7 +101,7 @@ object ProjectCodec {
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponse(projects: Seq[ProjectADM]) extends AdminResponse
+case class ProjectsGetResponse(projects: Seq[ProjectADM])
 object ProjectsGetResponse {
   // can be removed as soon as ProjectADM can define its own codec
   import ProjectCodec.projectCodec
@@ -114,7 +113,7 @@ object ProjectsGetResponse {
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponse(project: ProjectADM) extends AdminResponse
+case class ProjectGetResponse(project: ProjectADM)
 object ProjectGetResponse {
   // can be removed as soon as ProjectADM can define its own codec
   import ProjectCodec.projectCodec
@@ -148,7 +147,7 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[User])
  *
  * @param keywords a list of keywords.
  */
-case class ProjectsKeywordsGetResponse(keywords: Seq[String]) extends AdminResponse
+case class ProjectsKeywordsGetResponse(keywords: Seq[String])
 object ProjectsKeywordsGetResponse {
   implicit val codec: JsonCodec[ProjectsKeywordsGetResponse] = DeriveJsonCodec.gen[ProjectsKeywordsGetResponse]
 }
@@ -158,7 +157,7 @@ object ProjectsKeywordsGetResponse {
  *
  * @param keywords a list of keywords.
  */
-case class ProjectKeywordsGetResponse(keywords: Seq[String]) extends AdminResponse
+case class ProjectKeywordsGetResponse(keywords: Seq[String])
 object ProjectKeywordsGetResponse {
   implicit val codec: JsonCodec[ProjectKeywordsGetResponse] = DeriveJsonCodec.gen[ProjectKeywordsGetResponse]
 }
@@ -168,7 +167,7 @@ object ProjectKeywordsGetResponse {
  *
  * @param settings the restricted view settings.
  */
-case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM) extends AdminResponse
+case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
@@ -183,7 +182,7 @@ object ProjectRestrictedViewSettingsGetResponseADM {
 case class PermissionCodeAndProjectRestrictedViewSettings(
   permissionCode: Int,
   restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
-) extends AdminResponse
+)
 object PermissionCodeAndProjectRestrictedViewSettings {
   implicit val codec: JsonCodec[PermissionCodeAndProjectRestrictedViewSettings] =
     DeriveJsonCodec.gen[PermissionCodeAndProjectRestrictedViewSettings]

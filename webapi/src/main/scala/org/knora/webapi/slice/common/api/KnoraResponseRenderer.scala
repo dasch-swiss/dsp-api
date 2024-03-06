@@ -16,7 +16,6 @@ import org.knora.webapi.SchemaRendering
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.AdminResponse
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.routing.RouteUtilADM
@@ -42,11 +41,10 @@ final class KnoraResponseRenderer(config: AppConfig, stringFormatter: StringForm
       .provide(ZLayer.succeed(stringFormatter))
       .mapAttempt(_.asInstanceOf[A])
 
-  def toExternal[A <: AdminResponse](response: A): Task[A] =
+  def toExternal[A](response: A): Task[A] =
     RouteUtilADM
       .transformResponseIntoExternalFormat(response)
       .provide(ZLayer.succeed(stringFormatter))
-      .mapAttempt(_.asInstanceOf[A])
 
 }
 
