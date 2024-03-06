@@ -122,7 +122,7 @@ class GroupsResponderADMSpec extends CoreSpec {
               name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
               descriptions = Some(
                 GroupDescriptions.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+                  Seq(V2.StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
                 ),
               ),
               status = Some(GroupStatus.active),
@@ -216,8 +216,8 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "remove all members when group is deactivated" in {
         val group = UnsafeZioRun.runOrThrow(
-          GroupsResponderADM.groupMembersGetRequestADM(
-            GroupIri.unsafeFrom(imagesReviewerGroup.id).value,
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
             rootUser,
           ),
         )

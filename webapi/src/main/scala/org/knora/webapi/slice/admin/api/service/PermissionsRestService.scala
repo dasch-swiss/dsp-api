@@ -51,7 +51,7 @@ final case class PermissionsRestService(
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
       result <- responder.createAdministrativePermission(request, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: User): Task[KnoraProject] =
@@ -73,14 +73,14 @@ final case class PermissionsRestService(
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
       result <- responder.getPermissionsApByProjectIri(value.value)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def getPermissionsByProjectIri(projectIri: ProjectIri, user: User): Task[PermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsByProjectIri(projectIri)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def deletePermission(permissionIri: PermissionIri, user: User): Task[PermissionDeleteResponseADM] =
@@ -88,7 +88,7 @@ final case class PermissionsRestService(
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
       result <- responder.deletePermission(permissionIri, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def createDefaultObjectAccessPermission(
@@ -99,7 +99,7 @@ final case class PermissionsRestService(
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
       result <- responder.createDefaultObjectAccessPermission(request, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def updatePermissionHasPermissions(
@@ -114,7 +114,7 @@ final case class PermissionsRestService(
                              .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
                              .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
       result <- responder.updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def updatePermissionProperty(
@@ -126,7 +126,7 @@ final case class PermissionsRestService(
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
       result <- responder.updatePermissionProperty(permissionIri, request, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def updatePermissionResourceClass(
@@ -138,7 +138,7 @@ final case class PermissionsRestService(
       _      <- auth.ensureSystemAdmin(user)
       uuid   <- Random.nextUUID
       result <- responder.updatePermissionResourceClass(permissionIri, request, user, uuid)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def updatePermissionGroup(
@@ -151,7 +151,7 @@ final case class PermissionsRestService(
       groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
       uuid     <- Random.nextUUID
       result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
-      ext      <- format.toExternal(result)
+      ext      <- format.toExternalADM(result)
     } yield ext
 
   def getPermissionsDaopByProjectIri(
@@ -161,7 +161,7 @@ final case class PermissionsRestService(
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsDaopByProjectIri(projectIri)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 
   def getPermissionsApByProjectAndGroupIri(
@@ -172,7 +172,7 @@ final case class PermissionsRestService(
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value)
-      ext    <- format.toExternal(result)
+      ext    <- format.toExternalADM(result)
     } yield ext
 }
 
