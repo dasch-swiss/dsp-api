@@ -15,7 +15,6 @@ import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
@@ -109,7 +109,7 @@ class UsersADME2ESpec
     val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
     val request    = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/group-memberships") ~> addRootUserCredentials()
     val response   = singleAwaitingRequest(request)
-    AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[GroupADM]]
+    AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[Group]]
   }
 
   "The Users Route ('admin/users')" when {
@@ -1341,8 +1341,8 @@ class UsersADME2ESpec
 
         assert(response.status === StatusCodes.OK)
 
-        val groups: Seq[GroupADM] =
-          AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
+        val groups: Seq[Group] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[Group]]
         groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroupExternal)
 
         // testing getUserGroupMemberships method, which should return the same result
@@ -1365,7 +1365,7 @@ class UsersADME2ESpec
     "used to modify group membership" should {
       "add user to group" in {
         val membershipsBeforeUpdate = getUserGroupMemberships(normalUser.id)
-        membershipsBeforeUpdate should equal(Seq.empty[GroupADM])
+        membershipsBeforeUpdate should equal(Seq.empty[Group])
 
         val request = Post(
           baseApiUrl + s"/admin/users/iri/${URLEncoder.encode(normalUser.id, "utf-8")}/group-memberships/$imagesReviewerGroupIriEnc",
@@ -1401,7 +1401,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
-        membershipsAfterUpdate should equal(Seq.empty[GroupADM])
+        membershipsAfterUpdate should equal(Seq.empty[Group])
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

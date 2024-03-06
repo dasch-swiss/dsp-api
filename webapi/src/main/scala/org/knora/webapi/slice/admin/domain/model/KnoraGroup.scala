@@ -12,7 +12,10 @@ import sttp.tapir.CodecFormat
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -33,6 +36,33 @@ final case class KnoraGroup(
   belongsToProject: Option[ProjectIri],
   hasSelfJoinEnabled: GroupSelfJoin,
 )
+
+/**
+ * Represents user's group.
+ *
+ * @param id            the IRI if the group.
+ * @param name          the name of the group.
+ * @param descriptions  the descriptions of the group.
+ * @param project       the project this group belongs to.
+ * @param status        the group's status.
+ * @param selfjoin      the group's self-join status.
+ */
+case class Group(
+  id: IRI,
+  name: String,
+  descriptions: Seq[StringLiteralV2],
+  project: ProjectADM,
+  status: Boolean,
+  selfjoin: Boolean,
+) extends Ordered[Group] {
+
+  def groupIri: GroupIri = GroupIri.unsafeFrom(id)
+
+  /**
+   * Allows to sort collections of GroupADM. Sorting is done by the id.
+   */
+  def compare(that: Group): Int = this.id.compareTo(that.id)
+}
 
 final case class GroupIri private (override val value: String) extends AnyVal with StringValue
 
