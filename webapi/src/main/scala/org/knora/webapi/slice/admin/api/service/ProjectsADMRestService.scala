@@ -34,9 +34,9 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 @accessible
 trait ProjectADMRestService {
 
-  def listAllProjects(): Task[ProjectsGetResponseADM]
+  def listAllProjects(): Task[ProjectsGetResponse]
 
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
+  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse]
 
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM]
 
@@ -64,9 +64,9 @@ trait ProjectADMRestService {
 
   def getProjectAdminMembers(user: User, id: ProjectIdentifierADM): Task[ProjectAdminMembersGetResponseADM]
 
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM]
+  def listAllKeywords(): Task[ProjectsKeywordsGetResponse]
 
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
+  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse]
 
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
@@ -88,28 +88,28 @@ final case class ProjectsADMRestServiceLive(
 ) extends ProjectADMRestService {
 
   /**
-   * Returns all projects as a [[ProjectsGetResponseADM]].
+   * Returns all projects as a [[ProjectsGetResponse]].
    *
    * @return
-   *     '''success''': information about the projects as a [[ProjectsGetResponseADM]]
+   *     '''success''': information about the projects as a [[ProjectsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllProjects(): Task[ProjectsGetResponseADM] = for {
+  def listAllProjects(): Task[ProjectsGetResponse] = for {
     internal <- responder.getNonSystemProjects
     external <- format.toExternal(internal)
   } yield external
 
   /**
-   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponseADM]].
+   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponse]].
    *
    * @param id           a [[ProjectIdentifierADM]] instance
    * @return
-   *     '''success''': information about the project as a [[ProjectGetResponseADM]]
+   *     '''success''': information about the project as a [[ProjectGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    */
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM] = for {
+  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse] = for {
     internal <- responder.getSingleProjectADMRequest(id)
     external <- format.toExternal(internal)
   } yield external
@@ -128,7 +128,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
     internal <- ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -147,7 +147,7 @@ final case class ProjectsADMRestServiceLive(
     for {
       apiId    <- Random.nextUUID
       internal <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
-      external <- format.toExternal(internal)
+      external <- format.toExternalADM(internal)
     } yield external
   }
 
@@ -169,7 +169,7 @@ final case class ProjectsADMRestServiceLive(
     user: User,
   ): Task[ProjectOperationResponseADM] = for {
     internal <- Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -203,7 +203,7 @@ final case class ProjectsADMRestServiceLive(
    */
   def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] = for {
     internal <- responder.projectMembersGetRequestADM(id, user)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
@@ -222,18 +222,18 @@ final case class ProjectsADMRestServiceLive(
     id: ProjectIdentifierADM,
   ): Task[ProjectAdminMembersGetResponseADM] = for {
     internal <- responder.projectAdminMembersGetRequestADM(id, user)
-    external <- format.toExternal(internal)
+    external <- format.toExternalADM(internal)
   } yield external
 
   /**
    * Returns all keywords of all projects.
    *
    * @return
-   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponseADM]]
+   *     '''success''': list of all keywords as a [[ProjectsKeywordsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] = for {
+  def listAllKeywords(): Task[ProjectsKeywordsGetResponse] = for {
     internal <- responder.projectsKeywordsGetRequestADM()
     external <- format.toExternal(internal)
   } yield external
@@ -243,11 +243,11 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param iri      the [[ProjectIri]] of the project
    * @return
-   *     '''success''': ist of all keywords as a [[ProjectKeywordsGetResponseADM]]
+   *     '''success''': ist of all keywords as a [[ProjectKeywordsGetResponse]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponseADM] = for {
+  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse] = for {
     internal <- responder.projectKeywordsGetRequestADM(iri)
     external <- format.toExternal(internal)
   } yield external

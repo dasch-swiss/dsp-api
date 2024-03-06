@@ -63,8 +63,6 @@ object RouteUtilADM {
       }
 
       response match {
-        case ProjectsGetResponseADM(projects) => ProjectsGetResponseADM(projects.map(projectAsExternalRepresentation))
-        case ProjectGetResponseADM(project)   => ProjectGetResponseADM(projectAsExternalRepresentation(project))
         case ProjectMembersGetResponseADM(members) =>
           ProjectMembersGetResponseADM(members.map(userAsExternalRepresentation))
         case ProjectAdminMembersGetResponseADM(members) =>
@@ -90,6 +88,25 @@ object RouteUtilADM {
       }
     }
   }
+
+  def transformResponseIntoExternalFormat[A](response: A): ZIO[StringFormatter, Throwable, A] =
+    ZIO
+      .serviceWithZIO[StringFormatter] { sf =>
+        ZIO.attempt {
+          def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
+            val ontologiesExternal =
+              project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
+            project.copy(ontologies = ontologiesExternal)
+          }
+
+          response match {
+            case ProjectsGetResponse(projects) => ProjectsGetResponse(projects.map(projectAsExternalRepresentation))
+            case ProjectGetResponse(project)   => ProjectGetResponse(projectAsExternalRepresentation(project))
+            case _                             => response
+          }
+        }
+      }
+      .map(_.asInstanceOf[A])
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
