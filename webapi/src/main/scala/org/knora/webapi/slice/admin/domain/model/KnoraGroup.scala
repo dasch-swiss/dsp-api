@@ -25,7 +25,7 @@ import org.knora.webapi.slice.common.repo.rdf.LangString
 /**
  * The user entity as found in the knora-admin ontology.
  */
-final case class KnoraUserGroup(
+final case class KnoraGroup(
   id: GroupIri,
   groupName: GroupName,
   groupDescriptions: GroupDescriptions,
@@ -116,7 +116,7 @@ object GroupSelfJoin {
   def from(enabled: Boolean): GroupSelfJoin = GroupSelfJoin(enabled)
 }
 
-object KnoraUserGroup {
+object KnoraGroup {
   object Conversions {
     implicit val groupIriConverter: String => Either[String, GroupIri]   = GroupIri.from
     implicit val groupNameConverter: String => Either[String, GroupName] = GroupName.from

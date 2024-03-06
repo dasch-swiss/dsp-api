@@ -12,7 +12,7 @@ import org.knora.webapi.slice.admin.domain.model.*
 /**
  * This spec is used to test the [[Group]] value objects creation.
  */
-object KnoraUserGroupSpec extends ZIOSpecDefault {
+object KnoraGroupSpec$ extends ZIOSpecDefault {
   private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
   private val invalidDescription = Seq(
     V2.StringLiteralV2(value = "", language = Some("en")),

@@ -14,7 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraUserGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
@@ -90,7 +90,7 @@ object AuthorizationRestService {
     isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
-final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, groupsRepo: KnoraUserGroupRepo)
+final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, groupsRepo: KnoraGroupRepo)
     extends AuthorizationRestService {
   override def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =

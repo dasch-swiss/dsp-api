@@ -16,32 +16,32 @@ import org.knora.webapi.TestDataFactory.UserGroup.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
-import org.knora.webapi.slice.admin.domain.model.KnoraUserGroup
-import org.knora.webapi.slice.admin.domain.service.KnoraUserGroupRepo
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-final case class KnoraUserGroupRepoInMemory(groups: Ref[List[KnoraUserGroup]])
-    extends AbstractInMemoryCrudRepository[KnoraUserGroup, GroupIri](groups, _.id)
-    with KnoraUserGroupRepo {}
+final case class KnoraGroupRepoInMemory(groups: Ref[List[KnoraGroup]])
+    extends AbstractInMemoryCrudRepository[KnoraGroup, GroupIri](groups, _.id)
+    with KnoraGroupRepo {}
 
-object KnoraUserGroupRepoInMemory {
-  val layer = ZLayer.fromZIO(Ref.make(List.empty[KnoraUserGroup])) >>>
-    ZLayer.derive[KnoraUserGroupRepoInMemory]
+object KnoraGroupRepoInMemory {
+  val layer = ZLayer.fromZIO(Ref.make(List.empty[KnoraGroup])) >>>
+    ZLayer.derive[KnoraGroupRepoInMemory]
 }
 
-object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
+object KnoraGroupRepoLiveSpec$ extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("KnoraUserGroupRepoLive")(
     suite("findById")(
       test("findById given a non existing user should return None") {
-        ZIO.serviceWithZIO[KnoraUserGroupRepo](userGroupRepo =>
+        ZIO.serviceWithZIO[KnoraGroupRepo](userGroupRepo =>
           for {
             userGroup <- userGroupRepo.findById(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"))
           } yield assertTrue(userGroup.isEmpty),
         )
       },
       test("findById given an existing user should return that user") {
-        ZIO.serviceWithZIO[KnoraUserGroupRepo](userGroupRepo =>
+        ZIO.serviceWithZIO[KnoraGroupRepo](userGroupRepo =>
           for {
             _         <- userGroupRepo.save(testUserGroup)
             userGroup <- userGroupRepo.findById(testUserGroup.id)
@@ -49,7 +49,7 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
         )
       },
       test("save should update fields") {
-        ZIO.serviceWithZIO[KnoraUserGroupRepo](userGroupRepo =>
+        ZIO.serviceWithZIO[KnoraGroupRepo](userGroupRepo =>
           for {
             _ <- userGroupRepo.save(testUserGroup)
             testUserGroupModified =
@@ -64,7 +64,7 @@ object KnoraUserGroupRepoLiveSpec extends ZIOSpecDefault {
       },
     ),
   ).provide(
-    KnoraUserGroupRepoLive.layer,
+    KnoraGroupRepoLive.layer,
     TriplestoreServiceInMemory.emptyLayer,
     StringFormatter.test,
   )

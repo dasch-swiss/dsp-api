@@ -26,9 +26,9 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraUserGroup.Conversions.*
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
 import org.knora.webapi.slice.admin.domain.model._
-import org.knora.webapi.slice.admin.domain.service.KnoraUserGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
@@ -37,24 +37,24 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends KnoraUserGroupRepo {
-  override def findById(id: GroupIri): Task[Option[KnoraUserGroup]] = for {
+final case class KnoraGroupRepoLive(triplestore: TriplestoreService) extends KnoraGroupRepo {
+  override def findById(id: GroupIri): Task[Option[KnoraGroup]] = for {
     model     <- triplestore.queryRdfModel(KnoraUserGroupQueries.findById(id))
     resource  <- model.getResource(id.value)
     userGroup <- ZIO.foreach(resource)(toGroup)
   } yield userGroup
 
-  override def findAll(): Task[List[KnoraUserGroup]] = for {
+  override def findAll(): Task[List[KnoraGroup]] = for {
     model <- triplestore.queryRdfModel(KnoraUserGroupQueries.findAll)
     resources <-
       model.getResourcesRdfType(KnoraAdmin.UserGroup).option.map(_.getOrElse(Iterator.empty))
     groups <- ZStream.fromIterator(resources).mapZIO(toGroup).runCollect
   } yield groups.toList
 
-  def save(userGroup: KnoraUserGroup): Task[KnoraUserGroup] =
+  def save(userGroup: KnoraGroup): Task[KnoraGroup] =
     triplestore.query(KnoraUserGroupQueries.save(userGroup)).as(userGroup)
 
-  private def toGroup(resource: RdfResource): Task[KnoraUserGroup] = {
+  private def toGroup(resource: RdfResource): Task[KnoraGroup] = {
     for {
       id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value)))
       groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
@@ -63,7 +63,7 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
       groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
       belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)
       hasSelfJoinEnabled <- resource.getBooleanLiteralOrFail[GroupSelfJoin](KnoraAdmin.HasSelfJoinEnabled)
-    } yield KnoraUserGroup(
+    } yield KnoraGroup(
       id,
       groupName,
       groupDescriptions,
@@ -74,8 +74,8 @@ final case class KnoraUserGroupRepoLive(triplestore: TriplestoreService) extends
   }.mapError(it => TriplestoreResponseException(it.toString))
 }
 
-object KnoraUserGroupRepoLive {
-  val layer = ZLayer.derive[KnoraUserGroupRepoLive]
+object KnoraGroupRepoLive {
+  val layer = ZLayer.derive[KnoraGroupRepoLive]
 }
 
 private object KnoraUserGroupQueries {
@@ -122,7 +122,7 @@ private object KnoraUserGroupQueries {
         p.and(id.has(iri, variable(s"n${index}")).optional())
       })
 
-  def save(group: KnoraUserGroup): Update = {
+  def save(group: KnoraGroup): Update = {
     val query: ModifyQuery =
       Queries
         .MODIFY()
@@ -141,7 +141,7 @@ private object KnoraUserGroupQueries {
     Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
   )
 
-  private def toTriples(group: KnoraUserGroup) = {
+  private def toTriples(group: KnoraGroup) = {
     import Vocabulary.KnoraAdmin.*
     Rdf
       .iri(group.id.value)
