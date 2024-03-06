@@ -11,12 +11,12 @@ import dsp.constants.SalsahGui
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -47,7 +47,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -68,7 +68,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -88,7 +88,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(),
     )
@@ -104,7 +104,7 @@ object SharedTestDataADM {
       status = false,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq.empty[ProjectADM],
       permissions = PermissionsDataADM(),
     )
@@ -203,7 +203,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -232,7 +232,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -308,7 +308,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full GroupADM of the images ProjectAdmin group */
-  def imagesProjectAdminGroup: GroupADM = GroupADM(
+  def imagesProjectAdminGroup: Group = Group(
     id = "-",
     name = "ProjectAdmin",
     descriptions = Seq(StringLiteralV2(value = "Default Project Admin Group", language = Some("en"))),
@@ -318,7 +318,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full GroupADM of the images ProjectMember group */
-  def imagesProjectMemberGroup: GroupADM = GroupADM(
+  def imagesProjectMemberGroup: Group = Group(
     id = "-",
     name = "ProjectMember",
     descriptions = Seq(StringLiteralV2(value = "Default Project Member Group", language = Some("en"))),
@@ -328,7 +328,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full GroupADM of the images project reviewer group */
-  def imagesReviewerGroup: GroupADM = GroupADM(
+  def imagesReviewerGroup: Group = Group(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
     descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
@@ -338,7 +338,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full GroupADM of the images project reviewer group in the external format*/
-  def imagesReviewerGroupExternal: GroupADM = GroupADM(
+  def imagesReviewerGroupExternal: Group = Group(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
     descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
@@ -367,7 +367,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -396,7 +396,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -421,7 +421,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -535,7 +535,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -563,7 +563,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -590,7 +590,7 @@ object SharedTestDataADM {
       status = true,
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      groups = Seq.empty[GroupADM],
+      groups = Seq.empty[Group],
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
@@ -634,7 +634,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full GroupADM of the Thing searcher group */
-  def thingSearcherGroup: GroupADM = GroupADM(
+  def thingSearcherGroup: Group = Group(
     id = "http://rdfh.ch/groups/0001/thing-searcher",
     name = "Thing searcher",
     descriptions = Seq(StringLiteralV2(value = "A group for thing searchers.", language = Some("en"))),
@@ -680,7 +680,7 @@ object SharedTestDataADM {
     status = true,
     lang = "en",
     password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
-    groups = Seq.empty[GroupADM],
+    groups = Seq.empty[Group],
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
