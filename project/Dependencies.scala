@@ -15,7 +15,7 @@ object Dependencies {
     "daschswiss/apache-jena-fuseki:2.1.5" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
   val sipiImage = "daschswiss/sipi:3.9.0" // base image the knora-sipi image is created from
 
-  val ScalaVersion = "2.13.12"
+  val ScalaVersion = "2.13.13"
 
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
@@ -115,7 +115,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.10"
+  val tapirVersion = "1.9.11"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -123,7 +123,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.10",
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion,
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,

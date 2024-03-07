@@ -411,7 +411,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
-      ProjectADM,
+      ProjectADM.apply,
       "id",
       "shortname",
       "shortcode",
@@ -426,13 +426,12 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   )
 
   implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")),
+    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM.apply, "members")),
   )
   implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")),
+    lazyFormat(jsonFormat(ProjectMembersGetResponseADM.apply, "members")),
   )
-
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")),
+    lazyFormat(jsonFormat(ProjectOperationResponseADM.apply, "project")),
   )
 }

@@ -129,15 +129,19 @@ object UsersADMJsonProtocol
     with GroupsADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userADMFormat: JsonFormat[User] = jsonFormat11(User)
+  implicit val userADMFormat: JsonFormat[User] =
+    jsonFormat11(User.apply)
   implicit val groupMembersGetResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
-    jsonFormat(GroupMembersGetResponseADM, "members")
-  implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
+    jsonFormat(GroupMembersGetResponseADM.apply, "members")
+  implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] =
+    jsonFormat1(UsersGetResponseADM.apply)
+  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] =
+    jsonFormat1(UserResponseADM.apply)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
-    jsonFormat1(UserProjectMembershipsGetResponseADM)
+    jsonFormat1(UserProjectMembershipsGetResponseADM.apply)
   implicit val userProjectAdminMembershipsGetResponseADMFormat
-    : RootJsonFormat[UserProjectAdminMembershipsGetResponseADM] = jsonFormat1(UserProjectAdminMembershipsGetResponseADM)
+    : RootJsonFormat[UserProjectAdminMembershipsGetResponseADM] =
+    jsonFormat1(UserProjectAdminMembershipsGetResponseADM.apply)
   implicit val userGroupMembershipsGetResponseADMFormat: RootJsonFormat[UserGroupMembershipsGetResponseADM] =
-    jsonFormat1(UserGroupMembershipsGetResponseADM)
+    jsonFormat1(UserGroupMembershipsGetResponseADM.apply)
 }

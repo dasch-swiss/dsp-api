@@ -483,8 +483,8 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
     def write(sparqlSelectResponseBody: SparqlSelectResultBody): JsValue = ???
   }
 
-  implicit val headerFormat: JsonFormat[SparqlSelectResultHeader] = jsonFormat1(SparqlSelectResultHeader)
-  implicit val responseFormat: JsonFormat[SparqlSelectResult]     = jsonFormat2(SparqlSelectResult)
+  implicit val headerFormat: JsonFormat[SparqlSelectResultHeader] = jsonFormat1(SparqlSelectResultHeader.apply)
+  implicit val responseFormat: JsonFormat[SparqlSelectResult]     = jsonFormat2(SparqlSelectResult.apply)
 }
 
 /**

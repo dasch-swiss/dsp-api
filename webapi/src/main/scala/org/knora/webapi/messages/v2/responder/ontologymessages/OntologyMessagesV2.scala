@@ -2715,7 +2715,7 @@ case class ReadPropertyInfoV2(
         case objs if objs.nonEmpty =>
           Some(
             SalsahGui.External.GuiAttribute -> JsonLDArray(
-              objs.toArray.sorted.map(JsonLDString).toIndexedSeq,
+              objs.toArray.sorted.map(JsonLDString.apply).toIndexedSeq,
             ),
           )
 
