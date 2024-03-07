@@ -67,7 +67,7 @@ final case class AppServer(
     for {
       _ <- state.set(AppState.CreatingCaches)
       _ <- ZIO.attempt {
-             CacheUtil.removeAllCaches()
+             CacheUtil.clearAllCaches()
              CacheUtil.createCaches(appConfig.cacheConfigs)
            }.orDie
       _ <- state.set(AppState.CachesReady)

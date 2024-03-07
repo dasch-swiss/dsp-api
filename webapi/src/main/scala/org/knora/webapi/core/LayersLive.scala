@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import zio.ULayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -42,6 +41,7 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.infrastructure.EntityCache
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -109,6 +109,7 @@ object LayersLive {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
+      EntityCache.cacheManagerLayer,
       FilesEndpoints.layer,
       FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
@@ -124,9 +125,9 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
+      KnoraGroupRepoLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraGroupRepoLive.layer,
       KnoraUserRepoLive.layer,
       KnoraUserService.layer,
       KnoraUserToUserConverter.layer,

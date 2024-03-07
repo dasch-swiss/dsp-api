@@ -16,7 +16,6 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
-
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
@@ -28,7 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.infrastructure.EntityCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -192,9 +191,9 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       },
     ),
   ).provide(
+    EntityCache.cacheManagerLayer,
     KnoraUserRepoLive.layer,
-    TriplestoreServiceInMemory.emptyLayer,
     StringFormatter.test,
-    CacheService.layer,
+    TriplestoreServiceInMemory.emptyLayer,
   )
 }

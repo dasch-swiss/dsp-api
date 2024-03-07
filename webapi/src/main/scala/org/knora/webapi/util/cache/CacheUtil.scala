@@ -60,7 +60,7 @@ object CacheUtil {
         cacheConfig.timeToLiveSeconds,
         cacheConfig.timeToIdleSeconds,
       )
-      cacheManager.addCache(cache)
+      cacheManager.addCacheIfAbsent(cache)
       cache.getCacheEventNotificationService.registerListener(new LoggingCacheEventListener(log))
       log.info(s"CacheUtil: Created application cache '${cacheConfig.cacheName}'")
     }
@@ -69,9 +69,9 @@ object CacheUtil {
   /**
    * Removes all caches.
    */
-  def removeAllCaches(): Unit = {
+  def clearAllCaches(): Unit = {
     val cacheManager = CacheManager.getInstance()
-    cacheManager.removeAllCaches()
+    cacheManager.clearAll()
   }
 
   /**

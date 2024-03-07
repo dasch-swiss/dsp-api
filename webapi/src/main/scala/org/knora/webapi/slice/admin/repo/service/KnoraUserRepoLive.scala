@@ -14,11 +14,11 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
-
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -38,36 +38,39 @@ import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.infrastructure.EntityCache
+import org.knora.webapi.slice.infrastructure.EntityCache.CacheManager
+import org.knora.webapi.slice.infrastructure.EntityCache.LookupEntityCache2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService: CacheService) extends KnoraUserRepo {
+final case class KnoraUserRepoLive(
+  triplestore: TriplestoreService,
+  cache: LookupEntityCache2[UserIri, KnoraUser, Email, Username],
+) extends KnoraUserRepo {
 
-  override def findById(id: UserIri): Task[Option[KnoraUser]] = {
-    val construct = UserQueries.findById(id)
-    for {
-      model    <- triplestore.queryRdfModel(construct)
-      resource <- model.getResource(id.value)
-      user     <- ZIO.foreach(resource)(toUser)
-    } yield user
-  }
+  override def findById(id: UserIri): Task[Option[KnoraUser]] =
+    findOneByQueryFromCacheOrRepo(id, cache.get, UserQueries.findById)
+
   override def findByEmail(email: Email): Task[Option[KnoraUser]] =
-    findOneByQuery(UserQueries.findByEmail(email))
+    findOneByQueryFromCacheOrRepo(email, cache.getByKey1, UserQueries.findByEmail)
 
   override def findByUsername(username: Username): Task[Option[KnoraUser]] =
-    findOneByQuery(UserQueries.findByUsername(username))
+    findOneByQueryFromCacheOrRepo(username, cache.getByKey2, UserQueries.findByUsername)
 
-  private def findOneByQuery(construct: Construct) =
-    for {
+  private def findOneByQueryFromCacheOrRepo[I](id: I, fromCache: I => Option[KnoraUser], buildQuery: I => Construct) =
+    ZIO.fromOption(fromCache(id)).orElse(findOneByQuery(buildQuery(id))).unsome
+
+  private def findOneByQuery(construct: Construct): IO[Option[Throwable], KnoraUser] =
+    (for {
       model <- triplestore.queryRdfModel(construct)
       resource <- model
                     .getResourcesRdfType(KnoraAdmin.User)
                     .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
       user <- ZIO.foreach(resource.nextOption())(toUser)
-    } yield user
+    } yield user).some
 
   private def toUser(resource: RdfResource) = {
     for {
@@ -113,7 +116,8 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService
     } yield users.toList
 
   override def save(user: KnoraUser): Task[KnoraUser] =
-    cacheService.invalidateUser(user.id) *> triplestore.query(UserQueries.save(user)).as(user)
+    triplestore.query(UserQueries.save(user)) *>
+      ZIO.succeed(cache.put(user)).as(user)
 }
 
 object KnoraUserRepoLive {
@@ -209,7 +213,7 @@ object KnoraUserRepoLive {
     )
 
     private def toTriples(u: KnoraUser) = {
-      import Vocabulary.KnoraAdmin._
+      import Vocabulary.KnoraAdmin.*
       Rdf
         .iri(u.id.value)
         .has(RDF.TYPE, User)
@@ -226,5 +230,11 @@ object KnoraUserRepoLive {
         .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
     }
   }
-  val layer = ZLayer.derive[KnoraUserRepoLive]
+  val layer =
+      ZLayer.fromZIO(
+        ZIO.serviceWith[CacheManager](
+          EntityCache.createLookUpCache("knora-user", (u: KnoraUser) => (u.id, u.email, u.username), _),
+        ),
+      ) >>>
+      ZLayer.derive[KnoraUserRepoLive]
 }
