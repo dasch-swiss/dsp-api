@@ -29,8 +29,7 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.jdk.CollectionConverters.IteratorHasAsScala
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
@@ -155,7 +154,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   ): Task[Unit] = ZIO.scoped {
     for {
       model  <- execConstruct(query.sparql)
-      source <- modelToTurtle(model).map(RdfStringSource)
+      source <- modelToTurtle(model).map(RdfStringSource.apply)
       _      <- ZIO.attempt(RdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
     } yield ()
   }

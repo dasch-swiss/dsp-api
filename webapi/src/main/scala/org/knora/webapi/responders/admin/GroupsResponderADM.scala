@@ -231,7 +231,7 @@ final case class GroupsResponderADMLive(
     ZioHelper.sequence(groupIris.map { iri =>
       groupGetADM(iri)
         .flatMap(ZIO.fromOption(_))
-        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM)
+        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM.apply)
     })
 
   /**
@@ -292,7 +292,7 @@ final case class GroupsResponderADMLive(
    * @return A [[GroupMembersGetResponseADM]]
    */
   override def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM)
+    groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 
   /**
    * Create a new group.

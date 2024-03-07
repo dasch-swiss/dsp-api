@@ -2376,7 +2376,7 @@ final case class ResourcesResponderV2Live(
           ),
         )
       }
-      .map(JsonLDArray)
+      .map(JsonLDArray.apply)
 
   /**
    * Returns all events describing the history of a resource ordered by version date.

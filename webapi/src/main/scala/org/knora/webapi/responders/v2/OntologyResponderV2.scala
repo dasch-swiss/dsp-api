@@ -243,7 +243,7 @@ final case class OntologyResponderV2Live(
     ontologyCache.getCacheData.map { data =>
       val ontologies: Iterable[ReadOntologyV2] = data.ontologies.values
       ontologies.flatMap(_.properties.view.filterKeys(data.standoffProperties)).toMap
-    }.map(StandoffAllPropertyEntitiesGetResponseV2)
+    }.map(StandoffAllPropertyEntitiesGetResponseV2.apply)
 
   /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.

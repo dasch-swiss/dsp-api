@@ -81,7 +81,7 @@ final case class UsersRestService(
     userService
       .findUserByIri(userIri)
       .map(_.map(_.groups).getOrElse(Seq.empty))
-      .map(UserGroupMembershipsGetResponseADM)
+      .map(UserGroupMembershipsGetResponseADM.apply)
       .flatMap(format.toExternalADM)
 
   def createUser(requestingUser: User, userCreateRequest: Requests.UserCreateRequest): Task[UserResponseADM] =
