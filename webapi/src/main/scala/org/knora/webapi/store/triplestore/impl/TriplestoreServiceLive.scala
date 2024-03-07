@@ -139,7 +139,7 @@ case class TriplestoreServiceLive(
     outputFormat: QuadFormat,
   ): Task[Unit] =
     executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
-      .map(RdfStringSource)
+      .map(RdfStringSource.apply)
       .mapAttempt(RdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
 
   /**

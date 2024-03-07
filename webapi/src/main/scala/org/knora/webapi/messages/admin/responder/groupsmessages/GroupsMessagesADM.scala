@@ -69,8 +69,9 @@ case class GroupGetResponseADM(group: Group) extends AdminKnoraResponseADM with 
  */
 trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
-  implicit val groupADMFormat: JsonFormat[Group] = jsonFormat6(Group)
+  implicit val groupADMFormat: JsonFormat[Group] = jsonFormat6(Group.apply)
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
-    jsonFormat(GroupsGetResponseADM, "groups")
-  implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
+    jsonFormat(GroupsGetResponseADM.apply, "groups")
+  implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] =
+    jsonFormat(GroupGetResponseADM.apply, "group")
 }

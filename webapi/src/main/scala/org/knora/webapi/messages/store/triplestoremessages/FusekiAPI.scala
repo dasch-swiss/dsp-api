@@ -51,8 +51,9 @@ case class FusekiService(srvType: String, srvDescription: String, srvEndpoints: 
  */
 object FusekiJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val fusekiServiceFormat: JsonFormat[FusekiService] =
-    jsonFormat(FusekiService, "srv.type", "srv.description", "srv.endpoints")
+    jsonFormat(FusekiService.apply, "srv.type", "srv.description", "srv.endpoints")
   implicit val fusekiDatasetFormat: JsonFormat[FusekiDataset] =
-    jsonFormat(FusekiDataset, "ds.name", "ds.state", "ds.services")
-  implicit val fusekiServerFormat: RootJsonFormat[FusekiServer] = jsonFormat4(FusekiServer)
+    jsonFormat(FusekiDataset.apply, "ds.name", "ds.state", "ds.services")
+  implicit val fusekiServerFormat: RootJsonFormat[FusekiServer] =
+    jsonFormat4(FusekiServer.apply)
 }
