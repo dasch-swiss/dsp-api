@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
+
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -55,9 +56,6 @@ import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
-import org.knora.webapi.store.cache.CacheService
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -92,8 +90,6 @@ object LayersTest {
       with AssetPermissionsResponder
       with Authenticator
       with AuthorizationRestService
-      with CacheService
-      with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with ConstructResponseUtilV2
@@ -160,8 +156,6 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheService.layer,
-      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,

@@ -17,12 +17,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.cache.CacheService
 
 final case class ProjectADMService(
   private val ontologyRepo: OntologyRepo,
   private val projectRepo: KnoraProjectRepo,
-  private val cacheService: CacheService,
 ) {
 
   def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
@@ -33,14 +31,7 @@ final case class ProjectADMService(
   def findByIds(id: Seq[ProjectIri]): Task[Seq[ProjectADM]] = ZIO.foreach(id)(findById).map(_.flatten)
 
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    cacheService.getProjectADM(projectId).flatMap {
-      case Some(project) => ZIO.some(project)
-      case None =>
-        projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM)).tap {
-          case Some(prj) => cacheService.putProjectADM(prj)
-          case None      => ZIO.unit
-        }
-    }
+    projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
     ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))

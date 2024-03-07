@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -55,9 +56,6 @@ import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
-import org.knora.webapi.store.cache.CacheService
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -73,8 +71,8 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
-      AssetPermissionsResponder & Authenticator & AuthorizationRestService & CacheService &
-      CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
+      AssetPermissionsResponder & Authenticator & AuthorizationRestService &
+      CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsService & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       IriService & JwtService & KnoraProjectRepo & KnoraUserService & ListsResponder & ListsResponderV2 &
@@ -102,8 +100,6 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
-      CacheService.layer,
-      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,

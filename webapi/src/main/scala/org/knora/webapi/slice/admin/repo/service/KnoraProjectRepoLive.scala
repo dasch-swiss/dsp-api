@@ -13,8 +13,8 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -22,16 +22,18 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive.ProjectQueries
-import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.infrastructure.EntityCache
+import org.knora.webapi.slice.infrastructure.EntityCache.CacheManager
+import org.knora.webapi.slice.infrastructure.EntityCache.LookupEntityCache2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val cacheService: CacheService,
+  private val cache: LookupEntityCache2[ProjectIri, KnoraProject, Shortcode, Shortname],
 ) extends KnoraProjectRepo {
 
   override def findAll(): Task[List[KnoraProject]] =
@@ -45,37 +47,32 @@ final case class KnoraProjectRepoLive(
                   )
     } yield projects.toList
 
-  override def findById(id: ProjectIri): Task[Option[KnoraProject]] = findOneByIri(id)
+  override def findById(iri: ProjectIri): Task[Option[KnoraProject]] =
+    findOneByQueryFromCacheOrRepo(iri, cache.get, ProjectQueries.findByIri)
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
-    id match {
-      case ProjectIdentifierADM.IriIdentifier(iri)             => findOneByIri(iri)
-      case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => findOneByShortcode(shortcode)
-      case ProjectIdentifierADM.ShortnameIdentifier(shortname) => findOneByShortname(shortname)
-    }
+  override def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
+    findOneByQueryFromCacheOrRepo(shortcode, cache.getByKey1, ProjectQueries.findByShortcode)
 
-  private def findOneByIri(iri: ProjectIri): Task[Option[KnoraProject]] =
-    for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByIri(iri))
-      resource <- model.getResource(iri.value)
-      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
-    } yield project
+  override def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
+    findOneByQueryFromCacheOrRepo(shortname, cache.getByKey2, ProjectQueries.findByShortname)
 
-  private def findOneByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
-    for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByShortcode(shortcode))
-      resource <- model.getResourceByPropertyStringValue(ProjectShortcode, shortcode.value)
-      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
-    } yield project
+  private def findOneByQueryFromCacheOrRepo[I](
+    id: I,
+    fromCache: I => Option[KnoraProject],
+    buildQuery: I => Construct,
+  ) =
+    ZIO.fromOption(fromCache(id)).orElse(findOneByQuery(buildQuery(id))).unsome
 
-  private def findOneByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
-    for {
-      model    <- triplestore.queryRdfModel(ProjectQueries.findOneByShortname(shortname))
-      resource <- model.getResourceByPropertyStringValue(ProjectShortname, shortname.value)
-      project  <- ZIO.foreach(resource)(toKnoraProject).orElse(ZIO.none)
-    } yield project
+  private def findOneByQuery(construct: Construct): IO[Option[Throwable], KnoraProject] =
+    (for {
+      model <- triplestore.queryRdfModel(construct)
+      resource <- model
+                    .getResourcesRdfType(KnoraAdmin.KnoraProject)
+                    .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
+      user <- ZIO.foreach(resource.nextOption())(toKnoraProject)
+    } yield user).some
 
-  private def toKnoraProject(resource: RdfResource): IO[RdfError, KnoraProject] = {
+  private def toKnoraProject(resource: RdfResource) = {
     def getRestrictedView =
       for {
         size <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
@@ -107,18 +104,19 @@ final case class KnoraProjectRepoLive(
       selfjoin = selfjoin,
       restrictedView = restrictedView,
     )
-  }
+  }.mapError(e => TriplestoreResponseException(e.toString))
 
   override def save(project: KnoraProject): Task[KnoraProject] =
-    cacheService.clearCache() *>
-      triplestore.query(ProjectQueries.save(project)).as(project)
+    triplestore.query(ProjectQueries.save(project)) *>
+      ZIO.succeed(cache.put(project)).as(project)
+
 }
 
 object KnoraProjectRepoLive {
 
   private object ProjectQueries {
 
-    def findOneByIri(iri: ProjectIri): Construct =
+    def findByIri(iri: ProjectIri): Construct =
       Construct(
         s"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -131,7 +129,7 @@ object KnoraProjectRepoLive {
             |}""".stripMargin,
       )
 
-    def findOneByShortcode(shortcode: Shortcode): Construct =
+    def findByShortcode(shortcode: Shortcode): Construct =
       Construct(
         s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -146,7 +144,7 @@ object KnoraProjectRepoLive {
             |}""".stripMargin,
       )
 
-    def findOneByShortname(shortname: Shortname): Construct =
+    def findByShortname(shortname: Shortname): Construct =
       Construct(
         s"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -170,6 +168,7 @@ object KnoraProjectRepoLive {
           .where(project.isA(Vocabulary.KnoraAdmin.KnoraProject).and(projectPo))
       Construct(query.getQueryString)
     }
+
     private def toTriples(project: KnoraProject) = {
       val pattern = Rdf
         .iri(project.id.value)
@@ -228,8 +227,12 @@ object KnoraProjectRepoLive {
       Vocabulary.KnoraAdmin.projectRestrictedViewSize,
       Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
     )
-
   }
 
-  val layer = ZLayer.derive[KnoraProjectRepoLive]
+  val layer =
+    ZLayer.fromZIO(
+      ZIO.serviceWith[CacheManager](
+        EntityCache.createLookUpCache("knora-project", (u: KnoraProject) => (u.id, u.shortcode, u.shortname), _),
+      ),
+    ) >>> ZLayer.derive[KnoraProjectRepoLive]
 }

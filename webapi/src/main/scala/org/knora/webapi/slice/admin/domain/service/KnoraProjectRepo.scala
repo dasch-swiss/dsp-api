@@ -15,10 +15,15 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraProjectRepo extends Repository[KnoraProject, ProjectIri] {
-  def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
-  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] =
-    findById(ProjectIdentifierADM.ShortcodeIdentifier(code))
-  def findByShortname(code: Shortname): Task[Option[KnoraProject]] =
-    findById(ProjectIdentifierADM.ShortnameIdentifier.from(code))
+  def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] =
+    id match {
+      case ProjectIdentifierADM.IriIdentifier(value)       => findById(value)
+      case ProjectIdentifierADM.ShortcodeIdentifier(value) => findByShortcode(value)
+      case ProjectIdentifierADM.ShortnameIdentifier(value) => findByShortname(value)
+    }
+  def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]]
+  def findByShortname(shortname: Shortname): Task[Option[KnoraProject]]
+  def existsByShortcode(shortcode: Shortcode): Task[Boolean] = findByShortcode(shortcode).map(_.isDefined)
+  def existsByShortname(shortname: Shortname): Task[Boolean] = findByShortname(shortname).map(_.isDefined)
   def save(project: KnoraProject): Task[KnoraProject]
 }

@@ -19,6 +19,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
+
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -231,10 +232,10 @@ object KnoraUserRepoLive {
     }
   }
   val layer =
-      ZLayer.fromZIO(
-        ZIO.serviceWith[CacheManager](
-          EntityCache.createLookUpCache("knora-user", (u: KnoraUser) => (u.id, u.email, u.username), _),
-        ),
-      ) >>>
+    ZLayer.fromZIO(
+      ZIO.serviceWith[CacheManager](
+        EntityCache.createLookUpCache("knora-user", (u: KnoraUser) => (u.id, u.email, u.username), _),
+      ),
+    ) >>>
       ZLayer.derive[KnoraUserRepoLive]
 }

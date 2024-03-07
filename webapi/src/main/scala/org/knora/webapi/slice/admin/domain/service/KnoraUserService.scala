@@ -32,13 +32,11 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
-import org.knora.webapi.store.cache.CacheService
 
 case class KnoraUserService(
   private val userRepo: KnoraUserRepo,
   private val iriService: IriService,
   private val passwordService: PasswordService,
-  private val cacheService: CacheService,
 ) {
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =

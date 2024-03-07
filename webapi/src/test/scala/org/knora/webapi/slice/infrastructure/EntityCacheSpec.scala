@@ -1,10 +1,11 @@
 package org.knora.webapi.slice.infrastructure
 
-import org.knora.webapi.slice.infrastructure.EntityCache.CacheManager
 import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
+import org.knora.webapi.slice.infrastructure.EntityCache.CacheManager
 
 object EntityCacheSpec extends ZIOSpecDefault {
 
