@@ -6,30 +6,12 @@
 package swiss.dasch.domain
 
 import swiss.dasch.config.Configuration.IngestConfig
+import zio.*
 import zio.nio.file.{Files, Path}
-import zio.{Cause, IO, Task, UIO, ZIO, ZLayer}
+import zio.stm.{TMap, TSemaphore}
 
 import java.io.IOException
 import java.nio.file.StandardOpenOption
-import java.nio.file.attribute.FileAttribute
-
-trait BulkIngestService {
-
-  def startBulkIngest(shortcode: ProjectShortcode): Task[IngestResult]
-  def finalizeBulkIngest(shortcode: ProjectShortcode): Task[Unit]
-  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]]
-}
-
-object BulkIngestService {
-  def startBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, IngestResult] =
-    ZIO.serviceWithZIO[BulkIngestService](_.startBulkIngest(shortcode))
-
-  def finalizeBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Unit] =
-    ZIO.serviceWithZIO[BulkIngestService](_.finalizeBulkIngest(shortcode))
-
-  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Option[String]] =
-    ZIO.serviceWithZIO[BulkIngestService](_.getBulkIngestMappingCsv(shortcode))
-}
 
 case class IngestResult(success: Int = 0, failed: Int = 0) {
   def +(other: IngestResult): IngestResult = IngestResult(success + other.success, failed + other.failed)
@@ -40,13 +22,30 @@ object IngestResult {
   val failed: IngestResult  = IngestResult(failed = 1)
 }
 
-final case class BulkIngestServiceLive(
+final case class BulkIngestService(
   storage: StorageService,
   ingestService: IngestService,
   config: IngestConfig,
-) extends BulkIngestService {
+  semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
+) {
 
-  override def startBulkIngest(project: ProjectShortcode): Task[IngestResult] =
+  private def withSemaphoreFork[E, A](
+    key: ProjectShortcode,
+    zio: ProjectShortcode => IO[E, A],
+  ): IO[Option[Nothing], Fiber.Runtime[E, A]] = {
+    def getSemaphore =
+      semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1)).tap(semaphoresPerProject.put(key, _)).commit
+    def acquireWithTimeout(sem: TSemaphore) =
+      sem.acquire.as(sem).commit.timeout(Duration.fromMillis(400)).some
+    getSemaphore
+      .flatMap(acquireWithTimeout)
+      .flatMap(sem => zio.apply(key).logError.ensuring(sem.release.commit).forkDaemon)
+  }
+
+  def startBulkIngest(project: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, IngestResult]] =
+    withSemaphoreFork(project, doBulkIngest)
+
+  private def doBulkIngest(project: ProjectShortcode) =
     for {
       _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
       importDir   <- getImportFolder(project)
@@ -105,16 +104,20 @@ final case class BulkIngestServiceLive(
       Files.writeLines(csv, Seq(line), openOptions = Set(StandardOpenOption.APPEND))
     }
 
-  override def finalizeBulkIngest(shortcode: ProjectShortcode): Task[Unit] = for {
-    _         <- ZIO.logInfo(s"Finalizing bulk ingest for project $shortcode")
-    importDir <- getImportFolder(shortcode)
-    mappingCsv = getMappingCsvFile(importDir, shortcode)
-    _         <- storage.deleteRecursive(importDir)
-    _         <- storage.delete(mappingCsv)
-    _         <- ZIO.logInfo(s"Finished finalizing bulk ingest for project $shortcode")
-  } yield ()
+  def finalizeBulkIngest(shortcode: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, Unit]] =
+    withSemaphoreFork(shortcode, doFinalize)
 
-  override def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]] =
+  private def doFinalize(shortcode: ProjectShortcode): ZIO[Any, IOException, Unit] =
+    for {
+      _         <- ZIO.logInfo(s"Finalizing bulk ingest for project $shortcode")
+      importDir <- getImportFolder(shortcode)
+      mappingCsv = getMappingCsvFile(importDir, shortcode)
+      _         <- storage.deleteRecursive(importDir)
+      _         <- storage.delete(mappingCsv)
+      _         <- ZIO.logInfo(s"Finished finalizing bulk ingest for project $shortcode")
+    } yield ()
+
+  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]] =
     for {
       importDir <- getImportFolder(shortcode)
       mappingCsv = getMappingCsvFile(importDir, shortcode)
@@ -125,6 +128,6 @@ final case class BulkIngestServiceLive(
     } yield mapping
 }
 
-object BulkIngestServiceLive {
-  val layer = ZLayer.derive[BulkIngestServiceLive]
+object BulkIngestService {
+  val layer = ZLayer.fromZIO(TMap.empty[ProjectShortcode, TSemaphore].commit) >>> ZLayer.derive[BulkIngestService]
 }

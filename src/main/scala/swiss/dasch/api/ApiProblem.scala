@@ -17,6 +17,13 @@ sealed trait ApiProblem
 
 object ApiProblem {
 
+  case class Conflict(reason: String) extends ApiProblem
+
+  object Conflict {
+    given codec: JsonCodec[Conflict] = DeriveJsonCodec.gen[Conflict]
+    given schema: Schema[Conflict]   = DeriveSchema.gen[Conflict]
+  }
+
   case class NotFound(id: String, `type`: String) extends ApiProblem
 
   object NotFound {

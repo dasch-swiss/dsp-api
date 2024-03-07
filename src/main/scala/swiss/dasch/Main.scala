@@ -28,7 +28,7 @@ object Main extends ZIOAppDefault {
         AssetInfoServiceLive.layer,
         AuthServiceLive.layer,
         BaseEndpoints.layer,
-        BulkIngestServiceLive.layer,
+        BulkIngestService.layer,
         CommandExecutorLive.layer,
         Configuration.layer,
         CsvService.layer,

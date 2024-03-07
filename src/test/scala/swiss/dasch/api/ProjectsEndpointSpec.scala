@@ -291,7 +291,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     AssetInfoServiceLive.layer,
     AuthServiceLive.layer,
     BaseEndpoints.layer,
-    BulkIngestServiceLive.layer,
+    BulkIngestService.layer,
     CsvService.layer,
     CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,
