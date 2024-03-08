@@ -8,15 +8,6 @@ alias dog := docs-openapi-generate
 alias ssl := stack-start-latest
 alias stop := stack-stop
 
-# Generate the OpenApi in {{openapiDir}} yml from the tapir endpoints
-docs-openapi-generate:
-    # The generated files are stored in the docs/03-endpoints/generated-openapi directory
-    # You can specify the directory where the files are stored by setting the openapiDir variable
-    # e.g. `just openapiDir=/tmp/openapi docs-openapi-generate`
-    mkdir -p {{ openapiDir }}
-    rm {{ openapiDir }}/*.yml >> /dev/null 2>&1 || true
-    ./sbtx "webapi/runMain org.knora.webapi.slice.common.api.DocsGenerator {{ openapiDir }}"
-
 # Start stack
 stack-start:
     @echo "Starting Stack"
@@ -56,3 +47,29 @@ stack-destroy:
 [confirm]
 stack-init-test: && stack-start
     make init-db-test
+
+## Documentation
+
+# Generate the OpenApi in {{openapiDir}} yml from the tapir endpoints
+docs-openapi-generate:
+    # The generated files are stored in the docs/03-endpoints/generated-openapi directory
+    # You can specify the directory where the files are stored by setting the openapiDir variable
+    # e.g. `just openapiDir=/tmp/openapi docs-openapi-generate`
+    mkdir -p {{ openapiDir }}
+    rm {{ openapiDir }}/*.yml >> /dev/null 2>&1 || true
+    ./sbtx "webapi/runMain org.knora.webapi.slice.common.api.DocsGenerator {{ openapiDir }}"
+
+docs-install-requirements:
+    pip3 install -r docs/requirements.txt
+
+docs-clean:
+    rm -rf site/
+
+docs-build-dependent: docs-openapi-generate
+    make -C docs graphvizfigures
+
+docs-serve: docs-build-dependent
+    mkdocs serve
+
+docs-build: docs-build-dependent
+    mkdocs build 

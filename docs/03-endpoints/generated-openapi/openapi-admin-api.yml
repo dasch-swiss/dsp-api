@@ -1,0 +1,4851 @@
+openapi: 3.1.0
+info:
+  title: webapi-admin-api
+  version: v30.8.2-37-g3decf23-dirty-doc-integrate-admin-openapi-in-docs-DEV-3381
+servers:
+- url: http://localhost:3333
+  description: Local development server
+- url: https://api.dasch.swiss
+  description: Production server
+paths:
+  /admin/groups:
+    get:
+      tags:
+      - Admin Groups
+      description: Returns all groups.
+      operationId: getAdminGroups
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    post:
+      tags:
+      - Admin Groups
+      description: Creates a new group.
+      operationId: postAdminGroups
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/groups/{groupIri}:
+    get:
+      tags:
+      - Admin Groups
+      description: Returns a single group identified by IRI.
+      operationId: getAdminGroupsGroupiri
+      parameters:
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    put:
+      tags:
+      - Admin Groups
+      description: Updates a group.
+      operationId: putAdminGroupsGroupiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Groups
+      description: Deletes a group by changing its status to 'false'.
+      operationId: deleteAdminGroupsGroupiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/groups/{groupIri}/members:
+    get:
+      tags:
+      - Admin Groups
+      description: Returns all members of a single group.
+      operationId: getAdminGroupsGroupiriMembers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists:
+    get:
+      tags:
+      - Admin Lists
+      description: Get all lists or all lists belonging to a project.
+      operationId: getAdminLists
+      parameters:
+      - name: projectIri
+        in: query
+        description: The (optional) IRI of the project.
+        required: false
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0042
+      responses:
+        '200':
+          description: Contains the list of all root nodes of each found list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    post:
+      tags:
+      - Admin Lists
+      operationId: postAdminLists
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListCreateRootNodeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}/name:
+    put:
+      tags:
+      - Admin Lists
+      operationId: putAdminListsP1Name
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListChangeNameRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeInfoGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}/labels:
+    put:
+      tags:
+      - Admin Lists
+      operationId: putAdminListsP1Labels
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListChangeLabelsRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeInfoGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}/comments:
+    put:
+      tags:
+      - Admin Lists
+      operationId: putAdminListsP1Comments
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListChangeCommentsRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeInfoGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}/position:
+    put:
+      tags:
+      - Admin Lists
+      operationId: putAdminListsP1Position
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListChangePositionRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePositionChangeResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}:
+    get:
+      tags:
+      - Admin Lists
+      description: Returns a list node, root or child, with children (if exist).
+      operationId: getAdminListsP1
+      parameters:
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItemGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    put:
+      tags:
+      - Admin Lists
+      operationId: putAdminListsP1
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeInfoGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Lists
+      operationId: deleteAdminListsP1
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItemDeleteResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/comments/{p1}:
+    delete:
+      tags:
+      - Admin Lists
+      operationId: deleteAdminListsCommentsP1
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListNodeCommentsDeleteResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/lists/{p1}/info:
+    get:
+      tags:
+      - Admin Lists
+      description: Returns basic information about a list node, root or child, w/o
+        children (if exist).
+      operationId: getAdminListsP1Info
+      parameters:
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeInfoGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/lists/candelete/{p1}:
+    get:
+      tags:
+      - Admin Lists
+      description: Checks if a list can be deleted (none of its nodes is used in data).
+      operationId: getAdminListsCandeleteP1
+      parameters:
+      - name: p1
+        in: path
+        description: The IRI of the list.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanDeleteListResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/maintenance/{action-name}:
+    post:
+      tags:
+      - Admin Maintenance
+      operationId: postAdminMaintenanceAction-name
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: action-name
+        in: path
+        description: |
+          The name of the maintenance action to be executed.
+          Maintenance actions are executed asynchronously in the background.
+        required: true
+        schema:
+          type: string
+        example: fix-top-left-dimensions
+      requestBody:
+        description: |
+          The optional parameters as json for the maintenance action.
+          May be required by certain actions.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Json'
+        required: false
+      responses:
+        '202':
+          description: ''
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/ap:
+    post:
+      tags:
+      - Admin Permissions
+      description: Create a new administrative permission
+      operationId: postAdminPermissionsAp
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdministrativePermissionAPIRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdministrativePermissionCreateResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/ap/{projectIri}:
+    get:
+      tags:
+      - Admin Permissions
+      description: Get all administrative permissions for a project.
+      operationId: getAdminPermissionsApProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdministrativePermissionsForProjectGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/ap/{projectIri}/{groupIri}:
+    get:
+      tags:
+      - Admin Permissions
+      description: Get all administrative permissions for a project and a group.
+      operationId: getAdminPermissionsApProjectiriGroupiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdministrativePermissionGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/doap/{projectIri}:
+    get:
+      tags:
+      - Admin Permissions
+      description: Get all default object access permissions for a project.
+      operationId: getAdminPermissionsDoapProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultObjectAccessPermissionsForProjectGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{projectIri}:
+    get:
+      tags:
+      - Admin Permissions
+      description: Get all permissions for a project.
+      operationId: getAdminPermissionsProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionsForProjectGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{permissionIri}:
+    delete:
+      tags:
+      - Admin Permissions
+      description: Delete an permission.
+      operationId: deleteAdminPermissionsPermissioniri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: permissionIri
+        in: path
+        description: The IRI of a permission. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDeleteResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/doap:
+    post:
+      tags:
+      - Admin Permissions
+      description: Create a new default object access permission
+      operationId: postAdminPermissionsDoap
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDefaultObjectAccessPermissionAPIRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultObjectAccessPermissionCreateResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{permissionIri}/group:
+    put:
+      tags:
+      - Admin Permissions
+      description: Update a permission's group
+      operationId: putAdminPermissionsPermissioniriGroup
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: permissionIri
+        in: path
+        description: The IRI of a permission. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePermissionGroupApiRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{permissionIri}/hasPermissions:
+    put:
+      tags:
+      - Admin Permissions
+      description: Update a permission's set of hasPermissions
+      operationId: putAdminPermissionsPermissioniriHaspermissions
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: permissionIri
+        in: path
+        description: The IRI of a permission. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePermissionHasPermissionsApiRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{permissionIri}/resourceClass:
+    put:
+      tags:
+      - Admin Permissions
+      description: Update a permission's resource class
+      operationId: putAdminPermissionsPermissioniriResourceclass
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: permissionIri
+        in: path
+        description: The IRI of a permission. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePermissionResourceClassApiRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/permissions/{permissionIri}/property:
+    put:
+      tags:
+      - Admin Permissions
+      description: Update a permission's property
+      operationId: putAdminPermissionsPermissioniriProperty
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: permissionIri
+        in: path
+        description: The IRI of a permission. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePermissionPropertyApiRequestADM'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all projects.
+      operationId: getAdminProjects
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    post:
+      tags:
+      - Admin Projects
+      description: Creates a new project.
+      operationId: postAdminProjects
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOperationResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/iri/{projectIri}:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns a single project identified by the IRI.
+      operationId: getAdminProjectsIriProjectiri
+      parameters:
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    put:
+      tags:
+      - Admin Projects
+      description: Updates a project identified by the IRI.
+      operationId: putAdminProjectsIriProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOperationResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Projects
+      description: Deletes a project identified by the IRI.
+      operationId: deleteAdminProjectsIriProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOperationResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/iri/{projectIri}/RestrictedViewSettings:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns the project's restricted view settings identified by the
+        IRI.
+      operationId: getAdminProjectsIriProjectiriRestrictedviewsettings
+      parameters:
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectRestrictedViewSettingsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    post:
+      tags:
+      - Admin Projects
+      description: Sets the project's restricted view settings identified by the IRI.
+      operationId: postAdminProjectsIriProjectiriRestrictedviewsettings
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      requestBody:
+        description: |-
+          Set how all still image resources of a projects should be displayed when viewed as restricted.
+          This can be either a size restriction or a watermark.
+          For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:
+          * `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
+          * `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
+
+          If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size !128,128 is set.
+
+          It is only possible to set either the size or the watermark, not both at the same time.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRestrictedViewRequest'
+            example:
+              size: '!128,128'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedViewResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortcode/{projectShortcode}:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns a single project identified by the shortcode.
+      operationId: getAdminProjectsShortcodeProjectshortcode
+      parameters:
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns the project's restricted view settings identified by the
+        shortcode.
+      operationId: getAdminProjectsShortcodeProjectshortcodeRestrictedviewsettings
+      parameters:
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectRestrictedViewSettingsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+    post:
+      tags:
+      - Admin Projects
+      description: Sets the project's restricted view settings identified by the shortcode.
+      operationId: postAdminProjectsShortcodeProjectshortcodeRestrictedviewsettings
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      requestBody:
+        description: |-
+          Set how all still image resources of a projects should be displayed when viewed as restricted.
+          This can be either a size restriction or a watermark.
+          For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:
+          * `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
+          * `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
+
+          If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size !128,128 is set.
+
+          It is only possible to set either the size or the watermark, not both at the same time.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRestrictedViewRequest'
+            example:
+              size: '!128,128'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedViewResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortname/{projectShortname}:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns a single project identified by the shortname.
+      operationId: getAdminProjectsShortnameProjectshortname
+      parameters:
+      - name: projectShortname
+        in: path
+        description: The shortname of a project.
+        required: true
+        schema:
+          type: string
+        example: someShortname
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/projects/shortname/{projectShortname}/RestrictedViewSettings:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns the project's restricted view settings identified by the
+        shortname.
+      operationId: getAdminProjectsShortnameProjectshortnameRestrictedviewsettings
+      parameters:
+      - name: projectShortname
+        in: path
+        description: The shortname of a project.
+        required: true
+        schema:
+          type: string
+        example: someShortname
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectRestrictedViewSettingsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/projects/Keywords:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all unique keywords for all projects as a list.
+      operationId: getAdminProjectsKeywords
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsKeywordsGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/projects/iri/{projectIri}/Keywords:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all keywords for a single project.
+      operationId: getAdminProjectsIriProjectiriKeywords
+      parameters:
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectKeywordsGetResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/projects/iri/{projectIri}/AllData:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all ontologies, data, and configuration belonging to a
+        project identified by the IRI.
+      operationId: getAdminProjectsIriProjectiriAlldata
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          headers:
+            Content-Disposition:
+              required: true
+              schema:
+                type: string
+            Content-Type:
+              required: true
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/iri/{projectIri}/admin-members:
+    get:
+      tags:
+      - Admin Projects
+      operationId: getAdminProjectsIriProjectiriAdmin-members
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAdminMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/iri/{projectIri}/members:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all project members of a project identified by the IRI.
+      operationId: getAdminProjectsIriProjectiriMembers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortcode/{projectShortcode}/admin-members:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all admin members of a project identified by the shortcode.
+      operationId: getAdminProjectsShortcodeProjectshortcodeAdmin-members
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAdminMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortcode/{projectShortcode}/members:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all project members of a project identified by the shortcode.
+      operationId: getAdminProjectsShortcodeProjectshortcodeMembers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortname/{projectShortname}/admin-members:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all admin members of a project identified by the shortname.
+      operationId: getAdminProjectsShortnameProjectshortnameAdmin-members
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortname
+        in: path
+        description: The shortname of a project.
+        required: true
+        schema:
+          type: string
+        example: someShortname
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectAdminMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortname/{projectShortname}/members:
+    get:
+      tags:
+      - Admin Projects
+      description: Returns all project members of a project identified by the shortname.
+      operationId: getAdminProjectsShortnameProjectshortnameMembers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortname
+        in: path
+        description: The shortname of a project.
+        required: true
+        schema:
+          type: string
+        example: someShortname
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMembersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/export:
+    get:
+      tags:
+      - Admin Projects
+      description: Lists existing exports of all projects.
+      operationId: getAdminProjectsExport
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectExportInfoResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortcode/{projectShortcode}/export:
+    post:
+      tags:
+      - Admin Projects
+      description: Trigger an export of a project identified by the shortcode.
+      operationId: postAdminProjectsShortcodeProjectshortcodeExport
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '202':
+          description: ''
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/projects/shortcode/{projectShortcode}/import:
+    post:
+      tags:
+      - Admin Projects
+      description: Trigger an import of a project identified by the shortcode.
+      operationId: postAdminProjectsShortcodeProjectshortcodeImport
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectImportResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/store/ResetTriplestoreContent:
+    get:
+      tags:
+      - Admin Store
+      description: Resets the content of the triplestore, only available if configuration
+        `allowReloadOverHttp` is set to `true`.
+      operationId: getAdminStoreResettriplestorecontent
+      parameters:
+      - name: prependDefaults
+        in: query
+        description: Prepend defaults to the data objects.
+        required: false
+        schema:
+          type: boolean
+          default: true
+      requestBody:
+        description: RDF data objects to load into the triplestore, uses defaults
+          if not present.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RdfDataObject'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/users/iri/{userIri}/project-memberships:
+    get:
+      tags:
+      - Admin Users
+      description: Returns the user's project memberships for a user identified by
+        their IRI.
+      operationId: getAdminUsersIriUseririProject-memberships
+      parameters:
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProjectMembershipsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/users/iri/{userIri}/project-admin-memberships:
+    get:
+      tags:
+      - Admin Users
+      description: Returns the user's project admin memberships for a user identified
+        by their IRI.
+      operationId: getAdminUsersIriUseririProject-admin-memberships
+      parameters:
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProjectAdminMembershipsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/users/iri/{userIri}/group-memberships:
+    get:
+      tags:
+      - Admin Users
+      description: Returns the user's group memberships for a user identified by their
+        IRI.
+      operationId: getAdminUsersIriUseririGroup-memberships
+      parameters:
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGroupMembershipsGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+  /admin/users:
+    get:
+      tags:
+      - Admin Users
+      description: Returns all users.
+      operationId: getAdminUsers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    post:
+      tags:
+      - Admin Users
+      description: Create a new user.
+      operationId: postAdminUsers
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}:
+    get:
+      tags:
+      - Admin Users
+      description: Returns a user identified by their IRI.
+      operationId: getAdminUsersIriUseriri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Users
+      description: Delete a user identified by IRI (change status to false).
+      operationId: deleteAdminUsersIriUseriri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/email/{email}:
+    get:
+      tags:
+      - Admin Users
+      description: Returns a user identified by their Email.
+      operationId: getAdminUsersEmailEmail
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: email
+        in: path
+        description: The user email. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: jane@example.com
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/username/{username}:
+    get:
+      tags:
+      - Admin Users
+      description: Returns a user identified by their Username.
+      operationId: getAdminUsersUsernameUsername
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: username
+        in: path
+        description: The user name. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: JaneDoe
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/project-memberships/{projectIri}:
+    post:
+      tags:
+      - Admin Users
+      description: Add a user to a project identified by IRI.
+      operationId: postAdminUsersIriUseririProject-membershipsProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Users
+      description: Remove a user from a project membership identified by IRI.
+      operationId: deleteAdminUsersIriUseririProject-membershipsProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}:
+    post:
+      tags:
+      - Admin Users
+      description: Add a user as an admin to a project identified by IRI.
+      operationId: postAdminUsersIriUseririProject-admin-membershipsProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Users
+      description: Remove a user form an admin project membership identified by IRI.
+      operationId: deleteAdminUsersIriUseririProject-admin-membershipsProjectiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: projectIri
+        in: path
+        description: The IRI of a project. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/projects/0001
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/group-memberships/{groupIri}:
+    post:
+      tags:
+      - Admin Users
+      description: Add a user to a group identified by IRI.
+      operationId: postAdminUsersIriUseririGroup-membershipsGroupiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+    delete:
+      tags:
+      - Admin Users
+      description: Remove a user form an group membership identified by IRI.
+      operationId: deleteAdminUsersIriUseririGroup-membershipsGroupiri
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      - name: groupIri
+        in: path
+        description: The IRI of a group. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/BasicUserInformation:
+    put:
+      tags:
+      - Admin Users
+      description: Update a user's basic information identified by IRI.
+      operationId: putAdminUsersIriUseririBasicuserinformation
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicUserInformationChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/Password:
+    put:
+      tags:
+      - Admin Users
+      description: Change a user's password identified by IRI.
+      operationId: putAdminUsersIriUseririPassword
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/Status:
+    put:
+      tags:
+      - Admin Users
+      description: Change a user's status identified by IRI.
+      operationId: putAdminUsersIriUseririStatus
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/users/iri/{userIri}/SystemAdmin:
+    put:
+      tags:
+      - Admin Users
+      description: Change a user's SystemAdmin status identified by IRI.
+      operationId: putAdminUsersIriUseririSystemadmin
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: userIri
+        in: path
+        description: The user IRI. Must be URL-encoded.
+        required: true
+        schema:
+          type: string
+        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemAdminChangeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseADM'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+  /admin/files/{projectShortcode}/{filename}:
+    get:
+      tags:
+      - Admin Files
+      description: Returns the permission code and the project's restricted view settings
+        for a given shortcode and filename.
+      operationId: getAdminFilesProjectshortcodeFilename
+      parameters:
+      - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
+        in: cookie
+        required: false
+        schema:
+          type: string
+      - name: projectShortcode
+        in: path
+        description: The shortcode of a project. Must be a 4 digit hexadecimal String.
+        required: true
+        schema:
+          type: string
+        example: '0001'
+      - name: filename
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionCodeAndProjectRestrictedViewSettings'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GravsearchException'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadCredentialsException'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+      security:
+      - httpAuth: []
+      - httpAuth1: []
+components:
+  schemas:
+    Active:
+      type: object
+    AdministrativePermissionADM:
+      required:
+      - iri
+      - forProject
+      - forGroup
+      type: object
+      properties:
+        iri:
+          type: string
+        forProject:
+          type: string
+        forGroup:
+          type: string
+        hasPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionADM'
+    AdministrativePermissionCreateResponseADM:
+      required:
+      - administrativePermission
+      type: object
+      properties:
+        administrativePermission:
+          $ref: '#/components/schemas/AdministrativePermissionADM'
+    AdministrativePermissionGetResponseADM:
+      required:
+      - administrativePermission
+      type: object
+      properties:
+        administrativePermission:
+          $ref: '#/components/schemas/AdministrativePermissionADM'
+    AdministrativePermissionsForProjectGetResponseADM:
+      type: object
+      properties:
+        administrativePermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdministrativePermissionADM'
+    Arr:
+      type: object
+      properties:
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Json'
+    BadCredentialsException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    BadRequestException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    BasicUserInformationChangeRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        lang:
+          type: string
+    Bool:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: boolean
+    CanDeleteListResponseADM:
+      required:
+      - listIri
+      - canDeleteList
+      type: object
+      properties:
+        listIri:
+          type: string
+        canDeleteList:
+          type: boolean
+    CanJoin:
+      type: object
+    CannotJoin:
+      type: object
+    ChangePermissionGroupApiRequestADM:
+      required:
+      - forGroup
+      type: object
+      properties:
+        forGroup:
+          type: string
+    ChangePermissionHasPermissionsApiRequestADM:
+      type: object
+      properties:
+        hasPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionADM'
+    ChangePermissionPropertyApiRequestADM:
+      required:
+      - forProperty
+      type: object
+      properties:
+        forProperty:
+          type: string
+    ChangePermissionResourceClassApiRequestADM:
+      required:
+      - forResourceClass
+      type: object
+      properties:
+        forResourceClass:
+          type: string
+    ChildNodeDeleteResponseADM:
+      required:
+      - node
+      type: object
+      properties:
+        node:
+          $ref: '#/components/schemas/ListNodeADM'
+    ChildNodeInfoGetResponseADM:
+      required:
+      - nodeinfo
+      type: object
+      properties:
+        nodeinfo:
+          $ref: '#/components/schemas/ListChildNodeInfoADM'
+    Comments:
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV21'
+    CreateAdministrativePermissionAPIRequestADM:
+      required:
+      - forProject
+      - forGroup
+      type: object
+      properties:
+        id:
+          type: string
+        forProject:
+          type: string
+        forGroup:
+          type: string
+        hasPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionADM'
+    CreateDefaultObjectAccessPermissionAPIRequestADM:
+      required:
+      - forProject
+      type: object
+      properties:
+        id:
+          type: string
+        forProject:
+          type: string
+        forGroup:
+          type: string
+        forResourceClass:
+          type: string
+        forProperty:
+          type: string
+        hasPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionADM'
+    DefaultObjectAccessPermissionADM:
+      required:
+      - iri
+      - forProject
+      type: object
+      properties:
+        iri:
+          type: string
+        forProject:
+          type: string
+        forGroup:
+          type: string
+        forResourceClass:
+          type: string
+        forProperty:
+          type: string
+        hasPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionADM'
+    DefaultObjectAccessPermissionCreateResponseADM:
+      required:
+      - defaultObjectAccessPermission
+      type: object
+      properties:
+        defaultObjectAccessPermission:
+          $ref: '#/components/schemas/DefaultObjectAccessPermissionADM'
+    DefaultObjectAccessPermissionGetResponseADM:
+      required:
+      - defaultObjectAccessPermission
+      type: object
+      properties:
+        defaultObjectAccessPermission:
+          $ref: '#/components/schemas/DefaultObjectAccessPermissionADM'
+    DefaultObjectAccessPermissionsForProjectGetResponseADM:
+      type: object
+      properties:
+        defaultObjectAccessPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DefaultObjectAccessPermissionADM'
+    DuplicateValueException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    ForbiddenException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    GravsearchException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    Group:
+      required:
+      - id
+      - name
+      - project
+      - status
+      - selfjoin
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV2'
+        project:
+          $ref: '#/components/schemas/ProjectADM'
+        status:
+          type: boolean
+        selfjoin:
+          type: boolean
+    GroupCreateRequest:
+      required:
+      - name
+      - descriptions
+      - project
+      - status
+      - selfjoin
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV21'
+        project:
+          type: string
+        status:
+          type: boolean
+        selfjoin:
+          type: boolean
+    GroupGetResponseADM:
+      required:
+      - group
+      type: object
+      properties:
+        group:
+          $ref: '#/components/schemas/Group'
+    GroupMembersGetResponseADM:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    GroupUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV21'
+        status:
+          type: boolean
+        selfjoin:
+          type: boolean
+    GroupsGetResponseADM:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    Inactive:
+      type: object
+    Json:
+      oneOf:
+      - $ref: '#/components/schemas/Arr'
+      - $ref: '#/components/schemas/Bool'
+      - $ref: '#/components/schemas/Null'
+      - $ref: '#/components/schemas/Num'
+      - $ref: '#/components/schemas/Obj'
+      - $ref: '#/components/schemas/Str'
+    Labels:
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV21'
+    ListADM:
+      required:
+      - listinfo
+      type: object
+      properties:
+        listinfo:
+          $ref: '#/components/schemas/ListRootNodeInfoADM'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListChildNodeADM'
+    ListChangeCommentsRequest:
+      required:
+      - comments
+      type: object
+      properties:
+        comments:
+          $ref: '#/components/schemas/Comments'
+    ListChangeLabelsRequest:
+      required:
+      - labels
+      type: object
+      properties:
+        labels:
+          $ref: '#/components/schemas/Labels'
+    ListChangeNameRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+    ListChangePositionRequest:
+      required:
+      - position
+      - parentNodeIri
+      type: object
+      properties:
+        position:
+          type: integer
+          format: int32
+        parentNodeIri:
+          type: string
+    ListChangeRequest:
+      required:
+      - listIri
+      - projectIri
+      type: object
+      properties:
+        listIri:
+          type: string
+        projectIri:
+          type: string
+        hasRootNode:
+          type: string
+        position:
+          type: integer
+          format: int32
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/Labels'
+        comments:
+          $ref: '#/components/schemas/Comments'
+    ListChildNodeADM:
+      required:
+      - id
+      - labels
+      - comments
+      - position
+      - hasRootNode
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        comments:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        position:
+          type: integer
+          format: int32
+        hasRootNode:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListChildNodeADM'
+    ListChildNodeInfoADM:
+      required:
+      - id
+      - labels
+      - comments
+      - position
+      - hasRootNode
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        comments:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        position:
+          type: integer
+          format: int32
+        hasRootNode:
+          type: string
+    ListCreateRootNodeRequest:
+      required:
+      - comments
+      - labels
+      - projectIri
+      type: object
+      properties:
+        id:
+          type: string
+        comments:
+          $ref: '#/components/schemas/Comments'
+        labels:
+          $ref: '#/components/schemas/Labels'
+        name:
+          type: string
+        projectIri:
+          type: string
+    ListDeleteResponseADM:
+      required:
+      - iri
+      - deleted
+      type: object
+      properties:
+        iri:
+          type: string
+        deleted:
+          type: boolean
+    ListGetResponseADM:
+      required:
+      - list
+      type: object
+      properties:
+        list:
+          $ref: '#/components/schemas/ListADM'
+    ListItemDeleteResponseADM:
+      oneOf:
+      - $ref: '#/components/schemas/ChildNodeDeleteResponseADM'
+      - $ref: '#/components/schemas/ListDeleteResponseADM'
+    ListItemGetResponseADM:
+      oneOf:
+      - $ref: '#/components/schemas/ListGetResponseADM'
+      - $ref: '#/components/schemas/ListNodeGetResponseADM'
+    ListNodeADM:
+      oneOf:
+      - $ref: '#/components/schemas/ListChildNodeADM'
+      - $ref: '#/components/schemas/ListRootNodeADM'
+    ListNodeCommentsDeleteResponseADM:
+      required:
+      - nodeIri
+      - commentsDeleted
+      type: object
+      properties:
+        nodeIri:
+          type: string
+        commentsDeleted:
+          type: boolean
+    ListNodeGetResponseADM:
+      required:
+      - node
+      type: object
+      properties:
+        node:
+          $ref: '#/components/schemas/NodeADM'
+    ListNodeInfoADM:
+      oneOf:
+      - $ref: '#/components/schemas/ListChildNodeInfoADM'
+      - $ref: '#/components/schemas/ListRootNodeInfoADM'
+    ListRootNodeADM:
+      required:
+      - id
+      - projectIri
+      - labels
+      - comments
+      type: object
+      properties:
+        id:
+          type: string
+        projectIri:
+          type: string
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        comments:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListChildNodeADM'
+    ListRootNodeInfoADM:
+      required:
+      - id
+      - projectIri
+      - labels
+      - comments
+      type: object
+      properties:
+        id:
+          type: string
+        projectIri:
+          type: string
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+        comments:
+          $ref: '#/components/schemas/StringLiteralSequenceV2'
+    ListsGetResponseADM:
+      type: object
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListNodeInfoADM'
+    Map_Seq_String:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+    Map_Set_PermissionADM:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/PermissionADM'
+    MessageResponse:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    NodeADM:
+      required:
+      - nodeinfo
+      type: object
+      properties:
+        nodeinfo:
+          $ref: '#/components/schemas/ListChildNodeInfoADM'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListChildNodeADM'
+    NodeInfoGetResponseADM:
+      oneOf:
+      - $ref: '#/components/schemas/ChildNodeInfoGetResponseADM'
+      - $ref: '#/components/schemas/RootNodeInfoGetResponseADM'
+    NodePositionChangeResponseADM:
+      required:
+      - node
+      type: object
+      properties:
+        node:
+          $ref: '#/components/schemas/ListNodeADM'
+    NotFoundException:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    'Null':
+      type: object
+    Num:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: number
+    Obj:
+      type: object
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tuple2_String_Json'
+    PasswordChangeRequest:
+      required:
+      - requesterPassword
+      - newPassword
+      type: object
+      properties:
+        requesterPassword:
+          type: string
+        newPassword:
+          type: string
+    PermissionADM:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        additionalInformation:
+          type: string
+        permissionCode:
+          type: integer
+          format: int32
+    PermissionCodeAndProjectRestrictedViewSettings:
+      required:
+      - permissionCode
+      type: object
+      properties:
+        permissionCode:
+          type: integer
+          format: int32
+        restrictedViewSettings:
+          $ref: '#/components/schemas/ProjectRestrictedViewSettingsADM'
+    PermissionDeleteResponseADM:
+      required:
+      - permissionIri
+      - deleted
+      type: object
+      properties:
+        permissionIri:
+          type: string
+        deleted:
+          type: boolean
+    PermissionGetResponseADM:
+      oneOf:
+      - $ref: '#/components/schemas/AdministrativePermissionGetResponseADM'
+      - $ref: '#/components/schemas/DefaultObjectAccessPermissionGetResponseADM'
+    PermissionInfoADM:
+      required:
+      - iri
+      - permissionType
+      type: object
+      properties:
+        iri:
+          type: string
+        permissionType:
+          type: string
+    PermissionsDataADM:
+      required:
+      - groupsPerProject
+      - administrativePermissionsPerProject
+      type: object
+      properties:
+        groupsPerProject:
+          $ref: '#/components/schemas/Map_Seq_String'
+        administrativePermissionsPerProject:
+          $ref: '#/components/schemas/Map_Set_PermissionADM'
+    PermissionsForProjectGetResponseADM:
+      type: object
+      properties:
+        allPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionInfoADM'
+    ProjectADM:
+      required:
+      - id
+      - shortname
+      - shortcode
+      - status
+      - selfjoin
+      type: object
+      properties:
+        id:
+          type: string
+        shortname:
+          type: string
+        shortcode:
+          type: string
+        longname:
+          type: string
+        description:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV21'
+        keywords:
+          type: array
+          items:
+            type: string
+        logo:
+          type: string
+        ontologies:
+          type: array
+          items:
+            type: string
+        status:
+          type: boolean
+        selfjoin:
+          type: boolean
+    ProjectAdminMembersGetResponseADM:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    ProjectCreateRequest:
+      required:
+      - shortname
+      - shortcode
+      - status
+      - selfjoin
+      type: object
+      properties:
+        id:
+          type: string
+        shortname:
+          type: string
+        shortcode:
+          type: string
+        longname:
+          type: string
+        description:
+          type: array
+          items:
+            required:
+            - value
+            type: object
+            properties:
+              value:
+                type: string
+              language:
+                type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        logo:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        selfjoin:
+          $ref: '#/components/schemas/SelfJoin'
+    ProjectExportInfoResponse:
+      required:
+      - projectShortname
+      - location
+      type: object
+      properties:
+        projectShortname:
+          type: string
+        location:
+          type: string
+    ProjectGetResponse:
+      required:
+      - project
+      type: object
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectADM'
+    ProjectImportResponse:
+      required:
+      - location
+      type: object
+      properties:
+        location:
+          type: string
+    ProjectKeywordsGetResponse:
+      type: object
+      properties:
+        keywords:
+          type: array
+          items:
+            type: string
+    ProjectMembersGetResponseADM:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    ProjectOperationResponseADM:
+      required:
+      - project
+      type: object
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectADM'
+    ProjectRestrictedViewSettingsADM:
+      required:
+      - watermark
+      type: object
+      properties:
+        size:
+          type: string
+        watermark:
+          type: boolean
+    ProjectRestrictedViewSettingsGetResponseADM:
+      required:
+      - settings
+      type: object
+      properties:
+        settings:
+          $ref: '#/components/schemas/ProjectRestrictedViewSettingsADM'
+    ProjectUpdateRequest:
+      type: object
+      properties:
+        shortname:
+          type: string
+        longname:
+          type: string
+        description:
+          type: array
+          items:
+            required:
+            - value
+            type: object
+            properties:
+              value:
+                type: string
+              language:
+                type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        logo:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        selfjoin:
+          $ref: '#/components/schemas/SelfJoin'
+    ProjectsGetResponse:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectADM'
+    ProjectsKeywordsGetResponse:
+      type: object
+      properties:
+        keywords:
+          type: array
+          items:
+            type: string
+    RdfDataObject:
+      required:
+      - path
+      - name
+      type: object
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+    RestrictedViewResponse:
+      type: object
+      properties:
+        size:
+          $ref: '#/components/schemas/Size'
+        watermark:
+          $ref: '#/components/schemas/Watermark'
+    RootNodeInfoGetResponseADM:
+      required:
+      - listinfo
+      type: object
+      properties:
+        listinfo:
+          $ref: '#/components/schemas/ListRootNodeInfoADM'
+    SelfJoin:
+      oneOf:
+      - $ref: '#/components/schemas/CanJoin'
+      - $ref: '#/components/schemas/CannotJoin'
+    SetRestrictedViewRequest:
+      type: object
+      properties:
+        size:
+          $ref: '#/components/schemas/Size'
+        watermark:
+          $ref: '#/components/schemas/Watermark'
+    Size:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: string
+    Status:
+      oneOf:
+      - $ref: '#/components/schemas/Active'
+      - $ref: '#/components/schemas/Inactive'
+    StatusChangeRequest:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: boolean
+    Str:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: string
+    StringLiteralSequenceV2:
+      type: object
+      properties:
+        stringLiterals:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringLiteralV2'
+    StringLiteralV2:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: string
+        language:
+          type: string
+    StringLiteralV21:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: string
+        language:
+          type: string
+    SystemAdminChangeRequest:
+      required:
+      - systemAdmin
+      type: object
+      properties:
+        systemAdmin:
+          type: boolean
+    Tuple2_String_Json:
+      required:
+      - _1
+      - _2
+      type: object
+      properties:
+        _1:
+          type: string
+        _2:
+          $ref: '#/components/schemas/Json'
+    User:
+      required:
+      - id
+      - username
+      - email
+      - givenName
+      - familyName
+      - status
+      - lang
+      - permissions
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        status:
+          type: boolean
+        lang:
+          type: string
+        password:
+          type: string
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectADM'
+        permissions:
+          $ref: '#/components/schemas/PermissionsDataADM'
+    UserCreateRequest:
+      required:
+      - username
+      - email
+      - givenName
+      - familyName
+      - password
+      - status
+      - lang
+      - systemAdmin
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        password:
+          type: string
+        status:
+          type: boolean
+        lang:
+          type: string
+        systemAdmin:
+          type: boolean
+    UserGroupMembershipsGetResponseADM:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    UserProjectAdminMembershipsGetResponseADM:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectADM'
+    UserProjectMembershipsGetResponseADM:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectADM'
+    UserResponseADM:
+      required:
+      - user
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+    UsersGetResponseADM:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    ValidationException:
+      required:
+      - msg
+      type: object
+      properties:
+        msg:
+          type: string
+    Watermark:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: boolean
+  securitySchemes:
+    httpAuth:
+      type: http
+      scheme: bearer
+    httpAuth1:
+      type: http
+      scheme: basic

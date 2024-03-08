@@ -38,6 +38,7 @@ nav:
           - Lists Endpoint: 03-endpoints/api-admin/lists.md
           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
+          - OpenApi Documentation: 03-endpoints/api-admin/index.md
       - Util API:
           - Version: 03-endpoints/api-util/version.md
       - Instrumentation API:
@@ -111,6 +112,8 @@ plugins:
   - include-markdown
   - search
   - git-revision-date
+  - neoteroi.mkdocsoad:
+      use_pymdownx: true
 
 theme:
   name: material
@@ -129,3 +132,8 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - css/mkdocsoad-v1.0.2.css
