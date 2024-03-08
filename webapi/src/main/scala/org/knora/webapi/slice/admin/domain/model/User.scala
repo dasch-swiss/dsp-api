@@ -51,7 +51,6 @@ final case class KnoraUser(
  * @param username    The user's username (unique).
  * @param email       The user's email address.
  * @param password    The user's hashed password.
- * @param token       The API token. Can be used instead of email/password for authentication.
  * @param givenName   The user's given name.
  * @param familyName  The user's surname.
  * @param status      The user's status.
