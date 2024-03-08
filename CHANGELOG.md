@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.3...v0.7.0) (2024-03-08)
+
+
+### Enhancements
+
+* Add assets overview report ([#175](https://github.com/dasch-swiss/dsp-ingest/issues/175)) ([612963e](https://github.com/dasch-swiss/dsp-ingest/commit/612963efca6efb2e2f5ca771b3cfb8b7a6bf20dd))
+* Allow a single bulk-ingest per project only (DEV-3379) ([#182](https://github.com/dasch-swiss/dsp-ingest/issues/182)) ([c79c785](https://github.com/dasch-swiss/dsp-ingest/commit/c79c7857492f73764644742742dd22ca10984304))
+* Make get /projects/&lt;shortcode&gt;/bulk-ingest/mapping.csv respond with a file (DEV-3380) ([#181](https://github.com/dasch-swiss/dsp-ingest/issues/181)) ([43cd64d](https://github.com/dasch-swiss/dsp-ingest/commit/43cd64da82adc7c9ea6a6d1cdcd04e94d7cc7f65))
+* Write asset overview report as csv instead of json (DEV-3300) ([#179](https://github.com/dasch-swiss/dsp-ingest/issues/179)) ([eaf7aaf](https://github.com/dasch-swiss/dsp-ingest/commit/eaf7aafe2bd9ea6d290fe6c1915cedf61495f838))
+
+
+### Maintenance
+
+* Add CODEOWNERS (DEV-3378) ([#183](https://github.com/dasch-swiss/dsp-ingest/issues/183)) ([cb9e383](https://github.com/dasch-swiss/dsp-ingest/commit/cb9e38364b6c0a39be71a3c8a592617d963160f0))
+* **formatting:** Add trailing commas ([#180](https://github.com/dasch-swiss/dsp-ingest/issues/180)) ([3a7611b](https://github.com/dasch-swiss/dsp-ingest/commit/3a7611b3f3eedea810df37f9ca0348cbf63d3d00))
+* Minor dependency updates ([#177](https://github.com/dasch-swiss/dsp-ingest/issues/177)) ([62fe0a9](https://github.com/dasch-swiss/dsp-ingest/commit/62fe0a99d77831a8e26885beba0ceed07077e568))
+* Patch dependency updates ([#176](https://github.com/dasch-swiss/dsp-ingest/issues/176)) ([574d411](https://github.com/dasch-swiss/dsp-ingest/commit/574d41190e470ce29bd5ce4ee9b5b6201415fd42))
+* Update knora-sipi to v30.9.0 ([#184](https://github.com/dasch-swiss/dsp-ingest/issues/184)) ([37f1708](https://github.com/dasch-swiss/dsp-ingest/commit/37f1708db5a39c36fe9d4002c1727aa5a18f2413))
+
 ## [0.6.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.2...v0.6.3) (2024-02-29)
 
 
