@@ -1,5 +1,60 @@
 # Changelog
 
+## [30.9.0](https://github.com/dasch-swiss/dsp-api/compare/v30.8.2...v30.9.0) (2024-03-07)
+
+
+### Maintenance
+
+* Add clear cache to KnoraProjectRepoLive ([#3091](https://github.com/dasch-swiss/dsp-api/issues/3091)) ([eb98c53](https://github.com/dasch-swiss/dsp-api/commit/eb98c53af5b499171920154405c773428461ab67))
+* Add CODEOWNERS (DEV-3378) ([#3102](https://github.com/dasch-swiss/dsp-api/issues/3102)) ([914fe86](https://github.com/dasch-swiss/dsp-api/commit/914fe8661b7ef4876b8fbc8ded3e8286ee787e25))
+* Add DSP-INGEST to docker network ([#3086](https://github.com/dasch-swiss/dsp-api/issues/3086)) ([b248cd0](https://github.com/dasch-swiss/dsp-api/commit/b248cd095ffc9da8a1d78f24c318dc8c6fc2f6f5))
+* Add save to KnoraProjectRepo and use for setting the RestrictedView ([#3082](https://github.com/dasch-swiss/dsp-api/issues/3082)) ([fcd483f](https://github.com/dasch-swiss/dsp-api/commit/fcd483fb74169ab023324b4c26001337a6832989))
+* Bump Sipi to 3.9.0 ([#3097](https://github.com/dasch-swiss/dsp-api/issues/3097)) ([4b6e638](https://github.com/dasch-swiss/dsp-api/commit/4b6e6382281a4e4f6b106624684bb388f9fd4948))
+* Cleanup CacheService, and split KnoraUserService and UserService ([#3074](https://github.com/dasch-swiss/dsp-api/issues/3074)) ([3a21838](https://github.com/dasch-swiss/dsp-api/commit/3a21838423efebc0d315eb46b83ecc5bbddf0044))
+* **formatting:** Add trailing commas ([#3084](https://github.com/dasch-swiss/dsp-api/issues/3084)) ([b0b5e25](https://github.com/dasch-swiss/dsp-api/commit/b0b5e251e2fdaf320cda17a98af7d7ed8f2ec21b))
+* KnoraUserGroup and KnoraUserGroupRepo (DEV-3288) ([#3059](https://github.com/dasch-swiss/dsp-api/issues/3059)) ([8a79e93](https://github.com/dasch-swiss/dsp-api/commit/8a79e93766ba39b35b96c5457e5f9728f31fcf87))
+* Migrate DELETE /admin/groups/&lt;groupIri&gt; to Tapir (DEV-1588) ([#3081](https://github.com/dasch-swiss/dsp-api/issues/3081)) ([2715aa1](https://github.com/dasch-swiss/dsp-api/commit/2715aa1e346af4faf045741011e6b7933d4993e5))
+* Migrate POST /admin/group to Tapir (DEV-1588) ([#3057](https://github.com/dasch-swiss/dsp-api/issues/3057)) ([29b1ce6](https://github.com/dasch-swiss/dsp-api/commit/29b1ce6a80c2a30bea970968a825b007d60d4987))
+* Migrate PUT /admin/group/&lt;groupIri&gt; to Tapir (DEV-1588) ([#3071](https://github.com/dasch-swiss/dsp-api/issues/3071)) ([8df7033](https://github.com/dasch-swiss/dsp-api/commit/8df70337c0b579f5751fb7a7d5e8c9d84e6e175f))
+* Migrate PUT /admin/groups/&lt;groupIri&gt;/status to Tapir (DEV-1588) ([#3075](https://github.com/dasch-swiss/dsp-api/issues/3075)) ([2ca95ed](https://github.com/dasch-swiss/dsp-api/commit/2ca95eda375d4ac87fbcf73945d3de85b6fd5835))
+* Minor dependency updates ([#3078](https://github.com/dasch-swiss/dsp-api/issues/3078)) ([f60d937](https://github.com/dasch-swiss/dsp-api/commit/f60d93790f82ec338e5ba2697614a546713d6356))
+* Move caching from UserResponder to UserService ([#3064](https://github.com/dasch-swiss/dsp-api/issues/3064)) ([0484717](https://github.com/dasch-swiss/dsp-api/commit/0484717a4fbbfdec786c7ebe56d0830c7f38f2db))
+* Move code from UsersResponder to UserService and UserRestService ([#3067](https://github.com/dasch-swiss/dsp-api/issues/3067)) ([5345350](https://github.com/dasch-swiss/dsp-api/commit/5345350a0b79f48694edf90bd808e15899ec6806))
+* Move code from UsersResponder to UserService and UserRestService ([#3069](https://github.com/dasch-swiss/dsp-api/issues/3069)) ([e78a106](https://github.com/dasch-swiss/dsp-api/commit/e78a10618e2489a52e61d3a955637e5e6fd5b7ce))
+* Move remaining methods from UsersResponder to UserService and UserRestService ([#3072](https://github.com/dasch-swiss/dsp-api/issues/3072)) ([320a4a8](https://github.com/dasch-swiss/dsp-api/commit/320a4a803f2675b1631d3f3d04428d9288667557))
+* Patch dependency updates ([#3077](https://github.com/dasch-swiss/dsp-api/issues/3077)) ([3decf23](https://github.com/dasch-swiss/dsp-api/commit/3decf23ff369ad6c5416578343fb0dbc31a17a95))
+* Prevent illegal updates with `KnoraUserService` ([#3098](https://github.com/dasch-swiss/dsp-api/issues/3098)) ([4111312](https://github.com/dasch-swiss/dsp-api/commit/4111312c8a57d6c3344cdac6772c8f4b7e4e8047))
+* Refactor Group value objects ([#3058](https://github.com/dasch-swiss/dsp-api/issues/3058)) ([f7ab488](https://github.com/dasch-swiss/dsp-api/commit/f7ab488663c2de54d630e9d1e23e31527c8d3902))
+* Remove Codecov annotations ([#3070](https://github.com/dasch-swiss/dsp-api/issues/3070)) ([e9e3d5c](https://github.com/dasch-swiss/dsp-api/commit/e9e3d5cebeb243bb7ba792755f341fa967fd54bb))
+* Remove invalid test data ([#3088](https://github.com/dasch-swiss/dsp-api/issues/3088)) ([22a7333](https://github.com/dasch-swiss/dsp-api/commit/22a733356ec06cd6a978be7ae58a002b6199afc4))
+* Remove ontology from KnoraProject entity ([#3063](https://github.com/dasch-swiss/dsp-api/issues/3063)) ([376f536](https://github.com/dasch-swiss/dsp-api/commit/376f536d0089c1f4e6a960d9fd219ea724f323e4))
+* Remove unused `RejectingRoute` (DEV-3289) ([#3079](https://github.com/dasch-swiss/dsp-api/issues/3079)) ([fc8e7d0](https://github.com/dasch-swiss/dsp-api/commit/fc8e7d0e97921b28d0a65d0877ec1f0a602e7cac))
+* Remove unused code from standoff responder (DEV-3264) ([#3085](https://github.com/dasch-swiss/dsp-api/issues/3085)) ([56815a3](https://github.com/dasch-swiss/dsp-api/commit/56815a38febac3d3acd990b3b10b1045463644b3))
+* Rename GroupADM and move to domain model package (DEV-3292) ([#3094](https://github.com/dasch-swiss/dsp-api/issues/3094)) ([2202bd9](https://github.com/dasch-swiss/dsp-api/commit/2202bd95884b0c2350173e4d00fb64c9a9f25285))
+* Rename test data folder to align with PermissionsResponderADMSpec ([#3092](https://github.com/dasch-swiss/dsp-api/issues/3092)) ([b56580d](https://github.com/dasch-swiss/dsp-api/commit/b56580de70b785e5bdeaa04db2714879ac0ee7cd))
+* Replace default watermark for Sipi with new version ([#3066](https://github.com/dasch-swiss/dsp-api/issues/3066)) ([19caebd](https://github.com/dasch-swiss/dsp-api/commit/19caebd108d5adb57963af70476a58251f68708d))
+* Replace Spray JSON with ZIO-JSON in some projects endpoints (DEV-3375) ([#3095](https://github.com/dasch-swiss/dsp-api/issues/3095)) ([70ea9ba](https://github.com/dasch-swiss/dsp-api/commit/70ea9ba5ab41d7a1c275ce8dac36b3b2b143be7c))
+* Update dsp-app to v11.6.4 ([#3061](https://github.com/dasch-swiss/dsp-api/issues/3061)) ([97db659](https://github.com/dasch-swiss/dsp-api/commit/97db659486aec842de9410a51969273e62742c74))
+* Use RDF model in all methods of project repo ([#3032](https://github.com/dasch-swiss/dsp-api/issues/3032)) ([689bbbf](https://github.com/dasch-swiss/dsp-api/commit/689bbbf313cb4995c1612899186e18931d091445))
+
+
+### Documentation
+
+* Fix dead links in docs ([#3076](https://github.com/dasch-swiss/dsp-api/issues/3076)) ([068ec84](https://github.com/dasch-swiss/dsp-api/commit/068ec841633ba0df1c32be3a4fbdea3f4700980a))
+* Update documentation on restricted view settings ([#3101](https://github.com/dasch-swiss/dsp-api/issues/3101)) ([12db892](https://github.com/dasch-swiss/dsp-api/commit/12db892a5b4b04b42c2de6cce14e141527a46a7a))
+
+
+### Enhancements
+
+* Allow project admins to create users which are not a system admin (DEV-3266) ([#3099](https://github.com/dasch-swiss/dsp-api/issues/3099)) ([79e1963](https://github.com/dasch-swiss/dsp-api/commit/79e1963c442dc86004bc12ace4d5c6cdc095e37a))
+* Make GET /admin/users faster by caching projects (DEV-3311) ([#3062](https://github.com/dasch-swiss/dsp-api/issues/3062)) ([793f118](https://github.com/dasch-swiss/dsp-api/commit/793f11833c9cf9884d7c0681bf3c21ab7c2dfb08))
+* The restricted view must be either restricted with a watermark or by a particular size (DEV-3356) ([#3080](https://github.com/dasch-swiss/dsp-api/issues/3080)) ([75f5363](https://github.com/dasch-swiss/dsp-api/commit/75f53637ae71f3dba123a6fdecbe2fceaaed7cee))
+
+
+### Bug Fixes
+
+* **docs:** DSP-API docs root route gives a 404 error (DEV-3345) ([#3073](https://github.com/dasch-swiss/dsp-api/issues/3073)) ([0370e13](https://github.com/dasch-swiss/dsp-api/commit/0370e13d777e0f2b69c7560b6efbd7d26057537d))
+
 ## [30.8.2](https://github.com/dasch-swiss/dsp-api/compare/v30.8.1...v30.8.2) (2024-02-22)
 
 
