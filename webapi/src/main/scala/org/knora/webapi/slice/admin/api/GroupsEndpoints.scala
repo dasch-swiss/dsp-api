@@ -20,12 +20,8 @@ import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIriPathVar
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.GroupName
-import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
-import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
@@ -35,29 +31,32 @@ final case class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   val getGroups = baseEndpoints.publicEndpoint.get
     .in(base)
     .out(sprayJsonBody[GroupsGetResponseADM])
-    .description("Returns all groups.")
+    .description("Return all groups.")
 
   val getGroupByIri = baseEndpoints.publicEndpoint.get
     .in(base / groupIriPathVar)
     .out(sprayJsonBody[GroupGetResponseADM])
-    .description("Returns a single group identified by IRI.")
+    .description("Return a single group identified by its IRI.")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")
     .out(sprayJsonBody[GroupMembersGetResponseADM])
-    .description("Returns all members of a single group.")
+    .description("Return all members of a single group.")
 
   val postGroup = baseEndpoints.securedEndpoint.post
     .in(base)
-    .in(zioJsonBody[GroupCreateRequest])
+    .in(zioJsonBody[GroupCreateRequest].example(Examples.GroupEndpointsExample.groupCreateRequest))
     .out(sprayJsonBody[GroupGetResponseADM])
-    .description("Creates a new group.")
+    .name("Create new group")
+    .description(
+      "**Required permissions**: User must SystemAdmin or ProjectAdmin of the project the group is created in.",
+    )
 
   val putGroup = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar)
-    .in(zioJsonBody[GroupUpdateRequest])
+    .in(zioJsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
     .out(sprayJsonBody[GroupGetResponseADM])
-    .description("Updates a group.")
+    .description("Update a group's basic information.")
 
   val putGroupStatus = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar / "status")

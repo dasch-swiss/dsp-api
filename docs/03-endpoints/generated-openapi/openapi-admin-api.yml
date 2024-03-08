@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: webapi-admin-api
-  version: v30.8.2-37-g3decf23-dirty-doc-integrate-admin-openapi-in-docs-DEV-3381
+  version: v30.8.2-38-g47cc5cd-dirty-doc-polish-openapi-documentation
 servers:
 - url: http://localhost:3333
   description: Local development server
@@ -12,7 +12,7 @@ paths:
     get:
       tags:
       - Admin Groups
-      description: Returns all groups.
+      description: Return all groups.
       operationId: getAdminGroups
       responses:
         '200':
@@ -36,8 +36,9 @@ paths:
     post:
       tags:
       - Admin Groups
-      description: Creates a new group.
-      operationId: postAdminGroups
+      description: '**Required permissions**: User must SystemAdmin or ProjectAdmin
+        of the project the group is created in.'
+      operationId: Create new group
       parameters:
       - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
         in: cookie
@@ -49,6 +50,16 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GroupCreateRequest'
+            example:
+              name: NewGroup
+              descriptions:
+              - value: NewGroup description in English
+                language: en
+              - value: NewGroup Beschreibung auf Deutsch
+                language: de
+              project: http://rdfh.ch/projects/0042
+              status: true
+              selfjoin: false
         required: true
       responses:
         '200':
@@ -88,7 +99,7 @@ paths:
     get:
       tags:
       - Admin Groups
-      description: Returns a single group identified by IRI.
+      description: Return a single group identified by its IRI.
       operationId: getAdminGroupsGroupiri
       parameters:
       - name: groupIri
@@ -97,7 +108,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -120,7 +131,7 @@ paths:
     put:
       tags:
       - Admin Groups
-      description: Updates a group.
+      description: Update a group's basic information.
       operationId: putAdminGroupsGroupiri
       parameters:
       - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
@@ -134,12 +145,21 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/GroupUpdateRequest'
+            example:
+              name: NewGroupNewName
+              descriptions:
+              - value: NewGroupNewName description in English
+                language: en
+              - value: NewGroupNewName Beschreibung auf Deutsch
+                language: de
+              status: false
+              selfjoin: true
         required: true
       responses:
         '200':
@@ -192,7 +212,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -231,7 +251,7 @@ paths:
     get:
       tags:
       - Admin Groups
-      description: Returns all members of a single group.
+      description: Return all members of a single group.
       operationId: getAdminGroupsGroupiriMembers
       parameters:
       - name: KnoraAuthenticationMFYGSLTEMFZWG2BOON3WS43THI2DIMY9
@@ -245,7 +265,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -1034,7 +1054,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -2690,7 +2710,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       responses:
         '200':
           description: ''
@@ -2724,7 +2744,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       responses:
         '200':
           description: ''
@@ -2758,7 +2778,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       responses:
         '200':
           description: ''
@@ -2893,7 +2913,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       responses:
         '200':
           description: ''
@@ -2945,7 +2965,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       responses:
         '200':
           description: ''
@@ -3104,7 +3124,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: projectIri
         in: path
         description: The IRI of a project. Must be URL-encoded.
@@ -3163,7 +3183,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: projectIri
         in: path
         description: The IRI of a project. Must be URL-encoded.
@@ -3223,7 +3243,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: projectIri
         in: path
         description: The IRI of a project. Must be URL-encoded.
@@ -3282,7 +3302,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: projectIri
         in: path
         description: The IRI of a project. Must be URL-encoded.
@@ -3342,14 +3362,14 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: groupIri
         in: path
         description: The IRI of a group. Must be URL-encoded.
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -3401,14 +3421,14 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       - name: groupIri
         in: path
         description: The IRI of a group. Must be URL-encoded.
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ
+        example: http://rdfh.ch/groups/0042/a95UWs71KUklnFOe1rcw1w
       responses:
         '200':
           description: ''
@@ -3461,7 +3481,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       requestBody:
         content:
           application/json:
@@ -3520,7 +3540,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       requestBody:
         content:
           application/json:
@@ -3579,7 +3599,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       requestBody:
         content:
           application/json:
@@ -3638,7 +3658,7 @@ paths:
         required: true
         schema:
           type: string
-        example: http://rdfh.ch/users/-oKc5S4xSQ2E_50W0o1sFw
+        example: http://rdfh.ch/users/uQnRpDX9Qem3hFko88t9Bg
       requestBody:
         content:
           application/json:
