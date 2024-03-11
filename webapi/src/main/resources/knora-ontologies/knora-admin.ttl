@@ -86,16 +86,6 @@
 #
 #################################################################
 
-
-###  http://www.knora.org/ontology/knora-admin#address
-
-:address
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    knora-base:objectDatatypeConstraint xsd:string ;
-    rdfs:comment                        "The address of a person or an institution"@en .
-
-
 ###  http://www.knora.org/ontology/knora-admin#groupName
 
 :groupName
@@ -127,37 +117,6 @@
     # No knora-base:subjectClassConstraint, because this can be used with :knoraProject or :UserGroup.
 
     knora-base:objectDatatypeConstraint xsd:boolean .
-
-
-###  http://www.knora.org/ontology/knora-admin#institutionName
-
-:institutionName
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The institutions's name."@en ;
-    rdfs:subPropertyOf                  <http://xmlns.com/foaf/0.1/name> ;
-    knora-base:subjectClassConstraint   :Institution ;
-    knora-base:objectDatatypeConstraint xsd:string .
-
-
-###  http://www.knora.org/ontology/knora-admin#institutionDescription
-
-:institutionDescription
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "A description of an institution."@en ;
-    knora-base:subjectClassConstraint   :Institution ;
-    knora-base:objectDatatypeConstraint xsd:string .
-
-
-###  http://www.knora.org/ontology/knora-admin#institutionWebsite
-
-:institutionWebsite
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The URL of a web site."@en ;
-    knora-base:subjectClassConstraint   :Institution ;
-    knora-base:objectDatatypeConstraint xsd:anyURI .
 
 
 ###  http://www.knora.org/ontology/knora-admin#isActiveUser
@@ -198,16 +157,6 @@
     rdfs:comment                        "An encrypted credential for access"@en ;
     knora-base:subjectClassConstraint   :User ;
     knora-base:objectDatatypeConstraint xsd:string .
-
-
-###  http://www.knora.org/ontology/knora-admin#phone
-
-:phone
-    rdf:type                            owl:DatatypeProperty ;
-    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The phone number of a person, institution, etc."@en ;
-    knora-base:objectDatatypeConstraint xsd:string .
-
 
 ###  http://www.knora.org/ontology/knora-admin#preferredLanguage
 
@@ -334,33 +283,6 @@
 #    Classes
 #
 #################################################################
-
-
-###  http://www.knora.org/ontology/knora-admin#Institution
-
-:Institution
-    rdf:type        owl:Class ;
-    rdfs:subClassOf foaf:Organization,
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :institutionName ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :institutionDescription ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :institutionWebsite ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :phone ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :address ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :email ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:comment    "An institution that has data in Knora."@en .
-
 
 ###  http://www.knora.org/ontology/knora-admin#User
 

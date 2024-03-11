@@ -457,7 +457,6 @@ object OntologyConstants {
     val GivenName: IRI             = KnoraAdminPrefixExpansion + "givenName"
     val FamilyName: IRI            = KnoraAdminPrefixExpansion + "familyName"
     val Password: IRI              = KnoraAdminPrefixExpansion + "password"
-    val Address: IRI               = KnoraAdminPrefixExpansion + "address"
     val UsersActiveProject: IRI    = KnoraAdminPrefixExpansion + "currentproject"
     val PreferredLanguage: IRI     = KnoraAdminPrefixExpansion + "preferredLanguage"
     val IsInProject: IRI           = KnoraAdminPrefixExpansion + "isInProject"
@@ -502,13 +501,6 @@ object OntologyConstants {
       SystemAdmin,
       ProjectAdmin,
     )
-
-    /* Institution */
-    val Institution: IRI            = KnoraAdminPrefixExpansion + "Institution"
-    val InstitutionDescription: IRI = KnoraAdminPrefixExpansion + "institutionDescription"
-    val InstitutionName: IRI        = KnoraAdminPrefixExpansion + "institutionName"
-    val InstitutionWebsite: IRI     = KnoraAdminPrefixExpansion + "institutionWebsite"
-    val Phone: IRI                  = KnoraAdminPrefixExpansion + "phone"
 
     /* Permissions */
     val Permission: IRI                    = KnoraAdminPrefixExpansion + "Permission"

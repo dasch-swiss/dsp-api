@@ -140,11 +140,6 @@
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/institutions/dhlab-basel>
-    rdf:type                    knora-admin:Institution ;
-    knora-admin:institutionName "Digital Humanities Lab, Basel" .
-
-
 ##########################################################
 #
 # INCUNABULA PROJECT / USERS / GROUPS
