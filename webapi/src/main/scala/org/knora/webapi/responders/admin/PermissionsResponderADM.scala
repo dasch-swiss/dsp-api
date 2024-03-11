@@ -24,7 +24,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbb
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
@@ -40,6 +39,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -345,7 +345,7 @@ final case class PermissionsResponderADMLive(
     val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
         for {
-          maybeGroup <- messageRelay.ask[Option[GroupADM]](GroupGetADM(groupIri))
+          maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(groupIri))
 
           group = maybeGroup.getOrElse(
                     throw InconsistentRepositoryDataException(
@@ -758,10 +758,10 @@ final case class PermissionsResponderADMLive(
             ZIO.succeed(createRequest.forGroup)
           } else {
             for {
-              maybeGroup <- messageRelay.ask[Option[GroupADM]](GroupGetADM(createRequest.forGroup))
+              maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(createRequest.forGroup))
 
               // if it does not exist then throw an error
-              group: GroupADM =
+              group: Group =
                 maybeGroup.getOrElse(
                   throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
                 )
@@ -1577,13 +1577,13 @@ final case class PermissionsResponderADMLive(
             for {
               maybeGroup <-
                 messageRelay
-                  .ask[Option[GroupADM]](
+                  .ask[Option[Group]](
                     GroupGetADM(
                       groupIri = createRequest.forGroup.get,
                     ),
                   )
 
-              group: GroupADM =
+              group: Group =
                 maybeGroup.getOrElse(
                   throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
                 )

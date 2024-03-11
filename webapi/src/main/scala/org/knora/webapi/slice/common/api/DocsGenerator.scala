@@ -60,7 +60,7 @@ object DocsGenerator extends ZIOAppDefault {
       adminEndpoints <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
       v2Endpoints    <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
       path            = Path(args.headOption.getOrElse("/tmp"))
-      filesWritten   <- writeToFile(adminEndpoints, path, "maintenance") <*> writeToFile(v2Endpoints, path, "v2")
+      filesWritten   <- writeToFile(adminEndpoints, path, "admin-api") <*> writeToFile(v2Endpoints, path, "v2")
       _              <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
   }.provideSome[ZIOAppArgs](

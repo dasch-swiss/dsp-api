@@ -140,7 +140,7 @@ lazy val webApiCommonSettings = Seq(
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 val customScalacOptions = Seq(
-  "-Xsource:3",
+  "-Xsource:3-cross",
   "-Wconf:msg=constructor modifiers are assumed:s",
   "-feature",
   "-unchecked",

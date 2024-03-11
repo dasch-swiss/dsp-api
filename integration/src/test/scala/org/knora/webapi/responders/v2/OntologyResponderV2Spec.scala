@@ -22,7 +22,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.*
@@ -163,7 +163,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     "invalidate cached project information when adding an ontology to a project" in {
       // ernsure that the project is cached
       appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      expectMsgType[ProjectGetResponseADM](timeout)
+      expectMsgType[ProjectGetResponse](timeout)
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       val cachedProjectBefore = expectMsgType[Option[ProjectADM]](timeout)
       assert(cachedProjectBefore.isDefined)

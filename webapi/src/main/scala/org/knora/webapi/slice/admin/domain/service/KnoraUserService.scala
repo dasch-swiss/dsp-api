@@ -14,13 +14,13 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -31,21 +31,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
 import org.knora.webapi.store.cache.CacheService
-
-final case class UserChangeRequest(
-  username: Option[Username] = None,
-  email: Option[Email] = None,
-  givenName: Option[GivenName] = None,
-  familyName: Option[FamilyName] = None,
-  status: Option[UserStatus] = None,
-  lang: Option[LanguageCode] = None,
-  passwordHash: Option[PasswordHash] = None,
-  projects: Option[Chunk[ProjectIri]] = None,
-  projectsAdmin: Option[Chunk[ProjectIri]] = None,
-  groups: Option[Chunk[GroupIri]] = None,
-  systemAdmin: Option[SystemAdmin] = None,
-)
 
 case class KnoraUserService(
   private val userRepo: KnoraUserRepo,
@@ -54,7 +41,26 @@ case class KnoraUserService(
   private val cacheService: CacheService,
 ) {
 
-  def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
+  def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
+    updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))
+
+  def updateUserStatus(knoraUser: KnoraUser, status: UserStatus): Task[KnoraUser] =
+    updateUser(knoraUser, UserChangeRequest(status = Some(status)))
+
+  def updateUser(
+    knoraUser: KnoraUser,
+    username: Option[Username] = None,
+    email: Option[Email],
+    givenName: Option[GivenName] = None,
+    familyName: Option[FamilyName] = None,
+    lang: Option[LanguageCode] = None,
+  ): Task[KnoraUser] = {
+    val theUpdate =
+      UserChangeRequest(username = username, email = email, givenName = givenName, familyName = familyName, lang = lang)
+    updateUser(knoraUser, theUpdate)
+  }
+
+  private def updateUser(kUser: KnoraUser, update: UserChangeRequest): Task[KnoraUser] = {
     val updatedUser = kUser.copy(
       username = update.username.getOrElse(kUser.username),
       email = update.email.getOrElse(kUser.email),
@@ -109,17 +115,17 @@ case class KnoraUserService(
       userCreated <- userRepo.save(newUser)
     } yield userCreated
 
-  def addUserToGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+  def addUserToGroup(user: KnoraUser, group: Group): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO.when(user.isInGroup.contains(group.groupIri))(
            ZIO.fail(UserServiceError(s"User ${user.id.value} is already member of group ${group.groupIri.value}.")),
          )
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup :+ group.groupIri))).orDie
   } yield user
 
-  def removeUserFromGroup(user: User, group: GroupADM): IO[UserServiceError, KnoraUser] =
+  def removeUserFromGroup(user: User, group: Group): IO[UserServiceError, KnoraUser] =
     userRepo.findById(user.userIri).someOrFailException.orDie.flatMap(removeUserFromGroup(_, group))
 
-  def removeUserFromGroup(user: KnoraUser, group: GroupADM): IO[UserServiceError, KnoraUser] = for {
+  def removeUserFromGroup(user: KnoraUser, group: Group): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.groupIri.value}."))
            .when(!user.isInGroup.contains(group.groupIri))
@@ -210,6 +216,20 @@ case class KnoraUserService(
 }
 
 object KnoraUserService {
+  private final case class UserChangeRequest(
+    username: Option[Username] = None,
+    email: Option[Email] = None,
+    givenName: Option[GivenName] = None,
+    familyName: Option[FamilyName] = None,
+    status: Option[UserStatus] = None,
+    lang: Option[LanguageCode] = None,
+    passwordHash: Option[PasswordHash] = None,
+    projects: Option[Chunk[ProjectIri]] = None,
+    projectsAdmin: Option[Chunk[ProjectIri]] = None,
+    groups: Option[Chunk[GroupIri]] = None,
+    systemAdmin: Option[SystemAdmin] = None,
+  )
+
   object Errors {
     final case class UserServiceError(message: String)
   }

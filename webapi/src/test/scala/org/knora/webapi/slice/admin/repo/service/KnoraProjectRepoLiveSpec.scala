@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
@@ -131,5 +132,5 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         },
       ),
     ),
-  ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
+  ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, CacheService.layer, StringFormatter.test)
 }

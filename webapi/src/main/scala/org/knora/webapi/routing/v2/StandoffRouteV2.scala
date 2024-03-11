@@ -97,7 +97,7 @@ final case class StandoffRouteV2()(
                 .fromOption(allParts.get(xmlPartKey))
                 .mapBoth(
                   _ => BadRequestException(s"MultiPart POST request was sent without required '$xmlPartKey' part!"),
-                  CreateMappingRequestXMLV2,
+                  CreateMappingRequestXMLV2.apply,
                 )
           } yield CreateMappingRequestV2(metadata, xml, requestingUser, apiRequestID)
           RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)

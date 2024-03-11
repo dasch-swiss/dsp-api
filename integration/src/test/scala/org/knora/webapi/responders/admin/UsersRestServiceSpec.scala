@@ -15,8 +15,6 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -31,6 +29,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequ
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model.*
@@ -572,7 +571,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
     }
 
     "asked to update the user's group membership" should {
-      def findGroupMembershipsByIri(userIri: UserIri): Seq[GroupADM] =
+      def findGroupMembershipsByIri(userIri: UserIri): Seq[Group] =
         UnsafeZioRun.runOrThrow(
           ZIO.serviceWithZIO[UserService](_.findUserByIri(userIri).map(_.map(_.groups).getOrElse(Seq.empty))),
         )
@@ -586,12 +585,12 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser,
+        val received = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            rootUser,
+          ),
         )
-        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-
         received.members.map(_.id) should contain(normalUser.id)
       }
 
@@ -610,13 +609,13 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         val membershipsAfterUpdate = findGroupMembershipsByIri(normalUser.userIri)
         membershipsAfterUpdate should equal(Seq())
 
-        appActor ! GroupMembersGetRequestADM(
-          groupIri = imagesReviewerGroup.id,
-          requestingUser = rootUser,
+        val received = UnsafeZioRun.runOrThrow(
+          GroupsResponderADM.groupMembersGetRequest(
+            GroupIri.unsafeFrom(imagesReviewerGroup.id),
+            rootUser,
+          ),
         )
-        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-
-        received.members.map(_.id) should not contain normalUser.id
+        received.members.map(_.id) should not contain normalUser
       }
     }
   }

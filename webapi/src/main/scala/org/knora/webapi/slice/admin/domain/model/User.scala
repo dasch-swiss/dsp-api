@@ -14,11 +14,11 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -69,7 +69,7 @@ final case class User(
   status: Boolean,
   lang: String,
   password: Option[String] = None,
-  groups: Seq[GroupADM] = Vector.empty[GroupADM],
+  groups: Seq[Group] = Vector.empty[Group],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   permissions: PermissionsDataADM = PermissionsDataADM(),
 ) extends Ordered[User] { self =>
@@ -97,14 +97,14 @@ final case class User(
           status = false,
           lang = "",
           password = None,
-          groups = Seq.empty[GroupADM],
+          groups = Seq.empty[Group],
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM(),
         )
       case UserInformationType.Short =>
         self.copy(
           password = None,
-          groups = Seq.empty[GroupADM],
+          groups = Seq.empty[Group],
           projects = Seq.empty[ProjectADM],
           permissions = PermissionsDataADM(),
         )

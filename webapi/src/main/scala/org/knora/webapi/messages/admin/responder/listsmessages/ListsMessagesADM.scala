@@ -923,7 +923,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
+  implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] =
+    jsonFormat(ListsGetResponseADM.apply, "lists")
 
   implicit val listItemGetResponseADMJsonFormat: RootJsonFormat[ListItemGetResponseADM] =
     new RootJsonFormat[ListItemGetResponseADM] {
@@ -935,9 +936,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         Try(listGetResponseADMFormat.read(json))
           .getOrElse(listNodeGetResponseADMFormat.read(json))
     }
-  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
+  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] =
+    jsonFormat(ListGetResponseADM.apply, "list")
   implicit val listNodeGetResponseADMFormat: RootJsonFormat[ListNodeGetResponseADM] =
-    jsonFormat(ListNodeGetResponseADM, "node")
+    jsonFormat(ListNodeGetResponseADM.apply, "node")
 
   implicit val nodeInfoGetResponseADMJsonFormat: RootJsonFormat[NodeInfoGetResponseADM] =
     new RootJsonFormat[NodeInfoGetResponseADM] {
@@ -950,12 +952,12 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           .getOrElse(listNodeInfoGetResponseADMFormat.read(json))
     }
   implicit val listInfoGetResponseADMFormat: RootJsonFormat[RootNodeInfoGetResponseADM] =
-    jsonFormat(RootNodeInfoGetResponseADM, "listinfo")
+    jsonFormat(RootNodeInfoGetResponseADM.apply, "listinfo")
   implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ChildNodeInfoGetResponseADM] =
-    jsonFormat(ChildNodeInfoGetResponseADM, "nodeinfo")
+    jsonFormat(ChildNodeInfoGetResponseADM.apply, "nodeinfo")
 
   implicit val changeNodePositionApiResponseADMFormat: RootJsonFormat[NodePositionChangeResponseADM] =
-    jsonFormat(NodePositionChangeResponseADM, "node")
+    jsonFormat(NodePositionChangeResponseADM.apply, "node")
 
   implicit val listItemDeleteResponseADMFormat: RootJsonFormat[ListItemDeleteResponseADM] =
     new RootJsonFormat[ListItemDeleteResponseADM] {
@@ -968,12 +970,12 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           .getOrElse(listNodeDeleteResponseADMFormat.read(json))
     }
   implicit val listNodeDeleteResponseADMFormat: RootJsonFormat[ChildNodeDeleteResponseADM] =
-    jsonFormat(ChildNodeDeleteResponseADM, "node")
+    jsonFormat(ChildNodeDeleteResponseADM.apply, "node")
   implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] =
-    jsonFormat(ListDeleteResponseADM, "iri", "deleted")
+    jsonFormat(ListDeleteResponseADM.apply, "iri", "deleted")
 
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
-    jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
+    jsonFormat(CanDeleteListResponseADM.apply, "listIri", "canDeleteList")
   implicit val ListNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListNodeCommentsDeleteResponseADM] =
-    jsonFormat(ListNodeCommentsDeleteResponseADM, "nodeIri", "commentsDeleted")
+    jsonFormat(ListNodeCommentsDeleteResponseADM.apply, "nodeIri", "commentsDeleted")
 }

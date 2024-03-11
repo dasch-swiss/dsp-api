@@ -90,7 +90,7 @@ final case class MaintenanceServiceLive(
     for {
       result <- triplestoreService.query(checkDimensionsQuery(project, asset.id)).asSomeError
       rowMap <- ZIO.fromOption(result.results.bindings.headOption.map(_.rowMap))
-      iri    <- ZIO.fromOption(rowMap.get("valueIri")).map(InternalIri)
+      iri    <- ZIO.fromOption(rowMap.get("valueIri")).map(InternalIri.apply)
       width  <- ZIO.fromOption(rowMap.get("dimX").flatMap(_.toIntOption))
       height <- ZIO.fromOption(rowMap.get("dimY").flatMap(_.toIntOption))
       dim    <- ZIO.fromOption(Dimensions.from(width, height).toOption)

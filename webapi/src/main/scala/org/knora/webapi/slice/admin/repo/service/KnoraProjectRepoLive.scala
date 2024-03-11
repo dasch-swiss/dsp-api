@@ -24,12 +24,14 @@ import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive.ProjectQueries
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
+  private val cacheService: CacheService,
 ) extends KnoraProjectRepo {
 
   override def findAll(): Task[List[KnoraProject]] =
@@ -108,8 +110,8 @@ final case class KnoraProjectRepoLive(
   }
 
   override def save(project: KnoraProject): Task[KnoraProject] =
-    triplestore.query(ProjectQueries.save(project)).as(project)
-
+    cacheService.clearCache() *>
+      triplestore.query(ProjectQueries.save(project)).as(project)
 }
 
 object KnoraProjectRepoLive {

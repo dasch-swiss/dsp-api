@@ -159,7 +159,7 @@ final case class CardinalityServiceLive(
   private val knoraAdminAndBaseOntologies = Seq(
     "http://www.knora.org/ontology/knora-base",
     "http://www.knora.org/ontology/knora-admin",
-  ).map(InternalIri)
+  ).map(InternalIri.apply)
 
   private def isPartOfKnoraOntology(classIri: InternalIri): Task[Boolean] =
     iriConverter.getOntologyIriFromClassIri(classIri).map(knoraAdminAndBaseOntologies.contains)
@@ -183,7 +183,7 @@ final case class CardinalityServiceLive(
   private def superClassCheck(check: CheckCardinalitySubject) = {
     val superClasses                = ontologyRepo.findAllSuperClassesBy(check.classIri)
     val newCardinalityIsNotIncluded = (other: Cardinality) => check.newCardinality.isNotIncludedIn(other)
-    canSetCheckFor(superClasses, check.propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure)
+    canSetCheckFor(superClasses, check.propertyIri, newCardinalityIsNotIncluded, SuperClassCheckFailure.apply)
   }
 
   private def toClassIris(subclasses: List[ReadClassInfoV2]): List[InternalIri] =
@@ -196,7 +196,7 @@ final case class CardinalityServiceLive(
         superClasses <- ontologyRepo.findAllSuperClassesBy(toClassIris(subclasses), upToClass = check.classIri)
       } yield subclasses ::: superClasses
     val subclassCardinalityIsNotIncluded = (other: Cardinality) => other.isNotIncludedIn(check.newCardinality)
-    canSetCheckFor(subclasses, check.propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure)
+    canSetCheckFor(subclasses, check.propertyIri, subclassCardinalityIsNotIncluded, SubclassCheckFailure.apply)
   }
 
   private def canSetCheckFor(
