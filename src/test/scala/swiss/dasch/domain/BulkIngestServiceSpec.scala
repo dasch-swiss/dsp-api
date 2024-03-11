@@ -22,7 +22,9 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
   ): ZIO[BulkIngestService, Option[Nothing], Fiber.Runtime[IOException, Unit]] =
     ZIO.serviceWithZIO[BulkIngestService](_.finalizeBulkIngest(shortcode))
 
-  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Option[String]] =
+  def getBulkIngestMappingCsv(
+    shortcode: ProjectShortcode,
+  ): ZIO[BulkIngestService, Option[IOException], Option[String]] =
     ZIO.serviceWithZIO[BulkIngestService](_.getBulkIngestMappingCsv(shortcode))
 
   private val finalizeBulkIngestSuite = suite("finalize bulk ingest should")(test("remove all files") {

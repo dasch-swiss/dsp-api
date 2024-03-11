@@ -29,18 +29,19 @@ final case class BulkIngestService(
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
 
+  private def getSemaphore(key: ProjectShortcode) =
+    semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1)).tap(semaphoresPerProject.put(key, _)).commit
+
+  private def acquireWithTimeout(sem: TSemaphore) =
+    sem.acquire.as(sem).commit.timeout(Duration.fromMillis(400)).some
+
   private def withSemaphoreFork[E, A](
     key: ProjectShortcode,
     zio: ProjectShortcode => IO[E, A],
-  ): IO[Option[Nothing], Fiber.Runtime[E, A]] = {
-    def getSemaphore =
-      semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1)).tap(semaphoresPerProject.put(key, _)).commit
-    def acquireWithTimeout(sem: TSemaphore) =
-      sem.acquire.as(sem).commit.timeout(Duration.fromMillis(400)).some
-    getSemaphore
+  ): IO[Option[Nothing], Fiber.Runtime[E, A]] =
+    getSemaphore(key)
       .flatMap(acquireWithTimeout)
       .flatMap(sem => zio.apply(key).logError.ensuring(sem.release.commit).forkDaemon)
-  }
 
   def startBulkIngest(project: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, IngestResult]] =
     withSemaphoreFork(project, doBulkIngest)
@@ -117,14 +118,17 @@ final case class BulkIngestService(
       _         <- ZIO.logInfo(s"Finished finalizing bulk ingest for project $shortcode")
     } yield ()
 
-  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]] =
+  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): IO[Option[IOException], Option[String]] =
     for {
-      importDir <- getImportFolder(shortcode)
+      _         <- getSemaphore(shortcode).flatMap(acquireWithTimeout)
+      importDir <- getImportFolder(shortcode).asSomeError
       mappingCsv = getMappingCsvFile(importDir, shortcode)
-      mapping <- ZIO.ifZIO(Files.exists(mappingCsv))(
-                   Files.readAllLines(mappingCsv).map(it => Some(it.mkString("\n"))),
-                   ZIO.none,
-                 )
+      mapping <- ZIO
+                   .ifZIO(Files.exists(mappingCsv))(
+                     Files.readAllLines(mappingCsv).map(it => Some(it.mkString("\n"))),
+                     ZIO.none,
+                   )
+                   .asSomeError
     } yield mapping
 }
 
