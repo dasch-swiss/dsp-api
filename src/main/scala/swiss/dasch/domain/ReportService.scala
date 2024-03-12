@@ -38,7 +38,7 @@ final case class SizeInBytesReport(sizes: Map[SupportedFileType, SizeInBytesPerT
     })
 }
 
-final case class FileSize(sizeInBytes: BigDecimal) {
+final case class FileSize(sizeInBytes: BigDecimal) extends AnyVal {
   def +(other: FileSize): FileSize = FileSize(sizeInBytes + other.sizeInBytes)
 
 }

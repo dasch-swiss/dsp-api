@@ -6,7 +6,6 @@
 package swiss.dasch.domain
 
 import com.github.tototoshi.csv.{CSVWriter, defaultCSVFormat}
-import swiss.dasch.domain.FileSize.prettyPrint
 import swiss.dasch.domain.SizeInBytesPerType.{SizeInBytesMovingImages, SizeInBytesOther}
 import swiss.dasch.domain.SupportedFileType.{MovingImage, OtherFiles, StillImage}
 import zio.nio.file.Path
@@ -27,19 +26,19 @@ final case class AssetOverviewReportCsvRow(
   sizeOfOtherDerivatives: FileSize,
 ) {
 
-  def toList: List[String | Int] = List(
+  def toList: List[String | Number] = List(
     shortcode.value,
     totalNrOfAssets,
     nrOfStillImageAssets,
     nrOfMovingImageAssets,
     nrOrOtherAssets,
-    prettyPrint(sizeOfStillImageOriginals),
-    prettyPrint(sizeOfStillImageDerivatives),
-    prettyPrint(sizeOfMovingImageOriginals),
-    prettyPrint(sizeOfMovingImageDerivatives),
-    prettyPrint(sizeOfMovingImageKeyframes),
-    prettyPrint(sizeOfOtherOriginals),
-    prettyPrint(sizeOfOtherDerivatives),
+    sizeOfStillImageOriginals.sizeInBytes,
+    sizeOfStillImageDerivatives.sizeInBytes,
+    sizeOfMovingImageOriginals.sizeInBytes,
+    sizeOfMovingImageDerivatives.sizeInBytes,
+    sizeOfMovingImageKeyframes.sizeInBytes,
+    sizeOfOtherOriginals.sizeInBytes,
+    sizeOfOtherDerivatives.sizeInBytes,
   )
 }
 
