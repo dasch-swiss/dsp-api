@@ -43,7 +43,7 @@ import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
-import org.knora.webapi.slice.infrastructure.api.VersionEndpoint
+import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -245,7 +245,7 @@ object LayersTest {
       UsersResponder.layer,
       UsersRestService.layer,
       ValuesResponderV2Live.layer,
-      VersionEndpoint.layer,
+      ManagementEndpoints.layer,
     )
 
   private val fusekiAndSipiTestcontainers =

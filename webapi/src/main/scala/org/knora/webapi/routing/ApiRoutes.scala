@@ -112,7 +112,6 @@ private final case class ApiRoutesImpl(
               (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
                 .reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
-                HealthRoute().makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
