@@ -56,16 +56,16 @@ object DocsGenerator extends ZIOAppDefault {
   private val interp: OpenAPIDocsInterpreter = OpenAPIDocsInterpreter()
   override def run: ZIO[ZIOAppArgs, java.io.IOException, Int] = {
     for {
-      _               <- ZIO.logInfo("Generating OpenAPI docs")
-      args            <- getArgs
-      adminEndpoints  <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
-      versionEndpoint <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
-      v2Endpoints     <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
-      path             = Path(args.headOption.getOrElse("/tmp"))
+      _                   <- ZIO.logInfo("Generating OpenAPI docs")
+      args                <- getArgs
+      adminEndpoints      <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
+      managementEndpoints <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
+      v2Endpoints         <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
+      path                 = Path(args.headOption.getOrElse("/tmp"))
       filesWritten <-
         writeToFile(adminEndpoints, path, "admin-api") <*>
           writeToFile(v2Endpoints, path, "v2") <*>
-          writeToFile(versionEndpoint, path, "management")
+          writeToFile(managementEndpoints, path, "management")
       _ <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
   }.provideSome[ZIOAppArgs](
