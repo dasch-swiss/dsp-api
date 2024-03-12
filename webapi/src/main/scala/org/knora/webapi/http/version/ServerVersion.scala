@@ -5,9 +5,11 @@
 
 package org.knora.webapi.http.version
 
-import org.apache.pekko.http.scaladsl.model.headers.Server
-import org.apache.pekko.http.scaladsl.server.Directives.respondWithHeader
-import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko
+
+import pekko.http.scaladsl.model.headers.Server
+import pekko.http.scaladsl.server.Directives.respondWithHeader
+import pekko.http.scaladsl.server.Route
 
 /**
  * This object provides methods that can be used to add the [[Server]] header
@@ -15,7 +17,11 @@ import org.apache.pekko.http.scaladsl.server.Route
  */
 object ServerVersion {
 
-  def serverVersionHeader: Server = Server(products = s"${BuildInfo.name}/${BuildInfo.version}")
+  private val ApiNameAndVersion   = s"${BuildInfo.name}/${BuildInfo.version}"
+  private val PekkoNameAndVersion = s"pekko-http/${BuildInfo.pekkoHttp}"
+  private val AllProducts         = ApiNameAndVersion + " " + PekkoNameAndVersion
+
+  def serverVersionHeader: Server = Server(products = AllProducts)
 
   def addServerHeader(route: Route): Route = respondWithHeader(serverVersionHeader) {
     route

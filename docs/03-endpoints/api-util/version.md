@@ -21,7 +21,6 @@ Date: Mon, 11 Mar 2024 17:40:32 GMT
 Server: webapi/v30.9.0
 
 {
-    "name": "version",
     "buildCommit": "bbb0e65c7",
     "buildTime": "2024-03-11T17:40:17.322491Z",
     "fuseki": "2.1.5",

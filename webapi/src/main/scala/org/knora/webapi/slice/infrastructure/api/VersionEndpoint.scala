@@ -44,11 +44,22 @@ object VersionResponse {
   implicit val codec: JsonCodec[VersionResponse] = DeriveJsonCodec.gen[VersionResponse]
 }
 
+case class HealthResponse(name: String, severity: String, status: Boolean, message: String)
+
+object HealthResponse {
+  implicit val encoder: JsonCodec[HealthResponse] = DeriveJsonCodec.gen[HealthResponse]
+}
+
 final case class VersionEndpoint(baseEndpoints: BaseEndpoints) {
 
   private[infrastructure] val getVersion = baseEndpoints.publicEndpoint.get
     .in("version")
     .out(jsonBody[VersionResponse].example(VersionResponse.current))
+
+  private[infrastructure] val getHealth = baseEndpoints.publicEndpoint.get
+    .in("health")
+    .out(jsonBody[HealthResponse])
+    .out(statusCode)
 
   val endpoints: Seq[AnyEndpoint] = List(getVersion).map(_.tag("Version"))
 }
