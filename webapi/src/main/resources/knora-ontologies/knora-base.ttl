@@ -2202,152 +2202,140 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#isSequenceOf
+###  http://www.knora.org/ontology/knora-base#isSegmentOf
 
-:isSequenceOf
+:isSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Sequenz von"@de,
-                            "is sequence of"@en,
-                            "fait partie de"@fr,
-                            "fa parte di"@it ;
-    rdfs:comment            "Indicates that this resource is a sequence of a video or audio resource"@en ;
-    :subjectClassConstraint :Sequence  ;
+    rdfs:label              "ist Segment von"@de,
+                            "is segment of"@en ;
+    rdfs:comment            "Indicates that this resource is a segment of a video or audio resource"@en ;
+    :subjectClassConstraint :Segment  ;
     :objectClassConstraint  :Resource ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkTo .
 
 
-###  http://www.knora.org/ontology/knora-base#isSequenceOfValue
+###  http://www.knora.org/ontology/knora-base#isSegmentOfValue
 
-:isSequenceOfValue
+:isSegmentOfValue
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
-    :subjectClassConstraint :Sequence  ;
+    :subjectClassConstraint :Segment  ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/knora-base#isAudioSequenceOf
+###  http://www.knora.org/ontology/knora-base#isAudioSegmentOf
 
-:isAudioSequenceOf
+:isAudioSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Audio-Sequenz von"@de,
-                            "is audio sequence of"@en,
-                            "fait partie de la séquence audio de"@fr,
-                            "fa parte della sequenza audio di"@it ;
-    rdfs:comment            "Indicates that this resource is a sequence of an audio resource"@en ;
-    :subjectClassConstraint :AudioSequence  ;
+    rdfs:label              "ist Audio-Segment von"@de,
+                            "is audio segment of"@en ;
+    rdfs:comment            "Indicates that this resource is a segment of an audio resource"@en ;
+    :subjectClassConstraint :AudioSegment  ;
     :objectClassConstraint  :Resource ;
     :isEditable             true ;
-    rdfs:subPropertyOf      :isSequenceOf .
+    rdfs:subPropertyOf      :isSegmentOf .
 
 
-### http://www.knora.org/ontology/knora-base#isAudioSequenceOfValue
+### http://www.knora.org/ontology/knora-base#isAudioSegmentOfValue
 
-:isAudioSequenceOfValue
+:isAudioSegmentOfValue
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
-    :subjectClassConstraint :AudioSequence  ;
+    :subjectClassConstraint :AudioSegment  ;
     :isEditable             true ;
-    rdfs:subPropertyOf      :isSequenceOfValue .
+    rdfs:subPropertyOf      :isSegmentOfValue .
 
 
-###  http://www.knora.org/ontology/knora-base#isVideoSequenceOf
+###  http://www.knora.org/ontology/knora-base#isVideoSegmentOf
 
-:isVideoSequenceOf
+:isVideoSegmentOf
     rdf:type                owl:ObjectProperty ;
-    rdfs:label              "ist Video-Sequenz von"@de,
-                            "is video sequence of"@en,
-                            "fait partie de la séquence vidéo de"@fr,
-                            "fa parte della sequenza video di"@it ;
-    rdfs:comment            "Indicates that this resource is a sequence of a video resource"@en ;
-    :subjectClassConstraint :VideoSequence  ;
+    rdfs:label              "ist Video-Segment von"@de,
+                            "is video segment of"@en ;
+    rdfs:comment            "Indicates that this resource is a segment of a video resource"@en ;
+    :subjectClassConstraint :VideoSegment  ;
     :objectClassConstraint  :Resource ;
     :isEditable             true ;
-    rdfs:subPropertyOf      :isSequenceOf .
+    rdfs:subPropertyOf      :isSegmentOf .
 
-###  http://www.knora.org/ontology/knora-base#isVideoSequenceOfValue
+###  http://www.knora.org/ontology/knora-base#isVideoSegmentOfValue
 
-:isVideoSequenceOfValue
+:isVideoSegmentOfValue
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
-    :subjectClassConstraint :VideoSequence  ;
+    :subjectClassConstraint :VideoSegment  ;
     :isEditable             true ;
-    rdfs:subPropertyOf      :isSequenceOfValue .
+    rdfs:subPropertyOf      :isSegmentOfValue .
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
+###  http://www.knora.org/ontology/knora-base#hasSegmentBounds
 
-:hasSequenceBounds
+:hasSegmentBounds
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :IntervalValue ;
-    :subjectClassConstraint :Sequence  ;
+    :subjectClassConstraint :Segment  ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasValue ;
-    rdfs:label              "Sequenz-Grenzen"@de,
-                            "Sequence Bounds"@en ;
-    rdfs:comment            "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
+    rdfs:label              "Segment-Grenzen"@de,
+                            "Segment Bounds"@en ;
+    rdfs:comment            "Indicates the bounds of a segment, i.e. the start and end point in the containing resource."@en .
 
 
-###  http://www.knora.org/ontology/knora-base#Sequence
+###  http://www.knora.org/ontology/knora-base#Segment
 
-:Sequence
+:Segment
     rdf:type           owl:Class ;
     rdfs:subClassOf    :Resource,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasComment ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ],
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isSequenceOf  ;
+                         owl:onProperty     :isSegmentOf  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ],
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isSequenceOfValue  ;
+                         owl:onProperty     :isSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :hasSequenceBounds ;
+                         owl:onProperty     :hasSegmentBounds ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Sequence"@de,
-                       "Sequence"@en,
-                       "Sequence"@fr,
-                       "Sequence"@it ;
+    rdfs:label         "Segment"@de,
+                       "Segment"@en ;
     :canBeInstantiated false ;
-    rdfs:comment       "A resource representing a sub-sequence of another resource"@en .
+    rdfs:comment       "A resource representing a sub-segment of another resource"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#AudioSequence
+###  http://www.knora.org/ontology/knora-base#AudioSegment
 
-:AudioSequence
+:AudioSegment
     rdf:type           owl:Class ;
-    rdfs:subClassOf    :Sequence,
+    rdfs:subClassOf    :Segment,
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isAudioSequenceOf  ;
+                         owl:onProperty     :isAudioSegmentOf  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isAudioSequenceOfValue  ;
+                         owl:onProperty     :isAudioSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Audio-Sequenz"@de,
-                       "Audio Sequence"@en,
-                       "Séquence audio"@fr,
-                       "Sequenza audio"@it ;
+    rdfs:label         "Audio-Segment"@de,
+                       "Audio Segment"@en ;
     :canBeInstantiated true ;
-    rdfs:comment       "A sub-sequence of an audio resource"@en .
+    rdfs:comment       "A segment of an audio resource"@en .
 
 
-### http://www.knora.org/ontology/knora-base#VideoSequence
+### http://www.knora.org/ontology/knora-base#VideoSegment
 
-:VideoSequence
+:VideoSegment
     rdf:type           owl:Class ;
-    rdfs:subClassOf    :Sequence,
+    rdfs:subClassOf    :Segment,
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isVideoSequenceOf  ;
+                         owl:onProperty     :isVideoSegmentOf  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
-                         owl:onProperty     :isVideoSequenceOfValue  ;
+                         owl:onProperty     :isVideoSegmentOfValue  ;
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label         "Video-Sequenz"@de,
-                       "Video Sequence"@en,
-                       "Séquence vidéo"@fr,
-                       "Sequenza video"@it ;
+    rdfs:label         "Video-Segment"@de,
+                       "Video Segment"@en ;
     :canBeInstantiated true ;
-    rdfs:comment       "A sub-sequence of a video resource"@en .
+    rdfs:comment       "A segment of a video resource"@en .
