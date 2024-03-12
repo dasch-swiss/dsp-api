@@ -21,14 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Skip with success
-        run: echo "skipped"
+        run: |
+          echo "skipped"
+          exit 0
 
   integration-test:
     name: Build and integration-test
     runs-on: ubuntu-latest
     steps:
       - name: Skip with success
-        run: echo "skipped"
+        run: |
+          echo "skipped"
+          exit 0
 
   test-client-test-data:
     name: Test client-test-data
