@@ -5,7 +5,7 @@
 
 # Version
 
-The version endpoint provides the versions of the used components in the DSP stack.
+The version endpoint provides all versions of used components in the DSP stack.
 
 ## Example request
 
