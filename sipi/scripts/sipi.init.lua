@@ -128,15 +128,15 @@ function pre_flight(prefix, identifier, cookie)
 
         local settings_for_sipi = {}
         settings_for_sipi['type'] = "restrict"
-        settings_for_sipi['size'] = config.thumb_size
 
         if settings_from_api ~= nil then
             log("pre_flight - restricted view settings - from api: " .. tableToString(settings_from_api), server.loglevel.LOG_DEBUG)
             if settings_from_api.size ~= nil then
                 settings_for_sipi['size'] = settings_from_api.size
-            end
-            if  settings_from_api.watermark then
+            elseif settings_from_api.watermark then
                 settings_for_sipi['watermark'] = "/sipi/scripts/watermark.tif"
+            else
+                settings_for_sipi['size'] = config.thumb_size
             end
         end
 
