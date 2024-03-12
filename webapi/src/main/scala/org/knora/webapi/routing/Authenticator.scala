@@ -535,7 +535,7 @@ final case class AuthenticatorLive(
               Email
                 .from(email)
                 .toOption
-                .map(CredentialsIdentifier.EmailIdentifier)
+                .map(CredentialsIdentifier.EmailIdentifier.apply)
                 .map(KnoraPasswordCredentialsV2(_, password))
             case _ => None
           }

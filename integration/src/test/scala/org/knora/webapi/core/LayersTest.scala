@@ -37,8 +37,8 @@ import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -103,6 +103,7 @@ object LayersTest {
       with FilesEndpointsHandler
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
+      with GroupsService
       with HttpServer
       with IIIFRequestMessageHandler
       with InferenceOptimizationService
@@ -173,6 +174,7 @@ object LayersTest {
       GroupsEndpointsHandler.layer,
       GroupsResponderADMLive.layer,
       GroupsRestServiceLive.layer,
+      GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -181,7 +183,7 @@ object LayersTest {
       IriService.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserGroupRepoLive.layer,
+      KnoraGroupRepoLive.layer,
       KnoraUserRepoLive.layer,
       KnoraUserToUserConverter.layer,
       ListRestService.layer,

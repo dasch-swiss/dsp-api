@@ -14,6 +14,8 @@ import spray.json.RootJsonFormat
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.DecodeResult
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -46,7 +48,7 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMes
 // Requests
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectGetResponseADM]]. External use.
+ * of [[ProjectGetResponse]]. External use.
  *
  * @param identifier           the IRI, email, or username of the project.
  */
@@ -90,15 +92,20 @@ case class ProjectChangeRequestADM(
 
 // Responses
 
+object ProjectCodec {
+  implicit val projectCodec: JsonCodec[ProjectADM] = DeriveJsonCodec.gen[ProjectADM]
+}
+
 /**
  * Represents the Knora API ADM JSON response to a request for information about all projects.
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectsResponseADMFormat.write(this)
+case class ProjectsGetResponse(projects: Seq[ProjectADM])
+object ProjectsGetResponse {
+  // can be removed as soon as ProjectADM can define its own codec
+  import ProjectCodec.projectCodec
+  implicit val codec: JsonCodec[ProjectsGetResponse] = DeriveJsonCodec.gen[ProjectsGetResponse]
 }
 
 /**
@@ -106,8 +113,11 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM])
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponseADM(project: ProjectADM) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectResponseADMFormat.write(this)
+case class ProjectGetResponse(project: ProjectADM)
+object ProjectGetResponse {
+  // can be removed as soon as ProjectADM can define its own codec
+  import ProjectCodec.projectCodec
+  implicit val codec: JsonCodec[ProjectGetResponse] = DeriveJsonCodec.gen[ProjectGetResponse]
 }
 
 /**
@@ -137,10 +147,9 @@ case class ProjectAdminMembersGetResponseADM(members: Seq[User])
  *
  * @param keywords a list of keywords.
  */
-case class ProjectsKeywordsGetResponseADM(keywords: Seq[String])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
+case class ProjectsKeywordsGetResponse(keywords: Seq[String])
+object ProjectsKeywordsGetResponse {
+  implicit val codec: JsonCodec[ProjectsKeywordsGetResponse] = DeriveJsonCodec.gen[ProjectsKeywordsGetResponse]
 }
 
 /**
@@ -148,10 +157,9 @@ case class ProjectsKeywordsGetResponseADM(keywords: Seq[String])
  *
  * @param keywords a list of keywords.
  */
-case class ProjectKeywordsGetResponseADM(keywords: Seq[String])
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
+case class ProjectKeywordsGetResponse(keywords: Seq[String])
+object ProjectKeywordsGetResponse {
+  implicit val codec: JsonCodec[ProjectKeywordsGetResponse] = DeriveJsonCodec.gen[ProjectKeywordsGetResponse]
 }
 
 /**
@@ -160,9 +168,24 @@ case class ProjectKeywordsGetResponseADM(keywords: Seq[String])
  * @param settings the restricted view settings.
  */
 case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
-    extends AdminKnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
+object ProjectRestrictedViewSettingsGetResponseADM {
+  implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
+    DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
+}
+
+/**
+ * Represents the JSON response to a request for a information about a `FileValue`.
+ *
+ * @param permissionCode         a code representing the user's maximum permission on the file.
+ * @param restrictedViewSettings the project's restricted view settings.
+ */
+case class PermissionCodeAndProjectRestrictedViewSettings(
+  permissionCode: Int,
+  restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
+)
+object PermissionCodeAndProjectRestrictedViewSettings {
+  implicit val codec: JsonCodec[PermissionCodeAndProjectRestrictedViewSettings] =
+    DeriveJsonCodec.gen[PermissionCodeAndProjectRestrictedViewSettings]
 }
 
 /**
@@ -370,7 +393,11 @@ object ProjectIdentifierADM {
  * @param size      the restricted view size.
  * @param watermark the watermark file.
  */
-case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boolean) extends ProjectsADMJsonProtocol
+case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boolean)
+object ProjectRestrictedViewSettingsADM {
+  implicit val codec: JsonCodec[ProjectRestrictedViewSettingsADM] =
+    DeriveJsonCodec.gen[ProjectRestrictedViewSettingsADM]
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -384,7 +411,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
-      ProjectADM,
+      ProjectADM.apply,
       "id",
       "shortname",
       "shortcode",
@@ -397,28 +424,14 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       "selfjoin",
     ),
   )
-  implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")),
-  )
-  implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectGetResponseADM, "project")),
-  )
-  implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
-    jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
 
   implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")),
+    lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM.apply, "members")),
   )
   implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")),
+    lazyFormat(jsonFormat(ProjectMembersGetResponseADM.apply, "members")),
   )
-  implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] =
-    jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
-  implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] =
-    jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
-  implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] =
-    jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
-    lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")),
+    lazyFormat(jsonFormat(ProjectOperationResponseADM.apply, "project")),
   )
 }

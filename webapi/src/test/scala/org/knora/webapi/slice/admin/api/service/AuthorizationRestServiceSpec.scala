@@ -18,7 +18,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
-import org.knora.webapi.slice.admin.repo.service.KnoraUserGroupRepoInMemory
+import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
 
@@ -116,5 +116,5 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
     ),
-  ).provide(AuthorizationRestServiceLive.layer, KnoraProjectRepoInMemory.layer, KnoraUserGroupRepoInMemory.layer)
+  ).provide(AuthorizationRestServiceLive.layer, KnoraProjectRepoInMemory.layer, KnoraGroupRepoInMemory.layer)
 }

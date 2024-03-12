@@ -37,6 +37,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -54,19 +55,19 @@ import org.knora.webapi.util.ZioHelper
 trait GroupsResponderADM {
 
   /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
+   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
    *
-   * @return all the groups as a sequence of [[GroupADM]].
+   * @return all the groups as a sequence of [[Group]].
    */
-  def groupsGetADM: Task[Seq[GroupADM]]
+  def groupsGetADM: Task[Seq[Group]]
 
   /**
-   * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
+   * Gets the group with the given group IRI and returns the information as a [[Group]].
    *
    * @param groupIri the IRI of the group requested.
-   * @return information about the group as a [[GroupADM]]
+   * @return information about the group as a [[Group]]
    */
-  def groupGetADM(groupIri: IRI): Task[Option[GroupADM]]
+  def groupGetADM(groupIri: IRI): Task[Option[Group]]
 
   /**
    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
@@ -80,13 +81,11 @@ trait GroupsResponderADM {
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
    * Only project and system admins are allowed to access this information.
    *
-   * @param groupIri       the IRI of the group.
-   * @param requestingUser the user initiating the request.
+   * @param iri       the IRI of the group.
+   * @param user      the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM]
-  final def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetRequestADM(iri.value, user)
+  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
 
   /**
    * Create a new group.
@@ -158,19 +157,17 @@ final case class GroupsResponderADMLive(
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case _: GroupsGetADM                => groupsGetADM
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
-    case r: GroupMembersGetRequestADM   => groupMembersGetRequestADM(r.groupIri, r.requestingUser)
     case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
+   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
    *
-   * @return all the groups as a sequence of [[GroupADM]].
+   * @return all the groups as a sequence of [[Group]].
    */
-  override def groupsGetADM: Task[Seq[GroupADM]] = {
+  override def groupsGetADM: Task[Seq[Group]] = {
     val query = Construct(sparql.admin.txt.getGroups(None))
     for {
       groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
@@ -179,7 +176,7 @@ final case class GroupsResponderADMLive(
     } yield result.sorted
   }
 
-  private def convertStatementsToGroupADM(statements: (SubjectV2, ConstructPredicateObjects)): Task[GroupADM] = {
+  private def convertStatementsToGroupADM(statements: (SubjectV2, ConstructPredicateObjects)): Task[Group] = {
     val groupIri: SubjectV2                      = statements._1
     val propertiesMap: ConstructPredicateObjects = statements._2
     def getOption[A <: LiteralV2](key: IRI): UIO[Option[Seq[A]]] =
@@ -201,7 +198,7 @@ final case class GroupsResponderADMLive(
       descriptions <- getOrFail[StringLiteralV2](GroupDescriptions)
       status       <- getFirstValueOrFail[BooleanLiteralV2](StatusProp).map(_.value)
       selfjoin     <- getFirstValueOrFail[BooleanLiteralV2](HasSelfJoinEnabled).map(_.value)
-    } yield GroupADM(groupIri.toString, name, descriptions, projectADM, status, selfjoin)
+    } yield Group(groupIri.toString, name, descriptions, projectADM, status, selfjoin)
   }
 
   private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[ProjectADM] =
@@ -211,12 +208,12 @@ final case class GroupsResponderADMLive(
     } yield result
 
   /**
-   * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
+   * Gets the group with the given group IRI and returns the information as a [[Group]].
    *
    * @param groupIri       the IRI of the group requested.
-   * @return information about the group as a [[GroupADM]]
+   * @return information about the group as a [[Group]]
    */
-  override def groupGetADM(groupIri: IRI): Task[Option[GroupADM]] = {
+  override def groupGetADM(groupIri: IRI): Task[Option[Group]] = {
     val query = Construct(sparql.admin.txt.getGroups(maybeIri = Some(groupIri)))
     for {
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.headOption)
@@ -234,7 +231,7 @@ final case class GroupsResponderADMLive(
     ZioHelper.sequence(groupIris.map { iri =>
       groupGetADM(iri)
         .flatMap(ZIO.fromOption(_))
-        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM)
+        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM.apply)
     })
 
   /**
@@ -290,12 +287,12 @@ final case class GroupsResponderADMLive(
    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
    * Only project and system admins are allowed to access this information.
    *
-   * @param groupIri             the IRI of the group.
-   * @param requestingUser       the user initiating the request.
+   * @param iri             the IRI of the group.
+   * @param user       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  override def groupMembersGetRequestADM(groupIri: IRI, requestingUser: User): Task[GroupMembersGetResponseADM] =
-    groupMembersGetADM(groupIri, requestingUser).map(GroupMembersGetResponseADM)
+  override def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+    groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 
   /**
    * Create a new group.
@@ -481,7 +478,7 @@ final case class GroupsResponderADMLive(
    * @param changedGroup         the group with the new status.
    * @return a [[GroupGetResponseADM]]
    */
-  private def removeGroupMembersIfNecessary(changedGroup: GroupADM) =
+  private def removeGroupMembersIfNecessary(changedGroup: Group) =
     if (changedGroup.status) {
       // group active. no need to remove members.
       logger.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")

@@ -63,10 +63,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
       "return all projects excluding built-in system projects" in {
         val request  = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
-
-        // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
         val projects: Seq[ProjectADM] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
@@ -88,7 +85,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -107,7 +103,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
       }
 
@@ -116,7 +111,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
       }
 
@@ -125,11 +119,14 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
-        val settings: ProjectRestrictedViewSettingsADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+        val settings =
+          ProjectRestrictedViewSettingsGetResponseADM.codec
+            .decodeJson(responseToString(response))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
+            .settings
+
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
 
@@ -150,11 +147,14 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings",
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val settings: ProjectRestrictedViewSettingsADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+          ProjectRestrictedViewSettingsGetResponseADM.codec
+            .decodeJson(responseToString(response))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
+            .settings
+
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
       }
@@ -164,11 +164,14 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings",
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val settings: ProjectRestrictedViewSettingsADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+          ProjectRestrictedViewSettingsGetResponseADM.codec
+            .decodeJson(responseToString(response))
+            .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
+            .settings
+
         settings.size should be(Some("!512,512"))
         settings.watermark should be(true)
       }

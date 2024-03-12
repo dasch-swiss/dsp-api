@@ -52,9 +52,9 @@ sealed trait CredentialsIdentifier
 object CredentialsIdentifier {
   def fromOptions(iri: Option[IRI], email: Option[IRI], username: Option[IRI]): Option[CredentialsIdentifier] =
     (iri, email, username) match {
-      case (Some(iri), _, _)      => UserIri.from(iri).toOption.map(IriIdentifier)
-      case (_, Some(email), _)    => Email.from(email).toOption.map(EmailIdentifier)
-      case (_, _, Some(username)) => Username.from(username).toOption.map(UsernameIdentifier)
+      case (Some(iri), _, _)      => UserIri.from(iri).toOption.map(IriIdentifier.apply)
+      case (_, Some(email), _)    => Email.from(email).toOption.map(EmailIdentifier.apply)
+      case (_, _, Some(username)) => Username.from(username).toOption.map(UsernameIdentifier.apply)
       case _                      => None
     }
 
@@ -111,8 +111,9 @@ final case class LoginResponse(token: String)
  */
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
   implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] =
-    jsonFormat(LoginApiRequestPayloadV2, "iri", "email", "username", "password")
-  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
+    jsonFormat(LoginApiRequestPayloadV2.apply, "iri", "email", "username", "password")
+  implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] =
+    jsonFormat1(LoginResponse.apply)
 }
 
 trait AuthenticationV2Serialization {

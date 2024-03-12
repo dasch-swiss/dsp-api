@@ -112,7 +112,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literal      <- getLiteral(propertyIri).unsome
       string       <- ZIO.foreach(literal)(stringFromLiteral)
-      domainObject <- ZIO.foreach(string)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
+      domainObject <- ZIO.foreach(string)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError.apply))
     } yield domainObject
 
   /**
@@ -144,7 +144,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literals      <- getLiterals(propertyIri)
       strings       <- ZIO.foreach(literals)(stringFromLiteral)
-      domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError))
+      domainObjects <- ZIO.foreach(strings)(str => ZIO.fromEither(mapper(str)).mapError(ConversionError.apply))
     } yield Chunk.fromIterable(domainObjects)
 
   /**
@@ -183,7 +183,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literal      <- getLiteral(propertyIri).unsome
       langString   <- ZIO.foreach(literal)(langStringFromLiteral)
-      domainObject <- ZIO.foreach(langString)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError))
+      domainObject <- ZIO.foreach(langString)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError.apply))
     } yield domainObject
 
   /**
@@ -219,7 +219,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literals      <- getLiterals(propertyIri)
       langStrings   <- ZIO.foreach(literals)(langStringFromLiteral)
-      domainObjects <- ZIO.foreach(langStrings)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError))
+      domainObjects <- ZIO.foreach(langStrings)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError.apply))
     } yield Chunk.fromIterable(domainObjects)
 
   /**
@@ -258,7 +258,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literal      <- getLiteral(propertyIri).unsome
       boolean      <- ZIO.foreach(literal)(booleanFromLiteral)
-      domainObject <- ZIO.foreach(boolean)(it => ZIO.fromEither(mapper(it))).mapError(ConversionError)
+      domainObject <- ZIO.foreach(boolean)(it => ZIO.fromEither(mapper(it))).mapError(ConversionError.apply)
     } yield domainObject
 
   /**
@@ -292,7 +292,7 @@ final case class RdfResource(private val res: Resource) {
     for {
       literals      <- getLiterals(propertyIri)
       booleans      <- ZIO.foreach(literals)(booleanFromLiteral)
-      domainObjects <- ZIO.foreach(booleans)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError))
+      domainObjects <- ZIO.foreach(booleans)(it => ZIO.fromEither(mapper(it)).mapError(ConversionError.apply))
     } yield Chunk.fromIterable(domainObjects)
 
   /**
@@ -320,7 +320,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the [[InternalIri]] of the object or None if the object is not present.
    */
   def getObjectIri(propertyIri: String): IO[RdfError, Option[InternalIri]] =
-    getObjectUri(propertyIri).map(InternalIri).unsome
+    getObjectUri(propertyIri).map(InternalIri.apply).unsome
 
   /**
    * Returns the IRI of the object of a given predicate IRI.
@@ -339,7 +339,7 @@ final case class RdfResource(private val res: Resource) {
    * @return            the [[InternalIri]]s of the objects or an [[RdfError]] if the objects are not present.
    */
   def getObjectIris(propertyIri: String): IO[RdfError, Chunk[InternalIri]] =
-    getObjectUris(propertyIri).map(_.map(InternalIri))
+    getObjectUris(propertyIri).map(_.map(InternalIri.apply))
 
   def getObjectIrisConvert[A](prop: String)(implicit map: String => Either[String, A]) =
     getObjectIris(prop).flatMap { iris =>
@@ -422,10 +422,10 @@ final case class RdfModel private (private val model: Model) {
   def getResourcesRdfType(objectClass: String): IO[RdfError, Iterator[RdfResource]] = for {
     objClassProp  <- ZIO.attempt(model.createProperty(objectClass)).orDie
     resourcesJIter = model.listResourcesWithProperty(RDF.`type`, objClassProp)
-  } yield resourcesJIter.asScala.map(RdfResource)
+  } yield resourcesJIter.asScala.map(RdfResource.apply)
 
   def getSubjectResources: UIO[Chunk[RdfResource]] =
-    ZIO.succeed(Chunk.fromIterator(model.listSubjects().asScala).map(RdfResource))
+    ZIO.succeed(Chunk.fromIterator(model.listSubjects().asScala).map(RdfResource.apply))
 }
 
 object RdfModel {
