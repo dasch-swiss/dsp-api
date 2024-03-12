@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.7.0...v0.8.0) (2024-03-12)
+
+
+### Enhancements
+
+* Display size in bytes in asset-overview report columns ([#188](https://github.com/dasch-swiss/dsp-ingest/issues/188)) ([f389a31](https://github.com/dasch-swiss/dsp-ingest/commit/f389a31707c9e913444fc40180af7dbc6082a8fd))
+* Prevent mapping csv download during bulk ingest of project (DEV-3402) ([#185](https://github.com/dasch-swiss/dsp-ingest/issues/185)) ([fce7415](https://github.com/dasch-swiss/dsp-ingest/commit/fce7415f67a14d0abdd2ac09a984f87c6694822f))
+
+
+### Maintenance
+
+* Start release PRs as draft ([#187](https://github.com/dasch-swiss/dsp-ingest/issues/187)) ([432c069](https://github.com/dasch-swiss/dsp-ingest/commit/432c06948338bf17fd334391abc3b34cad39b58c))
+
 ## [0.7.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.6.3...v0.7.0) (2024-03-08)
 
 
