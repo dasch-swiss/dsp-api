@@ -5,37 +5,29 @@
 
 # Version
 
-The version endpoint provides the versions of the used components in the Knora-stack.
-The response has the type `application/json` and contains the following information:
-
-1. name: has the value "version"
-
-2. version numbers for the following components:
-    - pekkoHttp
-    - gdbFree
-    - gdbSE
-    - sbt
-    - scala
-    - sipi
-    - webapi
-
+The version endpoint provides all versions of used components in the DSP stack.
 
 ## Example request
 
 `GET /version`
 
-
 ## Example response
 
 ```json
+HTTP/1.1 200 OK
+Content-Length: 247
+Content-Type: application/json
+Date: Mon, 11 Mar 2024 17:40:32 GMT
+Server: webapi/v30.9.0
+
 {
-    "pekkoHttp": "10.1.7",
-    "gdbFree": "8.10.0-free",
-    "gdbSE": "8.5.0-se",
-    "name": "version",
-    "sbt": "1.2.8",
-    "scala": "2.12.8",
-    "sipi": "v2.0.1",
-    "webapi": "10.0.0-7-gc5a72b3-SNAPSHOT"
+    "buildCommit": "bbb0e65c7",
+    "buildTime": "2024-03-11T17:40:17.322491Z",
+    "fuseki": "2.1.5",
+    "pekkoHttp": "1.0.1",
+    "scala": "2.13.13",
+    "sipi": "3.9.0",
+    "webapi": "v30.9.0"
 }
+
 ```
