@@ -37,7 +37,7 @@ final case class GroupsRestServiceLive(
   format: KnoraResponseRenderer,
 ) extends GroupsRestService {
   override def getGroups: Task[GroupsGetResponseADM] = for {
-    internal <- responder.groupsGetADM.map(GroupsGetResponseADM)
+    internal <- responder.groupsGetADM.map(GroupsGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 

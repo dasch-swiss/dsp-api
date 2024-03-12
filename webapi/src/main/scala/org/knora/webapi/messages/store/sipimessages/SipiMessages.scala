@@ -118,10 +118,10 @@ case class SipiUploadWithoutProcessingResponseEntry(
 case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
 object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
-    SipiUploadResponseEntry,
-  )
-  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] =
+    jsonFormat4(SipiUploadResponseEntry.apply)
+  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] =
+    jsonFormat1(SipiUploadResponse.apply)
 }
 
 /**
@@ -133,11 +133,8 @@ case class SipiUploadWithoutProcessingResponse(uploadedFiles: Seq[SipiUploadWith
 
 object SipiUploadWithoutProcessingResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val sipiUploadWithoutProcessingResponseEntryFormat
-    : RootJsonFormat[SipiUploadWithoutProcessingResponseEntry] = jsonFormat3(
-    SipiUploadWithoutProcessingResponseEntry,
-  )
+    : RootJsonFormat[SipiUploadWithoutProcessingResponseEntry] =
+    jsonFormat3(SipiUploadWithoutProcessingResponseEntry.apply)
   implicit val sipiUploadWithoutProcessingResponseFormat: RootJsonFormat[SipiUploadWithoutProcessingResponse] =
-    jsonFormat1(
-      SipiUploadWithoutProcessingResponse,
-    )
+    jsonFormat1(SipiUploadWithoutProcessingResponse.apply)
 }

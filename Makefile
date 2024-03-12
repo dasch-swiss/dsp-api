@@ -289,7 +289,7 @@ init-db-from-ls-test-server-dump: ## init local database with data from local du
 	${MAKE} init-db-from-dump-file DUMP=db.ls-test-server.dasch.swiss.trig
 
 .PHONY: db-dump
-db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
+db-dump: ## Dump data from an env. Use as `make db-dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
 	@echo $@
 	@echo dumping environment ${ENV}
 	@curl -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"

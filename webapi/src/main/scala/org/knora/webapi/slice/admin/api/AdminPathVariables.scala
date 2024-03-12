@@ -21,7 +21,7 @@ object AdminPathVariables {
     path[GroupIri]
       .name("groupIri")
       .description("The IRI of a group. Must be URL-encoded.")
-      .example(GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ"))
+      .example(Examples.GroupExample.groupIri)
 
   val permissionIri: EndpointInput.PathCapture[PermissionIri] =
     path[PermissionIri]("permissionIri")

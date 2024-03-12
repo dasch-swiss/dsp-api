@@ -13,9 +13,9 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.5" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.12" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.9.0" // base image the knora-sipi image is created from
 
-  val ScalaVersion = "2.13.12"
+  val ScalaVersion = "2.13.13"
 
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
@@ -23,7 +23,7 @@ object Dependencies {
   val Rdf4jVersion      = "4.3.9"
 
   val ZioConfigVersion            = "4.0.1"
-  val ZioLoggingVersion           = "2.2.0"
+  val ZioLoggingVersion           = "2.2.2"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC23"
@@ -79,7 +79,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.2.1" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.2.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.77"
 
   // caching
@@ -109,13 +109,13 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.1.0"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.5"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.7"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.4.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.9"
+  val tapirVersion = "1.9.11"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -123,7 +123,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.9",
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion,
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
