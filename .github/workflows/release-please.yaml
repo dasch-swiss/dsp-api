@@ -18,6 +18,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           package-name: dsp-ingest
           pull-request-title-pattern: "chore${scope}: Release${component} ${version}"
+          draft-pull-request: true
           release-type: simple
           changelog-types: '[
                        {"type": "feat", "section": "Enhancements", "hidden": false },
