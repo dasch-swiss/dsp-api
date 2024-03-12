@@ -33,6 +33,7 @@ import org.knora.webapi.slice.admin.api.ProjectsEndpoints
 import org.knora.webapi.slice.admin.api.StoreEndpoints
 import org.knora.webapi.slice.admin.api.UsersEndpoints
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.search.api.SearchEndpoints
 
@@ -55,13 +56,17 @@ object DocsGenerator extends ZIOAppDefault {
   private val interp: OpenAPIDocsInterpreter = OpenAPIDocsInterpreter()
   override def run: ZIO[ZIOAppArgs, java.io.IOException, Int] = {
     for {
-      _              <- ZIO.logInfo("Generating OpenAPI docs")
-      args           <- getArgs
-      adminEndpoints <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
-      v2Endpoints    <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
-      path            = Path(args.headOption.getOrElse("/tmp"))
-      filesWritten   <- writeToFile(adminEndpoints, path, "admin-api") <*> writeToFile(v2Endpoints, path, "v2")
-      _              <- ZIO.logInfo(s"Wrote $filesWritten")
+      _                   <- ZIO.logInfo("Generating OpenAPI docs")
+      args                <- getArgs
+      adminEndpoints      <- ZIO.serviceWith[AdminApiEndpoints](_.endpoints)
+      managementEndpoints <- ZIO.serviceWith[ManagementEndpoints](_.endpoints)
+      v2Endpoints         <- ZIO.serviceWith[ApiV2Endpoints](_.endpoints)
+      path                 = Path(args.headOption.getOrElse("/tmp"))
+      filesWritten <-
+        writeToFile(adminEndpoints, path, "admin-api") <*>
+          writeToFile(v2Endpoints, path, "v2") <*>
+          writeToFile(managementEndpoints, path, "management")
+      _ <- ZIO.logInfo(s"Wrote $filesWritten")
     } yield 0
   }.provideSome[ZIOAppArgs](
     AdminApiEndpoints.layer,
@@ -78,6 +83,7 @@ object DocsGenerator extends ZIOAppDefault {
     SearchEndpoints.layer,
     StoreEndpoints.layer,
     UsersEndpoints.layer,
+    ManagementEndpoints.layer,
   )
 
   private def writeToFile(endpoints: Seq[AnyEndpoint], path: Path, name: String) = {
