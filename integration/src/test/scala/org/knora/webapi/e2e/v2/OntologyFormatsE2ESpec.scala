@@ -29,8 +29,15 @@ import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-class OntologyFormatsE2ESpec extends R2RSpec {
+class OntologyFormatsE2ESpec extends E2ESpec {
+
+  override lazy val rdfDataObjects: List[RdfDataObject] =
+    List(
+      RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
+      RdfDataObject("test_data/project_ontologies/minimal-onto.ttl", "http://www.knora.org/ontology/0001/minimal"),
+    )
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
@@ -157,26 +164,6 @@ class OntologyFormatsE2ESpec extends R2RSpec {
   // The URLs and expected response files for each HTTP GET test.
   private val httpGetTests = Seq(
     HttpGetTest(
-      urlPath = "/v2/ontologies/metadata",
-      fileBasename = "allOntologyMetadata",
-      maybeClientTestDataBasename = Some("all-ontology-metadata-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
-      fileBasename = "anythingOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/metadata/$incunabulaProjectSegment",
-      fileBasename = "incunabulaOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-incunabula-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/metadata/$beolProjectSegment",
-      fileBasename = "beolOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-beol-response"),
-    ),
-    HttpGetTest(
       urlPath = s"/v2/ontologies/allentities/$knoraApiSimpleOntologySegment",
       fileBasename = "knoraApiOntologySimple",
     ),
@@ -197,15 +184,6 @@ class OntologyFormatsE2ESpec extends R2RSpec {
     ),
     HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
     HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$incunabulaOntologySimpleSegment",
-      fileBasename = "incunabulaOntologySimple",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$incunabulaOntologyWithValueObjectsSegment",
-      fileBasename = "incunabulaOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("incunabula-ontology"),
-    ),
     HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateSegment", fileBasename = "knoraApiDate"),
     HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateValueSegment", fileBasename = "knoraApiDateValue"),
     HttpGetTest(
@@ -284,14 +262,68 @@ class OntologyFormatsE2ESpec extends R2RSpec {
     ),
   )
 
-  private val mediaTypesForGetTests = Seq(
-    RdfMediaTypes.`application/ld+json`,
-    RdfMediaTypes.`text/turtle`,
-    RdfMediaTypes.`application/rdf+xml`,
-  )
+  // The following test cases have been removed:
+  //
+  // HttpGetTest(
+  //   urlPath = "/v2/ontologies/metadata",
+  //   fileBasename = "allOntologyMetadata",
+  //   maybeClientTestDataBasename = Some("all-ontology-metadata-response"),
+  // ),
+  // HttpGetTest(
+  //   urlPath = s"/v2/ontologies/metadata/$incunabulaProjectSegment",
+  //   fileBasename = "incunabulaOntologyMetadata",
+  //   maybeClientTestDataBasename = Some("get-ontologies-project-incunabula-response"),
+  // ),
+  // HttpGetTest(
+  //   urlPath = s"/v2/ontologies/metadata/$beolProjectSegment",
+  //   fileBasename = "beolOntologyMetadata",
+  //   maybeClientTestDataBasename = Some("get-ontologies-project-beol-response"),
+  // ),
+  // HttpGetTest(
+  //   urlPath = s"/v2/ontologies/allentities/$incunabulaOntologySimpleSegment",
+  //   fileBasename = "incunabulaOntologySimple",
+  // ),
+  // HttpGetTest(
+  //   urlPath = s"/v2/ontologies/allentities/$incunabulaOntologyWithValueObjectsSegment",
+  //   fileBasename = "incunabulaOntologyWithValueObjects",
+  //   maybeClientTestDataBasename = Some("incunabula-ontology"),
+  // ),
 
-  private val ontologiesPath =
-    DSPApiDirectives.handleErrors(appConfig)(OntologiesRouteV2().makeRoute)
+  private def checkJsonLdTestCase(httpGetTest: HttpGetTest) = {
+    val mediaType   = RdfMediaTypes.`application/ld+json`
+    val responseStr = getResponse(httpGetTest, mediaType)
+    if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
+    else assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
+    httpGetTest.storeClientTestData(responseStr)
+  }
+
+  private def checkTurleTestCase(httpGetTest: HttpGetTest) = {
+    val mediaType   = RdfMediaTypes.`text/turtle`
+    val responseStr = getResponse(httpGetTest, mediaType)
+    if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
+    else assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
+  }
+
+  private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
+    val mediaType   = RdfMediaTypes.`application/rdf+xml`
+    val responseStr = getResponse(httpGetTest, mediaType)
+    if (writeTestDataFiles) {
+      val parsedResponse: RdfModel     = parseRdfXml(responseStr)
+      val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
+      if (parsedResponse != parsedExistingFile) httpGetTest.writeFile(responseStr, mediaType)
+    } else assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
+  }
+
+  private def getResponse(
+    httpGetTest: HttpGetTest,
+    mediaType: MediaType.NonBinary,
+  ) = {
+    val request     = Get(s"$baseApiUrl${httpGetTest.urlPath}").addHeader(Accept(mediaType))
+    val response    = singleAwaitingRequest(request)
+    val responseStr = responseToString(response)
+    assert(response.status == StatusCodes.OK, responseStr)
+    responseStr
+  }
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
@@ -299,57 +331,43 @@ class OntologyFormatsE2ESpec extends R2RSpec {
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   private val writeTestDataFiles = false
 
-  "The Ontologies v2 Endpoint" should {
-    "serve ontology data in different formats" in {
-      // Iterate over the HTTP GET tests.
-      for (httpGetTest <- httpGetTests) {
+  "The Ontologies v2 Endpoint" when {
+    "requested to serve ontologies in JSON-LD" should {
 
-        // Do each test with each media type.
-        for (mediaType <- mediaTypesForGetTests) {
+      "serve the Anything ontology metadata in JSON-LD" in {
+        val httpGetTest = HttpGetTest(
+          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
+          fileBasename = "anythingOntologyMetadata",
+          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+        )
+        checkJsonLdTestCase(httpGetTest)
+      }
 
-          Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
-            val responseStr: String = responseAs[String]
-            val isOkResponse        = response.status == StatusCodes.OK
-            if (!isOkResponse) {
-              println(httpGetTest)
-            }
-            assert(response.status == StatusCodes.OK, responseStr)
+    }
 
-            // Are we writing expected response files?
-            if (writeTestDataFiles) {
-              // Yes. But only write RDF/XML files if they're semantically different from the ones that we already
-              // have, to avoid writing new files into Git that differ only in their blank node IDs.
+    "requested to serve ontologies in TTL" should {
 
-              mediaType match {
-                case RdfMediaTypes.`application/rdf+xml` =>
-                  val parsedResponse: RdfModel     = parseRdfXml(responseStr)
-                  val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
-                  if (parsedResponse != parsedExistingFile) httpGetTest.writeFile(responseStr, mediaType)
-                case _ => httpGetTest.writeFile(responseStr, mediaType)
-              }
-            } else {
-              // No. Compare the received response with the expected response.
-              mediaType match {
-                case RdfMediaTypes.`application/ld+json` =>
-                  assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
-
-                case RdfMediaTypes.`text/turtle` =>
-                  assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
-
-                case RdfMediaTypes.`application/rdf+xml` =>
-                  assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
-
-                case _ => throw AssertionException(s"Unsupported media type for test: $mediaType")
-              }
-            }
-
-            // If necessary, store the JSON-LD response as client test data.
-            if (mediaType == RdfMediaTypes.`application/ld+json`) {
-              httpGetTest.storeClientTestData(responseStr)
-            }
-          }
-        }
+      "serve the Anything ontology metadata in TTL" in {
+        val httpGetTest = HttpGetTest(
+          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
+          fileBasename = "anythingOntologyMetadata",
+          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+        )
+        checkTurleTestCase(httpGetTest)
       }
     }
+
+    "requested to serve ontologies in RDF-XML" should {
+
+      "serve the Anything ontology metadata in RDF-XML" in {
+        val httpGetTest = HttpGetTest(
+          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
+          fileBasename = "anythingOntologyMetadata",
+          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+        )
+        checkRdfXmlTestCase(httpGetTest)
+      }
+    }
+
   }
 }
