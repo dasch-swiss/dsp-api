@@ -204,7 +204,7 @@ object RepositoryUpdater {
         graphs = pluginsForNeededUpdates
                    .map(_.plugin.graphsForMigration)
                    .reduce(_ merge _)
-        _ <- ZIO.logInfo("Downloading repository file...")
+        _ <- ZIO.logInfo(s"Downloading .$graphs repository file..")
         _ <- triplestoreService.downloadRepository(graphsBeforeMigrationFile, graphs)
 
         // Run the transformations to produce an output file.
