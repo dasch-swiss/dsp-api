@@ -16,6 +16,7 @@ jobs:
         uses: google-github-actions/release-please-action@v3
         with:
           token: ${{ secrets.GH_TOKEN }}
+          draft-pull-request: true
           release-type: simple
           package-name: dsp-api
           pull-request-title-pattern: "chore${scope}: Release${component} ${version}"
