@@ -114,7 +114,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     )
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
-  private val anythingProjectSegment   = URLEncoder.encode(SharedTestDataADM.anythingProjectIri, "UTF-8")
   private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
   private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
   private val knoraApiSimpleOntologySegment =
@@ -325,6 +324,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     responseStr
   }
 
+  private object TestCases {
+    private val anythingProjectSegment = URLEncoder.encode(SharedTestDataADM.anythingProjectIri, "UTF-8")
+
+    val anythingOntologyMetadata: HttpGetTest = HttpGetTest(
+      urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
+      fileBasename = "anythingOntologyMetadata",
+      maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+    )
+  }
+
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
@@ -335,11 +344,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     "requested to serve ontologies in JSON-LD" should {
 
       "serve the Anything ontology metadata in JSON-LD" in {
-        val httpGetTest = HttpGetTest(
-          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
-          fileBasename = "anythingOntologyMetadata",
-          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
-        )
+        val httpGetTest = TestCases.anythingOntologyMetadata
         checkJsonLdTestCase(httpGetTest)
       }
 
@@ -348,11 +353,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     "requested to serve ontologies in TTL" should {
 
       "serve the Anything ontology metadata in TTL" in {
-        val httpGetTest = HttpGetTest(
-          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
-          fileBasename = "anythingOntologyMetadata",
-          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
-        )
+        val httpGetTest = TestCases.anythingOntologyMetadata
         checkTurleTestCase(httpGetTest)
       }
     }
@@ -360,11 +361,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     "requested to serve ontologies in RDF-XML" should {
 
       "serve the Anything ontology metadata in RDF-XML" in {
-        val httpGetTest = HttpGetTest(
-          urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
-          fileBasename = "anythingOntologyMetadata",
-          maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
-        )
+        val httpGetTest = TestCases.anythingOntologyMetadata
         checkRdfXmlTestCase(httpGetTest)
       }
     }
