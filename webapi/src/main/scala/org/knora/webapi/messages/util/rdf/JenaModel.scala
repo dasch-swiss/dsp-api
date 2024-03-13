@@ -110,12 +110,7 @@ object JenaConversions {
       case other                        => throw RdfProcessingException(s"$other is not a Jena statement")
     }
 
-  def asJenaDataset(model: RdfModel): jena.query.Dataset =
-    model match {
-      case model: JenaModel => model.getDataset
-      case other            => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
-    }
-
+  def asJenaDataset(model: RdfModel): jena.query.Dataset = model.getDataset
 }
 
 /**
@@ -149,7 +144,7 @@ object JenaContextFactory {
  *
  * @param dataset the underlying Jena dataset.
  */
-class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
+class RdfModel(private val dataset: jena.query.Dataset) extends Iterable[Statement] {
 
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
@@ -164,8 +159,33 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
    */
   def getDataset: jena.query.Dataset = dataset
 
-  override def addStatement(statement: Statement): Unit =
+  /**
+   * Adds a statement to the model.
+   *
+   * @param statement the statement to be added.
+   */
+  def addStatement(statement: Statement): Unit =
     datasetGraph.add(JenaConversions.asJenaQuad(statement))
+
+  /**
+   * Adds one or more statements to the model.
+   *
+   * @param statements the statements to be added.
+   */
+  def addStatements(statements: Set[Statement]): Unit =
+    for (statement <- statements) {
+      addStatement(statement)
+    }
+
+  /**
+   * Adds all the statements from another model to this model.
+   *
+   * @param otherModel another [[RdfModel]].
+   */
+  def addStatementsFromModel(otherModel: RdfModel): Unit =
+    for (statement <- otherModel) {
+      addStatement(statement)
+    }
 
   /**
    * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
@@ -174,7 +194,15 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
   private def asJenaNodeOrWildcard(node: Option[RdfNode]): jena.graph.Node =
     node.fold(jena.graph.Node.ANY)(JenaConversions.asJenaNode)
 
-  override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
+  /**
+   * Constructs a statement and adds it to the model.
+   *
+   * @param subj    the subject.
+   * @param pred    the predicate.
+   * @param obj     the object.
+   * @param context the IRI of a named graph, or `None` to use the default graph.
+   */
+  def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
     datasetGraph.add(
       JenaContextFactory.contextNodeOrDefaultGraph(context),
       JenaConversions.asJenaNode(subj),
@@ -182,7 +210,15 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
       JenaConversions.asJenaNode(obj),
     )
 
-  override def remove(
+  /**
+   * Removes statements that match a pattern.
+   *
+   * @param subj    the subject, or `None` to match any subject.
+   * @param pred    the predicate, or `None` to match any predicate.
+   * @param obj     the object, or `None` to match any object.
+   * @param context the IRI of a named graph, or `None` to match any graph.
+   */
+  def remove(
     subj: Option[RdfResource],
     pred: Option[IriNode],
     obj: Option[RdfNode],
@@ -195,10 +231,32 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
       asJenaNodeOrWildcard(obj),
     )
 
-  override def removeStatement(statement: Statement): Unit =
+  /**
+   * Removes a statement from the model.
+   */
+  def removeStatement(statement: Statement): Unit =
     datasetGraph.delete(JenaConversions.asJenaQuad(statement))
 
-  override def find(
+  /**
+   * Removes a set of statements from the model.
+   *
+   * @param statements the statements to remove.
+   */
+  def removeStatements(statements: Set[Statement]): Unit =
+    for (statement <- statements) {
+      removeStatement(statement)
+    }
+
+  /**
+   * Returns statements that match a pattern.
+   *
+   * @param subj    the subject, or `None` to match any subject.
+   * @param pred    the predicate, or `None` to match any predicate.
+   * @param obj     the object, or `None` to match any object.
+   * @param context the IRI of a named graph, or `None` to match any graph.
+   * @return an iterator over the statements that match the pattern.
+   */
+  def find(
     subj: Option[RdfResource],
     pred: Option[IriNode],
     obj: Option[RdfNode],
@@ -213,10 +271,22 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
       ),
     )
 
-  override def contains(statement: Statement): Boolean =
+  /**
+   * Checks whether the model contains the specified statement.
+   *
+   * @param statement the statement.
+   * @return `true` if the model contains the statement.
+   */
+  def contains(statement: Statement): Boolean =
     datasetGraph.contains(JenaConversions.asJenaQuad(statement))
 
-  override def setNamespace(prefix: String, namespace: IRI): Unit = {
+  /**
+   * Adds a namespace declaration to the model.
+   *
+   * @param prefix the namespace prefix.
+   * @param namespace the namespace.
+   */
+  def setNamespace(prefix: String, namespace: IRI): Unit = {
     def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
       val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
       val _                                        = prefixMapping.setNsPrefix(prefix, namespace)
@@ -232,7 +302,12 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
     }
   }
 
-  override def getNamespaces: Map[String, IRI] = {
+  /**
+   * Returns the namespace declarations in the model.
+   *
+   * @return a map of prefixes to namespaces.
+   */
+  def getNamespaces: Map[String, IRI] = {
     def getNamespacesFromGraph(graph: jena.graph.Graph): Map[String, IRI] = {
       val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
       prefixMapping.getNsPrefixMap.asScala.toMap
@@ -252,15 +327,26 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
     defaultGraphNamespaces ++ namedGraphNamespaces
   }
 
+  /**
+   * Returns `true` if this model is empty.
+   */
   override def isEmpty: Boolean = dataset.isEmpty
 
-  override def getSubjects: Set[RdfResource] =
+  /**
+   * Returns a set of all the subjects in the model.
+   */
+  def getSubjects: Set[RdfResource] =
     datasetGraph.find.asScala.map { (quad: jena.sparql.core.Quad) =>
       val subj: jena.graph.Node = quad.getSubject
       JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
     }.toSet
 
-  override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
+  /**
+   * Returns `true` if this model is isomorphic with another RDF model.
+   *
+   * @param otherRdfModel another [[RdfModel]].
+   */
+  def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
     // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
 
     val thatDatasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(otherRdfModel).asDatasetGraph
@@ -280,14 +366,23 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
     }
   }
 
-  override def getContexts: Set[IRI] =
+  /**
+   * Returns the IRIs of the named graphs in the model.
+   */
+  def getContexts: Set[IRI] =
     datasetGraph.listGraphNodes.asScala.toSet.map { (node: jena.graph.Node) =>
       node.getURI
     }
 
-  override def asRepository: JenaRepository =
+  /**
+   * Returns an [[JenaRepository]] that can be used to query this model.
+   */
+  def asRepository: JenaRepository =
     new JenaRepository(dataset)
 
+  /**
+   * @return the number of statements in the model.
+   */
   override def size: Int = {
     // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
 
@@ -305,11 +400,22 @@ class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
     defaultGraphSize + sumOfNamedGraphSizes
   }
 
-  override def iterator: Iterator[Statement] =
+  def iterator: Iterator[Statement] =
     new StatementIterator(datasetGraph.find)
 
-  override def clear(): Unit =
+  /**
+   * Empties this model.
+   */
+  def clear(): Unit =
     datasetGraph.clear()
+
+  override def hashCode(): Int = super.hashCode()
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case thatRdfModel: RdfModel => isIsomorphicWith(thatRdfModel)
+      case _                      => false
+    }
 }
 
 /**
@@ -403,10 +509,10 @@ object JenaNodeFactory {
 }
 
 /**
- * A factory for creating instances of [[JenaModel]].
+ * A factory for creating instances of [[RdfModel]].
  */
 object JenaModelFactory {
-  def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
+  def makeEmptyModel: RdfModel = new RdfModel(jena.query.DatasetFactory.create)
 }
 
 /**

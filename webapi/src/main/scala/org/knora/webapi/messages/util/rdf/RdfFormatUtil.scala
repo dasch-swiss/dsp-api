@@ -297,7 +297,7 @@ object RdfFormatUtil {
    */
   def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
     val parseTry: Try[RdfModel] = Try {
-      val model: JenaModel = JenaModelFactory.makeEmptyModel
+      val model = JenaModelFactory.makeEmptyModel
       jena.riot.RDFDataMgr.read(
         model.getDataset.asDatasetGraph,
         inputStream,
@@ -408,14 +408,14 @@ object RdfFormatUtil {
    * @return the corresponding [[RdfModel]].
    */
   protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
-    val jenaModel: JenaModel = JenaModelFactory.makeEmptyModel
+    val model = JenaModelFactory.makeEmptyModel
     jena.riot.RDFParser
       .create()
       .source(new StringReader(rdfStr))
       .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat))
       .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-      .parse(jenaModel.getDataset)
-    jenaModel
+      .parse(model.getDataset)
+    model
   }
 
   /**

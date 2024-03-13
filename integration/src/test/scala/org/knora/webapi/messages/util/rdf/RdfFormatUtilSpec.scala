@@ -20,7 +20,6 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf.JenaModel
 import org.knora.webapi.messages.util.rdf.JenaModelFactory
 import org.knora.webapi.messages.util.rdf.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.*
@@ -267,7 +266,7 @@ object RdfFormatUtilSpec {
         JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
 
       case nonJsonLD: NonJsonLD =>
-        val model: JenaModel = JenaModelFactory.makeEmptyModel
+        val model = JenaModelFactory.makeEmptyModel
         jena.riot.RDFParser
           .create()
           .source(new StringReader(rdfStr))
