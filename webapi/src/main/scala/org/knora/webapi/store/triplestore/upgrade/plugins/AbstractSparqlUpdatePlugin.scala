@@ -5,22 +5,31 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.Logger
+import org.apache.jena.query.Dataset
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 
-import org.knora.webapi.messages.util.rdf.JenaModel
-import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 abstract class AbstractSparqlUpdatePlugin extends UpgradePlugin {
 
-  def getQuery: ModifyQuery
+  private val log: Logger = Logger(this.getClass)
+
+  def getQueries: List[ModifyQuery]
 
   override def transform(model: RdfModel): Unit = {
     val dataset = model.asInstanceOf[JenaModel].getDataset
-    val update  = UpdateFactory.create(getQuery.getQueryString)
-    val qExec   = UpdateExecutionFactory.create(update, dataset)
+    getQueries.foreach(execute(dataset, _))
+  }
+
+  private def execute(dataset: Dataset, query: ModifyQuery) = {
+    val queryString = query.getQueryString
+    log.info(s"Executing SPARQL update: $queryString")
+    val update = UpdateFactory.create(queryString)
+    val qExec  = UpdateExecutionFactory.create(update, dataset)
     qExec.execute()
   }
 }

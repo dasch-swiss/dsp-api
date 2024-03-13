@@ -21,13 +21,13 @@ import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
  * After removing `knora-admin:Institution` class and its properties from the knora-admin ontology this cleans up the DB.
  * Removes all `knora-admin:Institution` classes from the `knora-admin` named graph.
  */
-class UpgradePluginPR3110() extends AbstractSparqlUpdatePlugin {
+class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
 
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  override def getQuery: ModifyQuery = {
-    var (s, p, o) = (variable("s"), variable("p"), variable("o"))
+  private val removeAllInstitutions: ModifyQuery = {
+    val (s, p, o) = (variable("s"), variable("p"), variable("o"))
     Queries
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
@@ -38,4 +38,16 @@ class UpgradePluginPR3110() extends AbstractSparqlUpdatePlugin {
           .from(Vocabulary.NamedGraphs.knoraAdminIri),
       )
   }
+
+  private val removeAllBelongsToInstitutionTriples: ModifyQuery = {
+    val (s, o)               = (variable("s"), variable("o"))
+    val belongsToInstitution = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToInstitution")
+    Queries
+      .MODIFY()
+      .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
+      .delete(s.has(belongsToInstitution, o))
+      .where(s.has(belongsToInstitution, o).from(Vocabulary.NamedGraphs.knoraAdminIri))
+  }
+
+  override def getQueries: List[ModifyQuery] = List(removeAllInstitutions, removeAllBelongsToInstitutionTriples)
 }
