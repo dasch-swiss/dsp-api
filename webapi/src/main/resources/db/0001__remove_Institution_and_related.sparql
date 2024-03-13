@@ -1,9 +1,0 @@
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-
-DELETE WHERE {
-  GRAPH <http://www.knora.org/data/admin> {
-    ?s  a knora-admin:Institution ;
-        ?p ?o .
-  }
-}
