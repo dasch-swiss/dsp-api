@@ -18,9 +18,8 @@ import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
 /**
- * Transforms a repository for Knora PR 2094.
- * Transforms incorrect value of valueHasUri from node to string type adding also
- * missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI>
+ * After removing `knora-admin:Institution` class and its properties from the knora-admin ontology this cleans up the DB.
+ * Removes all `knora-admin:Institution` classes from the `knora-admin` named graph.
  */
 class UpgradePluginPR3110() extends AbstractSparqlUpdatePlugin {
 
