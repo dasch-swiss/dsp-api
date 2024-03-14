@@ -67,7 +67,6 @@ object IriTestConstants {
 
     object Class {
       val AdministrativePermission: InternalIri = makeEntity(KnoraAdmin.Ontology, "AdministrativePermission")
-      val Institution: InternalIri              = makeEntity(KnoraAdmin.Ontology, "Institution")
       val Permission: InternalIri               = makeEntity(KnoraAdmin.Ontology, "Permission")
     }
   }
