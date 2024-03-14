@@ -72,7 +72,7 @@ object CheckObjectClassConstraints {
               for {
                 _ <-
                   ZIO.when(!propertyInfo.isLinkValueProp) {
-                    propertyRequiresValue(s"xxx $resourceIdForErrorMsg", propertyIri, objectClassConstraint)
+                    propertyRequiresValue(resourceIdForErrorMsg, propertyIri, objectClassConstraint)
                   }
 
                 // Does the resource that's the target of the link belongs to a subclass of the
@@ -97,7 +97,7 @@ object CheckObjectClassConstraints {
             case other: ValueContentV2 =>
               // It's not a link value. Check that its type is equal to the property's object class constraint.
               ZIO.when(other.valueType != objectClassConstraint) {
-                propertyRequiresValue(s"yyy $resourceIdForErrorMsg", propertyIri, objectClassConstraint)
+                propertyRequiresValue(resourceIdForErrorMsg, propertyIri, objectClassConstraint)
               }
           }
         }
