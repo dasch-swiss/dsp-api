@@ -40,6 +40,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.temporal.ChronoUnit
 import java.util
 import scala.io.Source
@@ -598,6 +599,7 @@ case class TriplestoreServiceLive(
             graphIri,
             outputFile,
             quadFormat,
+            StandardOpenOption.APPEND,
           )
 
           Files.delete(tempTurtleFile)

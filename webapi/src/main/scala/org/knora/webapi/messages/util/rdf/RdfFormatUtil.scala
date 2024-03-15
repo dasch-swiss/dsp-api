@@ -16,6 +16,7 @@ import java.io.OutputStream
 import java.io.StringReader
 import java.io.StringWriter
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Path
 import scala.util.Try
 
@@ -349,8 +350,14 @@ object RdfFormatUtil {
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
    */
-  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
-    val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
+  def turtleToQuadsFile(
+    rdfSource: RdfSource,
+    graphIri: IRI,
+    outputFile: Path,
+    outputFormat: QuadFormat,
+    openOption: OpenOption = null,
+  ): Unit = {
+    val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile, openOption))
     val streamRDF = new jena.riot.system.StreamRDF {
       val inner: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
         bufferedFileOutputStream,

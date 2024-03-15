@@ -165,20 +165,25 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    */
   private def updateRepositoryWithSelectedPlugins(
     pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion],
-  ): UIO[RepositoryUpdatedResponse] =
+  ): UIO[RepositoryUpdatedResponse] = {
+    def createEmptyFile(filename: String, dir: Path) = ZIO.attempt {
+      val file = dir.resolve(filename)
+      Files.deleteIfExists(file)
+      Files.createFile(file)
+    }
     (for {
-      downloadDir <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
-      _           <- ZIO.logInfo(s"Repository update using download directory $downloadDir")
-
       // The file to save the repository in.
-      graphsBeforeMigrationFile       <- ZIO.attempt(downloadDir.resolve("downloaded-repository.nq"))
-      graphsWithAppliedMigrationsFile <- ZIO.attempt(downloadDir.resolve("transformed-repository.nq"))
+      dir                             <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
+      graphsBeforeMigrationFile       <- createEmptyFile("downloaded-repository.nq", dir)
+      graphsWithAppliedMigrationsFile <- createEmptyFile("transformed-repository.nq", dir)
 
       // Ask the store actor to download the repository to the file.
       graphs = pluginsForNeededUpdates
                  .map(_.plugin.graphsForMigration)
                  .reduce(_ merge _)
-      _ <- ZIO.logInfo(s"Downloading .$graphs repository file..")
+      _ <- ZIO.logInfo(
+             s"Downloading $graphs repository file. $graphsBeforeMigrationFile, $graphsWithAppliedMigrationsFile",
+           )
       _ <- triplestoreService.downloadRepository(graphsBeforeMigrationFile, graphs)
 
       // Run the transformations to produce an output file.
@@ -201,6 +206,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
     } yield RepositoryUpdatedResponse(
       message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}",
     )).orDie
+  }
 
   /**
    * Transforms a file containing a downloaded repository.
