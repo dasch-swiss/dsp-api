@@ -8,6 +8,6 @@ import Keys.*
 
 object LocalSettings {
   val localScalacOptions: Seq[SettingsDefinition] = Seq(
-    // scalacOptions -= "-Xfatal-warnings",
+    // scalacOptions -= "-Xfatal-warnings"
   )
 }
