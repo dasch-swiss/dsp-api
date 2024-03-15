@@ -151,7 +151,8 @@ final case class ProjectExportServiceLive(
     files <-
       ZIO.foreach(allGraphsTrigFile)(file =>
         Files.deleteIfExists(file.dataFile) *> Files.createFile(file.dataFile) *>
-        triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file))
+          triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file),
+      )
   } yield files
 
   /**
