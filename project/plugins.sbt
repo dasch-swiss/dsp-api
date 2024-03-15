@@ -14,7 +14,7 @@ addSbtPlugin("com.github.sbt"          % "sbt-javaagent"       % "0.1.8")
 addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.11")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.11.0")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"  % "2.5.2")
-addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"  % "0.11.1")
+addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"  % "0.12.0")
 addSbtPlugin("de.heikoseeberger" % "sbt-header"    % "5.10.0")
 
 // ad-hoc plugins - uncomment on demenad and keep it commented out in main branch
