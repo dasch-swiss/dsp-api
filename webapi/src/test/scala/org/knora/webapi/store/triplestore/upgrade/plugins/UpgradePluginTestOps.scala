@@ -7,6 +7,7 @@ import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
+
 import org.knora.webapi.messages.util.rdf.JenaModel
 import org.knora.webapi.messages.util.rdf.JenaModelFactory
 
