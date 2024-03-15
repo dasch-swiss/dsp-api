@@ -19,13 +19,14 @@ import java.nio.file.Files
 import java.nio.file.OpenOption
 import java.nio.file.Path
 import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.Rendering
 import org.knora.webapi.SchemaOptions
+
+import java.nio.file.StandardOpenOption
 
 /**
  * A trait for supported RDF formats.
@@ -349,13 +350,14 @@ object RdfFormatUtil {
    * @param graphIri     the named graph IRI to be added.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
+   * @param openOption the open option for the output file, default is CREATE
    */
   def turtleToQuadsFile(
     rdfSource: RdfSource,
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat,
-    openOption: OpenOption = null,
+    openOption: OpenOption = StandardOpenOption.CREATE,
   ): Unit = {
     val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile, openOption))
     val streamRDF = new jena.riot.system.StreamRDF {
