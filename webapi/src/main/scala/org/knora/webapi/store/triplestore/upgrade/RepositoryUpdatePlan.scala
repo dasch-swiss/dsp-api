@@ -15,37 +15,18 @@ import org.knora.webapi.store.triplestore.upgrade.plugins.*
  * The plan for updating a repository to work with the current version of Knora.
  */
 object RepositoryUpdatePlan {
+  final case class PluginForKnoraBaseVersion(versionNumber: Int, plugin: UpgradePlugin)
 
   /**
    * Constructs list of all repository update plugins in chronological order.
    */
   def makePluginsForVersions(log: Logger): Seq[PluginForKnoraBaseVersion] =
     Seq(
-      PluginForKnoraBaseVersion(
-        versionNumber = 1,
-        plugin = new UpgradePluginPR1307(),
-        prBasedVersionString = Some("PR 1307"),
-      ),
-      PluginForKnoraBaseVersion(
-        versionNumber = 2,
-        plugin = new UpgradePluginPR1322(),
-        prBasedVersionString = Some("PR 1322"),
-      ),
-      PluginForKnoraBaseVersion(
-        versionNumber = 3,
-        plugin = new UpgradePluginPR1367(),
-        prBasedVersionString = Some("PR 1367"),
-      ),
-      PluginForKnoraBaseVersion(
-        versionNumber = 4,
-        plugin = new UpgradePluginPR1372(),
-        prBasedVersionString = Some("PR 1372"),
-      ),
-      PluginForKnoraBaseVersion(
-        versionNumber = 5,
-        plugin = new MigrateOnlyBuiltInGraphs,
-        prBasedVersionString = Some("PR 1440"),
-      ),
+      PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307()),
+      PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322()),
+      PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367()),
+      PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372()),
+      PluginForKnoraBaseVersion(versionNumber = 5, plugin = new MigrateOnlyBuiltInGraphs),
       PluginForKnoraBaseVersion(versionNumber = 6, plugin = new MigrateOnlyBuiltInGraphs), // PR 1206
       PluginForKnoraBaseVersion(versionNumber = 7, plugin = new MigrateOnlyBuiltInGraphs), // PR 1403
       PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615()),
@@ -67,7 +48,6 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 29, plugin = new UpgradePluginPR3110()),
       PluginForKnoraBaseVersion(versionNumber = 30, plugin = new UpgradePluginPR3111()),
       // KEEP IT ON THE BOTTOM
-      // From "versionNumber = 6" don't use prBasedVersionString!
     )
 
   /**
@@ -95,23 +75,4 @@ object RepositoryUpdatePlan {
       name = "http://www.knora.org/data/standoff",
     ),
   )
-
-  /**
-   * Represents an update plugin with its knora-base version number and version string.
-   *
-   * @param versionNumber        the knora-base version number that the plugin's transformation produces.
-   * @param plugin               the plugin.
-   * @param prBasedVersionString the plugin's PR-based version string (not used for new plugins).
-   */
-  case class PluginForKnoraBaseVersion(
-    versionNumber: Int,
-    plugin: UpgradePlugin,
-    prBasedVersionString: Option[String] = None,
-  ) {
-    lazy val versionString: String =
-      prBasedVersionString match {
-        case Some(str) => str
-        case None      => s"knora-base v$versionNumber"
-      }
-  }
 }
