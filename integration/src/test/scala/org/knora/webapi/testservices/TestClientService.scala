@@ -65,11 +65,10 @@ final case class FileToUpload(path: Path, mimeType: ContentType)
  */
 final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
-final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: ActorSystem)
+final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient)(implicit system: ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  implicit val system: ActorSystem                = sys
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
   case class TestClientTimeoutException(msg: String) extends Exception
@@ -367,7 +366,7 @@ object TestClientService {
         sys        <- ZIO.service[ActorSystem]
         config     <- ZIO.service[AppConfig]
         httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys))
-      } yield TestClientService(config, httpClient, sys)
+      } yield TestClientService(config, httpClient)(sys)
     }
 
 }
