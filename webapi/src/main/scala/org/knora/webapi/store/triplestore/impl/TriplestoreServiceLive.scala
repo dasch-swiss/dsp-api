@@ -565,7 +565,7 @@ case class TriplestoreServiceLive(
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         // Stream the HTTP entity directly to the output file.
-        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile)).unit
+        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile, StandardCopyOption.REPLACE_EXISTING)).unit
       case None =>
         val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString) *>
