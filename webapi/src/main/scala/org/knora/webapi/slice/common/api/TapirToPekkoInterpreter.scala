@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
 import sttp.capabilities.pekko.PekkoStreams
@@ -22,10 +23,8 @@ import zio.json.JsonCodec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import org.knora.webapi.core.ActorSystem
-
-final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
-  implicit val executionContext: ExecutionContext = actorSystem.system.dispatcher
+final case class TapirToPekkoInterpreter()(system: ActorSystem) {
+  implicit val executionContext: ExecutionContext = system.dispatcher
   private case class GenericErrorResponse(error: String)
   private object GenericErrorResponse {
     implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]

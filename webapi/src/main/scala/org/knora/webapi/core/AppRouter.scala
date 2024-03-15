@@ -32,14 +32,14 @@ trait AppRouter {
 
 object AppRouter {
   val layer: ZLayer[
-    core.ActorSystem & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & MessageRelay &
+    pekko.actor.ActorSystem & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & MessageRelay &
       OntologyCache & OntologyHelpers & OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
     Nothing,
     AppRouter,
   ] =
     ZLayer {
       for {
-        as           <- ZIO.service[core.ActorSystem]
+        as           <- ZIO.service[pekko.actor.ActorSystem]
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
@@ -47,7 +47,7 @@ object AppRouter {
               OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
           ]
       } yield new AppRouter {
-        implicit val system: org.apache.pekko.actor.ActorSystem = as.system
+        implicit val system: org.apache.pekko.actor.ActorSystem = as
 
         val ref: ActorRef = system.actorOf(
           Props(
