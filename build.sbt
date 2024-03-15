@@ -9,7 +9,7 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val sipiVersion                 = "v30.9.0"
-val tapirVersion                = "1.9.10"
+val tapirVersion                = "1.9.11"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.1"
 val zioHttpVersion              = "3.0.0-RC4"
@@ -37,13 +37,13 @@ val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"      % tapirVersion
+  "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"      % tapirVersion,
 )
 
 val metrics = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   "dev.zio"                     %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
-  "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion
+  "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
 )
 
 lazy val root = (project in file("."))
@@ -55,11 +55,11 @@ lazy val root = (project in file("."))
       scalaVersion,
       sbtVersion,
       BuildInfoKey("sipiVersion", sipiVersion),
-      BuildInfoKey.action("gitCommit")(gitCommit)
+      BuildInfoKey.action("gitCommit")(gitCommit),
     ),
     buildInfoOptions += BuildInfoOption.BuildTime,
     buildInfoPackage    := "swiss.dasch.version",
-    Compile / mainClass := Some("swiss.dasch.Main")
+    Compile / mainClass := Some("swiss.dasch.Main"),
   )
   .settings(
     name := "dsp-ingest",
@@ -67,8 +67,8 @@ lazy val root = (project in file("."))
       HeaderLicense.Custom(
         """|Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
            |SPDX-License-Identifier: Apache-2.0
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     ),
     libraryDependencies ++= tapir ++ metrics ++ Seq(
       "com.github.jwt-scala" %% "jwt-zio-json"                      % "10.0.0",
@@ -105,7 +105,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
       "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.11"       % Test
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.11"       % Test,
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
@@ -117,19 +117,19 @@ lazy val root = (project in file("."))
     dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
-        |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin
+        |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin,
     ),
     // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
     dockerCommands += Cmd(
       "RUN",
-      "apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null"
+      "apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
     ),
     dockerCommands += Cmd(
       "RUN",
-      "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt update && apt upgrade -y && apt install -y temurin-21-jre && apt clean"
+      "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt update && apt upgrade -y && apt install -y temurin-21-jre && apt clean",
     ),
     dockerCommands := dockerCommands.value.filterNot {
       case Cmd("USER", args @ _*) => true
       case cmd                    => false
-    }
+    },
   )
