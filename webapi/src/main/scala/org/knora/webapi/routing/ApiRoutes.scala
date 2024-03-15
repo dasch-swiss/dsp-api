@@ -5,7 +5,7 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
 import org.apache.pekko.http.scaladsl.model.HttpMethods.*
@@ -15,7 +15,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
@@ -61,7 +60,7 @@ object ApiRoutes {
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes    <- ZIO.service[SearchApiRoutes]
         managementRoutes   <- ZIO.service[ManagementRoutes]
-        routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
             AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
@@ -98,7 +97,7 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem = routeData.system
+  private implicit val system: ActorSystem = routeData.system
 
   val routes: Route =
     logDuration {

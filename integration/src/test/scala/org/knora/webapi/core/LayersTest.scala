@@ -85,7 +85,11 @@ object LayersTest {
     with DspIngestTestContainer
     with SharedVolumes.Images
 
-  type CommonR0 = ActorSystem with AppConfigurationsTest with JwtService with SipiService with StringFormatter
+  type CommonR0 = pekko.actor.ActorSystem
+    with AppConfigurationsTest
+    with JwtService
+    with SipiService
+    with StringFormatter
   type CommonR =
     ApiRoutes
       with AdminApiEndpoints
