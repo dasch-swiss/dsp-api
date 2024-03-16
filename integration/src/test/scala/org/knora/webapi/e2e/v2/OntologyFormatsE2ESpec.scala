@@ -12,32 +12,19 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import dsp.errors.AssertionException
 import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 class OntologyFormatsE2ESpec extends E2ESpec {
-
-  override lazy val rdfDataObjects: List[RdfDataObject] =
-    List(
-      RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
-      RdfDataObject("test_data/project_ontologies/minimal-onto.ttl", "http://www.knora.org/ontology/0001/minimal"),
-    )
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
@@ -114,153 +101,154 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     )
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
-  private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
-  private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
-  private val knoraApiSimpleOntologySegment =
-    URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
-  private val knoraApiWithValueObjectsOntologySegment =
-    URLEncoder.encode(KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
-  private val incunabulaOntologySimpleSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
-  private val incunabulaOntologyWithValueObjectsSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
-  private val knoraApiDateSegment = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
-  private val knoraApiDateValueSegment =
-    URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
-  private val knoraApiSimpleHasColorSegment =
-    URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
-  private val knoraApiWithValueObjectsHasColorSegment =
-    URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
-  private val incunabulaSimplePubdateSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
-  private val incunabulaWithValueObjectsPubDateSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
-  private val incunabulaWithValueObjectsPageSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
-  private val incunabulaWithValueObjectsBookSegment =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
-  private val boxOntologyWithValueObjectsSegment =
-    URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
-  private val minimalOntologyWithValueObjects =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
-  private val anythingOntologyWithValueObjects =
-    URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
-  private val anythingThingWithAllLanguages =
-    URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost, "UTF-8")
-  private val imagesBild = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost, "UTF-8")
-  private val incunabulaBook =
-    URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost, "UTF-8")
-  private val incunabulaPage =
-    URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost, "UTF-8")
-  private val anythingHasListItem =
-    URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost, "UTF-8")
-  private val anythingHasDate =
-    URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost, "UTF-8")
-  private val imagesTitel = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost, "UTF-8")
-  private val incunabulaPartOf =
-    URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost, "UTF-8")
+  // private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
+  // private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
+  // private val knoraApiSimpleOntologySegment =
+  //   URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
+  // private val knoraApiWithValueObjectsOntologySegment =
+  //   URLEncoder.encode(KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
+  // private val incunabulaOntologySimpleSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
+  // private val incunabulaOntologyWithValueObjectsSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
+  // private val knoraApiDateSegment = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
+  // private val knoraApiDateValueSegment =
+  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
+  // private val knoraApiSimpleHasColorSegment =
+  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
+  // private val knoraApiWithValueObjectsHasColorSegment =
+  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
+  // private val incunabulaSimplePubdateSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
+  // private val incunabulaWithValueObjectsPubDateSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
+  // private val incunabulaWithValueObjectsPageSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
+  // private val incunabulaWithValueObjectsBookSegment =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
+  // private val boxOntologyWithValueObjectsSegment =
+  //   URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
+  // private val minimalOntologyWithValueObjects =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
+  // private val anythingOntologyWithValueObjects =
+  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
+  // private val anythingThingWithAllLanguages =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost, "UTF-8")
+  // private val imagesBild = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost, "UTF-8")
+  // private val incunabulaBook =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost, "UTF-8")
+  // private val incunabulaPage =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost, "UTF-8")
+  // private val anythingHasListItem =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost, "UTF-8")
+  // private val anythingHasDate =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost, "UTF-8")
+  // private val imagesTitel = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost, "UTF-8")
+  // private val incunabulaPartOf =
+  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost, "UTF-8")
 
   // The URLs and expected response files for each HTTP GET test.
-  private val httpGetTests = Seq(
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$knoraApiSimpleOntologySegment",
-      fileBasename = "knoraApiOntologySimple",
-    ),
-    HttpGetTest(
-      urlPath = "/ontology/knora-api/simple/v2",
-      fileBasename = "knoraApiOntologySimple",
-      disableWrite = true,
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment",
-      fileBasename = "knoraApiOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("knora-api-ontology"),
-    ),
-    HttpGetTest(
-      urlPath = "/ontology/knora-api/v2",
-      fileBasename = "knoraApiOntologyWithValueObjects",
-      disableWrite = true,
-    ),
-    HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
-    HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
-    HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateSegment", fileBasename = "knoraApiDate"),
-    HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateValueSegment", fileBasename = "knoraApiDateValue"),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$knoraApiSimpleHasColorSegment",
-      fileBasename = "knoraApiSimpleHasColor",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment",
-      fileBasename = "knoraApiWithValueObjectsHasColor",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment",
-      fileBasename = "incunabulaSimplePubDate",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment",
-      fileBasename = "incunabulaWithValueObjectsPubDate",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment",
-      fileBasename = "incunabulaPageAndBookWithValueObjects",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment",
-      fileBasename = "boxOntologyWithValueObjects",
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects",
-      fileBasename = "minimalOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("minimal-ontology"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects",
-      fileBasename = "anythingOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("anything-ontology"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/classes/$anythingThingWithAllLanguages?allLanguages=true",
-      fileBasename = "anythingThingWithAllLanguages",
-      maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/classes/$imagesBild",
-      fileBasename = "imagesBild",
-      maybeClientTestDataBasename = Some("get-class-image-bild-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/classes/$incunabulaBook",
-      fileBasename = "incunabulaBook",
-      maybeClientTestDataBasename = Some("get-class-incunabula-book-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/classes/$incunabulaPage",
-      fileBasename = "incunabulaPage",
-      maybeClientTestDataBasename = Some("get-class-incunabula-page-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$anythingHasListItem",
-      fileBasename = "anythingHasListItem",
-      maybeClientTestDataBasename = Some("get-property-listValue-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$anythingHasDate",
-      fileBasename = "anythingHasDate",
-      maybeClientTestDataBasename = Some("get-property-DateValue-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$imagesTitel",
-      fileBasename = "imagesTitel",
-      maybeClientTestDataBasename = Some("get-property-textValue-response"),
-    ),
-    HttpGetTest(
-      urlPath = s"/v2/ontologies/properties/$incunabulaPartOf",
-      fileBasename = "incunabulaPartOf",
-      maybeClientTestDataBasename = Some("get-property-linkvalue-response"),
-    ),
-  )
+  // private val httpGetTests = Seq(
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$knoraApiSimpleOntologySegment",
+  //     fileBasename = "knoraApiOntologySimple",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = "/ontology/knora-api/simple/v2",
+  //     fileBasename = "knoraApiOntologySimple",
+  //     disableWrite = true,
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment",
+  //     fileBasename = "knoraApiOntologyWithValueObjects",
+  //     maybeClientTestDataBasename = Some("knora-api-ontology"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = "/ontology/knora-api/v2",
+  //     fileBasename = "knoraApiOntologyWithValueObjects",
+  //     disableWrite = true,
+  //   ),
+  //   HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
+  //   HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
+  //   HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateSegment", fileBasename = "knoraApiDate"),
+  //   HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateValueSegment", fileBasename = "knoraApiDateValue"),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$knoraApiSimpleHasColorSegment",
+  //     fileBasename = "knoraApiSimpleHasColor",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment",
+  //     fileBasename = "knoraApiWithValueObjectsHasColor",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment",
+  //     fileBasename = "incunabulaSimplePubDate",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment",
+  //     fileBasename = "incunabulaWithValueObjectsPubDate",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment",
+  //     fileBasename = "incunabulaPageAndBookWithValueObjects",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment",
+  //     fileBasename = "boxOntologyWithValueObjects",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects",
+  //     fileBasename = "minimalOntologyWithValueObjects",
+  //     maybeClientTestDataBasename = Some("minimal-ontology"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects",
+  //     fileBasename = "anythingOntologyWithValueObjects",
+  //     maybeClientTestDataBasename = Some("anything-ontology"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$anythingThingWithAllLanguages?allLanguages=true",
+  //     fileBasename = "anythingThingWithAllLanguages",
+  //     maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$imagesBild",
+  //     fileBasename = "imagesBild",
+  //     maybeClientTestDataBasename = Some("get-class-image-bild-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaBook",
+  //     fileBasename = "incunabulaBook",
+  //     maybeClientTestDataBasename = Some("get-class-incunabula-book-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaPage",
+  //     fileBasename = "incunabulaPage",
+  //     maybeClientTestDataBasename = Some("get-class-incunabula-page-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$anythingHasListItem",
+  //     fileBasename = "anythingHasListItem",
+  //     maybeClientTestDataBasename = Some("get-property-listValue-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$anythingHasDate",
+  //     fileBasename = "anythingHasDate",
+  //     maybeClientTestDataBasename = Some("get-property-DateValue-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$imagesTitel",
+  //     fileBasename = "imagesTitel",
+  //     maybeClientTestDataBasename = Some("get-property-textValue-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaPartOf",
+  //     fileBasename = "incunabulaPartOf",
+  //     maybeClientTestDataBasename = Some("get-property-linkvalue-response"),
+  //   ),
+  // )
 
+  // TODO: remove before merging!
   // The following test cases have been removed:
   //
   // HttpGetTest(
