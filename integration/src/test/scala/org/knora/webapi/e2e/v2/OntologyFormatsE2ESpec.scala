@@ -5,6 +5,7 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import org.scalatest.Inspectors.forEvery
 import spray.json.*
 
 import java.net.URLEncoder
@@ -23,6 +24,7 @@ import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
@@ -103,8 +105,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
   // private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
   // private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
-  // private val knoraApiSimpleOntologySegment =
-  //   URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
+  //
+  //
   // private val knoraApiWithValueObjectsOntologySegment =
   //   URLEncoder.encode(KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
   // private val incunabulaOntologySimpleSegment =
@@ -149,10 +151,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
   // The URLs and expected response files for each HTTP GET test.
   // private val httpGetTests = Seq(
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/allentities/$knoraApiSimpleOntologySegment",
-  //     fileBasename = "knoraApiOntologySimple",
-  //   ),
+  //
+  //
+  //
+  //
   //   HttpGetTest(
   //     urlPath = "/ontology/knora-api/simple/v2",
   //     fileBasename = "knoraApiOntologySimple",
@@ -276,6 +278,9 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //   maybeClientTestDataBasename = Some("incunabula-ontology"),
   // ),
 
+  private def urlEncodeIri(iri: IRI): String =
+    URLEncoder.encode(iri, "UTF-8")
+
   private def checkJsonLdTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/ld+json`
     val responseStr = getResponse(httpGetTest, mediaType)
@@ -313,12 +318,20 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   }
 
   private object TestCases {
-    private val anythingProjectSegment = URLEncoder.encode(SharedTestDataADM.anythingProjectIri, "UTF-8")
-
-    val anythingOntologyMetadata: HttpGetTest = HttpGetTest(
-      urlPath = s"/v2/ontologies/metadata/$anythingProjectSegment",
+    private val anythingOntologyMetadata: HttpGetTest = HttpGetTest(
+      urlPath = s"/v2/ontologies/metadata/${urlEncodeIri(SharedTestDataADM.anythingProjectIri)}",
       fileBasename = "anythingOntologyMetadata",
       maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+    )
+
+    private val knoraApiOntologySimple = HttpGetTest(
+      urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
+      fileBasename = "knoraApiOntologySimple",
+    )
+
+    val testCases = Seq(
+      anythingOntologyMetadata,
+      knoraApiOntologySimple,
     )
   }
 
@@ -328,31 +341,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   private val writeTestDataFiles = false
 
-  "The Ontologies v2 Endpoint" when {
-    "requested to serve ontologies in JSON-LD" should {
-
-      "serve the Anything ontology metadata in JSON-LD" in {
-        val httpGetTest = TestCases.anythingOntologyMetadata
-        checkJsonLdTestCase(httpGetTest)
-      }
-
-    }
-
-    "requested to serve ontologies in TTL" should {
-
-      "serve the Anything ontology metadata in TTL" in {
-        val httpGetTest = TestCases.anythingOntologyMetadata
-        checkTurleTestCase(httpGetTest)
+  "The Ontologies v2 Endpoint" should {
+    "serve the ontology in JSON-LD, turtle and RDF-XML" in {
+      forEvery(TestCases.testCases) { testCase =>
+        checkJsonLdTestCase(testCase)
+        checkTurleTestCase(testCase)
+        checkRdfXmlTestCase(testCase)
       }
     }
-
-    "requested to serve ontologies in RDF-XML" should {
-
-      "serve the Anything ontology metadata in RDF-XML" in {
-        val httpGetTest = TestCases.anythingOntologyMetadata
-        checkRdfXmlTestCase(httpGetTest)
-      }
+    "serve the knora-api ontology on two separate endpoints" in {
+      // TODO: implement
     }
-
   }
 }
