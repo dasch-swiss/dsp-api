@@ -48,7 +48,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     urlPath: String,
     fileBasename: String,
     maybeClientTestDataBasename: Option[String] = None,
-    disableWrite: Boolean = false,
+    disableWrite: Boolean = false, // TODO: remove this parameter
   ) {
     private def makeFile(suffix: String): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
@@ -156,44 +156,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //
   //
   //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment",
-  //     fileBasename = "knoraApiOntologyWithValueObjects",
-  //     maybeClientTestDataBasename = Some("knora-api-ontology"),
-  //   ),
-  //   HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
-  //   HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
-  //   HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateSegment", fileBasename = "knoraApiDate"),
-  //   HttpGetTest(urlPath = s"/v2/ontologies/classes/$knoraApiDateValueSegment", fileBasename = "knoraApiDateValue"),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$knoraApiSimpleHasColorSegment",
-  //     fileBasename = "knoraApiSimpleHasColor",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment",
-  //     fileBasename = "knoraApiWithValueObjectsHasColor",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment",
-  //     fileBasename = "incunabulaSimplePubDate",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment",
-  //     fileBasename = "incunabulaWithValueObjectsPubDate",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment",
-  //     fileBasename = "incunabulaPageAndBookWithValueObjects",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment",
-  //     fileBasename = "boxOntologyWithValueObjects",
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects",
-  //     fileBasename = "minimalOntologyWithValueObjects",
-  //     maybeClientTestDataBasename = Some("minimal-ontology"),
-  //   ),
-  //   HttpGetTest(
   //     urlPath = s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects",
   //     fileBasename = "anythingOntologyWithValueObjects",
   //     maybeClientTestDataBasename = Some("anything-ontology"),
@@ -267,6 +229,35 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //   fileBasename = "incunabulaOntologyWithValueObjects",
   //   maybeClientTestDataBasename = Some("incunabula-ontology"),
   // ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$knoraApiSimpleHasColorSegment",
+  //     fileBasename = "knoraApiSimpleHasColor",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment",
+  //     fileBasename = "knoraApiWithValueObjectsHasColor",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment",
+  //     fileBasename = "incunabulaSimplePubDate",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment",
+  //     fileBasename = "incunabulaWithValueObjectsPubDate",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment",
+  //     fileBasename = "incunabulaPageAndBookWithValueObjects",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment",
+  //     fileBasename = "boxOntologyWithValueObjects",
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects",
+  //     fileBasename = "minimalOntologyWithValueObjects",
+  //     maybeClientTestDataBasename = Some("minimal-ontology"),
+  //   ),
   //
   // The following were redundant because they were each two routs to the same ontology, checked against the same file:
   //
@@ -321,27 +312,72 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   }
 
   private object TestCases {
-    private val anythingOntologyMetadata: HttpGetTest = HttpGetTest(
-      urlPath = s"/v2/ontologies/metadata/${urlEncodeIri(SharedTestDataADM.anythingProjectIri)}",
-      fileBasename = "anythingOntologyMetadata",
-      maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
-    )
+    private val knoraApiOntologySimple =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
+        fileBasename = "knoraApiOntologySimple",
+      )
 
-    private val knoraApiOntologySimple = HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
-      fileBasename = "knoraApiOntologySimple",
-    )
+    private val knoraApiOntologyComplex =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
+        fileBasename = "knoraApiOntologyWithValueObjects",
+        maybeClientTestDataBasename = Some("knora-api-ontology"),
+      )
 
-    private val knoraApiOntologyComplex = HttpGetTest(
-      urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
-      fileBasename = "knoraApiOntologyWithValueObjects",
-      maybeClientTestDataBasename = Some("knora-api-ontology"),
-    )
+    private val salsahGuiOntology =
+      HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology")
+
+    private val standoffOntology =
+      HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects")
+
+    private val knoraApiDateSegmentSimple =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/classes/${urlEncodeIri(KnoraApiV2Simple.Date)}",
+        fileBasename = "knoraApiDate",
+      )
+
+    private val knoraApiDateSegmentComplex =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/classes/${urlEncodeIri(KnoraApiV2Complex.DateValue)}",
+        fileBasename = "knoraApiDateValue",
+      )
+
+    private val knoraApiHasColorSegmentSimple =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/properties/${urlEncodeIri(KnoraApiV2Simple.HasColor)}",
+        fileBasename = "knoraApiSimpleHasColor",
+      )
+
+    private val knoraApiHasColorSegmentComplex =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/properties/${urlEncodeIri(KnoraApiV2Complex.HasColor)}",
+        fileBasename = "knoraApiWithValueObjectsHasColor",
+      )
+
+    private val anythingOntologyMetadata =
+      HttpGetTest(
+        urlPath = s"/v2/ontologies/metadata/${urlEncodeIri(SharedTestDataADM.anythingProjectIri)}",
+        fileBasename = "anythingOntologyMetadata",
+        maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+      )
 
     val testCases = Seq(
-      anythingOntologyMetadata,
+      // built-in ontologies
       knoraApiOntologySimple,
       knoraApiOntologyComplex,
+      salsahGuiOntology,
+      standoffOntology,
+      // class segments of built-in ontologies
+      knoraApiDateSegmentSimple,
+      knoraApiDateSegmentComplex,
+      // property segments of built-in ontologies
+      knoraApiHasColorSegmentSimple,
+      knoraApiHasColorSegmentComplex,
+      // project ontologies
+      anythingOntologyMetadata,
+      // TODO: class segments of project ontologies
+      // TODO: property segments of project ontologies
     )
   }
 
