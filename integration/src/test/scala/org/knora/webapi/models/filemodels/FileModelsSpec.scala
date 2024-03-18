@@ -5,8 +5,8 @@
 
 package org.knora.webapi.models.filemodels
 
-import spray.json.DefaultJsonProtocol.*
 import spray.json.*
+import spray.json.DefaultJsonProtocol.*
 
 import java.time.Instant
 import java.util.UUID

@@ -9,8 +9,8 @@ import org.apache.jena.query.Dataset
 import zio.Random
 import zio.Ref
 import zio.ZLayer
-import zio.test.ZIOSpecDefault
 import zio.test.*
+import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

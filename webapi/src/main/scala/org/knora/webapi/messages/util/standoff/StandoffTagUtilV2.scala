@@ -28,8 +28,8 @@ import org.knora.webapi.messages.util
 import org.knora.webapi.messages.util.DateUtil
 import org.knora.webapi.messages.util.KnoraCalendarPrecision
 import org.knora.webapi.messages.util.KnoraCalendarType
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
