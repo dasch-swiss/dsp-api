@@ -141,7 +141,7 @@ object LayersLive {
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
-      MaintenanceServiceLive.layer,
+      MaintenanceService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,

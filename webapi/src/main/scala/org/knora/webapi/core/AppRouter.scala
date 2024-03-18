@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
-import zio.macros.accessible
 
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -24,11 +23,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import pekko.actor.{ActorRef, Props}
 import pekko.routing.RoundRobinPool
 
-@accessible
-trait AppRouter {
-  val system: pekko.actor.ActorSystem
-  val ref: ActorRef
-}
+final case class AppRouter private (system: pekko.actor.ActorSystem, ref: ActorRef)
 
 object AppRouter {
   val layer: ZLayer[
@@ -39,22 +34,17 @@ object AppRouter {
   ] =
     ZLayer {
       for {
-        as           <- ZIO.service[pekko.actor.ActorSystem]
+        system       <- ZIO.service[pekko.actor.ActorSystem]
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
             CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers &
               OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
           ]
-      } yield new AppRouter {
-        implicit val system: org.apache.pekko.actor.ActorSystem = as
-
-        val ref: ActorRef = system.actorOf(
-          Props(
-            core.actors.RoutingActor(messageRelay, runtime),
-          ).withRouter(new RoundRobinPool(1_000)),
-          name = APPLICATION_MANAGER_ACTOR_NAME,
-        )
-      }
+        ref = system.actorOf(
+                Props(core.actors.RoutingActor(messageRelay, runtime)).withRouter(new RoundRobinPool(1_000)),
+                name = APPLICATION_MANAGER_ACTOR_NAME,
+              )
+      } yield AppRouter(system, ref)
     }.tap(_ => ZIO.logInfo(">>> AppRouter Initialized <<<"))
 }

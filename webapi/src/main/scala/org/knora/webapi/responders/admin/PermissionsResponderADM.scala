@@ -4,9 +4,9 @@
  */
 
 package org.knora.webapi.responders.admin
+
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.macros.accessible
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
@@ -57,7 +57,6 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Provides information about permissions to other responders.
  */
-@accessible
 trait PermissionsResponderADM {
 
   /**

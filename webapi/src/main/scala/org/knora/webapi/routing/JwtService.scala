@@ -22,7 +22,6 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.durationInt
-import zio.macros.accessible
 
 import scala.util.Failure
 import scala.util.Success
@@ -41,7 +40,6 @@ case class Jwt(jwtString: String, expiration: Long)
 /**
  * Provides functions for creating, decoding, and validating JWT tokens.
  */
-@accessible
 trait JwtService {
 
   /**
