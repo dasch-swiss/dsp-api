@@ -1,0 +1,29 @@
+{
+    "@id": "http://api.knora.org/ontology/knora-api/simple/v2",
+    "@type": "owl:Ontology",
+    "rdfs:label": "The knora-api ontology in the simple schema",
+    "@graph": [
+        {
+            "rdfs:label": "Color",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "rdfs:comment": "Specifies the color of a region.",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Color"
+            },
+            "@id": "knora-api:hasColor"
+        }
+    ],
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    }
+}
