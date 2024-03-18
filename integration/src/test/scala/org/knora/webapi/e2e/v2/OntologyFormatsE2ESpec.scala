@@ -305,11 +305,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (writeTestDataFiles) {
-      val parsedResponse: RdfModel     = parseRdfXml(responseStr)
-      val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
-      if (parsedResponse != parsedExistingFile) httpGetTest.writeFile(responseStr, mediaType)
-    } else assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
+    if (writeTestDataFiles) ()
+    else assert(parseRdfXml(responseStr) == parseTurtle(httpGetTest.readFile(RdfMediaTypes.`text/turtle`)))
   }
 
   private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
