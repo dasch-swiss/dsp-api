@@ -7,6 +7,15 @@ on:
       - "release-*"
 
 jobs:
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip with success
+        run: |
+          echo "skipped"
+          exit 0
+          
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest

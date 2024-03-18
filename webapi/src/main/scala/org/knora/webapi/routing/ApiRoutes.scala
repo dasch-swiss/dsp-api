@@ -5,7 +5,7 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
 import org.apache.pekko.http.scaladsl.model.HttpMethods.*
@@ -15,7 +15,6 @@ import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
@@ -31,6 +30,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
@@ -48,7 +48,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AuthorizationRestService & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
+    ActorSystem & AuthorizationRestService & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ManagementRoutes & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
     ApiRoutes,
   ] =
     ZLayer {
@@ -59,12 +59,21 @@ object ApiRoutes {
         adminApiRoutes     <- ZIO.service[AdminApiRoutes]
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes    <- ZIO.service[SearchApiRoutes]
-        routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        managementRoutes   <- ZIO.service[ManagementRoutes]
+        routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
             AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
           ]
-      } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, appConfig, runtime)
+      } yield ApiRoutesImpl(
+        routeData,
+        adminApiRoutes,
+        resourceInfoRoutes,
+        searchApiRoutes,
+        managementRoutes,
+        appConfig,
+        runtime,
+      )
     }
 }
 
@@ -80,6 +89,7 @@ private final case class ApiRoutesImpl(
   adminApiRoutes: AdminApiRoutes,
   resourceInfoRoutes: ResourceInfoRoutes,
   searchApiRoutes: SearchApiRoutes,
+  managementRoutes: ManagementRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
@@ -87,7 +97,7 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem = routeData.system
+  private implicit val system: ActorSystem = routeData.system
 
   val routes: Route =
     logDuration {
@@ -98,15 +108,14 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS)),
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes).reduce(_ ~ _) ~
+              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes ++ managementRoutes.routes)
+                .reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
-                HealthRoute().makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~
-                ValuesRouteV2().makeRoute ~
-                VersionRoute().makeRoute
+                ValuesRouteV2().makeRoute
             }
           }
         }

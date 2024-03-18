@@ -39,8 +39,6 @@ In Knora, each item of data belongs to some particular project. Each project usi
 
 - `projectDescription` (1-n): A description of the project.
 
-- `belongsToInstitution` (0-1): The `kb:Institution` that the project belongs to.
-
 Ontologies and resources are associated with a project by means of the
 `kb:attachedToProject` property, as described in [Ontologies](#ontologies)
 and [Properties of Resource](#properties-of-resource)). Users are associated with a project by means of

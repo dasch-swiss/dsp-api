@@ -15,8 +15,8 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonPro
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model.Group
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages

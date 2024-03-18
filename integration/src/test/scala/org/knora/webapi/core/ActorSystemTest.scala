@@ -5,11 +5,9 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko
+import org.apache.pekko.actor.ActorSystem
 import zio.*
 
 object ActorSystemTest {
-
-  def layer(sys: pekko.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
-    ZLayer.scoped(ZIO.succeed(new ActorSystem { override val system: pekko.actor.ActorSystem = sys }))
+  def layer(sys: ActorSystem): ZLayer[Any, Nothing, ActorSystem] = ZLayer.succeed(sys)
 }

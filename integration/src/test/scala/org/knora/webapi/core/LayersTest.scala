@@ -42,6 +42,8 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
+import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -83,7 +85,11 @@ object LayersTest {
     with DspIngestTestContainer
     with SharedVolumes.Images
 
-  type CommonR0 = ActorSystem with AppConfigurationsTest with JwtService with SipiService with StringFormatter
+  type CommonR0 = pekko.actor.ActorSystem
+    with AppConfigurationsTest
+    with JwtService
+    with SipiService
+    with StringFormatter
   type CommonR =
     ApiRoutes
       with AdminApiEndpoints
@@ -181,10 +187,11 @@ object LayersTest {
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
+      KnoraGroupRepoLive.layer,
       KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraGroupRepoLive.layer,
       KnoraUserRepoLive.layer,
+      KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
@@ -195,6 +202,7 @@ object LayersTest {
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
       MaintenanceServiceLive.layer,
+      ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -235,13 +243,13 @@ object LayersTest {
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
-      KnoraUserService.layer,
       UserService.layer,
       UsersEndpoints.layer,
       UsersEndpointsHandler.layer,
       UsersResponder.layer,
       UsersRestService.layer,
       ValuesResponderV2Live.layer,
+      ManagementEndpoints.layer,
     )
 
   private val fusekiAndSipiTestcontainers =
