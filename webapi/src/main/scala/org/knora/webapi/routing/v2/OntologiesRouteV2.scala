@@ -13,7 +13,6 @@ import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -39,6 +38,7 @@ import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import zio.ZIO
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
@@ -278,7 +278,8 @@ final case class OntologiesRouteV2()(
           user           <- Authenticator.getUserADM(requestContext)
           property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
           newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
-          canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
+          canChange <-
+            ZIO.serviceWithZIO[RestCardinalityService](_.canChangeCardinality(classIri, user, property, newCardinality))
         } yield canChange
         completeResponse(response, requestContext)
       }

@@ -6,8 +6,11 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
+<<<<<<< Updated upstream
 import zio.macros.accessible
 
+=======
+>>>>>>> Stashed changes
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
@@ -17,6 +20,7 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.GroupsService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
@@ -35,9 +39,10 @@ final case class GroupsRestServiceLive(
   auth: AuthorizationRestService,
   responder: GroupsResponderADM,
   format: KnoraResponseRenderer,
+  groupsService: GroupsService,
 ) extends GroupsRestService {
   override def getGroups: Task[GroupsGetResponseADM] = for {
-    internal <- responder.groupsGetADM.map(GroupsGetResponseADM.apply)
+    internal <- groupsService.findAll.map(GroupsGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 

@@ -9,7 +9,6 @@ import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 
 import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
@@ -33,7 +32,6 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-@accessible
 trait RestCardinalityService {
 
   def canChangeCardinality(

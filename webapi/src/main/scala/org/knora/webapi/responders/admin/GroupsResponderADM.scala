@@ -10,7 +10,6 @@ import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
-
 import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
@@ -43,7 +42,10 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.GroupsService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
@@ -53,13 +55,6 @@ import org.knora.webapi.util.ZioHelper
  */
 @accessible
 trait GroupsResponderADM {
-
-  /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
-   *
-   * @return all the groups as a sequence of [[Group]].
-   */
-  def groupsGetADM: Task[Seq[Group]]
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[Group]].
@@ -160,20 +155,6 @@ final case class GroupsResponderADMLive(
     case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
-
-  /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
-   *
-   * @return all the groups as a sequence of [[Group]].
-   */
-  override def groupsGetADM: Task[Seq[Group]] = {
-    val query = Construct(sparql.admin.txt.getGroups(None))
-    for {
-      groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
-      groups          = groupsResponse.statements.map(convertStatementsToGroupADM)
-      result         <- ZioHelper.sequence(groups.toSeq)
-    } yield result.sorted
   }
 
   private def convertStatementsToGroupADM(statements: (SubjectV2, ConstructPredicateObjects)): Task[Group] = {
