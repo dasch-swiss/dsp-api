@@ -406,7 +406,8 @@ object JenaNodeFactory {
  * A factory for creating instances of [[JenaModel]].
  */
 object JenaModelFactory {
-  def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
+  def makeEmptyModel: JenaModel                    = from(jena.query.DatasetFactory.create)
+  def from(dataset: jena.query.Dataset): JenaModel = new JenaModel(dataset)
 }
 
 /**
