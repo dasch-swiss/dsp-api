@@ -42,10 +42,11 @@ object SipiIT extends ZIOSpecDefault {
       .map(Request.get)
       .flatMap(Client.request(_))
 
-  private val getToken = JwtService
-    .createJwt(SystemUser)
-    .map(_.jwtString)
-    .provide(JwtServiceLive.layer, AppConfig.layer)
+  private val getToken =
+    ZIO
+      .serviceWithZIO[JwtService](_.createJwt(SystemUser))
+      .map(_.jwtString)
+      .provide(JwtServiceLive.layer, AppConfig.layer)
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(

@@ -7,7 +7,6 @@ package org.knora.webapi.routing
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
-
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
+import zio.ZIO
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser
@@ -32,6 +32,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private def testUserAdmFromIri(iri: String) = User(iri, "", "", "", "", false, "")
+
 
   "During Authentication" when {
     "called, the 'authenticateCredentialsV2' method" should {
@@ -57,8 +58,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "succeed with correct token" in {
         val isAuthenticated = UnsafeZioRun.runOrThrow(
           for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
           } yield result,
@@ -68,8 +68,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "fail with invalidated token" in {
         val actual = UnsafeZioRun
           .run(for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))

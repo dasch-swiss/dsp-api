@@ -18,7 +18,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
-import org.knora.webapi.slice.admin.domain.service.MaintenanceServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -29,7 +28,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.emptyDatasetRefLayer
 
-object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
+object MaintenanceServiceSpec extends ZIOSpecDefault {
 
   private val testProject              = TestDataFactory.someProject
   private val createProject            = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))

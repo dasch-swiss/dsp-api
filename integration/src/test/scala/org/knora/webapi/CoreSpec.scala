@@ -17,15 +17,17 @@ import zio.*
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.LogAspect
+import zio.ZIO
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -114,4 +116,5 @@ abstract class CoreSpec
       runtime.unsafe.shutdown()
     }
 
+  protected def createJwtTokenString(user: User) = ZIO.serviceWithZIO[JwtService](_.createJwt(user)).map(_.jwtString)
 }

@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -37,6 +36,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
@@ -201,7 +201,7 @@ object LayersTest {
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
-      MaintenanceServiceLive.layer,
+      MaintenanceService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
