@@ -65,7 +65,7 @@ object UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps 
           |  GRAPH <http://www.knora.org/data/admin> {
           |    <http://rdfh.ch/projects/0002> a knora-admin:knoraProject ;
           |                                   knora-admin:projectRestrictedViewSize      "!128,128"^^xsd:string .
-          |    FILTER NOT EXISTS { <http://rdfh.ch/projects/0001> knora-admin:projectRestrictedViewWatermark ?any . }
+          |    FILTER NOT EXISTS { <http://rdfh.ch/projects/0002> knora-admin:projectRestrictedViewWatermark ?any . }
           |  }
           |}
           |""".stripMargin
@@ -79,7 +79,7 @@ object UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps 
           |  GRAPH <http://www.knora.org/data/admin> {
           |    <http://rdfh.ch/projects/0003> a knora-admin:knoraProject ;
           |                                   knora-admin:projectRestrictedViewSize      "!128,128"^^xsd:string .
-          |    FILTER NOT EXISTS { <http://rdfh.ch/projects/0001> knora-admin:projectRestrictedViewWatermark ?any . }
+          |    FILTER NOT EXISTS { <http://rdfh.ch/projects/0003> knora-admin:projectRestrictedViewWatermark ?any . }
           |  }
           |}
           |""".stripMargin
