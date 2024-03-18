@@ -25,6 +25,8 @@ import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
+import org.knora.webapi.messages.util.rdf.JsonLD
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
@@ -85,6 +87,17 @@ class OntologyFormatsE2ESpec extends E2ESpec {
      */
     def readFile(mediaType: MediaType.NonBinary): String =
       FileUtil.readTextFile(makeFile(mediaType.fileExtensions.head))
+
+    def fileExists(mediaType: MediaType.NonBinary): Boolean =
+      Files.exists(makeFile(mediaType.fileExtensions.head))
+
+    def writeReceived(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
+      val newOutputFile = makeFile(s"received.${mediaType.fileExtensions.head}")
+
+      Files.createDirectories(newOutputFile.getParent)
+      FileUtil.writeTextFile(newOutputFile, responseStr)
+      ()
+    }
   }
 
   private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
@@ -132,10 +145,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //   URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
   // private val minimalOntologyWithValueObjects =
   //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
-  // private val anythingOntologyWithValueObjects =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
-  // private val anythingThingWithAllLanguages =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost, "UTF-8")
   // private val imagesBild = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost, "UTF-8")
   // private val incunabulaBook =
   //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost, "UTF-8")
@@ -155,16 +164,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //
   //
   //
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects",
-  //     fileBasename = "anythingOntologyWithValueObjects",
-  //     maybeClientTestDataBasename = Some("anything-ontology"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/classes/$anythingThingWithAllLanguages?allLanguages=true",
-  //     fileBasename = "anythingThingWithAllLanguages",
-  //     maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
-  //   ),
   //   HttpGetTest(
   //     urlPath = s"/v2/ontologies/classes/$imagesBild",
   //     fileBasename = "imagesBild",
@@ -280,17 +279,56 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private def checkJsonLdTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/ld+json`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
-    else assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
+    if (!httpGetTest.fileExists(mediaType)) {
+      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+      throw new AssertionError(s"No approved data available in file ${httpGetTest.fileBasename}")
+    }
+    if (JsonParser(responseStr) != JsonParser(httpGetTest.readFile(mediaType))) {
+      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+      throw new AssertionError(
+        s"""|The response did not equal the approved data.
+            |
+            |Response:
+            |
+            |${responseStr}
+            |
+            |----------------------------
+            |
+            |Approved data:
+            |
+            |${httpGetTest.readFile(mediaType)}
+            |""".stripMargin,
+      )
+    }
+    // if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
+    // else assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
     httpGetTest.storeClientTestData(responseStr)
   }
 
   private def checkTurleTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`text/turtle`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (writeTestDataFiles && parseTurtle(responseStr) != parseTurtle(httpGetTest.readFile(mediaType)))
-      httpGetTest.writeFile(responseStr, mediaType)
-    else assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
+    if (!httpGetTest.fileExists(mediaType)) {
+      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+      throw new AssertionError(s"No approved data available in file ${httpGetTest.fileBasename}")
+    }
+    if (parseTurtle(responseStr) != parseTurtle(httpGetTest.readFile(mediaType))) {
+      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+      throw new AssertionError(
+        s"""|The response did not equal the approved data.
+            |
+            |Response:
+            |
+            |${responseStr}
+            |
+            |----------------------------
+            |
+            |Approved data:
+            |
+            |${httpGetTest.readFile(mediaType)}
+            |""".stripMargin,
+      )
+    }
   }
   // LATER: use jena directly, with `isIsomorphicWith` (note that we only have one graph here)
   // LATER: in failure case, write the response to a file for approval
@@ -362,6 +400,29 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
       )
 
+    private val anythingOntologySimple =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost_SIMPLE)}",
+        fileBasename = "anythingOntologySimple",
+      )
+
+    private val anythingOntologyComplex =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",
+        fileBasename = "anythingOntologyWithValueObjects",
+        maybeClientTestDataBasename = Some("anything-ontology"),
+      )
+
+    private val anythingThingWithAllLanguages =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost)}?allLanguages=true",
+        fileBasename = "anythingThingWithAllLanguages",
+        maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
+      )
+
     val testCases = Seq(
       // built-in ontologies
       knoraApiOntologySimple,
@@ -376,6 +437,9 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       knoraApiHasColorSegmentComplex,
       // project ontologies
       anythingOntologyMetadata,
+      anythingOntologySimple,
+      anythingOntologyComplex,
+      anythingThingWithAllLanguages,
       // TODO: class segments of project ontologies
       // TODO: property segments of project ontologies
     )
@@ -385,13 +449,13 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = false
+  private val writeTestDataFiles = true
 
   "The Ontologies v2 Endpoint" should {
     "serve the ontologies in JSON-LD, turtle and RDF-XML" in {
       forEvery(TestCases.testCases) { testCase =>
-        checkJsonLdTestCase(testCase)
         checkTurleTestCase(testCase)
+        checkJsonLdTestCase(testCase)
         checkRdfXmlTestCase(testCase)
       }
     }

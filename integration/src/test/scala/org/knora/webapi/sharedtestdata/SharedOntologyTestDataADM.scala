@@ -14,6 +14,7 @@ object SharedOntologyTestDataADM {
   // anything
   val ANYTHING_ONTOLOGY_IRI: IRI                   = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/anything"
   val ANYTHING_ONTOLOGY_IRI_LocalHost: IRI         = LocalHost_Ontology + "/0001/anything/v2"
+  val ANYTHING_ONTOLOGY_IRI_LocalHost_SIMPLE: IRI  = LocalHost_Ontology + "/0001/anything/simple/v2"
   val ANYTHING_DATA_IRI: IRI                       = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0001/anything"
   val ANYTHING_THING_RESOURCE_CLASS_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "Thing"
   val ANYTHING_HasListItem_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasListItem"
