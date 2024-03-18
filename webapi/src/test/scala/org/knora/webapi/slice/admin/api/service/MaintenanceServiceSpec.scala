@@ -74,18 +74,20 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
     dim    <- ZIO.fromEither(Dimensions.from(width, height))
   } yield dim
 
-  val spec: Spec[Any, Any] = suite("MaintenanceServiceLive")(
+  val spec: Spec[Any, Any] = suite("MaintenanceService")(
     test("fixTopLeftDimensions should not fail for an empty report") {
       createProject *>
         saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width) *>
-        MaintenanceService.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)).as(assertCompletes)
+        ZIO
+          .serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)))
+          .as(assertCompletes)
     },
     test("fixTopLeftDimensions should not fail if no StillImageFileValue is found") {
       createProject *>
-        MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
+        ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport)).as(assertCompletes)
     },
     test("fixTopLeftDimensions should not fail if project is not found") {
-      MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
+      ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport)).as(assertCompletes)
     },
     test("fixTopLeftDimensions should transpose dimension for an existing StillImageFileValue") {
       for {
@@ -93,7 +95,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
         _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width)
         // when
-        _ <- MaintenanceService.fixTopLeftDimensions(testReport)
+        _ <- ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport))
         // then
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
@@ -106,13 +108,13 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
         _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.width, height = expectedDimension.height)
         // when
-        _ <- MaintenanceService.fixTopLeftDimensions(testReport)
+        _ <- ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport))
         // then
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
     },
   ).provide(
-    MaintenanceServiceLive.layer,
+    MaintenanceService.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
     PredicateObjectMapper.layer,
