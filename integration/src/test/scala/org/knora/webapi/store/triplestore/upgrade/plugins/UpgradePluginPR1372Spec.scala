@@ -5,8 +5,8 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.knora.webapi.messages.util.rdf.JenaRepository
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf.JenaRepository
 
 class UpgradePluginPR1372Spec extends UpgradePluginSpec {
   "Upgrade plugin PR1372" should {

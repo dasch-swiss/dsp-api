@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir.EndpointInput.PathCapture
 import sttp.tapir.*
+import sttp.tapir.EndpointInput.PathCapture
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer

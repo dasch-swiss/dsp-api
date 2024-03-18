@@ -9,8 +9,8 @@ import zio.*
 
 import dsp.errors.*
 import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*

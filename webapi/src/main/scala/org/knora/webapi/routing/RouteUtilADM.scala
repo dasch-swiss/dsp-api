@@ -5,9 +5,9 @@
 
 package org.knora.webapi.routing
 
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
 import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
-import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.RouteResult
 import org.apache.pekko.util.ByteString

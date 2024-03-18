@@ -49,8 +49,8 @@ import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService

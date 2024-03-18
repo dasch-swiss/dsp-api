@@ -5,8 +5,8 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import spray.json.DefaultJsonProtocol.*
 import spray.json.*
+import spray.json.DefaultJsonProtocol.*
 
 import java.util.UUID
 
