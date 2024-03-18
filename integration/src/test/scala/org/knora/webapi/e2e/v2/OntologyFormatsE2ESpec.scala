@@ -17,6 +17,8 @@ import org.knora.webapi.*
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -24,7 +26,6 @@ import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
@@ -156,19 +157,9 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //
   //
   //   HttpGetTest(
-  //     urlPath = "/ontology/knora-api/simple/v2",
-  //     fileBasename = "knoraApiOntologySimple",
-  //     disableWrite = true,
-  //   ),
-  //   HttpGetTest(
   //     urlPath = s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment",
   //     fileBasename = "knoraApiOntologyWithValueObjects",
   //     maybeClientTestDataBasename = Some("knora-api-ontology"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = "/ontology/knora-api/v2",
-  //     fileBasename = "knoraApiOntologyWithValueObjects",
-  //     disableWrite = true,
   //   ),
   //   HttpGetTest(urlPath = "/ontology/salsah-gui/v2", fileBasename = "salsahGuiOntology"),
   //   HttpGetTest(urlPath = "/ontology/standoff/v2", fileBasename = "standoffOntologyWithValueObjects"),
@@ -277,13 +268,28 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //   fileBasename = "incunabulaOntologyWithValueObjects",
   //   maybeClientTestDataBasename = Some("incunabula-ontology"),
   // ),
+  //
+  // The following were redundant because they were each two routs to the same ontology, checked against the same file:
+  //
+  //   HttpGetTest(
+  //     urlPath = "/ontology/knora-api/v2",
+  //     fileBasename = "knoraApiOntologyWithValueObjects",
+  //     disableWrite = true,
+  //   ),
+  // -> same as `s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}"`
+  //   HttpGetTest(
+  //     urlPath = "/ontology/knora-api/simple/v2",
+  //     fileBasename = "knoraApiOntologySimple",
+  //     disableWrite = true,
+  //   ),
+  // -> same as `s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}"`
 
   private def urlEncodeIri(iri: IRI): String =
     URLEncoder.encode(iri, "UTF-8")
 
   private def checkJsonLdTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/ld+json`
-    val responseStr = getResponse(httpGetTest, mediaType)
+    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
     if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
     else assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
     httpGetTest.storeClientTestData(responseStr)
@@ -291,14 +297,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
   private def checkTurleTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`text/turtle`
-    val responseStr = getResponse(httpGetTest, mediaType)
+    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
     if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
     else assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
   }
 
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
-    val responseStr = getResponse(httpGetTest, mediaType)
+    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
     if (writeTestDataFiles) {
       val parsedResponse: RdfModel     = parseRdfXml(responseStr)
       val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
@@ -306,11 +312,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     } else assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
   }
 
-  private def getResponse(
-    httpGetTest: HttpGetTest,
-    mediaType: MediaType.NonBinary,
-  ) = {
-    val request     = Get(s"$baseApiUrl${httpGetTest.urlPath}").addHeader(Accept(mediaType))
+  private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
+    val request     = Get(s"$baseApiUrl$url").addHeader(Accept(mediaType))
     val response    = singleAwaitingRequest(request)
     val responseStr = responseToString(response)
     assert(response.status == StatusCodes.OK, responseStr)
@@ -342,15 +345,58 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private val writeTestDataFiles = false
 
   "The Ontologies v2 Endpoint" should {
-    "serve the ontology in JSON-LD, turtle and RDF-XML" in {
+    "serve the ontologies in JSON-LD, turtle and RDF-XML" in {
       forEvery(TestCases.testCases) { testCase =>
         checkJsonLdTestCase(testCase)
         checkTurleTestCase(testCase)
         checkRdfXmlTestCase(testCase)
       }
     }
-    "serve the knora-api ontology on two separate endpoints" in {
-      // TODO: implement
+
+    "serve the knora-api ontology in the simple schema on two separate endpoints" in {
+      val ontologyAllEntitiesResponseJson = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`application/ld+json`,
+      )
+      val knoraApiResponseJson = getResponse(s"/ontology/knora-api/simple/v2", RdfMediaTypes.`application/ld+json`)
+      assert(JsonParser(ontologyAllEntitiesResponseJson) == JsonParser(knoraApiResponseJson))
+
+      val ontologyAllEntitiesResponseTurtle = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`text/turtle`,
+      )
+      val knoraApiResponseTurtle = getResponse(s"/ontology/knora-api/simple/v2", RdfMediaTypes.`text/turtle`)
+      assert(parseTurtle(ontologyAllEntitiesResponseTurtle) == parseTurtle(knoraApiResponseTurtle))
+
+      val ontologyAllEntitiesResponseRdfXml = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Simple.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`application/rdf+xml`,
+      )
+      val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/simple/v2", RdfMediaTypes.`application/rdf+xml`)
+      assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
+    }
+
+    "serve the knora-api in the complex schema on two separate endpoints" in {
+      val ontologyAllEntitiesResponseJson = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`application/ld+json`,
+      )
+      val knoraApiResponseJson = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`application/ld+json`)
+      assert(JsonParser(ontologyAllEntitiesResponseJson) == JsonParser(knoraApiResponseJson))
+
+      val ontologyAllEntitiesResponseTurtle = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`text/turtle`,
+      )
+      val knoraApiResponseTurtle = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`text/turtle`)
+      assert(parseTurtle(ontologyAllEntitiesResponseTurtle) == parseTurtle(knoraApiResponseTurtle))
+
+      val ontologyAllEntitiesResponseRdfXml = getResponse(
+        s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
+        RdfMediaTypes.`application/rdf+xml`,
+      )
+      val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`application/rdf+xml`)
+      assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
     }
   }
 }
