@@ -332,9 +332,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       fileBasename = "knoraApiOntologySimple",
     )
 
+    private val knoraApiOntologyComplex = HttpGetTest(
+      urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
+      fileBasename = "knoraApiOntologyWithValueObjects",
+      maybeClientTestDataBasename = Some("knora-api-ontology"),
+    )
+
     val testCases = Seq(
       anythingOntologyMetadata,
       knoraApiOntologySimple,
+      knoraApiOntologyComplex,
     )
   }
 
