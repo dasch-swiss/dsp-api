@@ -20,7 +20,6 @@ import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
 
@@ -298,9 +297,11 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private def checkTurleTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`text/turtle`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
+    if (writeTestDataFiles && parseTurtle(responseStr) != parseTurtle(httpGetTest.readFile(mediaType)))
+      httpGetTest.writeFile(responseStr, mediaType)
     else assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
   }
+  // LATER: use jena directly, with `isIsomorphicWith`
 
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
