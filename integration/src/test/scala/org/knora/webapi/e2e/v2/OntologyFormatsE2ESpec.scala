@@ -48,8 +48,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private case class HttpGetTest(
     urlPath: String,
     fileBasename: String,
-    maybeClientTestDataBasename: Option[String] = None,
-    disableWrite: Boolean = false, // TODO: remove this parameter
+    clientTestDataBasename: Option[String] = None,
   ) {
     private def makeFile(suffix: String): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
@@ -60,20 +59,19 @@ class OntologyFormatsE2ESpec extends E2ESpec {
      * @param responseStr the contents of the file to be written.
      * @param mediaType   the media type of the response.
      */
-    def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit =
-      if (!disableWrite) {
-        val newOutputFile = makeFile(mediaType.fileExtensions.head)
+    def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
+      val newOutputFile = makeFile(mediaType.fileExtensions.head)
 
-        Files.createDirectories(newOutputFile.getParent)
-        FileUtil.writeTextFile(newOutputFile, responseStr)
-        ()
-      }
+      Files.createDirectories(newOutputFile.getParent)
+      FileUtil.writeTextFile(newOutputFile, responseStr)
+      ()
+    }
 
     /**
      * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
      */
     def storeClientTestData(responseStr: String): Unit =
-      maybeClientTestDataBasename match {
+      clientTestDataBasename match {
         case Some(clientTestDataBasename) => CollectClientTestData(clientTestDataBasename, responseStr)
         case None                         => ()
       }
@@ -114,36 +112,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       ),
     )
 
-  // URL-encoded IRIs for use as URL segments in HTTP GET tests.
-  // private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.incunabulaProjectIri, "UTF-8")
-  // private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.beolProjectIri, "UTF-8")
-  //
-  //
-  // private val knoraApiWithValueObjectsOntologySegment =
-  //   URLEncoder.encode(KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
-  // private val incunabulaOntologySimpleSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
-  // private val incunabulaOntologyWithValueObjectsSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
-  // private val knoraApiDateSegment = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
-  // private val knoraApiDateValueSegment =
-  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
-  // private val knoraApiSimpleHasColorSegment =
-  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
-  // private val knoraApiWithValueObjectsHasColorSegment =
-  //   URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
-  // private val incunabulaSimplePubdateSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
-  // private val incunabulaWithValueObjectsPubDateSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
-  // private val incunabulaWithValueObjectsPageSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
-  // private val incunabulaWithValueObjectsBookSegment =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
-  // private val boxOntologyWithValueObjectsSegment =
-  //   URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
-  // private val minimalOntologyWithValueObjects =
-  //   URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
   // private val imagesBild = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost, "UTF-8")
   // private val incunabulaBook =
   //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost, "UTF-8")
@@ -364,7 +332,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       HttpGetTest(
         urlPath = s"/v2/ontologies/allentities/${urlEncodeIri(KnoraApiV2Complex.KnoraApiOntologyIri)}",
         fileBasename = "knoraApiOntologyWithValueObjects",
-        maybeClientTestDataBasename = Some("knora-api-ontology"),
+        clientTestDataBasename = Some("knora-api-ontology"),
       )
 
     private val salsahGuiOntology =
@@ -401,7 +369,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       HttpGetTest(
         urlPath = s"/v2/ontologies/metadata/${urlEncodeIri(SharedTestDataADM.anythingProjectIri)}",
         fileBasename = "anythingOntologyMetadata",
-        maybeClientTestDataBasename = Some("get-ontologies-project-anything-response"),
+        clientTestDataBasename = Some("get-ontologies-project-anything-response"),
       )
 
     private val anythingOntologySimple =
@@ -416,7 +384,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",
         fileBasename = "anythingOntologyWithValueObjects",
-        maybeClientTestDataBasename = Some("anything-ontology"),
+        clientTestDataBasename = Some("anything-ontology"),
       )
 
     private val anythingThingWithAllLanguages =
@@ -424,7 +392,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost)}?allLanguages=true",
         fileBasename = "anythingThingWithAllLanguages",
-        maybeClientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
+        clientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
       )
 
     val testCases = Seq(
