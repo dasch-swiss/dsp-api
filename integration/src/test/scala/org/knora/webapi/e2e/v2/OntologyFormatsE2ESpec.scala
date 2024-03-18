@@ -20,13 +20,12 @@ import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.*
 
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers.Accept
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.messages.util.rdf.JsonLD
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
