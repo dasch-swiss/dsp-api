@@ -301,11 +301,13 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       httpGetTest.writeFile(responseStr, mediaType)
     else assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
   }
-  // LATER: use jena directly, with `isIsomorphicWith`
+  // LATER: use jena directly, with `isIsomorphicWith` (note that we only have one graph here)
+  // LATER: in failure case, write the response to a file for approval
 
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
+    // RDF XML can be compared agains the persisted turtle file, so does not need to br written to a file.
     if (writeTestDataFiles) ()
     else assert(parseRdfXml(responseStr) == parseTurtle(httpGetTest.readFile(RdfMediaTypes.`text/turtle`)))
   }
