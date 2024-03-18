@@ -21,8 +21,8 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords

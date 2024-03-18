@@ -8,8 +8,8 @@ import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
 import zio.Ref
 import zio.ZIO
-import zio.test.Assertion.hasSameElements
 import zio.test.*
+import zio.test.Assertion.hasSameElements
 
 import java.nio.file.Files
 import java.util.UUID

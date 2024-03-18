@@ -5,8 +5,8 @@
 
 package org.knora.webapi
 
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 
