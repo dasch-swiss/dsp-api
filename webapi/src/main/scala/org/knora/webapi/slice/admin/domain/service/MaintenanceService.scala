@@ -9,7 +9,6 @@ import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 import zio.stream.ZStream
 
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
@@ -20,18 +19,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-@accessible
-trait MaintenanceService {
-  def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit]
-}
-
-final case class MaintenanceServiceLive(
+final case class MaintenanceService(
   projectRepo: KnoraProjectRepo,
   triplestoreService: TriplestoreService,
   mapper: PredicateObjectMapper,
-) extends MaintenanceService {
+) {
 
-  override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
+  def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
     def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
       getKnoraProject(project).flatMap { knoraProject =>
         ZStream
@@ -149,6 +143,6 @@ final case class MaintenanceServiceLive(
   }
 }
 
-object MaintenanceServiceLive {
-  val layer = ZLayer.derive[MaintenanceServiceLive]
+object MaintenanceService {
+  val layer = ZLayer.derive[MaintenanceService]
 }

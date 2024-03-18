@@ -17,7 +17,6 @@ import zio.Scope
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 
@@ -34,7 +33,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
-@accessible
 trait ProjectExportService {
   def exportProject(project: KnoraProject): Task[Path]
 

@@ -57,8 +57,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "succeed with correct token" in {
         val isAuthenticated = UnsafeZioRun.runOrThrow(
           for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
           } yield result,
@@ -68,8 +67,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "fail with invalidated token" in {
         val actual = UnsafeZioRun
           .run(for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
