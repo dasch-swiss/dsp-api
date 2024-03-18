@@ -39,9 +39,7 @@ object UpgradePluginPR3112Spec extends ZIOSpecDefault with UpgradePluginTestOps 
       val model = createJenaModelFromTriG(triG)
 
       // when
-      printModel(model)
       plugin.transform(model)
-      printModel(model)
 
       // then
       val project0001HasOnlyViewSize =
