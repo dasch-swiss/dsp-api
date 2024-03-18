@@ -201,7 +201,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //   ),
   // )
 
-  // TODO: remove before merging!
   // The following test cases have been removed:
   //
   // HttpGetTest(
@@ -257,6 +256,13 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //     fileBasename = "minimalOntologyWithValueObjects",
   //     maybeClientTestDataBasename = Some("minimal-ontology"),
   //   ),
+  //
+  // This affects client test data:
+  // - "all-ontology-metadata-response"
+  // - "get-ontologies-project-incunabula-response"
+  // - "get-ontologies-project-beol-response"
+  // - "incunabula-ontology"
+  // - "minimal-ontology"
   //
   // The following were redundant because they were each two routs to the same ontology, checked against the same file:
   //
@@ -331,7 +337,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     }
   }
   // LATER: use jena directly, with `isIsomorphicWith` (note that we only have one graph here)
-  // LATER: in failure case, write the response to a file for approval
 
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
