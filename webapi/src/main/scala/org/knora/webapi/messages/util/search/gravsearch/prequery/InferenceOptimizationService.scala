@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import zio.*
-import zio.macros.accessible
 
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
@@ -29,7 +28,6 @@ import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-@accessible
 trait InferenceOptimizationService {
 
   /**
