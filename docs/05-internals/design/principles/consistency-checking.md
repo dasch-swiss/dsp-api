@@ -234,11 +234,11 @@ However, this implementation would be much too slow. We therefore use
 two optimisations suggested by Ontotext:
 
 1. Add custom inference rules to make tables (i.e. named graphs) of
-  pre-calculated information about the cardinalities on properties of
-  subjects, and use those tables to simplify the consistency rules.
+   pre-calculated information about the cardinalities on properties of
+   subjects, and use those tables to simplify the consistency rules.
 2. Use the `[Cut]` constraint to avoid generating certain redundant
-  compiled rules (see [Entailment
-  rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules)).
+   compiled rules (see [Entailment
+   rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules)).
 
 For example, to construct a table of subjects belonging to classes that
 have `owl:maxCardinality 1` on some property `p`, we use the following
