@@ -125,12 +125,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // private val incunabulaPartOf =
   //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost, "UTF-8")
 
-  // The URLs and expected response files for each HTTP GET test.
   // private val httpGetTests = Seq(
-  //
-  //
-  //
-  //
   //   HttpGetTest(
   //     urlPath = s"/v2/ontologies/classes/$imagesBild",
   //     fileBasename = "imagesBild",
@@ -263,9 +258,11 @@ class OntologyFormatsE2ESpec extends E2ESpec {
             |
             |Response:
             |
-            |${responseStr}
+            |$responseStr
             |
-            |----------------------------
+            |
+            |${"=" * 120}
+            |
             |
             |Approved data:
             |
@@ -292,9 +289,11 @@ class OntologyFormatsE2ESpec extends E2ESpec {
             |
             |Response:
             |
-            |${responseStr}
+            |$responseStr
             |
-            |----------------------------
+            |
+            |${"=" * 120}
+            |
             |
             |Approved data:
             |
