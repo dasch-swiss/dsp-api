@@ -267,6 +267,21 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         clientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
       )
 
+    private val anythingOntologyThingSimple =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost_SIMPLE)}",
+        fileBasename = "anythingThingSimple",
+      )
+
+    private val anythingOntologyThingComplex =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost)}",
+        fileBasename = "anythingThing",
+        clientTestDataBasename = Some("get-class-anything-thing-response"),
+      )
+
     private val anythingOntologyHasListItemSimple =
       HttpGetTest(
         urlPath =
@@ -299,8 +314,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       anythingOntologySimple,
       anythingOntologyComplex,
       anythingThingWithAllLanguages,
-      // TODO: class segments of project ontologies
-      // project ontology properties
+      // class segments of project ontologies
+      anythingOntologyThingSimple,
+      anythingOntologyThingComplex,
+      // property segments of project ontologies
       anythingOntologyHasListItemSimple,
       anythingOntologyHasListItemComplex,
     )

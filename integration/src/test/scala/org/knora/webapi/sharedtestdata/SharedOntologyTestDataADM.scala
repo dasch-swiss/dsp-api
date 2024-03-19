@@ -17,6 +17,7 @@ object SharedOntologyTestDataADM {
   val ANYTHING_ONTOLOGY_IRI_LocalHost_SIMPLE: IRI         = LocalHost_Ontology + "/0001/anything/simple/v2"
   val ANYTHING_DATA_IRI: IRI                              = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0001/anything"
   val ANYTHING_THING_RESOURCE_CLASS_LocalHost: IRI        = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "Thing"
+  val ANYTHING_THING_RESOURCE_CLASS_LocalHost_SIMPLE: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost_SIMPLE + "#" + "Thing"
   val ANYTHING_HasListItem_PROPERTY_LocalHost: IRI        = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasListItem"
   val ANYTHING_HasListItem_PROPERTY_LocalHost_SIMPLE: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost_SIMPLE + "#" + "hasListItem"
   val ANYTHING_HasDate_PROPERTY_LocalHost: IRI            = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasDate"
