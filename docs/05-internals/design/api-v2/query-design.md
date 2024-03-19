@@ -7,7 +7,10 @@
 
 ## Inference
 
-DSP-API does not require the triplestore to perform inference, as different triplestores implement inference quite differently, so that taking advantage of inference would require triplestore specific code, which is not well maintainable. Instead, the API simulates inference for each Gravsearch query, so that the expected results are returned.
+DSP-API does not require the triplestore to perform inference, 
+as different triplestores implement inference quite differently, 
+so that taking advantage of inference would require triplestore specific code, which is not well maintainable. 
+Instead, the API simulates inference for each Gravsearch query, so that the expected results are returned.
 
 Gravsearch queries currently need to do the following:
 
@@ -38,13 +41,20 @@ This query:
 - Finds the Knora values attached to the resource, and returns each value along with
   the property that explicitly attaches it to the resource.
   
-However, such a query is very inefficient. Instead, the API does inference on the query, so that the relevant information can be found in a timely manner.
+However, such a query is very inefficient. 
+Instead, the API does inference on the query, so that the relevant information can be found in a timely manner.
 
-For this, the query is analyzed to check which project ontologies are relevant to the query. If an ontology is not relevant to a query, then all class and property definitions of this ontology are disregarded for inference.
+For this, the query is analyzed to check which project ontologies are relevant to the query. 
+If an ontology is not relevant to a query, 
+then all class and property definitions of this ontology are disregarded for inference.
 
-Then, each statement that requires inference (i.e. that could be phrased with property path syntax, as described above) is cross-referenced with the relevant ontologies, to see which property/class definitions would fit the statement according to the rules of RDF inference. And each of those definitions is added to the query as a separate `UNION` statement.
+Then, each statement that requires inference (i.e. that could be phrased with property path syntax, as described above) 
+is cross-referenced with the relevant ontologies, 
+to see which property/class definitions would fit the statement according to the rules of RDF inference. 
+And each of those definitions is added to the query as a separate `UNION` statement.
 
-E.g.: Given the resource class `B` is a subclass of `A` and the property `hasY` is a subproperty of `hasX`, then the following query
+E.g.: Given the resource class `B` is a subclass of `A` and the property `hasY` is a subproperty of `hasX`, 
+then the following query
 
 ```sparql
 SELECT {

@@ -1180,27 +1180,26 @@ relevant to the update.
 
 Moreover, the API enforces the following rules:
 
-  - An entity (i.e. a class or property) cannot be referred to until it
-    has been created.
-  - An entity cannot be modified or deleted if it is used in data,
-    except for changes to its `rdfs:label` or `rdfs:comment`.
-  - An entity cannot be modified if another entity refers to it, with
-    one exception: a `knora-api:subjectType` or `knora-api:objectType`
-    that refers to a class will not prevent the class's cardinalities
-    from being modified.
+- An entity (i.e. a class or property) cannot be referred to until it has been created.
+- An entity cannot be modified or deleted if it is used in data,
+  except for changes to its `rdfs:label` or `rdfs:comment`.
+- An entity cannot be modified if another entity refers to it, with
+  one exception: a `knora-api:subjectType` or `knora-api:objectType`
+  that refers to a class will not prevent the class's cardinalities
+  from being modified.
 
 Because of these rules, some operations have to be done in a specific
 order:
 
-  - Properties have to be defined before they can be used in the
-    cardinalities of a class, but a property's `knora-api:subjectType`
-    cannot refer to a class that does not yet exist. The recommended
-    approach is to first create a class with no cardinalities, then
-    create the properties that it needs, then add cardinalities for
-    those properties to the class.
-  - To delete a class along with its properties, the client must first
-    remove the cardinalities from the class, then delete the property
-    definitions, then delete the class definition.
+- Properties have to be defined before they can be used in the
+  cardinalities of a class, but a property's `knora-api:subjectType`
+  cannot refer to a class that does not yet exist. The recommended
+  approach is to first create a class with no cardinalities, then
+  create the properties that it needs, then add cardinalities for
+  those properties to the class.
+- To delete a class along with its properties, the client must first
+  remove the cardinalities from the class, then delete the property
+  definitions, then delete the class definition.
 
 When changing an existing ontology, the client must always supply the
 ontology's `knora-api:lastModificationDate`, which is returned in the
@@ -1797,7 +1796,8 @@ the property definition, submit the request without those predicates.
 
 ### Adding Cardinalities to a Class
 
-If the class (or any of its sub-classes) is used in data, it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
+If the class (or any of its sub-classes) is used in data, 
+it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
 
 ```
 HTTP POST to http://host/v2/ontologies/cardinalities
@@ -1853,23 +1853,30 @@ definition (but not any of the other entities in the ontology).
 It is possible to replace all cardinalities on properties used by a class.  
 If it succeeds the request will effectively replace all direct cardinalities of the class as specified.
 That is, it removes all the cardinalities from the class and replaces them with the submitted cardinalities. 
-Meaning that, if no cardinalities are submitted (i.e. the request contains no `rdfs:subClassOf`), the class is left with no cardinalities.
+Meaning that, if no cardinalities are submitted (i.e. the request contains no `rdfs:subClassOf`), 
+the class is left with no cardinalities.
 
 The request will fail if any of the "Pre-Update Checks" fails. 
 A partial update of the ontology will not be performed.
 
 #### Pre-Update Checks
 
-* _Ontology Check_
-    * Any given cardinality on a property must be included in any of the existing cardinalities for the same property of the super-classes.
-    * Any given cardinality on a property must include the effective cardinalities for the same property of all subclasses, taking into account the respective inherited cardinalities from the class hierarchy of the subclasses.
-* _Consistency Check with existing data_
-    * Given that instances of the class or any of its subclasses exist then these instances are checked if they conform to the given cardinality.
+- _Ontology Check_
+    - Any given cardinality on a property must be included in any of the existing cardinalities 
+      for the same property of the super-classes.
+    - Any given cardinality on a property must include the effective cardinalities 
+      for the same property of all subclasses, 
+      taking into account the respective inherited cardinalities from the class hierarchy of the subclasses.
+- _Consistency Check with existing data_
+    - Given that instances of the class or any of its subclasses exist,
+      then these instances are checked if they conform to the given cardinality.
 
 !!! note "Subproperty handling for cardinality pre-update checks"
     The Pre-Update check does not take into account any `subproperty` relations between the properties. 
-    Every cardinality is checked against only the given property and not its subproperties, neither in the ontology nor the consistency check with existing data. 
-    This means that currently it is necessary to maintain the cardinalities on all subproperties of a property in sync with the cardinalities on the superproperty.
+    Every cardinality is checked against only the given property and not its subproperties, 
+    neither in the ontology nor the consistency check with existing data. 
+    This means that currently it is necessary to maintain the cardinalities on all subproperties of a property 
+    in sync with the cardinalities on the superproperty.
 
 ```
 HTTP PUT to http://host/v2/ontologies/cardinalities
@@ -1926,6 +1933,7 @@ HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI?property
 The response will look like this:
 
 Failure:
+
 ```json
 {
   "knora-api:canDo": false,
@@ -1956,6 +1964,7 @@ Failure:
 ```
 
 Success:
+
 ```json
 {
     "knora-api:canDo": true,
@@ -1968,9 +1977,11 @@ Success:
 _Note_: The following check is still available but deprecated - use the more detailed check above.
 
 To check whether all class's cardinalities can be replaced:
+
 ```
 HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
 ```
+
 The response will look like this:
 
 ```json

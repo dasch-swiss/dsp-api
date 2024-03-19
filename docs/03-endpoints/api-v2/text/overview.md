@@ -58,8 +58,9 @@ which allows for creating project specific custom markup for text values.
 Details can be found [here](custom-standoff.md).
 
 !!! info
-    Custom markup is not supported by DSP-TOLS and is viewe-only in DSP-APP.  
-    Creating custom markup is relatively involved, so that it should only be used by projects working with complex textual data.
+    Custom markup is not supported by DSP-TOOLS and is view-only in DSP-APP.  
+    Creating custom markup is relatively involved, 
+    so that it should only be used by projects working with complex textual data.
 
 
 ## File Based

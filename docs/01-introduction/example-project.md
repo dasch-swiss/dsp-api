@@ -117,7 +117,8 @@ have the same predicate; a comma (`,`) is used to avoid repeating the
 predicate. The definition of `:title` says:
 
 * `rdf:type owl:ObjectProperty`: It is an `owl:ObjectProperty`. There are
-  two kinds of OWL properties: object properties and datatype properties. Object properties point to objects, which have IRIs and
+  two kinds of OWL properties: object properties and datatype properties. 
+  Object properties point to objects, which have IRIs and
   can have their own properties. Datatype properties point to literal
   values, such as strings and integers.
 * `rdfs:subPropertyOf knora-base:hasValue, dcterms:title`: It is a

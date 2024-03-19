@@ -105,7 +105,9 @@ the string is invalid, `requireStringWithValidation` throws `BadRequestException
 It is also possible to get and validate an optional JSON-LD object member:
 
 ```scala
-val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra, DateEraV2.parse)
+val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra, DateEraV2.parse
+)
 ```
 
 Here `JsonLDObject.maybeStringWithValidation` returns an `Option` that contains

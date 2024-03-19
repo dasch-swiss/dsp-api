@@ -57,19 +57,19 @@ An ontology name must be a valid XML
 [NCName](https://www.w3.org/TR/xml-names/#NT-NCName) and must be URL safe.
 The following names are reserved for built-in internal DSP ontologies:
 
-  - `knora-base`
-  - `standoff`
-  - `salsah-gui`
+- `knora-base`
+- `standoff`
+- `salsah-gui`
 
 Names starting with `knora` are reserved for future built-in Knora
 ontologies. A user-created ontology name may not start with the
 letter `v` followed by a digit, and may not contain these reserved
 words:
 
-  - `knora`
-  - `ontology`
-  - `simple`
-  - `shared`
+- `knora`
+- `ontology`
+- `simple`
+- `shared`
 
 ### External Ontology IRIs
 
@@ -103,13 +103,13 @@ of `knora-base` is called `knora-api`.
 The API version identifier indicates not only the version of the API,
 but also an API 'schema'. The DSP-API v2 is available in two schemas:
 
-  - A complex schema, which is suitable both for reading and for editing
-    data. The complex schema represents values primarily as complex
-    objects. Its version identifier is `v2`.
-  - A simple schema, which is suitable for reading data but not for
-    editing it. The simple schema facilitates interoperability between
-    DSP ontologies and non-DSP ontologies, since it represents
-    values primarily as literals. Its version identifier is `simple/v2`.
+- A complex schema, which is suitable both for reading and for editing
+  data. The complex schema represents values primarily as complex
+  objects. Its version identifier is `v2`.
+- A simple schema, which is suitable for reading data but not for
+  editing it. The simple schema facilitates interoperability between
+  DSP ontologies and non-DSP ontologies, since it represents
+  values primarily as literals. Its version identifier is `simple/v2`.
 
 Other schemas could be added in the future for more specific use cases.
 
@@ -122,20 +122,16 @@ For example, suppose a DSP-API server is running at
 `http://www.knora.org/ontology/0001/example`. That ontology can then be
 requested using either of these IRIs:
 
-  - `http://knora.example.org/ontology/0001/example/v2` (in the complex
-    schema)
-  - `http://knora.example.org/ontology/0001/example/simple/v2` (in the
-    simple schema)
+- `http://knora.example.org/ontology/0001/example/v2` (in the complex schema)
+- `http://knora.example.org/ontology/0001/example/simple/v2` (in the simple schema)
 
 While the internal `example` ontology refers to definitions in
 `knora-base`, the external `example` ontology that is served by the API
 refers instead to a `knora-api` ontology, whose IRI depends on the
 schema being used:
 
-  - `http://api.knora.org/ontology/knora-api/v2` (in the complex
-    schema)
-  - `http://api.knora.org/ontology/knora-api/simple/v2` (in the simple
-    schema)
+- `http://api.knora.org/ontology/knora-api/v2` (in the complex schema)
+- `http://api.knora.org/ontology/knora-api/simple/v2` (in the simple schema)
 
 ### Ontology Entity IRIs
 
@@ -150,12 +146,9 @@ Thus, if there is a class called `ExampleThing` in an ontology whose
 internal IRI is `http://www.knora.org/ontology/0001/example`, that class
 has the following IRIs:
 
-  - `http://www.knora.org/ontology/0001/example#ExampleThing` (in the
-    internal ontology)
-  - `http://HOST[:PORT]/ontology/0001/example/v2#ExampleThing` (in the
-    API v2 complex schema)
-  - `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing`
-    (in the API v2 simple schema)
+- `http://www.knora.org/ontology/0001/example#ExampleThing` (in the internal ontology)
+- `http://HOST[:PORT]/ontology/0001/example/v2#ExampleThing` (in the API v2 complex schema)
+- `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing` (in the API v2 simple schema)
 
 ### Shared Ontology IRIs
 
@@ -178,9 +171,9 @@ The internal and external IRIs of shared ontologies always use the hostname
 The project code can be omitted, in which case the default shared ontology
 project, `0000`, is assumed. The sample shared ontology, `example-box`, has these IRIs:
 
-  - `http://www.knora.org/ontology/shared/example-box` (internal)
-  - `http://api.knora.org/ontology/shared/example-box/v2` (external, complex schema)
-  - `http://api.knora.org/ontology/shared/example-box/simple/v2` (external, simple schema)
+- `http://www.knora.org/ontology/shared/example-box` (internal)
+- `http://api.knora.org/ontology/shared/example-box/v2` (external, complex schema)
+- `http://api.knora.org/ontology/shared/example-box/simple/v2` (external, simple schema)
 
 ## IRIs for Data
 
@@ -202,18 +195,18 @@ citable, it needs to be a resource, not a value.
 The formats of generated data IRIs for different types of objects are as
 follows:
 
-  - Resource: `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID`.
-  - Value:
-    `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID`
-  - Standoff tag:
-    `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID/STANDOFF_UUID`
-  - XML-to-standoff mapping:
-    `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
-  - XML-to-standoff mapping element:
-    `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
-  - Project: `http://rdfh.ch/projects/PROJECT_UUID`
-  - Group: `http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID`
-  - Permission:
-    `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
-  - Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
-  - User: `http://rdfh.ch/users/USER_UUID`
+- Resource: `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID`.
+- Value:
+  `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID`
+- Standoff tag:
+  `http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID/STANDOFF_UUID`
+- XML-to-standoff mapping:
+  `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME`
+- XML-to-standoff mapping element:
+  `http://rdfh.ch/projects/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID`
+- Project: `http://rdfh.ch/projects/PROJECT_UUID`
+- Group: `http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID`
+- Permission:
+  `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
+- Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
+- User: `http://rdfh.ch/users/USER_UUID`
