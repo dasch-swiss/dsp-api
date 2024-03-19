@@ -45,7 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -242,7 +242,7 @@ final case class PermissionsResponderADMLive(
   iriService: IriService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter,
 ) extends PermissionsResponderADM
@@ -1529,7 +1529,7 @@ final case class PermissionsResponderADMLive(
         projectIri <- ZIO
                         .fromEither(ProjectIri.from(createRequest.forProject))
                         .mapError(BadRequestException.apply)
-        project <- projectRepo
+        project <- knoraProjectService
                      .findById(projectIri)
                      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
         _ <- auth.ensureSystemAdminSystemUserOrProjectAdmin(user, project)
@@ -2224,14 +2224,14 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive,
   ] = ZLayer.fromZIO {
     for {
       au      <- ZIO.service[AuthorizationRestService]
       ac      <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]
-      kpr     <- ZIO.service[KnoraProjectRepo]
+      kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]

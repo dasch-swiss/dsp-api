@@ -47,7 +47,6 @@ import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -79,10 +78,10 @@ object LayersLive {
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsService & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
-      IriService & JwtService & KnoraProjectRepo & KnoraUserService & ListsResponder & ListsResponderV2 &
-      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
+      IriService & JwtService & ListsResponder & ListsResponderV2 &
+      MessageRelay & OntologyHelpers & OntologyCache & OntologyInferencer & OntologyResponderV2 &
       PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
-      ProjectADMRestService & ProjectService & ProjectExportService & ProjectExportStorageService &
+      ProjectADMRestService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StoreRestService &
