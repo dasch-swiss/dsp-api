@@ -73,7 +73,7 @@ To override this default behaviour, start the container by supplying
 another config file:
 
 ```bash
-$ docker run --name sipi \
+docker run --name sipi \
              -d \
              -p 1024:1024 \
              daschswiss/sipi \
@@ -84,7 +84,7 @@ You can also mount a directory (the local directory in this example),
 and use a config file that is outside of the docker container:
 
 ```bash
-$ docker run --name sipi \
+docker run --name sipi \
              -d \
              -p 1024:1024 \
              -v $PWD:/localdir \
