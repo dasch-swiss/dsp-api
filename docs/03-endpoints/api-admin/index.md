@@ -3,4 +3,4 @@ The latest version is located at [api.dasch.swiss/api/docs/docs.yaml](https://ap
 For an interactive documentation of all API endpoints, 
 please visit [api.dasch.swiss/api/docs/](https://api.dasch.swiss/api/docs/).
 
-[OAD](./docs/03-endpoints/generated-openapi/openapi-admin-api.yml)
+[OAD](../generated-openapi/openapi-admin-api.yml)
