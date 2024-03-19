@@ -93,7 +93,7 @@ case class ProjectChangeRequestADM(
 // Responses
 
 object ProjectCodec {
-  implicit val projectCodec: JsonCodec[ProjectADM] = DeriveJsonCodec.gen[ProjectADM]
+  implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]
 }
 
 /**
@@ -101,7 +101,7 @@ object ProjectCodec {
  *
  * @param projects information about all existing projects.
  */
-case class ProjectsGetResponse(projects: Seq[ProjectADM])
+case class ProjectsGetResponse(projects: Seq[Project])
 object ProjectsGetResponse {
   // can be removed as soon as ProjectADM can define its own codec
   import ProjectCodec.projectCodec
@@ -113,7 +113,7 @@ object ProjectsGetResponse {
  *
  * @param project all information about the project.
  */
-case class ProjectGetResponse(project: ProjectADM)
+case class ProjectGetResponse(project: Project)
 object ProjectGetResponse {
   // can be removed as soon as ProjectADM can define its own codec
   import ProjectCodec.projectCodec
@@ -193,7 +193,7 @@ object PermissionCodeAndProjectRestrictedViewSettings {
  *
  * @param project the new project info of the created/modified project.
  */
-case class ProjectOperationResponseADM(project: ProjectADM) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectOperationResponseADM(project: Project) extends AdminKnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
@@ -214,7 +214,7 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends AdminKnoraRe
  * @param status      The project's status.
  * @param selfjoin    The project's self-join status.
  */
-case class ProjectADM(
+case class Project(
   id: IRI,
   shortname: String,
   shortcode: String,
@@ -225,7 +225,7 @@ case class ProjectADM(
   ontologies: Seq[IRI],
   status: Boolean,
   selfjoin: Boolean,
-) extends Ordered[ProjectADM] {
+) extends Ordered[Project] {
 
   def projectIri: ProjectIri = ProjectIri.unsafeFrom(id)
 
@@ -239,12 +239,12 @@ case class ProjectADM(
   /**
    * Allows to sort collections of ProjectADM. Sorting is done by the id.
    */
-  def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
+  def compare(that: Project): Int = this.id.compareTo(that.id)
 
   override def equals(that: Any): Boolean =
     // Ignore the order of sequences when testing equality for this class.
     that match {
-      case otherProj: ProjectADM =>
+      case otherProj: Project =>
         id == otherProj.id &&
         shortname == otherProj.shortname &&
         shortcode == otherProj.shortcode &&
@@ -274,7 +274,7 @@ case class ProjectADM(
       .append(selfjoin)
       .toHashCode
 
-  def unescape: ProjectADM = {
+  def unescape: Project = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
       V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
@@ -409,9 +409,9 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 
-  implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
+  implicit val projectADMFormat: JsonFormat[Project] = lazyFormat(
     jsonFormat(
-      ProjectADM.apply,
+      Project.apply,
       "id",
       "shortname",
       "shortcode",

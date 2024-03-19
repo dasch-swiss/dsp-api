@@ -35,7 +35,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -48,7 +48,7 @@ final case class UsersRestService(
   knoraUserToUserConverter: KnoraUserToUserConverter,
   userRepo: KnoraUserRepo,
   passwordService: PasswordService,
-  projectService: ProjectADMService,
+  projectService: ProjectService,
   responder: UsersResponder,
   format: KnoraResponseRenderer,
 ) {

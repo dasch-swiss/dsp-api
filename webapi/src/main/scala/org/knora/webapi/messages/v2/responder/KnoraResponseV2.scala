@@ -10,7 +10,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
@@ -255,5 +255,5 @@ trait UpdateResultInProject {
   /**
    * The project that was updated.
    */
-  def projectADM: ProjectADM
+  def projectADM: Project
 }

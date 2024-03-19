@@ -91,7 +91,7 @@ final case class MaintenanceService(
     } yield (dim, iri)
 
   private def checkDimensionsQuery(project: KnoraProject, assetId: AssetId) = {
-    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     Select(s"""
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -115,7 +115,7 @@ final case class MaintenanceService(
     triplestoreService.query(transposeUpdate(project, stillImageFileValueIri)).asSomeError
 
   private def transposeUpdate(project: KnoraProject, stillImageFileValueIri: InternalIri) = {
-    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     Update(
       s"""
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

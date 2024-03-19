@@ -11,20 +11,20 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.valueobjects.V2.StringLiteralV2
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
-object ProjectADMServiceSpec extends ZIOSpecDefault {
+object ProjectServiceSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] =
     suite("projectDataNamedGraphV2 should return the data named graph of a project with shortcode for")(
       test("a ProjectADM") {
         val shortname = "someProject"
         val shortcode = "0001"
-        val p = ProjectADM(
+        val p = Project(
           id = IriTestConstants.Project.TestProject,
           shortname = shortname,
           shortcode = shortcode,
@@ -37,7 +37,7 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           selfjoin = true,
         )
         assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
+          ProjectService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname",
         )
       },
       test("a KnoraProject") {
@@ -56,7 +56,7 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           restrictedView = RestrictedView.default,
         )
         assertTrue(
-          ProjectADMService
+          ProjectService
             .projectDataNamedGraphV2(p)
             .value == s"http://www.knora.org/data/$shortcode/$shortname",
         )

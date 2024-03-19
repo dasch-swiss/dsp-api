@@ -131,7 +131,7 @@ object LayersTest {
       with PermissionsRestService
       with PredicateObjectMapper
       with ProjectADMRestService
-      with ProjectADMService
+      with ProjectService
       with ProjectExportService
       with ProjectExportStorageService
       with ProjectImportService
@@ -218,7 +218,7 @@ object LayersTest {
       PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectADMService.layer,
+      ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,

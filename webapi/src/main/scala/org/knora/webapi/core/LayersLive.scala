@@ -83,7 +83,7 @@ object LayersLive {
       IriService & JwtService & KnoraProjectRepo & KnoraUserService & ListsResponder & ListsResponderV2 &
       MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
       PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
-      ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
+      ProjectADMRestService & ProjectService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StoreRestService &
@@ -157,7 +157,7 @@ object LayersLive {
       PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectADMService.layer,
+      ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,

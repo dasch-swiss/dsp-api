@@ -29,7 +29,7 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.rdf.*
@@ -69,7 +69,7 @@ case class CreateValueResponseV2(
   valueType: SmartIri,
   valueUUID: UUID,
   valueCreationDate: Instant,
-  projectADM: ProjectADM,
+  projectADM: Project,
 ) extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
   override def toJsonLDDocument(
@@ -112,7 +112,7 @@ case class CreateValueResponseV2(
  * @param valueUUID  the value's UUID.
  * @param projectADM the project in which the value was updated.
  */
-case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: UUID, projectADM: ProjectADM)
+case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: UUID, projectADM: Project)
     extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
   override def toJsonLDDocument(
@@ -383,7 +383,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
    */
   def toJsonLD(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -1015,7 +1015,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
    */
   def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue
@@ -1205,7 +1205,7 @@ case class DateValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -1458,7 +1458,7 @@ case class TextValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -1784,7 +1784,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -1860,7 +1860,7 @@ case class DecimalValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -1945,7 +1945,7 @@ case class BooleanValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2012,7 +2012,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2097,7 +2097,7 @@ case class IntervalValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2206,7 +2206,7 @@ case class TimeValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2302,7 +2302,7 @@ case class HierarchicalListValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2395,7 +2395,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2473,7 +2473,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -2563,7 +2563,7 @@ case class GeonameValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -2690,12 +2690,12 @@ case class StillImageFileValueContentV2(
   override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 =
     copy(ontologySchema = targetSchema)
 
-  def makeFileUrl(projectADM: ProjectADM, url: String): String =
+  def makeFileUrl(projectADM: Project, url: String): String =
     s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -2792,7 +2792,7 @@ case class DocumentFileValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -2854,7 +2854,7 @@ case class ArchiveFileValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -2955,7 +2955,7 @@ case class TextFileValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -3031,7 +3031,7 @@ case class AudioFileValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -3108,7 +3108,7 @@ case class MovingImageFileValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = {
@@ -3208,7 +3208,7 @@ case class LinkValueContentV2(
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue =
@@ -3316,7 +3316,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
+    projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
   ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
