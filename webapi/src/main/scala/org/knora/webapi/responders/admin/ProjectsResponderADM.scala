@@ -32,7 +32,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.CacheService
@@ -169,7 +169,7 @@ final case class ProjectsResponderADMLive(
   private val cacheService: CacheService,
   private val permissionsResponderADM: PermissionsResponderADM,
   private val predicateObjectMapper: PredicateObjectMapper,
-  private val projectService: ProjectADMService,
+  private val projectService: ProjectService,
   private val triplestore: TriplestoreService,
   private val userService: UserService,
   implicit private val stringFormatter: StringFormatter,
@@ -777,7 +777,7 @@ object ProjectsResponderADMLive {
     for {
       iris    <- ZIO.service[IriService]
       cs      <- ZIO.service[CacheService]
-      ps      <- ZIO.service[ProjectADMService]
+      ps      <- ZIO.service[ProjectService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       po      <- ZIO.service[PredicateObjectMapper]

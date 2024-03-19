@@ -19,7 +19,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.cache.CacheService
 
-final case class ProjectADMService(
+final case class ProjectService(
   private val ontologyRepo: OntologyRepo,
   private val projectRepo: KnoraProjectRepo,
   private val cacheService: CacheService,
@@ -90,7 +90,7 @@ final case class ProjectADMService(
     } yield result
 
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
-    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     ontologyRepo
       .findByProject(project.id)
       .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
@@ -109,7 +109,7 @@ final case class ProjectADMService(
     setProjectRestrictedView(toKnoraProject(project, settings), settings)
 }
 
-object ProjectADMService {
+object ProjectService {
 
   /**
    * Given the [[ProjectADM]] constructs the project's data named graph.
@@ -135,5 +135,5 @@ object ProjectADMService {
   private def projectDataNamedGraphV2(shortcode: Shortcode, shortname: Shortname) =
     InternalIri(s"${OntologyConstants.NamedGraphs.DataNamedGraphStart}/${shortcode.value}/${shortname.value}")
 
-  val layer = ZLayer.derive[ProjectADMService]
+  val layer = ZLayer.derive[ProjectService]
 }

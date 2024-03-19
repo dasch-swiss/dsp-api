@@ -118,7 +118,7 @@ private object TriGCombiner {
 }
 
 final case class ProjectExportServiceLive(
-  private val projectService: ProjectADMService,
+  private val projectService: ProjectService,
   private val triplestore: TriplestoreService,
   private val dspIngestClient: DspIngestClient,
   private val exportStorage: ProjectExportStorageService,
