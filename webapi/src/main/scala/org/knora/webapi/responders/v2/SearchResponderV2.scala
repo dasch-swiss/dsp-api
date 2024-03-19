@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.macros.accessible
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -82,7 +81,7 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2
       ),
     )
 }
-@accessible
+
 trait SearchResponderV2 {
 
   /**
@@ -151,7 +150,7 @@ trait SearchResponderV2 {
    */
   def fulltextSearchV2(
     searchValue: IRI,
-    offset: RuntimeFlags,
+    offset: Int,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
@@ -187,7 +186,7 @@ trait SearchResponderV2 {
    */
   def searchResourcesByLabelV2(
     searchValue: String,
-    offset: RuntimeFlags,
+    offset: Int,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
@@ -209,7 +208,7 @@ trait SearchResponderV2 {
     projectIri: SmartIri,
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
-    page: RuntimeFlags,
+    page: Int,
     schemaAndOptions: SchemaRendering,
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2]

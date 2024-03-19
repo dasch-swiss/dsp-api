@@ -6,11 +6,13 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio.Exit
+import zio.ZIO
 import zio.test.*
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID.randomUUID
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
@@ -30,7 +32,6 @@ import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.unknownProjectIRI
-import zio.ZIO
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
 
