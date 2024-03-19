@@ -535,7 +535,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.description.nonEmpty) {
       projectUpdatePayload.description
         .map(_.map(_.value))
-        .map(_.map(d => StringLiteralV2(Iri.fromSparqlEncodedString(d.value), d.language)))
+        .map(_.map(d => StringLiteralV2.from(Iri.fromSparqlEncodedString(d.value), d.language)))
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
           throw UpdateNotPerformedException(

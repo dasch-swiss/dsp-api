@@ -108,7 +108,8 @@ object SparqlExtendedConstructResponse {
                       ),
                     )
 
-                  case OntologyConstants.Xsd.String => StringLiteralV2(value = datatypeLiteral.value, language = None)
+                  case OntologyConstants.Xsd.String =>
+                    StringLiteralV2.from(value = datatypeLiteral.value, language = None)
 
                   case OntologyConstants.Xsd.Decimal =>
                     DecimalLiteralV2(
@@ -123,7 +124,7 @@ object SparqlExtendedConstructResponse {
                 }
 
               case stringWithLanguage: StringWithLanguage =>
-                StringLiteralV2(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
+                StringLiteralV2.from(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
             }
         }
 
@@ -311,7 +312,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
  * @param value    the string value.
  * @param language the language iso.
  */
-case class StringLiteralV2(value: String, language: Option[String])
+case class StringLiteralV2 private (value: String, language: Option[String])
     extends LiteralV2
     with OntologyLiteralV2
     with Ordered[StringLiteralV2] {
@@ -328,7 +329,7 @@ object StringLiteralV2 {
 
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
     case _ if language.isDefined && value.isEmpty => throw BadRequestException("String value is missing.")
-    case _                                        => StringLiteralV2(value, language)
+    case _                                        => StringLiteralV2.from(value, language)
   }
 
 }
@@ -538,19 +539,19 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       case stringWithLang: JsObject =>
         stringWithLang.getFields("value", "language") match {
           case Seq(JsString(value), JsString(language)) =>
-            StringLiteralV2(
+            StringLiteralV2.from(
               value = value,
               language = Some(language),
             )
           case Seq(JsString(value)) =>
-            StringLiteralV2(
+            StringLiteralV2.from(
               value = value,
               language = None,
             )
           case _ =>
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
         }
-      case JsString(value) => StringLiteralV2(value, None)
+      case JsString(value) => StringLiteralV2.from(value, None)
       case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
     }
   }

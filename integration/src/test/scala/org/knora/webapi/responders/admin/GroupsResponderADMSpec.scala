@@ -68,7 +68,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 descriptions = GroupDescriptions
                   .unsafeFrom(
                     Seq(
-                      StringLiteralV2(
+                      StringLiteralV2.from(
                         value = """NewGroupDescription with "quotes" and <html tag>""",
                         language = Some("en"),
                       ),
@@ -86,7 +86,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         val newGroupInfo = response.group
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
-          Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en"))),
+          Seq(StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", Some("en"))),
         )
         newGroupInfo.project should equal(imagesProject)
         newGroupInfo.status should equal(true)
@@ -105,7 +105,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
                 name = groupName,
                 descriptions = GroupDescriptions
-                  .unsafeFrom(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
+                  .unsafeFrom(Seq(StringLiteralV2.from(value = "NewGroupDescription", language = Some("en")))),
                 project = ProjectIri.unsafeFrom(imagesProjectIri),
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
@@ -129,7 +129,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
                   GroupDescriptions.unsafeFrom(
-                    Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+                    Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
                   ),
                 ),
                 status = Some(GroupStatus.active),
@@ -142,7 +142,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         val updatedGroupInfo = response.group
         updatedGroupInfo.name should equal("UpdatedGroupName")
         updatedGroupInfo.descriptions should equal(
-          Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+          Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
         )
         updatedGroupInfo.project should equal(imagesProject)
         updatedGroupInfo.status should equal(true)
@@ -159,7 +159,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
                   GroupDescriptions
-                    .unsafeFrom(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
+                    .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", language = Some("en")))),
                 ),
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
@@ -184,7 +184,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(groupName),
                 descriptions = Some(
                   GroupDescriptions
-                    .unsafeFrom(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
+                    .unsafeFrom(Seq(StringLiteralV2.from(value = "UpdatedDescription", language = Some("en")))),
                 ),
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),

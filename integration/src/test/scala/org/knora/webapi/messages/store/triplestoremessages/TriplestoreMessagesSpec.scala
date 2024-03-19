@@ -9,8 +9,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.*
 
-import org.knora.webapi.messages.admin.responder.listsmessages.*
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 
 /**
  * This spec is used to test 'ListAdminMessages'.
@@ -21,7 +21,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
 
     "work for a 'StringLiteralV2' without language iso" in {
 
-      val string = StringLiteralV2("stringwithoutlang", None)
+      val string = StringLiteralV2.from("stringwithoutlang", None)
       val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithoutlang\"}")
@@ -33,7 +33,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
 
     "work for a 'StringLiteralV2' with language iso" in {
 
-      val string = StringLiteralV2("stringwithlang", Some("de"))
+      val string = StringLiteralV2.from("stringwithlang", Some("de"))
       val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")

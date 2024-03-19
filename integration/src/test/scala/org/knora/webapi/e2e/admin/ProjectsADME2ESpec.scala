@@ -222,7 +222,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
-        result.description should be(Seq(StringLiteralV2("a project created with a custom IRI", Some("en"))))
+        result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -303,7 +303,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
-        result.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+        result.description should be(Seq(StringLiteralV2.from(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
@@ -450,7 +450,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
-          Seq(StringLiteralV2(value = "updated project description", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "updated project description", language = Some("en"))),
         )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
@@ -498,8 +498,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.description.size should be(2)
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("en")))
-        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("se")))
+        result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("en")))
+        result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

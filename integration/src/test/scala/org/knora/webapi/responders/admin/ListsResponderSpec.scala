@@ -124,8 +124,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listCreateRootNode(
             ListCreateRootNodeRequest(
               id = None,
-              Comments.unsafeFrom(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de")))),
-              Labels.unsafeFrom(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+              Comments.unsafeFrom(Seq(StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")))),
+              Labels.unsafeFrom(Seq(StringLiteralV2.from(value = "Neue Liste", language = Some("de")))),
               Some(ListName.unsafeFrom("neuelistename")),
               ProjectIri.unsafeFrom(imagesProjectIri),
             ),
@@ -140,7 +140,7 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
+        labels.head should be(StringLiteralV2.from(value = "Neue Liste", language = Some("de")))
 
         val comments: Seq[StringLiteralV2] = listInfo.comments.stringLiterals
         comments.isEmpty should be(false)
@@ -160,8 +160,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listCreateRootNode(
             ListCreateRootNodeRequest(
               id = None,
-              Comments.unsafeFrom(Seq(StringLiteralV2(commentWithSpecialCharacter, language = Some("de")))),
-              Labels.unsafeFrom(Seq(StringLiteralV2(labelWithSpecialCharacter, language = Some("de")))),
+              Comments.unsafeFrom(Seq(StringLiteralV2.from(commentWithSpecialCharacter, language = Some("de")))),
+              Labels.unsafeFrom(Seq(StringLiteralV2.from(labelWithSpecialCharacter, language = Some("de")))),
               Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
               ProjectIri.unsafeFrom(imagesProjectIri),
             ),
@@ -197,8 +197,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           labels = Some(
             Labels.unsafeFrom(
               Seq(
-                StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed List", language = Some("en")),
+                StringLiteralV2.from(value = "Neue geänderte Liste", language = Some("de")),
+                StringLiteralV2.from(value = "Changed List", language = Some("en")),
               ),
             ),
           ),
@@ -206,8 +206,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             Comments
               .unsafeFrom(
                 Seq(
-                  StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                  StringLiteralV2(value = "New Comment", language = Some("en")),
+                  StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")),
+                  StringLiteralV2.from(value = "New Comment", language = Some("en")),
                 ),
               ),
           ),
@@ -225,8 +225,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         labels.size should be(2)
         labels.sorted should be(
           Seq(
-            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-            StringLiteralV2(value = "Changed List", language = Some("en")),
+            StringLiteralV2.from(value = "Neue geänderte Liste", language = Some("de")),
+            StringLiteralV2.from(value = "Changed List", language = Some("en")),
           ).sorted,
         )
 
@@ -234,8 +234,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         comments.size should be(2)
         comments.sorted should be(
           Seq(
-            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-            StringLiteralV2(value = "New Comment", language = Some("en")),
+            StringLiteralV2.from(value = "Neuer Kommentar", language = Some("de")),
+            StringLiteralV2.from(value = "New Comment", language = Some("en")),
           ).sorted,
         )
       }
@@ -262,11 +262,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2.from(value = "New First Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2.from(value = "New First Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("first")),
               ListIri.unsafeFrom(newListIri.get),
@@ -288,14 +288,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New First Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New First Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -316,11 +316,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2.from(value = "New Second Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2.from(value = "New Second Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("second")),
               ListIri.unsafeFrom(newListIri.get),
@@ -343,14 +343,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New Second Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New Second Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -371,11 +371,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2.from(value = "New Third Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2.from(value = "New Third Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("third")),
               ListIri.unsafeFrom(secondChildIri.get),
@@ -398,14 +398,14 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
         labels.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New Third Child List Node Value", language = Some("en"))),
         )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "New Third Child List Node Comment", language = Some("en"))),
         )
 
         // check position
@@ -428,11 +428,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2.from(value = "New Fourth Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2.from(value = "New Fourth Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("fourth")),
               ListIri.unsafeFrom(newListIri.get),

@@ -277,7 +277,7 @@ case class Project(
   def unescape: Project = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
-      StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
+      StringLiteralV2.from(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
     )
     val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
     copy(

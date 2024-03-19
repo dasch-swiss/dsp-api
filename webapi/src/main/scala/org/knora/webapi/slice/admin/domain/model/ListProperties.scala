@@ -83,7 +83,7 @@ object ListProperties {
           Validation
             .fromOption(Iri.toSparqlEncodedString(l.value))
             .mapError(_ => "Invalid label.")
-            .map(StringLiteralV2(_, l.language)),
+            .map(StringLiteralV2.from(_, l.language)),
         )
         Validation.validateAll(validatedLabels).map(Labels.apply).toEitherWith(_.head)
       }
@@ -99,7 +99,7 @@ object ListProperties {
           Validation
             .fromOption(Iri.toSparqlEncodedString(c.value))
             .mapError(_ => "Invalid comment.")
-            .map(s => StringLiteralV2(s, c.language)),
+            .map(s => StringLiteralV2.from(s, c.language)),
         )
         Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
       }
