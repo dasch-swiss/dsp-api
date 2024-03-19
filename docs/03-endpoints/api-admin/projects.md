@@ -163,10 +163,12 @@ Errors:
 - `401 Unauthorized` if authorization failed.
 
 ### Default set of RestrictedViewSize
+
 Starting from DSP 2023.10.02 release, the creation of new project will also set the `RestrictedViewSize` to default
 value, which is: `!512,512`. It is possible to change the value using [dedicated routes](#set-restricted-view-settings).
 
-#### Default set of permissions for a new project:
+#### Default set of permissions for a new project
+
 When a new project is created, following default permissions are added to its admins and members:
 
 - ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
@@ -322,8 +324,8 @@ Example response:
 Errors:
 
 - `400 Bad Request`
-  - if the provided IRI is not valid.
-  - if the provided payload is not valid.
+    - if the provided IRI is not valid.
+    - if the provided payload is not valid.
 - `404 Not Found` if no project with the provided IRI is found.
 
 
@@ -562,6 +564,7 @@ NB:
 Permissions: SystemAdmin / ProjectAdmin
 
 Request definition: 
+
 - `GET /admin/projects/shortcode/{shortcode}/admin-members`
 - `GET /admin/projects/shortname/{shortname}/admin-members`
 - `GET /admin/projects/iri/{iri}/admin-members`
@@ -756,6 +759,7 @@ Example response:
 Permissions:
 
 Request definition:
+
 - `GET /admin/projects/iri/{iri}/Keywords`
 
 Description: returns the keywords of a single project
@@ -824,10 +828,10 @@ Example response:
 Set how all still image resources of a projects should be displayed when viewed as restricted. 
 This can be either a size restriction or a watermark. 
 
-For that, we support two of the (IIIF size)[https://iiif.io/api/image/3.0/#42-size] forms:
+For that, we support two of the [IIIF size](https://iiif.io/api/image/3.0/#42-size) forms:
 
-  * `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
-  * `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
+- `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
+- `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
 
 
 If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size `!128,128` is set.
@@ -845,11 +849,13 @@ Description: Set the project's restricted view
 The endpoint accepts either a size or a watermark but not both.
 
 Size:
+
 ```json
 { "size": "!512,512" }
 ```
 
 Watermark:
+
 ```json
 { "watermark": true }
 ```
@@ -857,23 +863,29 @@ Watermark:
 Examples :
 
 Request:
+
 ```bash
 curl --request POST 'http://0.0.0.0:5555/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
 --data '{"size": "!512,512"}
 ```
+
 Response:
+
 ```json
 { "size": "!512,512" }
 ```
 
 Request:
+
 ```bash
 curl --request POST 'http://0.0.0.0:5555/admin/projects/shortcode/0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
 --data '{"watermark": true}'
 ```
+
 Response:
+
 ```json
 { "watermark": true }
 ```

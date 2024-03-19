@@ -95,8 +95,8 @@ As a response, the created administrative permission and its IRI are returned as
 permission types](../../05-internals/design/api-admin/administration.md#administrative-permissions).
 In summary, each permission should contain followings:
 
-  - `additionalInformation`: should be left empty, otherwise will be ignored.
-  - `name` : indicates the type of the permission that can be one of the followings:
+- `additionalInformation`: should be left empty, otherwise will be ignored.
+- `name` : indicates the type of the permission that can be one of the followings:
     - `ProjectAdminAllPermission`: gives the user the permission to do anything
      on project level, i.e. create new groups, modify all
      existing groups
@@ -114,7 +114,7 @@ In summary, each permission should contain followings:
      inside the project.
     - `ProjectResourceCreateRestrictedPermission`: gives restricted resource creation permission
      inside the project.
-  - `permissionCode`: should be left empty, otherwise will be ignored.
+- `permissionCode`: should be left empty, otherwise will be ignored.
 
 
 Note that during the creation of a new project, a default set of administrative permissions are added to its ProjectAdmin and 
@@ -153,14 +153,14 @@ default object access permission for a group of a project the request body would
 permission types](../../05-internals/design/api-admin/administration.md#default-object-access-permissions). 
 In summary, each permission should contain followings:
 
-  - `additionalInformation`: To whom the permission should be granted: project members, known users, unknown users, etc.
-  - `name` : indicates the type of the permission that can be one of the followings.
+- `additionalInformation`: To whom the permission should be granted: project members, known users, unknown users, etc.
+- `name` : indicates the type of the permission that can be one of the followings.
     - `RV`: restricted view permission (least privileged)
     - `V`: view permission
     - `M` modify permission
     - `D`: delete permission
     - `CR`: change rights permission (most privileged)
-  - `permissionCode`: The code assigned to a permission indicating its hierarchical level. These codes are as below:
+- `permissionCode`: The code assigned to a permission indicating its hierarchical level. These codes are as below:
     - `1`: for restricted view permission (least privileged)
     - `2`: for view permission
     - `6`: for modify permission
@@ -228,6 +228,7 @@ group as below:
     "forGroup": "http://www.knora.org/ontology/knora-admin#ProjectMember"
 }
 ```
+
 When updating an administrative permission, its previous `forGroup` value will be replaced with the new one.
 When updating a default object access permission, if it originally had a `forGroup` value defined, it will be replaced 
 with the new group. Otherwise, if the default object access permission was defined for a resource class or a property or 
@@ -289,6 +290,7 @@ updating a default object access permission. The IRI of the new property must be
    "forProperty":"http://www.knora.org/ontology/00FF/images#titel"
 }
 ```
+
 Note that if the default object access permission was originally defined for a group, with this operation, the permission 
 will be defined for the given property instead of the group. That means the value of the `forGroup` will 
 be deleted.

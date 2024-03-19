@@ -30,28 +30,28 @@ structure (the indentation corresponds to the nesting in XML):
 
 - `<mapping>`: the root element
 
-  - `<defaultXSLTransformation> (optional)`: the IRI of the
+    - `<defaultXSLTransformation> (optional)`: the IRI of the
     default XSL transformation to be applied to the XML when
     reading it back from DSP-API. The XSL transformation is
     expected to produce HTML. If given, the IRI has to refer to
     a resource of type `knora-base:XSLTransformation`.
 
-  - `<mappingElement>`: an element of the mapping (at least
+    - `<mappingElement>`: an element of the mapping (at least
     one)
 
-    - `<tag>`: information about the XML element that
+        - `<tag>`: information about the XML element that
       is mapped to a standoff class
 
-      - `<name>`: name of the XML element
-      - `<class>`: value of the class attribute of
+            - `<name>`: name of the XML element
+            - `<class>`: value of the class attribute of
         the XML element, if any. If the element has
         no class attribute, the keyword `noClass`
         has to be used.
-      - `<namespace>`: the namespace the XML element
+            - `<namespace>`: the namespace the XML element
         belongs to, if any. If the element does not
         belong to a namespace, the keyword
         `noNamespace` has to be used.
-      - `<separatesWords>`: a Boolean value
+            - `<separatesWords>`: a Boolean value
         indicating whether this tag separates words
         in the text. Once an XML document is
         converted to RDF-standoff the markup is
@@ -65,38 +65,38 @@ structure (the indentation corresponds to the nesting in XML):
         separated and are represented in the
         fulltext index as such.
 
-    - `<standoffClass>`: information about the
+        - `<standoffClass>`: information about the
       standoff class the XML element is mapped to
 
-      - `<classIri>`: IRI of the standoff class the
+            - `<classIri>`: IRI of the standoff class the
         XML element is mapped to
 
-      - `<attributes>`: XML attributes to be
+            - `<attributes>`: XML attributes to be
         mapped to standoff properties (other
         than `id` or `class`), if any
 
-        - `<attribute>`: an XML attribute
+                - `<attribute>`: an XML attribute
           to be mapped to a standoff
           property, may be repeated
 
-          - `<attributeName>`: the name
+                    - `<attributeName>`: the name
             of the XML attribute
-          - `<namespace>`: the namespace
+                    - `<namespace>`: the namespace
             the attribute belongs to, if
             any. If the attribute does
             not belong to a namespace,
             the keyword `noNamespace`
             has to be used.
-          - `<propertyIri>`: the IRI of
+                    - `<propertyIri>`: the IRI of
             the standoff property the
             XML attribute is mapped to.
 
-      - `<datatype>`: the data type of the
+            - `<datatype>`: the data type of the
         standoff class, if any.
 
-        - `<type>`: the IRI of the data type
+                - `<type>`: the IRI of the data type
           standoff class
-        - `<attributeName>`: the name of the
+                - `<attributeName>`: the name of the
           attribute holding the typed value in
           the expected standard format
 
