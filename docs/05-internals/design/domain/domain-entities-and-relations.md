@@ -7,7 +7,6 @@ as implicitly modelled by the ontologies, code, validations and documentation of
 The following document aims to give a higher level overview of said domain.
 
 !!! Note
-
     - As a high level overview, this document does not aim for exhaustivity.
     - Naming is tried to be kept as simple as possible, 
       while trying to consolidate different naming schemes
@@ -96,12 +95,6 @@ erDiagram
     DefaultObjectAccessPermission |{--o{ ResourceClass: "points to"
     
 ```
-
-!!! danger "Unclear/Unexpected Stuff"
-
-    - User.phone?
-    - Institution? (name, description, website, phone, address, email)
-    - Project.belongsToInstitution?
 
 ### Overview V2
 

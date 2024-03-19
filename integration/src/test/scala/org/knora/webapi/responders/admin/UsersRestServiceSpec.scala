@@ -29,10 +29,10 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequ
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -436,9 +436,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectMembersGetRequestADM(
-            IriIdentifier.unsafeFrom(imagesProject.id),
-            KnoraSystemInstances.Users.SystemUser,
+          ZIO.serviceWithZIO[ProjectsResponderADM](
+            _.projectMembersGetRequestADM(
+              IriIdentifier.unsafeFrom(imagesProject.id),
+              KnoraSystemInstances.Users.SystemUser,
+            ),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -458,9 +460,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectMembersGetRequestADM(
-            IriIdentifier.unsafeFrom(incunabulaProject.id),
-            KnoraSystemInstances.Users.SystemUser,
+          ZIO.serviceWithZIO[ProjectsResponderADM](
+            _.projectMembersGetRequestADM(
+              IriIdentifier.unsafeFrom(incunabulaProject.id),
+              KnoraSystemInstances.Users.SystemUser,
+            ),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -497,7 +501,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ZIO.serviceWithZIO[ProjectsResponderADM](
+            _.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -541,7 +547,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ZIO.serviceWithZIO[ProjectsResponderADM](
+            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ),
         )
         received.members.map(_.id) should contain(normalUser.id)
       }
@@ -564,7 +572,9 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ZIO.serviceWithZIO[ProjectsResponderADM](
+            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
       }
@@ -586,9 +596,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          GroupsResponderADM.groupMembersGetRequest(
-            GroupIri.unsafeFrom(imagesReviewerGroup.id),
-            rootUser,
+          ZIO.serviceWithZIO[GroupsResponderADM](
+            _.groupMembersGetRequest(
+              GroupIri.unsafeFrom(imagesReviewerGroup.id),
+              rootUser,
+            ),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -610,9 +622,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          GroupsResponderADM.groupMembersGetRequest(
-            GroupIri.unsafeFrom(imagesReviewerGroup.id),
-            rootUser,
+          ZIO.serviceWithZIO[GroupsResponderADM](
+            _.groupMembersGetRequest(
+              GroupIri.unsafeFrom(imagesReviewerGroup.id),
+              rootUser,
+            ),
           ),
         )
         received.members.map(_.id) should not contain normalUser

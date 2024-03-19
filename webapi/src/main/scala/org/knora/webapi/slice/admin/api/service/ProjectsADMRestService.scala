@@ -6,12 +6,11 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -25,13 +24,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-@accessible
 trait ProjectADMRestService {
 
   def listAllProjects(): Task[ProjectsGetResponse]
@@ -81,7 +79,7 @@ final case class ProjectsADMRestServiceLive(
   format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
-  projectService: ProjectADMService,
+  projectService: ProjectService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   permissionService: AuthorizationRestService,
@@ -323,7 +321,7 @@ final case class ProjectsADMRestServiceLive(
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectADMService & ProjectImportService & AuthorizationRestService,
+    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectService & ProjectImportService & AuthorizationRestService,
     ProjectsADMRestServiceLive,
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

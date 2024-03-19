@@ -457,7 +457,6 @@ object OntologyConstants {
     val GivenName: IRI             = KnoraAdminPrefixExpansion + "givenName"
     val FamilyName: IRI            = KnoraAdminPrefixExpansion + "familyName"
     val Password: IRI              = KnoraAdminPrefixExpansion + "password"
-    val Address: IRI               = KnoraAdminPrefixExpansion + "address"
     val UsersActiveProject: IRI    = KnoraAdminPrefixExpansion + "currentproject"
     val PreferredLanguage: IRI     = KnoraAdminPrefixExpansion + "preferredLanguage"
     val IsInProject: IRI           = KnoraAdminPrefixExpansion + "isInProject"
@@ -478,7 +477,6 @@ object OntologyConstants {
     val ProjectLogo: IRI                    = KnoraAdminPrefixExpansion + "projectLogo"
     val ProjectRestrictedViewSize: IRI      = KnoraAdminPrefixExpansion + "projectRestrictedViewSize"
     val ProjectRestrictedViewWatermark: IRI = KnoraAdminPrefixExpansion + "projectRestrictedViewWatermark"
-    val BelongsToInstitution: IRI           = KnoraAdminPrefixExpansion + "belongsToInstitution"
     val HasSelfJoinEnabled: IRI             = KnoraAdminPrefixExpansion + "hasSelfJoinEnabled"
 
     /* Group */
@@ -503,13 +501,6 @@ object OntologyConstants {
       SystemAdmin,
       ProjectAdmin,
     )
-
-    /* Institution */
-    val Institution: IRI            = KnoraAdminPrefixExpansion + "Institution"
-    val InstitutionDescription: IRI = KnoraAdminPrefixExpansion + "institutionDescription"
-    val InstitutionName: IRI        = KnoraAdminPrefixExpansion + "institutionName"
-    val InstitutionWebsite: IRI     = KnoraAdminPrefixExpansion + "institutionWebsite"
-    val Phone: IRI                  = KnoraAdminPrefixExpansion + "phone"
 
     /* Permissions */
     val Permission: IRI                    = KnoraAdminPrefixExpansion + "Permission"

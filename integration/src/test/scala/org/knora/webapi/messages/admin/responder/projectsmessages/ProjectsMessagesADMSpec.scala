@@ -19,7 +19,7 @@ class ProjectsMessagesADMSpec extends CoreSpec {
   "The ProjectADM case class" should {
     "return a 'OntologyConstraintException' when project description is not supplied" in {
       assertThrows[OntologyConstraintException](
-        ProjectADM(
+        Project(
           id = "id",
           shortcode = "1111",
           shortname = "shortname",

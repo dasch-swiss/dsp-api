@@ -460,6 +460,11 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   override def toOntologySchema(targetSchema: OntologySchema): SmartIri
 
   /**
+   * Converts this IRI to ApiV2Complex schema.
+   */
+  def toComplexSchema: SmartIri = toOntologySchema(ApiV2Complex)
+
+  /**
    * Constructs a short prefix label for the ontology that the IRI belongs to.
    */
   def getShortPrefixLabel: String

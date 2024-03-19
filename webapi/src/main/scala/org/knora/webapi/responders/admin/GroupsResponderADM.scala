@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.macros.accessible
 
 import java.util.UUID
 
@@ -22,12 +21,12 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
@@ -51,7 +50,6 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Returns information about groups.
  */
-@accessible
 trait GroupsResponderADM {
 
   /**
@@ -201,10 +199,10 @@ final case class GroupsResponderADMLive(
     } yield Group(groupIri.toString, name, descriptions, projectADM, status, selfjoin)
   }
 
-  private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[ProjectADM] =
+  private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[Project] =
     for {
       id     <- IriIdentifier.fromString(iri).toZIO.mapError(e => BadRequestException(e.getMessage))
-      result <- messageRelay.ask[Option[ProjectADM]](ProjectGetADM(id)).someOrFail(failReason)
+      result <- messageRelay.ask[Option[Project]](ProjectGetADM(id)).someOrFail(failReason)
     } yield result
 
   /**

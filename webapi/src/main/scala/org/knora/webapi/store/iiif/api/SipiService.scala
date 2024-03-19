@@ -8,7 +8,6 @@ package org.knora.webapi.store.iiif.api
 import zio.*
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
-import zio.macros.accessible
 import zio.nio.file.Path
 
 import org.knora.webapi.messages.store.sipimessages.*
@@ -60,7 +59,6 @@ object FileMetadataSipiResponse {
   implicit val decoder: JsonDecoder[FileMetadataSipiResponse] = DeriveJsonDecoder.gen[FileMetadataSipiResponse]
 }
 
-@accessible
 trait SipiService {
 
   /**

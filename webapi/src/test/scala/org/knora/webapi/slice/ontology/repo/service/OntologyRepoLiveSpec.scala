@@ -6,8 +6,9 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Scope
-import zio.test.ZIOSpecDefault
+import zio.ZIO
 import zio.test.*
+import zio.test.ZIOSpecDefault
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -31,19 +32,28 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
   private val aKnownClassSmartIri: SmartIri = sf.toSmartIri(aKnownClassIri.value)
   private val ontologySmartIri: SmartIri    = aKnownClassSmartIri.getOntologyFromEntity
 
+  // accessor
+  private def findById(id: InternalIri)          = ZIO.serviceWithZIO[OntologyRepo](_.findById(id))
+  private def findAll()                          = ZIO.serviceWithZIO[OntologyRepo](_.findAll())
+  private def findClassBy(classIri: InternalIri) = ZIO.serviceWithZIO[OntologyRepo](_.findClassBy(classIri))
+  private def findAllSuperClassesBy(classIri: InternalIri) =
+    ZIO.serviceWithZIO[OntologyRepo](_.findAllSuperClassesBy(classIri))
+  private def findAllSubclassesBy(classIri: InternalIri) =
+    ZIO.serviceWithZIO[OntologyRepo](_.findAllSubclassesBy(classIri))
+
   val spec: Spec[TestEnvironment & Scope, Any] =
     suite("OntologyRepoLive")(
       suite("findOntologyBy(InternalIri)")(
         test("when searching for unknown iri => return None") {
           for {
-            actual <- OntologyRepo.findById(anUnknownInternalOntologyIri)
+            actual <- findById(anUnknownInternalOntologyIri)
           } yield assertTrue(actual.isEmpty)
         },
         test("when searching for known iri => return Some(ReadOntology)") {
           val cacheData = OntologyCacheDataBuilder.builder(ontologySmartIri).build
           for {
             _      <- OntologyCacheFake.set(cacheData)
-            actual <- OntologyRepo.findById(ontologySmartIri.toInternalIri)
+            actual <- findById(ontologySmartIri.toInternalIri)
           } yield assertTrue(actual == cacheData.ontologies.get(ontologySmartIri))
         },
       ),
@@ -59,19 +69,19 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .build
           for {
             _      <- OntologyCacheFake.set(data)
-            actual <- OntologyRepo.findClassBy(aKnownClassIri)
+            actual <- findClassBy(aKnownClassIri)
           } yield assertTrue(actual.contains(knownClass))
         },
         test("when searching for unknown iri => return None") {
           for {
-            actual <- OntologyRepo.findClassBy(anUnknownClassIri)
+            actual <- findClassBy(anUnknownClassIri)
           } yield assertTrue(actual.isEmpty)
         },
       ),
       suite("findAll()")(
         test("given cache is Empty => return empty List") {
           for {
-            actual <- OntologyRepo.findAll()
+            actual <- findAll()
           } yield assertTrue(actual.isEmpty)
         },
         test("given cache has an ontology => return List of ontologies") {
@@ -79,7 +89,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           val cacheData = OntologyCacheDataBuilder.builder.addOntology(ontology).build
           for {
             _      <- OntologyCacheFake.set(cacheData)
-            actual <- OntologyRepo.findAll()
+            actual <- findAll()
           } yield assertTrue(actual == List(ontology))
         },
       ),
@@ -94,7 +104,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             )
           for {
             _      <- OntologyCacheFake.set(data.build).debug
-            actual <- OntologyRepo.findAllSubclassesBy(Biblio.Class.Publication)
+            actual <- findAllSubclassesBy(Biblio.Class.Publication)
           } yield assertTrue(actual.isEmpty)
         },
         test("findAllSubclassesBy multiple levels up across ontologies") {
@@ -122,7 +132,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .addOntology(biblioOntologyDefinition)
           for {
             _         <- OntologyCacheFake.set(data.build).debug
-            actual    <- OntologyRepo.findAllSubclassesBy(Biblio.Class.Publication)
+            actual    <- findAllSubclassesBy(Biblio.Class.Publication)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Biblio.Class.JournalArticle))
         },
@@ -138,7 +148,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             )
           for {
             _      <- OntologyCacheFake.set(data.build).debug
-            actual <- OntologyRepo.findAllSuperClassesBy(Biblio.Class.Article)
+            actual <- findAllSuperClassesBy(Biblio.Class.Article)
           } yield assertTrue(actual.isEmpty)
         },
         test("findAllSuperClassesBy multiple levels up across ontologies") {
@@ -164,7 +174,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .addOntology(biblioOntologyDefinition)
           for {
             _         <- OntologyCacheFake.set(data.build).debug
-            actual    <- OntologyRepo.findAllSuperClassesBy(Biblio.Class.JournalArticle)
+            actual    <- findAllSuperClassesBy(Biblio.Class.JournalArticle)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Anything.Class.Thing, Biblio.Class.Publication))
         },

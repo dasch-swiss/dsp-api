@@ -18,8 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
-import org.knora.webapi.slice.admin.domain.service.MaintenanceServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.TestDatasetBuilder
@@ -29,11 +28,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.emptyDatasetRefLayer
 
-object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
+object MaintenanceServiceSpec extends ZIOSpecDefault {
 
   private val testProject              = TestDataFactory.someProject
   private val createProject            = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))
-  private val projectDataNamedGraphIri = ProjectADMService.projectDataNamedGraphV2(testProject).value
+  private val projectDataNamedGraphIri = ProjectService.projectDataNamedGraphV2(testProject).value
   private val testAssetId              = AssetId.unsafeFrom("some-asset-id")
   private val expectedDimension        = Dimensions(5202, 3602)
   private val testReport = ProjectsWithBakfilesReport(
@@ -54,7 +53,7 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
                         |     knora-base:internalFilename "$testAssetId.jp2"^^xsd:string;
                         |  }
                         |""".stripMargin)
-    .flatMap(TestTripleStore.setDataset)
+    .flatMap(ds => ZIO.serviceWithZIO[TestTripleStore](_.setDataset(ds)))
 
   def queryForDim() = for {
     rowMap <- TriplestoreService
@@ -75,18 +74,20 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
     dim    <- ZIO.fromEither(Dimensions.from(width, height))
   } yield dim
 
-  val spec: Spec[Any, Any] = suite("MaintenanceServiceLive")(
+  val spec: Spec[Any, Any] = suite("MaintenanceService")(
     test("fixTopLeftDimensions should not fail for an empty report") {
       createProject *>
         saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width) *>
-        MaintenanceService.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)).as(assertCompletes)
+        ZIO
+          .serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)))
+          .as(assertCompletes)
     },
     test("fixTopLeftDimensions should not fail if no StillImageFileValue is found") {
       createProject *>
-        MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
+        ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport)).as(assertCompletes)
     },
     test("fixTopLeftDimensions should not fail if project is not found") {
-      MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
+      ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport)).as(assertCompletes)
     },
     test("fixTopLeftDimensions should transpose dimension for an existing StillImageFileValue") {
       for {
@@ -94,7 +95,7 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
         _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width)
         // when
-        _ <- MaintenanceService.fixTopLeftDimensions(testReport)
+        _ <- ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport))
         // then
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
@@ -107,13 +108,13 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
         _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.width, height = expectedDimension.height)
         // when
-        _ <- MaintenanceService.fixTopLeftDimensions(testReport)
+        _ <- ZIO.serviceWithZIO[MaintenanceService](_.fixTopLeftDimensions(testReport))
         // then
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
     },
   ).provide(
-    MaintenanceServiceLive.layer,
+    MaintenanceService.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
     PredicateObjectMapper.layer,

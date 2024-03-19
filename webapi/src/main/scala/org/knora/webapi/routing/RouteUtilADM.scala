@@ -5,9 +5,9 @@
 
 package org.knora.webapi.routing
 
+import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
 import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
-import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.RouteResult
 import org.apache.pekko.util.ByteString
@@ -45,7 +45,7 @@ object RouteUtilADM {
     response: KnoraResponseADM,
   ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
     ZIO.attempt {
-      def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
+      def projectAsExternalRepresentation(project: Project): Project = {
         val ontologiesExternal =
           project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
         project.copy(ontologies = ontologiesExternal)
@@ -93,7 +93,7 @@ object RouteUtilADM {
     ZIO
       .serviceWithZIO[StringFormatter] { sf =>
         ZIO.attempt {
-          def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
+          def projectAsExternalRepresentation(project: Project): Project = {
             val ontologiesExternal =
               project.ontologies.map(sf.toSmartIri(_)).map(_.toOntologySchema(ApiV2Complex).toString)
             project.copy(ontologies = ontologiesExternal)

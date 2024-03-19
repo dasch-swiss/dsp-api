@@ -30,6 +30,7 @@ it to a `SmartIri` like this:
 ```scala
 val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
 ````
+
 If the IRI came from a request, use this method to throw a specific
 exception if the IRI is invalid:
 

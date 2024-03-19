@@ -8,9 +8,10 @@ import sbt.Keys.version
 
 import scala.language.postfixOps
 import scala.sys.process.*
-
 import org.knora.Dependencies
 import org.knora.LocalSettings
+
+import java.time.Instant
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -33,6 +34,9 @@ val gitBranch = Option("git rev-parse --abbrev-ref HEAD" !!)
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + gitBranch.fold("")("-" + _)
 
 ThisBuild / version := gitVersion
+
+lazy val buildCommit = ("git rev-parse --short HEAD" !!).trim
+lazy val buildTime   = Instant.now.toString
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
@@ -253,9 +257,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "sipi"      -> Dependencies.sipiImage,
-      "fuseki"    -> Dependencies.fusekiImage,
-      "pekkoHttp" -> Dependencies.pekkoHttp,
+      "sipi"        -> Dependencies.sipiImage,
+      "fuseki"      -> Dependencies.fusekiImage,
+      "pekkoHttp"   -> Dependencies.pekkoHttp,
+      "buildCommit" -> buildCommit,
+      "buildTime"   -> buildTime,
     ),
     buildInfoPackage := "org.knora.webapi.http.version",
   )

@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 
 final case class KnoraUserToUserConverter(
-  private val projectsService: ProjectADMService,
+  private val projectsService: ProjectService,
   private val groupsResponder: GroupsResponderADM,
   private val permissionService: PermissionsResponderADM,
 ) {

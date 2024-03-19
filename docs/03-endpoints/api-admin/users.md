@@ -7,7 +7,7 @@
 
 ## Endpoint Overview
 
-**User Operations:**
+### General User Operations
 
 - `GET: /admin/users` : return all users
 - `GET: /admin/users/[iri | email | username]/<identifier>` : return single user identified by [IRI | email | username]
@@ -17,14 +17,14 @@
 - `PUT: /admin/users/iri/<userIri>/Status` : update user's status
 - `DELETE: /admin/users/iri/<userIri>` : delete user (set status to false)
 
-**User's project membership operations**
+### Project membership operations
 
 - `GET: /admin/users/iri/<userIri>/project-memberships` : get user's project memberships
 - `POST: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : add user to project (to ProjectMember group)
 - `DELETE: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember
   group)
 
-**User's group membership operations**
+### Group membership operations
 
 - `GET: /admin/users/iri/<userIri>/project-admin-memberships` : get user's ProjectAdmin group memberships
 - `POST: /admin/users/iri/<userIri>/project-admin-memberships/<projectIri>` : add user to ProjectAdmin group
@@ -134,10 +134,10 @@ specified by the `id` in the request body as below:
 - PUT: `/admin/users/iri/<userIri>/Status`
 - BODY:
 
-```
-    {
-      "status": false // true or false
-    }
+```json
+{
+    "status": false // true or false
+}
 ```
 
 ### Delete user (-\update user)**
@@ -202,10 +202,10 @@ Note: In order to add a user to a project admin group, the user needs to be memb
 - PUT: `/admin/users/iri/<userIri>/SystemAdmin`
 - BODY:
 
-```
-    {
-      "systemAdmin": false
-    }
+```json
+{
+  "systemAdmin": false
+}
 ```
 
 ## Example Data

@@ -23,7 +23,6 @@ import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -54,7 +53,6 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 
-@accessible
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
   def getDataset: UIO[Dataset]

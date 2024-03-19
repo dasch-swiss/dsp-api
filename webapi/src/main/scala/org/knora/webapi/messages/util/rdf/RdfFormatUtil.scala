@@ -16,7 +16,9 @@ import java.io.OutputStream
 import java.io.StringReader
 import java.io.StringWriter
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import scala.util.Try
 
 import dsp.errors.BadRequestException
@@ -348,9 +350,16 @@ object RdfFormatUtil {
    * @param graphIri     the named graph IRI to be added.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
+   * @param openOption the open option for the output file, default is CREATE
    */
-  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
-    val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
+  def turtleToQuadsFile(
+    rdfSource: RdfSource,
+    graphIri: IRI,
+    outputFile: Path,
+    outputFormat: QuadFormat,
+    openOption: OpenOption = StandardOpenOption.CREATE,
+  ): Unit = {
+    val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile, openOption))
     val streamRDF = new jena.riot.system.StreamRDF {
       val inner: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
         bufferedFileOutputStream,

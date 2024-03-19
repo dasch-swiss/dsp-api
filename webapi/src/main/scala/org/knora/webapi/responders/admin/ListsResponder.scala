@@ -21,8 +21,8 @@ import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -34,7 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -607,7 +607,7 @@ final case class ListsResponder(
           }
 
       // calculate the data named graph
-      dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
+      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(project).value
 
       // if parent node is known, find the root node of the list and the position of the new child node
       positionAndNode <-
@@ -1508,7 +1508,7 @@ final case class ListsResponder(
     projectRepo
       .findById(projectIri)
       .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-      .map(ProjectADMService.projectDataNamedGraphV2(_).value)
+      .map(ProjectService.projectDataNamedGraphV2(_).value)
 
   /**
    * Helper method to get parent of a node.

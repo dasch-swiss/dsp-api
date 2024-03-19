@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.store.cacheservicemessages
 
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
 
@@ -15,7 +15,7 @@ sealed trait CacheServiceRequest extends StoreRequest with RelayedMessage
 /**
  * Message equesting to write project to cache.
  */
-case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequest
+case class CacheServicePutProjectADM(value: Project) extends CacheServiceRequest
 
 /**
  * Message requesting to retrieve project from cache.

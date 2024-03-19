@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.macros.accessible
 
 import java.util.UUID
 
@@ -16,11 +15,11 @@ import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
@@ -33,7 +32,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.CacheService
@@ -45,7 +44,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 /**
  * Returns information about projects.
  */
-@accessible
 trait ProjectsResponderADM {
 
   /**
@@ -71,7 +69,7 @@ trait ProjectsResponderADM {
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
    * If project is not found in cache but in triplestore, then project is written to cache.
    */
-  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
+  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -171,7 +169,7 @@ final case class ProjectsResponderADMLive(
   private val cacheService: CacheService,
   private val permissionsResponderADM: PermissionsResponderADM,
   private val predicateObjectMapper: PredicateObjectMapper,
-  private val projectService: ProjectADMService,
+  private val projectService: ProjectService,
   private val triplestore: TriplestoreService,
   private val userService: UserService,
   implicit private val stringFormatter: StringFormatter,
@@ -507,7 +505,7 @@ final case class ProjectsResponderADMLive(
    *         [[UpdateNotPerformedException]] If one of the fields was not updated.
    */
   private def checkProjectUpdate(
-    updatedProject: ProjectADM,
+    updatedProject: Project,
     projectUpdatePayload: ProjectUpdateRequest,
   ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
@@ -752,7 +750,7 @@ final case class ProjectsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
-  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]] =
     projectService.findByProjectIdentifier(identifier)
 
   /**
@@ -779,7 +777,7 @@ object ProjectsResponderADMLive {
     for {
       iris    <- ZIO.service[IriService]
       cs      <- ZIO.service[CacheService]
-      ps      <- ZIO.service[ProjectADMService]
+      ps      <- ZIO.service[ProjectService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       po      <- ZIO.service[PredicateObjectMapper]

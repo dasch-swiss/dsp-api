@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-import zio.macros.accessible
 
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
@@ -20,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-@accessible
 trait GroupsRestService {
   def getGroups: Task[GroupsGetResponseADM]
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM]

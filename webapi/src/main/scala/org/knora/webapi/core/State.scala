@@ -6,32 +6,17 @@
 package org.knora.webapi.core
 
 import zio.*
-import zio.macros.accessible
 
 import org.knora.webapi.core.domain.AppState
 
-@accessible
-trait State {
-  def set(v: AppState): UIO[Unit]
-  val getAppState: UIO[AppState]
+final case class State private (private val state: Ref[AppState]) {
+  def set(v: AppState): UIO[Unit] = state.set(v) *> ZIO.logInfo(s"AppState set to ${v.toString()}")
+  def getAppState: UIO[AppState]  = state.get
 }
 
 object State {
   val layer: ZLayer[Any, Nothing, State] =
-    ZLayer {
-      for {
-        ref <- Ref.make[AppState](AppState.Stopped)
-      } yield new StateImpl(ref) {}
+    ZLayer(Ref.make[AppState](AppState.Stopped).map(State.apply))
+      .tap(_ => ZIO.logInfo(">>> AppStateService initialized <<<"))
 
-    }.tap(_ => ZIO.logInfo(">>> AppStateService initialized <<<"))
-
-  sealed abstract private class StateImpl(state: Ref[AppState]) extends State {
-
-    override def set(v: AppState): UIO[Unit] =
-      state.set(v) *> ZIO.logInfo(s"AppState set to ${v.toString()}")
-
-    override val getAppState: UIO[AppState] =
-      state.get
-
-  }
 }
