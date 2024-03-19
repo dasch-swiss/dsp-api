@@ -53,7 +53,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
                         |     knora-base:internalFilename "$testAssetId.jp2"^^xsd:string;
                         |  }
                         |""".stripMargin)
-    .flatMap(TestTripleStore.setDataset)
+    .flatMap(ds => ZIO.serviceWithZIO[TestTripleStore](_.setDataset(ds)))
 
   def queryForDim() = for {
     rowMap <- TriplestoreService

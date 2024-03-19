@@ -5,12 +5,18 @@
 
 package org.knora.webapi.responders.v2
 
+import zio.ZIO
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
+import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.SchemaRendering
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
@@ -18,6 +24,8 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -41,12 +49,75 @@ class SearchResponderV2Spec extends CoreSpec {
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
+  // accessor methods
+  private def fulltextSearchV2(
+    searchValue: IRI,
+    offset: Int,
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[SmartIri],
+    limitToStandoffClass: Option[SmartIri],
+    returnFiles: Boolean,
+    schemaAndOptions: SchemaRendering,
+    requestingUser: User,
+  ) = ZIO.serviceWithZIO[SearchResponderV2](
+    _.fulltextSearchV2(
+      searchValue,
+      offset,
+      limitToProject,
+      limitToResourceClass,
+      limitToStandoffClass,
+      returnFiles,
+      schemaAndOptions,
+      requestingUser,
+    ),
+  )
+
+  private def searchResourcesByLabelV2(
+    searchValue: String,
+    offset: Int,
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[SmartIri],
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ) = ZIO.serviceWithZIO[SearchResponderV2](
+    _.searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser),
+  )
+
+  private def searchResourcesByLabelCountV2(
+    searchValue: String,
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[SmartIri],
+  ) = ZIO.serviceWithZIO[SearchResponderV2](
+    _.searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass),
+  )
+
+  private def gravsearchV2(query: ConstructQuery, schemaAndOptions: SchemaRendering, user: User) =
+    ZIO.serviceWithZIO[SearchResponderV2](_.gravsearchV2(query, schemaAndOptions, user))
+
+  private def searchResourcesByProjectAndClassV2(
+    projectIri: SmartIri,
+    resourceClass: SmartIri,
+    orderByProperty: Option[SmartIri],
+    page: Int,
+    schemaAndOptions: SchemaRendering,
+    requestingUser: User,
+  ) = ZIO.serviceWithZIO[SearchResponderV2](
+    _.searchResourcesByProjectAndClassV2(
+      projectIri,
+      resourceClass,
+      orderByProperty,
+      page,
+      schemaAndOptions,
+      requestingUser,
+    ),
+  )
+
   "The search responder v2" should {
 
     "perform a fulltext search for 'Narr'" in {
 
       val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "Narr",
           offset = 0,
           limitToProject = None,
@@ -63,7 +134,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "perform a fulltext search for 'Dinge'" in {
       val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "Dinge",
           offset = 0,
           limitToProject = None,
@@ -80,7 +151,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "return a Bad Request error if fulltext search input is invalid" in {
       val result = UnsafeZioRun.run(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "qin(",
           offset = 0,
           limitToProject = None,
@@ -97,7 +168,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "return files attached to full-text search results" in {
 
       val result: ReadResourcesSequenceV2 = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "p7v",
           offset = 0,
           limitToProject = None,
@@ -124,7 +195,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
       val searchResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(
+        gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
           apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser,
@@ -140,7 +211,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
       val searchResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(
+        gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
           apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser,
@@ -158,7 +229,7 @@ class SearchResponderV2Spec extends CoreSpec {
                                     .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
-          result <- SearchResponderV2.searchResourcesByLabelV2(
+          result <- searchResourcesByLabelV2(
                       searchValue = "Narrenschiff",
                       offset = 0,
                       limitToProject = None,
@@ -179,7 +250,7 @@ class SearchResponderV2Spec extends CoreSpec {
                                     .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
-          result <- SearchResponderV2.searchResourcesByLabelV2(
+          result <- searchResourcesByLabelV2(
                       searchValue = "Narrenschiff",
                       offset = 0,
                       limitToProject = None,
@@ -201,7 +272,7 @@ class SearchResponderV2Spec extends CoreSpec {
                                     .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
-          result <- SearchResponderV2.searchResourcesByLabelCountV2(
+          result <- searchResourcesByLabelCountV2(
                       searchValue = "Narrenschiff",
                       limitToProject = None,
                       limitToResourceClass,
@@ -221,7 +292,7 @@ class SearchResponderV2Spec extends CoreSpec {
                                     .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
-          result <- SearchResponderV2.searchResourcesByLabelCountV2(
+          result <- searchResourcesByLabelCountV2(
                       searchValue = "Passio sancti Meynrhadi martyris et heremite",
                       limitToProject = None,
                       limitToResourceClass,
@@ -234,7 +305,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "search by project and resource class" in {
       val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.searchResourcesByProjectAndClassV2(
+        searchResourcesByProjectAndClassV2(
           projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
           resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
@@ -249,7 +320,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "search for list label" in {
 
       val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "non fiction",
           offset = 0,
           limitToProject = None,
@@ -269,7 +340,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "search for list label and find sub-nodes" in {
       val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.fulltextSearchV2(
+        fulltextSearchV2(
           searchValue = "novel",
           offset = 0,
           limitToProject = None,
@@ -289,7 +360,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "perform an extended search for a particular compound object (book)" in {
       val searchResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(
+        gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject,
           apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser,
@@ -300,17 +371,15 @@ class SearchResponderV2Spec extends CoreSpec {
 
     "perform an extended search ordered asc by label" in {
       val queryAsc = searchResponderV2SpecFullData.constructQuerySortByLabel
-      val ascResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser),
-      )
+      val ascResult =
+        UnsafeZioRun.runOrThrow(gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser))
       assert(ascResult.resources.head.label == "A blue thing")
     }
 
     "perform an extended search ordered desc by label" in {
       val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
-      val descResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser),
-      )
+      val descResult =
+        UnsafeZioRun.runOrThrow(gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser))
       assert(descResult.resources.head.label == "visible thing with hidden int values")
     }
   }
