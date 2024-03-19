@@ -91,7 +91,7 @@ object LayersLive {
   /**
    * All effect layers needed to provide the `Environment`
    */
-  val dspLayersLive: ULayer[DspEnvironmentLive] =
+  lazy val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       org.knora.webapi.core.ActorSystem.layer,
       AdminModule.layer,
@@ -128,7 +128,6 @@ object LayersLive {
       IriService.layer,
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
@@ -138,7 +137,6 @@ object LayersLive {
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
-      MaintenanceService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
