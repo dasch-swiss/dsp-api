@@ -20,7 +20,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -165,7 +165,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       expectMsgType[ProjectGetResponse](timeout)
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProjectBefore = expectMsgType[Option[ProjectADM]](timeout)
+      val cachedProjectBefore = expectMsgType[Option[Project]](timeout)
       assert(cachedProjectBefore.isDefined)
       // create an ontology
       appActor ! CreateOntologyRequestV2(
@@ -178,7 +178,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgType[ReadOntologyMetadataV2](timeout)
       // ensure that the project is no longer cached
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProject = expectMsgType[Option[ProjectADM]](timeout)
+      val cachedProject = expectMsgType[Option[Project]](timeout)
       assert(cachedProject.isEmpty)
     }
 

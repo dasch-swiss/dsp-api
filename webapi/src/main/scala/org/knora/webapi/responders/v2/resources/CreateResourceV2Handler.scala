@@ -38,7 +38,7 @@ import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.resources.CheckObjectClassConstraints
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -274,7 +274,7 @@ final case class CreateResourceV2Handler(
 
       // Get the IRI of the named graph in which the resource will be created.
       dataNamedGraph =
-        ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
+        ProjectService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
       // Generate SPARQL for creating the resource.
       sparqlUpdate = sparql.v2.txt.createNewResources(
@@ -634,7 +634,7 @@ final case class CreateResourceV2Handler(
    *         all permissions have been validated and defined.
    */
   private def validateAndFormatValuePermissions(
-    project: ProjectADM,
+    project: Project,
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,

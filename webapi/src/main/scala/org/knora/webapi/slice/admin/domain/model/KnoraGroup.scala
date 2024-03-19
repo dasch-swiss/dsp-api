@@ -14,7 +14,7 @@ import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -51,7 +51,7 @@ case class Group(
   id: IRI,
   name: String,
   descriptions: Seq[StringLiteralV2],
-  project: ProjectADM,
+  project: Project,
   status: Boolean,
   selfjoin: Boolean,
 ) extends Ordered[Group] {

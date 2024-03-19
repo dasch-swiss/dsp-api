@@ -13,7 +13,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.domain.model.Group
@@ -48,7 +48,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
@@ -69,7 +69,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
@@ -89,7 +89,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(),
     )
 
@@ -105,7 +105,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(),
     )
 
@@ -151,7 +151,7 @@ object SharedTestDataADM {
     )
 
   /* represents the full ProjectADM of the Knora System project */
-  def systemProject: ProjectADM = ProjectADM(
+  def systemProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.SystemProject,
     shortname = "SystemProject",
     shortcode = "FFFF",
@@ -170,7 +170,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
-  def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
+  def defaultSharedOntologiesProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = "DefaultSharedOntologiesProject",
     shortcode = "0000",
@@ -280,7 +280,7 @@ object SharedTestDataADM {
     )
 
   /* represents the full ProjectADM of the images project */
-  def imagesProject: ProjectADM = ProjectADM(
+  def imagesProject: Project = Project(
     id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
@@ -294,7 +294,7 @@ object SharedTestDataADM {
   )
 
   /* represents the full ProjectADM of the images project in the external format */
-  def imagesProjectExternal: ProjectADM = ProjectADM(
+  def imagesProjectExternal: Project = Project(
     id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
@@ -436,7 +436,7 @@ object SharedTestDataADM {
     )
 
   /* represents the ProjectADM of the incunabula project */
-  def incunabulaProject: ProjectADM = ProjectADM(
+  def incunabulaProject: Project = Project(
     id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
@@ -471,7 +471,7 @@ object SharedTestDataADM {
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
-  def incunabulaProjectExternal: ProjectADM = ProjectADM(
+  def incunabulaProjectExternal: Project = Project(
     id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
@@ -604,7 +604,7 @@ object SharedTestDataADM {
       ),
     )
 
-  def anythingProject: ProjectADM = ProjectADM(
+  def anythingProject: Project = Project(
     id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
@@ -617,7 +617,7 @@ object SharedTestDataADM {
     selfjoin = false,
   )
 
-  def anythingProjectExternal: ProjectADM = ProjectADM(
+  def anythingProjectExternal: Project = Project(
     id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
@@ -652,7 +652,7 @@ object SharedTestDataADM {
    */
   val beolProjectIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-  def beolProject: ProjectADM = ProjectADM(
+  def beolProject: Project = Project(
     id = beolProjectIri,
     shortname = "beol",
     shortcode = "0801",
@@ -703,7 +703,7 @@ object SharedTestDataADM {
    */
   val dokubibProjectIri = "http://rdfh.ch/projects/0804"
 
-  def dokubibProject: ProjectADM = ProjectADM(
+  def dokubibProject: Project = Project(
     id = dokubibProjectIri,
     shortname = "dokubib",
     shortcode = "0804",

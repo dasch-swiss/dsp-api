@@ -46,7 +46,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -238,7 +238,7 @@ final case class ResourcesResponderV2Live(
              )
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         newModificationDate <-
           updateResourceMetadataRequestV2.maybeNewModificationDate match {
@@ -381,7 +381,7 @@ final case class ResourcesResponderV2Live(
         _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
         sparqlUpdate = sparql.v2.txt.deleteResource(
@@ -470,7 +470,7 @@ final case class ResourcesResponderV2Live(
                }
 
         // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Do the update.
         _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
