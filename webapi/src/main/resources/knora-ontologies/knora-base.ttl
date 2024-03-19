@@ -9,6 +9,7 @@
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xml:         <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix ma:          <http://www.w3.org/ns/ma-ont#> .
 @prefix foaf:        <http://xmlns.com/foaf/0.1/> .
 @prefix dcterms:     <http://purl.org/dc/terms/> .
 @prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
@@ -1284,6 +1285,7 @@
 :AudioRepresentation
     rdf:type        owl:Class ;
     rdfs:subClassOf :Representation,
+                    ma:AudioTrack,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :hasAudioFileValue ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
@@ -1699,6 +1701,7 @@
 :MovingImageRepresentation
     rdf:type        owl:Class ;
     rdfs:subClassOf :Representation,
+                    ma:VideoTrack,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :hasMovingImageFileValue ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
@@ -1980,6 +1983,7 @@
 :StillImageRepresentation
     rdf:type        owl:Class ;
     rdfs:subClassOf :Representation,
+                    ma:Image,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :hasStillImageFileValue ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
@@ -2210,9 +2214,10 @@
                             "is segment of"@en ;
     rdfs:comment            "Indicates that this resource is a segment of a video or audio resource"@en ;
     :subjectClassConstraint :Segment  ;
-    :objectClassConstraint  :Resource ;
+    :objectClassConstraint  :Representation ;
     :isEditable             true ;
-    rdfs:subPropertyOf      :hasLinkTo .
+    rdfs:subPropertyOf      :hasLinkTo,
+                            ma:isFragmentOf .
 
 
 ###  http://www.knora.org/ontology/knora-base#isSegmentOfValue
@@ -2233,7 +2238,7 @@
                             "is audio segment of"@en ;
     rdfs:comment            "Indicates that this resource is a segment of an audio resource"@en ;
     :subjectClassConstraint :AudioSegment  ;
-    :objectClassConstraint  :Resource ;
+    :objectClassConstraint  :AudioRepresentation ;
     :isEditable             true ;
     rdfs:subPropertyOf      :isSegmentOf .
 
@@ -2256,7 +2261,7 @@
                             "is video segment of"@en ;
     rdfs:comment            "Indicates that this resource is a segment of a video resource"@en ;
     :subjectClassConstraint :VideoSegment  ;
-    :objectClassConstraint  :Resource ;
+    :objectClassConstraint  :MovingImageRepresentation ;
     :isEditable             true ;
     rdfs:subPropertyOf      :isSegmentOf .
 
@@ -2289,6 +2294,7 @@
 :Segment
     rdf:type           owl:Class ;
     rdfs:subClassOf    :Resource,
+                       ma:Track,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasComment ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ],
