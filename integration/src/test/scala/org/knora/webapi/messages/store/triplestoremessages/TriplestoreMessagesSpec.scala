@@ -9,7 +9,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.*
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 
 /**

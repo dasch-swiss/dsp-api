@@ -6,6 +6,8 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import spray.json.*
 import zio.*
 import zio.json.DeriveJsonCodec
@@ -21,8 +23,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -306,24 +306,27 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   override def toString: String = value
 }
 
-  /**
-   * Represents a string with language iso. Allows sorting inside collections by the value.
-   *
-   * @param value    the string value.
-   * @param language the language iso.
-   */
-  case class StringLiteralV2(value: String, language: Option[String]) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
+/**
+ * Represents a string with language iso. Allows sorting inside collections by the value.
+ *
+ * @param value    the string value.
+ * @param language the language iso.
+ */
+case class StringLiteralV2(value: String, language: Option[String])
+    extends LiteralV2
+    with OntologyLiteralV2
+    with Ordered[StringLiteralV2] {
 
-    override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
-    override def toString: String = value
+  override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+  override def toString: String                    = value
 
-    def toRdfLiteral: StringLiteral =
-      language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
-  }
+  def toRdfLiteral: StringLiteral =
+    language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
+}
 
-  object StringLiteralV2 {
-    implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
-  }
+object StringLiteralV2 {
+  implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+}
 
 /**
  * Represents a sequence of [[StringLiteralV2]].
