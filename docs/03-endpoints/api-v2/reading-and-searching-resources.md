@@ -73,7 +73,8 @@ the text value will only be available as `kb:textValueAsXml`, which will be of t
 where the content of `<text>` is a limited set of HTML tags that can be handled by CKEditor in DSP-APP.
 This allows for both displaying and editing the text value.
 
-In the second and third case, `kb:textValueHasMapping` will point to the custom mapping that may or may not specify an XSL transformation.
+In the second and third case, `kb:textValueHasMapping` will point to the custom mapping 
+that may or may not specify an XSL transformation.
 
 If no transformation is specified (second case), the text value will be returned only as `kb:textValueAsXml`.
 This property will be a string containing the contents of the initially uploaded XML.
@@ -83,7 +84,8 @@ the order of the attributes in one element may vary from the original.
 
 In the third case, when a transformation is specified, both `kb:textValueAsXml` and `kb:textValueAsHtml` will be returned.
 `kb:textValueAsHtml` is the result of the XSL transformation applied to `kb:textValueAsXml`.
-The HTML representation is intended to display the text value in a human readable and properly styled way, while the XML representation can be used to update the text value.
+The HTML representation is intended to display the text value in a human readable and properly styled way, 
+while the XML representation can be used to update the text value.
 
 ## Get the Representation of a Resource by IRI
 
@@ -236,8 +238,8 @@ resource metadata (e.g. `rdfs:label`), changes to a resource's metadata are not 
 version history.
 
 To request the resource as it was at each of these dates, see
-[Get a Full Representation of a Version of a Resource by IRI](#get-a-full-representation-of-a-version-of-a-resource-by-iri). For consistency in citation, we recommend using these dates when
-requesting resource versions.
+[Get a Full Representation of a Version of a Resource by IRI](#get-a-full-representation-of-a-version-of-a-resource-by-iri). 
+For consistency in citation, we recommend using these dates when requesting resource versions.
 
 ### Get the preview of a resource by IRI
 
@@ -254,8 +256,7 @@ HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 
 ## Get a Graph of Resources
 
-DSP can return a graph of connections between resources, e.g. for generating
-a network diagram.
+DSP can return a graph of connections between resources, e.g. for generating a network diagram.
 
 ```
 HTTP GET to http://host/v2/graph/resourceIRI[depth=Integer]
@@ -390,11 +391,13 @@ The search index used by DSP transforms all text into lower case characters and 
 For example, if a text value is: `The cake needs flour, sugar, and butter.`, 
 the tokens are `the`, `cake`, `needs`, `flour,`, `sugar,`, `and`, `butter.`.
 Note that punctuation marks like `,` and `.` are left with the word where they occurred.
-Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` to get results that contain `sugar,` or `sugar.` as well.
-The reason for this kind of tokenization is that some users need to be able to search explicitly for special characters including
-punctuation marks.
+Therefore, if you search for `sugar` you would have to use `sugar*` or `sugar?` 
+to get results that contain `sugar,` or `sugar.` as well.
+The reason for this kind of tokenization is 
+that some users need to be able to search explicitly for special characters including punctuation marks.
 
-Alphabetic, numeric, symbolic, and diacritical Unicode characters which are not in the first 127 ASCII characters (the "Basic Latin" Unicode block) 
+Alphabetic, numeric, symbolic, and diacritical Unicode characters 
+which are not in the first 127 ASCII characters (the "Basic Latin" Unicode block) 
 are converted into their ASCII equivalents, if one exists, e.g. `é` or `ä` are converted into `e` and `a`.
 
 Please note that the search terms have to be URL-encoded.
@@ -406,9 +409,12 @@ HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClass
 
 The first parameter has to be preceded by a question mark `?`, any following parameter by an ampersand `&`.
 
-A search value must have a minimal length of three characters (default value) as defined in `search-value-min-length` in `application.conf`.
+A search value must have a minimal length of three characters (default value) 
+as defined in `search-value-min-length` in `application.conf`.
 
-A search term may contain wildcards. A `?` represents a single character. It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. For example, the term `Uniform` can be search for like this:
+A search term may contain wildcards. A `?` represents a single character. 
+It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. 
+For example, the term `Uniform` can be search for like this:
 
 ```
 HTTP GET to http://host/v2/search/Unif%3Frm
@@ -630,7 +636,6 @@ The only record depicting a change in a resource's metadata is the `knora-api:la
 the event `updatedResourceMetadata` indicates a change in a resource's metadata, its `knora-api:eventBody` contains the 
 payload needed to update the value of the resource's `lastModificationDate`, see 
 [modifying metadata of a resource](editing-resources.md#modifying-a-resources-metadata).
-
 
 
 ### Get the Full History of all Resources of a Project as Events

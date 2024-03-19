@@ -10,7 +10,7 @@ Webapi running each in its own Docker container.
 
 To run the whole stack:
 
-```
+```bash
 make stack-up
 ```
 

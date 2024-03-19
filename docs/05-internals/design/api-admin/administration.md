@@ -13,7 +13,7 @@ The permissions API endpoint is described [here](../../../03-endpoints/api-admin
 The default permissions when a project is created are described
 [here](../../../03-endpoints/api-admin/projects.md#default-set-of-permissions-for-a-new-project).
 
-DSP’s concept of access control is that permissions 
+DSP's concept of access control is that permissions 
 can only be granted to groups and not to individual users.
 There are two distinct ways of granting permission.
 
@@ -121,10 +121,7 @@ follows:
 
 For example, if an object grants view permission to *unknown* and *known
 users*, and modify permission to *project members*, the resulting
-permission literal would be:
-    :
-
-    V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember
+permission literal would be: `V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember`.
 
 ### Administrative Permissions
 

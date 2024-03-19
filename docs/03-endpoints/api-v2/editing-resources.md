@@ -17,8 +17,8 @@ The body of the request is a JSON-LD document in the
 [complex API schema](introduction.md#api-schema), specifying the type,`rdfs:label`, and its Knora resource properties
 and their values. The representation of the resource is the same as when it is returned in a `GET` request, except that
 its `knora-api:attachedToUser` is not given, and the resource IRI and those of its values can be optionally specified.
-The format of the values submitted is described in [Creating and Editing Values](editing-values.md). If there are multiple values for
-a property, these must be given in an array.
+The format of the values submitted is described in [Creating and Editing Values](editing-values.md). 
+If there are multiple values for a property, these must be given in an array.
 
 For example, here is a request to create a resource with various value types:
 

@@ -57,7 +57,7 @@ This is now already possible for example with the `TriplestoreServive`, i.e. ins
 calling `MessageRelay#ask[SparqlSelectResul](SparqlSelectRequest)` it is much easier and more importantly _typesafe_ to
 call `TriplestoreService#sparqlHttpSelect(String): UIO[SparqlSelectResult]`.
 
-#### Communication between Akka based Responder and another Akka based Responder
+### Communication between Akka based Responder and another Akka based Responder
 
 Nothing changes with regard to existing communication patterns:
 
@@ -74,7 +74,7 @@ sequenceDiagram
     deactivate RoutingActor
 ```
 
-#### Communication between Akka based Responder and ziofied Responder
+### Communication between Akka based Responder and ziofied Responder
 
 The `AkkaResponder` code remains unchanged and will still `ask` the `ActorRef` to the `RoutingActor`.
 The `RoutingActor` will forward the message to the `MessageRelay` and return its response to the `AkkaResponder`.
@@ -97,7 +97,7 @@ sequenceDiagram
     deactivate RoutingActor
 ```
 
-#### Communication between ziofied Responder and Akka based Responder
+### Communication between ziofied Responder and Akka based Responder
 
 The `AppRouterRelayingMessageHandler` route all messages which _do not_ implement the `RelayedMessage` trait to
 the `RoutingActor`.
@@ -123,9 +123,9 @@ sequenceDiagram
     deactivate MessageRelay
 ```
 
-#### Communication between two ziofied Responders
+### Communication between two ziofied Responders
 
-#### Variant using the MessageRelay
+### Variant using the MessageRelay
 
 ```mermaid
 sequenceDiagram
@@ -141,7 +141,7 @@ sequenceDiagram
     deactivate MessageRelay
 ```
 
-#### Variant if other Responder is a direct dependency
+### Variant if other Responder is a direct dependency
 
 ```mermaid
 sequenceDiagram
@@ -154,10 +154,15 @@ sequenceDiagram
 
 ## Decision
 
-In preparation of the move from `Akka` to `ZIO`, it was decided that the `Responders` should be ported to use return `ZIO`s and the `MessageRelay` instead of `Future`s and the `ActorRef` to the `RoutingActor`.
+In preparation of the move from `Akka` to `ZIO`, 
+it was decided that the `Responders` should be ported to use return `ZIO`s and the `MessageRelay` 
+instead of `Future`s and the `ActorRef` to the `RoutingActor`.
 
 ## Consequences
 
-In a first step only the `Responders` are going to be ported, one by one, to use the above pattern. The `Akka Actor System` still remains, will be used in the test and will be removed in a later step.
-Due to the added indirections and the blocking nature of `Unsafe.unsafe(implicit u => r.unsafe.run(effect))` it is necessary to spin up more `RoutingActor` instances as otherwise deadlocks will occur.
-This should not be a problem as any shared state, e.g. caches, is not held within the `RoutingActor` or one of its contained `Responder` instances.
+In a first step only the `Responders` are going to be ported, one by one, to use the above pattern. 
+The `Akka Actor System` still remains, will be used in the test and will be removed in a later step.
+Due to the added indirections and the blocking nature of `Unsafe.unsafe(implicit u => r.unsafe.run(effect))` 
+it is necessary to spin up more `RoutingActor` instances as otherwise deadlocks will occur.
+This should not be a problem as any shared state, e.g. caches, 
+is not held within the `RoutingActor` or one of its contained `Responder` instances.

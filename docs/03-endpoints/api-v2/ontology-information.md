@@ -1796,7 +1796,8 @@ the property definition, submit the request without those predicates.
 
 ### Adding Cardinalities to a Class
 
-If the class (or any of its sub-classes) is used in data, it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
+If the class (or any of its sub-classes) is used in data, 
+it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
 
 ```
 HTTP POST to http://host/v2/ontologies/cardinalities
@@ -1852,7 +1853,8 @@ definition (but not any of the other entities in the ontology).
 It is possible to replace all cardinalities on properties used by a class.  
 If it succeeds the request will effectively replace all direct cardinalities of the class as specified.
 That is, it removes all the cardinalities from the class and replaces them with the submitted cardinalities. 
-Meaning that, if no cardinalities are submitted (i.e. the request contains no `rdfs:subClassOf`), the class is left with no cardinalities.
+Meaning that, if no cardinalities are submitted (i.e. the request contains no `rdfs:subClassOf`), 
+the class is left with no cardinalities.
 
 The request will fail if any of the "Pre-Update Checks" fails. 
 A partial update of the ontology will not be performed.
@@ -1871,8 +1873,10 @@ A partial update of the ontology will not be performed.
 
 !!! note "Subproperty handling for cardinality pre-update checks"
     The Pre-Update check does not take into account any `subproperty` relations between the properties. 
-    Every cardinality is checked against only the given property and not its subproperties, neither in the ontology nor the consistency check with existing data. 
-    This means that currently it is necessary to maintain the cardinalities on all subproperties of a property in sync with the cardinalities on the superproperty.
+    Every cardinality is checked against only the given property and not its subproperties, 
+    neither in the ontology nor the consistency check with existing data. 
+    This means that currently it is necessary to maintain the cardinalities on all subproperties of a property 
+    in sync with the cardinalities on the superproperty.
 
 ```
 HTTP PUT to http://host/v2/ontologies/cardinalities

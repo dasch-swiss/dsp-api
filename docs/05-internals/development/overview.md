@@ -38,7 +38,7 @@ Kakadu distribution.
 To build the image, and push it to the docker hub, follow the following
 steps:
 
-```
+```bash
 $ git clone https://github.com/dhlab-basel/docker-sipi
 (copy the Kakadu distribution ``v7_8-01382N.zip`` to the ``docker-sipi`` directory)
 $ docker build -t daschswiss/sipi

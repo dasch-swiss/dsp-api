@@ -25,7 +25,8 @@ sbt test
 
 ## How to Write and Run Integration Tests
 
-[Mostly you should consider writing unit tests](https://www.youtube.com/watch?v=VDfX44fZoMc). These can be executed fast and help developers more in their daily work.
+[Mostly you should consider writing unit tests](https://www.youtube.com/watch?v=VDfX44fZoMc). 
+These can be executed fast and help developers more in their daily work.
 
 You might need to create an integration test because:
 

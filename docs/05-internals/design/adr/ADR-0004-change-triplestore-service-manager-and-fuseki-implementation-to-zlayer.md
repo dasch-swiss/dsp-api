@@ -8,12 +8,16 @@ Accepted
 
 ## Context
 
-Both `org.knora.webapi.store.triplestore.TriplestoreServiceManager` and `org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl`
+Both `org.knora.webapi.store.triplestore.TriplestoreServiceManager` 
+and `org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl`
 where implemented as Akka-Actors.
 
 ## Decision
 
-As part of the move from `Akka` to `ZIO`, it was decided that the `TriplestoreServiceManager` and the `TriplestoreServiceHttpConnectorImpl` is refactored using ZIO.
+As part of the move from `Akka` to `ZIO`, 
+it was decided that the `TriplestoreServiceManager` 
+and the `TriplestoreServiceHttpConnectorImpl` 
+is refactored using ZIO.
 
 ## Consequences
 

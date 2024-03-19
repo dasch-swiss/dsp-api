@@ -261,7 +261,8 @@ sent to DSP-API and converted to standoff:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <text>
-    We had a party on <mydate description="new year" knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. It was a lot of fun.
+    We had a party on <mydate description="new year" knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. 
+    It was a lot of fun.
 </text>
 ```
 
@@ -432,7 +433,9 @@ by DSP-API.
 The mapping has to be sent as a multipart request to the standoff route
 using the path segment `mapping`:
 
-    HTTP POST http://host/v2/mapping
+```
+HTTP POST http://host/v2/mapping
+```
 
 The multipart request consists of two named parts:
 
