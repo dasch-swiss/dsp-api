@@ -112,57 +112,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       ),
     )
 
-  // private val imagesBild = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS_LocalHost, "UTF-8")
-  // private val incunabulaBook =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost, "UTF-8")
-  // private val incunabulaPage =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost, "UTF-8")
-  // private val anythingHasListItem =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost, "UTF-8")
-  // private val anythingHasDate =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost, "UTF-8")
-  // private val imagesTitel = URLEncoder.encode(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost, "UTF-8")
-  // private val incunabulaPartOf =
-  //   URLEncoder.encode(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property_LocalHost, "UTF-8")
-
-  // private val httpGetTests = Seq(
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/classes/$imagesBild",
-  //     fileBasename = "imagesBild",
-  //     maybeClientTestDataBasename = Some("get-class-image-bild-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/classes/$incunabulaBook",
-  //     fileBasename = "incunabulaBook",
-  //     maybeClientTestDataBasename = Some("get-class-incunabula-book-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/classes/$incunabulaPage",
-  //     fileBasename = "incunabulaPage",
-  //     maybeClientTestDataBasename = Some("get-class-incunabula-page-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$anythingHasListItem",
-  //     fileBasename = "anythingHasListItem",
-  //     maybeClientTestDataBasename = Some("get-property-listValue-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$anythingHasDate",
-  //     fileBasename = "anythingHasDate",
-  //     maybeClientTestDataBasename = Some("get-property-DateValue-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$imagesTitel",
-  //     fileBasename = "imagesTitel",
-  //     maybeClientTestDataBasename = Some("get-property-textValue-response"),
-  //   ),
-  //   HttpGetTest(
-  //     urlPath = s"/v2/ontologies/properties/$incunabulaPartOf",
-  //     fileBasename = "incunabulaPartOf",
-  //     maybeClientTestDataBasename = Some("get-property-linkvalue-response"),
-  //   ),
-  // )
-
   // The following test cases have been removed:
   //
   // HttpGetTest(
@@ -218,6 +167,36 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   //     fileBasename = "minimalOntologyWithValueObjects",
   //     maybeClientTestDataBasename = Some("minimal-ontology"),
   //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$imagesBild",
+  //     fileBasename = "imagesBild",
+  //     maybeClientTestDataBasename = Some("get-class-image-bild-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaBook",
+  //     fileBasename = "incunabulaBook",
+  //     maybeClientTestDataBasename = Some("get-class-incunabula-book-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/classes/$incunabulaPage",
+  //     fileBasename = "incunabulaPage",
+  //     maybeClientTestDataBasename = Some("get-class-incunabula-page-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$anythingHasDate",
+  //     fileBasename = "anythingHasDate",
+  //     maybeClientTestDataBasename = Some("get-property-DateValue-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$imagesTitel",
+  //     fileBasename = "imagesTitel",
+  //     maybeClientTestDataBasename = Some("get-property-textValue-response"),
+  //   ),
+  //   HttpGetTest(
+  //     urlPath = s"/v2/ontologies/properties/$incunabulaPartOf",
+  //     fileBasename = "incunabulaPartOf",
+  //     maybeClientTestDataBasename = Some("get-property-linkvalue-response"),
+  //   ),
   //
   // This affects client test data:
   // - "all-ontology-metadata-response"
@@ -225,6 +204,11 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // - "get-ontologies-project-beol-response"
   // - "incunabula-ontology"
   // - "minimal-ontology"
+  // - "get-class-image-bild-response"
+  // - "get-class-incunabula-book-response"
+  // - "get-property-DateValue-response"
+  // - "get-property-textValue-response"
+  // - "get-property-linkvalue-response"
   //
   // The following were redundant because they were each two routs to the same ontology, checked against the same file:
   //
@@ -254,7 +238,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     if (JsonParser(responseStr) != JsonParser(httpGetTest.readFile(mediaType))) {
       if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
       throw new AssertionError(
-        s"""|The response did not equal the approved data.
+        s"""|
+            |The response did not equal the approved data.
             |
             |Response:
             |
@@ -267,11 +252,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
             |Approved data:
             |
             |${httpGetTest.readFile(mediaType)}
+            |
             |""".stripMargin,
       )
     }
-    // if (writeTestDataFiles) httpGetTest.writeFile(responseStr, mediaType)
-    // else assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
     httpGetTest.storeClientTestData(responseStr)
   }
 
@@ -285,7 +269,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     if (parseTurtle(responseStr) != parseTurtle(httpGetTest.readFile(mediaType))) {
       if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
       throw new AssertionError(
-        s"""|The response did not equal the approved data.
+        s"""|
+            |The response did not equal the approved data.
             |
             |Response:
             |
@@ -298,6 +283,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
             |Approved data:
             |
             |${httpGetTest.readFile(mediaType)}
+            |
             |""".stripMargin,
       )
     }
@@ -394,6 +380,21 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         clientTestDataBasename = Some("get-class-anything-thing-with-allLanguages-response"),
       )
 
+    private val anythingOntologyHasListItemSimple =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/properties/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost_SIMPLE)}",
+        fileBasename = "anythingHasListItemSimple",
+      )
+
+    private val anythingOntologyHasListItemComplex =
+      HttpGetTest(
+        urlPath =
+          s"/v2/ontologies/properties/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_HasListItem_PROPERTY_LocalHost)}",
+        fileBasename = "anythingHasListItem",
+        clientTestDataBasename = Some("get-property-listValue-response"),
+      )
+
     val testCases = Seq(
       // built-in ontologies
       knoraApiOntologySimple,
@@ -412,7 +413,9 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       anythingOntologyComplex,
       anythingThingWithAllLanguages,
       // TODO: class segments of project ontologies
-      // TODO: property segments of project ontologies
+      // project ontology properties
+      anythingOntologyHasListItemSimple,
+      anythingOntologyHasListItemComplex,
     )
   }
 
