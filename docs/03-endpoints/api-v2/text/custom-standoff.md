@@ -29,76 +29,46 @@ The mapping is written in XML itself (for a formal description, see
 structure (the indentation corresponds to the nesting in XML):
 
 - `<mapping>`: the root element
-
-  - `<defaultXSLTransformation> (optional)`: the IRI of the
-    default XSL transformation to be applied to the XML when
-    reading it back from DSP-API. The XSL transformation is
-    expected to produce HTML. If given, the IRI has to refer to
-    a resource of type `knora-base:XSLTransformation`.
-
-  - `<mappingElement>`: an element of the mapping (at least
-    one)
-
-    - `<tag>`: information about the XML element that
-      is mapped to a standoff class
-
-      - `<name>`: name of the XML element
-      - `<class>`: value of the class attribute of
-        the XML element, if any. If the element has
-        no class attribute, the keyword `noClass`
-        has to be used.
-      - `<namespace>`: the namespace the XML element
-        belongs to, if any. If the element does not
-        belong to a namespace, the keyword
-        `noNamespace` has to be used.
-      - `<separatesWords>`: a Boolean value
-        indicating whether this tag separates words
-        in the text. Once an XML document is
-        converted to RDF-standoff the markup is
-        stripped from the text, possibly leading to
-        continuous text that has been separated by
-        tags before. For structural tags like
-        paragraphs etc., `<separatesWords>` can be
-        set to `true` in which case a special
-        separator is inserted in the the text in the
-        RDF representation. In this way, words stay
-        separated and are represented in the
-        fulltext index as such.
-
-    - `<standoffClass>`: information about the
-      standoff class the XML element is mapped to
-
-      - `<classIri>`: IRI of the standoff class the
-        XML element is mapped to
-
-      - `<attributes>`: XML attributes to be
-        mapped to standoff properties (other
-        than `id` or `class`), if any
-
-        - `<attribute>`: an XML attribute
-          to be mapped to a standoff
-          property, may be repeated
-
-          - `<attributeName>`: the name
-            of the XML attribute
-          - `<namespace>`: the namespace
-            the attribute belongs to, if
-            any. If the attribute does
-            not belong to a namespace,
-            the keyword `noNamespace`
-            has to be used.
-          - `<propertyIri>`: the IRI of
-            the standoff property the
-            XML attribute is mapped to.
-
-      - `<datatype>`: the data type of the
-        standoff class, if any.
-
-        - `<type>`: the IRI of the data type
-          standoff class
-        - `<attributeName>`: the name of the
-          attribute holding the typed value in
-          the expected standard format
+    - `<defaultXSLTransformation> (optional)`: the IRI of the
+      default XSL transformation to be applied to the XML when
+      reading it back from DSP-API. The XSL transformation is
+      expected to produce HTML. If given, the IRI has to refer to
+      a resource of type `knora-base:XSLTransformation`.
+    - `<mappingElement>`: an element of the mapping (at least one)
+        - `<tag>`: information about the XML element that is mapped to a standoff class
+            - `<name>`: name of the XML element
+            - `<class>`: value of the class attribute of
+              the XML element, if any. If the element has
+              no class attribute, the keyword `noClass`
+              has to be used.
+            - `<namespace>`: the namespace the XML element
+              belongs to, if any. If the element does not
+              belong to a namespace, the keyword
+              `noNamespace` has to be used.
+            - `<separatesWords>`: a Boolean value
+              indicating whether this tag separates words
+              in the text. Once an XML document is
+              converted to RDF-standoff the markup is
+              stripped from the text, possibly leading to
+              continuous text that has been separated by
+              tags before. For structural tags like
+              paragraphs etc., `<separatesWords>` can be
+              set to `true` in which case a special
+              separator is inserted in the text in the
+              RDF representation. In this way, words stay
+              separated and are represented in the
+              fulltext index as such.
+        - `<standoffClass>`: information about the standoff class the XML element is mapped to
+            - `<classIri>`: IRI of the standoff class the XML element is mapped to
+            - `<attributes>`: XML attributes to be mapped to standoff properties (other than `id` or `class`), if any
+                - `<attribute>`: an XML attribute to be mapped to a standoff property, may be repeated
+                    - `<attributeName>`: the name of the XML attribute
+                    - `<namespace>`: the namespace the attribute belongs to, if any. 
+                      If the attribute does not belong to a namespace, the keyword `noNamespace` has to be used.
+                    - `<propertyIri>`: the IRI of the standoff property the XML attribute is mapped to.
+            - `<datatype>`: the data type of the standoff class, if any.
+                - `<type>`: the IRI of the data type standoff class
+                - `<attributeName>`: the name of the attribute holding the typed value in the expected standard format
 
 XML structure of a mapping:
 
@@ -291,7 +261,8 @@ sent to DSP-API and converted to standoff:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <text>
-    We had a party on <mydate description="new year" knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. It was a lot of fun.
+    We had a party on <mydate description="new year" knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. 
+    It was a lot of fun.
 </text>
 ```
 
@@ -462,7 +433,9 @@ by DSP-API.
 The mapping has to be sent as a multipart request to the standoff route
 using the path segment `mapping`:
 
-    HTTP POST http://host/v2/mapping
+```
+HTTP POST http://host/v2/mapping
+```
 
 The multipart request consists of two named parts:
 

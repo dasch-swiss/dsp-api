@@ -113,13 +113,15 @@ In `SearchResponderV2`, two queries are generated from a given Gravsearch query:
 The Gravsearch query is passed to `QueryTraverser` along with a query transformer. Query transformers are classes
 that implement traits supported by `QueryTraverser`:
 
-- `WhereTransformer`: instructions how to convert statements in the WHERE clause of a SPARQL query (to generate the prequery's Where clause).
+- `WhereTransformer`: instructions how to convert statements in the WHERE clause of a SPARQL query 
+  (to generate the prequery's Where clause).
 
 To improve query performance, this trait defines the method `optimiseQueryPatterns` whose implementation can call 
 private methods to optimise the generated SPARQL. For example, before transformation of statements in WHERE clause, query 
 pattern orders must be optimised by moving `LuceneQueryPatterns` to the beginning and `isDeleted` statement patterns to the end of the WHERE clause. 
 
-- `AbstractPrequeryGenerator` (extends `WhereTransformer`): converts a Gravsearch query into a prequery; this one has two implementations for regular search queries and for count queries.
+- `AbstractPrequeryGenerator` (extends `WhereTransformer`): converts a Gravsearch query into a prequery; 
+  this one has two implementations for regular search queries and for count queries.
 - `SelectTransformer` (extends `WhereTransformer`): transforms a Select query into a Select query with simulated RDF inference.
 - `ConstructTransformer`: transforms a Construct query into a Construct query with simulated RDF inference.
 
@@ -147,11 +149,21 @@ The transformation of the Gravsearch query's WHERE clause relies on the implemen
 `AbstractPrequeryGenerator` contains members whose state is changed during the iteration over the statements of the input query.
 They can then be used to create the converted query.
 
-- `mainResourceVariable: Option[QueryVariable]`: SPARQL variable representing the main resource of the input query. Present in the prequery's SELECT clause.
-- `dependentResourceVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing dependent resources in the input query. Used in an aggregation function in the prequery's SELECT clause (see below).
-- `dependentResourceVariablesGroupConcat: Set[QueryVariable]`: a set of SPARQL variables representing an aggregation of dependent resources. Present in the prequery's SELECT clause.
-- `valueObjectVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing value objects. Used in an aggregation function in the prequery's SELECT clause (see below).
-- `valueObjectVarsGroupConcat: Set[QueryVariable]`: a set of SPARQL variables representing an aggregation of value objects. Present in the prequery's SELECT clause.
+- `mainResourceVariable: Option[QueryVariable]`: 
+  SPARQL variable representing the main resource of the input query. 
+  Present in the prequery's SELECT clause.
+- `dependentResourceVariables: mutable.Set[QueryVariable]`: 
+  a set of SPARQL variables representing dependent resources in the input query. 
+  Used in an aggregation function in the prequery's SELECT clause (see below).
+- `dependentResourceVariablesGroupConcat: Set[QueryVariable]`: 
+  a set of SPARQL variables representing an aggregation of dependent resources. 
+  Present in the prequery's SELECT clause.
+- `valueObjectVariables: mutable.Set[QueryVariable]`: 
+  a set of SPARQL variables representing value objects. 
+  Used in an aggregation function in the prequery's SELECT clause (see below).
+- `valueObjectVarsGroupConcat: Set[QueryVariable]`: 
+  a set of SPARQL variables representing an aggregation of value objects. 
+  Present in the prequery's SELECT clause.
 
 The variables mentioned above are present in the prequery's result rows because they are part of the prequery's SELECT clause.
 
@@ -213,7 +225,8 @@ The variable `?book` is bound to an IRI.
 Since more than one IRI could be bound to a variable representing a dependent resource, the results have to be aggregated.
 `GROUP_CONCAT` takes two arguments: a collection of strings (IRIs in our use case) and a separator
 (we use the non-printing Unicode character `INFORMATION SEPARATOR ONE`).
-When accessing `?book__Concat` in the prequery's results containing the IRIs of dependent resources, the string has to be split with the separator used in the aggregation function.
+When accessing `?book__Concat` in the prequery's results containing the IRIs of dependent resources, 
+the string has to be split with the separator used in the aggregation function.
 The result is a collection of IRIs representing dependent resources.
 The same logic applies to value objects.
 
@@ -229,10 +242,12 @@ will return more than one row per main resource. To deal with this situation,
 
 ### Main Query
 
-The purpose of the main query is to get all requested information about the main resource, dependent resources, and value objects.
+The purpose of the main query is to get all requested information 
+about the main resource, dependent resources, and value objects.
 The IRIs of those resources and value objects were returned by the prequery.
 Since the prequery only returns resources and value objects matching the input query's criteria,
-the main query can specifically ask for more detailed information on these resources and values without having to reconsider these criteria.
+the main query can specifically ask for more detailed information on these resources and values 
+without having to reconsider these criteria.
 
 #### Generating the Main Query
 
@@ -278,10 +293,13 @@ to the maximum allowed page size, the predicate
 
 ## Inference
 
-Gravsearch queries support a subset of RDFS reasoning (see [Inference](../../../03-endpoints/api-v2/query-language.md#inference) in the API documentation
-on Gravsearch). This is implemented as follows:
+Gravsearch queries support a subset of RDFS reasoning 
+(see [Inference](../../../03-endpoints/api-v2/query-language.md#inference) in the API documentation on Gravsearch). 
+This is implemented as follows:
 
-To simulate RDF inference, the API expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements using `UNION` statements for all subclasses and subproperties from the ontologies (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
+To simulate RDF inference, the API expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements 
+using `UNION` statements for all subclasses and subproperties from the ontologies 
+(equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
 Similarly, the API replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 
@@ -293,7 +311,8 @@ Lucene queries to the beginning of the block in which they occur.
 
 ## Query Optimization by Topological Sorting of Statements
 
-In Jena Fuseki, the performance of a query highly depends on the order of the query statements. For example, a query such as the one below:
+In Jena Fuseki, the performance of a query highly depends on the order of the query statements. 
+For example, a query such as the one below:
 
 ```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -342,7 +361,8 @@ The rest of the query then reads:
  ?letter beol:creationDate ?date .
 ```
 
-Since users cannot be expected to know about performance of triplestores in order to write efficient queries, an optimization method to automatically rearrange the statements of the given queries has been implemented. 
+Since users cannot be expected to know about performance of triplestores in order to write efficient queries, 
+an optimization method to automatically rearrange the statements of the given queries has been implemented. 
 Upon receiving the Gravsearch query, the algorithm converts the query to a graph. For each statement pattern,
 the subject of the statement is the origin node, the predicate is a directed edge, and the object 
 is the target node. For the query above, this conversion would result in the following graph:
@@ -411,6 +431,7 @@ UNION
     ?int knora-api:intValueAsInt 3 .
 }
 ```
+
 This would result in one graph per block of the `UNION`. Each graph is then sorted, and the statements of its 
 block are rearranged according to the topological order of graph. This is the result:
 

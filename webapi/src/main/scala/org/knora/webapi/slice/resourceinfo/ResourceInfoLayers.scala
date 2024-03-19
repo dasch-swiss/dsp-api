@@ -13,7 +13,6 @@ import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -25,6 +24,6 @@ object ResourceInfoLayers {
     Nothing,
     RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoRoutes,
   ] =
-    ResourceInfoRepoLive.layer >>> RestResourceInfoServiceLive.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoRoutes.layer
+    ResourceInfoRepoLive.layer >>> RestResourceInfoService.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoRoutes.layer
 
 }

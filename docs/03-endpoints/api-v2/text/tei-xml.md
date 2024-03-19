@@ -31,10 +31,13 @@ Please note that the URL parameters have to be URL-encoded.
 HTTP GET to http://host/v2/tei/resourceIri?textProperty=textPropertyIri
 ```
 
-In addition to the resource's Iri, the Iri of the property containing the text with standoff has to be submitted. This will be converted to the TEI body. 
+In addition to the resource's Iri, the Iri of the property containing the text with standoff has to be submitted. 
+This will be converted to the TEI body. 
 Please note that the resource can only have one instance of this property and the text must have standoff markup.
 
-The test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with_markup` with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` that can be converted to TEI as follows:
+The test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with_markup` 
+with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` 
+that can be converted to TEI as follows:
 
 ```
 HTTP GET to http://host/v2/tei/http%3A%2F%2Frdfh.ch%2F0001%2Fthing_with_richtext_with_markup?textProperty=http%3A%2F%2F0.0.0.0%3A3333%2Fontology%2F0001%2Fanything%2Fv2%23hasRichtext
@@ -62,18 +65,25 @@ The response to this request is a TEI XML document:
   </teiHeader>
   <text>
     <body>
-      <p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p>
+      <p>
+        This is a test that contains marked up elements. 
+        This is <hi rend="italic">interesting text</hi> in italics.
+        This is <hi rend="italic">boring text</hi> in italics.
+      </p>
     </body>
   </text>
 </TEI>        
 ```
 
-The body of the TEI document contains the standoff markup as XML. The header contains contains some basic metadata about the resource such as the `rdfs:label` an its IRI. However, this might not be sufficient for more advanced use cases like digital edition projects. 
+The body of the TEI document contains the standoff markup as XML. 
+The header contains contains some basic metadata about the resource such as the `rdfs:label` an its IRI. 
+However, this might not be sufficient for more advanced use cases like digital edition projects. 
 In that case, a custom conversion has to be performed (see below).
 
 ## Custom Conversion
 
-If a project defines its own standoff entities, a custom conversion can be provided (body of the TEI document). Also for the TEI header, a custom conversion can be provided.
+If a project defines its own standoff entities, a custom conversion can be provided (body of the TEI document). 
+Also for the TEI header, a custom conversion can be provided.
 
 For the custom conversion, additional configuration is required.
 
@@ -82,18 +92,29 @@ TEI body:
 - additional mapping from standoff to XML (URL parameter `mappingIri`)
 - XSL transformation to turn the XML into a valid TEI body (referred to by the mapping).
 
-The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see [XML To Standoff Mapping](custom-standoff.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
-For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. TEI expresses this as `<hi rend="italic">...</hi>`. In the mapping, the `standoff:StandoffItalicTag` may be mapped to a a temporary XML element that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
+The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup 
+(see [XML To Standoff Mapping](custom-standoff.md)). 
+This step is necessary because the mapping assumes a one to one relation 
+between standoff classes and properties and XML elements and attributes.
+For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. 
+TEI expresses this as `<hi rend="italic">...</hi>`. 
+In the mapping, the `standoff:StandoffItalicTag` may be mapped to a temporary XML element 
+that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
 
-For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. The standoff entities are defined in `beol-onto.ttl`.
+For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) 
+and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. 
+The standoff entities are defined in `beol-onto.ttl`.
 
 TEI header:
     
 - Gravsearch template to query the resources metadata, results are serialized to RDF/XML (URL parameter `gravsearchTemplateIri`)
 - XSL transformation to turn that RDF/XML into a valid TEI header (URL parameter `teiHeaderXSLTIri`)
 
-The Gravsearch template is expected to be of type `knora-base:TextRepresentation` and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
-The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) and more properties that are going to be mapped to the TEI header. The Gravsearch template is a simple text file with the files extension `.txt`.
+The Gravsearch template is expected to be of type `knora-base:TextRepresentation` 
+and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
+The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) 
+and more properties that are going to be mapped to the TEI header. 
+The Gravsearch template is a simple text file with the files extension `.txt`.
 
 A Gravsearch template may look like this (see `test_data/test_route/texts/beol/gravsearch.txt`):
 
@@ -184,10 +205,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     }
 ```
 
-Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iri of the resource the request is performed for.
-The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by [correspSearch](https://correspsearch.net).
+Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced 
+by the Iri of the resource the request is performed for.
+The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. 
+This information is converted to the TEI header in the format required by [correspSearch](https://correspsearch.net).
 
-To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see [Introduction](../introduction.md)).
+To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation 
+(see [Introduction](../introduction.md)).
 
 The Gravsearch query's result may look like this (`RDF/XML`):
 
@@ -258,7 +282,9 @@ The Gravsearch query's result may look like this (`RDF/XML`):
 </rdf:RDF>
 ```
 
-In order to convert the metadata (not the actual standoff markup), a `knora-base:knora-base:XSLTransformation` has to be provided. For our example, it looks like this (see `test_data/test_route/texts/beol/header.xsl`):
+In order to convert the metadata (not the actual standoff markup), 
+a `knora-base:knora-base:XSLTransformation` has to be provided. 
+For our example, it looks like this (see `test_data/test_route/texts/beol/header.xsl`):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

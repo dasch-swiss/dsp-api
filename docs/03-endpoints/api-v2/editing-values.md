@@ -241,12 +241,12 @@ Knora supports the storage of certain types of data as files, using [Sipi](https
 (see [FileValue](../../02-dsp-ontologies/knora-base.md#filevalue)). DSP-API v2 currently supports using Sipi to store
 the following types of files:
 
-* Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
-* Documents: PDF
-* Audio: MPEG or Waveform audio file format (.wav, .x-wav, .vnd.wave)
-* Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL
-* Video files: MP4
-* Archive files: ZIP, TAR, GZIP
+- Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
+- Documents: PDF
+- Audio: MPEG or Waveform audio file format (.wav, .x-wav, .vnd.wave)
+- Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL
+- Video files: MP4
+- Archive files: ZIP, TAR, GZIP
 
 Support for other types of files will be added in the future.
 
