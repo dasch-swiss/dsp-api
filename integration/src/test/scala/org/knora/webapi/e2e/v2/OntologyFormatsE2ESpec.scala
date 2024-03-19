@@ -34,8 +34,27 @@ class OntologyFormatsE2ESpec extends R2RSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
-      RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
-      RdfDataObject("test_data/project_ontologies/minimal-onto.ttl", "http://www.knora.org/ontology/0001/minimal"),
+      RdfDataObject(
+        path = "test_data/project_ontologies/example-box.ttl",
+        name = "http://www.knora.org/ontology/shared/example-box",
+      ),
+      RdfDataObject(
+        path = "test_data/project_ontologies/minimal-onto.ttl",
+        name = "http://www.knora.org/ontology/0001/minimal",
+      ),
+      RdfDataObject(
+        path = "test_data/project_ontologies/freetest-onto.ttl",
+        name = "http://www.knora.org/ontology/0001/freetest",
+      ),
+      RdfDataObject(
+        path = "test_data/project_data/freetest-data.ttl",
+        name = "http://www.knora.org/data/0001/freetest",
+      ),
+      RdfDataObject(
+        path = "test_data/project_ontologies/anything-onto.ttl",
+        name = "http://www.knora.org/ontology/0001/anything",
+      ),
+      RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     )
 
   /**
