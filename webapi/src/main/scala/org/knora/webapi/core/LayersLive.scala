@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import org.apache.pekko.actor.ActorSystem
 import zio.ULayer
 import zio.ZLayer
 
@@ -93,7 +94,7 @@ object LayersLive {
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
-      ActorSystem.layer,
+      org.knora.webapi.core.ActorSystem.layer,
       AdminApiEndpoints.layer,
       AdminApiRoutes.layer,
       ApiRoutes.layer,
@@ -140,7 +141,7 @@ object LayersLive {
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandlers.layer,
       MaintenanceRestService.layer,
-      MaintenanceServiceLive.layer,
+      MaintenanceService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,

@@ -97,12 +97,6 @@ erDiagram
     
 ```
 
-!!! danger "Unclear/Unexpected Stuff"
-
-    - User.phone?
-    - Institution? (name, description, website, phone, address, email)
-    - Project.belongsToInstitution?
-
 ### Overview V2
 
 ```mermaid

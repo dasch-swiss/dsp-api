@@ -40,6 +40,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.temporal.ChronoUnit
 import java.util
 import scala.io.Source
@@ -48,8 +49,8 @@ import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -564,7 +565,7 @@ case class TriplestoreServiceLive(
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         // Stream the HTTP entity directly to the output file.
-        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile)).unit
+        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile, StandardCopyOption.REPLACE_EXISTING)).unit
       case None =>
         val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString) *>
@@ -598,6 +599,7 @@ case class TriplestoreServiceLive(
             graphIri,
             outputFile,
             quadFormat,
+            StandardOpenOption.APPEND,
           )
 
           Files.delete(tempTurtleFile)

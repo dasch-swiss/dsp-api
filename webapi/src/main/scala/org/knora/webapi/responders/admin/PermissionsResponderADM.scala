@@ -4,9 +4,9 @@
  */
 
 package org.knora.webapi.responders.admin
+
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
-import zio.macros.accessible
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
@@ -26,8 +26,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -57,7 +57,6 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Provides information about permissions to other responders.
  */
-@accessible
 trait PermissionsResponderADM {
 
   /**

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
-import zio.*
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -30,8 +30,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -1143,8 +1143,13 @@ object ValueContentV2 {
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
                       val assetId = AssetId.unsafeFrom(internalFilename.substring(0, internalFilename.indexOf('.')))
-                      SipiService.getFileMetadataFromDspIngest(Shortcode.unsafeFrom(shortcode), assetId).logError
-                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromSipiTemp(internalFilename)
+                      ZIO
+                        .serviceWithZIO[SipiService](
+                          _.getFileMetadataFromDspIngest(Shortcode.unsafeFrom(shortcode), assetId),
+                        )
+                        .logError
+                    case AssetIngestState.AssetInTemp =>
+                      ZIO.serviceWithZIO[SipiService](_.getFileMetadataFromSipiTemp(internalFilename))
                   }
     } yield FileInfo(internalFilename, metadata)
 }

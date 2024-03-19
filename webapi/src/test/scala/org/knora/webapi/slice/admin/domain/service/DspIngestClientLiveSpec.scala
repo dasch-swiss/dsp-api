@@ -57,6 +57,9 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
   private val testShortcode    = Shortcode.unsafeFrom(testShortcodeStr)
   private val testContent      = "testContent".getBytes()
 
+  private val withDspIngestClient  = ZIO.serviceWithZIO[DspIngestClient]
+  private val getTokenForDspIngest = ZIO.serviceWithZIO[JwtService](_.createJwtForDspIngest()).map(_.jwtString)
+
   private val exportProjectSuite = suite("exportProject")(test("should download a project export") {
     val expectedUrl = s"/projects/$testShortcodeStr/export"
     for {
@@ -71,10 +74,10 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
            )
 
       // when
-      path <- DspIngestClient.exportProject(testShortcode)
+      path <- withDspIngestClient(_.exportProject(testShortcode))
 
       // then
-      mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
+      mockJwt <- getTokenForDspIngest
       _ <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
@@ -101,10 +104,10 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       _ <- HttpMockServer.stub.getResponseJsonBody(expectedUrl, 200, expected)
 
       // when
-      assetInfo <- DspIngestClient.getAssetInfo(testShortcode, assetId)
+      assetInfo <- withDspIngestClient(_.getAssetInfo(testShortcode, assetId))
 
       // then
-      mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
+      mockJwt <- getTokenForDspIngest
       _ <- HttpMockServer.verify.request(
              getRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),

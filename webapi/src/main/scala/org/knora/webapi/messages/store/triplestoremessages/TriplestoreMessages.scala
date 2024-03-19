@@ -17,8 +17,8 @@ import scala.collection.mutable
 import dsp.errors.*
 import dsp.valueobjects.V2
 import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
 

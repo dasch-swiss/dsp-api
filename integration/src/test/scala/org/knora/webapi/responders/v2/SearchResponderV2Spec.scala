@@ -6,8 +6,8 @@
 package org.knora.webapi.responders.v2
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.*
+import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

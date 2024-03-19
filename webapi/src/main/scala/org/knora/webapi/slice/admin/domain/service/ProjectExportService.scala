@@ -17,7 +17,6 @@ import zio.Scope
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 
@@ -34,7 +33,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
-@accessible
 trait ProjectExportService {
   def exportProject(project: KnoraProject): Task[Path]
 
@@ -149,7 +147,10 @@ final case class ProjectExportServiceLive(
     allGraphsTrigFile <-
       projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
     files <-
-      ZIO.foreach(allGraphsTrigFile)(file => triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file))
+      ZIO.foreach(allGraphsTrigFile)(file =>
+        Files.deleteIfExists(file.dataFile) *> Files.createFile(file.dataFile) *>
+          triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file),
+      )
   } yield files
 
   /**

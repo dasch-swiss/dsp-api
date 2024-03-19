@@ -6,8 +6,8 @@
 package org.knora.webapi.slice.common.repo.rdf
 
 import zio.*
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import org.knora.webapi.slice.common.repo.rdf.Errors.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
