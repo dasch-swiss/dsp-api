@@ -616,18 +616,19 @@ because it does not allow to perform searches across multiple documents.
 The recommended way to store text with markup in DSP-API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
 to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations
-(
-see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
+(see 
+[Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
 A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
 linguistics, we do not use any tokenisation resulting in a form of predefined segmentation, which would limit the user's
 ability to freely annotate any ranges in the text.
 
 For example, suppose we have the following text:
 
+```xml
 <blockquote>This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.</blockquote>
+```
 
-This would require just two standoff tags: `(italic, start=5, end=29)`
-and `(bold, start=14, end=36)`.
+This would require just two standoff tags: `(italic, start=5, end=29)` and `(bold, start=14, end=36)`.
 
 Moreover, standoff makes it possible to mark up the same text in different, possibly incompatible ways, allowing for
 different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can

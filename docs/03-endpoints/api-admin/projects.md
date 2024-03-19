@@ -171,22 +171,24 @@ value, which is: `!512,512`. It is possible to change the value using [dedicated
 
 When a new project is created, following default permissions are added to its admins and members:
 
-- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
-within the new project. This administrative permission is retrievable through its IRI:
-`http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
+- ProjectAdmin group receives an administrative permission to do all project level operations 
+  and to create resources within the new project. 
+  This administrative permission is retrievable through its IRI:
+  `http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
 
-- ProjectAdmin group also gets a default object access permission to change rights (which includes delete, modify, view, 
-and restricted view permissions) of any entity that belongs to the project. This default object access permission is retrievable 
-through its IRI: 
-`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
+- ProjectAdmin group also gets a default object access permission to change rights 
+  (which includes delete, modify, view, and restricted view permissions) of any entity that belongs to the project. 
+  This default object access permission is retrievable through its IRI: 
+  `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
 
-- ProjectMember group receives an administrative permission to create resources within the new project. This 
-administrative permission is retrievable through its IRI:
-`http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
+- ProjectMember group receives an administrative permission to create resources within the new project. 
+  This administrative permission is retrievable through its IRI:
+  `http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
 
-- ProjectMember group also gets a default object access permission to modify (which includes view and restricted view 
-permissions) of any entity that belongs to the project. This default object access permission is retrievable through its IRI: 
-`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
+- ProjectMember group also gets a default object access permission to modify 
+  (which includes view and restricted view permissions) of any entity that belongs to the project. 
+  This default object access permission is retrievable through its IRI: 
+  `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 
 ### Get Project by ID
@@ -830,8 +832,10 @@ This can be either a size restriction or a watermark.
 
 For that, we support two of the [IIIF size](https://iiif.io/api/image/3.0/#42-size) forms:
 
-- `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, while maintaining the aspect ratio.
-- `pct:n` The width and height of the returned image is scaled to n percent of the width and height of the original image. 1<= n <= 100.
+- `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, 
+  while maintaining the aspect ratio.
+- `pct:n` The width and height of the returned image is scaled to n percent 
+  of the width and height of the original image. 1<= n <= 100.
 
 
 If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size `!128,128` is set.

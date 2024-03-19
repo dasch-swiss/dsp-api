@@ -200,9 +200,9 @@ payload or the `position` parameter must be left out of the payload.
 
 ### Update list's or node's information
 
-The basic information of a list (or node) such as its labels, comments, name, or all of them can be updated. The parameters that 
-must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
-list and the IRI of the project it belongs to. 
+The basic information of a list (or node) such as its labels, comments, name, or all of them can be updated. 
+The parameters that must be updated together with the new value must be given in the JSON body of the request 
+together with the IRI of the list and the IRI of the project it belongs to. 
 
 - Required permission: SystemAdmin / ProjectAdmin
 - Required fields: `listIri`, `projectIri`
@@ -211,12 +211,13 @@ list and the IRI of the project it belongs to.
 - BODY:
 
 ```json
- {   "listIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-      "projectIri": "http://rdfh.ch/projects/0001",
-      "name": "new name for the list",
-      "labels": [{ "value": "a new label for the list", "language": "en"}],
-      "comments": [{ "value": "a new comment for the list", "language": "en"}]
-  }
+{
+    "listIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "new name for the list",
+    "labels": [{ "value": "a new label for the list", "language": "en"}],
+    "comments": [{ "value": "a new comment for the list", "language": "en"}]
+}
 ```
 
 The response will contain the basic information of the list, `listinfo` (or `nodeinfo`), without its children, as below:
@@ -247,15 +248,15 @@ The response will contain the basic information of the list, `listinfo` (or `nod
 If only name of the list must be updated, it can be given as below in the body of the request:
 
 ```json
-   {
-       "listIri": "listIri",
-       "projectIri": "someprojectiri",
-       "name": "another name"
-  }
+{
+    "listIri": "listIri",
+    "projectIri": "someprojectiri",
+    "name": "another name"
+}
 ```
 
-Alternatively, basic information `name`, `labels`, or `comments` of the root node (i.e. list) can be updated individually 
-as explained below.
+Alternatively, basic information `name`, `labels`, or `comments` of the root node (i.e. list) 
+can be updated individually as explained below.
 
 ### Update list or node's name
 

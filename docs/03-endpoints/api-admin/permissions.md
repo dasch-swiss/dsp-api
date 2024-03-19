@@ -68,7 +68,7 @@ the `@id` attribute which will then be assigned to the permission; otherwise the
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:
 
-```
+```json
 "id": "http://rdfh.ch/permissions/0001/jKIYuaEUETBcyxpenUwRzQ",
 ```
 
@@ -117,10 +117,13 @@ In summary, each permission should contain followings:
 - `permissionCode`: should be left empty, otherwise will be ignored.
 
 
-Note that during the creation of a new project, a default set of administrative permissions are added to its ProjectAdmin and 
-ProjectMember groups (See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
-Therefore, it is not possible to create new administrative permissions for the ProjectAdmin and ProjectMember groups of 
-a project. However, the default permissions set for these groups can be modified (See [update permission](./permissions.md#updating-a-permissions-scope)).
+Note that during the creation of a new project, 
+a default set of administrative permissions are added to its ProjectAdmin and ProjectMember groups 
+(See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
+Therefore, it is not possible to create new administrative permissions 
+for the ProjectAdmin and ProjectMember groups of a project. 
+However, the default permissions set for these groups can be modified 
+(See [update permission](./permissions.md#updating-a-permissions-scope)).
 
 
 ### Creating New Default Object Access Permissions
@@ -212,10 +215,12 @@ The response contains the newly created permission and its IRI, as:
 }
 ```
 
-Note that during the creation of a new project, a set of default object access permissions are created for its 
-ProjectAdmin and ProjectMember groups (See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
-Therefore, it is not possible to create new default object access permissions for the ProjectAdmin and ProjectMember 
-groups of a project. However, the default permissions set for these groups can be modified; see below for more information.
+Note that during the creation of a new project, 
+a set of default object access permissions are created for its ProjectAdmin and ProjectMember groups 
+(See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
+Therefore, it is not possible to create new default object access permissions 
+for the ProjectAdmin and ProjectMember groups of a project. 
+However, the default permissions set for these groups can be modified; see below for more information.
 
 ### Updating a Permission's Group
 
