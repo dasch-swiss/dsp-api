@@ -10,8 +10,8 @@
 **List Item Operations:**
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given
-If IRI of the child node is given, return the node with its immediate children
+- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given.
+  If IRI of the child node is given, return the node with its immediate children
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 - `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 - `GET: /admin/lists/<listIri>/info` : return list basic information (without children)
@@ -25,8 +25,8 @@ If IRI of the child node is given, return the node with its immediate children
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child)
 - `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child)
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child)
-- `PUT: /admin/lists/<nodeIri>/position` : update position of a child node within its current parent or by changing its 
-parent node
+- `PUT: /admin/lists/<nodeIri>/position` : update position of a child node within its current parent
+  or by changing its parent node
 
 - `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
 - `DELETE: /admin/lists/comments/<nodeIri>` : delete comments of a node (child only)
@@ -42,8 +42,8 @@ parent node
 ### Get list
 
 - Required permission: none
-- Return complete `list` (or `node`) including basic information of the list (or child node), `listinfo` (or `nodeinfo`),
-and all its children
+- Return complete `list` (or `node`) including basic information of the list (or child node), 
+  `listinfo` (or `nodeinfo`), and all its children
 - GET: `/admin/lists/<listIri>`
 
 ### Get list's information
@@ -85,7 +85,7 @@ List (root node or child node with all its children) can be deleted only if it (
 - Required fields: `projectIri`, `labels`, `comments`
 - POST: `/admin/lists`
 - BODY:
-  
+
 ```json
     {
         "projectIri": "someprojectiri",
@@ -94,7 +94,8 @@ List (root node or child node with all its children) can be deleted only if it (
     } 
 ```
 
-Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+specified by the `id` in the request body as below:
 
 ```json
   {
@@ -149,7 +150,8 @@ The response will contain the basic information of the list, `listinfo` and an e
     }
 ```
 
-Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data)
+form) specified by the `id` in the request body as below:
 
 ```json
 {    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
@@ -180,9 +182,9 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
 }
 ```
 
-The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary,
-according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than the
-number of existing children.
+The new node can be created and inserted in a specific position which must be given in the payload as shown below.
+If necessary, according to the given position, the sibling nodes will be shifted. 
+Note that `position` cannot have a value higher than the number of existing children.
 
 ```json
 {   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
@@ -195,7 +197,7 @@ number of existing children.
 
 In case the new node should be appended to the list of current children, either `position: -1` must be given in the
 payload or the `position` parameter must be left out of the payload.
- 
+
 ### Update list's or node's information
 
 The basic information of a list (or node) such as its labels, comments, name, or all of them can be updated. The parameters that 
@@ -207,7 +209,7 @@ list and the IRI of the project it belongs to.
 - Update list information
 - PUT: `/admin/lists/<listIri>`
 - BODY:
- 
+
 ```json
  {   "listIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
       "projectIri": "http://rdfh.ch/projects/0001",
@@ -260,10 +262,9 @@ as explained below.
 - Required permission: SystemAdmin / ProjectAdmin
 - Update name of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/name`
-- BODY:
- The new name of the node must be given in the body of the request as shown below:
+- BODY: The new name of the node must be given in the body of the request as shown below:
 
- ```json
+```json
 {
     "name": "a new name"
 }
@@ -276,10 +277,9 @@ There is no need to specify the project IRI because it is automatically extracte
 - Required permission: SystemAdmin / ProjectAdmin
 - Update labels of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/labels`
-- BODY:
- The new set of labels of the node must be given in the body of the request as shown below:
+- BODY: The new set of labels of the node must be given in the body of the request as shown below:
 
- ```json
+```json
 {
     "labels": [{"language": "se", "value": "nya märkningen"}]
 }
@@ -292,10 +292,9 @@ There is no need to specify the project IRI because it is automatically extracte
 - Required permission: SystemAdmin / ProjectAdmin
 - Update comments of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/labels`
-- BODY:
- The new set of comments of the node must be given in the body of the request as shown below:
+- BODY: The new set of comments of the node must be given in the body of the request as shown below:
 
- ```json
+```json
 {
     "comments": [{"language": "se", "value": "nya kommentarer"}]
 }
