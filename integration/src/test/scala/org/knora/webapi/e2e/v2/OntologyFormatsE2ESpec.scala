@@ -278,7 +278,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         urlPath =
           s"/v2/ontologies/classes/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost)}",
         fileBasename = "anythingThing",
-        clientTestDataBasename = Some("get-class-anything-thing-response"),
       )
 
     private val anythingOntologyHasListItemSimple =

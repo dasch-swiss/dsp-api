@@ -168,7 +168,6 @@ test-data/v2/lists/treelist.json
 test-data/v2/ontologies/
 test-data/v2/ontologies/add-cardinalities-to-class-nothing-request.json
 test-data/v2/ontologies/add-cardinalities-to-class-nothing-response.json
-test-data/v2/ontologies/all-ontology-metadata-response.json
 test-data/v2/ontologies/anything-ontology.json
 test-data/v2/ontologies/can-do-response.json
 test-data/v2/ontologies/candeletecardinalities-false-request.json
@@ -198,19 +197,9 @@ test-data/v2/ontologies/delete-class-comment-response.json
 test-data/v2/ontologies/delete-ontology-response.json
 test-data/v2/ontologies/delete-property-comment-response.json
 test-data/v2/ontologies/get-class-anything-thing-with-allLanguages-response.json
-test-data/v2/ontologies/get-class-image-bild-response.json
-test-data/v2/ontologies/get-class-incunabula-book-response.json
-test-data/v2/ontologies/get-class-incunabula-page-response.json
 test-data/v2/ontologies/get-ontologies-project-anything-response.json
-test-data/v2/ontologies/get-ontologies-project-beol-response.json
-test-data/v2/ontologies/get-ontologies-project-incunabula-response.json
-test-data/v2/ontologies/get-property-DateValue-response.json
-test-data/v2/ontologies/get-property-linkvalue-response.json
 test-data/v2/ontologies/get-property-listValue-response.json
-test-data/v2/ontologies/get-property-textValue-response.json
-test-data/v2/ontologies/incunabula-ontology.json
 test-data/v2/ontologies/knora-api-ontology.json
-test-data/v2/ontologies/minimal-ontology.json
 test-data/v2/ontologies/not-change-property-guielement-request.json
 test-data/v2/ontologies/not-change-property-guielement-response.json
 test-data/v2/ontologies/remove-class-cardinalities-request.json
