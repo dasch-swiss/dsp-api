@@ -10,7 +10,6 @@ import zio.*
 import java.util.UUID
 
 import dsp.errors.*
-import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -69,7 +68,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 descriptions = GroupDescriptions
                   .unsafeFrom(
                     Seq(
-                      V2.StringLiteralV2(
+                      StringLiteralV2(
                         value = """NewGroupDescription with "quotes" and <html tag>""",
                         language = Some("en"),
                       ),
@@ -106,7 +105,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
                 name = groupName,
                 descriptions = GroupDescriptions
-                  .unsafeFrom(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
+                  .unsafeFrom(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en")))),
                 project = ProjectIri.unsafeFrom(imagesProjectIri),
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
@@ -130,7 +129,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
                   GroupDescriptions.unsafeFrom(
-                    Seq(V2.StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
+                    Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
                   ),
                 ),
                 status = Some(GroupStatus.active),
@@ -160,7 +159,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
                   GroupDescriptions
-                    .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
+                    .unsafeFrom(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
                 ),
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
@@ -185,7 +184,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 name = Some(groupName),
                 descriptions = Some(
                   GroupDescriptions
-                    .unsafeFrom(Seq(V2.StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
+                    .unsafeFrom(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en")))),
                 ),
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),

@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.admin.repo.rdf
 
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.V2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
@@ -32,7 +32,7 @@ object RdfConversions {
   implicit val statusConverter: Boolean => Either[String, Status]        = value => Right(Status.from(value))
   implicit val selfjoinConverter: Boolean => Either[String, SelfJoin]    = value => Right(SelfJoin.from(value))
   implicit val descriptionConverter: LangString => Either[String, Description] = langString =>
-    Description.from(V2.StringLiteralV2(langString.value, langString.lang))
+    Description.from(StringLiteralV2(langString.value, langString.lang))
 
   // User properties
   implicit val usernameConverter: String => Either[String, Username]         = Username.from

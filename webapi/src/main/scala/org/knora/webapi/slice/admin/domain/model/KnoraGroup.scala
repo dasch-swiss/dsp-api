@@ -11,7 +11,6 @@ import sttp.tapir.CodecFormat
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
@@ -109,21 +108,21 @@ object GroupName extends StringValueCompanion[GroupName] {
     Right(GroupName(value)).filterOrElse(_.value.nonEmpty, GroupErrorMessages.GroupNameMissing)
 }
 
-final case class GroupDescriptions private (value: Seq[V2.StringLiteralV2])
+final case class GroupDescriptions private (value: Seq[StringLiteralV2])
     extends AnyVal
-    with Value[Seq[V2.StringLiteralV2]] {
+    with Value[Seq[StringLiteralV2]] {
   def toRdfLiterals: Seq[StringLiteral] = value.map(_.toRdfLiteral)
 }
 
-object GroupDescriptions extends WithFrom[Seq[V2.StringLiteralV2], GroupDescriptions] {
-  def from(value: Seq[V2.StringLiteralV2]): Either[String, GroupDescriptions] =
+object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescriptions] {
+  def from(value: Seq[StringLiteralV2]): Either[String, GroupDescriptions] =
     value.toList match {
       case descriptions @ (v2String :: _) if v2String.value.nonEmpty => Right(GroupDescriptions(descriptions))
       case _ :: _                                                    => Left(GroupErrorMessages.GroupDescriptionsInvalid)
       case _                                                         => Left(GroupErrorMessages.GroupDescriptionsMissing)
     }
 
-  def fromOne(value: V2.StringLiteralV2): Either[String, V2.StringLiteralV2] =
+  def fromOne(value: StringLiteralV2): Either[String, StringLiteralV2] =
     Some(value).filter(_.value.nonEmpty).toRight(GroupErrorMessages.GroupDescriptionsInvalid)
 
 }
@@ -150,8 +149,8 @@ object KnoraGroup {
   object Conversions {
     implicit val groupIriConverter: String => Either[String, GroupIri]   = GroupIri.from
     implicit val groupNameConverter: String => Either[String, GroupName] = GroupName.from
-    implicit val groupDescriptionsConverter: LangString => Either[String, V2.StringLiteralV2] = langString =>
-      GroupDescriptions.fromOne(V2.StringLiteralV2(langString.value, langString.lang))
+    implicit val groupDescriptionsConverter: LangString => Either[String, StringLiteralV2] = langString =>
+      GroupDescriptions.fromOne(StringLiteralV2(langString.value, langString.lang))
     implicit val groupStatusConverter: Boolean => Either[String, GroupStatus] = value => Right(GroupStatus.from(value))
     implicit val groupHasSelfJoinEnabledConverter: Boolean => Either[String, GroupSelfJoin] = value =>
       Right(GroupSelfJoin.from(value))

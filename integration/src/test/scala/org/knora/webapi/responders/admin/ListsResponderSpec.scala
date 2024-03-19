@@ -13,7 +13,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -125,8 +124,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listCreateRootNode(
             ListCreateRootNodeRequest(
               id = None,
-              Comments.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")))),
-              Labels.unsafeFrom(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+              Comments.unsafeFrom(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de")))),
+              Labels.unsafeFrom(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
               Some(ListName.unsafeFrom("neuelistename")),
               ProjectIri.unsafeFrom(imagesProjectIri),
             ),
@@ -161,8 +160,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           ListsResponder.listCreateRootNode(
             ListCreateRootNodeRequest(
               id = None,
-              Comments.unsafeFrom(Seq(V2.StringLiteralV2(commentWithSpecialCharacter, language = Some("de")))),
-              Labels.unsafeFrom(Seq(V2.StringLiteralV2(labelWithSpecialCharacter, language = Some("de")))),
+              Comments.unsafeFrom(Seq(StringLiteralV2(commentWithSpecialCharacter, language = Some("de")))),
+              Labels.unsafeFrom(Seq(StringLiteralV2(labelWithSpecialCharacter, language = Some("de")))),
               Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
               ProjectIri.unsafeFrom(imagesProjectIri),
             ),
@@ -198,8 +197,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
           labels = Some(
             Labels.unsafeFrom(
               Seq(
-                V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                V2.StringLiteralV2(value = "Changed List", language = Some("en")),
+                StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                StringLiteralV2(value = "Changed List", language = Some("en")),
               ),
             ),
           ),
@@ -207,8 +206,8 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
             Comments
               .unsafeFrom(
                 Seq(
-                  V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                  V2.StringLiteralV2(value = "New Comment", language = Some("en")),
+                  StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                  StringLiteralV2(value = "New Comment", language = Some("en")),
                 ),
               ),
           ),
@@ -263,11 +262,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("first")),
               ListIri.unsafeFrom(newListIri.get),
@@ -317,11 +316,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("second")),
               ListIri.unsafeFrom(newListIri.get),
@@ -372,11 +371,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("third")),
               ListIri.unsafeFrom(secondChildIri.get),
@@ -429,11 +428,11 @@ class ListsResponderSpec extends CoreSpec with ImplicitSender {
               id = None,
               Some(
                 Comments.unsafeFrom(
-                  Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))),
+                  Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))),
                 ),
               ),
               Labels.unsafeFrom(
-                Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
+                Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
               ),
               Some(ListName.unsafeFrom("fourth")),
               ListIri.unsafeFrom(newListIri.get),
