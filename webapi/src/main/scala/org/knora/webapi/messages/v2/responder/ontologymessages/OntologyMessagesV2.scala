@@ -2153,7 +2153,7 @@ object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
     val value =
       Iri.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
-    StringLiteralV2(value)
+    StringLiteralV2(value, None)
   }
 
   /**

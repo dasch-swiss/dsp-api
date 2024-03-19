@@ -21,6 +21,8 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -304,24 +306,24 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   override def toString: String = value
 }
 
-/**
- * Represents a string with an optional language tag. Allows sorting inside collections by value.
- *
- * @param value    the string value.
- * @param language the optional language tag.
- */
-case class StringLiteralV2(value: String, language: Option[String] = None)
-    extends LiteralV2
-    with OntologyLiteralV2
-    with Ordered[StringLiteralV2] {
-  override def toString: String = value
+  /**
+   * Represents a string with language iso. Allows sorting inside collections by the value.
+   *
+   * @param value    the string value.
+   * @param language the language iso.
+   */
+  case class StringLiteralV2(value: String, language: Option[String]) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
 
-  if (language.isDefined && value.isEmpty) {
-    throw BadRequestException(s"String value is missing.")
+    override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+    override def toString: String = value
+
+    def toRdfLiteral: StringLiteral =
+      language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
   }
 
-  def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
-}
+  object StringLiteralV2 {
+    implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+  }
 
 /**
  * Represents a sequence of [[StringLiteralV2]].
