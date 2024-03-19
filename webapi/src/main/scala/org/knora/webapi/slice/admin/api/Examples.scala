@@ -9,7 +9,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.Examples.GroupExample.groupName
@@ -83,7 +83,7 @@ object Examples {
       selfjoin = Option(GroupSelfJoin.enabled),
     )
 
-    private val project: ProjectADM = ProjectADM(
+    private val project: Project = Project(
       id = ProjectExample.projectIri.value,
       shortname = "example",
       shortcode = "0001",

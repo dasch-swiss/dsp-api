@@ -23,7 +23,7 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -386,7 +386,7 @@ case class ReadResourceV2(
   label: String,
   resourceClassIri: SmartIri,
   attachedToUser: IRI,
-  projectADM: ProjectADM,
+  projectADM: Project,
   permissions: String,
   userPermission: EntityPermission,
   values: Map[SmartIri, Seq[ReadValueV2]],
@@ -624,7 +624,7 @@ case class CreateResourceV2(
   resourceClassIri: SmartIri,
   label: String,
   values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-  projectADM: ProjectADM,
+  projectADM: Project,
   permissions: Option[String] = None,
   creationDate: Option[Instant] = None,
 ) extends ResourceV2 {
@@ -1306,12 +1306,12 @@ case class ReadResourcesSequenceV2(
    * project. Throws [[AssertionException]] if this [[ReadResourcesSequenceV2]] is empty or refers to more than one
    * project.
    */
-  override def projectADM: ProjectADM = {
+  override def projectADM: Project = {
     if (resources.isEmpty) {
       throw AssertionException("ReadResourcesSequenceV2 is empty")
     }
 
-    val allProjects: Set[ProjectADM] = resources.map(_.projectADM).toSet
+    val allProjects: Set[Project] = resources.map(_.projectADM).toSet
 
     if (allProjects.size != 1) {
       throw AssertionException("ReadResourcesSequenceV2 refers to more than one project")
@@ -1509,7 +1509,7 @@ case class ResourceEventBody(
   lastModificationDate: Option[Instant] = None,
   creationDate: Option[Instant] = None,
   deletionInfo: Option[DeletionInfo] = None,
-  projectADM: ProjectADM,
+  projectADM: Project,
 ) extends ResourceOrValueEventBody {
 
   def toJsonLD(
@@ -1627,7 +1627,7 @@ case class ResourceMetadataEventBody(
 case class ValueEventBody(
   resourceIri: IRI,
   resourceClassIri: SmartIri,
-  projectADM: ProjectADM,
+  projectADM: Project,
   propertyIri: SmartIri,
   valueIri: IRI,
   valueTypeIri: SmartIri,

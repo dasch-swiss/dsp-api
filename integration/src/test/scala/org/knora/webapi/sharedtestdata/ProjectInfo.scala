@@ -6,7 +6,7 @@
 package org.knora.webapi.sharedtestdata
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 
 /**
  * Represents basic information about a project.
@@ -35,7 +35,7 @@ case class ProjectInfo(
 )
 
 object ProjectInfo {
-  def from(projectADM: ProjectADM): ProjectInfo =
+  def from(projectADM: Project): ProjectInfo =
     ProjectInfo(
       id = projectADM.id,
       shortname = projectADM.shortname,
