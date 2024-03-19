@@ -31,6 +31,12 @@ import pekko.http.scaladsl.model.headers.Accept
 
 class OntologyFormatsE2ESpec extends R2RSpec {
 
+  override lazy val rdfDataObjects: List[RdfDataObject] =
+    List(
+      RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
+      RdfDataObject("test_data/project_ontologies/minimal-onto.ttl", "http://www.knora.org/ontology/0001/minimal"),
+    )
+
   /**
    * Represents an HTTP GET test that requests ontology information.
    *
