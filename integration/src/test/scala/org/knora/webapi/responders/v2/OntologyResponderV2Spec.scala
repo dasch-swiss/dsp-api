@@ -3922,7 +3922,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val guiAttributeComplexExpected = PredicateInfoV2(
           predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-          objects = Seq(StringLiteralV2("size=80")),
+          objects = Seq(StringLiteralV2("size=80", None)),
         )
 
         guiAttributeComplex should equal(guiAttributeComplexExpected)

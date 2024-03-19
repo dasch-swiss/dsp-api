@@ -135,8 +135,8 @@ class OntologyCacheSpec extends CoreSpec {
                 stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
                   Seq(
-                    StringLiteralV2("size=80"),
-                    StringLiteralV2("maxlength=255"),
+                    StringLiteralV2("size=80", None),
+                    StringLiteralV2("maxlength=255", None),
                   ),
                 ),
               ),

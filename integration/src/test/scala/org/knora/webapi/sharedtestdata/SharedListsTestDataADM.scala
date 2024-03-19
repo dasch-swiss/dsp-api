@@ -25,7 +25,7 @@ object SharedListsTestDataADM {
   val summerNodeInfo: ListChildNodeInfoADM = ListChildNodeInfoADM(
     id = "http://rdfh.ch/lists/00FF/526f26ed04",
     name = Some("sommer"),
-    labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+    labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer", None))),
     comments = StringLiteralSequenceV2.empty,
     position = 0,
     hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
@@ -35,7 +35,7 @@ object SharedListsTestDataADM {
     ListChildNodeADM(
       id = "http://rdfh.ch/lists/00FF/526f26ed04",
       name = Some("sommer"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer", None))),
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 0,
@@ -44,7 +44,7 @@ object SharedListsTestDataADM {
     ListChildNodeADM(
       id = "http://rdfh.ch/lists/00FF/eda2792605",
       name = Some("winter"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Winter"))),
+      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Winter", None))),
       comments = StringLiteralSequenceV2.empty,
       children = Seq.empty[ListChildNodeADM],
       position = 1,
@@ -56,19 +56,19 @@ object SharedListsTestDataADM {
     NodePathElementADM(
       id = "http://rdfh.ch/lists/00FF/691eee1cbe",
       name = Some("4KUN"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("KUNST"))),
+      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("KUNST", None))),
       comments = StringLiteralSequenceV2.empty,
     ),
     NodePathElementADM(
       id = "http://rdfh.ch/lists/00FF/2ebd2706c1",
       name = Some("7"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("FILM UND FOTO"))),
+      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("FILM UND FOTO", None))),
       comments = StringLiteralSequenceV2.empty,
     ),
     NodePathElementADM(
       id = "http://rdfh.ch/lists/00FF/c7f07a3fc1",
       name = Some("1"),
-      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Heidi Film"))),
+      labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Heidi Film", None))),
       comments = StringLiteralSequenceV2.empty,
     ),
   )
