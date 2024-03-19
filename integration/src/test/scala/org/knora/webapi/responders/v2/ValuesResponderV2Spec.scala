@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.compatible.Assertion
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -198,10 +199,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // Run the query.
     val result = UnsafeZioRun.runOrThrow(
-      SearchResponderV2.gravsearchV2(
-        GravsearchParser.parseQuery(gravsearchQuery),
-        SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
-        requestingUser,
+      ZIO.serviceWithZIO[SearchResponderV2](
+        _.gravsearchV2(
+          GravsearchParser.parseQuery(gravsearchQuery),
+          SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
+          requestingUser,
+        ),
       ),
     )
 
