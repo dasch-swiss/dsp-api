@@ -54,7 +54,7 @@ the `RoutingActor`, this is the `AppRouterRelayingMessageHandler`.
 
 In the long run we will prefer to invoke methods on the respective ziofied services directly.
 This is now already possible for example with the `TriplestoreServive`, i.e. instead of
-calling `MessageRelay#ask[SparqlSelectResul](SparqlSelectRequest)` it is much easier and more importantly *typesafe* to
+calling `MessageRelay#ask[SparqlSelectResul](SparqlSelectRequest)` it is much easier and more importantly _typesafe_ to
 call `TriplestoreService#sparqlHttpSelect(String): UIO[SparqlSelectResult]`.
 
 #### Communication between Akka based Responder and another Akka based Responder

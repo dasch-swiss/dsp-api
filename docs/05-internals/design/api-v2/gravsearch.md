@@ -411,6 +411,7 @@ UNION
     ?int knora-api:intValueAsInt 3 .
 }
 ```
+
 This would result in one graph per block of the `UNION`. Each graph is then sorted, and the statements of its 
 block are rearranged according to the topological order of graph. This is the result:
 

@@ -1,6 +1,7 @@
 ## Example for an HTTP Request Flow with Events
 
 ### Create a User
+
 ```mermaid
 sequenceDiagram
     autonumber

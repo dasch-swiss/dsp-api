@@ -17,7 +17,9 @@ installation of Knora. The different parts are:
 
 ## Knora Github Repository
 
-    $ git clone https://github.com/dasch-swiss/dsp-api
+```bash
+git clone https://github.com/dasch-swiss/dsp-api
+```
 
 ## Triplestore
 
@@ -55,22 +57,22 @@ organisation.
 To use the docker image stored locally or on the docker hub repository
 type:
 
-```
-$ docker run --name sipi -d -p 1024:1024 daschswiss/sipi
+```bash
+docker run --name sipi -d -p 1024:1024 daschswiss/sipi
 ```
 
 This will create and start a docker container with the `daschswiss/sipi`
 image in the background. The default behaviour is to start Sipi by
 calling the following command:
 
-```
-$ /sipi/local/bin/sipi -config /sipi/config/sipi.test-config.lua
+```bash
+/sipi/local/bin/sipi -config /sipi/config/sipi.test-config.lua
 ```
 
 To override this default behaviour, start the container by supplying
 another config file:
 
-```
+```bash
 $ docker run --name sipi \
              -d \
              -p 1024:1024 \
@@ -81,7 +83,7 @@ $ docker run --name sipi \
 You can also mount a directory (the local directory in this example),
 and use a config file that is outside of the docker container:
 
-```
+```bash
 $ docker run --name sipi \
              -d \
              -p 1024:1024 \

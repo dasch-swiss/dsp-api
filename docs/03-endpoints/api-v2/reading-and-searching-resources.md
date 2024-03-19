@@ -336,12 +336,12 @@ resource as you type. E.g., the user wants to get a list of resources
 whose `rdfs:label` contain some search terms separated by a whitespace
 character:
 
-   - Zeit
-   - Zeitg
-   - ...
-   - Zeitglöcklein d
-   - ...
-   - Zeitglöcklein des Lebens
+- Zeit
+- Zeitg
+- ...
+- Zeitglöcklein d
+- ...
+- Zeitglöcklein des Lebens
 
 With each character added to the last term, the selection gets more
 specific. The first term should at least contain three characters. To

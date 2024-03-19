@@ -19,23 +19,23 @@ With Docker installed and configured,
 
 1. Run the following:
 
-    ```
-    $ make init-db-test
-    ```
+   ```
+   make init-db-test
+   ```
 
    to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki).
 
 1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
-    ```
-    $ make stack-up
-    ```
+   ```
+   make stack-up
+   ```
 
 **_Note_**: To delete the existing containers and for a clean start, before creating the knora-test repository explained
 in the first step above, run the following:
 
 ```
-$ make stack-down-delete-volumes
+make stack-down-delete-volumes
 ```
 
 This stops the knora-stack and deletes any created volumes (deletes the database!).
@@ -43,19 +43,19 @@ This stops the knora-stack and deletes any created volumes (deletes the database
 To only shut down the Knora-Stack without deleting the containers:
 
 ```
-$ make stack-down
+make stack-down
 ```
 
 To restart the knora-api use the following command:
 
 ```
-$ make stack-restart-api
+make stack-restart-api
 ```
 
 If a change is made to knora-api code, only its image needs to be rebuilt. In that case, use
 
 ```
-$ make stack-up-fast
+make stack-up-fast
 ```
 
 which starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -63,7 +63,7 @@ which starts the knora-stack by skipping rebuilding most of the images (only api
 To work on Metadata, use
 
 ```
-$ make stack-up-with-metadata
+make stack-up-with-metadata
 ```
 
 which will put three example metadata sets to the projects `anything`, `images` and `dokubib`.
@@ -96,7 +96,7 @@ Note that, you can also print out the log information directly from the command 
 database container can be printed out using the following command:
 
 ```
-$ make stack-logs-db
+make stack-logs-db
 ```
 
 Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api`
@@ -104,14 +104,14 @@ or `stack-logs-sipi`.
 These commands print out and follow the logs, to only print the logs out without following, use
 `-no-follow` version of the commands for example:
 
- ```
- $ make stack-logs-db-no-follow
- ```
+```
+make stack-logs-db-no-follow
+```
 
 Lastly, to print out the entire logs of the running knora-stack, use
 
 ```
-$ make stack-logs
+make stack-logs
 ```
 
 With the Docker plugin installed, you can attach a terminal to the docker container within VS Code. This will stream the
@@ -127,15 +127,15 @@ attaching a shell to the container.
 To run all test targets, use the following in the command line:
 
 ```
-$ make test-all
+make test-all
 ```
 
 To run a single test from the command line, for example `SearchV2R2RSpec`,
 run the following:
 
- ```bash
-    $ sbt " webapi / testOnly *SearchV2R2RSpec* "
- ```
+```bash
+sbt " webapi / testOnly *SearchV2R2RSpec* "
+```
 
 _**Note:** to run tests, the api container must be stopped first!_
 
@@ -144,25 +144,25 @@ _**Note:** to run tests, the api container must be stopped first!_
 First, you need to install the requirements through:
 
 ```
-$ make docs-install-requirements
+make docs-install-requirements
 ```
 
 Then, to build docs into the local `site` folder, run the following command:
 
 ```
-$ make docs-build
+make docs-build
 ```
 
 At this point, you can serve the docs to view them locally using
 
 ```
-$ make docs-serve
+make docs-serve
 ```
 
 Lastly, to build and publish docs to Github Pages, use
 
 ```
-$ make docs-publish
+make docs-publish
 ```
 
 ## Build and Publish Docker Images
@@ -170,13 +170,13 @@ $ make docs-publish
 To build and publish all Docker images locally
 
 ```
-$ make docker-build
+make docker-build
 ```
 
 To publish all Docker images to Dockerhub
 
 ```
-$ make docker-publish
+make docker-publish
 ```
 
 ## Continuous Integration
