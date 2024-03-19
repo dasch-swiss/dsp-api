@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.*
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponse
@@ -25,14 +25,14 @@ final case class ProjectADMService(
   private val cacheService: CacheService,
 ) {
 
-  def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
+  def findAll: Task[List[Project]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
 
-  def findById(id: ProjectIri): Task[Option[ProjectADM]] =
+  def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
 
-  def findByIds(id: Seq[ProjectIri]): Task[Seq[ProjectADM]] = ZIO.foreach(id)(findById).map(_.flatten)
+  def findByIds(id: Seq[ProjectIri]): Task[Seq[Project]] = ZIO.foreach(id)(findById).map(_.flatten)
 
-  def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+  def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[Project]] =
     cacheService.getProjectADM(projectId).flatMap {
       case Some(project) => ZIO.some(project)
       case None =>
@@ -42,10 +42,10 @@ final case class ProjectADMService(
         }
     }
 
-  private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] = for {
+  private def toProjectADM(knoraProject: KnoraProject): Task[Project] = for {
     ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
     prj <- ZIO.attempt(
-             ProjectADM(
+             Project(
                id = knoraProject.id.value,
                shortname = knoraProject.shortname.value,
                shortcode = knoraProject.shortcode.value,
@@ -60,7 +60,7 @@ final case class ProjectADMService(
            )
   } yield prj
 
-  private def toKnoraProject(project: ProjectADM, restrictedView: RestrictedView): KnoraProject =
+  private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
     KnoraProject(
       id = ProjectIri.unsafeFrom(project.id),
       shortname = Shortname.unsafeFrom(project.shortname),
@@ -105,7 +105,7 @@ final case class ProjectADMService(
     projectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
   }
 
-  def setProjectRestrictedView(project: ProjectADM, settings: RestrictedView): Task[RestrictedView] =
+  def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
     setProjectRestrictedView(toKnoraProject(project, settings), settings)
 }
 
@@ -117,7 +117,7 @@ object ProjectADMService {
    * @param project A [[ProjectADM]].
    * @return the [[InternalIri]] of the project's data named graph.
    */
-  def projectDataNamedGraphV2(project: ProjectADM): InternalIri = {
+  def projectDataNamedGraphV2(project: Project): InternalIri = {
     val shortcode = Shortcode.unsafeFrom(project.shortcode)
     val shortname = Shortname.unsafeFrom(project.shortname)
     projectDataNamedGraphV2(shortcode, shortname)

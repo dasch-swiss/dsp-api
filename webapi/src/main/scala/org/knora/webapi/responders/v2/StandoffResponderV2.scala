@@ -26,7 +26,7 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
@@ -494,7 +494,7 @@ final case class StandoffResponderV2Live(
       // check if the given project IRI represents an actual project
       projectInfoMaybe <-
         messageRelay
-          .ask[Option[ProjectADM]](
+          .ask[Option[Project]](
             ProjectGetADM(
               identifier = IriIdentifier
                 .fromString(projectIri.toString)

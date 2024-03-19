@@ -634,7 +634,7 @@ final case class CreateResourceV2Handler(
    *         all permissions have been validated and defined.
    */
   private def validateAndFormatValuePermissions(
-    project: ProjectADM,
+    project: Project,
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,

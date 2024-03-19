@@ -69,7 +69,7 @@ trait ProjectsResponderADM {
    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
    * If project is not found in cache but in triplestore, then project is written to cache.
    */
-  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
+  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]]
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
@@ -505,7 +505,7 @@ final case class ProjectsResponderADMLive(
    *         [[UpdateNotPerformedException]] If one of the fields was not updated.
    */
   private def checkProjectUpdate(
-    updatedProject: ProjectADM,
+    updatedProject: Project,
     projectUpdatePayload: ProjectUpdateRequest,
   ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
@@ -750,7 +750,7 @@ final case class ProjectsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
-  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]] =
     projectService.findByProjectIdentifier(identifier)
 
   /**

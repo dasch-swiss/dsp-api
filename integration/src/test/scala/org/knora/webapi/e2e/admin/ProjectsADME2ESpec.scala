@@ -65,8 +65,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val projects: Seq[ProjectADM] =
-          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+        val projects: Seq[Project] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
         projects.size should be(6)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -212,7 +212,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
 
         // check that the custom IRI is correctly assigned
         result.id should be(customProjectIri)
@@ -299,7 +299,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
@@ -445,7 +445,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.shortname should be("updatedproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
@@ -496,7 +496,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.description.size should be(2)
         result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("en")))
         result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("se")))
@@ -521,7 +521,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.status should be(false)
 
         clientTestDataCollector.addFile(

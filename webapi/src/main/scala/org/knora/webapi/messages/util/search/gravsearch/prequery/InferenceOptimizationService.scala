@@ -12,7 +12,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.util.search.BindPattern
@@ -81,7 +81,7 @@ final case class InferenceOptimizationServiceLive(
       case Some(value) =>
         for {
           shortcode    <- ProjectIdentifierADM.ShortcodeIdentifier.fromString(value).toZIO
-          projectMaybe <- messageRelay.ask[Option[ProjectADM]](ProjectGetADM(shortcode))
+          projectMaybe <- messageRelay.ask[Option[Project]](ProjectGetADM(shortcode))
           projectOntologies =
             projectMaybe match {
               case None          => Seq.empty
