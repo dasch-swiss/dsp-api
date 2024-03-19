@@ -10,6 +10,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.*
 
 import org.knora.webapi.messages.admin.responder.listsmessages.*
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test 'ListAdminMessages'.
@@ -18,7 +19,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
 
   "Conversion from case class to JSON and back" should {
 
-    "work for a 'StringLiteralV2' without language tag" in {
+    "work for a 'StringLiteralV2' without language iso" in {
 
       val string = StringLiteralV2("stringwithoutlang", None)
       val json   = string.toJson.compactPrint
@@ -30,7 +31,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
       converted should be(string)
     }
 
-    "work for a 'StringLiteralV2' with language tag" in {
+    "work for a 'StringLiteralV2' with language iso" in {
 
       val string = StringLiteralV2("stringwithlang", Some("de"))
       val json   = string.toJson.compactPrint
@@ -43,12 +44,12 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
     }
   }
 
-  // "Creating a `StringLiteralV2`" should {
-  //   "fail when language tag is given but value is missing" in {
-  //     val caught = intercept[BadRequestException](
-  //       StringLiteralV2("", Some("de")),
-  //     )
-  //     assert(caught.getMessage === "String value is missing.")
-  //   }
-  // }
+  "Creating a `StringLiteralV2`" should {
+    "fail when language iso is given but value is missing" in {
+      val caught = intercept[BadRequestException](
+        StringLiteralV2.from("", Some("de")),
+      )
+      assert(caught.getMessage === "String value is missing.")
+    }
+  }
 }
