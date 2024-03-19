@@ -28,6 +28,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
+import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
@@ -37,10 +38,8 @@ import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
-import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -116,7 +115,7 @@ object LayersTest {
       with InferenceOptimizationService
       with IriConverter
       with IriService
-      with KnoraProjectRepoLive
+      with KnoraProjectRepo
       with ListsResponder
       with ListsResponderV2
       with MessageRelay
@@ -160,6 +159,7 @@ object LayersTest {
     ZLayer.makeSome[CommonR0, CommonR](
       AdminApiEndpoints.layer,
       AdminApiRoutes.layer,
+      AdminModule.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppRouter.layer,
@@ -188,10 +188,7 @@ object LayersTest {
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserRepoLive.layer,
       KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
       ListRestService.layer,

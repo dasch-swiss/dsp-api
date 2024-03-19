@@ -29,7 +29,9 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
+import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
+import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
@@ -38,9 +40,6 @@ import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -95,8 +94,9 @@ object LayersLive {
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       org.knora.webapi.core.ActorSystem.layer,
-      AdminApiEndpoints.layer,
+      AdminModule.layer,
       AdminApiRoutes.layer,
+      AdminApiEndpoints.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
@@ -127,10 +127,7 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserRepoLive.layer,
       KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
       ListRestService.layer,
