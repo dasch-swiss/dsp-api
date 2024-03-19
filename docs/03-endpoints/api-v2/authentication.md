@@ -8,11 +8,11 @@
 Certain routes are secured and require authentication.
 When accessing any secured route we support three options for authentication:
 
-- **Preferred method**: For each request an [Access Token](#Access-Token-/-Login-and-Logout) is sent in the HTTP
+- **Preferred method**: For each request an [Access Token](#access-token-login-and-logout) is sent in the HTTP
   authorization
   header with the
   [HTTP bearer scheme](https://tools.ietf.org/html/rfc6750#section-2.1).
-- **Deprecated method**: For each request an [Access Token](#Access-Token-/-Login-and-Logout) is provided as a cookie in
+- **Deprecated method**: For each request an [Access Token](#access-token-login-and-logout) is provided as a cookie in
   the HTTP request.
 - **Deprecated method**: [HTTP basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication), where
   the username is the user's `email`.
