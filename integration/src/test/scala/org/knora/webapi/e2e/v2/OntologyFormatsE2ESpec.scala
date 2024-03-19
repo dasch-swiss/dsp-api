@@ -175,7 +175,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       )
     }
   }
-  // LATER: use jena directly, with `isIsomorphicWith` (note that we only have one graph here)
 
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
@@ -327,7 +326,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = true
+  private val writeTestDataFiles = false
 
   "The Ontologies v2 Endpoint" should {
     "serve the ontologies in JSON-LD, turtle and RDF-XML" in {
