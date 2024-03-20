@@ -24,13 +24,13 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -219,7 +219,7 @@ case class Project(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[V2.StringLiteralV2],
+  description: Seq[StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
   ontologies: Seq[IRI],
@@ -276,8 +276,8 @@ case class Project(
 
   def unescape: Project = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
-      V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
+    val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
+      StringLiteralV2.from(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language),
     )
     val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
     copy(

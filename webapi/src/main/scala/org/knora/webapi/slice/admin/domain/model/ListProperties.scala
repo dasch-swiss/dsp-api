@@ -9,7 +9,7 @@ import zio.prelude.Validation
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.V2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
@@ -73,33 +73,33 @@ object ListProperties {
       else { Left("Invalid position value is given. Position should be either a positive value, 0 or -1.") }
   }
 
-  final case class Labels private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
+  final case class Labels private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
-  object Labels extends WithFrom[Seq[V2.StringLiteralV2], Labels] {
-    def from(value: Seq[V2.StringLiteralV2]): Either[String, Labels] =
+  object Labels extends WithFrom[Seq[StringLiteralV2], Labels] {
+    def from(value: Seq[StringLiteralV2]): Either[String, Labels] =
       if (value.isEmpty) Left("At least one label needs to be supplied.")
       else {
         val validatedLabels = value.map(l =>
           Validation
             .fromOption(Iri.toSparqlEncodedString(l.value))
             .mapError(_ => "Invalid label.")
-            .map(V2.StringLiteralV2(_, l.language)),
+            .map(StringLiteralV2.from(_, l.language)),
         )
         Validation.validateAll(validatedLabels).map(Labels.apply).toEitherWith(_.head)
       }
   }
 
-  final case class Comments private (value: Seq[V2.StringLiteralV2]) extends Value[Seq[V2.StringLiteralV2]]
+  final case class Comments private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
-  object Comments extends WithFrom[Seq[V2.StringLiteralV2], Comments] {
-    def from(value: Seq[V2.StringLiteralV2]): Either[String, Comments] =
+  object Comments extends WithFrom[Seq[StringLiteralV2], Comments] {
+    def from(value: Seq[StringLiteralV2]): Either[String, Comments] =
       if (value.isEmpty) Left("At least one comment needs to be supplied.")
       else {
         val validatedComments = value.map(c =>
           Validation
             .fromOption(Iri.toSparqlEncodedString(c.value))
             .mapError(_ => "Invalid comment.")
-            .map(s => V2.StringLiteralV2(s, c.language)),
+            .map(s => StringLiteralV2.from(s, c.language)),
         )
         Validation.validateAll(validatedComments).map(Comments.apply).toEitherWith(_.head)
       }
