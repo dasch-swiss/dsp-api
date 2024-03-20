@@ -26,9 +26,9 @@ import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class ProjectsEndpointsHandler(
-                                           projectsEndpoints: ProjectsEndpoints,
-                                           restService: ProjectRestService,
-                                           mapper: HandlerMapper,
+  projectsEndpoints: ProjectsEndpoints,
+  restService: ProjectRestService,
+  mapper: HandlerMapper,
 ) {
 
   val getAdminProjectsHandler =
