@@ -27,12 +27,12 @@ import org.knora.webapi.messages.twirl.queries.*
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 
 trait ProjectExportService {
   def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse]

@@ -11,8 +11,8 @@ import zio.ULayer
 import zio.ZLayer
 import zio.nio.file.Path
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 object ProjectExportServiceStub {
   val layer: ULayer[ProjectExportService] = ZLayer.succeed(new ProjectExportService {
