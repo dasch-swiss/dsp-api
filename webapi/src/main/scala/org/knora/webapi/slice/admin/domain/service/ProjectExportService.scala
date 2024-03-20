@@ -198,8 +198,8 @@ final case class ProjectExportServiceLive(
       zipped     <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
       path       <- zipped.toAbsolutePath
       fileSize   <- Files.size(zipped)
-      _          <- zipped.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Exported project $shortcode to $p ($fileSize bytes)"))
-    } yield ProjectExportInfoResponse(shortcode, path.toString())
+      _          <- ZIO.logInfo(s"Exported project $shortcode to $path ($fileSize bytes)")
+    } yield ProjectExportInfoResponse(shortcode, path.toString)
   }
 
   private def exportProjectAssets(project: KnoraProject, tempDir: Path): ZIO[Scope, Throwable, Path] = {
