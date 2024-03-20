@@ -2276,7 +2276,7 @@ final case class OntologyResponderV2Live(
           Some(
             SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
               predicateIri = SalsahGui.GuiAttribute.toSmartIri,
-              objects = newGuiAttributeIris.map(StringLiteralV2(_)).toSeq,
+              objects = newGuiAttributeIris.map(StringLiteralV2.from(_, None)).toSeq,
             ),
           )
         } else {

@@ -116,8 +116,8 @@ class OntologyCacheSpec extends CoreSpec {
                 stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
                   Seq(
-                    StringLiteralV2("A Description", language = Some("en")),
-                    StringLiteralV2("Eine Beschreibung", language = Some("de")),
+                    StringLiteralV2.from("A Description", language = Some("en")),
+                    StringLiteralV2.from("Eine Beschreibung", language = Some("de")),
                   ),
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
@@ -135,8 +135,8 @@ class OntologyCacheSpec extends CoreSpec {
                 stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
                   Seq(
-                    StringLiteralV2("size=80"),
-                    StringLiteralV2("maxlength=255"),
+                    StringLiteralV2.from("size=80", None),
+                    StringLiteralV2.from("maxlength=255", None),
                   ),
                 ),
               ),
@@ -202,8 +202,8 @@ class OntologyCacheSpec extends CoreSpec {
               stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
                 predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
                 Seq(
-                  StringLiteralV2("Seite im Buch", language = Some("de")),
-                  StringLiteralV2("Page in the book", language = Some("en")),
+                  StringLiteralV2.from("Seite im Buch", language = Some("de")),
+                  StringLiteralV2.from("Page in the book", language = Some("en")),
                 ),
               ),
               stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(

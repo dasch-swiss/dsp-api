@@ -19,8 +19,8 @@ make docs-serve # serve it locally
 
 You will need [Graphviz](http://www.graphviz.org/). On macOS:
 
-    ```shell
-    brew install graphviz
-    ```
-  
-    On Linux, use your distribution's package manager.
+```shell
+brew install graphviz
+```
+
+On Linux, use your distribution's package manager.

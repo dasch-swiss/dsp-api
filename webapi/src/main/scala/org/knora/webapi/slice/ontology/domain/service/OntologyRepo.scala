@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology.domain.service
 
 import zio.Task
-import zio.macros.accessible
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -15,7 +14,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-@accessible
 trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   override def findById(id: InternalIri): Task[Option[ReadOntologyV2]]

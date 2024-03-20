@@ -7,23 +7,22 @@
 
 ## General Principles
 
-  - DSP-API v2 requests and responses are RDF documents. Any API v2
-    response can be returned as [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
-    [Turtle](https://www.w3.org/TR/turtle/),
-    or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/).
-  - Each class or property used in a request or response has a
-    definition in an ontology, which Knora can serve.
-  - Response formats are reused for different requests whenever
-    possible, to minimise the number of different response formats a
-    client has to handle. For example, any request for one or more
-    resources (such as a search result, or a request for one specific
-    resource) returns a response in the same format.
-  - Response size is limited by design. Large amounts of data must be
-    retrieved by requesting small pages of data, one after the other.
-  - Responses that provide data are distinct from responses that provide
-    definitions (i.e. ontology entities). Data responses indicate which
-    types are used, and the client can request information about these
-    types separately.
+- DSP-API v2 requests and responses are RDF documents. Any API v2
+  response can be returned as [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
+  [Turtle](https://www.w3.org/TR/turtle/),
+  or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/).
+- Each class or property used in a request or response has a definition in an ontology, which Knora can serve.
+- Response formats are reused for different requests whenever
+  possible, to minimise the number of different response formats a
+  client has to handle. For example, any request for one or more
+  resources (such as a search result, or a request for one specific
+  resource) returns a response in the same format.
+- Response size is limited by design. Large amounts of data must be
+  retrieved by requesting small pages of data, one after the other.
+- Responses that provide data are distinct from responses that provide
+  definitions (i.e. ontology entities). Data responses indicate which
+  types are used, and the client can request information about these
+  types separately.
 
 ## API Schemas
 
@@ -31,13 +30,12 @@ The types used in the triplestore are not exposed directly in the API.
 Instead, they are mapped onto API 'schemas'. Two schemas are currently
 provided.
 
-  - A complex schema, which is suitable both for reading and for editing
-    data. The complex schema represents values primarily as complex
-    objects.
-  - A simple schema, which is suitable for reading data but not for
-    editing it. The simple schema facilitates interoperability between
-    DSP ontologies and non-DSP ontologies, since it represents
-    values primarily as literals.
+- A complex schema, which is suitable both for reading and for editing
+  data. The complex schema represents values primarily as complex objects.
+- A simple schema, which is suitable for reading data but not for
+  editing it. The simple schema facilitates interoperability between
+  DSP ontologies and non-DSP ontologies, since it represents
+  values primarily as literals.
 
 Each schema has its own type IRIs, which are derived from the ones used
 in the triplestore. For details of these different IRI formats, see
@@ -169,14 +167,14 @@ Therefore, instances of `SmartIriImpl` created by different instances of
 
 There are in fact two instances of `StringFormatter`:
 
-  - one returned by `StringFormatter.getGeneralInstance` which is
-    available after Akka has started and has the API server's hostname
-    (and can therefore provide `SmartIri` instances capable of parsing
-    IRIs containing that hostname). This instance is used throughout the
-    DSP-API server.
-  - one returned by `StringFormatter.getInstanceForConstantOntologies`,
-    which is available before Akka has started, and is used only by the
-    hard-coded constant `knora-api` ontologies.
+- one returned by `StringFormatter.getGeneralInstance` which is
+  available after Akka has started and has the API server's hostname
+  (and can therefore provide `SmartIri` instances capable of parsing
+  IRIs containing that hostname). This instance is used throughout the
+  DSP-API server.
+- one returned by `StringFormatter.getInstanceForConstantOntologies`,
+  which is available before Akka has started, and is used only by the
+  hard-coded constant `knora-api` ontologies.
 
 This is the reason for the existence of the `SmartIri` trait, which is a
 top-level definition and has its own `equals` and `hashCode` methods.

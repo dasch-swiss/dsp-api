@@ -20,8 +20,8 @@ import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
 
-import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -58,7 +58,7 @@ final case class KnoraGroupRepoLive(triplestore: TriplestoreService) extends Kno
     for {
       id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value)))
       groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
-      groupDescriptions  <- resource.getLangStringLiteralsOrFail[V2.StringLiteralV2](KnoraAdmin.GroupDescriptions)
+      groupDescriptions  <- resource.getLangStringLiteralsOrFail[StringLiteralV2](KnoraAdmin.GroupDescriptions)
       groupDescriptions  <- ZIO.fromEither(GroupDescriptions.from(groupDescriptions))
       groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
       belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)

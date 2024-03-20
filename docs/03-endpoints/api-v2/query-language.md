@@ -359,9 +359,9 @@ text markup (see [Matching Standoff Dates](#matching-standoff-dates)).
 
 Note that the given date value for comparison must have the following format: 
   
-    ```
-    (GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
-    ```
+```
+(GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?
+```
     
 E.g. an exact date like `GREGORIAN:2015-12-03` or a period like `GREGORIAN:2015-12-03:2015-12-04`.
 Dates may also have month or year precision, e.g. `ISLAMIC:1407-02` (the whole month of december) or `JULIAN:1330` 

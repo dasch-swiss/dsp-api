@@ -1863,7 +1863,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
   def unescape: PredicateInfoV2 =
     copy(
       objects = objects.map {
-        case StringLiteralV2(str, lang) => StringLiteralV2(Iri.fromSparqlEncodedString(str), lang)
+        case StringLiteralV2(str, lang) => StringLiteralV2.from(Iri.fromSparqlEncodedString(str), lang)
         case other                      => other
       },
     )
@@ -2153,7 +2153,7 @@ object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
     val value =
       Iri.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
-    StringLiteralV2(value)
+    StringLiteralV2.from(value, None)
   }
 
   /**

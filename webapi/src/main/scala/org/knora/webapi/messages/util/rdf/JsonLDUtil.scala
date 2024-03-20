@@ -901,7 +901,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
         }
 
         val text = obj.requireStringWithValidation(JsonLDKeywords.VALUE, validationFun)
-        StringLiteralV2(text, Some(lang))
+        StringLiteralV2.from(text, Some(lang))
 
       case other => throw BadRequestException(s"Expected JSON-LD object: $other")
     }

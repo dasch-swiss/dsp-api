@@ -9,8 +9,8 @@ import zio.Chunk
 import zio.NonEmptyChunk
 
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -68,7 +68,7 @@ object TestDataFactory {
     val testUserGroup: KnoraGroup = KnoraGroup(
       GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234"),
       GroupName.unsafeFrom("User Group"),
-      GroupDescriptions.unsafeFrom(List(V2.StringLiteralV2("one user group to rule them all", None))),
+      GroupDescriptions.unsafeFrom(List(StringLiteralV2.from("one user group to rule them all", None))),
       GroupStatus.from(true),
       Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
       GroupSelfJoin.from(false),
@@ -80,7 +80,7 @@ object TestDataFactory {
     Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
-    NonEmptyChunk(Description.unsafeFrom(V2.StringLiteralV2("Some description", None))),
+    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Some description", None))),
     List.empty,
     None,
     Status.Active,

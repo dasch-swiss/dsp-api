@@ -14,10 +14,10 @@ building from source), or the published [docker image](https://hub.docker.com/r/
 can be used. To start Sipi, run the following command from inside the `sipi/`
 folder:
 
-```
-$ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-config.lua
+```bash
+export DOCKERHOST=LOCAL_IP_ADDRESS
+docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
+docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-config.lua
 ```
 
 where `LOCAL_IP_ADDRESS` is the IP of the host running `DSP-API`.
@@ -53,10 +53,10 @@ If you just want to test Sipi with DSP-API without serving the actual
 files (e.g. when executing browser tests), you can simply start Sipi
 like this:
 
-```
-$ export DOCKERHOST=LOCAL_IP_ADDRESS
-$ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-test-config.lua
+```bash
+export DOCKERHOST=LOCAL_IP_ADDRESS
+docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
+docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-test-config.lua
 ```
 
 Then always the same test file will be served which is delivered with Sipi. In test mode, Sipi will
