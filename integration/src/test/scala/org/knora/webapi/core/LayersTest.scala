@@ -187,7 +187,6 @@ object LayersTest {
       PermissionsResponderADMLive.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,

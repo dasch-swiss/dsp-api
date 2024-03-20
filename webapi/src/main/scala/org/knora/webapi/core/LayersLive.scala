@@ -134,7 +134,6 @@ object LayersLive {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectService.layer,
       ProjectsResponderADMLive.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
