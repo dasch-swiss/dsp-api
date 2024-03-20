@@ -19,7 +19,7 @@ object AdminDomainModule {
 
   type Dependencies =
     AdminRepoModule.Provided & TriplestoreService & IriService & PasswordService & CacheService & PredicateObjectMapper
-  type Provided = KnoraGroupService & KnoraUserService & MaintenanceService & KnoraProjectService
+  type Provided = KnoraGroupService & KnoraUserService & KnoraProjectService & MaintenanceService
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     KnoraGroupService.layer,
