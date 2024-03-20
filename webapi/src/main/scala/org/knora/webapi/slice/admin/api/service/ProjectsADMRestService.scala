@@ -51,6 +51,8 @@ trait ProjectADMRestService {
   def exportProject(shortcode: String, user: User): Task[Unit]
   def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit]
 
+  def exportProjectAwaiting(id: ShortcodeIdentifier, user: User): Task[ProjectExportInfoResponse]
+
   def importProject(shortcode: String, user: User): Task[ProjectImportResponse]
 
   def importProject(shortcode: ShortcodeIdentifier, user: User): Task[ProjectImportResponse] =
@@ -293,6 +295,12 @@ final case class ProjectsADMRestServiceLive(
     project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
+
+  override def exportProjectAwaiting(id: ShortcodeIdentifier, user: User): Task[ProjectExportInfoResponse] = for {
+    _          <- permissionService.ensureSystemAdmin(user)
+    project    <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
+    exportInfo <- projectExportService.exportProject(project).logError
+  } yield exportInfo
 
   private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
     ZIO.fromEither(Shortcode.from(shortcodeStr)).mapBoth(BadRequestException.apply, ShortcodeIdentifier.from)
