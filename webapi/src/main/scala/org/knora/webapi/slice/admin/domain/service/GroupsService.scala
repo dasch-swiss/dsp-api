@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.ZLayer
 
 final case class GroupsService(
-  private val groupRepo: KnoraGroupRepo,
+  private val groupService: KnoraGroupService,
 ) {}
 
 object GroupsService {

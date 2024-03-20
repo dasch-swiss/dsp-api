@@ -9,7 +9,6 @@ import zio.Random
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.CanDeleteListResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
@@ -23,7 +22,7 @@ import org.knora.webapi.slice.admin.api.Requests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
@@ -32,11 +31,11 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 final case class ListRestService(
   auth: AuthorizationRestService,
   listsResponder: ListsResponder,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
 ) {
   def listChange(iri: ListIri, request: ListChangeRequest, user: User): Task[NodeInfoGetResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
-    project <- projectRepo
+    project <- knoraProjectService
                  .findById(request.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
@@ -80,7 +79,7 @@ final case class ListRestService(
   } yield response
 
   def listCreateRootNode(req: ListCreateRootNodeRequest, user: User): Task[ListGetResponseADM] = for {
-    project <- projectRepo
+    project <- knoraProjectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
@@ -89,7 +88,7 @@ final case class ListRestService(
   } yield response
 
   def listCreateChildNode(req: ListCreateChildNodeRequest, user: User): Task[ChildNodeInfoGetResponseADM] = for {
-    project <- projectRepo
+    project <- knoraProjectService
                  .findById(req.projectIri)
                  .someOrFail(BadRequestException("Project not found"))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)

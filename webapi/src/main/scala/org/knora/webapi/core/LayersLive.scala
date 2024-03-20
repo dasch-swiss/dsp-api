@@ -36,7 +36,6 @@ import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
@@ -155,7 +154,7 @@ object LayersLive {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectsADMRestServiceLive.layer,
+      ProjectADMRestService.layer,
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,

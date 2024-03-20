@@ -21,11 +21,11 @@ import org.knora.webapi.store.cache.CacheService
 
 final case class ProjectService(
   private val ontologyRepo: OntologyRepo,
-  private val projectRepo: KnoraProjectRepo,
+  private val knoraProjectService: KnoraProjectService,
   private val cacheService: CacheService,
 ) {
 
-  def findAll: Task[List[Project]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
+  def findAll: Task[List[Project]] = knoraProjectService.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
 
   def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
@@ -36,7 +36,7 @@ final case class ProjectService(
     cacheService.getProjectADM(projectId).flatMap {
       case Some(project) => ZIO.some(project)
       case None =>
-        projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM)).tap {
+        knoraProjectService.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM)).tap {
           case Some(prj) => cacheService.putProjectADM(prj)
           case None      => ZIO.unit
         }
@@ -78,13 +78,13 @@ final case class ProjectService(
 
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponse] =
     for {
-      projects <- projectRepo.findAll()
+      projects <- knoraProjectService.findAll()
       keywords  = projects.flatMap(_.keywords.map(_.value)).distinct.sorted
     } yield ProjectsKeywordsGetResponse(keywords)
 
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponse]] =
     for {
-      projectMaybe <- projectRepo.findById(id)
+      projectMaybe <- knoraProjectService.findById(id)
       keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
       result        = keywordsMaybe.map(ProjectKeywordsGetResponse(_))
     } yield result
@@ -97,16 +97,8 @@ final case class ProjectService(
       .map(_ :+ projectGraph)
   }
 
-  def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] = {
-    val newSettings = settings match {
-      case RestrictedView.Watermark(false) => RestrictedView.default
-      case s                               => s
-    }
-    projectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
-  }
-
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
-    setProjectRestrictedView(toKnoraProject(project, settings), settings)
+    knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
 }
 
 object ProjectService {
