@@ -157,6 +157,12 @@ final case class ProjectsEndpointsHandler(
       user => (id: ShortcodeIdentifier) => restService.exportProject(id, user),
     )
 
+  val postAdminProjectsByShortcodeExportAwaitingHandler =
+    SecuredEndpointHandler(
+      projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting,
+      user => (id: ShortcodeIdentifier) => restService.exportProjectAwaiting(id, user),
+    )
+
   val postAdminProjectsByShortcodeImportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeImport,
@@ -225,6 +231,7 @@ final case class ProjectsEndpointsHandler(
     deleteAdminProjectsByIriHandler,
     getAdminProjectsExportsHandler,
     postAdminProjectsByShortcodeExportHandler,
+    postAdminProjectsByShortcodeExportAwaitingHandler,
     postAdminProjectsByShortcodeImportHandler,
     postAdminProjectsHandler,
     putAdminProjectsByIriHandler,
