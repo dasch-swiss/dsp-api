@@ -328,8 +328,8 @@ object StringLiteralV2 {
   implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
 
   def from(value: String, language: Option[String]): StringLiteralV2 = language match {
-    case _ if language.isDefined && value.isEmpty => throw BadRequestException("String value is missing.")
-    case _                                        => StringLiteralV2.from(value, language)
+    case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")
+    case _                        => StringLiteralV2(value, language)
   }
 
 }
