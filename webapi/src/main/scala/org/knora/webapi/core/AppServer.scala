@@ -132,11 +132,20 @@ final case class AppServer(
       _ <- ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp)
       _ <- state.set(AppState.Running)
     } yield ()
+
+  def interrupt =
+    for {
+      _ <- ZIO.logInfo("=> Shutting down DSP-API Server")
+      _ <- ZIO.attempt(as.terminate()).orDie
+      _ <- ZIO.attempt(hs.stop()).orDie
+      _ <- ZIO.logInfo("=> DSP-API Server shut down")
+      // TODO: this can be done better
+    } yield ()
 }
 
 object AppServer {
 
-  private type AppServerEnvironment =
+  type AppServerEnvironment =
     State & TriplestoreService & RepositoryUpdater & actor.ActorSystem & OntologyCache & SipiService & HttpServer & AppConfig
 
   /**

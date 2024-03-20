@@ -17,6 +17,8 @@ import org.knora.webapi.routing.ApiRoutes
  */
 trait HttpServer {
   val serverBinding: Http.ServerBinding
+
+  def stop(): Task[Unit]
 }
 
 object HttpServer {
@@ -52,5 +54,14 @@ object HttpServer {
 
   private final case class HttpServerImpl(binding: Http.ServerBinding) extends HttpServer { self =>
     val serverBinding: Http.ServerBinding = self.binding
+    override def stop(): Task[Unit] =
+      ZIO
+        .fromFuture(_ =>
+          self.binding
+            .terminate(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.MILLISECONDS)),
+        )
+        .orDie
+        .unit
+    // TODO: this can be done better
   }
 }
