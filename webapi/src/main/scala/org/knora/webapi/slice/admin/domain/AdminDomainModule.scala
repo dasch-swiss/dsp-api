@@ -24,8 +24,8 @@ object AdminDomainModule {
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     KnoraGroupService.layer,
+    KnoraProjectService.layer,
     KnoraUserService.layer,
     MaintenanceService.layer,
-    KnoraProjectService.layer,
   )
 }
