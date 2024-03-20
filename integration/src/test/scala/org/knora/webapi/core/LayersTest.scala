@@ -94,7 +94,6 @@ object LayersTest {
       with AuthorizationRestService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
-      with CardinalityService
       with ConstructResponseUtilV2
       with ConstructTransformer
       with DspIngestClient
