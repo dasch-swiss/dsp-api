@@ -32,9 +32,10 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 
 trait ProjectExportService {
-  def exportProject(project: KnoraProject): Task[Path]
+  def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse]
 
   /**
    * Exports a project to a file.
@@ -181,7 +182,7 @@ final case class ProjectExportServiceLive(
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
-  override def exportProject(project: KnoraProject): Task[Path] = ZIO.scoped {
+  override def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse] = ZIO.scoped {
     val shortcode             = project.shortcode.value
     val projectExportDir      = exportStorage.projectExportDirectory(project)
     val projectExportFilename = exportStorage.projectExportFilename(project)
@@ -195,9 +196,10 @@ final case class ProjectExportServiceLive(
       _          <- exportProjectAssets(project, collectDir)
       _          <- ZIO.logInfo(s"Zipping project export for $shortcode")
       zipped     <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
+      path       <- zipped.toAbsolutePath
       fileSize   <- Files.size(zipped)
       _          <- zipped.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Exported project $shortcode to $p ($fileSize bytes)"))
-    } yield zipped
+    } yield ProjectExportInfoResponse(shortcode, path.toString())
   }
 
   private def exportProjectAssets(project: KnoraProject, tempDir: Path): ZIO[Scope, Throwable, Path] = {
