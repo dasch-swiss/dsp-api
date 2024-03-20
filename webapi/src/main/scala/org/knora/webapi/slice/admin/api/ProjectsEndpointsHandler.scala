@@ -19,16 +19,16 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class ProjectsEndpointsHandler(
-  projectsEndpoints: ProjectsEndpoints,
-  restService: ProjectADMRestService,
-  mapper: HandlerMapper,
+                                           projectsEndpoints: ProjectsEndpoints,
+                                           restService: ProjectRestService,
+                                           mapper: HandlerMapper,
 ) {
 
   val getAdminProjectsHandler =
@@ -157,6 +157,12 @@ final case class ProjectsEndpointsHandler(
       user => (id: ShortcodeIdentifier) => restService.exportProject(id.value, user),
     )
 
+  val postAdminProjectsByShortcodeExportAwaitingHandler =
+    SecuredEndpointHandler(
+      projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting,
+      user => (id: ShortcodeIdentifier) => restService.exportProjectAwaiting(id.value, user),
+    )
+
   val postAdminProjectsByShortcodeImportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeImport,
@@ -225,6 +231,7 @@ final case class ProjectsEndpointsHandler(
     deleteAdminProjectsByIriHandler,
     getAdminProjectsExportsHandler,
     postAdminProjectsByShortcodeExportHandler,
+    postAdminProjectsByShortcodeExportAwaitingHandler,
     postAdminProjectsByShortcodeImportHandler,
     postAdminProjectsHandler,
     putAdminProjectsByIriHandler,

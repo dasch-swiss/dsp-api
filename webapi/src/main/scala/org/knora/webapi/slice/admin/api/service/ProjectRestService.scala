@@ -28,7 +28,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class ProjectADMRestService(
+final case class ProjectRestService(
   format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
   knoraProjectService: KnoraProjectService,
@@ -244,6 +244,14 @@ final case class ProjectADMRestService(
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
+  def exportProjectAwaiting(shortcode: Shortcode, user: User): Task[ProjectExportInfoResponse] = for {
+    _ <- permissionService.ensureSystemAdmin(user)
+    project <- knoraProjectService
+                 .findByShortcode(shortcode)
+                 .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
+    exportInfo <- projectExportService.exportProject(project).logError
+  } yield exportInfo
+
   def importProject(
     shortcode: Shortcode,
     user: User,
@@ -264,6 +272,6 @@ final case class ProjectADMRestService(
   } yield exports
 }
 
-object ProjectADMRestService {
-  val layer = ZLayer.derive[ProjectADMRestService]
+object ProjectRestService {
+  val layer = ZLayer.derive[ProjectRestService]
 }

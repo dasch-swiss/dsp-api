@@ -17,7 +17,7 @@ import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -60,7 +60,7 @@ object AdminApiModule {
       PermissionsEndpoints.layer,
       PermissionsEndpointsHandlers.layer,
       PermissionsRestService.layer,
-      ProjectADMRestService.layer,
+      ProjectRestService.layer,
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       StoreRestService.layer,

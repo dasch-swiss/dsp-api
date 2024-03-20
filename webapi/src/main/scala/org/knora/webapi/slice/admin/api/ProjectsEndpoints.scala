@@ -164,6 +164,14 @@ final case class ProjectsEndpoints(
       .out(statusCode(StatusCode.Accepted))
       .description("Trigger an export of a project identified by the shortcode.")
 
+    val postAdminProjectsByShortcodeExportAwaiting = baseEndpoints.securedEndpoint.post
+      .in(projectsByShortcode / "export-await")
+      .out(zioJsonBody[ProjectExportInfoResponse])
+      .description(
+        "Trigger an export of a project identified by the shortcode." +
+          "Returns the shortcode and the export location when the process has finished successfully.",
+      )
+
     val postAdminProjectsByShortcodeImport = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / "import")
       .out(zioJsonBody[ProjectImportResponse])
@@ -212,6 +220,7 @@ final case class ProjectsEndpoints(
       Secured.getAdminProjectsExports,
       Secured.postAdminProjects,
       Secured.postAdminProjectsByShortcodeExport,
+      Secured.postAdminProjectsByShortcodeExportAwaiting,
       Secured.postAdminProjectsByShortcodeImport,
       Secured.putAdminProjectsByIri,
       Secured.postAdminProjectsByProjectIriRestrictedViewSettings,
