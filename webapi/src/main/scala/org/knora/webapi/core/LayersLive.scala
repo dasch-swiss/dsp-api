@@ -72,7 +72,7 @@ object LayersLive {
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
       AssetPermissionsResponder & Authenticator & AuthorizationRestService &
       CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
+      GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       IriService & JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &

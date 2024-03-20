@@ -95,7 +95,6 @@ object LayersTest {
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with ConstructResponseUtilV2
-      with ConstructTransformer
       with DspIngestClient
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
