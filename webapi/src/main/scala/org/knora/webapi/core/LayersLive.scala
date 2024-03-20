@@ -89,7 +89,7 @@ object LayersLive {
   /**
    * All effect layers needed to provide the `Environment`
    */
-  lazy val dspLayersLive: ULayer[DspEnvironmentLive] =
+  val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       org.knora.webapi.core.ActorSystem.layer,
       AdminModule.layer,
