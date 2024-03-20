@@ -76,7 +76,7 @@ object LayersLive {
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       IriService & JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
-      PermissionUtilADM & PredicateObjectMapper & ProjectExportService & ProjectExportStorageService &
+      PermissionUtilADM & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &

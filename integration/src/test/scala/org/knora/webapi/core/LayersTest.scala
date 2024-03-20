@@ -103,7 +103,6 @@ object LayersTest {
       with InferenceOptimizationService
       with IriConverter
       with IriService
-      with KnoraUserService
       with ListsResponder
       with ListsResponderV2
       with MessageRelay
@@ -115,7 +114,6 @@ object LayersTest {
       with PermissionUtilADM
       with PermissionsResponderADM
       with PermissionsRestService
-      with PredicateObjectMapper
       with ProjectExportService
       with ProjectExportStorageService
       with ProjectImportService
