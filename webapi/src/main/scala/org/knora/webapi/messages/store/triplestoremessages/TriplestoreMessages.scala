@@ -332,6 +332,7 @@ object StringLiteralV2 {
     case _                        => StringLiteralV2(value, language)
   }
 
+  def unsafeFrom(value: String, language: Option[String]): StringLiteralV2 = StringLiteralV2(value, language)
 }
 
 /**
