@@ -75,7 +75,7 @@ object LayersLive {
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       IriService & JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyInferencer & OntologyResponderV2 & PasswordService & PermissionsResponderADM & PermissionsRestService &
+      OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
       PermissionUtilADM & PredicateObjectMapper & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
@@ -125,7 +125,6 @@ object LayersLive {
       OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
-      PasswordService.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateObjectMapper.layer,

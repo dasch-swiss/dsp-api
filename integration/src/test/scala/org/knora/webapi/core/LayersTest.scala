@@ -115,7 +115,6 @@ object LayersTest {
       with OntologyInferencer
       with OntologyRepo
       with OntologyResponderV2
-      with PasswordService
       with PermissionUtilADM
       with PermissionsResponderADM
       with PermissionsRestService
@@ -180,7 +179,6 @@ object LayersTest {
       OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
-      PasswordService.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
       PredicateObjectMapper.layer,
