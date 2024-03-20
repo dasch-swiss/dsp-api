@@ -63,6 +63,7 @@ must be a JSON object containing:
 - `filename`: must be the same as the filename submitted in the URL
 
 ### clean_temp_dir.lua
+
 The `clean_temp_dir.lua` script is available at Sipi's `clean_temp_dir` route.
 When called, it deletes old temporary files from `tmp` and (recursively) from any subdirectories. 
 The maximum allowed age of temporary files can be set in Sipi's configuration file, 

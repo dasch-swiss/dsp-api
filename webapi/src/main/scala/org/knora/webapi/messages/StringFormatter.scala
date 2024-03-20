@@ -1676,7 +1676,7 @@ class StringFormatter private (
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language),
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language),
       ),
     )
   def unescapeOptionalString(optionalString: Option[String]): Option[String] =

@@ -94,7 +94,7 @@ specified by the `id` in the request body as below:
 }
 ```
 
-### Change Group Status:
+### Change Group Status
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 - Changeable information: `status`
@@ -108,7 +108,7 @@ specified by the `id` in the request body as below:
 }
 ```
 
-### Delete Group:
+### Delete Group
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 - Remark: The same as changing the groups `status` to

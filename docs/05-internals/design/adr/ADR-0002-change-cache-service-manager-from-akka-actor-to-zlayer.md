@@ -12,7 +12,10 @@ The `org.knora.webapi.store.cacheservice.CacheServiceManager` was implemented as
 
 ## Decision
 
-As part of the move from `Akka` to `ZIO`, it was decided that the `CacheServiceManager` and the whole implementation of the in-memory and Redis backed cache is refactored using ZIO.
+As part of the move from `Akka` to `ZIO`, 
+it was decided that the `CacheServiceManager` 
+and the whole implementation of the in-memory and Redis backed cache 
+is refactored using ZIO.
 
 ## Consequences
 

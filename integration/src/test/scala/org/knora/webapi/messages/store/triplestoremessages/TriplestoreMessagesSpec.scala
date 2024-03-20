@@ -19,9 +19,9 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
 
   "Conversion from case class to JSON and back" should {
 
-    "work for a 'StringLiteralV2' without language tag" in {
+    "work for a 'StringLiteralV2' without language iso" in {
 
-      val string = StringLiteralV2("stringwithoutlang", None)
+      val string = StringLiteralV2.from("stringwithoutlang", None)
       val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithoutlang\"}")
@@ -31,9 +31,9 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
       converted should be(string)
     }
 
-    "work for a 'StringLiteralV2' with language tag" in {
+    "work for a 'StringLiteralV2' with language iso" in {
 
-      val string = StringLiteralV2("stringwithlang", Some("de"))
+      val string = StringLiteralV2.from("stringwithlang", Some("de"))
       val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")
@@ -45,9 +45,9 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
   }
 
   "Creating a `StringLiteralV2`" should {
-    "fail when language tag is given but value is missing" in {
+    "fail when language iso is given but value is missing" in {
       val caught = intercept[BadRequestException](
-        StringLiteralV2("", Some("de")),
+        StringLiteralV2.from("", Some("de")),
       )
       assert(caught.getMessage === "String value is missing.")
     }

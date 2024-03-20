@@ -1681,7 +1681,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     PredicateInfoV2(
       predicateIri = predicateIri.toSmartIri,
       objects = objects ++ objectsWithLang.map { case (lang, str) =>
-        StringLiteralV2(str, Some(lang))
+        StringLiteralV2.from(str, Some(lang))
       },
     )
 

@@ -6,6 +6,8 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import spray.json.*
 import zio.*
 import zio.json.DeriveJsonCodec
@@ -15,7 +17,6 @@ import java.time.Instant
 import scala.collection.mutable
 
 import dsp.errors.*
-import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
@@ -107,7 +108,8 @@ object SparqlExtendedConstructResponse {
                       ),
                     )
 
-                  case OntologyConstants.Xsd.String => StringLiteralV2(value = datatypeLiteral.value, language = None)
+                  case OntologyConstants.Xsd.String =>
+                    StringLiteralV2.from(value = datatypeLiteral.value, language = None)
 
                   case OntologyConstants.Xsd.Decimal =>
                     DecimalLiteralV2(
@@ -122,7 +124,7 @@ object SparqlExtendedConstructResponse {
                 }
 
               case stringWithLanguage: StringWithLanguage =>
-                StringLiteralV2(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
+                StringLiteralV2.from(value = stringWithLanguage.value, language = Some(stringWithLanguage.language))
             }
         }
 
@@ -305,22 +307,32 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
 }
 
 /**
- * Represents a string with an optional language tag. Allows sorting inside collections by value.
+ * Represents a string with language iso. Allows sorting inside collections by the value.
  *
  * @param value    the string value.
- * @param language the optional language tag.
+ * @param language the language iso.
  */
-case class StringLiteralV2(value: String, language: Option[String] = None)
+case class StringLiteralV2 private (value: String, language: Option[String])
     extends LiteralV2
     with OntologyLiteralV2
     with Ordered[StringLiteralV2] {
-  override def toString: String = value
 
-  if (language.isDefined && value.isEmpty) {
-    throw BadRequestException(s"String value is missing.")
+  override def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+  override def toString: String                    = value
+
+  def toRdfLiteral: StringLiteral =
+    language.map(Rdf.literalOfLanguage(value, _)).getOrElse(Rdf.literalOf(value))
+}
+
+object StringLiteralV2 {
+  implicit val codec: JsonCodec[StringLiteralV2] = DeriveJsonCodec.gen[StringLiteralV2]
+
+  def from(value: String, language: Option[String]): StringLiteralV2 = language match {
+    case Some(_) if value.isEmpty => throw BadRequestException("String value is missing.")
+    case _                        => StringLiteralV2(value, language)
   }
 
-  def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+  def unsafeFrom(value: String, language: Option[String]): StringLiteralV2 = StringLiteralV2(value, language)
 }
 
 /**
@@ -528,77 +540,20 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       case stringWithLang: JsObject =>
         stringWithLang.getFields("value", "language") match {
           case Seq(JsString(value), JsString(language)) =>
-            StringLiteralV2(
+            StringLiteralV2.from(
               value = value,
               language = Some(language),
             )
           case Seq(JsString(value)) =>
-            StringLiteralV2(
+            StringLiteralV2.from(
               value = value,
               language = None,
             )
           case _ =>
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
         }
-      case JsString(value) => StringLiteralV2(value, None)
+      case JsString(value) => StringLiteralV2.from(value, None)
       case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
     }
   }
-
-  // TODO-mpro: below object needs to be here because of moving value object to separate project which are also partially used in V2.
-  // Once dsp.valueobjects.V2.StringLiteralV2 is replaced by LangString value object, it can be removed.
-  // By then it is quick fix solution.
-  implicit object V2LiteralV2Format extends JsonFormat[V2.StringLiteralV2] {
-
-    /**
-     * Converts a [[StringLiteralV2]] to a [[JsValue]].
-     *
-     * @param string a [[StringLiteralV2]].
-     * @return a [[JsValue]].
-     */
-    def write(string: V2.StringLiteralV2): JsValue =
-      if (string.language.isDefined) {
-        // have language tag
-        JsObject(
-          Map(
-            "value"    -> string.value.toJson,
-            "language" -> string.language.toJson,
-          ),
-        )
-      } else {
-        // no language tag
-        JsObject(
-          Map(
-            "value" -> string.value.toJson,
-          ),
-        )
-      }
-
-    /**
-     * Converts a [[JsValue]] to a [[StringLiteralV2]].
-     *
-     * @param json a [[JsValue]].
-     * @return a [[StringLiteralV2]].
-     */
-    def read(json: JsValue): V2.StringLiteralV2 = json match {
-      case stringWithLang: JsObject =>
-        stringWithLang.getFields("value", "language") match {
-          case Seq(JsString(value), JsString(language)) =>
-            V2.StringLiteralV2(
-              value = value,
-              language = Some(language),
-            )
-          case Seq(JsString(value)) =>
-            V2.StringLiteralV2(
-              value = value,
-              language = None,
-            )
-          case _ =>
-            throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
-        }
-      case JsString(value) => V2.StringLiteralV2(value, None)
-      case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
-    }
-  }
-
 }

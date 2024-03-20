@@ -13,7 +13,8 @@ where implemented as Akka-Actors
 
 ## Decision
 
-As part of the move from `Akka` to `ZIO`, it was decided that the `IIIFServiceManager` and the `IIIFServiceSipiImpl` is refactored using ZIO.
+As part of the move from `Akka` to `ZIO`, 
+it was decided that the `IIIFServiceManager` and the `IIIFServiceSipiImpl` is refactored using ZIO.
 
 ## Consequences
 

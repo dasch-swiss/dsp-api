@@ -10,12 +10,9 @@ DSP is published as a set of [Docker](https://www.docker.com) images under the
 
 The following Docker images are published:
 
-- DSP-API:
-  - https://hub.docker.com/r/daschswiss/knora-api
-- Sipi (includes DSP's specific Sipi scripts):
-  - https://hub.docker.com/r/daschswiss/knora-sipi
-- DSP-APP:
-  - https://hub.docker.com/r/daschswiss/dsp-app
+- [DSP-API](https://hub.docker.com/r/daschswiss/knora-api)
+- [Sipi](https://hub.docker.com/r/daschswiss/knora-sipi) (includes DSP's specific Sipi scripts)
+- [DSP-APP](https://hub.docker.com/r/daschswiss/dsp-app)
 
 DSP's Docker images are published automatically through Github CI each time a
 pull-request is merged into the `main` branch.
@@ -27,11 +24,11 @@ using the result of `git describe`. The describe version is built from the
 The images can be published locally by running:
 
 ```bash
-$ make docker-build
+make docker-build
 ```
 
 or to Dockerhub:
 
 ```bash
-$ make docker-publish
+make docker-publish
 ```

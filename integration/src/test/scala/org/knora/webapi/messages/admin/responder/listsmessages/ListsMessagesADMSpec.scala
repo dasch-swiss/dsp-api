@@ -26,13 +26,13 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         projectIri = "http://rdfh.ch/projects/00FF",
         labels = StringLiteralSequenceV2(
           Vector(
-            StringLiteralV2("Title", Some("en")),
-            StringLiteralV2("Titel", Some("de")),
-            StringLiteralV2("Titre", Some("fr")),
+            StringLiteralV2.from("Title", Some("en")),
+            StringLiteralV2.from("Titel", Some("de")),
+            StringLiteralV2.from("Titre", Some("fr")),
           ),
         ),
         comments = StringLiteralSequenceV2(
-          Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))),
+          Vector(StringLiteralV2.from("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))),
         ),
       )
 
@@ -49,7 +49,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
       val listNodeInfo = ListChildNodeInfoADM(
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
-        labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Sommer", None))),
         comments = StringLiteralSequenceV2.empty,
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
@@ -68,7 +68,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
       val listNode: ListNodeADM = ListChildNodeADM(
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
-        labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2.from("Sommer", None))),
         comments = StringLiteralSequenceV2.empty,
         children = Seq.empty[ListChildNodeADM],
         position = 0,

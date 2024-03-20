@@ -11,7 +11,6 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
 import org.knora.webapi.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -21,6 +20,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -535,7 +535,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.description.nonEmpty) {
       projectUpdatePayload.description
         .map(_.map(_.value))
-        .map(_.map(d => V2.StringLiteralV2(Iri.fromSparqlEncodedString(d.value), d.language)))
+        .map(_.map(d => StringLiteralV2.from(Iri.fromSparqlEncodedString(d.value), d.language)))
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
           throw UpdateNotPerformedException(

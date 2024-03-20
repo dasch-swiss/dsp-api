@@ -9,8 +9,7 @@ For the sake of comprehensibility, it was necessary to split the ontology into m
 even though this obliterates the evident connections between those diagrams.
 
 !!! Note "Legend"
-
-    - dotted lines: the boxes are copies from another diagram.
+    dotted lines: the boxes are copies from another diagram.
 
 ### Resources
 
@@ -529,7 +528,6 @@ flowchart LR
 ### Resource Triples Structure
 
 !!! Note "Legend"
-
     - round boxes: resources
     - square boxes: properties
     - hexagonal boxes: resoures that are duplicated for graphical reasons

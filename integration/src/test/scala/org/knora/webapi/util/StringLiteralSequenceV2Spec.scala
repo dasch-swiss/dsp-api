@@ -16,15 +16,15 @@ class StringLiteralSequenceV2Spec extends CoreSpec {
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(
-      StringLiteralV2(
+      StringLiteralV2.from(
         value = "Film und Foto",
         language = Some("de"),
       ),
-      StringLiteralV2(
+      StringLiteralV2.from(
         value = "Film and Photo",
         language = Some("en"),
       ),
-      StringLiteralV2(
+      StringLiteralV2.from(
         value = "Film e Fotografia",
         language = Some("it"),
       ),
