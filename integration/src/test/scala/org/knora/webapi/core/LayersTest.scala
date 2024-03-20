@@ -30,15 +30,10 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
-import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
-import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -104,8 +99,6 @@ object LayersTest {
       with ConstructResponseUtilV2
       with ConstructTransformer
       with DspIngestClient
-      with FilesEndpoints
-      with FilesEndpointsHandler
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with GroupsService
@@ -114,6 +107,7 @@ object LayersTest {
       with InferenceOptimizationService
       with IriConverter
       with IriService
+      with KnoraUserService
       with ListsResponder
       with ListsResponderV2
       with MessageRelay
@@ -127,11 +121,10 @@ object LayersTest {
       with PermissionsResponderADM
       with PermissionsRestService
       with PredicateObjectMapper
-      with ProjectADMRestService
-      with ProjectService
       with ProjectExportService
       with ProjectExportStorageService
       with ProjectImportService
+      with ProjectService
       with ProjectsResponderADM
       with QueryTraverser
       with RepositoryUpdater
@@ -144,20 +137,17 @@ object LayersTest {
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
-      with StoreRestService
       with TestClientService
       with TriplestoreService
+      with UserService
       with UsersResponder
       with UsersRestService
-      with KnoraUserService
-      with UserService
       with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      AdminApiEndpoints.layer,
-      AdminApiRoutes.layer,
       AdminModule.layer,
+      AdminApiModule.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppRouter.layer,
@@ -172,13 +162,8 @@ object LayersTest {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
-      FilesEndpoints.layer,
-      FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsEndpoints.layer,
-      GroupsEndpointsHandler.layer,
       GroupsResponderADMLive.layer,
-      GroupsRestServiceLive.layer,
       GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
@@ -188,14 +173,8 @@ object LayersTest {
       IriService.layer,
       KnoraResponseRenderer.layer,
       KnoraUserToUserConverter.layer,
-      ListRestService.layer,
-      ListsEndpoints.layer,
-      ListsEndpointsHandlers.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
-      MaintenanceEndpoints.layer,
-      MaintenanceEndpointsHandlers.layer,
-      MaintenanceRestService.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
@@ -205,19 +184,13 @@ object LayersTest {
       OntologyResponderV2Live.layer,
       PasswordService.layer,
       PermissionUtilADMLive.layer,
-      PermissionsEndpoints.layer,
-      PermissionsEndpointsHandlers.layer,
       PermissionsResponderADMLive.layer,
-      PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectADMRestService.layer,
-      ProjectsEndpoints.layer,
-      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
@@ -231,17 +204,11 @@ object LayersTest {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
-      StoreRestService.layer,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersEndpoints.layer,
-      UsersEndpointsHandler.layer,
       UsersResponder.layer,
-      UsersRestService.layer,
       ValuesResponderV2Live.layer,
       ManagementEndpoints.layer,
     )

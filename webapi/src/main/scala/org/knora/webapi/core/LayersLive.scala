@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
@@ -31,12 +32,8 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
-import org.knora.webapi.slice.admin.api.AdminApiRoutes
-import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
-import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
@@ -75,26 +72,23 @@ object LayersLive {
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
       AssetPermissionsResponder & Authenticator & AuthorizationRestService & CacheService &
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
-      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsService & GroupsResponderADM & HttpServer &
+      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsService & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
-      IriService & JwtService & ListsResponder & ListsResponderV2 &
-      MessageRelay & OntologyHelpers & OntologyCache & OntologyInferencer & OntologyResponderV2 &
-      PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
-      ProjectADMRestService & ProjectExportService & ProjectExportStorageService &
+      IriService & JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
+      OntologyInferencer & OntologyResponderV2 & PasswordService & PermissionsResponderADM & PermissionsRestService &
+      PermissionUtilADM & PredicateObjectMapper & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
-      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StoreRestService &
-      StringFormatter & TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
+      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
+      TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
-      org.knora.webapi.core.ActorSystem.layer,
+      AdminApiModule.layer,
       AdminModule.layer,
-      AdminApiRoutes.layer,
-      AdminApiEndpoints.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
@@ -110,13 +104,8 @@ object LayersLive {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
-      FilesEndpoints.layer,
-      FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsEndpoints.layer,
-      GroupsEndpointsHandler.layer,
       GroupsResponderADMLive.layer,
-      GroupsRestServiceLive.layer,
       GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
@@ -127,14 +116,9 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       KnoraUserToUserConverter.layer,
-      ListRestService.layer,
-      ListsEndpoints.layer,
-      ListsEndpointsHandlers.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
-      MaintenanceEndpoints.layer,
-      MaintenanceEndpointsHandlers.layer,
-      MaintenanceRestService.layer,
+      ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
@@ -144,19 +128,13 @@ object LayersLive {
       OntologyResponderV2Live.layer,
       PasswordService.layer,
       PermissionUtilADMLive.layer,
-      PermissionsEndpoints.layer,
-      PermissionsEndpointsHandlers.layer,
       PermissionsResponderADMLive.layer,
-      PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectADMRestService.layer,
-      ProjectsEndpoints.layer,
-      ProjectsEndpointsHandler.layer,
+      ProjectService.layer,
       ProjectsResponderADMLive.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
@@ -171,18 +149,12 @@ object LayersLive {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
-      StoreRestService.layer,
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersEndpoints.layer,
-      UsersEndpointsHandler.layer,
       UsersResponder.layer,
-      UsersRestService.layer,
       ValuesResponderV2Live.layer,
-      ManagementEndpoints.layer,
+      org.knora.webapi.core.ActorSystem.layer,
     )
 }

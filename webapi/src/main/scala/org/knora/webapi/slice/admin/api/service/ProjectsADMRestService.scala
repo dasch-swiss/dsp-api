@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio.*
-import dsp.errors.BadRequestException
+
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -238,27 +238,20 @@ final case class ProjectADMRestService(
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)
 
-  def exportProject(shortcodeStr: String, user: User): Task[Unit] =
-    convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
-
-  def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit] = for {
+  def exportProject(id: Shortcode, user: User): Task[Unit] = for {
     _       <- permissionService.ensureSystemAdmin(user)
-    project <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
+    project <- knoraProjectService.findByShortcode(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
-  private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
-    ZIO.fromEither(Shortcode.from(shortcodeStr)).mapBoth(BadRequestException.apply, ShortcodeIdentifier.from)
-
   def importProject(
-    shortcodeStr: String,
+    shortcode: Shortcode,
     user: User,
   ): Task[ProjectImportResponse] = for {
-    _         <- permissionService.ensureSystemAdmin(user)
-    shortcode <- convertStringToShortcodeId(shortcodeStr)
+    _ <- permissionService.ensureSystemAdmin(user)
     path <-
       projectImportService
-        .importProject(shortcode.value, user)
+        .importProject(shortcode, user)
         .flatMap {
           case Some(export) => export.toAbsolutePath.map(_.toString)
           case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))

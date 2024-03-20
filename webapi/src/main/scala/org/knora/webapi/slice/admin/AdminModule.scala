@@ -6,15 +6,16 @@
 package org.knora.webapi.slice.admin
 
 import zio.ZLayer
-import org.knora.webapi.slice.admin.domain.service.*
+
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.AdminDomainModule
+import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 
 object AdminModule {
 

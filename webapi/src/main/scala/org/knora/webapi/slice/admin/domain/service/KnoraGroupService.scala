@@ -5,10 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import zio.Task
 import zio.ZLayer
+
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 
 case class KnoraGroupService(knoraGroupRepo: KnoraGroupRepo) {
 

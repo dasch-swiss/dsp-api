@@ -7,10 +7,12 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
+
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -52,7 +54,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
-import zio.ZIO
 
 trait ResourcesResponderV2
 

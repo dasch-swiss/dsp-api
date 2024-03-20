@@ -5,13 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Task
+import zio.ZLayer
+
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import zio.Task
-import zio.ZLayer
 
 final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
   def findById(id: ProjectIri): Task[Option[KnoraProject]]           = knoraProjectRepo.findById(id)
