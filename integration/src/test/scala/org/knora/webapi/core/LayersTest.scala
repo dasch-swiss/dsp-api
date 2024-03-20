@@ -47,7 +47,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -124,7 +123,6 @@ object LayersTest {
       with ResourceUtilV2
       with ResourcesResponderV2
       with RestCardinalityService
-      with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
       with StandoffResponderV2

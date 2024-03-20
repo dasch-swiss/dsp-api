@@ -48,7 +48,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -78,7 +77,7 @@ object LayersLive {
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
       PermissionUtilADM & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
-      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
+      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
       TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
 
