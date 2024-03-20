@@ -9,6 +9,7 @@ import zio.ZLayer
 
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -23,9 +24,11 @@ object AdminDomainModule {
   type Dependencies =
     AdminRepoModule.Provided & CacheService & IriService & OntologyRepo & PasswordService & PredicateObjectMapper & TriplestoreService
 
-  type Provided = KnoraGroupService & KnoraProjectService & KnoraUserService & MaintenanceService & ProjectService
+  type Provided =
+    GroupService & KnoraGroupService & KnoraProjectService & KnoraUserService & MaintenanceService & ProjectService
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
+    GroupService.layer,
     KnoraGroupService.layer,
     KnoraProjectService.layer,
     KnoraUserService.layer,

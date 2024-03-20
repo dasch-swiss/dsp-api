@@ -101,7 +101,6 @@ object LayersTest {
       with DspIngestClient
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
-      with GroupsService
       with HttpServer
       with IIIFRequestMessageHandler
       with InferenceOptimizationService
@@ -164,7 +163,6 @@ object LayersTest {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
-      GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
