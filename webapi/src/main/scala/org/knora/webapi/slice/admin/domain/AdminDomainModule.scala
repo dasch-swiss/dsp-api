@@ -19,8 +19,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminDomainModule {
 
   type Dependencies =
-    AdminRepoModule.Provided & TriplestoreService & IriService & PasswordService & CacheService & PredicateObjectMapper
-  type Provided = KnoraGroupService & KnoraUserService & KnoraProjectService & MaintenanceService
+    AdminRepoModule.Provided & CacheService & IriService & PasswordService & PredicateObjectMapper & TriplestoreService
+
+  type Provided = KnoraGroupService & KnoraProjectService & KnoraUserService & MaintenanceService
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
     KnoraGroupService.layer,
