@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
-
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -19,7 +18,6 @@ import org.knora.webapi.settings.APPLICATION_MANAGER_ACTOR_NAME
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
-
 import pekko.actor.{ActorRef, Props}
 import pekko.routing.RoundRobinPool
 

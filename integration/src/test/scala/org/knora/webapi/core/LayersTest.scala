@@ -92,7 +92,6 @@ object LayersTest {
       with AssetPermissionsResponder
       with Authenticator
       with AuthorizationRestService
-      with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService

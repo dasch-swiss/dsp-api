@@ -70,7 +70,7 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
-      AssetPermissionsResponder & Authenticator & AuthorizationRestService & CacheService &
+      AssetPermissionsResponder & Authenticator & AuthorizationRestService &
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
