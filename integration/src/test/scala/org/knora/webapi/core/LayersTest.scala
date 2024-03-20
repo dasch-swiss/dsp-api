@@ -101,7 +101,6 @@ object LayersTest {
       with IIIFRequestMessageHandler
       with InferenceOptimizationService
       with IriConverter
-      with IriService
       with ListsResponder
       with ListsResponderV2
       with MessageRelay

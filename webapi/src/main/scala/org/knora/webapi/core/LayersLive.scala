@@ -73,7 +73,7 @@ object LayersLive {
       CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
       GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
-      IriService & JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
+      JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
       PermissionUtilADM & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
