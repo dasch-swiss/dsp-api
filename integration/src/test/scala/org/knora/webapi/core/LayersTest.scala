@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
+import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -72,67 +73,26 @@ object LayersTest {
   /**
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
-  type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
-  type DefaultTestEnvironmentWithSipi = DefaultTestEnvironmentWithoutSipi
-    with SipiTestContainer
-    with DspIngestTestContainer
-    with SharedVolumes.Images
+  type DefaultTestEnvironmentWithoutSipi =
+    LayersLive.DspEnvironmentLive & FusekiTestContainer & TestClientService
 
-  type CommonR0 = pekko.actor.ActorSystem
-    with AppConfigurationsTest
-    with JwtService
-    with SipiService
-    with StringFormatter
+  type DefaultTestEnvironmentWithSipi =
+    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images
+
+  type CommonR0 =
+    pekko.actor.ActorSystem & AppConfigurationsTest & JwtService & SipiService & StringFormatter
+
   type CommonR =
-    ApiRoutes
-      with AdminApiEndpoints
-      with ApiV2Endpoints
-      with AppRouter
-      with AssetPermissionsResponder
-      with Authenticator
-      with AuthorizationRestService
-      with CacheServiceRequestMessageHandler
-      with CardinalityHandler
-      with ConstructResponseUtilV2
-      with DspIngestClient
-      with GravsearchTypeInspectionRunner
-      with GroupsResponderADM
-      with HttpServer
-      with IIIFRequestMessageHandler
-      with InferenceOptimizationService
-      with IriConverter
-      with ListsResponder
-      with ListsResponderV2
-      with MessageRelay
-      with OntologyCache
-      with OntologyHelpers
-      with OntologyInferencer
-      with OntologyRepo
-      with OntologyResponderV2
-      with PermissionUtilADM
-      with PermissionsResponderADM
-      with PermissionsRestService
-      with ProjectExportService
-      with ProjectExportStorageService
-      with ProjectImportService
-      with ProjectService
-      with ProjectsResponderADM
-      with QueryTraverser
-      with RepositoryUpdater
-      with ResourceUtilV2
-      with ResourcesResponderV2
-      with RestCardinalityService
-      with SearchApiRoutes
-      with SearchResponderV2
-      with StandoffResponderV2
-      with StandoffTagUtilV2
-      with State
-      with TestClientService
-      with TriplestoreService
-      with UserService
-      with UsersResponder
-      with UsersRestService
-      with ValuesResponderV2
+    ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
+      AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
+      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer & IIIFRequestMessageHandler &
+      InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache &
+      OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 & PermissionUtilADM &
+      PermissionsResponderADM & PermissionsRestService & ProjectExportService & ProjectExportStorageService &
+      ProjectImportService & ProjectService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
+      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
+      StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService & UserService &
+      UsersResponder & UsersRestService & ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -202,14 +162,8 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations
-        with DspIngestTestContainer
-        with FusekiTestContainer
-        with JwtService
-        with SharedVolumes.Images
-        with SipiService
-        with SipiTestContainer
-        with StringFormatter,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & JwtService & SharedVolumes.Images &
+        SipiService & SipiTestContainer & StringFormatter,
     ](
       AppConfigForTestContainers.testcontainers,
       DspIngestClientLive.layer,
@@ -223,7 +177,7 @@ object LayersTest {
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer with AppConfigurations with JwtService with SipiService with StringFormatter](
+    ZLayer.make[FusekiTestContainer & AppConfigurations & JwtService & SipiService & StringFormatter](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
       SipiServiceMock.layer,
