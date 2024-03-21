@@ -104,7 +104,7 @@ object LayersLive {
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsResponderADMLive.layer,
+      GroupsResponderADM.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

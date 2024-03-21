@@ -47,105 +47,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries._
 import org.knora.webapi.util.ZioHelper
 
-/**
- * Returns information about groups.
- */
-trait GroupsResponderADM {
-
-  /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
-   *
-   * @return all the groups as a sequence of [[Group]].
-   */
-  def groupsGetADM: Task[Seq[Group]]
-
-  /**
-   * Gets the group with the given group IRI and returns the information as a [[Group]].
-   *
-   * @param groupIri the IRI of the group requested.
-   * @return information about the group as a [[Group]]
-   */
-  def groupGetADM(groupIri: IRI): Task[Option[Group]]
-
-  /**
-   * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
-   *
-   * @param groupIris the IRIs of the groups being requested
-   * @return information about the group as a set of [[GroupGetResponseADM]] objects.
-   */
-  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]]
-
-  /**
-   * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
-   * Only project and system admins are allowed to access this information.
-   *
-   * @param iri       the IRI of the group.
-   * @param user      the user initiating the request.
-   * @return A [[GroupMembersGetResponseADM]]
-   */
-  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
-
-  /**
-   * Create a new group.
-   *
-   * @param request  the create request information.
-   * @param apiRequestID   the unique request ID.
-   * @return a [[GroupGetResponseADM]]
-   */
-  def createGroup(
-    request: GroupCreateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM]
-
-  /**
-   * Change group's basic information.
-   *
-   * @param groupIri      the IRI of the group we want to change.
-   * @param request       the change request.
-   * @param apiRequestID  the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def updateGroup(
-    groupIri: GroupIri,
-    request: GroupUpdateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM]
-
-  /**
-   * Change group's status.
-   *
-   * @param groupIri           the IRI of the group we want to change.
-   * @param request            the change request.
-   * @param apiRequestID       the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def updateGroupStatus(
-    groupIri: GroupIri,
-    request: GroupStatusUpdateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM]
-
-  /**
-   * Delete a group by changing its status to 'false'.
-   *
-   * @param iri                the IRI of the group to be deleted.
-   * @param apiRequestID       the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def deleteGroup(
-    iri: GroupIri,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM]
-}
-
-final case class GroupsResponderADMLive(
+final case class GroupsResponderADM(
   triplestore: TriplestoreService,
   messageRelay: MessageRelay,
   iriService: IriService,
   knoraUserService: KnoraUserService,
   implicit val stringFormatter: StringFormatter,
-) extends GroupsResponderADM
-    with MessageHandler
+) extends MessageHandler
     with GroupsADMJsonProtocol
     with LazyLogging {
 
@@ -165,7 +73,7 @@ final case class GroupsResponderADMLive(
    *
    * @return all the groups as a sequence of [[Group]].
    */
-  override def groupsGetADM: Task[Seq[Group]] = {
+  def groupsGetADM: Task[Seq[Group]] = {
     val query = Construct(sparql.admin.txt.getGroups(None))
     for {
       groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
@@ -211,7 +119,7 @@ final case class GroupsResponderADMLive(
    * @param groupIri       the IRI of the group requested.
    * @return information about the group as a [[Group]]
    */
-  override def groupGetADM(groupIri: IRI): Task[Option[Group]] = {
+  def groupGetADM(groupIri: IRI): Task[Option[Group]] = {
     val query = Construct(sparql.admin.txt.getGroups(maybeIri = Some(groupIri)))
     for {
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.headOption)
@@ -225,7 +133,7 @@ final case class GroupsResponderADMLive(
    * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
-  override def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
+  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
     ZioHelper.sequence(groupIris.map { iri =>
       groupGetADM(iri)
         .flatMap(ZIO.fromOption(_))
@@ -289,7 +197,7 @@ final case class GroupsResponderADMLive(
    * @param user       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
-  override def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+  def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 
   /**
@@ -299,7 +207,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]]
    */
-  override def createGroup(
+  def createGroup(
     request: GroupCreateRequest,
     apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
@@ -355,7 +263,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
-  override def updateGroup(
+  def updateGroup(
     groupIri: GroupIri,
     request: GroupUpdateRequest,
     apiRequestID: UUID,
@@ -374,7 +282,7 @@ final case class GroupsResponderADMLive(
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupGetResponseADM]].
    */
-  override def updateGroupStatus(
+  def updateGroupStatus(
     groupIri: GroupIri,
     request: GroupStatusUpdateRequest,
     apiRequestID: UUID,
@@ -389,7 +297,7 @@ final case class GroupsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
   }
 
-  override def deleteGroup(
+  def deleteGroup(
     iri: GroupIri,
     apiRequestID: UUID,
   ): Task[GroupGetResponseADM] = {
@@ -493,7 +401,7 @@ final case class GroupsResponderADMLive(
     }
 }
 
-object GroupsResponderADMLive {
+object GroupsResponderADM {
   val layer = ZLayer.fromZIO {
     for {
       ts      <- ZIO.service[TriplestoreService]
@@ -501,7 +409,7 @@ object GroupsResponderADMLive {
       sf      <- ZIO.service[StringFormatter]
       kus     <- ZIO.service[KnoraUserService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, sf))
+      handler <- mr.subscribe(GroupsResponderADM(ts, mr, iris, kus, sf))
     } yield handler
   }
 }
