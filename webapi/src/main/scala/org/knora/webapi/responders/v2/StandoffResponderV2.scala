@@ -45,6 +45,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -54,7 +55,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements

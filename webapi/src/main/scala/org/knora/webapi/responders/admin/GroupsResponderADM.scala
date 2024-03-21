@@ -34,17 +34,17 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
-import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.model
 
 /**
  * Returns information about groups.
