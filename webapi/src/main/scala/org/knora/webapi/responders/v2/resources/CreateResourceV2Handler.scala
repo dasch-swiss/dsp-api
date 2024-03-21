@@ -37,7 +37,6 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.resources.CheckObjectClassConstraints
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -55,7 +54,6 @@ final case class CreateResourceV2Handler(
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
   permissionUtilADM: PermissionUtilADM,
-  projectRepo: KnoraProjectRepo,
   searchResponderV2: SearchResponderV2,
   getResources: GetResources,
   implicit val stringFormatter: StringFormatter,

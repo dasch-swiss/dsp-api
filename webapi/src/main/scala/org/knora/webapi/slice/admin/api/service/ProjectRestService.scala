@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 
-import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -23,69 +22,20 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-trait ProjectADMRestService {
-
-  def listAllProjects(): Task[ProjectsGetResponse]
-
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse]
-
-  def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM]
-
-  def updateProject(
-    id: IriIdentifier,
-    updateReq: ProjectUpdateRequest,
-    user: User,
-  ): Task[ProjectOperationResponseADM]
-
-  def deleteProject(id: IriIdentifier, user: User): Task[ProjectOperationResponseADM]
-
-  def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM]
-
-  def exportProject(shortcode: String, user: User): Task[Unit]
-  def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit]
-
-  def exportProjectAwaiting(id: ShortcodeIdentifier, user: User): Task[ProjectExportInfoResponse]
-
-  def importProject(shortcode: String, user: User): Task[ProjectImportResponse]
-
-  def importProject(shortcode: ShortcodeIdentifier, user: User): Task[ProjectImportResponse] =
-    importProject(shortcode.value.value, user)
-
-  def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]]
-
-  def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM]
-
-  def getProjectAdminMembers(user: User, id: ProjectIdentifierADM): Task[ProjectAdminMembersGetResponseADM]
-
-  def listAllKeywords(): Task[ProjectsKeywordsGetResponse]
-
-  def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse]
-
-  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM]
-
-  def updateProjectRestrictedViewSettings(
-    id: ProjectIdentifierADM,
-    user: User,
-    setSizeReq: SetRestrictedViewRequest,
-  ): Task[RestrictedViewResponse]
-}
-
-final case class ProjectsADMRestServiceLive(
+final case class ProjectRestService(
   format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
-  projectRepo: KnoraProjectRepo,
-  projectService: ProjectService,
+  knoraProjectService: KnoraProjectService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   permissionService: AuthorizationRestService,
-) extends ProjectADMRestService {
+) {
 
   /**
    * Returns all projects as a [[ProjectsGetResponse]].
@@ -185,9 +135,10 @@ final case class ProjectsADMRestServiceLive(
    */
   def getAllProjectData(id: IriIdentifier, user: User): Task[ProjectDataGetResponseADM] =
     for {
-      project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
-      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+      project <-
+        knoraProjectService.findById(id.value).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
+      _      <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      result <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
   /**
@@ -275,61 +226,52 @@ final case class ProjectsADMRestServiceLive(
    * @param req  Contains the values to be set.
    * @return [[RestrictedViewResponse]].
    */
-  override def updateProjectRestrictedViewSettings(
+  def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: User,
     req: SetRestrictedViewRequest,
   ): Task[RestrictedViewResponse] =
     for {
-      project        <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      project        <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _              <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       restrictedView <- req.toRestrictedView
-      newSettings    <- projectService.setProjectRestrictedView(project, restrictedView)
+      newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)
 
-  override def exportProject(shortcodeStr: String, user: User): Task[Unit] =
-    convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
-
-  override def exportProject(id: ShortcodeIdentifier, user: User): Task[Unit] = for {
+  def exportProject(id: Shortcode, user: User): Task[Unit] = for {
     _       <- permissionService.ensureSystemAdmin(user)
-    project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
+    project <- knoraProjectService.findByShortcode(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
-  override def exportProjectAwaiting(id: ShortcodeIdentifier, user: User): Task[ProjectExportInfoResponse] = for {
-    _          <- permissionService.ensureSystemAdmin(user)
-    project    <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
+  def exportProjectAwaiting(shortcode: Shortcode, user: User): Task[ProjectExportInfoResponse] = for {
+    _ <- permissionService.ensureSystemAdmin(user)
+    project <- knoraProjectService
+                 .findByShortcode(shortcode)
+                 .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
     exportInfo <- projectExportService.exportProject(project).logError
   } yield exportInfo
 
-  private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
-    ZIO.fromEither(Shortcode.from(shortcodeStr)).mapBoth(BadRequestException.apply, ShortcodeIdentifier.from)
-
-  override def importProject(
-    shortcodeStr: String,
+  def importProject(
+    shortcode: Shortcode,
     user: User,
   ): Task[ProjectImportResponse] = for {
-    _         <- permissionService.ensureSystemAdmin(user)
-    shortcode <- convertStringToShortcodeId(shortcodeStr)
+    _ <- permissionService.ensureSystemAdmin(user)
     path <-
       projectImportService
-        .importProject(shortcode.value, user)
+        .importProject(shortcode, user)
         .flatMap {
           case Some(export) => export.toAbsolutePath.map(_.toString)
           case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
         }
   } yield ProjectImportResponse(path)
 
-  override def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
+  def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
     _       <- permissionService.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
-
 }
 
-object ProjectsADMRestServiceLive {
-  val layer: URLayer[
-    KnoraResponseRenderer & ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectService & ProjectImportService & AuthorizationRestService,
-    ProjectsADMRestServiceLive,
-  ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
+object ProjectRestService {
+  val layer = ZLayer.derive[ProjectRestService]
 }

@@ -23,24 +23,19 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.*
+import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing.*
+import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
-import org.knora.webapi.slice.admin.api.service.GroupsRestServiceLive
-import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
-import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -48,13 +43,11 @@ import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
@@ -76,27 +69,25 @@ object LayersLive {
    */
   type DspEnvironmentLive =
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
-      AssetPermissionsResponder & Authenticator & AuthorizationRestService & CacheService &
-      CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
-      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsService & GroupsResponderADM & HttpServer &
+      AssetPermissionsResponder & Authenticator & AuthorizationRestService &
+      CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
+      GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
-      IriService & JwtService & KnoraProjectRepo & KnoraUserService & ListsResponder & ListsResponderV2 &
-      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
-      PasswordService & PermissionsResponderADM & PermissionsRestService & PermissionUtilADM & PredicateObjectMapper &
-      ProjectADMRestService & ProjectService & ProjectExportService & ProjectExportStorageService &
+      JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
+      OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
+      PermissionUtilADM & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
-      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService & SearchApiRoutes &
-      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StoreRestService &
-      StringFormatter & TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
+      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &
+      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
+      TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
    */
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
-      org.knora.webapi.core.ActorSystem.layer,
-      AdminApiEndpoints.layer,
-      AdminApiRoutes.layer,
+      AdminApiModule.layer,
+      AdminModule.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppConfig.layer,
@@ -112,14 +103,8 @@ object LayersLive {
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
-      FilesEndpoints.layer,
-      FilesEndpointsHandler.layer,
       GravsearchTypeInspectionRunner.layer,
-      GroupsEndpoints.layer,
-      GroupsEndpointsHandler.layer,
       GroupsResponderADMLive.layer,
-      GroupsRestServiceLive.layer,
-      GroupsService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -127,21 +112,11 @@ object LayersLive {
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraProjectRepoLive.layer,
       KnoraResponseRenderer.layer,
-      KnoraUserRepoLive.layer,
-      KnoraUserService.layer,
       KnoraUserToUserConverter.layer,
-      ListRestService.layer,
-      ListsEndpoints.layer,
-      ListsEndpointsHandlers.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
-      MaintenanceEndpoints.layer,
-      MaintenanceEndpointsHandlers.layer,
-      MaintenanceRestService.layer,
-      MaintenanceService.layer,
+      ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
@@ -149,21 +124,13 @@ object LayersLive {
       OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
-      PasswordService.layer,
       PermissionUtilADMLive.layer,
-      PermissionsEndpoints.layer,
-      PermissionsEndpointsHandlers.layer,
       PermissionsResponderADMLive.layer,
-      PermissionsRestService.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
-      ProjectService.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectsADMRestServiceLive.layer,
-      ProjectsEndpoints.layer,
-      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
@@ -178,18 +145,12 @@ object LayersLive {
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
-      StoreEndpoints.layer,
-      StoreEndpointsHandler.layer,
-      StoreRestService.layer,
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
-      UsersEndpoints.layer,
-      UsersEndpointsHandler.layer,
       UsersResponder.layer,
-      UsersRestService.layer,
       ValuesResponderV2Live.layer,
-      ManagementEndpoints.layer,
+      org.knora.webapi.core.ActorSystem.layer,
     )
 }

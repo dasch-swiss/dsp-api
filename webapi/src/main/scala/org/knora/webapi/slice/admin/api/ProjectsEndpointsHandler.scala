@@ -19,7 +19,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
@@ -27,7 +27,7 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class ProjectsEndpointsHandler(
   projectsEndpoints: ProjectsEndpoints,
-  restService: ProjectADMRestService,
+  restService: ProjectRestService,
   mapper: HandlerMapper,
 ) {
 
@@ -154,19 +154,19 @@ final case class ProjectsEndpointsHandler(
   val postAdminProjectsByShortcodeExportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeExport,
-      user => (id: ShortcodeIdentifier) => restService.exportProject(id, user),
+      user => (id: ShortcodeIdentifier) => restService.exportProject(id.value, user),
     )
 
   val postAdminProjectsByShortcodeExportAwaitingHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeExportAwaiting,
-      user => (id: ShortcodeIdentifier) => restService.exportProjectAwaiting(id, user),
+      user => (id: ShortcodeIdentifier) => restService.exportProjectAwaiting(id.value, user),
     )
 
   val postAdminProjectsByShortcodeImportHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.postAdminProjectsByShortcodeImport,
-      user => (id: ShortcodeIdentifier) => restService.importProject(id, user),
+      user => (id: ShortcodeIdentifier) => restService.importProject(id.value, user),
     )
 
   val postAdminProjectsHandler =

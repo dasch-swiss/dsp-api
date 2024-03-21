@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
@@ -22,7 +23,6 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -44,8 +44,9 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -86,7 +87,7 @@ final case class ResourcesResponderV2Live(
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
   permissionUtilADM: PermissionUtilADM,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   searchResponderV2: SearchResponderV2,
   implicit val stringFormatter: StringFormatter,
 ) extends ResourcesResponderV2
@@ -153,7 +154,6 @@ final case class ResourcesResponderV2Live(
         standoffTagUtilV2,
         resourceUtilV2,
         permissionUtilADM,
-        projectRepo,
         searchResponderV2,
         this,
         stringFormatter,
@@ -1551,14 +1551,15 @@ final case class ResourcesResponderV2Live(
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectId <- IriIdentifier
-                     .fromString(projectResourceHistoryEventsGetRequest.projectIri)
-                     .toZIO
-                     .mapError(e => BadRequestException(e.getMessage))
-      _ <- projectRepo.findById(projectId).someOrFail(NotFoundException(s"Project ${projectId.value.value} not found"))
+      projectId <- ZIO
+                     .fromEither(ProjectIri.from(projectResourceHistoryEventsGetRequest.projectIri))
+                     .mapError(e => BadRequestException(e))
+      _ <- knoraProjectService
+             .findById(projectId)
+             .someOrFail(NotFoundException(s"Project ${projectId.value} not found"))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value.value)
+      prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value)
       sparqlSelectResponse <- triplestore.query(Select(prequery))
       mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
@@ -1996,7 +1997,7 @@ final case class ResourcesResponderV2Live(
 
 object ResourcesResponderV2Live {
   val layer: URLayer[
-    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectRepo & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService,
+    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService,
     ResourcesResponderV2,
   ] = ZLayer.fromZIO {
     for {
@@ -2008,7 +2009,7 @@ object ResourcesResponderV2Live {
       su      <- ZIO.service[StandoffTagUtilV2]
       ru      <- ZIO.service[ResourceUtilV2]
       pu      <- ZIO.service[PermissionUtilADM]
-      pr      <- ZIO.service[KnoraProjectRepo]
+      pr      <- ZIO.service[KnoraProjectService]
       sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
       handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, sf))

@@ -20,7 +20,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class MaintenanceService(
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
   mapper: PredicateObjectMapper,
 ) {
@@ -34,7 +34,7 @@ final case class MaintenanceService(
       }
 
     def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
-      val getProjectZio: IO[Option[Throwable], KnoraProject] = projectRepo
+      val getProjectZio: IO[Option[Throwable], KnoraProject] = knoraProjectService
         .findByShortcode(project.id)
         .some
         .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
