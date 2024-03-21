@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko.actor.ActorSystem
-import zio.*
+import zio._
 
 object ActorSystemTest {
   def layer(sys: ActorSystem): ZLayer[Any, Nothing, ActorSystem] = ZLayer.succeed(sys)

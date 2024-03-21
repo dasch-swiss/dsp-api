@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.admin.api
 
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.spray.jsonBody as sprayJsonBody
-import sttp.tapir.json.zio.jsonBody as zioJsonBody
-import zio.*
+import sttp.tapir._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
+import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import zio._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
@@ -18,7 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserGroupMembersh
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.slice.admin.api.PathVars.emailPathVar
 import org.knora.webapi.slice.admin.api.PathVars.userIriPathVar

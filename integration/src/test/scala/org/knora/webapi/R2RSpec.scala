@@ -13,7 +13,7 @@ import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import zio.*
+import zio._
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -28,7 +28,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.FileUtil

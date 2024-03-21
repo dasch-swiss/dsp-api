@@ -7,14 +7,14 @@ package org.knora.webapi.slice.admin.api
 
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.spray.jsonBody as sprayJsonBody
-import sttp.tapir.json.zio.jsonBody as zioJsonBody
+import sttp.tapir._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
+import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
 import zio.Chunk
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname

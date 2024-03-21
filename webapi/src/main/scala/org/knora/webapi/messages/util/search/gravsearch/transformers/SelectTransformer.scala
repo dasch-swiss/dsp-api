@@ -5,13 +5,13 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
-import zio.*
+import zio._
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 
-import SparqlTransformer.*
+import SparqlTransformer._
 
 class SelectTransformer(
   simulateInference: Boolean,

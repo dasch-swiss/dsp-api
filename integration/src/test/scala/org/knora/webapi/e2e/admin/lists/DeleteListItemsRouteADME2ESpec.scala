@@ -7,13 +7,13 @@ package org.knora.webapi.e2e.admin.lists
 
 import org.apache.pekko
 
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM

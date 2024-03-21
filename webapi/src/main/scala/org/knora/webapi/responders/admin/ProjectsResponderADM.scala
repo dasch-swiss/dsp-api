@@ -5,22 +5,22 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
+import zio._
 
 import java.util.UUID
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService

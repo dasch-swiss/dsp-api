@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.iiif
 
-import zio.*
+import zio._
 
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay

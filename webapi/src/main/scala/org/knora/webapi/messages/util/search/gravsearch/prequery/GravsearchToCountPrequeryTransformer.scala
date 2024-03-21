@@ -9,7 +9,7 @@ import zio.Task
 import zio.ZIO
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 
 /**

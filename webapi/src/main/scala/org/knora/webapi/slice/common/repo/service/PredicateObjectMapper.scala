@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.repo.service
 
-import zio.*
+import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import spray.json.*
+import spray.json._
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2

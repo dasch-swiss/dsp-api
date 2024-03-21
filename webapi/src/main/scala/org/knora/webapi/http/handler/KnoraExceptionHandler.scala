@@ -20,7 +20,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 
-import pekko.http.scaladsl.model.*
+import pekko.http.scaladsl.model._
 import pekko.http.scaladsl.server.Directives.complete
 import pekko.http.scaladsl.server.Directives.extractRequest
 import pekko.http.scaladsl.server.ExceptionHandler

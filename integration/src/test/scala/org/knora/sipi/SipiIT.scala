@@ -7,21 +7,21 @@ package org.knora.sipi
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import zio.*
-import zio.http.*
+import zio._
+import zio.http._
 import zio.json.DecoderOps
 import zio.json.ast.Json
-import zio.test.*
+import zio.test._
 
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import org.knora.sipi.MockDspApiServer.verify.*
+import org.knora.sipi.MockDspApiServer.verify._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser

@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.Logger
 import java.time.Instant
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**

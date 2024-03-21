@@ -9,13 +9,13 @@ import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 

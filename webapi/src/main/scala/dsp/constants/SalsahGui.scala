@@ -5,7 +5,7 @@
 
 package dsp.constants
 
-import dsp.errors.*
+import dsp.errors._
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.

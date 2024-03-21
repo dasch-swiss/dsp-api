@@ -12,7 +12,7 @@ import zio.ZIO
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
@@ -30,7 +30,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.Multipart
 import pekko.http.scaladsl.model.Multipart.BodyPart
-import pekko.http.scaladsl.server.Directives.*
+import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
 
 /**

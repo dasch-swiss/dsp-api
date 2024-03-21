@@ -7,7 +7,7 @@ package org.knora.webapi.http.status
 
 import org.apache.pekko
 
-import dsp.errors.*
+import dsp.errors._
 
 import pekko.http.scaladsl.model.StatusCode
 import pekko.http.scaladsl.model.StatusCodes

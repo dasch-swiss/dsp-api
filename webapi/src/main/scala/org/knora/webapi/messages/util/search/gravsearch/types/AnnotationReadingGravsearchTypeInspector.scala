@@ -10,10 +10,10 @@ import zio.ZIO
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperties
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
 

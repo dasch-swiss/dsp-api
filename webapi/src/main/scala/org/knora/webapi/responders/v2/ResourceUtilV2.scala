@@ -6,8 +6,8 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
 import zio.Task
+import zio._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI

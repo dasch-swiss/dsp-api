@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.model.vocabulary.*
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.model.vocabulary._
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -34,7 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
