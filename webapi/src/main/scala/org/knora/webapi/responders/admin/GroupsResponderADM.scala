@@ -22,8 +22,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
@@ -39,13 +37,14 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
 import org.knora.webapi.util.ZioHelper
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.domain.model
 
 /**
  * Returns information about groups.
@@ -143,6 +142,7 @@ final case class GroupsResponderADMLive(
   messageRelay: MessageRelay,
   iriService: IriService,
   knoraUserService: KnoraUserService,
+  projectService: ProjectService,
   implicit val stringFormatter: StringFormatter,
 ) extends GroupsResponderADM
     with MessageHandler
@@ -186,24 +186,24 @@ final case class GroupsResponderADMLive(
     def getFirstValueOrFail[A <: LiteralV2](key: IRI): Task[A] = getOrFail[A](key).map(_.head)
     for {
       projectIri <- getFirstValueOrFail[IriLiteralV2](BelongsToProject).map(_.value)
-      projectADM <- findProjectByIriOrFail(
-                      projectIri,
-                      InconsistentRepositoryDataException(
-                        s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.",
-                      ),
-                    )
+      project <- findProjectByIriOrFail(
+                   projectIri,
+                   InconsistentRepositoryDataException(
+                     s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.",
+                   ),
+                 )
       name         <- getFirstValueOrFail[StringLiteralV2](GroupName).map(_.value)
       descriptions <- getOrFail[StringLiteralV2](GroupDescriptions)
       status       <- getFirstValueOrFail[BooleanLiteralV2](StatusProp).map(_.value)
       selfjoin     <- getFirstValueOrFail[BooleanLiteralV2](HasSelfJoinEnabled).map(_.value)
-    } yield Group(groupIri.toString, name, descriptions, projectADM, status, selfjoin)
+    } yield Group(groupIri.toString, name, descriptions, project, status, selfjoin)
   }
 
   private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[Project] =
     for {
-      id     <- IriIdentifier.fromString(iri).toZIO.mapError(e => BadRequestException(e.getMessage))
-      result <- messageRelay.ask[Option[Project]](ProjectGetADM(id)).someOrFail(failReason)
-    } yield result
+      id      <- ZIO.fromEither(model.KnoraProject.ProjectIri.from(iri)).mapError(BadRequestException.apply)
+      project <- projectService.findById(id).someOrFail(failReason)
+    } yield project
 
   /**
    * Gets the group with the given group IRI and returns the information as a [[Group]].
@@ -309,7 +309,7 @@ final case class GroupsResponderADMLive(
              .fail(DuplicateValueException(s"Group with the name '${request.name.value}' already exists"))
              .when(nameExists)
 
-      projectADM <-
+      project <-
         findProjectByIriOrFail(
           request.project.value,
           NotFoundException(s"Cannot create group inside project <${request.project}>. The project was not found."),
@@ -317,10 +317,7 @@ final case class GroupsResponderADMLive(
 
       // check the custom IRI; if not given, create an unused IRI
       customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
-      groupIri <- iriService.checkOrCreateEntityIri(
-                    customGroupIri,
-                    GroupIri.makeNew(Shortcode.unsafeFrom(projectADM.shortcode)).value,
-                  )
+      groupIri                        <- iriService.checkOrCreateEntityIri(customGroupIri, GroupIri.makeNew(project.getShortcode).value)
 
       /* create the group */
       createNewGroupSparqlString =
@@ -500,8 +497,9 @@ object GroupsResponderADMLive {
       iris    <- ZIO.service[IriService]
       sf      <- ZIO.service[StringFormatter]
       kus     <- ZIO.service[KnoraUserService]
+      ps      <- ZIO.service[ProjectService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, sf))
+      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, ps, sf))
     } yield handler
   }
 }
