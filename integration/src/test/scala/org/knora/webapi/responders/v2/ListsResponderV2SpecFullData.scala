@@ -30,7 +30,7 @@ class ListsResponderV2SpecFullData {
       id = "http://rdfh.ch/lists/0001/treeList11",
       labels = StringLiteralSequenceV2(
         stringLiterals = Vector(
-          StringLiteralV2(
+          StringLiteralV2.from(
             value = "Tree list node 11",
             language = Some("en"),
           ),

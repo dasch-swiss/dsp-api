@@ -6,7 +6,7 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko
-import zio.*
+import zio._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -17,7 +17,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 
-import pekko.http.scaladsl.server.Directives.*
+import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
 
 /**

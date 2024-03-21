@@ -1,0 +1,29 @@
+{
+    "@id": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2",
+    "@type": "owl:Ontology",
+    "rdfs:label": "The anything ontology",
+    "@graph": [
+        {
+            "rdfs:label": "List element",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:ListNode"
+            },
+            "@id": "anything:hasListItem"
+        }
+    ],
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+    }
+}

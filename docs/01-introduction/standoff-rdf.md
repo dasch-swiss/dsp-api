@@ -55,5 +55,6 @@ original XML.
 To represent overlapping or non-hierarchical markup in exported and imported XML, DSP-API supports
 [CLIX](https://web.archive.org/web/20171222112655/http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html) tags.
 
-As XML-to-Standoff has proved to be complicated and not very well performing, the use of standoff with custom mappings is discouraged. 
+As XML-to-Standoff has proved to be complicated and not very well performing, 
+the use of standoff with custom mappings is discouraged. 
 Improved integration of text with XML mark up, particularly TEI-XML, is in planning.

@@ -5,12 +5,12 @@
 
 package org.knora.webapi.store.cache
 
-import zio.*
-import zio.stm.*
+import zio._
+import zio.stm._
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -29,7 +29,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
  */
 case class CacheService(
   users: TMap[UserIri, User],
-  projects: TMap[ProjectIri, ProjectADM],
+  projects: TMap[ProjectIri, Project],
   mappingUsernameUserIri: TMap[Username, UserIri],
   mappingEmailUserIri: TMap[Email, UserIri],
   mappingShortcodeProjectIri: TMap[Shortcode, ProjectIri],
@@ -89,7 +89,7 @@ case class CacheService(
    * @param value the stored value
    * @return [[Unit]]
    */
-  def putProjectADM(value: ProjectADM): Task[Unit] =
+  def putProjectADM(value: Project): Task[Unit] =
     (for {
       _ <- projects.put(value.projectIri, value)
       _ <- mappingShortcodeProjectIri.put(value.getShortcode, value.projectIri)
@@ -105,7 +105,7 @@ case class CacheService(
    * @param identifier the project identifier.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
+  def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[Project]] =
     identifier match {
       case IriIdentifier(projectIri) => projects.get(projectIri).commit
       case ShortcodeIdentifier(code) =>
@@ -147,7 +147,7 @@ object CacheService {
     ZLayer {
       for {
         users            <- TMap.empty[UserIri, User].commit
-        projects         <- TMap.empty[ProjectIri, ProjectADM].commit
+        projects         <- TMap.empty[ProjectIri, Project].commit
         usernameMapping  <- TMap.empty[Username, UserIri].commit
         emailMapping     <- TMap.empty[Email, UserIri].commit
         shortcodeMapping <- TMap.empty[Shortcode, ProjectIri].commit

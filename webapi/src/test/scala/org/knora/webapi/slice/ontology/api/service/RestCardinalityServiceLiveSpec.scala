@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.ontology.api.service
 
-import zio.*
-import zio.test.*
+import zio._
+import zio.test._
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
@@ -22,7 +22,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.*
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

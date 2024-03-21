@@ -7,8 +7,8 @@ package org.knora.webapi.slice.infrastructure.api
 
 import sttp.model.StatusCode
 import sttp.tapir.AnyEndpoint
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
+import sttp.tapir._
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.statusCode
 import zio.UIO

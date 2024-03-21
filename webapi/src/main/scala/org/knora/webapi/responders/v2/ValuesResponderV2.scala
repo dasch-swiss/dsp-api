@@ -6,38 +6,38 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko.http.scaladsl.util.FastFuture
-import zio.*
+import zio._
 import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.*
+import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -319,7 +319,7 @@ final case class ValuesResponderV2Live(
               ZIO.succeed(defaultValuePermissions)
           }
 
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value.
         created <-
@@ -1033,7 +1033,7 @@ final case class ValuesResponderV2Live(
              )
 
         // Do the update.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
         newValueIri <-
           iriService.checkOrCreateEntityIri(
             updateValuePermissionsV2.newValueVersionIri,
@@ -1175,7 +1175,7 @@ final case class ValuesResponderV2Live(
                case _ => ZIO.unit
              }
 
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value version.
         newValueVersion <-
@@ -1642,7 +1642,7 @@ final case class ValuesResponderV2Live(
              )
 
         // Get information about the project that the resource is in, so we know which named graph to do the update in.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+        dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Do the update.
         deletedValueIri <-

@@ -17,25 +17,25 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.store.cache.CacheService
 
 final case class UserService(
-  private val userRepo: KnoraUserRepo,
+  private val knoraUserService: KnoraUserService,
   private val userToKnoraUserConverter: KnoraUserToUserConverter,
   private val cacheService: CacheService,
 ) {
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
-    fromCacheOrRepo(iri, cacheService.getUserByIri, userRepo.findById)
+    fromCacheOrRepo(iri, cacheService.getUserByIri, knoraUserService.findById)
 
   def findUsersByIris(iris: Seq[UserIri]): Task[Seq[User]] =
     ZIO.foreach(iris)(findUserByIri).map(_.flatten)
 
   def findUserByEmail(email: Email): Task[Option[User]] =
-    fromCacheOrRepo(email, cacheService.getUserByEmail, userRepo.findByEmail)
+    fromCacheOrRepo(email, cacheService.getUserByEmail, knoraUserService.findByEmail)
 
   def findUserByUsername(username: Username): Task[Option[User]] =
-    fromCacheOrRepo(username, cacheService.getUserByUsername, userRepo.findByUsername)
+    fromCacheOrRepo(username, cacheService.getUserByUsername, knoraUserService.findByUsername)
 
   def findAll: Task[Seq[User]] =
-    userRepo.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+    knoraUserService.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
   private def fromCacheOrRepo[A](
     id: A,

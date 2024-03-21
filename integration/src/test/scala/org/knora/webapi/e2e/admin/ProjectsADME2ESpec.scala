@@ -16,17 +16,17 @@ import org.apache.pekko.util.Timeout
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import dsp.valueobjects.V2
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
@@ -65,8 +65,8 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val projects: Seq[ProjectADM] =
-          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+        val projects: Seq[Project] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
         projects.size should be(6)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -212,7 +212,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
 
         // check that the custom IRI is correctly assigned
         result.id should be(customProjectIri)
@@ -222,7 +222,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
-        result.description should be(Seq(V2.StringLiteralV2("a project created with a custom IRI", Some("en"))))
+        result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -299,11 +299,11 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
-        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("project longname"))
-        result.description should be(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
+        result.description should be(Seq(StringLiteralV2.from(value = "project description", language = Some("en"))))
         result.keywords should be(Seq("keywords"))
         result.logo should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
@@ -445,12 +445,12 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.shortname should be("updatedproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
-          Seq(V2.StringLiteralV2(value = "updated project description", language = Some("en"))),
+          Seq(StringLiteralV2.from(value = "updated project description", language = Some("en"))),
         )
         result.keywords.sorted should be(Seq("updated", "keywords").sorted)
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
@@ -496,10 +496,10 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.description.size should be(2)
-        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("en")))
-        result.description should contain(V2.StringLiteralV2(value = "Test Project", language = Some("se")))
+        result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("en")))
+        result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -521,7 +521,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.status should be(false)
 
         clientTestDataCollector.addFile(

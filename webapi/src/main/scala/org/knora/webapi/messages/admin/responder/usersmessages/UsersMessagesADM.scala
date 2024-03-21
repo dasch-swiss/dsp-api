@@ -6,17 +6,17 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.*
+import spray.json._
 
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -61,7 +61,7 @@ case class UserResponseADM(user: User) extends AdminKnoraResponseADM {
  *
  * @param projects a sequence of projects the user is member of.
  */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
+case class UserProjectMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
 }
 
@@ -70,7 +70,7 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
  *
  * @param projects a sequence of projects the user is member of the project admin group.
  */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends AdminKnoraResponseADM {
+case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[Project]) extends AdminKnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
 }
 

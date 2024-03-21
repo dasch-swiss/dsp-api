@@ -4,21 +4,21 @@
  */
 
 package org.knora.webapi.responders.admin
+
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
-import zio.macros.accessible
+import zio._
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.ResponderRequest
@@ -27,10 +27,10 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -45,7 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -57,7 +57,6 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Provides information about permissions to other responders.
  */
-@accessible
 trait PermissionsResponderADM {
 
   /**
@@ -243,7 +242,7 @@ final case class PermissionsResponderADMLive(
   iriService: IriService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter,
 ) extends PermissionsResponderADM
@@ -738,7 +737,7 @@ final case class PermissionsResponderADMLive(
         // get project
         maybeProject <-
           messageRelay
-            .ask[Option[ProjectADM]](
+            .ask[Option[Project]](
               ProjectGetADM(
                 identifier = IriIdentifier
                   .fromString(createRequest.forProject)
@@ -747,7 +746,7 @@ final case class PermissionsResponderADMLive(
             )
 
         // if it doesnt exist then throw an error
-        project: ProjectADM =
+        project: Project =
           maybeProject.getOrElse(
             throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."),
           )
@@ -1530,7 +1529,7 @@ final case class PermissionsResponderADMLive(
         projectIri <- ZIO
                         .fromEither(ProjectIri.from(createRequest.forProject))
                         .mapError(BadRequestException.apply)
-        project <- projectRepo
+        project <- knoraProjectService
                      .findById(projectIri)
                      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
         _ <- auth.ensureSystemAdminSystemUserOrProjectAdmin(user, project)
@@ -2225,14 +2224,14 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive,
   ] = ZLayer.fromZIO {
     for {
       au      <- ZIO.service[AuthorizationRestService]
       ac      <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]
-      kpr     <- ZIO.service[KnoraProjectRepo]
+      kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]

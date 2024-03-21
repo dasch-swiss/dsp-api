@@ -23,7 +23,7 @@ with the list in `webapi/scripts/expected-client-test-data.txt`.
 
 To generate client test data, type:
 
-```
+```bash
 make client-test-data
 ```
 
@@ -31,6 +31,6 @@ When the tests have finished running, you will find the file
 `client-test-data.zip` in the current directory. Then, run
 this script to update the list of expected test data files:
 
-```
+```bash
 webapi/scripts/update-expected-client-test-data.sh client-test-data.zip
 ```

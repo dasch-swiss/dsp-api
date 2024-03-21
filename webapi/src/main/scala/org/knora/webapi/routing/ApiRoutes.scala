@@ -5,17 +5,16 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.actor
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
-import org.apache.pekko.http.scaladsl.model.HttpMethods.*
-import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.model.HttpMethods._
+import org.apache.pekko.http.scaladsl.server.Directives._
 import org.apache.pekko.http.scaladsl.server.Route
-import zio.*
+import zio._
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
-import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
@@ -24,17 +23,13 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.v2.*
+import org.knora.webapi.routing.v2._
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
-import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
@@ -49,7 +44,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AuthorizationRestService & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ManagementRoutes & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
+    ActorSystem & AuthorizationRestService & AdminApiRoutes & AppConfig & AppRouter & core.State & IriConverter & MessageRelay & ManagementRoutes & ResourceInfoRoutes & RestCardinalityService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
     ApiRoutes,
   ] =
     ZLayer {
@@ -61,10 +56,10 @@ object ApiRoutes {
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         searchApiRoutes    <- ZIO.service[SearchApiRoutes]
         managementRoutes   <- ZIO.service[ManagementRoutes]
-        routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
-            AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
+            AppConfig & AuthorizationRestService & core.State & IriConverter & MessageRelay & RestCardinalityService & routing.Authenticator & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
           ]
       } yield ApiRoutesImpl(
         routeData,
@@ -93,12 +88,12 @@ private final case class ApiRoutesImpl(
   managementRoutes: ManagementRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
-    AppConfig & AuthorizationRestService & core.State & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
+    AppConfig & AuthorizationRestService & core.State & IriConverter & MessageRelay & RestCardinalityService & routing.Authenticator & SearchResponderV2 & SipiService & StringFormatter & UserService & ValuesResponderV2,
   ],
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem = routeData.system
+  private implicit val system: ActorSystem = routeData.system
 
   val routes: Route =
     logDuration {

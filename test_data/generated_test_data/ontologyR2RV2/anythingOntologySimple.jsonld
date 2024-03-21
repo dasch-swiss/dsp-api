@@ -1,0 +1,1415 @@
+{
+    "@id": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2",
+    "@type": "owl:Ontology",
+    "rdfs:label": "The anything ontology",
+    "@graph": [
+        {
+            "rdfs:label": "Audio Sequence Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSequenceBounds"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOf"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A Resource representing a subsequence of an audio",
+            "@type": "owl:Class",
+            "@id": "anything:AudioSequenceThing"
+        },
+        {
+            "rdfs:label": "Audio Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:AudioRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasAudioFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A Resource representing an audio",
+            "@type": "owl:Class",
+            "@id": "anything:AudioThing"
+        },
+        {
+            "rdfs:label": "Blue thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "anything:Thing"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasOtherListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRichtext"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasText"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDate"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInteger"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDecimal"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasBoolean"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasUri"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInterval"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasColor"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeometry"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeoname"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingDocument"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingPicture"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTimeStamp"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:isPartOfOtherThing"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasBlueThing"
+                    },
+                    "owl:minCardinality": 0
+                }
+            ],
+            "rdfs:comment": "Diese Resource-Klasse beschreibt ein blaues Ding",
+            "@type": "owl:Class",
+            "@id": "anything:BlueThing"
+        },
+        {
+            "rdfs:label": "Represents an event in a TextValue",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:StandoffDateTag"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:standoffEventTagHasDescription"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "Represents an event in a TextValue",
+            "@type": "owl:Class",
+            "@id": "anything:StandoffEventTag"
+        },
+        {
+            "rdfs:label": "Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasOtherListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasOtherThing"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRichtext"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasText"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDate"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInteger"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDecimal"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasBoolean"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasUri"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInterval"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasColor"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeometry"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeoname"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingDocument"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingPicture"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTimeStamp"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:isPartOfOtherThing"
+                    },
+                    "owl:minCardinality": 0
+                }
+            ],
+            "rdfs:comment": "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:Thing"
+        },
+        {
+            "rdfs:label": "Document",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:DocumentRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDocumentTitle"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasDocumentFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A document about a thing",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:ThingDocument"
+        },
+        {
+            "rdfs:label": "Picture of a thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:StillImageRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasPictureTitle"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStillImageFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "Diese Resource-Klasse beschreibt ein Bild eines Dinges",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:ThingPicture"
+        },
+        {
+            "rdfs:label": "Thing with region",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:thingHasRegion"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A thing with a region",
+            "@type": "owl:Class",
+            "@id": "anything:ThingWithRegion"
+        },
+        {
+            "rdfs:label": "Thing with representation",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasRepresentation"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A thing with a representation",
+            "@type": "owl:Class",
+            "@id": "anything:ThingWithRepresentation"
+        },
+        {
+            "rdfs:label": "Thing with sequence number",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "anything:Thing"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasOtherListItem"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasOtherThing"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasRichtext"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasText"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDate"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInteger"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasDecimal"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasBoolean"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasUri"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasInterval"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasColor"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeometry"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeoname"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingDocument"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasThingPicture"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTimeStamp"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:isPartOfOtherThing"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:seqnum"
+                    },
+                    "owl:minCardinality": 0
+                }
+            ],
+            "rdfs:comment": "Diese Resource-Klasse beschreibt ein Ding mit einer Sequenznummer",
+            "@type": "owl:Class",
+            "@id": "anything:ThingWithSeqnum"
+        },
+        {
+            "rdfs:label": "Trivial thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "Diese Resource-Klasse beschreibt ein unbedeutendes Ding",
+            "@type": "owl:Class",
+            "knora-api:resourceIcon": "thing.png",
+            "@id": "anything:TrivialThing"
+        },
+        {
+            "rdfs:label": "Video Sequence Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSequenceBounds"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOf"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A Resource representing a subsequence of a video",
+            "@type": "owl:Class",
+            "@id": "anything:VideoSequenceThing"
+        },
+        {
+            "rdfs:label": "Video Thing",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:MovingImageRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasMovingImageFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A Resource representing a video",
+            "@type": "owl:Class",
+            "@id": "anything:VideoThing"
+        },
+        {
+            "rdfs:label": "A blue thing",
+            "rdfs:subPropertyOf": {
+                "@id": "anything:hasOtherThing"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "anything:BlueThing"
+            },
+            "@id": "anything:hasBlueThing"
+        },
+        {
+            "rdfs:label": "Boolean value",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:boolean"
+            },
+            "@id": "anything:hasBoolean"
+        },
+        {
+            "rdfs:label": "Color",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Color"
+            },
+            "@id": "anything:hasColor"
+        },
+        {
+            "rdfs:label": "Date",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Date"
+            },
+            "@id": "anything:hasDate"
+        },
+        {
+            "rdfs:label": "Decimal number",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:decimal"
+            },
+            "@id": "anything:hasDecimal"
+        },
+        {
+            "rdfs:label": "document title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingDocument"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasDocumentTitle"
+        },
+        {
+            "rdfs:label": "Geometry",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Geom"
+            },
+            "@id": "anything:hasGeometry"
+        },
+        {
+            "rdfs:label": "Geoname",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Geoname"
+            },
+            "@id": "anything:hasGeoname"
+        },
+        {
+            "rdfs:label": "Integer",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:integer"
+            },
+            "@id": "anything:hasInteger"
+        },
+        {
+            "rdfs:label": "Integer",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:integer"
+            },
+            "@id": "anything:hasIntegerUsedByOtherOntologies"
+        },
+        {
+            "rdfs:label": "Time interval",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Interval"
+            },
+            "@id": "anything:hasInterval"
+        },
+        {
+            "rdfs:label": "List element",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:ListNode"
+            },
+            "@id": "anything:hasListItem"
+        },
+        {
+            "rdfs:label": "Other list element",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:ListNode"
+            },
+            "@id": "anything:hasOtherListItem"
+        },
+        {
+            "rdfs:label": "Another thing",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasLinkTo"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "anything:Thing"
+            },
+            "@id": "anything:hasOtherThing"
+        },
+        {
+            "rdfs:label": "Title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingPicture"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasPictureTitle"
+        },
+        {
+            "rdfs:label": "Text",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasRichtext"
+        },
+        {
+            "rdfs:label": "Text",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasText"
+        },
+        {
+            "rdfs:label": "document about a thing",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasRepresentation"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "anything:ThingDocument"
+            },
+            "@id": "anything:hasThingDocument"
+        },
+        {
+            "rdfs:label": "Picture of a thing",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasRepresentation"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "anything:ThingPicture"
+            },
+            "@id": "anything:hasThingPicture"
+        },
+        {
+            "rdfs:label": "Timestamp",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:dateTimeStamp"
+            },
+            "@id": "anything:hasTimeStamp"
+        },
+        {
+            "rdfs:label": "Title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "anything:hasTitle"
+        },
+        {
+            "rdfs:label": "URI",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "anything:hasUri"
+        },
+        {
+            "rdfs:label": "is part of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:isPartOf"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "knora-api:objectType": {
+                "@id": "anything:Thing"
+            },
+            "@id": "anything:isPartOfOtherThing"
+        },
+        {
+            "@id": "anything:standoffEventTagHasDescription",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:StandoffEventTag"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            }
+        },
+        {
+            "rdfs:label": "has region",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasLinkTo"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "anything:ThingWithRegion"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Region"
+            },
+            "@id": "anything:thingHasRegion"
+        }
+    ],
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+    }
+}

@@ -13,8 +13,8 @@ import dsp.valueobjects.Iri.isProjectIri
 import dsp.valueobjects.Iri.validateAndEscapeProjectIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -92,16 +92,14 @@ object KnoraProject {
       else Left("Longname must be 3 to 256 characters long.")
   }
 
-  final case class Description private (override val value: V2.StringLiteralV2)
-      extends AnyVal
-      with Value[V2.StringLiteralV2]
+  final case class Description private (override val value: StringLiteralV2) extends AnyVal with Value[StringLiteralV2]
 
-  object Description extends WithFrom[V2.StringLiteralV2, Description] {
+  object Description extends WithFrom[StringLiteralV2, Description] {
 
     def unsafeFrom(text: String, lang: Option[String]): Description =
-      Description.from(V2.StringLiteralV2(text, lang)).fold(e => throw new IllegalArgumentException(e), identity)
+      Description.from(StringLiteralV2.from(text, lang)).fold(e => throw new IllegalArgumentException(e), identity)
 
-    def from(literal: V2.StringLiteralV2): Either[String, Description] =
+    def from(literal: StringLiteralV2): Either[String, Description] =
       if (literal.value.length >= 3 && literal.value.length <= 40960) Right(Description(literal))
       else Left("Description must be 3 to 40960 characters long.")
   }

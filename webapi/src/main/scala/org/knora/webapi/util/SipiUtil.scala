@@ -5,7 +5,7 @@
 
 package org.knora.webapi.util
 
-import spray.json.*
+import spray.json._
 
 import scala.util.Failure
 import scala.util.Success

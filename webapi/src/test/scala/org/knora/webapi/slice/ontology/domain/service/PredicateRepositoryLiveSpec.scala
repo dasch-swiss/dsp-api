@@ -7,8 +7,8 @@ package org.knora.webapi.slice.ontology.domain.service
 import org.apache.jena.query.Dataset
 import zio.Ref
 import zio.ZLayer
-import zio.test.Assertion.*
-import zio.test.*
+import zio.test.Assertion._
+import zio.test._
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive

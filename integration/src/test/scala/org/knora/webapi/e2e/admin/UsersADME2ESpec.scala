@@ -9,16 +9,16 @@ import org.apache.pekko
 
 import java.net.URLEncoder
 import scala.concurrent.Await
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -28,8 +28,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.model.headers.*
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers._
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
@@ -84,7 +84,7 @@ class UsersADME2ESpec
     val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
     val request    = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-memberships") ~> addRootUserCredentials()
     val response   = singleAwaitingRequest(request)
-    AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+    AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
   }
 
   /**
@@ -97,7 +97,7 @@ class UsersADME2ESpec
     val request =
       Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-admin-memberships") ~> addRootUserCredentials()
     val response = singleAwaitingRequest(request)
-    AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+    AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
   }
 
   /**
@@ -1107,8 +1107,8 @@ class UsersADME2ESpec
 
         assert(response.status === StatusCodes.OK)
 
-        val projects: Seq[ProjectADM] =
-          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
+        val projects: Seq[Project] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[Project]]
         projects should contain allElementsOf Seq(
           SharedTestDataADM.imagesProjectExternal,
           SharedTestDataADM.incunabulaProjectExternal,
@@ -1205,7 +1205,7 @@ class UsersADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
-        membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
+        membershipsAfterUpdate should equal(Seq.empty[Project])
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1229,8 +1229,8 @@ class UsersADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
-        val projects: Seq[ProjectADM] =
-          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+        val projects: Seq[Project] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
         projects should contain allElementsOf Seq(
           SharedTestDataADM.imagesProjectExternal,
           SharedTestDataADM.incunabulaProjectExternal,
@@ -1313,7 +1313,7 @@ class UsersADME2ESpec
 
         val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
 
-        membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
+        membershipsAfterUpdate should equal(Seq.empty[Project])
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

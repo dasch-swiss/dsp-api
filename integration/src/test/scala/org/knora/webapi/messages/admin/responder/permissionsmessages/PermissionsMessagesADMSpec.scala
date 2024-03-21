@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
+import zio.ZIO
+
 import java.util.UUID
 
 import dsp.errors.BadRequestException
@@ -16,9 +18,9 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbb
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
-import org.knora.webapi.sharedtestdata.*
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.sharedtestdata._
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -481,7 +483,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = Some(8),
         ),
       )
-      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      val exit =
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         "Invalid value for name parameter of hasPermissions: invalid, it should be one of " +
@@ -499,7 +502,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
 
-      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      val exit =
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
@@ -518,7 +522,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
 
-      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      val exit =
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Given permission code $code and permission name $name are not consistent.",
@@ -535,7 +540,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
 
-      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      val exit =
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"One of permission code or permission name must be provided for a default object access permission.",
@@ -551,7 +557,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = Some(8),
         ),
       )
-      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      val exit =
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"additionalInformation of a default object access permission type cannot be empty.",

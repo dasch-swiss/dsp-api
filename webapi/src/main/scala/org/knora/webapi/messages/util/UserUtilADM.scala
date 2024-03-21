@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import zio.*
+import zio._
 
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException

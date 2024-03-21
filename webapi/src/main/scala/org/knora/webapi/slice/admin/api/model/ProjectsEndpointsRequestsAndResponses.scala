@@ -11,8 +11,8 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 object ProjectsEndpointsRequestsAndResponses {

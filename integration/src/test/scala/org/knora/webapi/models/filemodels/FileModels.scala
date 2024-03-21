@@ -8,10 +8,10 @@ package org.knora.webapi.models.filemodels
 import java.time.Instant
 import java.util.UUID
 
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -103,7 +103,7 @@ sealed abstract case class UploadFileRequest private (
     resourceCreationDate: Option[Instant] = None,
     resourceClassIRI: Option[SmartIri] = None,
     valuePropertyIRI: Option[SmartIri] = None,
-    project: Option[ProjectADM] = None,
+    project: Option[Project] = None,
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

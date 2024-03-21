@@ -5,13 +5,12 @@
 
 package org.knora.webapi.store.iiif.api
 
-import zio.*
+import zio._
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
-import zio.macros.accessible
 import zio.nio.file.Path
 
-import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -60,7 +59,6 @@ object FileMetadataSipiResponse {
   implicit val decoder: JsonDecoder[FileMetadataSipiResponse] = DeriveJsonDecoder.gen[FileMetadataSipiResponse]
 }
 
-@accessible
 trait SipiService {
 
   /**

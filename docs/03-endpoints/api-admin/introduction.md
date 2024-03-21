@@ -21,7 +21,9 @@ values (see
 ## Knora IRIs in the Admin API
 
 Every resource that is created or hosted by Knora is identified by a
-unique ID called an Internationalized Resource Identifier ([IRI](https://tools.ietf.org/html/rfc3987)). The IRI is required for every API operation to identify the resource in question. A Knora IRI has itself the format of a URL.
+unique ID called an Internationalized Resource Identifier ([IRI](https://tools.ietf.org/html/rfc3987)). 
+The IRI is required for every API operation to identify the resource in question. 
+A Knora IRI has itself the format of a URL. 
 For some API operations, the IRI has to be URL-encoded (HTTP GET requests).
 
 Unlike the DSP-API v2, the admin API uses internal IRIs, i.e. the actual IRIs

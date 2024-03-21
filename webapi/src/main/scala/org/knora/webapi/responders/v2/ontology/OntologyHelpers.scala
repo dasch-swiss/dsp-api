@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import zio.*
+import zio._
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -13,26 +13,26 @@ import scala.collection.immutable
 import scala.util.Try
 
 import dsp.constants.SalsahGui
-import dsp.errors.*
-import org.knora.webapi.*
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService

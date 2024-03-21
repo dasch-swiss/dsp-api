@@ -6,14 +6,14 @@
 package org.knora.webapi.routing
 
 import org.apache.commons.codec.binary.Base32
-import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers
 import org.apache.pekko.http.scaladsl.model.headers.HttpCookie
 import org.apache.pekko.http.scaladsl.model.headers.HttpCookiePair
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
-import spray.json.*
-import zio.*
+import spray.json._
+import zio._
 import zio.macros.accessible
 
 import java.util.Base64
@@ -22,12 +22,12 @@ import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID

@@ -18,7 +18,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.webapi.TestDataFactory
-import org.knora.webapi.TestDataFactory.User.*
+import org.knora.webapi.TestDataFactory.User._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email

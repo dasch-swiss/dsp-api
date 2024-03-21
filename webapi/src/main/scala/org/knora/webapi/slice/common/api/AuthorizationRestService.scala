@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
-import zio.*
+import zio._
 import zio.macros.accessible
 
 import dsp.errors.ForbiddenException
@@ -13,8 +13,8 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
@@ -90,8 +90,10 @@ object AuthorizationRestService {
     isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
-final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, groupsRepo: KnoraGroupRepo)
-    extends AuthorizationRestService {
+final case class AuthorizationRestServiceLive(
+  knoraProjectService: KnoraProjectService,
+  knoraGroupService: KnoraGroupService,
+) extends AuthorizationRestService {
   override def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
@@ -102,7 +104,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
     groupIri: GroupIri,
   ): IO[ForbiddenException, KnoraProject] =
     for {
-      group <- groupsRepo
+      group <- knoraGroupService
                  .findById(groupIri)
                  .orDie
                  .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
@@ -116,7 +118,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
     user: User,
     projectIri: ProjectIri,
   ): IO[ForbiddenException, KnoraProject] =
-    projectRepo
+    knoraProjectService
       .findById(projectIri)
       .orDie
       .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))

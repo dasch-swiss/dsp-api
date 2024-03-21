@@ -25,7 +25,6 @@ import zio.http.URL
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
-import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZSink
@@ -38,7 +37,6 @@ import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
-@accessible
 trait DspIngestClient {
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]
 

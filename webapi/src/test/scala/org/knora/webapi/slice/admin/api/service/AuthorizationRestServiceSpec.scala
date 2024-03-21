@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.api.service
 import zio.Exit
 import zio.ZIO
 import zio.test.Assertion.failsWithA
-import zio.test.*
+import zio.test._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
@@ -18,6 +18,8 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
@@ -116,5 +118,11 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
     ),
-  ).provide(AuthorizationRestServiceLive.layer, KnoraProjectRepoInMemory.layer, KnoraGroupRepoInMemory.layer)
+  ).provide(
+    AuthorizationRestServiceLive.layer,
+    KnoraProjectService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraGroupRepoInMemory.layer,
+  )
 }

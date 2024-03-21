@@ -16,56 +16,55 @@ as far as is practical, in a triplestore-independent way (see
 useful to enforce consistency constraints in the triplestore itself, for
 two reasons:
 
-1.  To prevent inconsistencies resulting from bugs in the DSP-API
-    server.
-2.  To prevent users from inserting inconsistent data directly into the
-    triplestore, bypassing Knora.
+1. To prevent inconsistencies resulting from bugs in the DSP-API server.
+2. To prevent users from inserting inconsistent data directly into the triplestore, bypassing Knora.
 
 The design of the `knora-base` ontology supports two ways of specifying
 constraints on data (see [knora-base: Consistency Checking](../../../02-dsp-ontologies/knora-base.md#consistency-checking)
 for details):
 
-1.  A property definition should specify the types that are allowed as
-    subjects and objects of the property, using
-    `knora-base:subjectClassConstraint` and (if it is an object
-    property) `knora-base:objectClassConstraint`. Every subproperty of
-    `knora-base:hasValue` or a `knora-base:hasLinkTo` (i.e. every
-    property of a resource that points to a `knora-base:Value` or to
-    another resource) is required have this constraint, because the
-    DSP-API server relies on it to know what type of object to expect
-    for the property. Use of `knora-base:subjectClassConstraint` is
-    recommended but not required.
-2.  A class definition should use OWL cardinalities (see [OWL 2 Quick Reference Guide](https://www.w3.org/TR/owl2-quick-reference/))
-    to indicate the properties that instances of the class are allowed to
-    have, and to constrain the number of objects that each property can
-    have. Subclasses of `knora-base:Resource` are required to have a
-    cardinality for each subproperty of `knora-base:hasValue` or a
-    `knora-base:hasLinkTo` that resources of that class can have.
+1. A property definition should specify the types that are allowed as
+  subjects and objects of the property, using
+  `knora-base:subjectClassConstraint` and (if it is an object
+  property) `knora-base:objectClassConstraint`. Every subproperty of
+  `knora-base:hasValue` or a `knora-base:hasLinkTo` (i.e. every
+  property of a resource that points to a `knora-base:Value` or to
+  another resource) is required have this constraint, because the
+  DSP-API server relies on it to know what type of object to expect
+  for the property. Use of `knora-base:subjectClassConstraint` is
+  recommended but not required.
+2. A class definition should use OWL cardinalities 
+  (see [OWL 2 Quick Reference Guide](https://www.w3.org/TR/owl2-quick-reference/))
+  to indicate the properties that instances of the class are allowed to
+  have, and to constrain the number of objects that each property can
+  have. Subclasses of `knora-base:Resource` are required to have a
+  cardinality for each subproperty of `knora-base:hasValue` or a
+  `knora-base:hasLinkTo` that resources of that class can have.
 
 Specifically, consistency checking should prevent the following:
 
-  - An object property or datatype property has a subject of the wrong
-    class, or an object property has an object of the wrong class
-    (GraphDB's consistency checke cannot check the types of literals).
-  - An object property has an object that does not exist (i.e. the
-    object is an IRI that is not used as the subject of any statements
-    in the repository). This can be treated as if the object is of the
-    wrong type (i.e. it can cause a violation of
-    `knora-base:objectClassConstraint`, because there is no compatible
-    `rdf:type` statement for the object).
-  - A class has `owl:cardinality 1` or `owl:minCardinality 1` on an
-    object property or datatype property, and an instance of the class
-    does not have that property.
-  - A class has `owl:cardinality 1` or `owl:maxCardinality 1` on an
-    object property or datatype property, and an instance of the class
-    has more than one object for that property.
-  - An instance of `knora-base:Resource` has an object property pointing
-    to a `knora-base:Value` or to another `Resource`, and its class has
-    no cardinality for that property.
-  - An instance of `knora-base:Value` has a subproperty of
-    `knora-base:valueHas`, and its class has no cardinality for that
-    property.
-  - A datatype property has an empty string as an object.
+- An object property or datatype property has a subject of the wrong
+  class, or an object property has an object of the wrong class
+  (GraphDB's consistency checke cannot check the types of literals).
+- An object property has an object that does not exist (i.e. the
+  object is an IRI that is not used as the subject of any statements
+  in the repository). This can be treated as if the object is of the
+  wrong type (i.e. it can cause a violation of
+  `knora-base:objectClassConstraint`, because there is no compatible
+  `rdf:type` statement for the object).
+- A class has `owl:cardinality 1` or `owl:minCardinality 1` on an
+  object property or datatype property, and an instance of the class
+  does not have that property.
+- A class has `owl:cardinality 1` or `owl:maxCardinality 1` on an
+  object property or datatype property, and an instance of the class
+  has more than one object for that property.
+- An instance of `knora-base:Resource` has an object property pointing
+  to a `knora-base:Value` or to another `Resource`, and its class has
+  no cardinality for that property.
+- An instance of `knora-base:Value` has a subproperty of
+  `knora-base:valueHas`, and its class has no cardinality for that
+  property.
+- A datatype property has an empty string as an object.
 
 Cardinalities in base classes are inherited by derived classes. Derived
 classes can override inherited cardinalities by making them more
@@ -75,19 +74,19 @@ the original cardinality.
 Instances of `Resource` and `Value` can be marked as deleted, using the
 property `isDeleted`. This must be taken into account as follows:
 
-  - With `owl:cardinality 1` or `owl:maxCardinality 1`, if the object of
-    the property can be marked as deleted, the property must not have
-    more than one object that has not been marked as deleted. In other
-    words, it's OK if there is more than one object, as long only one of
-    them has `knora-base:isDeleted false`.
-  - With `owl:cardinality 1` or `owl:minCardinality 1`, the property
-    must have an object, but it's OK if the property's only object is
-    marked as deleted. We allow this because the subject and object may
-    have different owners, and it may not be feasible for them to
-    coordinate their work. The owner of the object should always be able
-    to mark it as deleted. (It could be useful to notify the owner of
-    the subject when this happens, but that is beyond the scope of
-    consistency checking.)
+- With `owl:cardinality 1` or `owl:maxCardinality 1`, if the object of
+  the property can be marked as deleted, the property must not have
+  more than one object that has not been marked as deleted. In other
+  words, it's OK if there is more than one object, as long only one of
+  them has `knora-base:isDeleted false`.
+- With `owl:cardinality 1` or `owl:minCardinality 1`, the property
+  must have an object, but it's OK if the property's only object is
+  marked as deleted. We allow this because the subject and object may
+  have different owners, and it may not be feasible for them to
+  coordinate their work. The owner of the object should always be able
+  to mark it as deleted. (It could be useful to notify the owner of
+  the subject when this happens, but that is beyond the scope of
+  consistency checking.)
 
 ## Design
 
@@ -160,14 +159,14 @@ Consistency: <rule_name>
 
 The differences between inference rules and consistency rules are:
 
-  - A consistency rule begins with `Consistency` instead of `Id`.
-  - In a consistency rule, the consequences are optional. Instead of
-    representing statements to be inferred, they represent statements
-    that must exist if the premises are satisfied. In other words, if
-    the premises are satisfied and the consequences are not found, the
-    rule is violated.
-  - If a consistency rule doesn't specify any consequences, and the
-    premises are satisfied, the rule is violated.
+- A consistency rule begins with `Consistency` instead of `Id`.
+- In a consistency rule, the consequences are optional. Instead of
+  representing statements to be inferred, they represent statements
+  that must exist if the premises are satisfied. In other words, if
+  the premises are satisfied and the consequences are not found, the
+  rule is violated.
+- If a consistency rule doesn't specify any consequences, and the
+  premises are satisfied, the rule is violated.
 
 Rules use variable names for subjects, predicates, and objects, and they
 can use actual property names.
@@ -234,12 +233,12 @@ whether `i` is actually something that can be marked as deleted.
 However, this implementation would be much too slow. We therefore use
 two optimisations suggested by Ontotext:
 
-1.  Add custom inference rules to make tables (i.e. named graphs) of
-    pre-calculated information about the cardinalities on properties of
-    subjects, and use those tables to simplify the consistency rules.
-2.  Use the `[Cut]` constraint to avoid generating certain redundant
-    compiled rules (see [Entailment
-    rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules)).
+1. Add custom inference rules to make tables (i.e. named graphs) of
+   pre-calculated information about the cardinalities on properties of
+   subjects, and use those tables to simplify the consistency rules.
+2. Use the `[Cut]` constraint to avoid generating certain redundant
+   compiled rules (see [Entailment
+   rules](http://graphdb.ontotext.com/documentation/standard/reasoning.html#entailment-rules)).
 
 For example, to construct a table of subjects belonging to classes that
 have `owl:maxCardinality 1` on some property `p`, we use the following

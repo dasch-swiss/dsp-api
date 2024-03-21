@@ -9,9 +9,9 @@ import zio.Chunk
 import zio.Task
 import zio.ULayer
 import zio.ZLayer
-import zio.nio.file
 import zio.nio.file.Path
 
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 object ProjectExportServiceStub {
@@ -44,7 +44,7 @@ object ProjectExportServiceStub {
      */
     override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ???
 
-    override def exportProject(project: KnoraProject): Task[file.Path] = ???
+    override def exportProject(project: KnoraProject): Task[ProjectExportInfoResponse] = ???
 
     override def listExports(): Task[Chunk[ProjectExportInfo]] = ???
   })

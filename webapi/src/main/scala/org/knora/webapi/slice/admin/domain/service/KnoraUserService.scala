@@ -14,7 +14,7 @@ import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.Password
 import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
@@ -40,6 +41,10 @@ case class KnoraUserService(
   private val passwordService: PasswordService,
   private val cacheService: CacheService,
 ) {
+  def findById(userIri: UserIri): Task[Option[KnoraUser]]         = userRepo.findById(userIri)
+  def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
+  def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
+  def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))
@@ -132,7 +137,7 @@ case class KnoraUserService(
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
   } yield user
 
-  def addUserToProject(user: KnoraUser, project: ProjectADM): IO[UserServiceError, KnoraUser] = for {
+  def addUserToProject(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is already member of project ${project.projectIri.value}."))
            .when(user.isInProject.contains(project.projectIri))
@@ -149,7 +154,7 @@ case class KnoraUserService(
    */
   def removeUserFromProject(
     user: KnoraUser,
-    project: ProjectADM,
+    project: Project,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of project ${project.projectIri.value}."))
@@ -171,7 +176,7 @@ case class KnoraUserService(
    */
   def addUserToProjectAsAdmin(
     user: KnoraUser,
-    project: ProjectADM,
+    project: Project,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <-
       ZIO
@@ -199,7 +204,7 @@ case class KnoraUserService(
    */
   def removeUserFromProjectAsAdmin(
     user: KnoraUser,
-    project: ProjectADM,
+    project: Project,
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${project.projectIri.value}."))

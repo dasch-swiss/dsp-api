@@ -7,9 +7,9 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import org.xml.sax.SAXException
-import zio.*
+import zio._
 
-import java.io.*
+import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -18,17 +18,17 @@ import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
@@ -39,17 +39,17 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -494,7 +494,7 @@ final case class StandoffResponderV2Live(
       // check if the given project IRI represents an actual project
       projectInfoMaybe <-
         messageRelay
-          .ask[Option[ProjectADM]](
+          .ask[Option[Project]](
             ProjectGetADM(
               identifier = IriIdentifier
                 .fromString(projectIri.toString)
@@ -511,7 +511,7 @@ final case class StandoffResponderV2Live(
             throw BadRequestException(s"Project with Iri ${projectIri.toString} does not exist")
 
       // put the mapping into the named graph of the project
-      namedGraph = ProjectADMService.projectDataNamedGraphV2(projectInfoMaybe.get).value
+      namedGraph = ProjectService.projectDataNamedGraphV2(projectInfoMaybe.get).value
 
       result <-
         IriLocker.runWithIriLock(

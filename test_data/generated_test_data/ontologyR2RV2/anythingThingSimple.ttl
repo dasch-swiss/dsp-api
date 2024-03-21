@@ -1,0 +1,108 @@
+@prefix anything:  <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#> .
+@prefix knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+anything:Thing  rdf:type        owl:Class;
+        rdfs:comment            "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking";
+        rdfs:label              "Thing";
+        rdfs:subClassOf         knora-api:Resource;
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasGeometry
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasGeoname
+                                ];
+        rdfs:subClassOf         [ rdf:type         owl:Restriction;
+                                  owl:cardinality  1;
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasInteger
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasThingDocument
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:isPartOfOtherThing
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasDecimal
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasUri
+                                ];
+        rdfs:subClassOf         [ rdf:type         owl:Restriction;
+                                  owl:cardinality  1;
+                                  owl:onProperty   knora-api:arkUrl
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasColor
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasInterval
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasOtherThing
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasDate
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasThingPicture
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasRichtext
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasOtherListItem
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasListItem
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasTimeStamp
+                                ];
+        rdfs:subClassOf         [ rdf:type         owl:Restriction;
+                                  owl:cardinality  1;
+                                  owl:onProperty   rdfs:label
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:maxCardinality  1;
+                                  owl:onProperty      anything:hasBoolean
+                                ];
+        rdfs:subClassOf         [ rdf:type            owl:Restriction;
+                                  owl:minCardinality  0;
+                                  owl:onProperty      anything:hasText
+                                ];
+        knora-api:resourceIcon  "thing.png" .
+
+<http://0.0.0.0:3333/ontology/0001/anything/simple/v2>
+        rdf:type    owl:Ontology;
+        rdfs:label  "The anything ontology" .

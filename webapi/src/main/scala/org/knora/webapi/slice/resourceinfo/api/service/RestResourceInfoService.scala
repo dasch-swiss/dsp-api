@@ -5,8 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api.service
 
-import zio.*
-import zio.macros.accessible
+import zio._
 
 import java.time.Instant
 
@@ -14,33 +13,12 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.*
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
-@accessible
-trait RestResourceInfoService {
-
-  /**
-   * Queries the existing resources of a certain resource class of a single project and returns the [[ResourceInfoDto]] in a [[ListResponseDto]]
-   * List can be sorted determined by the ordering.
-   * @param projectIri an external IRI for the project
-   * @param resourceClass an external IRI to the resource class to retrieve
-   * @param order    sort by property
-   * @param orderBy  sort by ascending or descending
-   * @return the [[ListResponseDto]] for the project and resource class
-   */
-  def findByProjectAndResourceClass(
-    projectIri: IriIdentifier,
-    resourceClass: IRI,
-    order: Order,
-    orderBy: OrderBy,
-  ): Task[ListResponseDto]
-}
-
-final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverter: IriConverter)
-    extends RestResourceInfoService {
+final case class RestResourceInfoService(repo: ResourceInfoRepo, iriConverter: IriConverter) {
 
   private def lastModificationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
     instant(order)(one.lastModificationDate, two.lastModificationDate)
@@ -59,7 +37,16 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
     case (CreationDate, order)         => resources.sortWith(creationDateSort(order))
   }
 
-  override def findByProjectAndResourceClass(
+  /**
+   * Queries the existing resources of a certain resource class of a single project and returns the [[ResourceInfoDto]] in a [[ListResponseDto]]
+   * List can be sorted determined by the ordering.
+   * @param projectIri an external IRI for the project
+   * @param resourceClass an external IRI to the resource class to retrieve
+   * @param order    sort by property
+   * @param orderBy  sort by ascending or descending
+   * @return the [[ListResponseDto]] for the project and resource class
+   */
+  def findByProjectAndResourceClass(
     projectIri: IriIdentifier,
     resourceClass: IRI,
     order: Order,
@@ -73,6 +60,6 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
     } yield ListResponseDto(sort(resources, order, orderBy))
 }
 
-object RestResourceInfoServiceLive {
-  val layer = ZLayer.derive[RestResourceInfoServiceLive]
+object RestResourceInfoService {
+  val layer = ZLayer.derive[RestResourceInfoService]
 }

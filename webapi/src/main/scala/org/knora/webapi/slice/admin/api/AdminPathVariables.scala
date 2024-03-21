@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir.*
+import sttp.tapir._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier

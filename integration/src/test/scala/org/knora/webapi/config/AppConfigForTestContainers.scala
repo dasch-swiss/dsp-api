@@ -6,8 +6,8 @@
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
-import zio.*
-import zio.config.*
+import zio._
+import zio.config._
 import zio.config.typesafe.TypesafeConfigProvider
 
 import org.knora.webapi.config.AppConfig.AppConfigurations

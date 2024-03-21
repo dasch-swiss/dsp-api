@@ -9,11 +9,11 @@ For the management of *users*, *projects*, *groups*, *lists*, and *permissions*,
 centric approach, provides the following endpoints corresponding to the respective classes of objects that they have an
 effect on, namely:
 
-  - [Users endpoint](lists.md): `http://server:port/admin/users` - `knora-base:User`
-  - [Projects endpoint](projects.md): `http://server:port/admin/projects` - `knora-base:knoraProject`
-  - [Groups endpoint](groups.md): `http://server:port/admin/groups` - `knora-base:UserGroup`
-  - [Lists endpoint](lists.md): `http://server:port/admin/lists` - `knora-base:ListNode`
-  - [Permissions endpoint](permissions.md): `http://server:port/admin/permissions` - `knora-admin:Permission`
+- [Users endpoint](lists.md): `http://server:port/admin/users` - `knora-base:User`
+- [Projects endpoint](projects.md): `http://server:port/admin/projects` - `knora-base:knoraProject`
+- [Groups endpoint](groups.md): `http://server:port/admin/groups` - `knora-base:UserGroup`
+- [Lists endpoint](lists.md): `http://server:port/admin/lists` - `knora-base:ListNode`
+- [Permissions endpoint](permissions.md): `http://server:port/admin/permissions` - `knora-admin:Permission`
 
 All information regarding users, projects, groups, lists and permissions is stored in the `http://www.knora.org/admin`
 named graph.

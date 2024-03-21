@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 import zio.NonEmptyChunk
+import zio.ZIO
 
 import java.util.UUID
 import scala.collection.Map
@@ -16,17 +17,17 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
+import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
@@ -159,8 +160,10 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
         val result: Map[IRI, Set[PermissionADM]] = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.userAdministrativePermissionsGetADM(
-            multiuserUser.permissions.groupsPerProject,
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.userAdministrativePermissionsGetADM(
+              multiuserUser.permissions.groupsPerProject,
+            ),
           ),
         )
         result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
@@ -171,7 +174,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all AdministrativePermissions for project" in {
         val result = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsApByProjectIri(imagesProjectIri),
+          ZIO.serviceWithZIO[PermissionsResponderADM](_.getPermissionsApByProjectIri(imagesProjectIri)),
         )
         result shouldEqual AdministrativePermissionsForProjectGetResponseADM(
           Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p),
@@ -180,9 +183,11 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return AdministrativePermission for project and group" in {
         val result = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsApByProjectAndGroupIri(
-            imagesProjectIri,
-            OntologyConstants.KnoraAdmin.ProjectMember,
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.getPermissionsApByProjectAndGroupIri(
+              imagesProjectIri,
+              OntologyConstants.KnoraAdmin.ProjectMember,
+            ),
           ),
         )
         result shouldEqual AdministrativePermissionGetResponseADM(perm002_a1.p)
@@ -216,14 +221,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "asked to create an administrative permission" should {
       "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.createAdministrativePermission(
-            CreateAdministrativePermissionAPIRequestADM(
-              forProject = imagesProjectIri,
-              forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-              hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createAdministrativePermission(
+              CreateAdministrativePermissionAPIRequestADM(
+                forProject = imagesProjectIri,
+                forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assertFailsWithA[DuplicateValueException](
@@ -238,15 +245,17 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create and return an administrative permission with a custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createAdministrativePermission(
-            CreateAdministrativePermissionAPIRequestADM(
-              id = Some(customIri),
-              forProject = SharedTestDataADM.anythingProjectIri,
-              forGroup = SharedTestDataADM.thingSearcherGroup.id,
-              hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createAdministrativePermission(
+              CreateAdministrativePermissionAPIRequestADM(
+                id = Some(customIri),
+                forProject = SharedTestDataADM.anythingProjectIri,
+                forGroup = SharedTestDataADM.thingSearcherGroup.id,
+                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.administrativePermission.iri == customIri)
@@ -271,15 +280,17 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createAdministrativePermission(
-            CreateAdministrativePermissionAPIRequestADM(
-              id = Some(customIri),
-              forProject = SharedTestDataADM.anythingProjectIri,
-              forGroup = OntologyConstants.KnoraAdmin.KnownUser,
-              hasPermissions = hasPermissions,
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createAdministrativePermission(
+              CreateAdministrativePermissionAPIRequestADM(
+                id = Some(customIri),
+                forProject = SharedTestDataADM.anythingProjectIri,
+                forGroup = OntologyConstants.KnoraAdmin.KnownUser,
+                hasPermissions = hasPermissions,
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.administrativePermission.iri == customIri)
@@ -333,8 +344,10 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all DefaultObjectAccessPermissions for project" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsDaopByProjectIri(
-            ProjectIri.unsafeFrom(imagesProjectIri),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.getPermissionsDaopByProjectIri(
+              ProjectIri.unsafeFrom(imagesProjectIri),
+            ),
           ),
         )
         actual shouldEqual DefaultObjectAccessPermissionsForProjectGetResponseADM(
@@ -422,14 +435,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "create a DefaultObjectAccessPermission for project and group" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM.anythingProjectIri,
-              forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-              hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = SharedTestDataADM.anythingProjectIri,
+                forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+                hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
 
@@ -445,15 +460,17 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ"
         val received = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-              id = Some(customIri),
-              forProject = SharedTestDataADM.anythingProjectIri,
-              forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
-              hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                id = Some(customIri),
+                forProject = SharedTestDataADM.anythingProjectIri,
+                forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
+                hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(received.defaultObjectAccessPermission.iri == customIri)
@@ -467,14 +484,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "create a DefaultObjectAccessPermission for project and resource class" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = imagesProjectIri,
-              forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-              hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = imagesProjectIri,
+                forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+                hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
@@ -490,14 +509,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "create a DefaultObjectAccessPermission for project and property" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = imagesProjectIri,
-              forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-              hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = imagesProjectIri,
+                forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+                hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
@@ -513,14 +534,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM2.incunabulaProjectIri,
-              forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-              hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = SharedTestDataADM2.incunabulaProjectIri,
+                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assertFailsWithA[DuplicateValueException](
@@ -535,17 +558,19 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM2.incunabulaProjectIri,
-              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
-              hasPermissions = Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = SharedTestDataADM2.incunabulaProjectIri,
+                forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
+                hasPermissions = Set(
+                  PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                ),
               ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assertFailsWithA[DuplicateValueException](
@@ -560,16 +585,18 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM2.incunabulaProjectIri,
-              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-              hasPermissions = Set(
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = SharedTestDataADM2.incunabulaProjectIri,
+                forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+                hasPermissions = Set(
+                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser),
+                ),
               ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assertFailsWithA[DuplicateValueException](
@@ -584,18 +611,20 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = SharedTestDataADM2.incunabulaProjectIri,
-              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
-              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-              hasPermissions = Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = SharedTestDataADM2.incunabulaProjectIri,
+                forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
+                forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+                hasPermissions = Set(
+                  PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                ),
               ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assertFailsWithA[DuplicateValueException](
@@ -618,14 +647,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = imagesProjectIri,
-              forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
-              hasPermissions = hasPermissions,
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = imagesProjectIri,
+                forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
+                hasPermissions = hasPermissions,
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
@@ -653,14 +684,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.createDefaultObjectAccessPermission(
-            CreateDefaultObjectAccessPermissionAPIRequestADM(
-              forProject = imagesProjectIri,
-              forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              hasPermissions = hasPermissions,
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.createDefaultObjectAccessPermission(
+              CreateDefaultObjectAccessPermissionAPIRequestADM(
+                forProject = imagesProjectIri,
+                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                hasPermissions = hasPermissions,
+              ),
+              rootUser,
+              UUID.randomUUID(),
             ),
-            rootUser,
-            UUID.randomUUID(),
           ),
         )
         assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
@@ -673,15 +706,19 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all permissions for 'image' project" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsByProjectIri(ProjectIri.unsafeFrom(imagesProjectIri)),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.getPermissionsByProjectIri(ProjectIri.unsafeFrom(imagesProjectIri)),
+          ),
         )
         actual.allPermissions.size should be(10)
       }
 
       "return all permissions for 'incunabula' project" in {
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsByProjectIri(
-            ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.getPermissionsByProjectIri(
+              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri),
+            ),
           ),
         )
         actual shouldEqual
@@ -888,8 +925,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ),
         )
         val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         assert(ap.iri == permissionIri.value)
@@ -900,8 +938,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionsGroup(permissionIri, newGroupIri, imagesUser02, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionsGroup(permissionIri, newGroupIri, imagesUser02, UUID.randomUUID()),
+          ),
         )
         assertFailsWithA[ForbiddenException](
           exit,
@@ -913,8 +952,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri.value)
@@ -925,8 +965,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA")
         val newGroupIri   = GroupIri.unsafeFrom(projectMember)
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri.value)
@@ -938,8 +979,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw")
         val newGroupIri   = GroupIri.unsafeFrom(projectMember)
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID()),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri.value)
@@ -954,13 +996,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               imagesUser02,
               UUID.randomUUID(),
             ),
+          ),
         )
 
         assertFailsWithA[ForbiddenException](
@@ -973,13 +1016,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
 
         val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
@@ -998,13 +1042,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         assert(ap.iri == permissionIri)
@@ -1021,13 +1066,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
 
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
@@ -1055,13 +1101,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
@@ -1086,13 +1133,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
@@ -1111,13 +1159,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           ),
         )
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -1137,13 +1186,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -1164,13 +1214,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -1190,13 +1241,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionHasPermissions(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionHasPermissions(
               PermissionIri.unsafeFrom(permissionIri),
               hasPermissions,
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[BadRequestException](
           exit,
@@ -1210,13 +1262,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionResourceClass(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
               incunabulaMemberUser,
               UUID.randomUUID(),
             ),
+          ),
         )
 
         assertFailsWithA[ForbiddenException](
@@ -1229,13 +1282,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionResourceClass(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
@@ -1246,13 +1300,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionResourceClass(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
@@ -1264,13 +1319,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionResourceClass(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionResourceClass(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionResourceClassApiRequestADM(resourceClassIri),
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[ForbiddenException](
           exit,
@@ -1285,13 +1341,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionProperty(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[ForbiddenException](
           exit,
@@ -1304,13 +1361,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM
-            .updatePermissionProperty(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
               normalUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         assertFailsWithA[ForbiddenException](
           exit,
@@ -1322,13 +1380,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM
-            .updatePermissionProperty(
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionProperty(
               PermissionIri.unsafeFrom(permissionIri),
               ChangePermissionPropertyApiRequestADM(propertyIri),
               rootUser,
               UUID.randomUUID(),
             ),
+          ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
@@ -1340,11 +1399,13 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.updatePermissionProperty(
-            PermissionIri.unsafeFrom(permissionIri),
-            ChangePermissionPropertyApiRequestADM(propertyIri),
-            rootUser,
-            UUID.randomUUID(),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.updatePermissionProperty(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionPropertyApiRequestADM(propertyIri),
+              rootUser,
+              UUID.randomUUID(),
+            ),
           ),
         )
         val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
@@ -1358,7 +1419,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "throw BadRequestException if given IRI is not a permission IRI" in {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA")
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.deletePermission(permissionIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](_.deletePermission(permissionIri, rootUser, UUID.randomUUID())),
         )
         assertFailsWithA[NotFoundException](
           exit,
@@ -1369,7 +1430,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         val exit = UnsafeZioRun.run(
-          PermissionsResponderADM.deletePermission(permissionIri, SharedTestDataADM.imagesUser02, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](
+            _.deletePermission(permissionIri, SharedTestDataADM.imagesUser02, UUID.randomUUID()),
+          ),
         )
         assertFailsWithA[ForbiddenException](
           exit,
@@ -1380,7 +1443,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "erase a permission with given IRI" in {
         val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
         val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.deletePermission(permissionIri, rootUser, UUID.randomUUID()),
+          ZIO.serviceWithZIO[PermissionsResponderADM](_.deletePermission(permissionIri, rootUser, UUID.randomUUID())),
         )
         assert(actual.deleted)
       }

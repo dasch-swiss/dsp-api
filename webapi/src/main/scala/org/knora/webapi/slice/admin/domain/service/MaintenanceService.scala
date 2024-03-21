@@ -9,10 +9,9 @@ import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 import zio.stream.ZStream
 
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -20,18 +19,13 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-@accessible
-trait MaintenanceService {
-  def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit]
-}
-
-final case class MaintenanceServiceLive(
-  projectRepo: KnoraProjectRepo,
+final case class MaintenanceService(
+  knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
   mapper: PredicateObjectMapper,
-) extends MaintenanceService {
+) {
 
-  override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
+  def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
     def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
       getKnoraProject(project).flatMap { knoraProject =>
         ZStream
@@ -40,7 +34,7 @@ final case class MaintenanceServiceLive(
       }
 
     def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
-      val getProjectZio: IO[Option[Throwable], KnoraProject] = projectRepo
+      val getProjectZio: IO[Option[Throwable], KnoraProject] = knoraProjectService
         .findByShortcode(project.id)
         .some
         .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
@@ -97,7 +91,7 @@ final case class MaintenanceServiceLive(
     } yield (dim, iri)
 
   private def checkDimensionsQuery(project: KnoraProject, assetId: AssetId) = {
-    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     Select(s"""
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -121,7 +115,7 @@ final case class MaintenanceServiceLive(
     triplestoreService.query(transposeUpdate(project, stillImageFileValueIri)).asSomeError
 
   private def transposeUpdate(project: KnoraProject, stillImageFileValueIri: InternalIri) = {
-    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    val projectGraph = ProjectService.projectDataNamedGraphV2(project)
     Update(
       s"""
          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -149,6 +143,6 @@ final case class MaintenanceServiceLive(
   }
 }
 
-object MaintenanceServiceLive {
-  val layer = ZLayer.derive[MaintenanceServiceLive]
+object MaintenanceService {
+  val layer = ZLayer.derive[MaintenanceService]
 }

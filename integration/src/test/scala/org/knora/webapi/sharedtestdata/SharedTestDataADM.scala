@@ -8,12 +8,11 @@ package org.knora.webapi.sharedtestdata
 import java.time.Instant
 
 import dsp.constants.SalsahGui
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.domain.model.Group
@@ -48,7 +47,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
@@ -69,7 +68,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
@@ -89,7 +88,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(),
     )
 
@@ -105,7 +104,7 @@ object SharedTestDataADM {
       lang = "de",
       password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
       groups = Seq.empty[Group],
-      projects = Seq.empty[ProjectADM],
+      projects = Seq.empty[Project],
       permissions = PermissionsDataADM(),
     )
 
@@ -151,12 +150,12 @@ object SharedTestDataADM {
     )
 
   /* represents the full ProjectADM of the Knora System project */
-  def systemProject: ProjectADM = ProjectADM(
+  def systemProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.SystemProject,
     shortname = "SystemProject",
     shortcode = "FFFF",
     longname = Some("Knora System Project"),
-    description = Seq(V2.StringLiteralV2(value = "Knora System Project", language = Some("en"))),
+    description = Seq(StringLiteralV2.from(value = "Knora System Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq(
@@ -170,12 +169,12 @@ object SharedTestDataADM {
   )
 
   /* represents the full ProjectADM of the default shared ontologies project */
-  def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
+  def defaultSharedOntologiesProject: Project = Project(
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = "DefaultSharedOntologiesProject",
     shortcode = "0000",
     longname = Some("Default Knora Shared Ontologies Project"),
-    description = Seq(V2.StringLiteralV2(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
+    description = Seq(StringLiteralV2.from(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq.empty[IRI],
@@ -280,12 +279,12 @@ object SharedTestDataADM {
     )
 
   /* represents the full ProjectADM of the images project */
-  def imagesProject: ProjectADM = ProjectADM(
+  def imagesProject: Project = Project(
     id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
-    description = Seq(V2.StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
@@ -294,12 +293,12 @@ object SharedTestDataADM {
   )
 
   /* represents the full ProjectADM of the images project in the external format */
-  def imagesProjectExternal: ProjectADM = ProjectADM(
+  def imagesProjectExternal: Project = Project(
     id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
     longname = Some("Image Collection Demo"),
-    description = Seq(V2.StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+    description = Seq(StringLiteralV2.from(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI_LocalHost),
@@ -311,7 +310,7 @@ object SharedTestDataADM {
   def imagesProjectAdminGroup: Group = Group(
     id = "-",
     name = "ProjectAdmin",
-    descriptions = Seq(StringLiteralV2(value = "Default Project Admin Group", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2.from(value = "Default Project Admin Group", language = Some("en"))),
     project = imagesProject,
     status = true,
     selfjoin = false,
@@ -321,7 +320,7 @@ object SharedTestDataADM {
   def imagesProjectMemberGroup: Group = Group(
     id = "-",
     name = "ProjectMember",
-    descriptions = Seq(StringLiteralV2(value = "Default Project Member Group", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2.from(value = "Default Project Member Group", language = Some("en"))),
     project = imagesProject,
     status = true,
     selfjoin = false,
@@ -331,7 +330,7 @@ object SharedTestDataADM {
   def imagesReviewerGroup: Group = Group(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
-    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2.from(value = "A group for image reviewers.", language = Some("en"))),
     project = imagesProject,
     status = true,
     selfjoin = false,
@@ -341,7 +340,7 @@ object SharedTestDataADM {
   def imagesReviewerGroupExternal: Group = Group(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
-    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2.from(value = "A group for image reviewers.", language = Some("en"))),
     project = imagesProjectExternal,
     status = true,
     selfjoin = false,
@@ -436,13 +435,13 @@ object SharedTestDataADM {
     )
 
   /* represents the ProjectADM of the incunabula project */
-  def incunabulaProject: ProjectADM = ProjectADM(
+  def incunabulaProject: Project = Project(
     id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
-      V2.StringLiteralV2(
+      StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
@@ -471,13 +470,13 @@ object SharedTestDataADM {
   )
 
   /* represents the ProjectADM of the incunabula project in the external format*/
-  def incunabulaProjectExternal: ProjectADM = ProjectADM(
+  def incunabulaProjectExternal: Project = Project(
     id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
-      V2.StringLiteralV2(
+      StringLiteralV2.from(
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None,
@@ -604,12 +603,12 @@ object SharedTestDataADM {
       ),
     )
 
-  def anythingProject: ProjectADM = ProjectADM(
+  def anythingProject: Project = Project(
     id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
     longname = Some("Anything Project"),
-    description = Seq(V2.StringLiteralV2(value = "Anything Project", language = None)),
+    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI, SharedOntologyTestDataADM.SomethingOntologyIri),
@@ -617,12 +616,12 @@ object SharedTestDataADM {
     selfjoin = false,
   )
 
-  def anythingProjectExternal: ProjectADM = ProjectADM(
+  def anythingProjectExternal: Project = Project(
     id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
     longname = Some("Anything Project"),
-    description = Seq(V2.StringLiteralV2(value = "Anything Project", language = None)),
+    description = Seq(StringLiteralV2.from(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
     logo = None,
     ontologies = Seq(
@@ -637,7 +636,7 @@ object SharedTestDataADM {
   def thingSearcherGroup: Group = Group(
     id = "http://rdfh.ch/groups/0001/thing-searcher",
     name = "Thing searcher",
-    descriptions = Seq(StringLiteralV2(value = "A group for thing searchers.", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2.from(value = "A group for thing searchers.", language = Some("en"))),
     project = anythingProject,
     status = true,
     selfjoin = true,
@@ -652,12 +651,12 @@ object SharedTestDataADM {
    */
   val beolProjectIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-  def beolProject: ProjectADM = ProjectADM(
+  def beolProject: Project = Project(
     id = beolProjectIri,
     shortname = "beol",
     shortcode = "0801",
     longname = Some("Bernoulli-Euler Online"),
-    description = Seq(V2.StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
+    description = Seq(StringLiteralV2.from(value = "Bernoulli-Euler Online", language = None)),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq(
@@ -703,12 +702,12 @@ object SharedTestDataADM {
    */
   val dokubibProjectIri = "http://rdfh.ch/projects/0804"
 
-  def dokubibProject: ProjectADM = ProjectADM(
+  def dokubibProject: Project = Project(
     id = dokubibProjectIri,
     shortname = "dokubib",
     shortcode = "0804",
     longname = Some("Dokubib"),
-    description = Seq(V2.StringLiteralV2(value = "Dokubib", language = None)),
+    description = Seq(StringLiteralV2.from(value = "Dokubib", language = None)),
     keywords = Seq.empty[String],
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),

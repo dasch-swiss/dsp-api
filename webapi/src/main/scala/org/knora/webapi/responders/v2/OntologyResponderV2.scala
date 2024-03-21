@@ -14,14 +14,13 @@ import zio.ZLayer
 import java.time.Instant
 
 import dsp.constants.SalsahGui
-import dsp.errors.*
-import org.knora.webapi.*
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -29,7 +28,7 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -37,7 +36,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -75,7 +74,7 @@ final case class OntologyResponderV2Live(
   ontologyCache: OntologyCache,
   ontologyHelpers: OntologyHelpers,
   ontologyRepo: OntologyRepo,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
   cacheService: CacheService,
   implicit val stringFormatter: StringFormatter,
@@ -542,8 +541,9 @@ final case class OntologyResponderV2Live(
           )
 
       // Make the internal ontology IRI.
-      projectId <- IriIdentifier.fromString(projectIri.toString).toZIO.mapError(e => BadRequestException(e.getMessage))
-      project   <- projectRepo.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
+      projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(e => BadRequestException(e))
+      project <-
+        knoraProjectService.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
       internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
                               validOntologyName,
                               createOntologyRequest.isShared,
@@ -2276,7 +2276,7 @@ final case class OntologyResponderV2Live(
           Some(
             SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
               predicateIri = SalsahGui.GuiAttribute.toSmartIri,
-              objects = newGuiAttributeIris.map(StringLiteralV2(_)).toSeq,
+              objects = newGuiAttributeIris.map(StringLiteralV2.from(_, None)).toSeq,
             ),
           )
         } else {
@@ -2967,7 +2967,7 @@ final case class OntologyResponderV2Live(
 
 object OntologyResponderV2Live {
   val layer: URLayer[
-    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectRepo & MessageRelay & OntologyCache &
+    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectService & MessageRelay & OntologyCache &
       OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService & CacheService,
     OntologyResponderV2,
   ] = ZLayer.fromZIO {
@@ -2976,7 +2976,7 @@ object OntologyResponderV2Live {
       ch       <- ZIO.service[CardinalityHandler]
       cs       <- ZIO.service[CardinalityService]
       is       <- ZIO.service[IriService]
-      kr       <- ZIO.service[KnoraProjectRepo]
+      kr       <- ZIO.service[KnoraProjectService]
       oc       <- ZIO.service[OntologyCache]
       oh       <- ZIO.service[OntologyHelpers]
       or       <- ZIO.service[OntologyRepo]

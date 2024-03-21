@@ -19,9 +19,10 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import org.apache.pekko
+import org.apache.pekko.actor.ActorSystem
 import spray.json.JsObject
-import spray.json.*
-import zio.*
+import spray.json._
+import zio._
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -33,11 +34,10 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol.*
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol.*
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -65,11 +65,10 @@ final case class FileToUpload(path: Path, mimeType: ContentType)
  */
 final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
-final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: pekko.actor.ActorSystem)
+final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient)(implicit system: ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  implicit val system: pekko.actor.ActorSystem    = sys
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
   case class TestClientTimeoutException(msg: String) extends Exception
@@ -356,7 +355,7 @@ object TestClientService {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient)(implicit system: pekko.actor.ActorSystem) = ZIO.attemptBlocking {
+  private def release(httpClient: CloseableHttpClient)(implicit system: ActorSystem) = ZIO.attemptBlocking {
     pekko.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
@@ -366,8 +365,8 @@ object TestClientService {
       for {
         sys        <- ZIO.service[ActorSystem]
         config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys.system))
-      } yield TestClientService(config, httpClient, sys.system)
+        httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys))
+      } yield TestClientService(config, httpClient)(sys)
     }
 
 }

@@ -7,13 +7,13 @@ package org.knora.webapi.e2e.admin.lists
 
 import org.apache.pekko
 
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -148,7 +148,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
         labels.size should be(1)
-        labels should contain(StringLiteralV2(value = "nya märkningen", language = Some("se")))
+        labels should contain(StringLiteralV2.from(value = "nya märkningen", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -193,7 +193,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
         comments.size should be(1)
-        comments should contain(StringLiteralV2(value = "nya kommentarer", language = Some("se")))
+        comments should contain(StringLiteralV2.from(value = "nya kommentarer", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -299,7 +299,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
         val labels: Seq[StringLiteralV2] = receivedNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels should contain(StringLiteralV2(value = "nya märkningen för nod", language = Some("se")))
+        labels should contain(StringLiteralV2.from(value = "nya märkningen för nod", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -344,7 +344,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
         val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
         comments.size should be(1)
-        comments should contain(StringLiteralV2(value = "nya kommentarer för nod", language = Some("se")))
+        comments should contain(StringLiteralV2.from(value = "nya kommentarer för nod", language = Some("se")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(

@@ -7,29 +7,30 @@ package org.knora.webapi.responders.v2
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.compatible.Assertion
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
@@ -198,10 +199,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // Run the query.
     val result = UnsafeZioRun.runOrThrow(
-      SearchResponderV2.gravsearchV2(
-        GravsearchParser.parseQuery(gravsearchQuery),
-        SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
-        requestingUser,
+      ZIO.serviceWithZIO[SearchResponderV2](
+        _.gravsearchV2(
+          GravsearchParser.parseQuery(gravsearchQuery),
+          SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
+          requestingUser,
+        ),
       ),
     )
 

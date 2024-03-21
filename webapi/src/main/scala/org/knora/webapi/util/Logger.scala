@@ -5,10 +5,10 @@
 
 package org.knora.webapi.util
 import zio.LogLevel
-import zio.*
+import zio._
 import zio.logging.LogFilter
-import zio.logging.LogFormat.*
-import zio.logging.*
+import zio.logging.LogFormat._
+import zio.logging._
 import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {

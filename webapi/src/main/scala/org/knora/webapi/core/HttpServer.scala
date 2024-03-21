@@ -5,14 +5,12 @@
 
 package org.knora.webapi.core
 
-import org.apache.pekko
-import zio.*
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.Http
+import zio._
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core
 import org.knora.webapi.routing.ApiRoutes
-
-import pekko.http.scaladsl.Http
 
 /**
  * The Akka based HTTP server
@@ -25,11 +23,11 @@ object HttpServer {
   val layer: ZLayer[ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
     ZLayer.scoped {
       for {
-        as        <- ZIO.service[core.ActorSystem]
+        as        <- ZIO.service[ActorSystem]
         config    <- ZIO.service[AppConfig]
         apiRoutes <- ZIO.service[ApiRoutes]
         binding <- {
-          implicit val system: pekko.actor.ActorSystem = as.system
+          implicit val system: ActorSystem = as
 
           ZIO.acquireRelease {
             ZIO

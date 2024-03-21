@@ -8,7 +8,7 @@ package org.knora.webapi.e2e.admin.lists
 import org.apache.pekko
 
 import scala.concurrent.Await
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
@@ -16,14 +16,14 @@ import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.admin.lists
-import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.http.scaladsl.model.*
+import pekko.http.scaladsl.model._
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
 
@@ -100,7 +100,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.head should be(StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+        labels.head should be(StringLiteralV2.from(value = "New list with a custom IRI", language = Some("en")))
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -232,7 +232,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
+        labels.head should be(StringLiteralV2.from(value = "Neue Liste", language = Some("de")))
 
         val comments = receivedList.listinfo.comments.stringLiterals
         comments.isEmpty should be(false)
@@ -394,12 +394,12 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
+        labels.sorted should be(Seq(StringLiteralV2.from(value = label, language = Some("en"))))
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
-        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        comments.sorted should be(Seq(StringLiteralV2.from(value = comment, language = Some("en"))))
 
         // check position
         val position = childNodeInfo.position
@@ -463,12 +463,12 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
+        labels.sorted should be(Seq(StringLiteralV2.from(value = label, language = Some("en"))))
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
-        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        comments.sorted should be(Seq(StringLiteralV2.from(value = comment, language = Some("en"))))
 
         // check position
         val position = childNodeInfo.position
@@ -538,12 +538,12 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
+        labels.sorted should be(Seq(StringLiteralV2.from(value = label, language = Some("en"))))
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
-        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        comments.sorted should be(Seq(StringLiteralV2.from(value = comment, language = Some("en"))))
 
         // check position
         val position = childNodeInfo.position
@@ -609,12 +609,12 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
+        labels.sorted should be(Seq(StringLiteralV2.from(value = label, language = Some("en"))))
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
-        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        comments.sorted should be(Seq(StringLiteralV2.from(value = comment, language = Some("en"))))
 
         // check position
         val position = childNodeInfo.position

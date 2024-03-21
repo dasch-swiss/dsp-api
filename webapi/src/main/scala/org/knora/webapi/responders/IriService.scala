@@ -6,9 +6,9 @@
 package org.knora.webapi.responders
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
+import zio._
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri

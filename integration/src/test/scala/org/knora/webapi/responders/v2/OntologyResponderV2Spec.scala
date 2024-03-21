@@ -12,32 +12,32 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.constants.SalsahGui
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -165,7 +165,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       expectMsgType[ProjectGetResponse](timeout)
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProjectBefore = expectMsgType[Option[ProjectADM]](timeout)
+      val cachedProjectBefore = expectMsgType[Option[Project]](timeout)
       assert(cachedProjectBefore.isDefined)
       // create an ontology
       appActor ! CreateOntologyRequestV2(
@@ -178,7 +178,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgType[ReadOntologyMetadataV2](timeout)
       // ensure that the project is no longer cached
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProject = expectMsgType[Option[ProjectADM]](timeout)
+      val cachedProject = expectMsgType[Option[Project]](timeout)
       assert(cachedProject.isEmpty)
     }
 
@@ -689,15 +689,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has name", Some("en")),
-              StringLiteralV2("hat Namen", Some("de")),
+              StringLiteralV2.from("has name", Some("en")),
+              StringLiteralV2.from("hat Namen", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("The name of a Thing", Some("en")),
-              StringLiteralV2("Der Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The name of a Thing", Some("en")),
+              StringLiteralV2.from("Der Name eines Dinges", Some("de")),
             ),
           ),
         ),
@@ -756,15 +756,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has name", Some("en")),
-              StringLiteralV2("hat Namen", Some("de")),
+              StringLiteralV2.from("has name", Some("en")),
+              StringLiteralV2.from("hat Namen", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("The name of a Thing", Some("en")),
-              StringLiteralV2("Der Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The name of a Thing", Some("en")),
+              StringLiteralV2.from("Der Name eines Dinges", Some("de")),
             ),
           ),
         ),
@@ -846,13 +846,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has interesting thing", Some("en")),
+              StringLiteralV2.from("has interesting thing", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("an interesting Thing", Some("en")),
+              StringLiteralV2.from("an interesting Thing", Some("en")),
             ),
           ),
         ),
@@ -965,11 +965,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Comic Book", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Comic Book", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A comic book", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A comic book", Some("en"))),
           ),
         ),
         directCardinalities = Map(),
@@ -1007,11 +1007,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Comic Author", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Comic Author", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A comic author", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A comic author", Some("en"))),
           ),
         ),
         directCardinalities = Map(),
@@ -1058,13 +1058,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Comic author", Some("en")),
+              StringLiteralV2.from("Comic author", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("A comic author of a comic book", Some("en")),
+              StringLiteralV2.from("A comic author of a comic book", Some("en")),
             ),
           ),
         ),
@@ -1169,13 +1169,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1218,13 +1218,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1267,13 +1267,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1316,13 +1316,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1365,13 +1365,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1414,13 +1414,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1466,13 +1466,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1519,13 +1519,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1568,13 +1568,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1617,13 +1617,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1666,13 +1666,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1715,13 +1715,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1764,13 +1764,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1813,13 +1813,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1862,13 +1862,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1911,13 +1911,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -1960,13 +1960,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -2010,13 +2010,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -2043,9 +2043,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("has name", Some("en")),
-        StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de")),
+        StringLiteralV2.from("has name", Some("en")),
+        StringLiteralV2.from("a nom", Some("fr")),
+        StringLiteralV2.from("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2068,9 +2068,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("has name", Some("en")),
-        StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de")),
+        StringLiteralV2.from("has name", Some("en")),
+        StringLiteralV2.from("a nom", Some("fr")),
+        StringLiteralV2.from("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2103,9 +2103,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("has name", Some("en")),
-        StringLiteralV2("a nom", Some("fr")),
-        StringLiteralV2("hat Namen", Some("de")),
+        StringLiteralV2.from("has name", Some("en")),
+        StringLiteralV2.from("a nom", Some("fr")),
+        StringLiteralV2.from("hat Namen", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2139,12 +2139,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("The name of a Thing", Some("en")),
-        StringLiteralV2(
+        StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from(
           "Le nom d\\'une chose",
           Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de")),
+        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2167,17 +2167,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("The name of a Thing", Some("en")),
-        StringLiteralV2(
+        StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from(
           "Le nom d\\'une chose",
           Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de")),
+        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(text), lang)
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2210,17 +2210,17 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
-        StringLiteralV2("The name of a Thing", Some("en")),
-        StringLiteralV2(
+        StringLiteralV2.from("The name of a Thing", Some("en")),
+        StringLiteralV2.from(
           "Le nom d\\'une chose",
           Some("fr"),
         ), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-        StringLiteralV2("Der Name eines Dinges", Some("de")),
+        StringLiteralV2.from("Der Name eines Dinges", Some("de")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(text), lang)
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2410,11 +2410,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2454,11 +2454,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is invalid", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is invalid", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2497,11 +2497,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2536,11 +2536,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("thing with cardinalities", Some("en"))),
+            objects = Seq(StringLiteralV2.from("thing with cardinalities", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that has cardinalities", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that has cardinalities", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2591,11 +2591,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing as part", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Thing as part", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Thing that is part of something else", Some("en"))),
           ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
@@ -2631,11 +2631,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing as a whole", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Thing as a whole", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that has multiple parts", Some("en"))),
           ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
@@ -2680,15 +2680,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("is part of", Some("en")),
-              StringLiteralV2("ist Teil von", Some("de")),
+              StringLiteralV2.from("is part of", Some("en")),
+              StringLiteralV2.from("ist Teil von", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Represents a part of a whole relation", Some("en")),
-              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de")),
+              StringLiteralV2.from("Represents a part of a whole relation", Some("en")),
+              StringLiteralV2.from("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de")),
             ),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
@@ -2806,11 +2806,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2896,11 +2896,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A subclass thing of thing", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -2977,11 +2977,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A subclass thing of thing", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -3015,11 +3015,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("other sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("other sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Another subclass thing of thing", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -3096,11 +3096,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("other sub thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("other sub thing", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Another subclass thing of thing", Some("en"))),
           ),
         ),
         directCardinalities = Map(
@@ -3135,15 +3135,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("nothing", Some("en")),
-              StringLiteralV2("Nichts", Some("de")),
+              StringLiteralV2.from("nothing", Some("en")),
+              StringLiteralV2.from("Nichts", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Represents nothing", Some("en")),
-              StringLiteralV2("Stellt nichts dar", Some("de")),
+              StringLiteralV2.from("Represents nothing", Some("en")),
+              StringLiteralV2.from("Stellt nichts dar", Some("de")),
             ),
           ),
         ),
@@ -3184,8 +3184,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr")),
+        StringLiteralV2.from("nothing", Some("en")),
+        StringLiteralV2.from("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3207,8 +3207,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr")),
+        StringLiteralV2.from("nothing", Some("en")),
+        StringLiteralV2.from("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3241,8 +3241,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("nothing", Some("en")),
-        StringLiteralV2("rien", Some("fr")),
+        StringLiteralV2.from("nothing", Some("en")),
+        StringLiteralV2.from("rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3276,8 +3276,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", Some("en")),
+        StringLiteralV2.from("ne représente rien", Some("fr")),
       )
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3299,13 +3299,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", Some("en")),
+        StringLiteralV2.from("ne représente rien", Some("fr")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(text), lang)
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3338,13 +3338,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(
-        StringLiteralV2("Represents nothing", Some("en")),
-        StringLiteralV2("ne représente rien", Some("fr")),
+        StringLiteralV2.from("Represents nothing", Some("en")),
+        StringLiteralV2.from("ne représente rien", Some("fr")),
       )
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(Iri.fromSparqlEncodedString(text), lang)
+        StringLiteralV2.from(Iri.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3386,13 +3386,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3426,13 +3426,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3466,13 +3466,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3506,13 +3506,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3546,13 +3546,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3588,13 +3588,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3629,13 +3629,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("restrictive thing", Some("en")),
+              StringLiteralV2.from("restrictive thing", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("A more restrictive Thing", Some("en")),
+              StringLiteralV2.from("A more restrictive Thing", Some("en")),
             ),
           ),
         ),
@@ -3682,13 +3682,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -3819,15 +3819,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has nothingness", Some("en")),
-              StringLiteralV2("hat Nichtsein", Some("de")),
+              StringLiteralV2.from("has nothingness", Some("en")),
+              StringLiteralV2.from("hat Nichtsein", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Indicates whether a Nothing has nothingness", Some("en")),
-              StringLiteralV2("Anzeigt, ob ein Nichts Nichtsein hat", Some("de")),
+              StringLiteralV2.from("Indicates whether a Nothing has nothingness", Some("en")),
+              StringLiteralV2.from("Anzeigt, ob ein Nichts Nichtsein hat", Some("de")),
             ),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
@@ -3922,7 +3922,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
         val guiAttributeComplexExpected = PredicateInfoV2(
           predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-          objects = Seq(StringLiteralV2("size=80")),
+          objects = Seq(StringLiteralV2.from("size=80", None)),
         )
 
         guiAttributeComplex should equal(guiAttributeComplexExpected)
@@ -3997,13 +3997,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong property", Some("en")),
+              StringLiteralV2.from("wrong property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -4037,13 +4037,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("wrong class", Some("en")),
+              StringLiteralV2.from("wrong class", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid class definition", Some("en")),
+              StringLiteralV2.from("An invalid class definition", Some("en")),
             ),
           ),
         ),
@@ -4076,11 +4076,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("void", Some("en"))),
+            objects = Seq(StringLiteralV2.from("void", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a void", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a void", Some("en"))),
           ),
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Nothing")),
@@ -4255,13 +4255,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has other nothing", Some("en")),
+              StringLiteralV2.from("has other nothing", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Indicates whether a Nothing has another Nothing", Some("en")),
+              StringLiteralV2.from("Indicates whether a Nothing has another Nothing", Some("en")),
             ),
           ),
         ),
@@ -4530,15 +4530,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has emptiness", Some("en")),
-              StringLiteralV2("hat Leerheit", Some("de")),
+              StringLiteralV2.from("has emptiness", Some("en")),
+              StringLiteralV2.from("hat Leerheit", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("Indicates whether a Nothing has emptiness", Some("en")),
-              StringLiteralV2("Anzeigt, ob ein Nichts Leerheit hat", Some("de")),
+              StringLiteralV2.from("Indicates whether a Nothing has emptiness", Some("en")),
+              StringLiteralV2.from("Anzeigt, ob ein Nichts Leerheit hat", Some("de")),
             ),
           ),
         ),
@@ -5025,11 +5025,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid class", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents an invalid class", Some("en"))),
           ),
         ),
         subClassOf = Set(IncunabulaOntologyIri.makeEntityIri("book")),
@@ -5061,11 +5061,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("invalid class", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents an invalid class", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents an invalid class", Some("en"))),
           ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
@@ -5105,13 +5105,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -5154,13 +5154,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -5199,13 +5199,13 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("invalid property", Some("en")),
+              StringLiteralV2.from("invalid property", Some("en")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en")),
+              StringLiteralV2.from("An invalid property definition", Some("en")),
             ),
           ),
         ),
@@ -5238,11 +5238,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("any box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents any box", Some("en"))),
           ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
@@ -5304,11 +5304,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("any box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents any box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents any box", Some("en"))),
           ),
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
@@ -5375,11 +5375,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has any shared name", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has any shared name", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a shared name", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a shared name", Some("en"))),
           ),
         ),
         subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasName")),
@@ -5449,11 +5449,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has boolean", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has boolean", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Represents a boolean", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Represents a boolean", Some("en"))),
           ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
@@ -5519,11 +5519,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has box", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("Has a box", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Has a box", Some("en"))),
           ),
         ),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
@@ -5582,7 +5582,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "test class",
                   language = Some("en"),
                 ),
@@ -5591,7 +5591,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A test class",
                   language = Some("en"),
                 ),
@@ -5627,7 +5627,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "test text property",
                   language = Some("en"),
                 ),
@@ -5640,7 +5640,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A test text property",
                   language = Some("en"),
                 ),
@@ -5680,7 +5680,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "test int property",
                   language = Some("en"),
                 ),
@@ -5693,7 +5693,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A test int property",
                   language = Some("en"),
                 ),
@@ -5733,7 +5733,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "test link property",
                   language = Some("en"),
                 ),
@@ -5746,7 +5746,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A test link property",
                   language = Some("en"),
                 ),
@@ -5880,7 +5880,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A Blue Free Test class",
                   language = Some("en"),
                 ),
@@ -5889,7 +5889,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A Blue Free Test class used for testing cardinalities",
                   language = Some("en"),
                 ),
@@ -5925,7 +5925,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "blue test text property",
                   language = Some("en"),
                 ),
@@ -5940,7 +5940,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A blue test text property",
                   language = Some("en"),
                 ),
@@ -5980,7 +5980,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "blue test integer property",
                   language = Some("en"),
                 ),
@@ -5995,7 +5995,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
-                StringLiteralV2(
+                StringLiteralV2.from(
                   value = "A blue test integer property",
                   language = Some("en"),
                 ),
@@ -6186,11 +6186,11 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("FOAF person", Some("en"))),
+            objects = Seq(StringLiteralV2.from("FOAF person", Some("en"))),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("FOAF person with reference to foaf:Person", Some("en"))),
+            objects = Seq(StringLiteralV2.from("FOAF person with reference to foaf:Person", Some("en"))),
           ),
         ),
         subClassOf = Set(
@@ -6265,15 +6265,15 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
             objects = Seq(
-              StringLiteralV2("has foaf name", Some("en")),
-              StringLiteralV2("hat foaf Namen", Some("de")),
+              StringLiteralV2.from("has foaf name", Some("en")),
+              StringLiteralV2.from("hat foaf Namen", Some("de")),
             ),
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
             objects = Seq(
-              StringLiteralV2("The foaf name of something", Some("en")),
-              StringLiteralV2("Der foaf Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The foaf name of something", Some("en")),
+              StringLiteralV2.from("Der foaf Name eines Dinges", Some("de")),
             ),
           ),
         ),
@@ -6518,7 +6518,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Different Video Sequence Thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("Different Video Sequence Thing", Some("en"))),
           ),
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
@@ -6560,7 +6560,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("is sequence of", Some("en"))),
+            objects = Seq(StringLiteralV2.from("is sequence of", Some("en"))),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
@@ -6637,7 +6637,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("has sequence bounds", Some("en"))),
+            objects = Seq(StringLiteralV2.from("has sequence bounds", Some("en"))),
           ),
           SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,

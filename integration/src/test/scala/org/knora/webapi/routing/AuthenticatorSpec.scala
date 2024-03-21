@@ -9,7 +9,7 @@ import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
 
 import dsp.errors.BadCredentialsException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
@@ -57,8 +57,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "succeed with correct token" in {
         val isAuthenticated = UnsafeZioRun.runOrThrow(
           for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
           } yield result,
@@ -68,8 +67,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "fail with invalidated token" in {
         val actual = UnsafeZioRun
           .run(for {
-            token <-
-              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
