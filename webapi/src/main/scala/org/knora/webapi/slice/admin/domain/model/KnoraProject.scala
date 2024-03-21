@@ -43,7 +43,15 @@ object KnoraProject {
 
   object ProjectIri extends StringValueCompanion[ProjectIri] {
 
-    private val builtInProjects: Seq[String] = Seq(SystemProject, DefaultSharedOntologiesProject)
+    private val BuiltInProjects: Seq[String] = Seq(SystemProject, DefaultSharedOntologiesProject)
+
+    /**
+     * Explanation of the project IRI regex:
+     * * `^` asserts the start of the string.
+     * * `http://rdfh\.ch/projects/` matches the specified prefix.
+     * * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
+     */
+    private val projectIriRegEx = """^http://rdfh\.ch/projects/[a-zA-Z0-9_-]{4,40}$""".r
 
     /**
      * Returns `true` if an IRI string looks like a Knora project IRI
@@ -51,9 +59,11 @@ object KnoraProject {
      * @param iri the IRI to be checked.
      */
     private def isProjectIri(iri: String): Boolean =
-      isIri(iri) && (isRegularProjectIri(iri) || isBuiltInProjectIri(iri))
-    private def isRegularProjectIri(iri: String)          = iri.startsWith("http://rdfh.ch/projects/")
-    private def isBuiltInProjectIri(iri: String): Boolean = builtInProjects.contains(iri)
+      (isIri(iri) && isRegularProjectIri(iri)) || isBuiltInProjectIri(iri)
+
+    private def isRegularProjectIri(iri: String) = projectIriRegEx.matches(iri)
+
+    private def isBuiltInProjectIri(iri: String): Boolean = BuiltInProjects.contains(iri)
 
     def from(str: String): Either[String, ProjectIri] = str match {
       case str if str.isEmpty        => Left(IriErrorMessages.ProjectIriMissing)
