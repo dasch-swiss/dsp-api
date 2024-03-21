@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
+
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -148,7 +149,7 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      StandoffResponderV2Live.layer,
+      StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       TapirToPekkoInterpreter.layer,

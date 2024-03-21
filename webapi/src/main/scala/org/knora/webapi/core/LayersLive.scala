@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import org.apache.pekko.actor.ActorSystem
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -142,7 +143,7 @@ object LayersLive {
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
       SipiServiceLive.layer,
-      StandoffResponderV2Live.layer,
+      StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StringFormatter.live,
