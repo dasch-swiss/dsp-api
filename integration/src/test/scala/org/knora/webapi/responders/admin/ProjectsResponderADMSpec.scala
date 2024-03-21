@@ -14,7 +14,6 @@ import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -29,6 +28,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -41,15 +41,17 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
   private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
 
   private val ProjectsResponderADM = ZIO.serviceWithZIO[ProjectsResponderADM]
+  private val ProjectRestService   = ZIO.serviceWithZIO[ProjectRestService]
 
-  "The ProjectsResponderADM" when {
+  "The ProjectsResponderADM / ProjectRestService" when {
     "used to query for project information" should {
       "return information for every project excluding system projects" in {
-        val received = UnsafeZioRun.runOrThrow(ProjectsResponderADM(_.getNonSystemProjects))
-        assert(received.projects.contains(SharedTestDataADM.imagesProject))
-        assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
-        assert(!received.projects.map(_.id).contains(SharedTestDataADM.systemProjectIri))
-        assert(!received.projects.contains(SharedTestDataADM.defaultSharedOntologiesProject))
+        val received    = UnsafeZioRun.runOrThrow(ProjectRestService(_.listAllProjects()))
+        val projectIris = received.projects.map(_.id)
+        assert(projectIris.contains(SharedTestDataADM.imagesProject.id))
+        assert(projectIris.contains(SharedTestDataADM.incunabulaProject.id))
+        assert(!projectIris.contains(SharedTestDataADM.systemProjectIri))
+        assert(!projectIris.contains(SharedTestDataADM.defaultSharedOntologiesProject.id))
       }
 
       "return information about a project identified by IRI" in {

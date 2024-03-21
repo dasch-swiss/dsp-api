@@ -13,7 +13,7 @@ import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 
 import dsp.errors.*
-import dsp.valueobjects.Iri
+import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -1482,9 +1482,7 @@ final case class PermissionsResponderADMLive(
 
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
-    Iri
-      .validateAndEscapeProjectIri(req.forProject)
-      .getOrElse(throw BadRequestException(s"Invalid project IRI ${req.forProject}"))
+    ProjectIri.from(req.forProject).getOrElse(throw BadRequestException(s"Invalid project IRI  ${req.forProject}"))
 
     (req.forGroup, req.forResourceClass, req.forProperty) match {
       case (None, None, None) =>

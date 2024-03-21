@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio.*
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -32,6 +31,7 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
@@ -89,7 +89,7 @@ object LayersTest {
       InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache &
       OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 & PermissionUtilADM &
       PermissionsResponderADM & PermissionsRestService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
+      ProjectImportService & ProjectService & ProjectRestService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
       StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService & UserService &
       UsersResponder & UsersRestService & ValuesResponderV2

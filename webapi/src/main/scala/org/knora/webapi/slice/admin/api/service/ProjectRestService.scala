@@ -10,6 +10,7 @@ import zio.*
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponse
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -25,12 +26,14 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class ProjectRestService(
   format: KnoraResponseRenderer,
   responder: ProjectsResponderADM,
+  projectService: ProjectService,
   knoraProjectService: KnoraProjectService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
@@ -46,8 +49,9 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
   def listAllProjects(): Task[ProjectsGetResponse] = for {
-    internal <- responder.getNonSystemProjects
-    external <- format.toExternal(internal)
+    internal <- projectService.findAll
+    projects  = internal.filter(_.projectIri.isRegularProjectIri)
+    external <- format.toExternal(ProjectsGetResponse(projects))
   } yield external
 
   /**

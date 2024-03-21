@@ -40,7 +40,9 @@ object AdminApiModule {
   type Dependencies =
     AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService & GroupsResponderADM & HandlerMapper & KnoraProjectService & KnoraResponseRenderer & KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache & PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService & ProjectsResponderADM & TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
 
-  type Provided = AdminApiEndpoints & AdminApiRoutes & UsersRestService & PermissionsRestService
+  type Provided = AdminApiEndpoints & AdminApiRoutes &
+    // the `*RestService`s are only exposed for the integration tests
+    UsersRestService & ProjectRestService & PermissionsRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](

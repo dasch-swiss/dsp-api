@@ -82,19 +82,6 @@ final case class ProjectsResponderADM(
   }
 
   /**
-   * Gets all the projects but not system projects.
-   * Filters out system projects in response.
-   *
-   * @return all non-system projects as a [[ProjectsGetResponse]].
-   *         [[NotFoundException]] if no projects are found.
-   */
-  def getNonSystemProjects: Task[ProjectsGetResponse] =
-    projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
-      case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
-      case projects => ZIO.succeed(ProjectsGetResponse(projects))
-    }
-
-  /**
    * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
    * as a [[ProjectGetResponse]].
    *

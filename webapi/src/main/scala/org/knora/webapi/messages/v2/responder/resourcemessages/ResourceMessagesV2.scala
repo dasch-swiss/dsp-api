@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -164,11 +165,7 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
   requestingUser: User,
 ) extends ResourcesResponderRequestV2 {
-  Iri
-    .validateAndEscapeIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
-
-  if (!Iri.isProjectIri(projectIri)) throw BadRequestException("Given IRI is not a project IRI.")
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
 }
 
 /**

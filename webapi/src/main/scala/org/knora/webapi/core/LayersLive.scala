@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import org.apache.pekko.actor.ActorSystem
 import zio.ULayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -34,6 +33,7 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.common.api.*
@@ -76,7 +76,7 @@ object LayersLive {
       JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
       PermissionUtilADM & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
+      ProjectImportService & ProjectRestService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
       TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
