@@ -28,9 +28,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -42,7 +39,6 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -734,22 +730,11 @@ final case class PermissionsResponderADMLive(
               case None => ()
             }
 
-        // get project
-        maybeProject <-
-          messageRelay
-            .ask[Option[Project]](
-              ProjectGetADM(
-                identifier = IriIdentifier
-                  .fromString(createRequest.forProject)
-                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-              ),
-            )
-
-        // if it doesnt exist then throw an error
-        project: Project =
-          maybeProject.getOrElse(
-            throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."),
-          )
+        projectId <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
+        project <-
+          knoraProjectService
+            .findById(projectId)
+            .someOrFail(NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
         // get group
         groupIri <-
@@ -770,7 +755,7 @@ final case class PermissionsResponderADMLive(
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
-                              PermissionIri.makeNew(Shortcode.unsafeFrom(project.shortcode)).value,
+                              PermissionIri.makeNew(project.shortcode).value,
                             )
 
         // Create the administrative permission.
@@ -779,7 +764,7 @@ final case class PermissionsResponderADMLive(
                                                  permissionClassIri =
                                                    OntologyConstants.KnoraAdmin.AdministrativePermission,
                                                  permissionIri = newPermissionIri,
-                                                 projectIri = project.id,
+                                                 projectIri = project.id.value,
                                                  groupIri = groupIri,
                                                  permissions = PermissionUtilADM.formatPermissionADMs(
                                                    createRequest.hasPermissions,
