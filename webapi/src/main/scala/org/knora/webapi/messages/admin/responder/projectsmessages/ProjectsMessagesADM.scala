@@ -29,12 +29,12 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -6,13 +6,13 @@
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.*
+import spray.json._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

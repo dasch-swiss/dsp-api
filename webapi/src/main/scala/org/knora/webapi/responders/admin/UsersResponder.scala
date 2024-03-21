@@ -13,7 +13,7 @@ import zio.ZLayer
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.UserService
 

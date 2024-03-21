@@ -14,7 +14,7 @@ import dsp.valueobjects.Iri.validateAndEscapeProjectIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue

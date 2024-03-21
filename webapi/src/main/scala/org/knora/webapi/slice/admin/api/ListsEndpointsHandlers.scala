@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCommentsD
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.NodePositionChangeResponseADM
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.slice.admin.api.Requests.*
+import org.knora.webapi.slice.admin.api.Requests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User

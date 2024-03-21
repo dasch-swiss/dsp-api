@@ -8,20 +8,20 @@ package org.knora.webapi.messages.store.triplestoremessages
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
-import spray.json.*
-import zio.*
+import spray.json._
+import zio._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import java.time.Instant
 import scala.collection.mutable
 
-import dsp.errors.*
-import org.knora.webapi.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
+import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.

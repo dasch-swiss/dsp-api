@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core
 
-import zio.*
+import zio._
 
 import org.knora.webapi.core.domain.AppState
 

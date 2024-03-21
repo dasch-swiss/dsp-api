@@ -7,7 +7,7 @@ package org.knora.webapi.messages.twirl
 
 import java.time.Instant
 
-import org.knora.webapi.*
+import org.knora.webapi._
 
 /**
  * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values

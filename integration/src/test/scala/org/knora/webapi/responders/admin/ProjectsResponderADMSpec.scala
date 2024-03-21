@@ -19,17 +19,17 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 

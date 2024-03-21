@@ -5,13 +5,13 @@
 
 package org.knora.webapi.messages.util.search.gravsearch
 
-import zio.*
+import zio._
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchEntityTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo

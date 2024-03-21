@@ -18,9 +18,9 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbb
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.*
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.sharedtestdata._
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 

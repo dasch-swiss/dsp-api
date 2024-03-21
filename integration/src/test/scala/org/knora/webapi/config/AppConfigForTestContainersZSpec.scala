@@ -5,8 +5,8 @@
 
 package org.knora.webapi.config
 
-import zio.*
-import zio.test.*
+import zio._
+import zio.test._
 
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer

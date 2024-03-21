@@ -6,27 +6,27 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
+import zio._
 
 import java.util.UUID
 
-import dsp.errors.*
-import org.knora.webapi.*
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.*
+import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
@@ -44,7 +44,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries._
 import org.knora.webapi.util.ZioHelper
 
 /**

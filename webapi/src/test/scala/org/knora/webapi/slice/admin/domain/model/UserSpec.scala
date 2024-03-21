@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import zio.test.*
+import zio.test._
 
 object UserSpec extends ZIOSpecDefault {
   private val validPassword   = "pass-word"

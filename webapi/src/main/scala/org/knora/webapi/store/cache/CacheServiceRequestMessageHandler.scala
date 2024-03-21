@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cache
 
-import zio.*
+import zio._
 import zio.metrics.Metric
 
 import java.time.temporal.ChronoUnit
@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.store.cacheservicemessages.*
+import org.knora.webapi.messages.store.cacheservicemessages._
 
 trait CacheServiceRequestMessageHandler extends MessageHandler
 

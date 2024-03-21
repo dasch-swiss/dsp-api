@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
-import zio.*
+import zio._
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.FilterPattern

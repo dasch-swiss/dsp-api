@@ -6,7 +6,7 @@
 package dsp.valueobjects
 
 import zio.Scope
-import zio.test.*
+import zio.test._
 
 import java.util.UUID
 

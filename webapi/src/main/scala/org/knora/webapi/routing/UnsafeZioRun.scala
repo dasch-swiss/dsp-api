@@ -5,7 +5,7 @@
 
 package org.knora.webapi.routing
 
-import zio.*
+import zio._
 
 import scala.concurrent.Future
 

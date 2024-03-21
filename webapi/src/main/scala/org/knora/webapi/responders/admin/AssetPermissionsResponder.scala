@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import zio.*
+import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
