@@ -185,7 +185,7 @@ final case class ProjectRestService(
   ): Task[ProjectAdminMembersGetResponseADM] = for {
     project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
     _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    internal <- userService.findByProjectMembership(project).map(ProjectAdminMembersGetResponseADM.apply)
+    internal <- userService.findByProjectAdminMembership(project).map(ProjectAdminMembersGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 

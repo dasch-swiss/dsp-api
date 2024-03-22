@@ -591,7 +591,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.OK)
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
-        log.info(s"members: {}", members)
         members.size should be(2)
         clientTestDataCollector.addFile(
           TestDataFileContent(
