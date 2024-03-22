@@ -407,7 +407,7 @@ object GroupsResponderADM {
       kus     <- ZIO.service[KnoraUserService]
       ps      <- ZIO.service[ProjectService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADMLive(ts, mr, iris, kus, ps, sf))
+      handler <- mr.subscribe(GroupsResponderADM(ts, mr, iris, kus, ps, sf))
     } yield handler
   }
 }
