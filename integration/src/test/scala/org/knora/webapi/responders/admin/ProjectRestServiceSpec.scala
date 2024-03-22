@@ -14,10 +14,12 @@ import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
 
 import java.util.UUID
+
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -33,8 +35,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-
-import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
