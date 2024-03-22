@@ -183,7 +183,9 @@ final case class ProjectRestService(
     user: User,
     id: ProjectIdentifierADM,
   ): Task[ProjectAdminMembersGetResponseADM] = for {
-    internal <- responder.projectAdminMembersGetRequestADM(id, user)
+    project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    internal <- userService.findByProjectMembership(project).map(ProjectAdminMembersGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 
@@ -211,7 +213,11 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
   def getKeywordsByProjectIri(iri: ProjectIri): Task[ProjectKeywordsGetResponse] = for {
-    internal <- responder.projectKeywordsGetRequestADM(iri)
+    internal <- knoraProjectService
+                  .findById(iri)
+                  .someOrFail(NotFoundException(s"Project '${iri.value}' not found."))
+                  .map(_.keywords.map(_.value))
+                  .map(ProjectKeywordsGetResponse.apply)
     external <- format.toExternal(internal)
   } yield external
 

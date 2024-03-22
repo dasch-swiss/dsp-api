@@ -553,8 +553,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ProjectRestService(
+            _.getProjectAdminMembers(
+              rootUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
+            ),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -578,8 +581,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ProjectRestService(
+            _.getProjectAdminMembers(
+              rootUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
+            ),
           ),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)

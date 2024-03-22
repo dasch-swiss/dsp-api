@@ -30,24 +30,18 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ProjectsResponderADM(
   private val iriService: IriService,
   private val cacheService: CacheService,
   private val permissionsResponderADM: PermissionsResponderADM,
-  private val predicateObjectMapper: PredicateObjectMapper,
   private val projectService: ProjectService,
   private val triplestore: TriplestoreService,
-  private val userService: UserService,
   implicit private val stringFormatter: StringFormatter,
 ) extends MessageHandler
     with LazyLogging {
@@ -77,60 +71,6 @@ final case class ProjectsResponderADM(
       )
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
-
-  /**
-   * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
-   * if none are found
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param user       the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  def projectAdminMembersGetRequestADM(
-    id: ProjectIdentifierADM,
-    user: User,
-  ): Task[ProjectAdminMembersGetResponseADM] =
-    for {
-      /* Get project and verify permissions. */
-      project <- projectService
-                   .findByProjectIdentifier(id)
-                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _ <- ZIO
-             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
-             .when {
-               !user.permissions.isSystemAdmin &&
-               !user.permissions.isProjectAdmin(project.id)
-             }
-
-      query = Construct(
-                sparql.admin.txt
-                  .getProjectAdminMembers(
-                    maybeIri = id.asIriIdentifierOption,
-                    maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption,
-                  ),
-              )
-
-      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
-
-      // get project member IRI from results rows
-      userIris = statements.map { case (subject, _) => UserIri.unsafeFrom(subject.value) }
-      users   <- userService.findUsersByIris(userIris)
-    } yield ProjectAdminMembersGetResponseADM(users)
-
-  /**
-   * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
-   *
-   * @param projectIri           the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
-   */
-  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse] =
-    for {
-      id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
-      keywords <- projectService
-                    .findProjectKeywordsBy(id)
-                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
-    } yield keywords
 
   /**
    * Update project's basic information.
@@ -514,11 +454,9 @@ object ProjectsResponderADM {
       ps      <- ZIO.service[ProjectService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
-      po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      us      <- ZIO.service[UserService]
-      handler <- mr.subscribe(ProjectsResponderADM(iris, cs, pr, po, ps, ts, us, sf))
+      handler <- mr.subscribe(ProjectsResponderADM(iris, cs, pr, ps, ts, sf))
     } yield handler
   }
 }

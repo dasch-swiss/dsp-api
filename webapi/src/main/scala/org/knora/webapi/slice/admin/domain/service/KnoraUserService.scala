@@ -46,7 +46,10 @@ case class KnoraUserService(
   def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
   def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
   def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
-  def findByProjectMembership(project: KnoraProject)              = userRepo.findByProjectMembership(project.id)
+  def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectMembership(project.id)
+  def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectAdminMembership(project.id)
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))

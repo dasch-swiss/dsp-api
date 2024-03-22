@@ -38,6 +38,9 @@ final case class UserService(
   def findByProjectMembership(project: KnoraProject): Task[Seq[User]] =
     knoraUserService.findByProjectMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
+  def findByProjectAdminMembership(project: KnoraProject): Task[Seq[User]] =
+    knoraUserService.findByProjectAdminMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+
   def findAll: Task[Seq[User]] =
     knoraUserService.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 

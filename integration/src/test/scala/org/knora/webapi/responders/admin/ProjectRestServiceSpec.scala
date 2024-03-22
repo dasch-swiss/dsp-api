@@ -36,14 +36,13 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
-class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
+class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
   private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
 
-  private val ProjectsResponderADM = ZIO.serviceWithZIO[ProjectsResponderADM]
-  private val ProjectRestService   = ZIO.serviceWithZIO[ProjectRestService]
+  private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
 
-  "The ProjectsResponderADM / ProjectRestService" when {
+  "The ProjectRestService" when {
     "used to query for project information" should {
       "return information for every project excluding system projects" in {
         val received    = UnsafeZioRun.runOrThrow(ProjectRestService(_.listAllProjects()))
@@ -512,10 +511,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by IRI" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
+          ProjectRestService(
+            _.getProjectAdminMembers(
               SharedTestDataADM.rootUser,
+              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
             ),
           ),
         )
@@ -530,10 +529,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by shortname" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
+          ProjectRestService(
+            _.getProjectAdminMembers(
               SharedTestDataADM.rootUser,
+              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
             ),
           ),
         )
@@ -548,10 +547,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all project admin members of a project identified by shortcode" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
+          ProjectRestService(
+            _.getProjectAdminMembers(
               SharedTestDataADM.rootUser,
+              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
             ),
           ),
         )
@@ -566,10 +565,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+          ProjectRestService(
+            _.getProjectAdminMembers(
               SharedTestDataADM.rootUser,
+              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
         )
@@ -579,10 +578,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              ShortnameIdentifier.unsafeFrom("wrongshortname"),
+          ProjectRestService(
+            _.getProjectAdminMembers(
               SharedTestDataADM.rootUser,
+              ShortnameIdentifier.unsafeFrom("wrongshortname"),
             ),
           ),
         )
@@ -591,10 +590,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectAdminMembersGetRequestADM(
-              ShortcodeIdentifier.unsafeFrom("9999"),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              ShortcodeIdentifier.unsafeFrom("9999"),
             ),
           ),
         )
@@ -610,10 +609,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all keywords for a single project" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectKeywordsGetRequestADM(
-              ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id),
-            ),
+          ProjectRestService(
+            _.getKeywordsByProjectIri(SharedTestDataADM.incunabulaProject.projectIri),
           ),
         )
         received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
@@ -621,17 +618,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return empty list for a project without keywords" in {
         val received = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id)),
-          ),
+          ProjectRestService(_.getKeywordsByProjectIri(SharedTestDataADM.dokubibProject.projectIri)),
         )
         received.keywords should be(Seq.empty[String])
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)),
+          ProjectRestService(
+            _.getKeywordsByProjectIri(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)),
           ),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
