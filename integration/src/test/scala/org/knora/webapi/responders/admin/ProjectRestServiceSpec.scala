@@ -9,11 +9,8 @@
  */
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
-
-import java.util.UUID
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -385,21 +382,23 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val projectStatus   = Status.Active
         val selfJoin        = SelfJoin.CanJoin
 
-        appActor ! ProjectChangeRequestADM(
-          projectIri = iri,
-          projectUpdatePayload = ProjectUpdateRequest(
-            shortname = None,
-            longname = Some(updatedLongname),
-            description = Some(updatedDescription),
-            keywords = Some(updatedKeywords),
-            logo = Some(updatedLogo),
-            status = Some(projectStatus),
-            selfjoin = Some(selfJoin),
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectRestService(
+            _.updateProject(
+              iri,
+              ProjectUpdateRequest(
+                shortname = None,
+                longname = Some(updatedLongname),
+                description = Some(updatedDescription),
+                keywords = Some(updatedKeywords),
+                logo = Some(updatedLogo),
+                status = Some(projectStatus),
+                selfjoin = Some(selfJoin),
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.shortname should be("newproject")
         received.project.shortcode should be("111C")
         received.project.longname should be(Some("updated project longname"))
@@ -420,19 +419,17 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
         val longname = Longname.unsafeFrom("longname")
         val iri      = ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)
-        appActor ! ProjectChangeRequestADM(
-          projectIri = iri,
-          projectUpdatePayload = ProjectUpdateRequest(longname = Some(longname)),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
-        )
-        expectMsg(
-          Failure(
-            NotFoundException(
-              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request.",
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(
+            _.updateProject(
+              iri,
+              ProjectUpdateRequest(longname = Some(longname)),
+              SharedTestDataADM.rootUser,
             ),
           ),
         )
+
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
     }
 

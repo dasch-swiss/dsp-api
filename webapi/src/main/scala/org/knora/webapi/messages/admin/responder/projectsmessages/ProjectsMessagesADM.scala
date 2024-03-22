@@ -18,50 +18,19 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.prelude.Validation
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.admin.ProjectsResponderADM]].
- */
-sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-// Requests
-/**
- * Requests updating an existing project.
- *
- * @param projectIri            the IRI of the project to be updated.
- * @param projectUpdatePayload  the [[ProjectUpdateRequest]]
- * @param requestingUser        the user making the request.
- * @param apiRequestID          the ID of the API request.
- */
-case class ProjectChangeRequestADM(
-  projectIri: ProjectIri,
-  projectUpdatePayload: ProjectUpdateRequest,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends ProjectsResponderRequestADM
-
-// Responses
 
 object ProjectCodec {
   implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]

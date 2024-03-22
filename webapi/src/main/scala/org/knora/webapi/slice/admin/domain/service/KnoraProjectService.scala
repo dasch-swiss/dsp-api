@@ -13,14 +13,18 @@ import zio.ZLayer
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.store.cache.CacheService
 
-final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
+final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, cacheService: CacheService) {
   def findById(id: ProjectIri): Task[Option[KnoraProject]]           = knoraProjectRepo.findById(id)
+  def existsById(id: ProjectIri): Task[Boolean]                      = knoraProjectRepo.existsById(id)
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = knoraProjectRepo.findById(id)
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]]   = knoraProjectRepo.findByShortcode(code)
   def findAll(): Task[List[KnoraProject]]                            = knoraProjectRepo.findAll()
@@ -33,18 +37,15 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
   }
 
   def createProject(req: ProjectCreateRequest): Task[KnoraProject] = for {
-    _ <- ensureShortcodeIsUnique(req.shortcode)
-    _ <- ensureShortnameIsUnique(req.shortname)
-    _ <- ZIO
-           .fail(new IllegalArgumentException("ProjectCreateRequest is not valid"))
-           .when(req.description.isEmpty)
-    projectIri = ProjectIri.makeNew
+    _            <- ensureShortcodeIsUnique(req.shortcode)
+    _            <- ensureShortnameIsUnique(req.shortname)
+    descriptions <- toNonEmptyChunk(req.description)
     project = KnoraProject(
-                projectIri,
+                req.id.getOrElse(ProjectIri.makeNew),
                 req.shortname,
                 req.shortcode,
                 req.longname,
-                NonEmptyChunk.fromIterable(req.description.head, req.description.tail),
+                descriptions,
                 req.keywords,
                 req.logo,
                 req.status,
@@ -52,7 +53,14 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
                 RestrictedView.default,
               )
     project <- knoraProjectRepo.save(project)
+    _       <- cacheService.clearCache()
   } yield project
+
+  private def toNonEmptyChunk(descriptions: List[Description]) =
+    ZIO
+      .fail(new IllegalArgumentException("Descriptions may not be empty"))
+      .when(descriptions.isEmpty)
+      .as(NonEmptyChunk.fromIterable(descriptions.head, descriptions.tail))
 
   private def ensureShortcodeIsUnique(shortcode: Shortcode) =
     knoraProjectRepo
@@ -68,6 +76,29 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
       .filterOrFail(identity)(
         DuplicateValueException(s"Project with the shortname: '${shortname.value}' already exists"),
       )
+
+  def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[KnoraProject] =
+    for {
+      desc <- updateReq.description match {
+                case Some(value) => toNonEmptyChunk(value).map(Some(_))
+                case None        => ZIO.none
+              }
+      _ <- updateReq.shortname match {
+             case Some(value) => ensureShortnameIsUnique(value)
+             case None        => ZIO.unit
+           }
+      updated <- knoraProjectRepo.save(
+                   project.copy(
+                     longname = updateReq.longname.orElse(project.longname),
+                     description = desc.getOrElse(project.description),
+                     keywords = updateReq.keywords.getOrElse(project.keywords),
+                     logo = updateReq.logo.orElse(project.logo),
+                     status = updateReq.status.getOrElse(project.status),
+                     selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
+                   ),
+                 )
+      _ <- cacheService.clearCache()
+    } yield updated
 }
 
 object KnoraProjectService {

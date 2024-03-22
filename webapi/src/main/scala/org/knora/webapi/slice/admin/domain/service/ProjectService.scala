@@ -14,6 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -27,7 +28,7 @@ final case class ProjectService(
   private val cacheService: CacheService,
 ) {
 
-  def findAll: Task[List[Project]] = knoraProjectService.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
+  def findAll: Task[List[Project]] = knoraProjectService.findAll().flatMap(ZIO.foreachPar(_)(toProject))
 
   def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
@@ -40,17 +41,17 @@ final case class ProjectService(
 
   def findByIds(id: Seq[ProjectIri]): Task[Seq[Project]] = ZIO.foreach(id)(findById).map(_.flatten)
 
-  def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[Project]] =
+  private def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[Project]] =
     cacheService.getProjectADM(projectId).flatMap {
       case Some(project) => ZIO.some(project)
       case None =>
-        knoraProjectService.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM)).tap {
+        knoraProjectService.findById(projectId).flatMap(ZIO.foreach(_)(toProject)).tap {
           case Some(prj) => cacheService.putProjectADM(prj)
           case None      => ZIO.unit
         }
     }
 
-  private def toProjectADM(knoraProject: KnoraProject): Task[Project] = for {
+  private def toProject(knoraProject: KnoraProject): Task[Project] = for {
     ontologies <- ontologyRepo.findByProject(knoraProject).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
     prj <- ZIO.attempt(
              Project(
@@ -103,7 +104,10 @@ final case class ProjectService(
     knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
 
   def createProject(createReq: ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest): Task[Project] =
-    knoraProjectService.createProject(createReq).flatMap(toProjectADM)
+    knoraProjectService.createProject(createReq).flatMap(toProject)
+
+  def updateProject(project: KnoraProject, updateReq: ProjectUpdateRequest): Task[Project] =
+    knoraProjectService.updateProject(project, updateReq).flatMap(toProject)
 }
 
 object ProjectService {
