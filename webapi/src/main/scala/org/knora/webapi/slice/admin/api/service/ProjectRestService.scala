@@ -69,7 +69,7 @@ final case class ProjectRestService(
 
   private def toExternalProjectGetResponse(prjTask: Task[Option[Project]], id: StringValue): Task[ProjectGetResponse] =
     prjTask
-      .someOrFail(NotFoundException(s"Project not '${id.value} not found."))
+      .someOrFail(NotFoundException(s"Project '${id.value}' not found."))
       .map(ProjectGetResponse.apply)
       .flatMap(format.toExternal)
 

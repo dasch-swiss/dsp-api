@@ -14,12 +14,12 @@ import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
 
 import java.util.UUID
-
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -30,17 +30,27 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
+
+import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
  */
 class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
+
   private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
 
   private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
+
+  private def toExternal(project: Project) =
+    project.copy(ontologies =
+      project.ontologies.map((iri: String) => iri.toSmartIri.toOntologySchema(ApiV2Complex).toString),
+    )
 
   "The ProjectRestService" when {
     "used to query for project information" should {
@@ -57,14 +67,14 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(_.findById(SharedTestDataADM.incunabulaProject.projectIri)),
         )
-        assert(actual == ProjectGetResponse(SharedTestDataADM.incunabulaProject))
+        assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
       }
 
       "return information about a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
           ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.getShortname)),
         )
-        assert(actual == ProjectGetResponse(SharedTestDataADM.incunabulaProject))
+        assert(actual == ProjectGetResponse(toExternal(SharedTestDataADM.incunabulaProject)))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
@@ -90,7 +100,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
     }
 
     "used to query project's restricted view settings" should {
-      val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = true)
+      val expectedResult = ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512"))
 
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
@@ -98,7 +108,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             _.getProjectRestrictedViewSettings(IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)),
           ),
         )
-        actual shouldEqual Some(expectedResult)
+        actual shouldEqual expectedResult
       }
 
       "return restricted view settings using project SHORTNAME" in {
@@ -109,7 +119,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ),
           ),
         )
-        actual shouldEqual Some(expectedResult)
+        actual shouldEqual expectedResult
       }
 
       "return restricted view settings using project SHORTCODE" in {
@@ -120,7 +130,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ),
           ),
         )
-        actual shouldEqual Some(expectedResult)
+        actual shouldEqual expectedResult
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {

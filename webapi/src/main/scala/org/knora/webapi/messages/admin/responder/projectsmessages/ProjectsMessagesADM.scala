@@ -157,7 +157,7 @@ object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
 
-  def from(restrictedView: RestrictedView) =
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsGetResponseADM =
     ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
 }
 
@@ -386,7 +386,7 @@ object ProjectRestrictedViewSettingsADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsADM]
 
-  def from(restrictedView: RestrictedView) =
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsADM =
     restrictedView match {
       case RestrictedView.Watermark(value) => ProjectRestrictedViewSettingsADM(None, value)
       case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), false)
