@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit.*
+import org.apache.pekko.testkit._
 
 import java.util.UUID
 
@@ -13,20 +13,20 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.listsmessages.*
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.slice.admin.api.Requests.ListChangePositionRequest
 import org.knora.webapi.slice.admin.api.Requests.ListChangeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.admin.api.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.admin.domain.model.ListProperties._
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 

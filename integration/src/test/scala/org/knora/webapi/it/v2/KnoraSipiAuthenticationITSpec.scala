@@ -5,19 +5,19 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.Await
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.*
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

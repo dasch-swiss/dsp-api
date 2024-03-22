@@ -13,7 +13,7 @@ import org.apache.http.HttpResponse
 import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.*
+import org.apache.http.client.methods._
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.CloseableHttpClient
@@ -22,8 +22,8 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import spray.json.*
-import zio.*
+import spray.json._
+import zio._
 import zio.json.DecoderOps
 import zio.nio.file.Path
 
@@ -34,7 +34,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
-import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt

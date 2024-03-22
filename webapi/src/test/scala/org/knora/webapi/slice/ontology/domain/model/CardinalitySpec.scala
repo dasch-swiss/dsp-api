@@ -7,10 +7,10 @@ package org.knora.webapi.slice.ontology.domain.model
 
 import zio.Random
 import zio.Scope
-import zio.test.*
+import zio.test._
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 
 object CardinalitySpec extends ZIOSpecDefault {

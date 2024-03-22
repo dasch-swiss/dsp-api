@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.*
+import sttp.tapir._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.zio._
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier

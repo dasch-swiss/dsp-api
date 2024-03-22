@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.repo.service
 
-import zio.*
+import zio._
 
 /**
  * Trait for generic readonly operations on a repository for a specific type.

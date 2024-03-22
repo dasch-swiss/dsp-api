@@ -11,8 +11,8 @@ import sttp.apispec.openapi.Info
 import sttp.apispec.openapi.OpenAPI
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-import zio.*
-import zio.http.*
+import zio._
+import zio.http._
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus
 import zio.metrics.jvm.DefaultJvmMetrics

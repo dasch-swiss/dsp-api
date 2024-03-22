@@ -5,13 +5,13 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.http.scaladsl.model.*
 import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
 import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
+import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.RouteResult
 import org.apache.pekko.util.ByteString
-import zio.*
+import zio._
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -24,9 +24,9 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.User
 

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import zio.*
+import zio._
 
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay

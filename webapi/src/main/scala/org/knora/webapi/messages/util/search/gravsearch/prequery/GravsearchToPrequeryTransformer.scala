@@ -10,10 +10,10 @@ import zio.ZIO
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil

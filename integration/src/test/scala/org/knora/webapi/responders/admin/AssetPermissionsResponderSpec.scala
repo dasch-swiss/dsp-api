@@ -5,9 +5,9 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.testkit.*
+import org.apache.pekko.testkit._
 
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM

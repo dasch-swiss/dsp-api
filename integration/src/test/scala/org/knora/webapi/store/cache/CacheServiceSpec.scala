@@ -6,12 +6,12 @@
 package org.knora.webapi.store.cache
 
 import zio.ZIO
-import zio.test.*
+import zio.test._
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model._
 
 object CacheServiceSpec extends ZIOSpecDefault {
 

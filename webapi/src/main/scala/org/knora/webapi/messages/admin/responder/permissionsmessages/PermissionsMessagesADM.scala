@@ -6,14 +6,14 @@
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.*
+import spray.json._
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM

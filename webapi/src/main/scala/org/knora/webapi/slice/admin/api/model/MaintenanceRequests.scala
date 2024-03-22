@@ -13,9 +13,9 @@ import eu.timepit.refined.string.MatchesRegex
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-import zio.json.interop.refined.*
+import zio.json.interop.refined._
 
-import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec.*
+import org.knora.webapi.slice.admin.api.Codecs.ZioJsonCodec._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object MaintenanceRequests {

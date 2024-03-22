@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
+import zio._
 
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponse
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
