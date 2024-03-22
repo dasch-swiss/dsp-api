@@ -60,7 +60,7 @@ class AssetPermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
       actual shouldEqual PermissionCodeAndProjectRestrictedViewSettings(
         permissionCode = 1,
-        Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = true)),
+        Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = false)),
       )
     }
   }
