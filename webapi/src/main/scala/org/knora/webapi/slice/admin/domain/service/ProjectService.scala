@@ -13,6 +13,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -100,6 +101,9 @@ final case class ProjectService(
 
   def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
     knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
+
+  def createProject(createReq: ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest): Task[Project] =
+    knoraProjectService.createProject(createReq).flatMap(toProjectADM)
 }
 
 object ProjectService {

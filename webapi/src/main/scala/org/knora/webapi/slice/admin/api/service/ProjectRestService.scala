@@ -7,10 +7,12 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio._
 
+import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -38,6 +40,7 @@ final case class ProjectRestService(
   responder: ProjectsResponderADM,
   projectService: ProjectService,
   knoraProjectService: KnoraProjectService,
+  permissionResponder: PermissionsResponderADM,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   userService: UserService,
@@ -86,7 +89,10 @@ final case class ProjectRestService(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
-    internal <- ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
+    _        <- auth.ensureSystemAdmin(user)
+    _        <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)
+    internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
+    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.projectIri)
     external <- format.toExternalADM(internal)
   } yield external
 

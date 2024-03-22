@@ -32,7 +32,6 @@ import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -47,19 +46,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Requests
-/**
- * Requests the creation of a new project.
- *
- * @param createRequest  the [[ProjectCreateRequest]] information for the creation of a new project.
- * @param requestingUser the user making the request.
- * @param apiRequestID   the ID of the API request.
- */
-case class ProjectCreateRequestADM(
-  createRequest: ProjectCreateRequest,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends ProjectsResponderRequestADM
-
 /**
  * Requests updating an existing project.
  *
