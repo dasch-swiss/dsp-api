@@ -28,23 +28,11 @@ import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-trait InferenceOptimizationService {
-
-  /**
-   * Extracts all ontologies that are relevant to a gravsearch query, in order to allow optimized cache-based inference simulation.
-   *
-   * @param whereClause  the WHERE-clause of a gravsearch query.
-   * @return a set of ontology IRIs relevant to the query, or `None`, if no meaningful result could be produced.
-   *         In the latter case, inference should be done on the basis of all available ontologies.
-   */
-  def getOntologiesRelevantForInference(whereClause: WhereClause): Task[Option[Set[SmartIri]]]
-}
-
-final case class InferenceOptimizationServiceLive(
+final case class InferenceOptimizationService(
   private val messageRelay: MessageRelay,
   private val ontologyCache: OntologyCache,
   implicit private val stringFormatter: StringFormatter,
-) extends InferenceOptimizationService {
+) {
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
@@ -91,9 +79,14 @@ final case class InferenceOptimizationServiceLive(
     }
   }
 
-  override def getOntologiesRelevantForInference(
-    whereClause: WhereClause,
-  ): Task[Option[Set[SmartIri]]] = {
+  /**
+   * Extracts all ontologies that are relevant to a gravsearch query, in order to allow optimized cache-based inference simulation.
+   *
+   * @param whereClause  the WHERE-clause of a gravsearch query.
+   * @return a set of ontology IRIs relevant to the query, or `None`, if no meaningful result could be produced.
+   *         In the latter case, inference should be done on the basis of all available ontologies.
+   */
+  def getOntologiesRelevantForInference(whereClause: WhereClause): Task[Option[Set[SmartIri]]] = {
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
       patterns.flatMap { pattern =>
