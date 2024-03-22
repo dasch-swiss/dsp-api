@@ -7,9 +7,11 @@ package org.knora.webapi.responders.v2
 
 import org.apache.pekko
 import org.apache.pekko.actor.Status.Failure
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.valueobjects.Iri
@@ -41,9 +43,9 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+
 import pekko.pattern.ask
 import pekko.testkit.ImplicitSender
-import zio.ZIO
 
 /**
  * Tests [[OntologyResponderV2]].

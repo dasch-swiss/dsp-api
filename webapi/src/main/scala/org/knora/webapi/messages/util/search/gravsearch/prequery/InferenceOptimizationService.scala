@@ -5,8 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import dsp.errors.ValidationException
 import zio._
+
+import dsp.errors.ValidationException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

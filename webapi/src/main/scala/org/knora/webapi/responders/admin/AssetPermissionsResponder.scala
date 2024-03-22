@@ -5,6 +5,8 @@
 
 package org.knora.webapi.responders.admin
 
+import zio._
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
@@ -21,7 +23,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import zio._
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
