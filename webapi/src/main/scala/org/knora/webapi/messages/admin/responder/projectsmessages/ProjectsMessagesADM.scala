@@ -19,7 +19,6 @@ import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -35,6 +34,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +155,9 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
+
+  def from(restrictedView: RestrictedView) =
+    ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
 }
 
 /**
@@ -381,6 +384,12 @@ case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boo
 object ProjectRestrictedViewSettingsADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsADM]
+
+  def from(restrictedView: RestrictedView) =
+    restrictedView match {
+      case RestrictedView.Watermark(value) => ProjectRestrictedViewSettingsADM(None, value)
+      case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), false)
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

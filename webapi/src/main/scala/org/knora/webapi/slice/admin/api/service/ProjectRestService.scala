@@ -221,8 +221,8 @@ final case class ProjectRestService(
    */
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     for {
-      internal <- responder.projectRestrictedViewSettingsGetRequestADM(id)
-      external <- format.toExternal(internal)
+      project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
     } yield external
 
   /**

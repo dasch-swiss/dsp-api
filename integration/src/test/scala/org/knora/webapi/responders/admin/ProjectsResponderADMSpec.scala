@@ -95,8 +95,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectRestrictedViewSettingsGetADM(IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)),
+          ProjectRestService(
+            _.getProjectRestrictedViewSettings(IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id)),
           ),
         )
         actual shouldEqual Some(expectedResult)
@@ -104,8 +104,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project SHORTNAME" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectRestrictedViewSettingsGetADM(
+          ProjectRestService(
+            _.getProjectRestrictedViewSettings(
               ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
             ),
           ),
@@ -115,8 +115,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return restricted view settings using project SHORTCODE" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectRestrictedViewSettingsGetADM(
+          ProjectRestService(
+            _.getProjectRestrictedViewSettings(
               ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
             ),
           ),
@@ -126,8 +126,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project IRI is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectRestrictedViewSettingsGetRequestADM(
+          ProjectRestService(
+            _.getProjectRestrictedViewSettings(
               IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
@@ -137,15 +137,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(_.projectRestrictedViewSettingsGetRequestADM(ShortcodeIdentifier.unsafeFrom("9999"))),
+          ProjectRestService(_.getProjectRestrictedViewSettings(ShortcodeIdentifier.unsafeFrom("9999"))),
         )
         assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
 
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectRestrictedViewSettingsGetRequestADM(
+          ProjectRestService(
+            _.getProjectRestrictedViewSettings(
               ShortnameIdentifier.unsafeFrom("wrongshortname"),
             ),
           ),

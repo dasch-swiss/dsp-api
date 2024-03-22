@@ -187,64 +187,6 @@ final case class ProjectsResponderADM(
     } yield keywords
 
   /**
-   * Get project's restricted view settings.
-   *
-   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
-   *
-   * @return [[ProjectRestrictedViewSettingsADM]]
-   */
-  def projectRestrictedViewSettingsGetADM(
-    id: ProjectIdentifierADM,
-  ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
-    val query = Construct(
-      sparql.admin.txt
-        .getProjects(
-          maybeIri = id.asIriIdentifierOption,
-          maybeShortname = id.asShortnameIdentifierOption,
-          maybeShortcode = id.asShortcodeIdentifierOption,
-        ),
-    )
-    for {
-      projectResponse <- triplestore.query(query).flatMap(_.asExtended)
-      restrictedViewSettings <- {
-        if (projectResponse.statements.nonEmpty) {
-          val (_, propsMap) = projectResponse.statements.head
-          for {
-            size <- predicateObjectMapper
-                      .getSingleOption[StringLiteralV2](
-                        OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
-                        propsMap,
-                      )
-                      .map(_.map(_.value))
-            watermark <- predicateObjectMapper
-                           .getSingleOption[BooleanLiteralV2](
-                             OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
-                             propsMap,
-                           )
-                           .map(_.exists(_.value))
-          } yield Some(ProjectRestrictedViewSettingsADM(size, watermark))
-        } else {
-          ZIO.none
-        }
-      }
-    } yield restrictedViewSettings
-  }
-
-  /**
-   * Get project's restricted view settings.
-   *
-   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
-   *
-   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
-   */
-  def projectRestrictedViewSettingsGetRequestADM(
-    id: ProjectIdentifierADM,
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    projectRestrictedViewSettingsGetADM(id)
-      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      .map(ProjectRestrictedViewSettingsGetResponseADM.apply)
-
-  /**
    * Update project's basic information.
    *
    * @param projectIri    the IRI of the project.
