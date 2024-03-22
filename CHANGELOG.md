@@ -1,5 +1,54 @@
 # Changelog
 
+## [30.10.0](https://github.com/dasch-swiss/dsp-api/compare/v30.9.0...v30.10.0) (2024-03-22)
+
+
+### Maintenance
+
+* Dependency updates ([#3122](https://github.com/dasch-swiss/dsp-api/issues/3122)) ([e9cb379](https://github.com/dasch-swiss/dsp-api/commit/e9cb37958ca1cced36c433371635866643618d71))
+* Fix never-ending jobs in release PRs ([#3114](https://github.com/dasch-swiss/dsp-api/issues/3114)) ([f2f1fc9](https://github.com/dasch-swiss/dsp-api/commit/f2f1fc909eb221b51766e51a6232092c5b59493b))
+* Fix typo in Makefile ([#3108](https://github.com/dasch-swiss/dsp-api/issues/3108)) ([de31c94](https://github.com/dasch-swiss/dsp-api/commit/de31c94091bf939f9ef14e27ee1b6cc4324a1a5e))
+* Improve test for serving ontologies in different formats ([#3115](https://github.com/dasch-swiss/dsp-api/issues/3115)) ([a010275](https://github.com/dasch-swiss/dsp-api/commit/a010275a3930f1aaddab4f33bcba024b4d1e814e))
+* **knora-admin:** Remove unused Institution class and its properties (DEV-3365) ([#3109](https://github.com/dasch-swiss/dsp-api/issues/3109)) ([7e3664d](https://github.com/dasch-swiss/dsp-api/commit/7e3664d20cdcc2f5b67666095771e858df0a73ad))
+* Major dependency updates ([#3121](https://github.com/dasch-swiss/dsp-api/issues/3121)) ([e2e57c1](https://github.com/dasch-swiss/dsp-api/commit/e2e57c1b26d86291c4228acaab51ea61f48b8142))
+* Merge StringLiteralV2 classes ([#3133](https://github.com/dasch-swiss/dsp-api/issues/3133)) ([70cced2](https://github.com/dasch-swiss/dsp-api/commit/70cced277eccd5cf9eefa6d95591c957b5de88c8))
+* Migrate GET /version and /health to tapir (DEV-3286, DEV-3287) ([#3110](https://github.com/dasch-swiss/dsp-api/issues/3110)) ([c7d69aa](https://github.com/dasch-swiss/dsp-api/commit/c7d69aab48a5b1b54592d2d4e0d06cb142840746))
+* Minor dependency updates ([#3120](https://github.com/dasch-swiss/dsp-api/issues/3120)) ([564bdcf](https://github.com/dasch-swiss/dsp-api/commit/564bdcf1ce1addc9f2888b6a9618d96a6ec13616))
+* Modularize layers  ([#3132](https://github.com/dasch-swiss/dsp-api/issues/3132)) ([9ef26c9](https://github.com/dasch-swiss/dsp-api/commit/9ef26c94d3ad9c4a71280b067382dd3d2212a605))
+* Move test for serving ontologies in different formats to separate file ([#3127](https://github.com/dasch-swiss/dsp-api/issues/3127)) ([9a48e23](https://github.com/dasch-swiss/dsp-api/commit/9a48e239e478b15d15d15119047cb7fbccbe09a6))
+* Patch dependency updates ([#3119](https://github.com/dasch-swiss/dsp-api/issues/3119)) ([3a5194f](https://github.com/dasch-swiss/dsp-api/commit/3a5194fa3ba0712c28e2e7160802621ec9de52bb))
+* Remove accessible makro (Scala3 perparation) ([#3135](https://github.com/dasch-swiss/dsp-api/issues/3135)) ([30e4f06](https://github.com/dasch-swiss/dsp-api/commit/30e4f06c4588d04202d0c96c6bff353ef2895271))
+* Remove methods from projects responder, clean up ProjectIri ([#3137](https://github.com/dasch-swiss/dsp-api/issues/3137)) ([b4eec85](https://github.com/dasch-swiss/dsp-api/commit/b4eec85a34eb39e74892b9c11bd39d806ca0fce3))
+* Remove zio.accessible makro (Scala3 migration) ([#3126](https://github.com/dasch-swiss/dsp-api/issues/3126)) ([d753fcc](https://github.com/dasch-swiss/dsp-api/commit/d753fcc24270096befbe2a44399e496f2b012b2e))
+* Rename ProjectADM and service to Project ([#3130](https://github.com/dasch-swiss/dsp-api/issues/3130)) ([fc1dc53](https://github.com/dasch-swiss/dsp-api/commit/fc1dc5383901429de6ac70d84165515327671fe0))
+* Revert the import style to Scala 2 ([#3138](https://github.com/dasch-swiss/dsp-api/issues/3138)) ([96ee921](https://github.com/dasch-swiss/dsp-api/commit/96ee92133f1eace6aaf6bfb40d3008771217fb86))
+* Simplify ActorSystem layer ([#3123](https://github.com/dasch-swiss/dsp-api/issues/3123)) ([292f7eb](https://github.com/dasch-swiss/dsp-api/commit/292f7eb34733e42098edc5406c73d4d9361d21d2))
+* Split CreateResourcesV2Handler from ResourcesResponderV2 (D… ([#3118](https://github.com/dasch-swiss/dsp-api/issues/3118)) ([24b691a](https://github.com/dasch-swiss/dsp-api/commit/24b691ab9b029bab20056efa2d80e79acff060f0))
+* Start release PRs as drafts ([#3111](https://github.com/dasch-swiss/dsp-api/issues/3111)) ([b76e538](https://github.com/dasch-swiss/dsp-api/commit/b76e53853351602c8d08123edb3db76504f2d54c))
+* Successfully skip `check-formatting` job on release PRs ([#3113](https://github.com/dasch-swiss/dsp-api/issues/3113)) ([1d35cad](https://github.com/dasch-swiss/dsp-api/commit/1d35cad3ceebc7c0d7dbce3f0e022a510187bfd0))
+* Update dsp-app to v11.7.1 ([#3105](https://github.com/dasch-swiss/dsp-api/issues/3105)) ([9851405](https://github.com/dasch-swiss/dsp-api/commit/9851405dfe0621a82a91596bf610949750cfa291))
+
+
+### Documentation
+
+* Add Examples to /admin/groups endpoints ([#3107](https://github.com/dasch-swiss/dsp-api/issues/3107)) ([bbb0e65](https://github.com/dasch-swiss/dsp-api/commit/bbb0e65c761af3c507e7fa3805b8e80df66f6fe0))
+* Integrate OpenApi generated documentation for admin api (DEV-3381) ([#3104](https://github.com/dasch-swiss/dsp-api/issues/3104)) ([241ea9b](https://github.com/dasch-swiss/dsp-api/commit/241ea9b3dc2f436277ad968ff0d9a379713cf0fb))
+* Lint with markdownlint ([#3128](https://github.com/dasch-swiss/dsp-api/issues/3128)) ([2b7d239](https://github.com/dasch-swiss/dsp-api/commit/2b7d2398a3849b14d368c87738b12dd6cd1d4f4f))
+
+
+### Enhancements
+
+* Add additional project export route that awaits the process ([#3136](https://github.com/dasch-swiss/dsp-api/issues/3136)) ([70e0172](https://github.com/dasch-swiss/dsp-api/commit/70e0172378926f4fd285a7718fcd1ee7f2de2fa3))
+
+
+### Bug Fixes
+
+* Disable broken upgrade plugins ([#3117](https://github.com/dasch-swiss/dsp-api/issues/3117)) ([6714898](https://github.com/dasch-swiss/dsp-api/commit/6714898bc9838312ac753ddbd570673705fc4e1e))
+* Enable upgrade plugins with custom graphs ([#3124](https://github.com/dasch-swiss/dsp-api/issues/3124)) ([4186b5f](https://github.com/dasch-swiss/dsp-api/commit/4186b5ff5ade853ad4e8679de2400a548580184b))
+* Ensure all project's restricted view settings are correctly persisted ([#3125](https://github.com/dasch-swiss/dsp-api/issues/3125)) ([51cde02](https://github.com/dasch-swiss/dsp-api/commit/51cde02c86fdea4dc4712b2cc6487049d05aaa0f))
+* In Sipi use size fallback only when api failed to return a setting (DEV-3409) ([#3112](https://github.com/dasch-swiss/dsp-api/issues/3112)) ([172041a](https://github.com/dasch-swiss/dsp-api/commit/172041ae96b6a5a35d3842e47045573289d67ae8))
+* Remove invalid watermark triples (DEV-3418) ([#3116](https://github.com/dasch-swiss/dsp-api/issues/3116)) ([e563ab9](https://github.com/dasch-swiss/dsp-api/commit/e563ab95b6d9c052e39b544e020d65c7ecb29476))
+
 ## [30.9.0](https://github.com/dasch-swiss/dsp-api/compare/v30.8.2...v30.9.0) (2024-03-07)
 
 
