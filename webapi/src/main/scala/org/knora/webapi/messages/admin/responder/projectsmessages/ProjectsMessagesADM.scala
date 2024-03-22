@@ -47,22 +47,6 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMes
 
 // Requests
 /**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectGetResponse]]. External use.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectADM]]. Internal use only.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
  * Requests the creation of a new project.
  *
  * @param createRequest  the [[ProjectCreateRequest]] information for the creation of a new project.

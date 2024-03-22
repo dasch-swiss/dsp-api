@@ -5,16 +5,12 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import dsp.errors.ValidationException
 import zio._
-
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.util.search.BindPattern
 import org.knora.webapi.messages.util.search.Entity
 import org.knora.webapi.messages.util.search.FilterNotExistsPattern
@@ -26,10 +22,12 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 final case class InferenceOptimizationService(
-  private val messageRelay: MessageRelay,
+  private val projectService: ProjectService,
   private val ontologyCache: OntologyCache,
   implicit private val stringFormatter: StringFormatter,
 ) {
@@ -68,8 +66,8 @@ final case class InferenceOptimizationService(
       case None => ZIO.succeed(Seq.empty)
       case Some(value) =>
         for {
-          shortcode    <- ProjectIdentifierADM.ShortcodeIdentifier.fromString(value).toZIO
-          projectMaybe <- messageRelay.ask[Option[Project]](ProjectGetADM(shortcode))
+          shortcode    <- ZIO.fromEither(Shortcode.from(value)).mapError(ValidationException.apply)
+          projectMaybe <- projectService.findByShortcode(shortcode)
           projectOntologies =
             projectMaybe match {
               case None          => Seq.empty
@@ -125,6 +123,5 @@ final case class InferenceOptimizationService(
 }
 
 object InferenceOptimizationService {
-  val layer: URLayer[MessageRelay & OntologyCache & StringFormatter, InferenceOptimizationServiceLive] =
-    ZLayer.fromFunction(InferenceOptimizationServiceLive.apply _)
+  val layer = ZLayer.derive[InferenceOptimizationService]
 }

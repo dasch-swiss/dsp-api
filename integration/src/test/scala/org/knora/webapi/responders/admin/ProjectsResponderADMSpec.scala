@@ -15,7 +15,6 @@ import zio.ZIO
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
@@ -56,50 +55,38 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return information about a project identified by IRI" in {
-        appActor ! ProjectGetRequestADM(identifier =
-          IriIdentifier
-            .fromString(SharedTestDataADM.incunabulaProject.id)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+        val actual = UnsafeZioRun.runOrThrow(
+          ProjectRestService(_.findById(SharedTestDataADM.incunabulaProject.projectIri)),
         )
-        expectMsg(ProjectGetResponse(SharedTestDataADM.incunabulaProject))
-
+        assert(actual == ProjectGetResponse(SharedTestDataADM.incunabulaProject))
       }
 
       "return information about a project identified by shortname" in {
-        appActor ! ProjectGetRequestADM(identifier =
-          ShortnameIdentifier
-            .fromString(SharedTestDataADM.incunabulaProject.shortname)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+        val actual = UnsafeZioRun.runOrThrow(
+          ProjectRestService(_.findByShortname(SharedTestDataADM.incunabulaProject.getShortname)),
         )
-        expectMsg(ProjectGetResponse(SharedTestDataADM.incunabulaProject))
+        assert(actual == ProjectGetResponse(SharedTestDataADM.incunabulaProject))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-        appActor ! ProjectGetRequestADM(identifier =
-          IriIdentifier
-            .fromString(notExistingProjectButValidProjectIri)
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(_.findById(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri))),
         )
-        expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found")))
-
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
 
       "return 'NotFoundException' when the project shortname is unknown" in {
-        appActor ! ProjectGetRequestADM(
-          identifier = ShortnameIdentifier
-            .fromString("wrongshortname")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(_.findByShortname(Shortname.unsafeFrom("wrongshortname"))),
         )
-        expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
+        assertFailsWithA[NotFoundException](exit, s"Project 'wrongshortname' not found.")
       }
 
       "return 'NotFoundException' when the project shortcode is unknown" in {
-        appActor ! ProjectGetRequestADM(
-          identifier = ShortcodeIdentifier
-            .fromString("9999")
-            .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(_.findByShortcode(Shortcode.unsafeFrom("9999"))),
         )
-        expectMsg(timeout, Failure(NotFoundException(s"Project '9999' not found")))
+        assertFailsWithA[NotFoundException](exit, s"Project '9999' not found.")
       }
     }
 

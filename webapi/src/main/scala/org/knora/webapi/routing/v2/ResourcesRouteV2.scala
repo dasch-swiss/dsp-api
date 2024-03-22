@@ -13,7 +13,6 @@ import zio.ZIO
 import zio._
 
 import java.time.Instant
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
@@ -35,6 +34,7 @@ import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -45,7 +45,7 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & SearchResponderV2 & SipiService & StringFormatter & UserService,
+    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService & StringFormatter & UserService,
   ],
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi

@@ -62,8 +62,6 @@ final case class ProjectsResponderADM(
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectGetADM(identifier)        => findByProjectIdentifier(identifier)
-    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -80,21 +78,6 @@ final case class ProjectsResponderADM(
       )
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
-
-  /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponse]].
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponse]].
-   *
-   *         [[NotFoundException]] When no project for the given IRI can be found.
-   */
-  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse] =
-    projectService
-      .findByProjectIdentifier(id)
-      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
-      .map(ProjectGetResponse.apply)
 
   /**
    * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
