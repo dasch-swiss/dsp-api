@@ -164,6 +164,12 @@
                             knora-base:dimY @stillImageFileValue.dimY .
                     }
 
+                    case stillImageFileValue: StillImageExternalFileValueContentV2 => {
+                        <@newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl""" ;
+                            knora-base:dimX @stillImageFileValue.dimX ;
+                            knora-base:dimY @stillImageFileValue.dimY .
+                    }
+
                     case documentFileValue: DocumentFileValueContentV2 => {
                         @documentFileValue.dimX match {
                             case Some(definedDimX) => {

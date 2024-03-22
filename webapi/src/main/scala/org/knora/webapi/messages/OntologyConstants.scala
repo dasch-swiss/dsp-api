@@ -270,6 +270,7 @@ object OntologyConstants {
     val OriginalMimeType: IRI = KnoraBasePrefixExpansion + "originalMimeType"
     val DimX: IRI             = KnoraBasePrefixExpansion + "dimX"
     val DimY: IRI             = KnoraBasePrefixExpansion + "dimY"
+    val ExternalUrl: IRI      = KnoraBasePrefixExpansion + "externalUrl"
     val PageCount: IRI        = KnoraBasePrefixExpansion + "pageCount"
     val Fps: IRI              = KnoraBasePrefixExpansion + "fps"
 
@@ -283,31 +284,33 @@ object OntologyConstants {
     val TimeBase: IRI     = KnoraBasePrefixExpansion + "TimeBase"
     val ColorBase: IRI    = KnoraBasePrefixExpansion + "ColorBase"
 
-    val TextValue: IRI            = KnoraBasePrefixExpansion + "TextValue"
-    val IntValue: IRI             = KnoraBasePrefixExpansion + "IntValue"
-    val BooleanValue: IRI         = KnoraBasePrefixExpansion + "BooleanValue"
-    val UriValue: IRI             = KnoraBasePrefixExpansion + "UriValue"
-    val DecimalValue: IRI         = KnoraBasePrefixExpansion + "DecimalValue"
-    val DateValue: IRI            = KnoraBasePrefixExpansion + "DateValue"
-    val ColorValue: IRI           = KnoraBasePrefixExpansion + "ColorValue"
-    val GeomValue: IRI            = KnoraBasePrefixExpansion + "GeomValue"
-    val ListValue: IRI            = KnoraBasePrefixExpansion + "ListValue"
-    val IntervalValue: IRI        = KnoraBasePrefixExpansion + "IntervalValue"
-    val TimeValue: IRI            = KnoraBasePrefixExpansion + "TimeValue"
-    val LinkValue: IRI            = KnoraBasePrefixExpansion + "LinkValue"
-    val GeonameValue: IRI         = KnoraBasePrefixExpansion + "GeonameValue"
-    val FileValue: IRI            = KnoraBasePrefixExpansion + "FileValue"
-    val AudioFileValue: IRI       = KnoraBasePrefixExpansion + "AudioFileValue"
-    val DDDFileValue: IRI         = KnoraBasePrefixExpansion + "DDDFileValue"
-    val DocumentFileValue: IRI    = KnoraBasePrefixExpansion + "DocumentFileValue"
-    val ArchiveFileValue: IRI     = KnoraBasePrefixExpansion + "ArchiveFileValue"
-    val StillImageFileValue: IRI  = KnoraBasePrefixExpansion + "StillImageFileValue"
-    val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
-    val TextFileValue: IRI        = KnoraBasePrefixExpansion + "TextFileValue"
+    val TextValue: IRI                   = KnoraBasePrefixExpansion + "TextValue"
+    val IntValue: IRI                    = KnoraBasePrefixExpansion + "IntValue"
+    val BooleanValue: IRI                = KnoraBasePrefixExpansion + "BooleanValue"
+    val UriValue: IRI                    = KnoraBasePrefixExpansion + "UriValue"
+    val DecimalValue: IRI                = KnoraBasePrefixExpansion + "DecimalValue"
+    val DateValue: IRI                   = KnoraBasePrefixExpansion + "DateValue"
+    val ColorValue: IRI                  = KnoraBasePrefixExpansion + "ColorValue"
+    val GeomValue: IRI                   = KnoraBasePrefixExpansion + "GeomValue"
+    val ListValue: IRI                   = KnoraBasePrefixExpansion + "ListValue"
+    val IntervalValue: IRI               = KnoraBasePrefixExpansion + "IntervalValue"
+    val TimeValue: IRI                   = KnoraBasePrefixExpansion + "TimeValue"
+    val LinkValue: IRI                   = KnoraBasePrefixExpansion + "LinkValue"
+    val GeonameValue: IRI                = KnoraBasePrefixExpansion + "GeonameValue"
+    val FileValue: IRI                   = KnoraBasePrefixExpansion + "FileValue"
+    val AudioFileValue: IRI              = KnoraBasePrefixExpansion + "AudioFileValue"
+    val DDDFileValue: IRI                = KnoraBasePrefixExpansion + "DDDFileValue"
+    val DocumentFileValue: IRI           = KnoraBasePrefixExpansion + "DocumentFileValue"
+    val ArchiveFileValue: IRI            = KnoraBasePrefixExpansion + "ArchiveFileValue"
+    val StillImageFileValue: IRI         = KnoraBasePrefixExpansion + "StillImageFileValue"
+    val StillImageExternalFileValue: IRI = KnoraBasePrefixExpansion + "StillImageExternalFileValue"
+    val MovingImageFileValue: IRI        = KnoraBasePrefixExpansion + "MovingImageFileValue"
+    val TextFileValue: IRI               = KnoraBasePrefixExpansion + "TextFileValue"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
       StillImageFileValue,
+      StillImageExternalFileValue,
       MovingImageFileValue,
       AudioFileValue,
       DDDFileValue,
@@ -755,13 +758,14 @@ object OntologyConstants {
     val FileValue: IRI     = KnoraApiV2PrefixExpansion + "FileValue"
     val ColorValue: IRI    = KnoraApiV2PrefixExpansion + "ColorValue"
 
-    val StillImageFileValue: IRI  = KnoraApiV2PrefixExpansion + "StillImageFileValue"
-    val MovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
-    val AudioFileValue: IRI       = KnoraApiV2PrefixExpansion + "AudioFileValue"
-    val DDDFileValue: IRI         = KnoraApiV2PrefixExpansion + "DDDFileValue"
-    val TextFileValue: IRI        = KnoraApiV2PrefixExpansion + "TextFileValue"
-    val DocumentFileValue: IRI    = KnoraApiV2PrefixExpansion + "DocumentFileValue"
-    val ArchiveFileValue: IRI     = KnoraApiV2PrefixExpansion + "ArchiveFileValue"
+    val StillImageFileValue: IRI         = KnoraApiV2PrefixExpansion + "StillImageFileValue"
+    val StillImageExternalFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageExternalFileValue"
+    val MovingImageFileValue: IRI        = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
+    val AudioFileValue: IRI              = KnoraApiV2PrefixExpansion + "AudioFileValue"
+    val DDDFileValue: IRI                = KnoraApiV2PrefixExpansion + "DDDFileValue"
+    val TextFileValue: IRI               = KnoraApiV2PrefixExpansion + "TextFileValue"
+    val DocumentFileValue: IRI           = KnoraApiV2PrefixExpansion + "DocumentFileValue"
+    val ArchiveFileValue: IRI            = KnoraApiV2PrefixExpansion + "ArchiveFileValue"
 
     val HasRepresentationValue: IRI = KnoraApiV2PrefixExpansion + "hasRepresentationValue"
 
@@ -866,6 +870,7 @@ object OntologyConstants {
     val StillImageFileValueHasDimX: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
     val StillImageFileValueHasDimY: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
     val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
+    val StillImageFileValueHasExternalUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasExternalUrl"
 
     val AudioFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "audioFileValueHasDuration"
 
@@ -1000,37 +1005,38 @@ object OntologyConstants {
     (InternalSchema, ApiV2Simple) -> Map(
       // All the values of this map must be either properties or datatypes. PropertyInfoContentV2.toOntologySchema
       // relies on this assumption.
-      KnoraBase.SubjectClassConstraint   -> KnoraApiV2Simple.SubjectType,
-      KnoraBase.ObjectClassConstraint    -> KnoraApiV2Simple.ObjectType,
-      KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2Simple.ObjectType,
-      KnoraBase.TextValue                -> Xsd.String,
-      KnoraBase.IntValue                 -> Xsd.Integer,
-      KnoraBase.BooleanValue             -> Xsd.Boolean,
-      KnoraBase.UriValue                 -> Xsd.Uri,
-      KnoraBase.DecimalValue             -> Xsd.Decimal,
-      KnoraBase.TimeValue                -> Xsd.DateTimeStamp,
-      KnoraBase.DateValue                -> KnoraApiV2Simple.Date,
-      KnoraBase.ColorValue               -> KnoraApiV2Simple.Color,
-      KnoraBase.GeomValue                -> KnoraApiV2Simple.Geom,
-      KnoraBase.ListValue                -> KnoraApiV2Simple.ListNode,
-      KnoraBase.IntervalValue            -> KnoraApiV2Simple.Interval,
-      KnoraBase.GeonameValue             -> KnoraApiV2Simple.Geoname,
-      KnoraBase.FileValue                -> KnoraApiV2Simple.File,
-      KnoraBase.StillImageFileValue      -> KnoraApiV2Simple.File,
-      KnoraBase.MovingImageFileValue     -> KnoraApiV2Simple.File,
-      KnoraBase.AudioFileValue           -> KnoraApiV2Simple.File,
-      KnoraBase.DDDFileValue             -> KnoraApiV2Simple.File,
-      KnoraBase.TextFileValue            -> KnoraApiV2Simple.File,
-      KnoraBase.DocumentFileValue        -> KnoraApiV2Simple.File,
-      KnoraBase.ArchiveFileValue         -> KnoraApiV2Simple.File,
-      KnoraBase.HasFileValue             -> KnoraApiV2Simple.HasFile,
-      KnoraBase.HasStillImageFileValue   -> KnoraApiV2Simple.HasStillImageFile,
-      KnoraBase.HasMovingImageFileValue  -> KnoraApiV2Simple.HasMovingImageFile,
-      KnoraBase.HasAudioFileValue        -> KnoraApiV2Simple.HasAudioFile,
-      KnoraBase.HasDDDFileValue          -> KnoraApiV2Simple.HasDDDFile,
-      KnoraBase.HasTextFileValue         -> KnoraApiV2Simple.HasTextFile,
-      KnoraBase.HasDocumentFileValue     -> KnoraApiV2Simple.HasDocumentFile,
-      KnoraBase.HasArchiveFileValue      -> KnoraApiV2Simple.HasArchiveFile,
+      KnoraBase.SubjectClassConstraint      -> KnoraApiV2Simple.SubjectType,
+      KnoraBase.ObjectClassConstraint       -> KnoraApiV2Simple.ObjectType,
+      KnoraBase.ObjectDatatypeConstraint    -> KnoraApiV2Simple.ObjectType,
+      KnoraBase.TextValue                   -> Xsd.String,
+      KnoraBase.IntValue                    -> Xsd.Integer,
+      KnoraBase.BooleanValue                -> Xsd.Boolean,
+      KnoraBase.UriValue                    -> Xsd.Uri,
+      KnoraBase.DecimalValue                -> Xsd.Decimal,
+      KnoraBase.TimeValue                   -> Xsd.DateTimeStamp,
+      KnoraBase.DateValue                   -> KnoraApiV2Simple.Date,
+      KnoraBase.ColorValue                  -> KnoraApiV2Simple.Color,
+      KnoraBase.GeomValue                   -> KnoraApiV2Simple.Geom,
+      KnoraBase.ListValue                   -> KnoraApiV2Simple.ListNode,
+      KnoraBase.IntervalValue               -> KnoraApiV2Simple.Interval,
+      KnoraBase.GeonameValue                -> KnoraApiV2Simple.Geoname,
+      KnoraBase.FileValue                   -> KnoraApiV2Simple.File,
+      KnoraBase.StillImageFileValue         -> KnoraApiV2Simple.File,
+      KnoraBase.StillImageExternalFileValue -> KnoraApiV2Simple.File,
+      KnoraBase.MovingImageFileValue        -> KnoraApiV2Simple.File,
+      KnoraBase.AudioFileValue              -> KnoraApiV2Simple.File,
+      KnoraBase.DDDFileValue                -> KnoraApiV2Simple.File,
+      KnoraBase.TextFileValue               -> KnoraApiV2Simple.File,
+      KnoraBase.DocumentFileValue           -> KnoraApiV2Simple.File,
+      KnoraBase.ArchiveFileValue            -> KnoraApiV2Simple.File,
+      KnoraBase.HasFileValue                -> KnoraApiV2Simple.HasFile,
+      KnoraBase.HasStillImageFileValue      -> KnoraApiV2Simple.HasStillImageFile,
+      KnoraBase.HasMovingImageFileValue     -> KnoraApiV2Simple.HasMovingImageFile,
+      KnoraBase.HasAudioFileValue           -> KnoraApiV2Simple.HasAudioFile,
+      KnoraBase.HasDDDFileValue             -> KnoraApiV2Simple.HasDDDFile,
+      KnoraBase.HasTextFileValue            -> KnoraApiV2Simple.HasTextFile,
+      KnoraBase.HasDocumentFileValue        -> KnoraApiV2Simple.HasDocumentFile,
+      KnoraBase.HasArchiveFileValue         -> KnoraApiV2Simple.HasArchiveFile,
     ),
     (InternalSchema, ApiV2Complex) -> Map(
       KnoraBase.SubjectClassConstraint   -> KnoraApiV2Complex.SubjectType,

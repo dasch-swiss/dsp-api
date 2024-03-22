@@ -1076,6 +1076,18 @@ final case class ConstructResponseUtilV2Live(
           ),
         )
 
+      case OntologyConstants.KnoraBase.StillImageExternalFileValue =>
+        ZIO.succeed(
+          StillImageExternalFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = fileValue,
+            dimX = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
+            dimY = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
+            externalUrl = valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
+            comment = valueCommentOption,
+          ),
+        )
+
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         ZIO.succeed(
           DocumentFileValueContentV2(

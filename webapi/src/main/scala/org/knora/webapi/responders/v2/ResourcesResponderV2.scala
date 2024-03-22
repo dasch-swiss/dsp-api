@@ -48,6 +48,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -89,6 +90,7 @@ final case class ResourcesResponderV2Live(
   permissionUtilADM: PermissionUtilADM,
   knoraProjectService: KnoraProjectService,
   searchResponderV2: SearchResponderV2,
+  ontologyRepo: OntologyRepo,
   implicit val stringFormatter: StringFormatter,
 ) extends ResourcesResponderV2
     with MessageHandler
@@ -156,6 +158,7 @@ final case class ResourcesResponderV2Live(
         permissionUtilADM,
         searchResponderV2,
         this,
+        ontologyRepo,
         stringFormatter,
       )(createResourceRequestV2)
 
@@ -1997,7 +2000,7 @@ final case class ResourcesResponderV2Live(
 
 object ResourcesResponderV2Live {
   val layer: URLayer[
-    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService,
+    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService & OntologyRepo,
     ResourcesResponderV2,
   ] = ZLayer.fromZIO {
     for {
@@ -2011,8 +2014,9 @@ object ResourcesResponderV2Live {
       pu      <- ZIO.service[PermissionUtilADM]
       pr      <- ZIO.service[KnoraProjectService]
       sr      <- ZIO.service[SearchResponderV2]
+      or      <- ZIO.service[OntologyRepo]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, sf))
+      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or, sf))
     } yield handler
   }
 }

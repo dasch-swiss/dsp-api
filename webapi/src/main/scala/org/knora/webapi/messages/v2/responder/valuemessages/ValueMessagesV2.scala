@@ -1091,6 +1091,17 @@ object ValueContentV2 {
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            case StillImageExternalFileValue =>
+              for {
+                error <- ZIO.succeed(BadRequestException("No file info found for StillImageExternalFileValue"))
+                info  <- ZIO.fromOption(fileInfo).orElseFail(error)
+                content <-
+                  StillImageExternalFileValueContentV2.fromJsonLdObject(
+                    jsonLdObject,
+                    info.filename,
+                    info.metadata,
+                  )
+              } yield content
             case DocumentFileValue =>
               for {
                 info <-
@@ -2760,6 +2771,109 @@ object StillImageFileValueContentV2 {
       dimX = metadata.width.getOrElse(0),
       dimY = metadata.height.getOrElse(0),
       comment = comment,
+    )
+}
+
+/**
+ * Represents the external image file metadata.
+ *
+ * @param fileValue the basic metadata about the file value.
+ * @param dimX      the with of the the image in pixels.
+ * @param dimY      the height of the the image in pixels.
+ * @param comment   a comment on this `StillImageFileValueContentV2`, if any.
+ */
+case class StillImageExternalFileValueContentV2(
+  ontologySchema: OntologySchema,
+  fileValue: FileValueV2,
+  dimX: Int,
+  dimY: Int,
+  externalUrl: String,
+  comment: Option[String] = None,
+) extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.StillImageExternalFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema) =
+    copy(ontologySchema = targetSchema)
+
+  def makeFileUrl: String =
+    s"$externalUrl/full/$dimX,$dimY/0/default.jpg"
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: Project,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDValue =
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(makeFileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(
+          toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
+            StillImageFileValueHasDimX -> JsonLDInt(dimX),
+            StillImageFileValueHasDimY -> JsonLDInt(dimY),
+            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
+              .datatypeValueToJsonLDObject(
+                value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+              ),
+            StillImageFileValueHasExternalUrl -> JsonLDString(externalUrl),
+          ),
+        )
+    }
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
+    that match {
+      case thatStillImage: StillImageExternalFileValueContentV2 =>
+        fileValue == thatStillImage.fileValue &&
+        dimX == thatStillImage.dimX &&
+        dimY == thatStillImage.dimY
+        externalUrl == thatStillImage.externalUrl
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
+    currentVersion match {
+      case thatStillImage: StillImageExternalFileValueContentV2 =>
+        wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+
+}
+
+/**
+ * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
+ */
+object StillImageExternalFileValueContentV2 {
+  def fromJsonLdObject(
+    jsonLDObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse,
+  ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
+    for {
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+    } yield StillImageExternalFileValueContentV2(
+      ontologySchema = ApiV2Complex,
+      fileValue = FileValueV2(
+        internalFilename,
+        metadata.internalMimeType,
+        metadata.originalFilename,
+        metadata.originalMimeType,
+      ),
+      dimX = metadata.width.getOrElse(0),
+      dimY = metadata.height.getOrElse(0),
+      comment = comment,
+      externalUrl = "",
     )
 }
 

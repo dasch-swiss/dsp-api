@@ -1116,8 +1116,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with a still image file value" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
@@ -1127,6 +1125,42 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             dimY = 256,
           ),
           internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+        )
+        .toMessage(resourceIri = Some(resourceIri))
+
+      appActor ! CreateResourceRequestV2(
+        createResource = inputResource,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID,
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile,
+      )
+    }
+
+    "create a resource with an external still image file value" in {
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource: CreateResourceV2 = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageExternalFile(
+            externalUrl = "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2",
+            dimX = 512,
+            dimY = 256,
+          ),
+          internalFilename = "IQUO3t1AABm-TTTTTTTTTTT.jp2",
         )
         .toMessage(resourceIri = Some(resourceIri))
 

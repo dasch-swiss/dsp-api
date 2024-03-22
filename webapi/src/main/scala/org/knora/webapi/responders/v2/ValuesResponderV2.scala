@@ -681,11 +681,7 @@ final case class ValuesResponderV2Live(
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
-      valueCreationDate: Instant =
-        valueToCreate.customValueCreationDate match {
-          case Some(customValueCreationDate) => customValueCreationDate
-          case None                          => resourceCreationDate
-        }
+      valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(resourceCreationDate)
 
       // Generate the SPARQL.
       insertSparql: String =
