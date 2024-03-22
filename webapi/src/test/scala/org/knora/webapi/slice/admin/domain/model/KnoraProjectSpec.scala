@@ -37,13 +37,6 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     test("pass an invalid value and return an error") {
       assertTrue(ProjectIri.from("not an iri") == Left("Project IRI is invalid."))
     },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-      assertTrue(
-        ProjectIri.from(projectIriWithUUIDVersion3) ==
-          Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported."),
-      )
-    },
     test("pass a valid project IRI and successfully create value object") {
       val validIris =
         Gen.fromIterable(

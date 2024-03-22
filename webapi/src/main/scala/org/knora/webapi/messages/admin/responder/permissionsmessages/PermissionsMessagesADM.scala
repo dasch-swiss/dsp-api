@@ -22,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 
@@ -179,9 +180,7 @@ case class AdministrativePermissionForIriGetRequestADM(
  */
 case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -248,9 +247,7 @@ case class DefaultObjectAccessPermissionGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -327,9 +324,7 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -368,9 +363,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
