@@ -33,7 +33,7 @@ class ResourcesMessagesV2Spec extends CoreSpec {
           requestingUser = SharedTestDataADM.imagesUser01,
         ),
       )
-      assert(caught.getMessage === "Given IRI is not a project IRI.")
+      assert(caught.getMessage === "Invalid project IRI: http://rdfh.ch/0001/thing-with-history")
     }
   }
 

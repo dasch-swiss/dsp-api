@@ -32,6 +32,7 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
@@ -89,7 +90,7 @@ object LayersTest {
       InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache &
       OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 & PermissionUtilADM &
       PermissionsResponderADM & PermissionsRestService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
+      ProjectImportService & ProjectService & ProjectRestService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
       ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
       StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService & UserService &
       UsersResponder & UsersRestService & ValuesResponderV2
@@ -138,7 +139,7 @@ object LayersTest {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectsResponderADMLive.layer,
+      ProjectsResponderADM.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
@@ -148,7 +149,7 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
-      StandoffResponderV2Live.layer,
+      StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       TapirToPekkoInterpreter.layer,

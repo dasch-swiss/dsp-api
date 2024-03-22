@@ -56,26 +56,6 @@ object Iri {
     urlValidator.isValid(s)
 
   /**
-   * Returns `true` if an IRI string looks like a Knora project IRI
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isProjectIri(iri: IRI): Boolean =
-    iri.startsWith("http://rdfh.ch/projects/") || isBuiltInProjectIri(iri)
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora built-in IRI:
-   *  - http://www.knora.org/ontology/knora-admin#SystemProject
-   *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isBuiltInProjectIri(iri: IRI): Boolean = {
-    val builtInProjects = Seq(SystemProject, DefaultSharedOntologiesProject)
-    isIri(iri) && builtInProjects.contains(iri)
-  }
-
-  /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
    * @param s a string.
@@ -112,16 +92,6 @@ object Iri {
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
-
-  /**
-   * Check that the supplied IRI represents a valid project IRI.
-   *
-   * @param iri the string to be checked.
-   * @return the same string but escaped.
-   */
-  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
-    if (isProjectIri(iri)) toSparqlEncodedString(iri)
-    else None
 
   /**
    * Base64Uuid value object.
