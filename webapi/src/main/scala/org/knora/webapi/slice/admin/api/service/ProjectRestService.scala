@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -39,7 +40,8 @@ final case class ProjectRestService(
   knoraProjectService: KnoraProjectService,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
-  permissionService: AuthorizationRestService,
+  userService: UserService,
+  auth: AuthorizationRestService,
 ) {
 
   /**
@@ -144,7 +146,7 @@ final case class ProjectRestService(
     for {
       project <-
         knoraProjectService.findById(id.value).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _      <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      _      <- auth.ensureSystemAdminOrProjectAdmin(user, project)
       result <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
@@ -160,7 +162,9 @@ final case class ProjectRestService(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def getProjectMembers(user: User, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] = for {
-    internal <- responder.projectMembersGetRequestADM(id, user)
+    project  <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    internal <- userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 
@@ -192,7 +196,8 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
   def listAllKeywords(): Task[ProjectsKeywordsGetResponse] = for {
-    internal <- responder.projectsKeywordsGetRequestADM()
+    projects <- knoraProjectService.findAll()
+    internal  = ProjectsKeywordsGetResponse(projects.flatMap(_.keywords.map(_.value)).distinct.sorted)
     external <- format.toExternal(internal)
   } yield external
 
@@ -240,19 +245,19 @@ final case class ProjectRestService(
   ): Task[RestrictedViewResponse] =
     for {
       project        <- knoraProjectService.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _              <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
+      _              <- auth.ensureSystemAdminOrProjectAdmin(user, project)
       restrictedView <- req.toRestrictedView
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
     } yield RestrictedViewResponse.from(newSettings)
 
   def exportProject(id: Shortcode, user: User): Task[Unit] = for {
-    _       <- permissionService.ensureSystemAdmin(user)
+    _       <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService.findByShortcode(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
   def exportProjectAwaiting(shortcode: Shortcode, user: User): Task[ProjectExportInfoResponse] = for {
-    _ <- permissionService.ensureSystemAdmin(user)
+    _ <- auth.ensureSystemAdmin(user)
     project <- knoraProjectService
                  .findByShortcode(shortcode)
                  .someOrFail(NotFoundException(s"Project ${shortcode.value} not found."))
@@ -263,7 +268,7 @@ final case class ProjectRestService(
     shortcode: Shortcode,
     user: User,
   ): Task[ProjectImportResponse] = for {
-    _ <- permissionService.ensureSystemAdmin(user)
+    _ <- auth.ensureSystemAdmin(user)
     path <-
       projectImportService
         .importProject(shortcode, user)
@@ -274,7 +279,7 @@ final case class ProjectRestService(
   } yield ProjectImportResponse(path)
 
   def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {
-    _       <- permissionService.ensureSystemAdmin(user)
+    _       <- auth.ensureSystemAdmin(user)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
 }

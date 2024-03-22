@@ -20,7 +20,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -80,51 +79,6 @@ final case class ProjectsResponderADM(
   }
 
   /**
-   * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
-   * if none are found.
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param user       the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  def projectMembersGetRequestADM(
-    id: ProjectIdentifierADM,
-    user: User,
-  ): Task[ProjectMembersGetResponseADM] =
-    for {
-      /* Get project and verify permissions. */
-      project <- projectService
-                   .findByProjectIdentifier(id)
-                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _ <- ZIO
-             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
-             .when {
-               val userPermissions = user.permissions
-               !userPermissions.isSystemAdmin &&
-               !userPermissions.isProjectAdmin(project.id) &&
-               !user.isSystemUser
-             }
-
-      query = Construct(
-                sparql.admin.txt
-                  .getProjectMembers(
-                    maybeIri = id.asIriIdentifierOption,
-                    maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption,
-                  ),
-              )
-
-      statements <- triplestore
-                      .query(query)
-                      .flatMap(_.asExtended)
-                      .map(_.statements.toList)
-
-      // get project member IRI from results rows
-      userIris = statements.map { case (s: SubjectV2, _) => UserIri.unsafeFrom(s.value) }
-      users   <- userService.findUsersByIris(userIris)
-    } yield ProjectMembersGetResponseADM(users)
-
-  /**
    * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
    * if none are found
    *
@@ -163,14 +117,6 @@ final case class ProjectsResponderADM(
       userIris = statements.map { case (subject, _) => UserIri.unsafeFrom(subject.value) }
       users   <- userService.findUsersByIris(userIris)
     } yield ProjectAdminMembersGetResponseADM(users)
-
-  /**
-   * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
-   *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
-   */
-  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse] =
-    projectService.findAllProjectsKeywords
 
   /**
    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.

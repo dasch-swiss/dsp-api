@@ -416,10 +416,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     "used to query members" should {
       "return all members of a project identified by IRI" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              IriIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.id),
             ),
           ),
         )
@@ -436,10 +436,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all members of a project identified by shortname" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              ShortnameIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortname),
             ),
           ),
         )
@@ -456,10 +456,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all members of a project identified by shortcode" in {
         val actual = UnsafeZioRun.runOrThrow(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              ShortcodeIdentifier.unsafeFrom(SharedTestDataADM.imagesProject.shortcode),
             ),
           ),
         )
@@ -476,10 +476,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project IRI is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              IriIdentifier.unsafeFrom(notExistingProjectButValidProjectIri),
             ),
           ),
         )
@@ -488,10 +488,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortname is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              ShortnameIdentifier.unsafeFrom("wrongshortname"),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              ShortnameIdentifier.unsafeFrom("wrongshortname"),
             ),
           ),
         )
@@ -500,10 +500,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' when the project shortcode is unknown (project membership)" in {
         val exit = UnsafeZioRun.run(
-          ProjectsResponderADM(
-            _.projectMembersGetRequestADM(
-              ShortcodeIdentifier.unsafeFrom("9999"),
+          ProjectRestService(
+            _.getProjectMembers(
               SharedTestDataADM.rootUser,
+              ShortcodeIdentifier.unsafeFrom("9999"),
             ),
           ),
         )
@@ -604,7 +604,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "used to query keywords" should {
       "return all unique keywords for all projects" in {
-        val received = UnsafeZioRun.runOrThrow(ProjectsResponderADM(_.projectsKeywordsGetRequestADM()))
+        val received = UnsafeZioRun.runOrThrow(ProjectRestService(_.listAllKeywords()))
         received.keywords.size should be(21)
       }
 
