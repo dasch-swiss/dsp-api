@@ -10,6 +10,8 @@ import zio._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -29,6 +31,12 @@ final case class ProjectService(
 
   def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
+
+  def findByShortcode(shortcode: Shortcode): Task[Option[Project]] =
+    findByProjectIdentifier(ShortcodeIdentifier.from(shortcode))
+
+  def findByShortname(shortname: Shortname): Task[Option[Project]] =
+    findByProjectIdentifier(ShortnameIdentifier.from(shortname))
 
   def findByIds(id: Seq[ProjectIri]): Task[Seq[Project]] = ZIO.foreach(id)(findById).map(_.flatten)
 

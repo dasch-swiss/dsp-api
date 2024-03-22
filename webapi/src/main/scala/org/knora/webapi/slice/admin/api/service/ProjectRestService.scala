@@ -21,12 +21,14 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
@@ -54,19 +56,20 @@ final case class ProjectRestService(
     external <- format.toExternal(ProjectsGetResponse(projects))
   } yield external
 
-  /**
-   * Finds the project by its [[ProjectIdentifierADM]] and returns the information as a [[ProjectGetResponse]].
-   *
-   * @param id           a [[ProjectIdentifierADM]] instance
-   * @return
-   *     '''success''': information about the project as a [[ProjectGetResponse]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
-   */
-  def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponse] = for {
-    internal <- responder.getSingleProjectADMRequest(id)
-    external <- format.toExternal(internal)
-  } yield external
+  def findById(id: ProjectIri): Task[ProjectGetResponse] =
+    toExternalProjectGetResponse(projectService.findById(id), id)
+
+  def findByShortcode(shortcode: Shortcode): Task[ProjectGetResponse] =
+    toExternalProjectGetResponse(projectService.findByShortcode(shortcode), shortcode)
+
+  def findByShortname(shortname: Shortname): Task[ProjectGetResponse] =
+    toExternalProjectGetResponse(projectService.findByShortname(shortname), shortname)
+
+  private def toExternalProjectGetResponse(prjTask: Task[Option[Project]], id: StringValue): Task[ProjectGetResponse] =
+    prjTask
+      .someOrFail(NotFoundException(s"Project not '${id.value} not found."))
+      .map(ProjectGetResponse.apply)
+      .flatMap(format.toExternal)
 
   /**
    * Creates a project from the given payload.
