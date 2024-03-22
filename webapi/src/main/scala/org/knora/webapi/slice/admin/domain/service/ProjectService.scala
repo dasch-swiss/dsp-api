@@ -10,8 +10,9 @@ import zio._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponse
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -29,6 +30,12 @@ final case class ProjectService(
 
   def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))
+
+  def findByShortcode(shortcode: Shortcode): Task[Option[Project]] =
+    findByProjectIdentifier(ShortcodeIdentifier.from(shortcode))
+
+  def findByShortname(shortname: Shortname): Task[Option[Project]] =
+    findByProjectIdentifier(ShortnameIdentifier.from(shortname))
 
   def findByIds(id: Seq[ProjectIri]): Task[Seq[Project]] = ZIO.foreach(id)(findById).map(_.flatten)
 
@@ -76,17 +83,11 @@ final case class ProjectService(
       restrictedView,
     )
 
-  def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponse] =
-    for {
-      projects <- knoraProjectService.findAll()
-      keywords  = projects.flatMap(_.keywords.map(_.value)).distinct.sorted
-    } yield ProjectsKeywordsGetResponse(keywords)
-
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponse]] =
     for {
       projectMaybe <- knoraProjectService.findById(id)
       keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
-      result        = keywordsMaybe.map(ProjectKeywordsGetResponse(_))
+      result        = keywordsMaybe.map(ProjectKeywordsGetResponse.apply)
     } yield result
 
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {

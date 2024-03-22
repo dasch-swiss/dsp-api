@@ -10,6 +10,7 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -33,6 +34,12 @@ final case class UserService(
 
   def findUserByUsername(username: Username): Task[Option[User]] =
     fromCacheOrRepo(username, cacheService.getUserByUsername, knoraUserService.findByUsername)
+
+  def findByProjectMembership(project: KnoraProject): Task[Seq[User]] =
+    knoraUserService.findByProjectMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+
+  def findByProjectAdminMembership(project: KnoraProject): Task[Seq[User]] =
+    knoraUserService.findByProjectAdminMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
   def findAll: Task[Seq[User]] =
     knoraUserService.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))

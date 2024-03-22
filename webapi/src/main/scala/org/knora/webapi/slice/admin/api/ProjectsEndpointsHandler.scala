@@ -43,19 +43,19 @@ final case class ProjectsEndpointsHandler(
   val getAdminProjectsByProjectIriHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectIri,
-      (id: IriIdentifier) => restService.findProject(id),
+      (id: IriIdentifier) => restService.findById(id.value),
     )
 
   val getAdminProjectsByProjectShortcodeHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortcode,
-      (id: ShortcodeIdentifier) => restService.findProject(id),
+      (id: ShortcodeIdentifier) => restService.findByShortcode(id.value),
     )
 
   val getAdminProjectsByProjectShortnameHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortname,
-      (id: ShortnameIdentifier) => restService.findProject(id),
+      (id: ShortnameIdentifier) => restService.findByShortname(id.value),
     )
 
   val getAdminProjectsKeywordsByProjectIriHandler =

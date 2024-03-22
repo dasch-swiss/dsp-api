@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.Password
@@ -45,6 +46,10 @@ case class KnoraUserService(
   def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
   def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
   def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
+  def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectMembership(project.id)
+  def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectAdminMembership(project.id)
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))
