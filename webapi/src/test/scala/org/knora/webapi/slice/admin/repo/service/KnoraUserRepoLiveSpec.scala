@@ -16,6 +16,7 @@ import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.TestDataFactory.User._
 import org.knora.webapi.messages.StringFormatter
