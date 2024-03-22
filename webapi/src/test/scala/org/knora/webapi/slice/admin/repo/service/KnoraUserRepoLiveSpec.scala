@@ -35,7 +35,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
 
-  val KnoraUserRepo = ZIO.serviceWithZIO[KnoraUserRepo]
+  private val KnoraUserRepo = ZIO.serviceWithZIO[KnoraUserRepo]
 
   private def createUserQuery(u: KnoraUser): Update = {
     val triples = Rdf
