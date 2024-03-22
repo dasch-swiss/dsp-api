@@ -97,10 +97,5 @@ final case class AssetPermissionsResponder(
 }
 
 object AssetPermissionsResponder {
-  def getFileInfoForSipiADM(shortcode: ShortcodeIdentifier, filename: String, user: User) =
-    ZIO.serviceWithZIO[AssetPermissionsResponder](
-      _.getPermissionCodeAndProjectRestrictedViewSettings(shortcode, filename, user),
-    )
-
   val layer = ZLayer.derive[AssetPermissionsResponder]
 }
