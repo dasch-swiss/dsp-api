@@ -424,9 +424,6 @@ final case class ProjectsResponderADM(
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
-  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]] =
-    projectService.findByProjectIdentifier(identifier)
-
   /**
    * Helper method for checking if a project identified by shortname exists.
    *
