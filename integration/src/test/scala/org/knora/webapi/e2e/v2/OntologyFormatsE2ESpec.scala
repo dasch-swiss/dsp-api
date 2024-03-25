@@ -30,6 +30,12 @@ import pekko.http.scaladsl.model.headers.Accept
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
+  // If false, the responses from the server are compared to the contents fo the expected response files.
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  private val writeTestDataFiles = false
+
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
       RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
@@ -41,10 +47,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
    *
    * @param urlPath                     the URL path to be used in the request.
    * @param fileBasename                the basename of the test data file containing the expected response.
-   * @param maybeClientTestDataBasename the basename of the client test data file, if any, to be collected by
+   * @param clientTestDataBasename      the basename of the client test data file, if any, to be collected by
    *                                    [[org.knora.webapi.e2e.ClientTestDataCollector]].
-   * @param disableWrite                if true, this [[HttpGetTest]] will not write the expected response file when `writeFile` is called.
-   *                                    This is useful if two tests share the same file.
    */
   private case class HttpGetTest(
     urlPath: String,
@@ -53,20 +57,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   ) {
     private def makeFile(suffix: String): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
-
-    /**
-     * Writes the expected response file.
-     *
-     * @param responseStr the contents of the file to be written.
-     * @param mediaType   the media type of the response.
-     */
-    def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
-      val newOutputFile = makeFile(mediaType.fileExtensions.head)
-
-      Files.createDirectories(newOutputFile.getParent)
-      FileUtil.writeTextFile(newOutputFile, responseStr)
-      ()
-    }
 
     /**
      * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
@@ -301,7 +291,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         clientTestDataBasename = Some("get-property-listValue-response"),
       )
 
-    val testCases = Seq(
+    val testCases: Seq[HttpGetTest] = Seq(
       // built-in ontologies
       knoraApiOntologySimple,
       knoraApiOntologyComplex,
@@ -326,12 +316,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       anythingOntologyHasListItemComplex,
     )
   }
-
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
-  // If false, the responses from the server are compared to the contents fo the expected response files.
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = false
 
   "The Ontologies v2 Endpoint" should {
     "serve the ontologies in JSON-LD, turtle and RDF-XML" in {

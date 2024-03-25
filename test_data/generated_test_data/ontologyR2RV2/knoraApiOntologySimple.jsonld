@@ -686,6 +686,11 @@
             "@id": "knora-api:Resource"
         },
         {
+            "@id": "knora-api:StillImageAbstractFileValue",
+            "@type": "owl:Class",
+            "rdfs:comment": "A file containing a two-dimensional still image"
+        },
+        {
             "rdfs:label": "Representation (Image)",
             "rdfs:subClassOf": [
                 {
@@ -861,6 +866,16 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:error"
+        },
+        {
+            "@id": "knora-api:externalUrl",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:File"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            }
         },
         {
             "rdfs:label": "has zip",
@@ -1075,12 +1090,12 @@
                 "@id": "knora-api:hasFile"
             },
             "rdfs:comment": "Connects a Representation to an image file",
-            "@type": "owl:DatatypeProperty",
+            "@type": "owl:ObjectProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:StillImageRepresentation"
             },
             "knora-api:objectType": {
-                "@id": "knora-api:File"
+                "@id": "knora-api:StillImageAbstractFileValue"
             },
             "@id": "knora-api:hasStillImageFile"
         },
