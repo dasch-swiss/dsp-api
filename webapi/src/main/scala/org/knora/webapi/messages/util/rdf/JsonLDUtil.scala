@@ -796,7 +796,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
               for {
                 propertySmartIri <-
                   c.asSmartIri(key)
-                    .orElseFail("Invalid property IRI: $key")
+                    .orElseFail(s"Invalid property IRI: $key")
                     .filterOrElseWith(it => it.isKnoraEntityIri && it.isApiV2ComplexSchema)(it =>
                       ZIO.fail(s"Invalid Knora API v2 complex property IRI: $it"),
                     )
