@@ -9,7 +9,6 @@ import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -49,6 +48,8 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
+
+import java.net.URI
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -1093,13 +1094,9 @@ object ValueContentV2 {
               } yield content
             case StillImageExternalFileValue =>
               for {
-                error <- ZIO.succeed(BadRequestException("No file info found for StillImageExternalFileValue"))
-                info  <- ZIO.fromOption(fileInfo).orElseFail(error)
                 content <-
                   StillImageExternalFileValueContentV2.fromJsonLdObject(
                     jsonLdObject,
-                    info.filename,
-                    info.metadata,
                   )
               } yield content
             case DocumentFileValue =>
@@ -2800,8 +2797,7 @@ case class StillImageExternalFileValueContentV2(
   override def toOntologySchema(targetSchema: OntologySchema) =
     copy(ontologySchema = targetSchema)
 
-  def makeFileUrl: String =
-    s"$externalUrl/full/$dimX,$dimY/0/default.jpg"
+  def makeFileUrl: String = externalUrl
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
@@ -2819,7 +2815,15 @@ case class StillImageExternalFileValueContentV2(
             StillImageFileValueHasDimY -> JsonLDInt(dimY),
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
-                value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
+                value = {
+                  try {
+                    val uri = URI.create(externalUrl)
+                    s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
+                  } catch {
+                    case e: IllegalArgumentException =>
+                      throw BadRequestException(s"Invalid URL: $externalUrl: ${e.getMessage}")
+                  }
+                },
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
             StillImageFileValueHasExternalUrl -> JsonLDString(externalUrl),
@@ -2857,23 +2861,24 @@ case class StillImageExternalFileValueContentV2(
 object StillImageExternalFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse,
   ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
+      externalUrl <- ZIO
+                       .fromEither(jsonLDObject.getRequiredString(FileValueHasExternalUrl))
+                       .mapError(e => BadRequestException(s"Invalid $FileValueHasExternalUrl: $e"))
     } yield StillImageExternalFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = FileValueV2(
-        internalFilename,
-        metadata.internalMimeType,
-        metadata.originalFilename,
-        metadata.originalMimeType,
+        "internalFilename",
+        "internalMimeType",
+        Some("originalFilename"),
+        Some("originalMimeType"),
       ),
-      dimX = metadata.width.getOrElse(0),
-      dimY = metadata.height.getOrElse(0),
+      dimX = 0,
+      dimY = 0,
       comment = comment,
-      externalUrl = "",
+      externalUrl = externalUrl,
     )
 }
 
