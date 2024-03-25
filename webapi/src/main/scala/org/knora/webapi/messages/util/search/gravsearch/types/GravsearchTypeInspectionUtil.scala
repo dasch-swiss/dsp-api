@@ -5,14 +5,14 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import zio.*
+import zio._
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search._
 
 /**
  * Utilities for Gravsearch type inspection.

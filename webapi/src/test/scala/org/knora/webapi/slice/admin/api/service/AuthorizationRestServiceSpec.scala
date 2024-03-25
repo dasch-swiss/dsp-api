@@ -7,8 +7,8 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.Exit
 import zio.ZIO
-import zio.test.*
 import zio.test.Assertion.failsWithA
+import zio.test._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
@@ -18,6 +18,8 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
@@ -37,7 +39,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("RestPermissionService")(
     suite("given an inactive system admin")(
       test("isSystemAdmin should return true") {
-        assertTrue(AuthorizationRestService.isSystemAdmin(inactiveSystemAdmin))
+        assertTrue(AuthorizationRestService.isSystemAdminOrUser(inactiveSystemAdmin))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
@@ -49,7 +51,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     ),
     suite("given a active system admin")(
       test("isSystemAdmin should return true") {
-        assertTrue(AuthorizationRestService.isSystemAdmin(activeSystemAdmin))
+        assertTrue(AuthorizationRestService.isSystemAdminOrUser(activeSystemAdmin))
       },
       test("when ensureSystemAdmin succeed") {
         for {
@@ -59,7 +61,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     ),
     suite("given an inactive normal user")(
       test("isSystemAdmin should return false") {
-        assertTrue(!AuthorizationRestService.isSystemAdmin(inactiveNormalUser))
+        assertTrue(!AuthorizationRestService.isSystemAdminOrUser(inactiveNormalUser))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
@@ -71,7 +73,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     ),
     suite("given an active normal user")(
       test("isSystemAdmin should return false") {
-        assertTrue(!AuthorizationRestService.isSystemAdmin(activeNormalUser))
+        assertTrue(!AuthorizationRestService.isSystemAdminOrUser(activeNormalUser))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
@@ -116,5 +118,11 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
     ),
-  ).provide(AuthorizationRestServiceLive.layer, KnoraProjectRepoInMemory.layer, KnoraGroupRepoInMemory.layer)
+  ).provide(
+    AuthorizationRestServiceLive.layer,
+    KnoraProjectService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraGroupRepoInMemory.layer,
+  )
 }

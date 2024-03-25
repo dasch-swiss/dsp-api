@@ -9,10 +9,9 @@ import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import zio.json.JsonCodec
 
-import dsp.valueobjects.V2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -24,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.common.Value.BooleanValue
 import org.knora.webapi.slice.common.Value.IntValue
 import org.knora.webapi.slice.common.Value.StringValue
@@ -81,11 +81,11 @@ object Codecs {
 
     // list properties
     implicit val comments: StringCodec[Comments] =
-      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(Comments.from, _.value)
+      JsonCodec[Seq[StringLiteralV2]].transformOrFail(Comments.from, _.value)
     implicit val description: StringCodec[Description] =
-      JsonCodec[V2.StringLiteralV2].transformOrFail(Description.from, _.value)
+      JsonCodec[StringLiteralV2].transformOrFail(Description.from, _.value)
     implicit val labels: StringCodec[Labels] =
-      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(Labels.from, _.value)
+      JsonCodec[Seq[StringLiteralV2]].transformOrFail(Labels.from, _.value)
     implicit val listIri: StringCodec[ListIri]   = stringCodec(ListIri.from)
     implicit val listName: StringCodec[ListName] = stringCodec(ListName.from)
     implicit val position: StringCodec[Position] = intCodec(Position.from)
@@ -122,7 +122,7 @@ object Codecs {
     implicit val groupIri: StringCodec[GroupIri]   = stringCodec(GroupIri.from)
     implicit val groupName: StringCodec[GroupName] = stringCodec(GroupName.from)
     implicit val groupDescriptions: StringCodec[GroupDescriptions] =
-      JsonCodec[Seq[V2.StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)
+      JsonCodec[Seq[StringLiteralV2]].transformOrFail(GroupDescriptions.from, _.value)
     implicit val groupStatus: StringCodec[GroupStatus]     = booleanCodec(GroupStatus.from)
     implicit val groupSelfJoin: StringCodec[GroupSelfJoin] = booleanCodec(GroupSelfJoin.from)
   }

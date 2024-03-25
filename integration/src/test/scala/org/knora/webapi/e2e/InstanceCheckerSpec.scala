@@ -13,7 +13,7 @@ import scala.concurrent.duration.NANOSECONDS
 
 import dsp.errors.AssertionException
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.FileUtil
 

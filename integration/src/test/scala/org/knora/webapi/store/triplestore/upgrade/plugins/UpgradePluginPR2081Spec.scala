@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {

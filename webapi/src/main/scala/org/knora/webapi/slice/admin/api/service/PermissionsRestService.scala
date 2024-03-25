@@ -33,13 +33,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class PermissionsRestService(
   responder: PermissionsResponderADM,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   auth: AuthorizationRestService,
   format: KnoraResponseRenderer,
 ) {
@@ -61,7 +61,7 @@ final case class PermissionsRestService(
     } yield project
 
   private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: User): Task[KnoraProject] =
-    projectRepo
+    knoraProjectService
       .findById(projectIri)
       .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))

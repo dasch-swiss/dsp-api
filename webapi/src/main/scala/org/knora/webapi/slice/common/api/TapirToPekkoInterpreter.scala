@@ -9,7 +9,7 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
 import sttp.capabilities.pekko.PekkoStreams
-import sttp.tapir.generic.auto.*
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.zio.ZioMetrics

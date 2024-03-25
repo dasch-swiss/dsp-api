@@ -7,12 +7,12 @@ package org.knora.webapi.e2e
 
 import org.apache.pekko
 
-import dsp.errors.*
-import org.knora.webapi.*
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.http.handler
 
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.server.Directives.*
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
 
 /**

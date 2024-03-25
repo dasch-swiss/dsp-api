@@ -7,9 +7,9 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
-import dsp.valueobjects.V2
-import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
@@ -24,7 +24,7 @@ class ProjectsMessagesADMSpec extends CoreSpec {
           shortcode = "1111",
           shortname = "shortname",
           longname = None,
-          description = Seq.empty[V2.StringLiteralV2],
+          description = Seq.empty[StringLiteralV2],
           keywords = Seq.empty[String],
           logo = None,
           ontologies = Seq.empty[IRI],

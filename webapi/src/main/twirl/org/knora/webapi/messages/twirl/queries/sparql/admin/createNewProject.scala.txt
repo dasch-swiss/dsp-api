@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import dsp.valueobjects.V2
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @*
  * Creates a new project.
@@ -28,7 +28,7 @@
   shortname: String,
   shortcode: String,
   maybeLongname: Option[String],
-  descriptions: Seq[V2.StringLiteralV2],
+  descriptions: Seq[StringLiteralV2],
   maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
   status: Boolean,

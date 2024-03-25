@@ -5,9 +5,9 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.*
-import zio.nio.file.*
-import zio.test.*
+import zio._
+import zio.nio.file._
+import zio.test._
 
 object ZipUtilitySpec extends ZIOSpecDefault {
   private val testFolderName  = "test-folder"

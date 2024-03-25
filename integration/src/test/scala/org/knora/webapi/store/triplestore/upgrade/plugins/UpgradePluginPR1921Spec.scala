@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.compatible.Assertion
 
 import dsp.errors.AssertionException
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Assertion =

@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import zio.test.*
 import zio.test.ZIOSpecDefault
+import zio.test._
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache

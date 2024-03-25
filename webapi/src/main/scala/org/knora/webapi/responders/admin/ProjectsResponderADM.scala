@@ -5,22 +5,21 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
+import zio._
 
 import java.util.UUID
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -31,163 +30,31 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-/**
- * Returns information about projects.
- */
-trait ProjectsResponderADM {
-
-  /**
-   * Gets all the projects and returns them as a [[ProjectADM]].
-   *
-   * @return all the projects as a [[ProjectADM]].
-   *         [[NotFoundException]] if no projects are found.
-   */
-  def getNonSystemProjects: Task[ProjectsGetResponse]
-
-  /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponse]].
-   *
-   * @param id the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponse]].
-   *
-   *         [[NotFoundException]] When no project for the given IRI can be found.
-   */
-  def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse]
-
-  /**
-   * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
-   * If project is not found in cache but in triplestore, then project is written to cache.
-   */
-  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]]
-
-  /**
-   * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
-   * if none are found.
-   *
-   * @param id     the IRI, shortname, shortcode or UUID of the project.
-   * @param user the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  def projectMembersGetRequestADM(id: ProjectIdentifierADM, user: User): Task[ProjectMembersGetResponseADM]
-
-  /**
-   * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
-   * if none are found
-   *
-   * @param id     the IRI, shortname, shortcode or UUID of the project.
-   * @param user the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  def projectAdminMembersGetRequestADM(id: ProjectIdentifierADM, user: User): Task[ProjectAdminMembersGetResponseADM]
-
-  /**
-   * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
-   *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
-   */
-  def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse]
-
-  /**
-   * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
-   *
-   * @param projectIri the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
-   */
-  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse]
-
-  /**
-   * Get project's restricted view settings.
-   *
-   * @param id the project's identifier (IRI / shortcode / shortname)
-   * @return [[ProjectRestrictedViewSettingsADM]]
-   */
-  def projectRestrictedViewSettingsGetADM(id: ProjectIdentifierADM): Task[Option[ProjectRestrictedViewSettingsADM]]
-
-  /**
-   * Get project's restricted view settings.
-   *
-   * @param id the project's identifier (IRI / shortcode / shortname)
-   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
-   */
-  def projectRestrictedViewSettingsGetRequestADM(
-    id: ProjectIdentifierADM,
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
-
-  /**
-   * Creates a project.
-   *
-   * @param createReq            the new project's information.
-   * @param requestingUser       the user that is making the request.
-   * @param apiRequestID         the unique api request ID.
-   * @return A [[ProjectOperationResponseADM]].
-   *
-   *         [[ForbiddenException]]      In the case that the user is not allowed to perform the operation.
-   *
-   *         [[DuplicateValueException]] In the case when either the shortname or shortcode are not unique.
-   *
-   *         [[BadRequestException]]     In the case when the shortcode is invalid.
-   */
-  def projectCreateRequestADM(
-    createReq: ProjectCreateRequest,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[ProjectOperationResponseADM]
-
-  /**
-   * Update project's basic information.
-   *
-   * @param projectIri    the IRI of the project.
-   * @param updateReq     the update payload.
-   * @param user          the user making the request.
-   * @param apiRequestID  the unique api request ID.
-   * @return A [[ProjectOperationResponseADM]].
-   *
-   *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
-   */
-  def changeBasicInformationRequestADM(
-    projectIri: ProjectIri,
-    updateReq: ProjectUpdateRequest,
-    user: User,
-    apiRequestID: UUID,
-  ): Task[ProjectOperationResponseADM]
-
-}
-
-final case class ProjectsResponderADMLive(
+final case class ProjectsResponderADM(
   private val iriService: IriService,
   private val cacheService: CacheService,
   private val permissionsResponderADM: PermissionsResponderADM,
-  private val predicateObjectMapper: PredicateObjectMapper,
   private val projectService: ProjectService,
   private val triplestore: TriplestoreService,
-  private val userService: UserService,
   implicit private val stringFormatter: StringFormatter,
-) extends ProjectsResponderADM
-    with MessageHandler
+) extends MessageHandler
     with LazyLogging {
 
   // Global lock IRI used for project creation and update
   private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
-  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
+  def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ProjectsResponderRequestADM]
 
   /**
    * Receives a message extending [[ProjectsResponderRequestADM]], and returns an appropriate response message.
    */
-  override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ProjectGetADM(identifier)        => findByProjectIdentifier(identifier)
-    case ProjectGetRequestADM(identifier) => getSingleProjectADMRequest(identifier)
+  def handle(msg: ResponderRequest): Task[Any] = msg match {
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -206,199 +73,6 @@ final case class ProjectsResponderADMLive(
   }
 
   /**
-   * Gets all the projects but not system projects.
-   * Filters out system projects in response.
-   *
-   * @return all non-system projects as a [[ProjectsGetResponse]].
-   *         [[NotFoundException]] if no projects are found.
-   */
-  override def getNonSystemProjects: Task[ProjectsGetResponse] =
-    projectService.findAll.map(_.filter(_.id.startsWith("http://rdfh.ch/projects/"))).flatMap {
-      case Nil      => ZIO.fail(NotFoundException(s"No projects found"))
-      case projects => ZIO.succeed(ProjectsGetResponse(projects))
-    }
-
-  /**
-   * Gets the project with the given project IRI, shortname, shortcode or UUID and returns the information
-   * as a [[ProjectGetResponse]].
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @return Information about the project as a [[ProjectGetResponse]].
-   *
-   *         [[NotFoundException]] When no project for the given IRI can be found.
-   */
-  override def getSingleProjectADMRequest(id: ProjectIdentifierADM): Task[ProjectGetResponse] =
-    projectService
-      .findByProjectIdentifier(id)
-      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found"))
-      .map(ProjectGetResponse.apply)
-
-  /**
-   * Gets the members of a project with the given IRI, shortname, shortcode or UUID. Returns an empty list
-   * if none are found.
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param user       the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  override def projectMembersGetRequestADM(
-    id: ProjectIdentifierADM,
-    user: User,
-  ): Task[ProjectMembersGetResponseADM] =
-    for {
-      /* Get project and verify permissions. */
-      project <- projectService
-                   .findByProjectIdentifier(id)
-                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _ <- ZIO
-             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
-             .when {
-               val userPermissions = user.permissions
-               !userPermissions.isSystemAdmin &&
-               !userPermissions.isProjectAdmin(project.id) &&
-               !user.isSystemUser
-             }
-
-      query = Construct(
-                sparql.admin.txt
-                  .getProjectMembers(
-                    maybeIri = id.asIriIdentifierOption,
-                    maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption,
-                  ),
-              )
-
-      statements <- triplestore
-                      .query(query)
-                      .flatMap(_.asExtended)
-                      .map(_.statements.toList)
-
-      // get project member IRI from results rows
-      userIris = statements.map { case (s: SubjectV2, _) => UserIri.unsafeFrom(s.value) }
-      users   <- userService.findUsersByIris(userIris)
-    } yield ProjectMembersGetResponseADM(users)
-
-  /**
-   * Gets the admin members of a project with the given IRI, shortname, shortcode or UUIDe. Returns an empty list
-   * if none are found
-   *
-   * @param id           the IRI, shortname, shortcode or UUID of the project.
-   * @param user       the user making the request.
-   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-   */
-  override def projectAdminMembersGetRequestADM(
-    id: ProjectIdentifierADM,
-    user: User,
-  ): Task[ProjectAdminMembersGetResponseADM] =
-    for {
-      /* Get project and verify permissions. */
-      project <- projectService
-                   .findByProjectIdentifier(id)
-                   .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _ <- ZIO
-             .fail(ForbiddenException("SystemAdmin or ProjectAdmin permissions are required."))
-             .when {
-               !user.permissions.isSystemAdmin &&
-               !user.permissions.isProjectAdmin(project.id)
-             }
-
-      query = Construct(
-                sparql.admin.txt
-                  .getProjectAdminMembers(
-                    maybeIri = id.asIriIdentifierOption,
-                    maybeShortname = id.asShortnameIdentifierOption,
-                    maybeShortcode = id.asShortcodeIdentifierOption,
-                  ),
-              )
-
-      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
-
-      // get project member IRI from results rows
-      userIris = statements.map { case (subject, _) => UserIri.unsafeFrom(subject.value) }
-      users   <- userService.findUsersByIris(userIris)
-    } yield ProjectAdminMembersGetResponseADM(users)
-
-  /**
-   * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
-   *
-   * @return all keywords for all projects as [[ProjectsKeywordsGetResponse]]
-   */
-  override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponse] =
-    projectService.findAllProjectsKeywords
-
-  /**
-   * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
-   *
-   * @param projectIri           the IRI of the project.
-   * @return keywords for a projects as [[ProjectKeywordsGetResponse]]
-   */
-  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponse] =
-    for {
-      id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
-      keywords <- projectService
-                    .findProjectKeywordsBy(id)
-                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
-    } yield keywords
-
-  /**
-   * Get project's restricted view settings.
-   *
-   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
-   *
-   * @return [[ProjectRestrictedViewSettingsADM]]
-   */
-  override def projectRestrictedViewSettingsGetADM(
-    id: ProjectIdentifierADM,
-  ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
-    val query = Construct(
-      sparql.admin.txt
-        .getProjects(
-          maybeIri = id.asIriIdentifierOption,
-          maybeShortname = id.asShortnameIdentifierOption,
-          maybeShortcode = id.asShortcodeIdentifierOption,
-        ),
-    )
-    for {
-      projectResponse <- triplestore.query(query).flatMap(_.asExtended)
-      restrictedViewSettings <- {
-        if (projectResponse.statements.nonEmpty) {
-          val (_, propsMap) = projectResponse.statements.head
-          for {
-            size <- predicateObjectMapper
-                      .getSingleOption[StringLiteralV2](
-                        OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
-                        propsMap,
-                      )
-                      .map(_.map(_.value))
-            watermark <- predicateObjectMapper
-                           .getSingleOption[BooleanLiteralV2](
-                             OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
-                             propsMap,
-                           )
-                           .map(_.exists(_.value))
-          } yield Some(ProjectRestrictedViewSettingsADM(size, watermark))
-        } else {
-          ZIO.none
-        }
-      }
-    } yield restrictedViewSettings
-  }
-
-  /**
-   * Get project's restricted view settings.
-   *
-   * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
-   *
-   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
-   */
-  override def projectRestrictedViewSettingsGetRequestADM(
-    id: ProjectIdentifierADM,
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    projectRestrictedViewSettingsGetADM(id)
-      .someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      .map(ProjectRestrictedViewSettingsGetResponseADM.apply)
-
-  /**
    * Update project's basic information.
    *
    * @param projectIri    the IRI of the project.
@@ -409,7 +83,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
-  override def changeBasicInformationRequestADM(
+  def changeBasicInformationRequestADM(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: User,
@@ -535,7 +209,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.description.nonEmpty) {
       projectUpdatePayload.description
         .map(_.map(_.value))
-        .map(_.map(d => V2.StringLiteralV2(Iri.fromSparqlEncodedString(d.value), d.language)))
+        .map(_.map(d => StringLiteralV2.from(Iri.fromSparqlEncodedString(d.value), d.language)))
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -605,7 +279,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
-  override def projectCreateRequestADM(
+  def projectCreateRequestADM(
     createReq: ProjectCreateRequest,
     requestingUser: User,
     apiRequestID: UUID,
@@ -750,7 +424,7 @@ final case class ProjectsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
-  override def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]] =
+  def findByProjectIdentifier(identifier: ProjectIdentifierADM): Task[Option[Project]] =
     projectService.findByProjectIdentifier(identifier)
 
   /**
@@ -772,7 +446,7 @@ final case class ProjectsResponderADMLive(
     triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByShortcode(shortcode)))
 }
 
-object ProjectsResponderADMLive {
+object ProjectsResponderADM {
   val layer = ZLayer.fromZIO {
     for {
       iris    <- ZIO.service[IriService]
@@ -780,11 +454,9 @@ object ProjectsResponderADMLive {
       ps      <- ZIO.service[ProjectService]
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
-      po      <- ZIO.service[PredicateObjectMapper]
       mr      <- ZIO.service[MessageRelay]
       pr      <- ZIO.service[PermissionsResponderADM]
-      us      <- ZIO.service[UserService]
-      handler <- mr.subscribe(ProjectsResponderADMLive(iris, cs, pr, po, ps, ts, us, sf))
+      handler <- mr.subscribe(ProjectsResponderADM(iris, cs, pr, ps, ts, sf))
     } yield handler
   }
 }

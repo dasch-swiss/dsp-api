@@ -5,18 +5,17 @@
 
 package dsp.valueobjects
 
-import zio.test.*
+import zio.test._
 
-import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model._
 
 /**
  * This spec is used to test the [[Group]] value objects creation.
  */
 object KnoraGroupSpec extends ZIOSpecDefault {
-  private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
-  private val invalidDescription = Seq(
-    V2.StringLiteralV2(value = "", language = Some("en")),
-  )
+  private val validDescription   = Seq(StringLiteralV2.from(value = "Valid group description", language = Some("en")))
+  private val invalidDescription = Seq(StringLiteralV2.unsafeFrom(value = "", language = Some("en")))
 
   def spec: Spec[Any, Any] = groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest
 
@@ -31,7 +30,7 @@ object KnoraGroupSpec extends ZIOSpecDefault {
 
   private val groupDescriptionsTest = suite("GroupDescriptions should")(
     test("not be created from an empty value") {
-      val emptyDescription = Seq.empty[V2.StringLiteralV2]
+      val emptyDescription = Seq.empty[StringLiteralV2]
       assertTrue(GroupDescriptions.from(emptyDescription) == Left(GroupErrorMessages.GroupDescriptionsMissing))
     },
     test("not be created from an invalid value") {

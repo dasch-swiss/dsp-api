@@ -5,7 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
-import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 import org.knora.webapi.E2ESpec
@@ -70,7 +70,10 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
       assert(
-        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+        result == PermissionCodeAndProjectRestrictedViewSettings(
+          1,
+          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
+        ),
       )
     }
 
@@ -97,7 +100,10 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .getOrElse(throw new AssertionError(s"Could not decode response for ${responseToString(response)}."))
 
       assert(
-        result == PermissionCodeAndProjectRestrictedViewSettings(1, Some(ProjectRestrictedViewSettingsADM(None, false))),
+        result == PermissionCodeAndProjectRestrictedViewSettings(
+          1,
+          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
+        ),
       )
     }
   }

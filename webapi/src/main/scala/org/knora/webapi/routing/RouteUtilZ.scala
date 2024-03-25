@@ -6,7 +6,7 @@
 package org.knora.webapi.routing
 
 import org.apache.pekko
-import zio.*
+import zio._
 
 import java.net.URLDecoder
 import java.util.UUID

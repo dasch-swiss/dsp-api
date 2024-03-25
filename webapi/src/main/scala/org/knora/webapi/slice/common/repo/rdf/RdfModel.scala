@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.common.repo.rdf
 
-import org.apache.jena.rdf.model.*
+import org.apache.jena.rdf.model._
 import org.apache.jena.vocabulary.RDF
-import zio.*
+import zio._
 
 import java.io.StringReader
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
-import org.knora.webapi.slice.common.repo.rdf.Errors.*
+import org.knora.webapi.slice.common.repo.rdf.Errors._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 object Errors {

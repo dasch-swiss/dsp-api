@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import eu.timepit.refined.auto.*
+import eu.timepit.refined.auto._
 import zio.Chunk
 import zio.ZIO
 import zio.test.Spec
@@ -15,8 +15,9 @@ import zio.test.assertTrue
 
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -115,6 +116,7 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
     },
   ).provide(
     MaintenanceService.layer,
+    KnoraProjectService.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
     PredicateObjectMapper.layer,

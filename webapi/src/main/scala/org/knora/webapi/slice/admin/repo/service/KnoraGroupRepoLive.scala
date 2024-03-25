@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.model.vocabulary.*
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.model.vocabulary._
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -20,14 +20,14 @@ import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
 
-import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
@@ -58,7 +58,7 @@ final case class KnoraGroupRepoLive(triplestore: TriplestoreService) extends Kno
     for {
       id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value)))
       groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
-      groupDescriptions  <- resource.getLangStringLiteralsOrFail[V2.StringLiteralV2](KnoraAdmin.GroupDescriptions)
+      groupDescriptions  <- resource.getLangStringLiteralsOrFail[StringLiteralV2](KnoraAdmin.GroupDescriptions)
       groupDescriptions  <- ZIO.fromEither(GroupDescriptions.from(groupDescriptions))
       groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
       belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)

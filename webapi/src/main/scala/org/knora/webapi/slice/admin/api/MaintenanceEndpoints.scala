@@ -6,9 +6,9 @@
 package org.knora.webapi.slice.admin.api
 
 import sttp.model.StatusCode
-import sttp.tapir.*
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.jsonBody as zioJsonBody
+import sttp.tapir._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
 import zio.ZLayer
 import zio.json.ast.Json
 

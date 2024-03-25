@@ -6,17 +6,17 @@
 package org.knora.webapi.routing.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Directives._
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
-import zio.*
 import zio.ZIO
+import zio._
 
 import java.time.Instant
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.Sipi
@@ -27,17 +27,17 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetIngested
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 
@@ -46,7 +46,7 @@ import org.knora.webapi.store.iiif.api.SipiService
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & MessageRelay & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & UserService,
+    AppConfig & Authenticator & IriConverter & ProjectService & MessageRelay & SearchResponderV2 & SipiService & StringFormatter & UserService,
   ],
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi

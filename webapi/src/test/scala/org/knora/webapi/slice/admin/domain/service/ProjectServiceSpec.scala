@@ -10,10 +10,10 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
@@ -29,7 +29,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2("description not used in test", None)),
+          description = List(StringLiteralV2.from("description not used in test", None)),
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,
@@ -48,7 +48,8 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
-          description = NonEmptyChunk(Description.unsafeFrom(StringLiteralV2("description not used in test", None))),
+          description =
+            NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("description not used in test", None))),
           keywords = List.empty,
           logo = None,
           status = Status.Active,

@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade
 import com.typesafe.scalalogging.Logger
 
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.store.triplestore.upgrade.plugins.*
+import org.knora.webapi.store.triplestore.upgrade.plugins._
 
 /**
  * The plan for updating a repository to work with the current version of Knora.

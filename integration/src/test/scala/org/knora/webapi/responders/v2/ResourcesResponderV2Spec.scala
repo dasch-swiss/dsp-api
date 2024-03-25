@@ -14,26 +14,26 @@ import org.xmlunit.diff.Diff
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.models.filemodels.*
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -41,7 +41,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.util.*
+import org.knora.webapi.util._
 
 import pekko.testkit.ImplicitSender
 

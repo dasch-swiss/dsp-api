@@ -11,7 +11,7 @@ import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
-import zio.*
+import zio._
 
 import java.io.StringReader
 

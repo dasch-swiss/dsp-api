@@ -7,8 +7,8 @@ package org.knora.webapi.messages.v2.responder.resourcesmessages
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.sharedtestdata.*
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.sharedtestdata._
 
 /**
  * Tests [[ResourceMessagesV2]].
@@ -33,7 +33,7 @@ class ResourcesMessagesV2Spec extends CoreSpec {
           requestingUser = SharedTestDataADM.imagesUser01,
         ),
       )
-      assert(caught.getMessage === "Given IRI is not a project IRI.")
+      assert(caught.getMessage === "Invalid project IRI: http://rdfh.ch/0001/thing-with-history")
     }
   }
 

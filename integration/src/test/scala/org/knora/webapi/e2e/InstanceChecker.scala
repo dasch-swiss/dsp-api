@@ -12,14 +12,14 @@ import scala.collection.mutable
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne

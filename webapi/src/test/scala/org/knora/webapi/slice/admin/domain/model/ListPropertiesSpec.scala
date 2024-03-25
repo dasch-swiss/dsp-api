@@ -11,8 +11,8 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.ListProperties._
 
 /**
  * This spec is used to test the [[List]] value objects creation.
@@ -82,11 +82,11 @@ object ListPropertiesSpec extends ZIOSpecDefault {
       assertTrue(Labels.from(Seq.empty) == Left("At least one label needs to be supplied."))
     },
     test("pass an invalid object and return an error") {
-      val invalid = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
+      val invalid = Seq(StringLiteralV2.from(value = "Invalid list label \r", language = Some("en")))
       assertTrue(Labels.from(invalid) == Left("Invalid label."))
     },
     test("pass a valid object and successfully create value object") {
-      val valid = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
+      val valid = Seq(StringLiteralV2.from(value = "Valid list label", language = Some("en")))
       assertTrue(Labels.from(valid).map(_.value) == Right(valid))
     },
   )
@@ -96,11 +96,11 @@ object ListPropertiesSpec extends ZIOSpecDefault {
       assertTrue(Comments.from(Seq.empty) == Left("At least one comment needs to be supplied."))
     },
     test("pass an invalid object and return an error") {
-      val invalid = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
+      val invalid = Seq(StringLiteralV2.from(value = "Invalid list comment \r", language = Some("en")))
       assertTrue(Comments.from(invalid) == Left("Invalid comment."))
     },
     test("pass a valid object and successfully create value object") {
-      val valid = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
+      val valid = Seq(StringLiteralV2.from(value = "Valid list comment", language = Some("en")))
       assertTrue(Comments.from(valid).map(_.value) == Right(valid))
     },
   )

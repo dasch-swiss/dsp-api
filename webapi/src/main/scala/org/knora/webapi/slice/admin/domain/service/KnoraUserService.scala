@@ -22,12 +22,14 @@ import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.Password
 import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
@@ -40,6 +42,14 @@ case class KnoraUserService(
   private val passwordService: PasswordService,
   private val cacheService: CacheService,
 ) {
+  def findById(userIri: UserIri): Task[Option[KnoraUser]]         = userRepo.findById(userIri)
+  def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
+  def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
+  def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
+  def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectMembership(project.id)
+  def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
+    userRepo.findByProjectAdminMembership(project.id)
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))

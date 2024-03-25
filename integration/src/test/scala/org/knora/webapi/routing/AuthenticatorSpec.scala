@@ -9,7 +9,7 @@ import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
 
 import dsp.errors.BadCredentialsException
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2

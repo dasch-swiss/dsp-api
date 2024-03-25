@@ -10,7 +10,7 @@ import java.time.Instant
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -203,15 +203,15 @@ object InputOntologyV2Spec {
           "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
             objects = Seq(
-              StringLiteralV2("has name", Some("en")),
-              StringLiteralV2("hat Namen", Some("de")),
+              StringLiteralV2.from("has name", Some("en")),
+              StringLiteralV2.from("hat Namen", Some("de")),
             ),
           ),
           "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
             objects = Seq(
-              StringLiteralV2("The name of a 'Thing'", Some("en")),
-              StringLiteralV2("Der Name eines Dinges", Some("de")),
+              StringLiteralV2.from("The name of a 'Thing'", Some("en")),
+              StringLiteralV2.from("Der Name eines Dinges", Some("de")),
             ),
           ),
         ),
@@ -234,11 +234,11 @@ object InputOntologyV2Spec {
           ),
           "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-            objects = Seq(StringLiteralV2("wild thing", Some("en"))),
+            objects = Seq(StringLiteralV2.from("wild thing", Some("en"))),
           ),
           "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that is wild", Some("en"))),
+            objects = Seq(StringLiteralV2.from("A thing that is wild", Some("en"))),
           ),
         ),
         classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,

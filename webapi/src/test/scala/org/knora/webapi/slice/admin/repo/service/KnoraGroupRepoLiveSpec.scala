@@ -12,7 +12,7 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.TestDataFactory.UserGroup.*
+import org.knora.webapi.TestDataFactory.UserGroup._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName

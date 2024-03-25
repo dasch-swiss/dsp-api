@@ -5,43 +5,42 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import zio.*
+import zio._
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants.*
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.util.*
+import org.knora.webapi.util._
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -164,11 +163,7 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
   requestingUser: User,
 ) extends ResourcesResponderRequestV2 {
-  Iri
-    .validateAndEscapeIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
-
-  if (!Iri.isProjectIri(projectIri)) throw BadRequestException("Given IRI is not a project IRI.")
+  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
 }
 
 /**
@@ -685,7 +680,7 @@ object CreateResourceRequestV2 {
     requestingUser: User,
     ingestState: AssetIngestState = AssetInTemp,
   ): ZIO[
-    IriConverter & MessageRelay & SipiService & StringFormatter & UserService,
+    IriConverter & MessageRelay & ProjectService & SipiService & StringFormatter & UserService,
     Throwable,
     CreateResourceRequestV2,
   ] =
@@ -711,16 +706,17 @@ object CreateResourceRequestV2 {
                           stringFormatter.toSmartIriWithErr,
                         ),
                       )
-        projectId <-
-          IriIdentifier.fromString(projectIri.toString).toZIO.mapError(e => BadRequestException(e.getMessage))
-        projectInfoResponse <- MessageRelay.ask[ProjectGetResponse](ProjectGetRequestADM(projectId))
+        projectId <- ZIO.fromEither(ProjectIri.from(projectIri.toString)).mapError(BadRequestException.apply)
+        project <- ZIO
+                     .serviceWithZIO[ProjectService](_.findById(projectId))
+                     .someOrFail(NotFoundException(s"Project '$projectIri' not found"))
 
         _ <- ZIO.attempt(maybeCustomResourceIri.foreach { iri =>
                if (!iri.isKnoraResourceIri) {
                  throw BadRequestException(s"<$iri> is not a Knora resource IRI")
                }
 
-               if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
+               if (!iri.getProjectCode.contains(project.shortcode)) {
                  throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
                }
              })
@@ -791,7 +787,7 @@ object CreateResourceRequestV2 {
                                            )
                                        }
                   fileInfo <- ValueContentV2
-                                .getFileInfo(projectInfoResponse.project.shortcode, ingestState, valueJsonLDObject)
+                                .getFileInfo(project.shortcode, ingestState, valueJsonLDObject)
                                 .option
 
                   valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser, fileInfo)
@@ -854,7 +850,7 @@ object CreateResourceRequestV2 {
           resourceClassIri = resourceClassIri,
           label = label,
           values = propertyValuesMap,
-          projectADM = projectInfoResponse.project,
+          projectADM = project,
           permissions = permissions,
           creationDate = creationDate,
         ),

@@ -5,9 +5,9 @@
 
 package org.knora.webapi
 
-import zio.*
+import zio._
 
-import org.knora.webapi.core.*
+import org.knora.webapi.core._
 import org.knora.webapi.slice.infrastructure.MetricsServer
 import org.knora.webapi.util.Logger
 

@@ -8,7 +8,7 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.*
+import org.knora.webapi.messages.OntologyConstants.KnoraBase._
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 /**
