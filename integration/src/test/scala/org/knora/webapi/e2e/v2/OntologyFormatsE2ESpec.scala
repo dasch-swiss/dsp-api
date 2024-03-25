@@ -6,7 +6,6 @@ package org.knora.webapi.e2e.v2
 
 import cats.implicits._
 import org.apache.pekko
-import org.scalatest.Inspectors.forEvery
 import spray.json._
 
 import java.net.URLEncoder
@@ -183,9 +182,12 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private def checkRdfXmlTestCase(httpGetTest: HttpGetTest): Unit = {
     val mediaType   = RdfMediaTypes.`application/rdf+xml`
     val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    // RDF XML can be compared agains the persisted turtle file, so does not need to br written to a file.
+    // RDF XML can be compared against the persisted turtle file, so does not need to br written to a file.
     if (writeTestDataFiles) ()
-    else assert(parseRdfXml(responseStr) == parseTurtle(httpGetTest.readFile(RdfMediaTypes.`text/turtle`)))
+    else {
+      assert(parseRdfXml(responseStr) == parseTurtle(httpGetTest.readFile(RdfMediaTypes.`text/turtle`)))
+      ()
+    }
   }
 
   private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
