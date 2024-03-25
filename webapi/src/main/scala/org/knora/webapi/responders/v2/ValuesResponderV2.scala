@@ -37,7 +37,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -1354,7 +1353,7 @@ final case class ValuesResponderV2Live(
                        propertyIri = propertyIri,
                        currentValueIri = currentValue.valueIri,
                        newValueIri = newValueIri,
-                       valueTypeIri = newValueVersion.valueType,
+                       valueTypeIri = currentValue.valueContent.valueType,
                        value = newValueVersion,
                        valueCreator = valueCreator,
                        valuePermissions = valuePermissions,
