@@ -12,6 +12,7 @@ import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import scala.util.Try
 
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -26,7 +27,6 @@ import org.knora.webapi.util._
 
 import pekko.http.scaladsl.model._
 import pekko.http.scaladsl.model.headers.Accept
-import scala.util.Try
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 

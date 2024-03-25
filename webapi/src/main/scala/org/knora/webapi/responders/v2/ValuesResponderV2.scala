@@ -5,9 +5,15 @@
 
 package org.knora.webapi.responders.v2
 
+import org.apache.pekko.http.scaladsl.util.FastFuture
+import zio._
+import zio.macros.accessible
+
+import java.time.Instant
+import java.util.UUID
+
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
-import org.apache.pekko.http.scaladsl.util.FastFuture
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -41,11 +47,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import zio._
-import zio.macros.accessible
-
-import java.time.Instant
-import java.util.UUID
 
 /**
  * Handles requests to read and write Knora values.
