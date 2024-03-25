@@ -5,21 +5,17 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko.http.scaladsl.util.FastFuture
-import zio._
-import zio.macros.accessible
-
-import java.time.Instant
-import java.util.UUID
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
+import org.apache.pekko.http.scaladsl.util.FastFuture
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
@@ -41,10 +37,16 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import zio._
+import zio.macros.accessible
+
+import java.time.Instant
+import java.util.UUID
 
 /**
  * Handles requests to read and write Knora values.
@@ -881,6 +883,7 @@ final case class ValuesResponderV2Live(
     ): Task[ResourcePropertyValue] =
       for {
         submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
+        submittedInternalValueType   <- ZIO.attempt(submittedExternalValueType.toOntologySchema(InternalSchema))
 
         // Get ontology information about the submitted property.
         propertyInfoRequestForSubmittedProperty =
@@ -954,9 +957,14 @@ final case class ValuesResponderV2Live(
                 s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>",
               ),
             )
-        // Check that the current value has the submitted value type.
+        isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+        isStillImageTypes = {
+          val stillImageFileValues = List(StillImageExternalFileValue, StillImageFileValue)
+          stillImageFileValues.contains(submittedInternalValueType.toInternalIri.value) &&
+          stillImageFileValues.contains(currentValue.valueContent.valueType.toInternalIri.value)
+        }
         _ <-
-          ZIO.when(currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema))(
+          ZIO.when(!(isSameType || isStillImageTypes))(
             ZIO.fail(
               BadRequestException(
                 s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>",
@@ -2429,10 +2437,7 @@ final case class ValuesResponderV2Live(
 }
 
 object ValuesResponderV2Live {
-  val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & SearchResponderV2 & StringFormatter,
-    ValuesResponderV2,
-  ] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]

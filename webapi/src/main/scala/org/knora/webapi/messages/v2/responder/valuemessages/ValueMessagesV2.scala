@@ -2837,10 +2837,8 @@ case class StillImageExternalFileValueContentV2(
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
       case thatStillImage: StillImageExternalFileValueContentV2 =>
-        fileValue == thatStillImage.fileValue &&
-        dimX == thatStillImage.dimX &&
-        dimY == thatStillImage.dimY
         externalUrl == thatStillImage.externalUrl
+      case _: StillImageFileValueContentV2 => false
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -2849,6 +2847,7 @@ case class StillImageExternalFileValueContentV2(
     currentVersion match {
       case thatStillImage: StillImageExternalFileValueContentV2 =>
         wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
+      case _: StillImageFileValueContentV2 => false
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
