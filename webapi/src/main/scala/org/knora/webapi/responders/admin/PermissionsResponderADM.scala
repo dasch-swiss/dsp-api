@@ -1515,7 +1515,7 @@ final case class PermissionsResponderADMLive(
         project <- knoraProjectService
                      .findById(projectIri)
                      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
-        _ <- auth.ensureSystemAdminSystemUserOrProjectAdmin(user, project)
+        _ <- auth.ensureSystemAdminOrProjectAdmin(user, project)
         checkResult <- defaultObjectAccessPermissionGetADM(
                          createRequest.forProject,
                          createRequest.forGroup,

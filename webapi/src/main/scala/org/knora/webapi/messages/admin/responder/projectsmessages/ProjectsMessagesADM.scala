@@ -35,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,22 +47,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 // Requests
-/**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectGetResponse]]. External use.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectADM]]. Internal use only.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
 /**
  * Requests the creation of a new project.
  *
@@ -171,6 +156,9 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
+
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsGetResponseADM =
+    ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
 }
 
 /**
@@ -397,6 +385,12 @@ case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boo
 object ProjectRestrictedViewSettingsADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsADM]
+
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsADM =
+    restrictedView match {
+      case RestrictedView.Watermark(value) => ProjectRestrictedViewSettingsADM(None, value)
+      case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), false)
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
