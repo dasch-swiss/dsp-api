@@ -142,7 +142,7 @@ final case class ProjectsEndpointsHandler(
   val deleteAdminProjectsByIriHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.deleteAdminProjectsByIri,
-      user => (id: IriIdentifier) => restService.deleteProject(id, user),
+      user => (id: IriIdentifier) => restService.deleteProject(id.value, user),
     )
 
   val getAdminProjectsExportsHandler =
@@ -179,7 +179,7 @@ final case class ProjectsEndpointsHandler(
     SecuredEndpointHandler[(IriIdentifier, ProjectUpdateRequest), ProjectOperationResponseADM](
       projectsEndpoints.Secured.putAdminProjectsByIri,
       user => { case (id: IriIdentifier, changeReq: ProjectUpdateRequest) =>
-        restService.updateProject(id, changeReq, user)
+        restService.updateProject(id.value, changeReq, user)
       },
     )
 

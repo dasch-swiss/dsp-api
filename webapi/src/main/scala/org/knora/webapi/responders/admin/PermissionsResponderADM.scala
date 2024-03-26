@@ -29,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -151,10 +152,10 @@ trait PermissionsResponderADM {
   /**
    * Update a permission's group
    *
-   * @param permissionIri                the IRI of the permission.
-   * @param groupIri                     the [[GroupIri]] to change.
-   * @param requestingUser               the [[User]] of the requesting user.
-   * @param apiRequestID                 the API request ID.
+   * @param permissionIri  the IRI of the permission.
+   * @param groupIri       the [[GroupIri]] to change.
+   * @param requestingUser the [[User]] of the requesting user.
+   * @param apiRequestID   the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
    */
@@ -231,6 +232,8 @@ trait PermissionsResponderADM {
     isInProjectAdminGroups: Seq[IRI],
     isInSystemAdminGroup: Boolean,
   ): Task[PermissionsDataADM]
+
+  def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit]
 }
 
 final case class PermissionsResponderADMLive(
@@ -2046,7 +2049,11 @@ final case class PermissionsResponderADMLive(
    *                      throws ForbiddenException if the user is not a project or system admin
    */
   private def verifyUsersRightForOperation(requestingUser: User, projectIri: IRI, permissionIri: IRI): Unit =
-    if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+    if (
+      !requestingUser.isSystemUser && !requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
+        projectIri,
+      )
+    ) {
 
       throw ForbiddenException(
         s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.",
@@ -2203,6 +2210,61 @@ final case class PermissionsResponderADMLive(
 
     } yield projectIri
 
+  override def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
+    for {
+      // Give the admins of the new project rights for any operation in project level, and rights to create resources.
+      _ <- createAdministrativePermission(
+             CreateAdministrativePermissionAPIRequestADM(
+               forProject = projectIri.value,
+               forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
+               hasPermissions =
+                 Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
+             ),
+             SystemUser,
+             UUID.randomUUID(),
+           )
+
+      // Give the members of the new project rights to create resources.
+      _ <- createAdministrativePermission(
+             CreateAdministrativePermissionAPIRequestADM(
+               forProject = projectIri.value,
+               forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+               hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+             ),
+             SystemUser,
+             UUID.randomUUID(),
+           )
+
+      // Give the admins of the new project rights to change rights, modify, delete, view,
+      // and restricted view of all resources and values that belong to the project.
+      _ <- createDefaultObjectAccessPermission(
+             CreateDefaultObjectAccessPermissionAPIRequestADM(
+               forProject = projectIri.value,
+               forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+               hasPermissions = Set(
+                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+               ),
+             ),
+             SystemUser,
+             UUID.randomUUID(),
+           )
+
+      // Give the members of the new project rights to modify, view, and restricted view of all resources and values
+      // that belong to the project.
+      _ <- createDefaultObjectAccessPermission(
+             CreateDefaultObjectAccessPermissionAPIRequestADM(
+               forProject = projectIri.value,
+               forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+               hasPermissions = Set(
+                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+               ),
+             ),
+             SystemUser,
+             UUID.randomUUID(),
+           )
+    } yield ()
 }
 
 object PermissionsResponderADMLive {

@@ -7,11 +7,12 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio._
 
+import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
@@ -35,9 +36,9 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class ProjectRestService(
   format: KnoraResponseRenderer,
-  responder: ProjectsResponderADM,
   projectService: ProjectService,
   knoraProjectService: KnoraProjectService,
+  permissionResponder: PermissionsResponderADM,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
   userService: UserService,
@@ -86,29 +87,42 @@ final case class ProjectRestService(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def createProject(createReq: ProjectCreateRequest, user: User): Task[ProjectOperationResponseADM] = for {
-    internal <- ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
+    _ <- auth.ensureSystemAdmin(user)
+    _ <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)
+    _ <- ZIO
+           .fail(
+             BadRequestException(s"IRI: '${createReq.id.map(_.value).getOrElse("")}' already exists, try another one."),
+           )
+           .whenZIO(
+             createReq.id match {
+               case Some(id) => knoraProjectService.existsById(id)
+               case None     => ZIO.succeed(false)
+             },
+           )
+    internal <- projectService.createProject(createReq).map(ProjectOperationResponseADM.apply)
+    _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(internal.project.projectIri)
     external <- format.toExternalADM(internal)
   } yield external
 
   /**
    * Deletes the project by its [[ProjectIri]].
    *
-   * @param id   the [[ProjectIri]] of the project
-   * @param user the [[User]] making the request
+   * @param projectIri  the [[ProjectIri]] of the project
+   * @param user        the [[User]] making the request
    * @return
    *     '''success''': a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def deleteProject(id: IriIdentifier, user: User): Task[ProjectOperationResponseADM] = {
-    val updatePayload = ProjectUpdateRequest(status = Some(Status.Inactive))
+  def deleteProject(projectIri: ProjectIri, user: User): Task[ProjectOperationResponseADM] =
     for {
-      apiId    <- Random.nextUUID
-      internal <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
+      project <- auth.ensureSystemAdminOrProjectAdmin(user, projectIri)
+      internal <- projectService
+                    .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
+                    .map(ProjectOperationResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
-  }
 
   /**
    * Updates a project, identified by its [[ProjectIri]].
@@ -123,11 +137,15 @@ final case class ProjectRestService(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def updateProject(
-    id: IriIdentifier,
+    projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: User,
   ): Task[ProjectOperationResponseADM] = for {
-    internal <- Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
+    project <- knoraProjectService
+                 .findById(projectIri)
+                 .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    internal <- projectService.updateProject(project, updateReq).map(ProjectOperationResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 

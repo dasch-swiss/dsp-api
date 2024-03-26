@@ -136,7 +136,7 @@ final case class AppServer(
 
 object AppServer {
 
-  private type AppServerEnvironment =
+  type AppServerEnvironment =
     State & TriplestoreService & RepositoryUpdater & actor.ActorSystem & OntologyCache & SipiService & HttpServer & AppConfig
 
   /**
