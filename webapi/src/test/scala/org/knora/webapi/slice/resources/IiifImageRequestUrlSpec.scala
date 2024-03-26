@@ -19,11 +19,9 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment with Scope, Nothing] = suite("IiifImageRequestUrl")(
     test("should accept a IIIF image request url version 1") {
-      // https://iiif.io/api/image/1.0/#21-image-request-url-syntax
-      // http[s]://server/[prefix/]identifier/region/size/rotation/quality[.format]
       val validUrls =
         Seq(
-          // V1
+          // V1 https://iiif.io/api/image/1.0/#21-image-request-url-syntax
           "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
           "http://www.example.org/prefix1/prefix2/prefix3/abcd1234/80,15,60,75/full/0/native",
           "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
@@ -45,10 +43,10 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           "http://www.example.org/prefix1/abcd1234/full/600,/0/color.jpg",
           "http://www.example.org/prefix1/abcd1234/full/600,/0/grey.jpg",
           "http://www.example.org/prefix1/abcd1234/full/600,/0/bitonal.jpg",
-          // V2
+          // V2 https://iiif.io/api/image/2.0/#image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/0/default.jpg",
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/!90/gray.webp",
-          // V3
+          // V3 https://iiif.io/api/image/3.0/#21-image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/max/0/default.jpg",
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
         )
