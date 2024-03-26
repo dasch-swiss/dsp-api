@@ -14,6 +14,16 @@ jobs:
       matrix:
         java: [ "21" ]
     steps:
+      - name: Check if no-op step is needed
+        id: noop
+        run: echo "${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}" >>  $GITHUB_OUTPUT
+      - env:
+          IS_NOOP: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+        run: echo env
+      - name: check stuff
+        run: |
+          echo ${{ steps.noop.outputs }}
+          echo $IS_NOOP
       - name: Run preparatory steps
         if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
