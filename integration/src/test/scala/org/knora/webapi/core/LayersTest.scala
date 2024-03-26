@@ -90,7 +90,7 @@ object LayersTest {
       InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache &
       OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 & PermissionUtilADM &
       PermissionsResponderADM & PermissionsRestService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectService & ProjectRestService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater &
+      ProjectImportService & ProjectService & ProjectRestService & QueryTraverser & RepositoryUpdater &
       ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
       StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService & UserService &
       UsersResponder & UsersRestService & ValuesResponderV2
@@ -139,7 +139,6 @@ object LayersTest {
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
-      ProjectsResponderADM.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,

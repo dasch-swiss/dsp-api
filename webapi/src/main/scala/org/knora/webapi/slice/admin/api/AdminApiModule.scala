@@ -12,7 +12,6 @@ import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
@@ -38,7 +37,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminApiModule {
 
   type Dependencies =
-    AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService & GroupsResponderADM & HandlerMapper & KnoraProjectService & KnoraResponseRenderer & KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache & PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService & ProjectsResponderADM & TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
+    AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService & GroupsResponderADM & HandlerMapper & KnoraProjectService & KnoraResponseRenderer & KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache & PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService & TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests

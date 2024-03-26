@@ -9,11 +9,8 @@
  */
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
 import zio.ZIO
-
-import java.util.UUID
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
@@ -168,23 +165,26 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
         val shortcode = "111c"
-        appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom("newproject"),
-            shortcode = Shortcode.unsafeFrom(shortcode),
-            longname = Some(Longname.unsafeFrom("project longname")),
-            description =
-              List(Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en")))),
-            keywords = List("keywords").map(Keyword.unsafeFrom),
-            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin,
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectRestService(
+            _.createProject(
+              ProjectCreateRequest(
+                shortname = Shortname.unsafeFrom("newproject"),
+                shortcode = Shortcode.unsafeFrom(shortcode),
+                longname = Some(Longname.unsafeFrom("project longname")),
+                description = List(
+                  Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en"))),
+                ),
+                keywords = List("keywords").map(Keyword.unsafeFrom),
+                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+                status = Status.Active,
+                selfjoin = SelfJoin.CannotJoin,
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
 
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.shortname should be("newproject")
         received.project.shortcode should be(shortcode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
@@ -257,22 +257,25 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       }
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
-        appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom("newproject2"),
-            shortcode = Shortcode.unsafeFrom("1112"),
-            longname = Some(Longname.unsafeFrom("project longname")),
-            description =
-              List(Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en")))),
-            keywords = List("keywords").map(Keyword.unsafeFrom),
-            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin,
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectRestService(
+            _.createProject(
+              ProjectCreateRequest(
+                shortname = Shortname.unsafeFrom("newproject2"),
+                shortcode = Shortcode.unsafeFrom("1112"),
+                longname = Some(Longname.unsafeFrom("project longname")),
+                description = List(
+                  Description.unsafeFrom(StringLiteralV2.from(value = "project description", language = Some("en"))),
+                ),
+                keywords = List("keywords").map(Keyword.unsafeFrom),
+                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+                status = Status.Active,
+                selfjoin = SelfJoin.CannotJoin,
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
         received.project.shortname should be("newproject2")
         received.project.shortcode should be("1112")
@@ -288,26 +291,28 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
-        appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom("project_with_char"),
-            shortcode = Shortcode.unsafeFrom("1312"),
-            longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
-            description = List(
-              Description.unsafeFrom(
-                StringLiteralV2.from(value = descriptionWithSpecialCharacter, language = Some("en")),
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectRestService(
+            _.createProject(
+              ProjectCreateRequest(
+                shortname = Shortname.unsafeFrom("project_with_char"),
+                shortcode = Shortcode.unsafeFrom("1312"),
+                longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
+                description = List(
+                  Description.unsafeFrom(
+                    StringLiteralV2.from(value = descriptionWithSpecialCharacter, language = Some("en")),
+                  ),
+                ),
+                keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
+                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+                status = Status.Active,
+                selfjoin = SelfJoin.CannotJoin,
               ),
+              SharedTestDataADM.rootUser,
             ),
-            keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
-            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin,
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
 
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.longname should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
@@ -321,41 +326,47 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
-        appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom("newproject"),
-            shortcode = Shortcode.unsafeFrom("111C"),
-            longname = Some(Longname.unsafeFrom("project longname")),
-            description =
-              List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
-            keywords = List("keywords").map(Keyword.unsafeFrom),
-            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin,
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(
+            _.createProject(
+              ProjectCreateRequest(
+                shortname = Shortname.unsafeFrom("newproject"),
+                shortcode = Shortcode.unsafeFrom("111D"),
+                longname = Some(Longname.unsafeFrom("project longname")),
+                description =
+                  List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+                keywords = List("keywords").map(Keyword.unsafeFrom),
+                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+                status = Status.Active,
+                selfjoin = SelfJoin.CannotJoin,
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
-        expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
+        assertFailsWithA[DuplicateValueException](exit, s"Project with the shortname: 'newproject' already exists")
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
-        appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreateRequest(
-            shortname = Shortname.unsafeFrom("newproject3"),
-            shortcode = Shortcode.unsafeFrom("111C"),
-            longname = Some(Longname.unsafeFrom("project longname")),
-            description =
-              List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
-            keywords = List("keywords").map(Keyword.unsafeFrom),
-            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = Status.Active,
-            selfjoin = SelfJoin.CannotJoin,
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(
+            _.createProject(
+              ProjectCreateRequest(
+                shortname = Shortname.unsafeFrom("newproject3"),
+                shortcode = Shortcode.unsafeFrom("111C"),
+                longname = Some(Longname.unsafeFrom("project longname")),
+                description =
+                  List(Description.unsafeFrom(StringLiteralV2.from(value = "description", language = Some("en")))),
+                keywords = List("keywords").map(Keyword.unsafeFrom),
+                logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+                status = Status.Active,
+                selfjoin = SelfJoin.CannotJoin,
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
-        expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '111C' already exists")))
+        assertFailsWithA[DuplicateValueException](exit, s"Project with the shortcode: '111C' already exists")
       }
 
       "UPDATE a project" in {
@@ -371,21 +382,23 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val projectStatus   = Status.Active
         val selfJoin        = SelfJoin.CanJoin
 
-        appActor ! ProjectChangeRequestADM(
-          projectIri = iri,
-          projectUpdatePayload = ProjectUpdateRequest(
-            shortname = None,
-            longname = Some(updatedLongname),
-            description = Some(updatedDescription),
-            keywords = Some(updatedKeywords),
-            logo = Some(updatedLogo),
-            status = Some(projectStatus),
-            selfjoin = Some(selfJoin),
+        val received = UnsafeZioRun.runOrThrow(
+          ProjectRestService(
+            _.updateProject(
+              iri,
+              ProjectUpdateRequest(
+                shortname = None,
+                longname = Some(updatedLongname),
+                description = Some(updatedDescription),
+                keywords = Some(updatedKeywords),
+                logo = Some(updatedLogo),
+                status = Some(projectStatus),
+                selfjoin = Some(selfJoin),
+              ),
+              SharedTestDataADM.rootUser,
+            ),
           ),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
         )
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.shortname should be("newproject")
         received.project.shortcode should be("111C")
         received.project.longname should be(Some("updated project longname"))
@@ -406,19 +419,17 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
         val longname = Longname.unsafeFrom("longname")
         val iri      = ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)
-        appActor ! ProjectChangeRequestADM(
-          projectIri = iri,
-          projectUpdatePayload = ProjectUpdateRequest(longname = Some(longname)),
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID(),
-        )
-        expectMsg(
-          Failure(
-            NotFoundException(
-              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request.",
+        val exit = UnsafeZioRun.run(
+          ProjectRestService(
+            _.updateProject(
+              iri,
+              ProjectUpdateRequest(longname = Some(longname)),
+              SharedTestDataADM.rootUser,
             ),
           ),
         )
+
+        assertFailsWithA[NotFoundException](exit, s"Project '$notExistingProjectButValidProjectIri' not found.")
       }
     }
 
