@@ -24,7 +24,7 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           // V1 https://iiif.io/api/image/1.0/#21-image-request-url-syntax
           "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
           "http://www.example.org/prefix1/prefix2/prefix3/abcd1234/80,15,60,75/full/0/native",
-          "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
+          "https://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
           "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native.jpg",
           "http://www.example.org/prefix1/abcd1234/pct:10,10,80,70/full/0/native.jpg",
           "http://www.example.org/prefix1/abcd1234/full/full/0/native.jpg",
@@ -45,10 +45,10 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           "http://www.example.org/prefix1/abcd1234/full/600,/0/bitonal.jpg",
           // V2 https://iiif.io/api/image/2.0/#image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/0/default.jpg",
-          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/!90/gray.webp",
+          "https://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/!90/gray.webp",
           // V3 https://iiif.io/api/image/3.0/#21-image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/max/0/default.jpg",
-          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
+          "https://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
         )
       check(Gen.fromIterable(validUrls)) { url =>
         val actual = IiifImageRequestUrl.from(url)
@@ -60,6 +60,7 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
         Seq(
           "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/info.json",
           "https://iiif.dasch.swiss/0811/5Jd909CLmCJ-BUUL1DDOXGJ.jp2/info.json",
+          "ftp://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
         )
       check(Gen.fromIterable(invalidUrls)) { url =>
         val actual = IiifImageRequestUrl.from(url)
