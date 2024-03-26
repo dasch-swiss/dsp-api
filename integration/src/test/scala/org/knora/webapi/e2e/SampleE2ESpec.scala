@@ -4,8 +4,11 @@ import zio.json.*
 import zio.test.*
 
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object SampleE2ESpec extends E2EZSpec {
+
+  override def rdfDataObjects: List[RdfDataObject] = List.empty
 
   case class VersionResponse(
     buildCommit: String,

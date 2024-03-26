@@ -12,8 +12,9 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
-  private lazy val testLayers     = util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
-  private lazy val rdfDataObjects = List.empty[RdfDataObject]
+  private lazy val testLayers = util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
+
+  def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
   type env = LayersTest.DefaultTestEnvironmentWithoutSipi with Client with Scope
 
