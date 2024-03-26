@@ -369,11 +369,11 @@ a `kb:FileValue`. The base class `FileValue`, which is not intended to be used d
 - `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to the Knora API server.
 
 - `isPreview` (0-1): A boolean indicating whether the file is a preview, i.e. a small image representing the contents of
-  the file. A preview is always a `StillImageFileValue`, regardless of the type of the enclosing `Representation`.
+  the file. A preview is always a `StillImageAbstractFileValue`, regardless of the type of the enclosing `Representation`.
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageFileValue`: Contains metadata about a still image file.
+- `StillImageAbstractFileValue`: Contains metadata about a still image file, whicih cen be either `StillImageFileValue` or `StillImageExternalFileValue`.
 
 - `MovingImageFileValue`: Contains metadata about a video file.
 
