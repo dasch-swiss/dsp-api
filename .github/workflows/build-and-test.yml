@@ -11,14 +11,8 @@ jobs:
       matrix:
         java: [ "21" ]
     env:
-      IS_NOOP: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
-      - name: verify something
-        run: |
-          echo "ref_name... ${{ github.ref_name }}"
-          echo "ref... ${{ github.ref }}"
-          echo "equals... ${{ github.ref_name == 'wip/fiddle-' }}"
-          echo "starts with... ${{ startsWith(github.ref_name, 'wip/fiddle-') }}"
       - name: Inform on no-op
         run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
