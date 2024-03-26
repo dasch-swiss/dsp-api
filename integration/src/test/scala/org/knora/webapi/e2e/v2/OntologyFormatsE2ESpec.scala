@@ -4,15 +4,8 @@
  */
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
-import org.scalatest.Inspectors.forEvery
-import spray.json._
-
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.Accept
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -23,9 +16,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import org.scalatest.Inspectors.forEvery
+import spray.json._
 
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.Accept
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class OntologyFormatsE2ESpec extends E2ESpec {
 
@@ -40,20 +37,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
    *
    * @param urlPath                     the URL path to be used in the request.
    * @param fileBasename                the basename of the test data file containing the expected response.
-   * @param maybeClientTestDataBasename the basename of the client test data file, if any, to be collected by
+   * @param clientTestDataBasename      the basename of the client test data file, if any, to be collected by
    *                                    [[org.knora.webapi.e2e.ClientTestDataCollector]].
-   * @param disableWrite                if true, this [[HttpGetTest]] will not write the expected response file when `writeFile` is called.
-   *                                    This is useful if two tests share the same file.
    */
   private case class HttpGetTest(
     urlPath: String,
     fileBasename: String,
     clientTestDataBasename: Option[String] = None,
   ) {
-    private val jsonLd         = "jsonld"
-    private val jsonLdReceived = s"received.$jsonLd"
-    private def makeFile(suffix: String): Path =
-      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
+    private def makeFile(): Path =
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.jsonld")
 
     /**
      * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
@@ -70,14 +63,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
      * @param mediaType the media type of the response.
      * @return the contents of the file.
      */
-    def readFile(mediaType: MediaType.NonBinary): String =
-      FileUtil.readTextFile(makeFile(mediaType.fileExtensions.head))
+    def readFile(): String =
+      FileUtil.readTextFile(makeFile())
 
     def fileExists: Boolean =
-      Files.exists(makeFile(jsonLd))
+      Files.exists(makeFile())
 
     def writeReceived(responseStr: String): Unit = {
-      val newOutputFile = makeFile(jsonLdReceived)
+      val newOutputFile = makeFile()
 
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
@@ -113,7 +106,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       throw new AssertionError(s"No approved data available in file ${httpGetTest.fileBasename}")
     }
 
-    val approvedJsonLd = httpGetTest.readFile(RdfMediaTypes.`application/ld+json`)
+    val approvedJsonLd = httpGetTest.readFile()
     if (JsonParser(responseJsonLd) != JsonParser(approvedJsonLd)) {
       httpGetTest.writeReceived(responseJsonLd)
       throw new AssertionError(

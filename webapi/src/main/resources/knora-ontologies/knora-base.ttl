@@ -1036,8 +1036,8 @@
 :externalUrl
     rdf:type                  owl:DatatypeProperty ;
     rdfs:subPropertyOf        :valueHas ;
-    :subjectClassConstraint   :FileValue ;
-    :objectDatatypeConstraint xsd:string .
+    :subjectClassConstraint   :StillImageExternalFileValue ;
+    :objectDatatypeConstraint xsd:anyURI.
 
 
 ###  http://www.knora.org/ontology/knora-base#originalMimeType

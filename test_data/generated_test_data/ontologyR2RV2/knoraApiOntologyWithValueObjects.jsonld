@@ -7265,11 +7265,11 @@
                 "@id": "knora-api:valueHas"
             },
             "knora-api:subjectType": {
-                "@id": "knora-api:FileValue"
+                "@id": "knora-api:StillImageExternalFileValue"
             },
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
-                "@id": "xsd:string"
+                "@id": "xsd:anyURI"
             },
             "@id": "knora-api:externalUrl"
         },

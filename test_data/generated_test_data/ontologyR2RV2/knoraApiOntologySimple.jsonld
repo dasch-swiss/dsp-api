@@ -874,7 +874,7 @@
                 "@id": "knora-api:File"
             },
             "knora-api:objectType": {
-                "@id": "xsd:string"
+                "@id": "xsd:anyURI"
             }
         },
         {
