@@ -56,8 +56,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 
-trait ResourcesResponderV2
-
 trait GetResources {
   def getResourcesV2(
     resourceIris: Seq[IRI],
@@ -79,7 +77,7 @@ trait GetResources {
   ): Task[ReadResourcesSequenceV2]
 }
 
-final case class ResourcesResponderV2Live(
+final case class ResourcesResponderV2(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
@@ -92,10 +90,24 @@ final case class ResourcesResponderV2Live(
   searchResponderV2: SearchResponderV2,
   ontologyRepo: OntologyRepo,
   implicit val stringFormatter: StringFormatter,
-) extends ResourcesResponderV2
-    with MessageHandler
+) extends MessageHandler
     with LazyLogging
     with GetResources {
+
+  private val createHandler = CreateResourceV2Handler(
+    appConfig,
+    iriService,
+    messageRelay,
+    triplestore,
+    constructResponseUtilV2,
+    standoffTagUtilV2,
+    resourceUtilV2,
+    permissionUtilADM,
+    searchResponderV2,
+    this,
+    ontologyRepo,
+    stringFormatter,
+  )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[ResourcesResponderRequestV2]
@@ -147,20 +159,7 @@ final case class ResourcesResponderV2Live(
       )
 
     case createResourceRequestV2: CreateResourceRequestV2 =>
-      CreateResourceV2Handler(
-        appConfig,
-        iriService,
-        messageRelay,
-        triplestore,
-        constructResponseUtilV2,
-        standoffTagUtilV2,
-        resourceUtilV2,
-        permissionUtilADM,
-        searchResponderV2,
-        this,
-        ontologyRepo,
-        stringFormatter,
-      )(createResourceRequestV2)
+      createHandler(createResourceRequestV2)
 
     case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 =>
       updateResourceMetadataV2(updateResourceMetadataRequestV2)
@@ -184,6 +183,9 @@ final case class ResourcesResponderV2Live(
     case other =>
       Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
+
+  def createResource(createResource: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
+    createHandler(createResource)
 
   /**
    * Updates a resources metadata.
@@ -1998,7 +2000,7 @@ final case class ResourcesResponderV2Live(
   }
 }
 
-object ResourcesResponderV2Live {
+object ResourcesResponderV2 {
   val layer: URLayer[
     AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService & OntologyRepo,
     ResourcesResponderV2,
@@ -2016,7 +2018,7 @@ object ResourcesResponderV2Live {
       sr      <- ZIO.service[SearchResponderV2]
       or      <- ZIO.service[OntologyRepo]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or, sf))
+      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or, sf))
     } yield handler
   }
 }

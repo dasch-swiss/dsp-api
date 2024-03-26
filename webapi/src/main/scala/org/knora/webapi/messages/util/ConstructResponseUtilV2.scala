@@ -54,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -1083,7 +1084,9 @@ final case class ConstructResponseUtilV2Live(
             fileValue = fileValue,
             dimX = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
             dimY = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
-            externalUrl = valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
+            externalUrl = IiifImageRequestUrl.unsafeFrom(
+              valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
+            ),
             comment = valueCommentOption,
           ),
         )

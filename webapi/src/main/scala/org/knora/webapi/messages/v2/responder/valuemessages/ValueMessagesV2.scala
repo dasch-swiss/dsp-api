@@ -7,7 +7,6 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import zio.ZIO
 
-import java.net.URI
 import java.time.Instant
 import java.util.UUID
 
@@ -48,6 +47,7 @@ import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 
@@ -2784,7 +2784,7 @@ case class StillImageExternalFileValueContentV2(
   fileValue: FileValueV2,
   dimX: Int,
   dimY: Int,
-  externalUrl: String,
+  externalUrl: IiifImageRequestUrl,
   comment: Option[String] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
@@ -2797,7 +2797,7 @@ case class StillImageExternalFileValueContentV2(
   override def toOntologySchema(targetSchema: OntologySchema) =
     copy(ontologySchema = targetSchema)
 
-  def makeFileUrl: String = externalUrl
+  def makeFileUrl: String = externalUrl.value.toString
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
@@ -2816,17 +2816,13 @@ case class StillImageExternalFileValueContentV2(
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
                 value = {
-                  try {
-                    val uri = URI.create(externalUrl)
-                    s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
-                  } catch {
-                    case e: IllegalArgumentException =>
-                      throw BadRequestException(s"Invalid URL: $externalUrl: ${e.getMessage}")
-                  }
+                  val uri = externalUrl.value.toURI
+                  if (uri.getPort == -1) s"${uri.getScheme}://${uri.getHost}"
+                  else s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
                 },
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
-            StillImageFileValueHasExternalUrl -> JsonLDString(externalUrl),
+            StillImageFileValueHasExternalUrl -> JsonLDString(externalUrl.value.toString),
           ),
         )
     }
@@ -2862,10 +2858,9 @@ object StillImageExternalFileValueContentV2 {
     jsonLDObject: JsonLDObject,
   ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
     for {
-      comment <- JsonLDUtil.getComment(jsonLDObject)
-      externalUrl <- ZIO
-                       .fromEither(jsonLDObject.getRequiredString(FileValueHasExternalUrl))
-                       .mapError(e => BadRequestException(s"Invalid $FileValueHasExternalUrl: $e"))
+      comment          <- JsonLDUtil.getComment(jsonLDObject)
+      externalUrlEither = jsonLDObject.getRequiredString(FileValueHasExternalUrl).flatMap(IiifImageRequestUrl.from)
+      externalUrl      <- ZIO.fromEither(externalUrlEither).mapError(BadRequestException.apply)
     } yield StillImageExternalFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = FileValueV2(

@@ -11,6 +11,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
 object FileModelUtil {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -218,10 +219,10 @@ object FileType {
     dimX: Option[Int] = Some(100),
     dimY: Option[Int] = Some(100),
   ) extends FileType
-  case class StillImageFile(dimX: Int = 100, dimY: Int = 100)                              extends FileType
-  case class StillImageExternalFile(externalUrl: String, dimX: Int = 100, dimY: Int = 100) extends FileType
-  case class MovingImageFile(dimX: Int = 100, dimY: Int = 100)                             extends FileType
-  case object TextFile                                                                     extends FileType
-  case object AudioFile                                                                    extends FileType
-  case object ArchiveFile                                                                  extends FileType
+  case class StillImageFile(dimX: Int = 100, dimY: Int = 100)                                           extends FileType
+  case class StillImageExternalFile(externalUrl: IiifImageRequestUrl, dimX: Int = 100, dimY: Int = 100) extends FileType
+  case class MovingImageFile(dimX: Int = 100, dimY: Int = 100)                                          extends FileType
+  case object TextFile                                                                                  extends FileType
+  case object AudioFile                                                                                 extends FileType
+  case object ArchiveFile                                                                               extends FileType
 }
