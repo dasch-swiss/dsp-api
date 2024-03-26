@@ -16,10 +16,9 @@ jobs:
     steps:
       - env:
           IS_NOOP: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
-        run: echo env
+        run: echo "$IS_NOOP"
       - name: check stuff
-        run: |
-          echo $IS_NOOP
+        run: echo "$IS_NOOP"
       - name: Run preparatory steps
         if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
