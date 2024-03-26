@@ -6,9 +6,9 @@
 package org.knora.webapi.util
 
 import org.apache.pekko
-import zio.*
+import zio._
 
-import dsp.errors.*
+import dsp.errors._
 import org.knora.webapi.routing.UnsafeZioRun
 
 import pekko.actor.ActorRef

@@ -5,15 +5,15 @@
 
 package org.knora.webapi.responders.v2.resources
 
-import zio.*
+import zio._
 
-import dsp.errors.*
-import org.knora.webapi.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages._
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 
 object CheckObjectClassConstraints {
 

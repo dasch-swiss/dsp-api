@@ -5,15 +5,16 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.model.vocabulary.*
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.model.vocabulary._
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -34,7 +35,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
@@ -112,6 +113,20 @@ final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService
       users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
     } yield users.toList
 
+  override def findByProjectMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
+    for {
+      model     <- triplestore.queryRdfModel(UserQueries.findProjectMembers(projectIri))
+      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
+      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
+    } yield users
+
+  override def findByProjectAdminMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
+    for {
+      model     <- triplestore.queryRdfModel(UserQueries.findProjectAdminMembers(projectIri))
+      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
+      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
+    } yield users
+
   override def save(user: KnoraUser): Task[KnoraUser] =
     cacheService.invalidateUser(user.id) *> triplestore.query(UserQueries.save(user)).as(user)
 }
@@ -128,6 +143,32 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(s.has(p, o))
+            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+        )
+      Construct(query.getQueryString)
+    }
+    def findProjectMembers(projectIri: ProjectIri): Construct = {
+      val (userIri, p, o) = (variable("s"), variable("p"), variable("o"))
+      val query = Queries
+        .CONSTRUCT(tp(userIri, p, o))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
+        .where(
+          userIri
+            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+            .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(projectIri.value)))
+            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+        )
+      Construct(query.getQueryString)
+    }
+    def findProjectAdminMembers(projectIri: ProjectIri): Construct = {
+      val (userIri, p, o) = (variable("s"), variable("p"), variable("o"))
+      val query = Queries
+        .CONSTRUCT(tp(userIri, p, o))
+        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
+        .where(
+          userIri
+            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+            .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(projectIri.value)))
             .from(Vocabulary.NamedGraphs.knoraAdminIri),
         )
       Construct(query.getQueryString)

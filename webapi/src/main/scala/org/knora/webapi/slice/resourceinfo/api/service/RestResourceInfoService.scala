@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api.service
 
-import zio.*
+import zio._
 
 import java.time.Instant
 
@@ -13,7 +13,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.*
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo

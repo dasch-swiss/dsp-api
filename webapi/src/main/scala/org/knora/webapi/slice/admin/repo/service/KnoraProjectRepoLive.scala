@@ -6,20 +6,20 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import zio.*
+import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
+import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive.ProjectQueries
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError

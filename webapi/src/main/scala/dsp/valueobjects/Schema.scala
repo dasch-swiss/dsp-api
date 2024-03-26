@@ -6,9 +6,9 @@
 package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
-import zio.prelude.*
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
+import zio.prelude._
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException

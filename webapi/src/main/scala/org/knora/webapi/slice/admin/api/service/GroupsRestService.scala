@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
+import zio._
 
 import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.groupsmessages.*
+import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
@@ -19,27 +19,18 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-trait GroupsRestService {
-  def getGroups: Task[GroupsGetResponseADM]
-  def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM]
-  def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM]
-  def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM]
-  def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM]
-  def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM]
-  def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM]
-}
-
-final case class GroupsRestServiceLive(
+final case class GroupsRestService(
   auth: AuthorizationRestService,
   responder: GroupsResponderADM,
   format: KnoraResponseRenderer,
-) extends GroupsRestService {
-  override def getGroups: Task[GroupsGetResponseADM] = for {
+) {
+
+  def getGroups: Task[GroupsGetResponseADM] = for {
     internal <- responder.groupsGetADM.map(GroupsGetResponseADM.apply)
     external <- format.toExternalADM(internal)
   } yield external
 
-  override def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
+  def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
     for {
       internal <- responder
                     .groupGetADM(iri.value)
@@ -48,13 +39,13 @@ final case class GroupsRestServiceLive(
       external <- format.toExternalADM(internal)
     } yield external
 
-  override def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
+  def getGroupMembers(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     for {
       internal <- responder.groupMembersGetRequest(iri, user)
       external <- format.toExternalADM(internal)
     } yield external
 
-  override def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
+  def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
       uuid     <- Random.nextUUID
@@ -62,7 +53,7 @@ final case class GroupsRestServiceLive(
       external <- format.toExternalADM(internal)
     } yield external
 
-  override def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
+  def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
@@ -70,7 +61,7 @@ final case class GroupsRestServiceLive(
       external <- format.toExternalADM(internal)
     } yield external
 
-  override def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
+  def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
@@ -78,7 +69,7 @@ final case class GroupsRestServiceLive(
       external <- format.toExternalADM(internal)
     } yield external
 
-  override def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
+  def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
     for {
       _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       uuid     <- Random.nextUUID
@@ -87,6 +78,6 @@ final case class GroupsRestServiceLive(
     } yield external
 }
 
-object GroupsRestServiceLive {
-  val layer = ZLayer.derive[GroupsRestServiceLive]
+object GroupsRestService {
+  val layer = ZLayer.derive[GroupsRestService]
 }

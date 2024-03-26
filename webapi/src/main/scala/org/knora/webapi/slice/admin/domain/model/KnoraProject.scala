@@ -9,12 +9,14 @@ import zio.NonEmptyChunk
 
 import scala.util.matching.Regex
 
-import dsp.valueobjects.Iri.isProjectIri
-import dsp.valueobjects.Iri.validateAndEscapeProjectIri
+import dsp.valueobjects.Iri.DefaultSharedOntologiesProject
+import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
+import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -36,16 +38,44 @@ case class KnoraProject(
 
 object KnoraProject {
 
-  final case class ProjectIri private (override val value: String) extends AnyVal with StringValue
+  final case class ProjectIri private (override val value: String) extends AnyVal with StringValue {
+    def isBuiltInProjectIri: Boolean = ProjectIri.isBuiltInProjectIri(value)
+    def isRegularProjectIri: Boolean = !isBuiltInProjectIri
+  }
 
   object ProjectIri extends StringValueCompanion[ProjectIri] {
+
+    private val BuiltInProjects: Seq[String] = Seq(SystemProject, DefaultSharedOntologiesProject)
+
+    /**
+     * Explanation of the project IRI regex:
+     * * `^` asserts the start of the string.
+     * * `http://rdfh\.ch/projects/` matches the specified prefix.
+     * * `[a-zA-Z0-9_-]{4,40}` matches any alphanumeric character, hyphen, or underscore between 4 and 40 times.
+     */
+    private val projectIriRegEx = """^http://rdfh\.ch/projects/[a-zA-Z0-9_-]{4,40}$""".r
+
+    /**
+     * Returns `true` if an IRI string looks like a Knora project IRI
+     *
+     * @param iri the IRI to be checked.
+     */
+    private def isProjectIri(iri: String): Boolean =
+      (isIri(iri) && isRegularProjectIri(iri)) || isBuiltInProjectIri(iri)
+
+    private def isRegularProjectIri(iri: String) = projectIriRegEx.matches(iri)
+
+    private def isBuiltInProjectIri(iri: String): Boolean = BuiltInProjects.contains(iri)
 
     def from(str: String): Either[String, ProjectIri] = str match {
       case str if str.isEmpty        => Left(IriErrorMessages.ProjectIriMissing)
       case str if !isProjectIri(str) => Left(IriErrorMessages.ProjectIriInvalid)
-      case str if UuidUtil.hasValidLength(str.split("/").last) && !UuidUtil.hasSupportedVersion(str) =>
-        Left(IriErrorMessages.UuidVersionInvalid)
-      case _ => validateAndEscapeProjectIri(str).toRight(IriErrorMessages.ProjectIriInvalid).map(ProjectIri.apply)
+      case _                         => Right(ProjectIri(str))
+    }
+
+    def makeNew: ProjectIri = {
+      val uuid = UuidUtil.makeRandomBase64EncodedUuid
+      unsafeFrom(s"http://$IriDomain/projects/$uuid")
     }
   }
 

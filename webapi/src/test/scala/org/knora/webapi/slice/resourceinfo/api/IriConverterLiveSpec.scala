@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zio.test.*
+import zio.test._
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter

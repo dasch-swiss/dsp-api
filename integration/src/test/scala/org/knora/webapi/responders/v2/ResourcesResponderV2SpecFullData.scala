@@ -9,13 +9,13 @@ import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameJulian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.PermissionUtilADM.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec

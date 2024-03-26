@@ -7,10 +7,10 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.ZLayer
 
-final case class GroupsService(
-  private val groupRepo: KnoraGroupRepo,
+final case class GroupService(
+  private val knoraGroupService: KnoraGroupService,
 ) {}
 
-object GroupsService {
-  def layer = ZLayer.derive[GroupsService]
+object GroupService {
+  def layer = ZLayer.derive[GroupService]
 }

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.*
+import zio._
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -31,7 +31,6 @@ import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -46,7 +45,6 @@ final case class UsersRestService(
   userService: UserService,
   knoraUserService: KnoraUserService,
   knoraUserToUserConverter: KnoraUserToUserConverter,
-  userRepo: KnoraUserRepo,
   passwordService: PasswordService,
   projectService: ProjectService,
   responder: UsersResponder,
@@ -54,7 +52,7 @@ final case class UsersRestService(
 ) {
 
   def getAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
-    _ <- auth.ensureSystemAdminSystemUserOrProjectAdminInAnyProject(requestingUser)
+    _ <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
     internal <- userService.findAll
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
                   .map(_.map(_.filterUserInformation(requestingUser, UserInformationType.Restricted)).sorted)
@@ -100,7 +98,7 @@ final case class UsersRestService(
     } yield external
 
   private def getKnoraUserOrNotFound(userIri: UserIri) =
-    userRepo.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
+    knoraUserService.findById(userIri).someOrFail(NotFoundException(s"User with iri ${userIri.value} not found."))
 
   def getProjectAdminMemberShipsByUserIri(userIri: UserIri): Task[UserProjectAdminMembershipsGetResponseADM] =
     for {

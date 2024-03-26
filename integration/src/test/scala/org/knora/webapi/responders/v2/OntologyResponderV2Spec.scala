@@ -7,37 +7,38 @@ package org.knora.webapi.responders.v2
 
 import org.apache.pekko
 import org.apache.pekko.actor.Status.Failure
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 
 import dsp.constants.SalsahGui
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProject
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -161,9 +162,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "invalidate cached project information when adding an ontology to a project" in {
-      // ernsure that the project is cached
-      appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      expectMsgType[ProjectGetResponse](timeout)
+      // Ensure that the project is cached
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[ProjectRestService](_.findById(imagesProject.projectIri)))
+
       appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
       val cachedProjectBefore = expectMsgType[Option[Project]](timeout)
       assert(cachedProjectBefore.isDefined)

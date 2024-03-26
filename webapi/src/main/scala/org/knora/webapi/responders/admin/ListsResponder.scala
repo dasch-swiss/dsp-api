@@ -11,29 +11,29 @@ import zio.ZLayer
 
 import java.util.UUID
 
-import dsp.errors.*
+import dsp.errors._
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.*
+import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.*
-import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ListsResponder.Queries
-import org.knora.webapi.slice.admin.api.Requests.*
+import org.knora.webapi.slice.admin.api.Requests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -48,7 +48,7 @@ final case class ListsResponder(
   appConfig: AppConfig,
   auth: AuthorizationRestService,
   iriService: IriService,
-  projectRepo: KnoraProjectRepo,
+  knoraProjectService: KnoraProjectService,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter,
@@ -589,7 +589,7 @@ final case class ListsResponder(
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      project <- projectRepo
+      project <- knoraProjectService
                    .findById(projectIri)
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
 
@@ -758,7 +758,7 @@ final case class ListsResponder(
 
   private def ensureUserIsAdminOrProjectOwner(listIri: ListIri, user: User): Task[KnoraProject] =
     getProjectIriFromNode(listIri.value)
-      .flatMap(projectRepo.findById)
+      .flatMap(knoraProjectService.findById)
       .someOrFail(BadRequestException(s"Project not found for node $listIri"))
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
@@ -1505,7 +1505,7 @@ final case class ListsResponder(
    * @return an [[IRI]].
    */
   private def getDataNamedGraph(projectIri: ProjectIri): Task[IRI] =
-    projectRepo
+    knoraProjectService
       .findById(projectIri)
       .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
       .map(ProjectService.projectDataNamedGraphV2(_).value)

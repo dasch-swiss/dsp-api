@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api.model
 
-import zio.json.*
+import zio.json._
 
 import java.time.Instant
 

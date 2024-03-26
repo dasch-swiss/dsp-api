@@ -9,13 +9,13 @@ import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
-import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import spray.json.*
-import zio.*
+import spray.json._
+import zio._
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
@@ -28,7 +28,7 @@ import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithSipi
 import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument

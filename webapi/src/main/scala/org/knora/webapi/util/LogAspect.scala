@@ -5,7 +5,7 @@
 
 package org.knora.webapi.util
 
-import zio.*
+import zio._
 
 object LogAspect {
 

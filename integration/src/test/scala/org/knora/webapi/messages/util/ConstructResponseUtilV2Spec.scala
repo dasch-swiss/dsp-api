@@ -13,9 +13,9 @@ import zio.ZIO
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
-import org.knora.webapi.*
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2

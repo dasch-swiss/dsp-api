@@ -16,15 +16,15 @@ import org.apache.pekko.util.Timeout
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.Future
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.RdfModel
@@ -128,7 +128,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             .settings
 
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(true)
+        settings.watermark should be(false)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -156,7 +156,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             .settings
 
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(true)
+        settings.watermark should be(false)
       }
 
       "return the project's restricted view settings using its shortcode" in {
@@ -173,7 +173,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
             .settings
 
         settings.size should be(Some("!512,512"))
-        settings.watermark should be(true)
+        settings.watermark should be(false)
       }
     }
 
@@ -446,7 +446,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         response.status should be(StatusCodes.OK)
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
-        result.shortname should be("updatedproject")
+        result.shortname should be("newproject")
         result.shortcode should be("1111")
         result.longname should be(Some("updated project longname"))
         result.description should be(
@@ -544,7 +544,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
@@ -567,7 +566,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
@@ -579,7 +577,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
@@ -591,7 +588,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]

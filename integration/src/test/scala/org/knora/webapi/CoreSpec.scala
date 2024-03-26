@@ -12,8 +12,8 @@ import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import zio.*
 import zio.ZIO
+import zio._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

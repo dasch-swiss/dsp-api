@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
-import zio.*
+import zio._
 import zio.macros.accessible
 
 import dsp.errors.ForbiddenException
@@ -13,13 +13,11 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
-import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdmin
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
-import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdmin
-import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminSystemUserOrProjectAdminInAnyProject
+import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrUser
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
 
 /**
@@ -42,8 +40,6 @@ trait AuthorizationRestService {
    */
   def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit]
 
-  def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit]
-
   def ensureSystemAdminOrProjectAdmin(user: User, project: ProjectIri): IO[ForbiddenException, KnoraProject]
 
   /**
@@ -56,11 +52,6 @@ trait AuthorizationRestService {
    *         Fails with a [[ForbiddenException]] otherwise.
    */
   def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit]
-
-  def ensureSystemAdminSystemUserOrProjectAdmin(
-    user: User,
-    project: KnoraProject,
-  ): IO[ForbiddenException, Unit]
 
   def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit]
 
@@ -77,32 +68,29 @@ trait AuthorizationRestService {
  */
 object AuthorizationRestService {
   def isActive(userADM: User): Boolean                           = userADM.status
-  def isSystemAdmin(user: User): Boolean                         = user.permissions.isSystemAdmin
-  def isSystemUser(user: User): Boolean                          = user.isSystemUser
+  def isSystemAdminOrUser(user: User): Boolean                   = user.permissions.isSystemAdmin || user.isSystemUser
   def isProjectAdmin(user: User, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id.value)
   def isSystemOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
-    isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
-  def isSystemAdminSystemUserOrProjectAdmin(project: KnoraProject)(userADM: User): Boolean =
-    isSystemUser(userADM) || isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
+    isSystemAdminOrUser(userADM) || isProjectAdmin(userADM, project)
   def isSystemAdminOrProjectAdminInAnyProject(user: User): Boolean =
-    isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
-  def isSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): Boolean =
-    isSystemUser(user) || isSystemAdmin(user) || user.permissions.isProjectAdminInAnyProject()
+    isSystemAdminOrUser(user) || user.permissions.isProjectAdminInAnyProject()
 }
 
-final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, groupsRepo: KnoraGroupRepo)
-    extends AuthorizationRestService {
+final case class AuthorizationRestServiceLive(
+  knoraProjectService: KnoraProjectService,
+  knoraGroupService: KnoraGroupService,
+) extends AuthorizationRestService {
   override def ensureSystemAdmin(user: User): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
-    checkActiveUser(user, isSystemAdmin, msg)
+    checkActiveUser(user, isSystemAdminOrUser, msg)
   }
   override def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
     groupIri: GroupIri,
   ): IO[ForbiddenException, KnoraProject] =
     for {
-      group <- groupsRepo
+      group <- knoraGroupService
                  .findById(groupIri)
                  .orDie
                  .someOrFail(ForbiddenException(s"Group with IRI '${groupIri.value}' not found"))
@@ -116,7 +104,7 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
     user: User,
     projectIri: ProjectIri,
   ): IO[ForbiddenException, KnoraProject] =
-    projectRepo
+    knoraProjectService
       .findById(projectIri)
       .orDie
       .someOrFail(ForbiddenException(s"Project with IRI '${projectIri.value}' not found"))
@@ -127,23 +115,10 @@ final case class AuthorizationRestServiceLive(projectRepo: KnoraProjectRepo, gro
       s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
     checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
   }
-  override def ensureSystemAdminSystemUserOrProjectAdmin(
-    user: User,
-    project: KnoraProject,
-  ): IO[ForbiddenException, Unit] = {
-    lazy val msg =
-      s"You are logged in with username '${user.username}', but only a system administrator, system user or project administrator has permissions for this operation."
-    checkActiveUser(user, isSystemAdminSystemUserOrProjectAdmin(project), msg)
-  }
 
   override def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
     val msg = "ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
-  }
-
-  override def ensureSystemAdminSystemUserOrProjectAdminInAnyProject(user: User): IO[ForbiddenException, Unit] = {
-    val msg = "ProjectAdmin or SystemAdmin permissions are required."
-    checkActiveUser(user, isSystemAdminSystemUserOrProjectAdminInAnyProject, msg)
   }
 
   private def checkActiveUser(

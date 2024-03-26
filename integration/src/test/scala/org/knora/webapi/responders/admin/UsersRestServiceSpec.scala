@@ -14,9 +14,9 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.LanguageCode
-import org.knora.webapi.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2
@@ -28,11 +28,12 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
-import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -44,6 +45,8 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val incunabulaProject   = SharedTestDataADM.incunabulaProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
+
+  private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
 
   def getProjectMemberShipsByUserIri(
     userIri: UserIri,
@@ -436,10 +439,10 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects.map(_.id) should equal(Chunk(imagesProject.id))
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(imagesProject.id),
+          ProjectRestService(
+            _.getProjectMembers(
               KnoraSystemInstances.Users.SystemUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
             ),
           ),
         )
@@ -460,10 +463,10 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         )
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectMembersGetRequestADM(
-              IriIdentifier.unsafeFrom(incunabulaProject.id),
+          ProjectRestService(
+            _.getProjectMembers(
               KnoraSystemInstances.Users.SystemUser,
+              IriIdentifier.unsafeFrom(incunabulaProject.id),
             ),
           ),
         )
@@ -501,8 +504,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // also check that the user has been removed from the project's list of users
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ProjectRestService(
+            _.getProjectMembers(
+              rootUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
+            ),
           ),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)
@@ -547,8 +553,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // get project admins for images project (should contain normal user)
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ProjectRestService(
+            _.getProjectAdminMembers(
+              rootUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
+            ),
           ),
         )
         received.members.map(_.id) should contain(normalUser.id)
@@ -572,8 +581,11 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
         membershipsAfterUpdate.projects should equal(Seq())
 
         val received = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[ProjectsResponderADM](
-            _.projectAdminMembersGetRequestADM(IriIdentifier.unsafeFrom(imagesProject.id), rootUser),
+          ProjectRestService(
+            _.getProjectAdminMembers(
+              rootUser,
+              IriIdentifier.unsafeFrom(imagesProject.id),
+            ),
           ),
         )
         received.members should not contain normalUser.ofType(UserInformationType.Restricted)

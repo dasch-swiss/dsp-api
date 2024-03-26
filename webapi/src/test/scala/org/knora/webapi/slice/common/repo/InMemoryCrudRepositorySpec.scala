@@ -8,8 +8,8 @@ package org.knora.webapi.slice.common.repo
 import zio.Ref
 import zio.ZIO
 import zio.ZLayer
-import zio.test.*
 import zio.test.Assertion.hasSameElements
+import zio.test._
 
 final case class SomeEntity(id: Int, name: String)
 final case class InMemoryRepository(entities: Ref[List[SomeEntity]])
