@@ -452,7 +452,7 @@ would refer to that property in general, not to any particular instance in which
 particular resources. To attach metadata to a specific link in RDF, it is necessary to create an RDF "reification". A
 reification makes statements about a particular triple (subject, predicate, object), in this case the triple that
 expresses the link between the resources. Knora uses reifications of type `kb:LinkValue` (described in
-[LinkValue](#linkvalue) to store metadata about links.
+[LinkValue](#linkvalue)) to store metadata about links.
 
 For example, suppose a project describes paintings that belong to collections. The project can define an ontology as
 follows (expressed here in [Turtle](http://www.w3.org/TR/turtle/) format, and simplified for the purposes of
@@ -603,6 +603,8 @@ There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: Fo
 `kb:StillImageRepresentation` and the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the
 whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`. The parts only define which sub-sequence of
 this representation they are.
+
+<!-- TODO: update this section -->
 
 ### Text with Standoff Markup
 

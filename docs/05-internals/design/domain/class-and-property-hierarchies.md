@@ -616,6 +616,8 @@ flowchart LR
   StillImageRepresentation --> hasStillImageRepresentation --> StillImageFileValue
 ```
 
+<!-- TODO: Update this. -->
+
 ### Properties without Subject Class Constraint
 
 ```mermaid
