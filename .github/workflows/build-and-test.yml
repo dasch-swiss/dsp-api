@@ -19,10 +19,10 @@ jobs:
       - name: Inform on no-op
         run: echo "Running this as a no-op job... $IS_NOOP"
       - name: is noop
-        if: ${{ env.IS_NOOP }}
+        if: ${{ env.IS_NOOP == true }}
         run: echo "noop -- $IS_NOOP"
       - name: is noop
-        if: ${{ ! env.IS_NOOP }}
+        if: ${{ ! env.IS_NOOP == true }}
         run: echo "not noop -- $IS_NOOP"
       - name: Run preparatory steps
         if: ${{ ( ! ( env.IS_NOOP ) ) }}
