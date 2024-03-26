@@ -1,10 +1,7 @@
 name: CI-build-and-test
 
 on:
-  push:
-    branches-ignore:
-      - main
-      - "release-*"
+  push
 
 jobs:
   build-and-test:
