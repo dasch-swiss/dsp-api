@@ -33,11 +33,11 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           "http://www.example.org/image-service/abcd1234/pct:50/0/native.jpg",
           "http://www.example.org/image-service/abcd1234/150,75/0/native.jpg",
           "http://www.example.org/image-service/abcd1234/!150,75/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full90/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full180/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full270/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full22.5/native.jpg",
+          "http://www.example.org/image-service/abcd1234/full/0/native.jpg",
+          "http://www.example.org/image-service/abcd1234/full/90/native.jpg",
+          "http://www.example.org/image-service/abcd1234/full/180/native.jpg",
+          "http://www.example.org/image-service/abcd1234/full/270/native.jpg",
+          "http://www.example.org/image-service/abcd1234/full/22.5/native.jpg",
           "http://www.example.org/image-service/abcd1234/full/600,/0/native.jpg",
           "http://www.example.org/image-service/abcd1234/full/600,/0/color.jpg",
           "http://www.example.org/image-service/abcd1234/full/600,/0/grey.jpg",
@@ -58,6 +58,6 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
         val actual = IiifImageRequestUrl.from(url)
         assertTrue(actual.isLeft)
       }
-    }
+    },
   )
 }
