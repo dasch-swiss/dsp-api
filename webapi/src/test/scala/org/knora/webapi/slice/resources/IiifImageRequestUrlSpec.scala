@@ -23,25 +23,34 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
       // http[s]://server/[prefix/]identifier/region/size/rotation/quality[.format]
       val validUrls =
         Seq(
-          // region https://iiif.io/api/image/1.0/#41-region
-          "http://www.example.org/image-service/abcd1234/80,15,60,75/full/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/pct:10,10,80,70/full/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/full/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/100,/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/,100/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/pct:50/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/150,75/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/!150,75/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/90/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/180/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/270/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/22.5/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/600,/0/native.jpg",
-          "http://www.example.org/image-service/abcd1234/full/600,/0/color.jpg",
-          "http://www.example.org/image-service/abcd1234/full/600,/0/grey.jpg",
-          "http://www.example.org/image-service/abcd1234/full/600,/0/bitonal.jpg",
+          // V1
+          "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
+          "http://www.example.org/prefix1/prefix2/prefix3/abcd1234/80,15,60,75/full/0/native",
+          "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native",
+          "http://www.example.org/prefix1/abcd1234/80,15,60,75/full/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/pct:10,10,80,70/full/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/full/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/100,/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/,100/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/pct:50/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/150,75/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/!150,75/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/90/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/180/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/270/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/22.5/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/600,/0/native.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/600,/0/color.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/600,/0/grey.jpg",
+          "http://www.example.org/prefix1/abcd1234/full/600,/0/bitonal.jpg",
+          // V2
+          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/0/default.jpg",
+          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/full/!90/gray.webp",
+          // V3
+          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/max/0/default.jpg",
+          "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
         )
       check(Gen.fromIterable(validUrls)) { url =>
         val actual = IiifImageRequestUrl.from(url)
