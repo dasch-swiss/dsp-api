@@ -2038,7 +2038,7 @@
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StillImageFileValue
+###  http://www.knora.org/ontology/knora-base#StillImageAbstractFileValue
 
 :StillImageAbstractFileValue
     rdf:type        owl:Class ;
