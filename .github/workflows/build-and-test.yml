@@ -16,6 +16,8 @@ jobs:
     env:
       IS_NOOP: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job $IS_NOOP"
       - name: Run preparatory steps
         if: ${{ !env.IS_NOOP }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
