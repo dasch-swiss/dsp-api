@@ -10,7 +10,7 @@ import org.knora.webapi.core.LayersTest
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-abstract class IntegrationSpecZio extends ZIOSpecDefault with TestStartupUtils {
+abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
   private lazy val testLayers     = util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
   private lazy val rdfDataObjects = List.empty[RdfDataObject]
@@ -23,19 +23,16 @@ abstract class IntegrationSpecZio extends ZIOSpecDefault with TestStartupUtils {
     _         <- prepareRepository(rdfDataObjects)
   } yield appServer
 
-  private def shutdown(appServer: AppServer): ZIO[Any, Nothing, Unit] = for {
-    _ <- appServer.interrupt
-  } yield ()
+  def withResettedTriplestore =
+    TestAspect.before(prepareRepository(rdfDataObjects))
 
   def e2eSpec: Spec[env, Any]
 
   override def spec = (
     e2eSpec
-      @@ TestAspect.aroundWith(prepare)(shutdown)
+      @@ TestAspect.beforeAll(prepare)
       @@ TestAspect.sequential
-  ).provide(testLayers, Client.default, Scope.default)
-
-  // TODO: reset triplestore content instead of resetting the whole testcontainer
+  ).provideShared(testLayers, Client.default, Scope.default)
 
   def sendRequest[A, B](request: A)(implicit
     enc: JsonEncoder[A],

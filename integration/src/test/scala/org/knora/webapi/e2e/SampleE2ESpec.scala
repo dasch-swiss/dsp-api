@@ -4,9 +4,9 @@ package org.knora.webapi.e2e
 import zio.json.*
 import zio.test.*
 
-import org.knora.webapi.IntegrationSpecZio
+import org.knora.webapi.E2EZSpec
 
-object FooSpec extends IntegrationSpecZio {
+object SampleE2ESpec extends E2EZSpec {
 
   case class VersionResponse(
     buildCommit: String,
@@ -36,7 +36,7 @@ object FooSpec extends IntegrationSpecZio {
     // },
     versionTest,
     healthTest,
-    fooTest,
+    fooTest @@ withResettedTriplestore,
   )
 
   val versionTest = test("check version endpoint") {
