@@ -1637,16 +1637,6 @@ class StringFormatter private (
     s"$projectIri/mappings"
 
   /**
-   * Creates a new project IRI based on a UUID.
-   *
-   * @return a new project IRI.
-   */
-  def makeRandomProjectIri: IRI = {
-    val uuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/projects/$uuid"
-  }
-
-  /**
    * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
    *
    * @param customValueIri the custom value IRI to be validated.

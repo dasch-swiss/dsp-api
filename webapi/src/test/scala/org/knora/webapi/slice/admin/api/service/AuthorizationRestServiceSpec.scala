@@ -23,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
+import org.knora.webapi.store.cache.CacheService
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
 
@@ -120,6 +121,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     ),
   ).provide(
     AuthorizationRestServiceLive.layer,
+    CacheService.layer,
     KnoraProjectService.layer,
     KnoraProjectRepoInMemory.layer,
     KnoraGroupService.layer,
