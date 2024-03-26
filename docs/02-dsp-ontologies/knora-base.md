@@ -373,7 +373,7 @@ a `kb:FileValue`. The base class `FileValue`, which is not intended to be used d
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageAbstractFileValue`: Contains metadata about a still image file, whicih cen be either `StillImageFileValue` or `StillImageExternalFileValue`.
+- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be either `StillImageFileValue` or `StillImageExternalFileValue`.
 
 - `MovingImageFileValue`: Contains metadata about a video file.
 
