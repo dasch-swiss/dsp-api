@@ -1080,11 +1080,9 @@ final case class ConstructResponseUtilV2Live(
       case OntologyConstants.KnoraBase.StillImageExternalFileValue =>
         ZIO.succeed(
           StillImageExternalFileValueContentV2(
-            ontologySchema = InternalSchema,
-            fileValue = fileValue,
-            dimX = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
-            dimY = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
-            externalUrl = IiifImageRequestUrl.unsafeFrom(
+            InternalSchema,
+            fileValue,
+            IiifImageRequestUrl.unsafeFrom(
               valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
             ),
             comment = valueCommentOption,
@@ -1680,7 +1678,7 @@ final case class ConstructResponseUtilV2Live(
                   )
                 }
               } else {
-                ZIO.succeed(None)
+                ZIO.none
               }
           } yield mapping.mappingIri -> MappingAndXSLTransformation(
             mapping = mapping.mapping,

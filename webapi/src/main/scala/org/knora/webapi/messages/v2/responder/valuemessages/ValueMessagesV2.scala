@@ -2782,10 +2782,8 @@ object StillImageFileValueContentV2 {
 case class StillImageExternalFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  dimX: Int,
-  dimY: Int,
   externalUrl: IiifImageRequestUrl,
-  comment: Option[String] = None,
+  comment: Option[IRI] = None,
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2811,8 +2809,6 @@ case class StillImageExternalFileValueContentV2(
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
-            StillImageFileValueHasDimX -> JsonLDInt(dimX),
-            StillImageFileValueHasDimY -> JsonLDInt(dimY),
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
               .datatypeValueToJsonLDObject(
                 value = {
@@ -2869,10 +2865,8 @@ object StillImageExternalFileValueContentV2 {
         Some("originalFilename"),
         Some("originalMimeType"),
       ),
-      dimX = 0,
-      dimY = 0,
-      comment = comment,
       externalUrl = externalUrl,
+      comment = comment,
     )
 }
 

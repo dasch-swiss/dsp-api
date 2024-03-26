@@ -17,61 +17,59 @@ object FileModelUtil {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def getFileRepresentationClassIri(fileType: FileType): SmartIri = fileType match {
-    case FileType.DocumentFile(_, _, _) => OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri
-    case FileType.StillImageFile(_, _)  => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
-    case FileType.StillImageExternalFile(_, _, _) =>
-      OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
-    case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.MovingImageRepresentation.toSmartIri
-    case FileType.TextFile              => OntologyConstants.KnoraApiV2Complex.TextRepresentation.toSmartIri
-    case FileType.AudioFile             => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
-    case FileType.ArchiveFile           => OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation.toSmartIri
+    case FileType.DocumentFile(_, _, _)     => OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri
+    case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
+    case FileType.StillImageExternalFile(_) => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
+    case FileType.MovingImageFile(_, _)     => OntologyConstants.KnoraApiV2Complex.MovingImageRepresentation.toSmartIri
+    case FileType.TextFile                  => OntologyConstants.KnoraApiV2Complex.TextRepresentation.toSmartIri
+    case FileType.AudioFile                 => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
+    case FileType.ArchiveFile               => OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation.toSmartIri
   }
 
   def getFileRepresentationPropertyIri(fileType: FileType): SmartIri = fileType match {
-    case FileType.DocumentFile(_, _, _) => OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
-    case FileType.StillImageFile(_, _)  => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-    case FileType.StillImageExternalFile(_, _, _) =>
-      OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-    case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri
-    case FileType.TextFile              => OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri
-    case FileType.AudioFile             => OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri
-    case FileType.ArchiveFile           => OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
+    case FileType.DocumentFile(_, _, _)     => OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
+    case FileType.StillImageFile(_, _)      => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    case FileType.StillImageExternalFile(_) => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    case FileType.MovingImageFile(_, _)     => OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri
+    case FileType.TextFile                  => OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri
+    case FileType.AudioFile                 => OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri
+    case FileType.ArchiveFile               => OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
   }
 
   def getFileValuePropertyName(fileType: FileType): String = fileType match {
-    case FileType.DocumentFile(_, _, _)           => "knora-api:hasDocumentFileValue"
-    case FileType.StillImageFile(_, _)            => "knora-api:hasStillImageFileValue"
-    case FileType.StillImageExternalFile(_, _, _) => "knora-api:hasStillImageFileValue"
-    case FileType.MovingImageFile(_, _)           => "knora-api:hasMovingImageFileValue"
-    case FileType.TextFile                        => "knora-api:hasTextFileValue"
-    case FileType.AudioFile                       => "knora-api:hasAudioFileValue"
-    case FileType.ArchiveFile                     => "knora-api:hasArchiveFileValue"
+    case FileType.DocumentFile(_, _, _)     => "knora-api:hasDocumentFileValue"
+    case FileType.StillImageFile(_, _)      => "knora-api:hasStillImageFileValue"
+    case FileType.StillImageExternalFile(_) => "knora-api:hasStillImageFileValue"
+    case FileType.MovingImageFile(_, _)     => "knora-api:hasMovingImageFileValue"
+    case FileType.TextFile                  => "knora-api:hasTextFileValue"
+    case FileType.AudioFile                 => "knora-api:hasAudioFileValue"
+    case FileType.ArchiveFile               => "knora-api:hasArchiveFileValue"
   }
 
   def getDefaultClassName(fileType: FileType): String = fileType match {
-    case FileType.DocumentFile(_, _, _)           => "DocumentRepresentation"
-    case FileType.StillImageFile(_, _)            => "StillImageRepresentation"
-    case FileType.StillImageExternalFile(_, _, _) => "StillImageRepresentation"
-    case FileType.MovingImageFile(_, _)           => "MovingImageRepresentation"
-    case FileType.TextFile                        => "TextRepresentation"
-    case FileType.AudioFile                       => "AudioRepresentation"
-    case FileType.ArchiveFile                     => "ArchiveRepresentation"
+    case FileType.DocumentFile(_, _, _)     => "DocumentRepresentation"
+    case FileType.StillImageFile(_, _)      => "StillImageRepresentation"
+    case FileType.StillImageExternalFile(_) => "StillImageRepresentation"
+    case FileType.MovingImageFile(_, _)     => "MovingImageRepresentation"
+    case FileType.TextFile                  => "TextRepresentation"
+    case FileType.AudioFile                 => "AudioRepresentation"
+    case FileType.ArchiveFile               => "ArchiveRepresentation"
   }
 
   def getFileValueType(fileType: FileType): String = fileType match {
-    case FileType.DocumentFile(_, _, _)           => "knora-api:DocumentFileValue"
-    case FileType.StillImageFile(_, _)            => "knora-api:StillImageFileValue"
-    case FileType.StillImageExternalFile(_, _, _) => "knora-api:StillImageExternalFileValue"
-    case FileType.MovingImageFile(_, _)           => "knora-api:MovingImageFileValue"
-    case FileType.TextFile                        => "knora-api:TextFileValue"
-    case FileType.AudioFile                       => "knora-api:AudioFileValue"
-    case FileType.ArchiveFile                     => "knora-api:ArchiveFileValue"
+    case FileType.DocumentFile(_, _, _)     => "knora-api:DocumentFileValue"
+    case FileType.StillImageFile(_, _)      => "knora-api:StillImageFileValue"
+    case FileType.StillImageExternalFile(_) => "knora-api:StillImageExternalFileValue"
+    case FileType.MovingImageFile(_, _)     => "knora-api:MovingImageFileValue"
+    case FileType.TextFile                  => "knora-api:TextFileValue"
+    case FileType.AudioFile                 => "knora-api:AudioFileValue"
+    case FileType.ArchiveFile               => "knora-api:ArchiveFileValue"
   }
 
   def getFileValueTypeIRI(fileType: FileType): SmartIri = fileType match {
     case FileType.DocumentFile(_, _, _) => OntologyConstants.KnoraApiV2Complex.DocumentFileValue.toSmartIri
     case FileType.StillImageFile(_, _)  => OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri
-    case FileType.StillImageExternalFile(_, _, _) =>
+    case FileType.StillImageExternalFile(_) =>
       OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue.toSmartIri
     case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.MovingImageFileValue.toSmartIri
     case FileType.TextFile              => OntologyConstants.KnoraApiV2Complex.TextFileValue.toSmartIri
@@ -115,7 +113,7 @@ object FileModelUtil {
           dimY = dimY,
           comment = comment,
         )
-      case FileType.StillImageExternalFile(externalUrl, dimX, dimY) =>
+      case FileType.StillImageExternalFile(externalUrl) =>
         StillImageExternalFileValueContentV2(
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(
@@ -124,8 +122,6 @@ object FileModelUtil {
             originalFilename = originalFilename,
             originalMimeType = originalMimeType,
           ),
-          dimX = dimX,
-          dimY = dimY,
           externalUrl = externalUrl,
           comment = comment,
         )
@@ -219,10 +215,10 @@ object FileType {
     dimX: Option[Int] = Some(100),
     dimY: Option[Int] = Some(100),
   ) extends FileType
-  case class StillImageFile(dimX: Int = 100, dimY: Int = 100)                                           extends FileType
-  case class StillImageExternalFile(externalUrl: IiifImageRequestUrl, dimX: Int = 100, dimY: Int = 100) extends FileType
-  case class MovingImageFile(dimX: Int = 100, dimY: Int = 100)                                          extends FileType
-  case object TextFile                                                                                  extends FileType
-  case object AudioFile                                                                                 extends FileType
-  case object ArchiveFile                                                                               extends FileType
+  case class StillImageFile(dimX: Int = 100, dimY: Int = 100)         extends FileType
+  case class StillImageExternalFile(externalUrl: IiifImageRequestUrl) extends FileType
+  case class MovingImageFile(dimX: Int = 100, dimY: Int = 100)        extends FileType
+  case object TextFile                                                extends FileType
+  case object AudioFile                                               extends FileType
+  case object ArchiveFile                                             extends FileType
 }

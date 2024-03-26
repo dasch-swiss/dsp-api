@@ -165,9 +165,7 @@
                     }
 
                     case stillImageFileValue: StillImageExternalFileValueContentV2 => {
-                        <@newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl.value.toString""" ;
-                            knora-base:dimX @stillImageFileValue.dimX ;
-                            knora-base:dimY @stillImageFileValue.dimY .
+                        <@newValueIri> knora-base:externalUrl """@stillImageFileValue.externalUrl.value.toString""" .
                     }
 
                     case documentFileValue: DocumentFileValueContentV2 => {

@@ -1161,11 +1161,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
       val inputResource: CreateResourceV2 = UploadFileRequest
         .make(
-          fileType = FileType.StillImageExternalFile(
-            externalUrl = imageRequestUrl,
-            dimX = 512,
-            dimY = 256,
-          ),
+          fileType = FileType.StillImageExternalFile(imageRequestUrl),
           internalFilename = "IQUO3t1AABm-TTTTTTTTTTT.jp2",
         )
         .toMessage(resourceIri = Some(resourceIri))

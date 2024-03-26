@@ -2028,12 +2028,6 @@
     rdfs:subClassOf :StillImageAbstractFileValue,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :externalUrl ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :dimY ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :dimX ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
@@ -2042,13 +2036,7 @@
 
 :StillImageAbstractFileValue
     rdf:type        owl:Class ;
-    rdfs:subClassOf :FileValue,
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :dimY ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type        owl:Restriction ;
-                      owl:onProperty  :dimX ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:subClassOf :FileValue ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 
