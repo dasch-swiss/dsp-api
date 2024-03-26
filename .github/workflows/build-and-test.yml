@@ -19,12 +19,12 @@ jobs:
       - name: check stuff
         run: echo "$IS_NOOP"
       - name: Run preparatory steps
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+        if: ${{ env.IS_NOOP }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all tests
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+        if: ${{ env.IS_NOOP }}
         run: ./sbtx -v coverage "webapi/test" coverageAggregate
       # - name: WebApi Unit Test Report
       #   uses: dorny/test-reporter@v1
@@ -34,18 +34,18 @@ jobs:
       #     path: ./webapi/target/test-reports/TEST-*.xml
       #     reporter: java-junit
       - name: Upload coverage data to codacy
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+        if: ${{ env.IS_NOOP }}
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
+        if: ${{ env.IS_NOOP }}
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: No-op step
-        if: ${{ github.ref_name != 'main' && github.ref_name != 'release-*' }}
+        if: ${{ !env.IS_NOOP }}
         run: echo "No checks on main or release branches, skipping this job."
 
   integration-test:
