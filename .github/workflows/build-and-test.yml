@@ -20,10 +20,10 @@ jobs:
         run: echo "Running this as a no-op job... $IS_NOOP"
       - name: is noop
         if: ${{ env.IS_NOOP }}
-        run: echo "noop"
+        run: echo "noop -- $IS_NOOP"
       - name: is noop
         if: ${{ ! env.IS_NOOP }}
-        run: echo "not noop"
+        run: echo "not noop -- $IS_NOOP"
       - name: Run preparatory steps
         if: ${{ ( ! ( env.IS_NOOP ) ) }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
