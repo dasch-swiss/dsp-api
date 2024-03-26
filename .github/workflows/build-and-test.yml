@@ -17,12 +17,12 @@ jobs:
       IS_NOOP: ${{ github.ref_name == 'main' || github.ref_name == 'release-*' }}
     steps:
       - name: Inform on no-op
-        run: echo "Running this as a no-op job... $IS_NOOP"
+        run: echo "Running this as a no-op job... $IS_NOOP / ${{ env.IS_NOOP}}"
       - name: is noop
-        if: ${{ env.IS_NOOP == true }}
+        if: ${{ env.IS_NOOP == 'true' }}
         run: echo "noop -- $IS_NOOP"
       - name: is noop
-        if: ${{ env.IS_NOOP == false }}
+        if: ${{ env.IS_NOOP == 'false' }}
         run: echo "not noop -- $IS_NOOP"
       - name: Run preparatory steps
         if: ${{ ( ! ( env.IS_NOOP ) ) }}
