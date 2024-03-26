@@ -22,7 +22,7 @@ jobs:
         if: ${{ env.IS_NOOP == true }}
         run: echo "noop -- $IS_NOOP"
       - name: is noop
-        if: ${{ ! env.IS_NOOP == true }}
+        if: ${{ env.IS_NOOP == false }}
         run: echo "not noop -- $IS_NOOP"
       - name: Run preparatory steps
         if: ${{ ( ! ( env.IS_NOOP ) ) }}
