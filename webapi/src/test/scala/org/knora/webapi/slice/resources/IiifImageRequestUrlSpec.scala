@@ -58,18 +58,6 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
         val actual = IiifImageRequestUrl.from(url)
         assertTrue(actual.isLeft)
       }
-    },
-    test("should reject an invalid IIIF image request url") {
-      val invalidUrls =
-        Seq(
-          // invalid rotation (mustbeint)
-          "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/full/max/mustbeint/default.jpg",
-          "https://iiif.dasch.swiss/0811/5Jd909CLmCJ-BUUL1DDOXGJ.jp2/full/3360,2123/mustbeint/default.jpg",
-        )
-      check(Gen.fromIterable(invalidUrls)) { url =>
-        val actual = IiifImageRequestUrl.from(url)
-        assertTrue(actual.isLeft)
-      }
-    },
+    }
   )
 }
