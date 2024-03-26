@@ -28,9 +28,6 @@ project from scratch, you can adapt these scripts to import your
 ontology (and any existing RDF data) into your triplestore for use with
 DSP-API.
 
-The syntax of Turtle is fairly simple: it is basically a sequence of
-triples. We will consider some details of Turtle syntax as we go along.
-
 ## The Incunabula Ontology
 
 Here we will just focus on some of the main aspects of the ontology. An

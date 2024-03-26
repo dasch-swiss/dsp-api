@@ -588,23 +588,6 @@ is part of another resource needs to have a property `kb:seqnum` or a subpropert
 client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the pages
 of a book like in [this](../01-introduction/example-project.md#resource-classes) example).
 
-#### isSequenceOf
-
-Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resources that have
-a time dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of
-`kb:MovingImageRepresentation` and `kb:AudioRepresentation`.
-
-`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a
-`kb:IntervalValue`. This defines the start and end point of the subseqence in relation to the entire audio/video
-resource as an [interval](#intervalvalue). When the properties are used in this combination, a dedicated behavior in the
-frontend allows to display the sequences alongside the main resource.
-
-There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a*
-`kb:StillImageRepresentation` and the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the
-whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`. The parts only define which sub-sequence of
-this representation they are.
-
-<!-- TODO: update this section -->
 
 ### Text with Standoff Markup
 
