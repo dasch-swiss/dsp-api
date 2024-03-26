@@ -5,10 +5,10 @@
 
 package org.knora.webapi
 
-import zio.*
-import zio.http.*
-import zio.json.*
-import zio.test.*
+import zio._
+import zio.http._
+import zio.json._
+import zio.test._
 
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest
