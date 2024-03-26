@@ -85,14 +85,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest",
     ),
-    RdfDataObject(
-      path = "test_data/project_ontologies/sequences-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/sequences",
-    ),
-    RdfDataObject(
-      path = "test_data/project_data/sequences-data.ttl",
-      name = "http://www.knora.org/data/0001/sequences",
-    ),
   )
 
   private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
