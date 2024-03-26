@@ -174,6 +174,9 @@ abstract class E2ESpec
   protected def parseRdfXml(rdfXmlStr: String): RdfModel =
     RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
 
+  protected def parseJsonLd(rdfXmlStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = JsonLD)
+
   /**
    * Reads or writes a test data file.
    *
