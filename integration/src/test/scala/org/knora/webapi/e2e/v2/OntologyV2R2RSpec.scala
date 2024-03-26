@@ -6,7 +6,6 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
-import zio._
 
 import java.net.URLEncoder
 import java.time.Instant
@@ -33,12 +32,10 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
-import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
 
 import pekko.http.scaladsl.model._
