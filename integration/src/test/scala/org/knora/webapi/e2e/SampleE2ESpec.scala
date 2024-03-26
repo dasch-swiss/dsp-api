@@ -1,6 +1,5 @@
 package org.knora.webapi.e2e
 
-// import zio.*
 import zio.json.*
 import zio.test.*
 
@@ -27,16 +26,10 @@ object SampleE2ESpec extends E2EZSpec {
     implicit val decoder: JsonDecoder[HealthResponse] = DeriveJsonDecoder.gen[HealthResponse]
   }
 
-  override def e2eSpec = suite("FooSpec")(
-    // test("sendRequest") {
-    //   for {
-    //     response      <- sendRequest[TestRequest, TestResponse](TestRequest(1, "test"))
-    //     expectedResult = TestResponse(1, "test")
-    //   } yield assertTrue(response == expectedResult)
-    // },
+  override def e2eSpec = suite("SampleE2ESpec")(
     versionTest,
     healthTest,
-    fooTest @@ withResettedTriplestore,
+    getTokenTest @@ withResettedTriplestore, // this is not actually needed, it just shows how to use it
   )
 
   val versionTest = test("check version endpoint") {
@@ -56,9 +49,9 @@ object SampleE2ESpec extends E2EZSpec {
     } yield assertTrue(response == expected)
   }
 
-  val fooTest = test("foo") {
+  val getTokenTest = test("foo") {
     for {
-      _ <- getToken("root@example.com", "test").debug
-    } yield assertTrue(true)
+      token <- getToken("root@example.com", "test")
+    } yield assertTrue(token.nonEmpty)
   }
 }

@@ -34,16 +34,6 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       @@ TestAspect.sequential
   ).provideShared(testLayers, Client.default, Scope.default)
 
-  def sendRequest[A, B](request: A)(implicit
-    enc: JsonEncoder[A],
-    dec: JsonDecoder[B],
-  ): ZIO[env, String, B] = {
-    val aa = request.toJson
-    val bb = aa.fromJson[B]
-    // TODO: send actual requests here
-    ZIO.fromEither(bb)
-  }
-
   def sendGetRequestString(url: String): ZIO[env, String, String] =
     for {
       client   <- ZIO.service[Client]
