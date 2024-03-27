@@ -1188,7 +1188,7 @@ object JsonLDUtil {
     )
   }
 
-  def makeUrlObject(url: URL)(implicit sf: StringFormatter): JsonLDObject =
+  def makeUriObject(url: URL)(implicit sf: StringFormatter): JsonLDObject =
     datatypeValueToJsonLDObject(url.toString, OntologyConstants.Xsd.Uri.toSmartIri)
 
   /**
