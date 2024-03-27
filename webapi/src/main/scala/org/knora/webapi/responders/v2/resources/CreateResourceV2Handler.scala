@@ -41,6 +41,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
@@ -56,6 +57,7 @@ final case class CreateResourceV2Handler(
   permissionUtilADM: PermissionUtilADM,
   searchResponderV2: SearchResponderV2,
   getResources: GetResources,
+  ontologyRepo: OntologyRepo,
   implicit val stringFormatter: StringFormatter,
 ) extends LazyLogging {
 
@@ -387,17 +389,19 @@ final case class CreateResourceV2Handler(
 
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
-      _ <- ZIO.foreachDiscard(internalCreateResource.values) {
-             case (iri: SmartIri, values: Seq[CreateValueInNewResourceV2]) =>
-               CheckObjectClassConstraints(
-                 iri,
-                 values,
-                 linkTargetClasses,
-                 entityInfo,
-                 clientResourceIDs,
-                 resourceIDForErrorMsg,
-               )
-           }
+      _ <-
+        ZIO.foreachDiscard(internalCreateResource.values) {
+          case (iri: SmartIri, values: Seq[CreateValueInNewResourceV2]) =>
+            CheckObjectClassConstraints(
+              iri,
+              values,
+              linkTargetClasses,
+              entityInfo,
+              clientResourceIDs,
+              resourceIDForErrorMsg,
+              ontologyRepo,
+            )
+        }
 
       // Check that the submitted values do not contain duplicates.
       _ <- checkForDuplicateValues(internalCreateResource.values, resourceIDForErrorMsg)

@@ -15,6 +15,8 @@ import zio.ZIO
 
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.URI
+import java.net.URL
 import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
@@ -1186,6 +1188,12 @@ object JsonLDUtil {
       ),
     )
   }
+
+  def makeUriObject(url: URL)(implicit sf: StringFormatter): JsonLDObject =
+    makeUriObject(url.toURI)
+
+  def makeUriObject(uri: URI)(implicit sf: StringFormatter): JsonLDObject =
+    datatypeValueToJsonLDObject(uri.toString, OntologyConstants.Xsd.Uri.toSmartIri)
 
   /**
    * Given a map of language codes to predicate values, returns a JSON-LD array in which each element

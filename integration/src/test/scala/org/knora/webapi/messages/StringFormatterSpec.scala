@@ -919,6 +919,12 @@ class StringFormatterSpec extends CoreSpec {
       println(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
     }
 
+    "should convert link value prop to link prop" in {
+      val resourceIri: IRI = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue"
+      val asLinkProp       = resourceIri.toSmartIri.fromLinkValuePropToLinkProp
+      assert(asLinkProp == "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri)
+    }
+
     "generate an ARK URL for a resource IRI without a timestamp" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
       val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl()
@@ -947,5 +953,4 @@ class StringFormatterSpec extends CoreSpec {
     }
 
   }
-
 }

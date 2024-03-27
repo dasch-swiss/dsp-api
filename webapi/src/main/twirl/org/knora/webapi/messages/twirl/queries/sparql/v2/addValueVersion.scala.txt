@@ -19,7 +19,7 @@
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the most recent existing version of the value.
  * @param newValueIri the new value IRI.
- * @param valueTypeIri the type of the new value.
+ * @param valueTypeIri the type of the previous value.
  * @param permissionRelevantAssertions Permission-relevant assertions, i.e. owner and project plus permissions, in
  *        the form of a list of tuples (predicate, object).
  * @param value the value to insert.
@@ -177,7 +177,6 @@ WHERE {
 
     ?resource ?property ?currentValue .
     ?currentValue rdf:type ?valueType .
-    ?property knora-base:objectClassConstraint ?valueType .
 
     @*
 

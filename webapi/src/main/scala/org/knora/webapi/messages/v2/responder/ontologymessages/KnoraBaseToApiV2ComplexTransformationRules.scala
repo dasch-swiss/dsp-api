@@ -1371,6 +1371,23 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       ),
     ),
   )
+  private val StillImageFileValueHasExternalUrl: ReadPropertyInfoV2 = makeProperty(
+    propertyIri = OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasExternalUrl,
+    propertyType = OntologyConstants.Owl.DatatypeProperty,
+    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+    subjectType = Some(OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue),
+    objectType = Some(OntologyConstants.Xsd.Uri),
+    predicates = Seq(
+      makePredicate(
+        predicateIri = OntologyConstants.Rdfs.Label,
+        objectsWithLang = Map(LanguageCodes.EN -> "External Url to the image"),
+      ),
+      makePredicate(
+        predicateIri = OntologyConstants.Rdfs.Comment,
+        objectsWithLang = Map(LanguageCodes.EN -> "External Url to the image"),
+      ),
+    ),
+  )
 
   private val ResourceCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> Unbounded,
@@ -1473,6 +1490,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne,
   )
 
+  private val StillImageExternalFileValueCardinalities = Map(
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasExternalUrl -> ExactlyOne,
+  )
+
   /**
    * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
    * See also [[OntologyConstants.CorrespondingIris]].
@@ -1561,23 +1583,24 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
    * added to the specified classes to obtain `knora-api`.
    */
   override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-    OntologyConstants.KnoraApiV2Complex.Resource            -> ResourceCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DateBase            -> DateBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.UriBase             -> UriBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.BooleanBase         -> BooleanBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.IntBase             -> IntBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DecimalBase         -> DecimalBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.IntervalBase        -> IntervalBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.ColorBase           -> ColorBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.Value               -> ValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.TextValue           -> TextValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.StandoffTag         -> StandoffTagCardinalities,
-    OntologyConstants.KnoraApiV2Complex.LinkValue           -> LinkValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.GeomValue           -> GeomValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.ListValue           -> ListValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.GeonameValue        -> GeonameValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.FileValue           -> FileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.Resource                    -> ResourceCardinalities,
+    OntologyConstants.KnoraApiV2Complex.DateBase                    -> DateBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.UriBase                     -> UriBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.BooleanBase                 -> BooleanBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.IntBase                     -> IntBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.DecimalBase                 -> DecimalBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.IntervalBase                -> IntervalBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.ColorBase                   -> ColorBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.Value                       -> ValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.TextValue                   -> TextValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.StandoffTag                 -> StandoffTagCardinalities,
+    OntologyConstants.KnoraApiV2Complex.LinkValue                   -> LinkValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.GeomValue                   -> GeomValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.ListValue                   -> ListValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.GeonameValue                -> GeonameValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.FileValue                   -> FileValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValue         -> StillImageFileValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.StillImageExternalFileValue -> StillImageExternalFileValueCardinalities,
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
@@ -1658,6 +1681,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     StillImageFileValueHasDimX,
     StillImageFileValueHasDimY,
     StillImageFileValueHasIIIFBaseUrl,
+    StillImageFileValueHasExternalUrl,
   ).map { propertyInfo =>
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo
   }.toMap

@@ -27,7 +27,7 @@ metadata. In the diagram below, a book (`ex:book2`) has a title
 
 ### Projects
 
-In Knora, each item of data belongs to some particular project. Each project using Knora must define a
+In DSP-API, each item of data belongs to some particular project. Each project using DSP-API must define a
 `kb:knoraProject`, which has these properties (cardinalities are indicated in parentheses after each property name):
 
 - `projectShortname` (1): A short name that can be used to identify the project in configuration files and the like.
@@ -55,7 +55,7 @@ also required.
 ### Resources
 
 All the content produced by a project (e.g. digitised primary source materials or research data) must be stored in
-objects that belong to subclasses of `kb:Resource`, so that Knora can query and update that content. Each project using
+objects that belong to subclasses of `kb:Resource`, so that DSP-API can query and update that content. Each project using
 the Knora base ontology must define its own OWL classes, derived from `kb:Resource`, to represent the types of data it
 deals with. A subclass of `kb:Resource` may additionally be a subclass of any other class, e.g. an industry-standard
 class such as `foaf:Person`; this can facilitate searches across projects.
@@ -81,7 +81,7 @@ Every resource is required to have an `rdfs:label`. The object of this property 
 value; hence it is not versioned. A user who has modify permission on a resource (see
 [Authorisation](#authorisation)) can change its label.
 
-A resource can be marked as deleted; Knora does this by adding the predicate `kb:isDeleted true` to the resource. An
+A resource can be marked as deleted; DSP-API does this by adding the predicate `kb:isDeleted true` to the resource. An
 optional `kb:deleteComment` may be added to explain why the resource has been marked as deleted. Deleted resources are
 normally hidden. They cannot be undeleted, because even though resources are not versioned, it is necessary to be able
 to find out when a resource was deleted. If desired, a new resource can be created by copying data from a deleted
@@ -113,16 +113,15 @@ see [Authorisation](#authorisation).
 #### Representations
 
 It is not practical to store all data in RDF. In particular, RDF is not a good storage medium for binary data such as
-images. Therefore, Knora stores such data outside the triplestore, in ordinary files. A resource can have metadata about
-a file attached to it. The technical term for such a resource in Knora is a **Representation**. For each file, there is
-a `kb:FileValue` in the triplestore containing metadata about the file (see [FileValue](#filevalue)). Knora
-uses [Sipi](https://github.com/dhlab-basel/Sipi) to store files. The Knora APIs provide ways to
-create file values using Knora and Sipi.
+images. Therefore, DSP-API stores such data outside the triplestore, in ordinary files. A resource can have metadata about
+a file attached to it. The technical term for such a resource in the Knora ontology is a **Representation**. For each file, there is
+a `kb:FileValue` in the triplestore containing metadata about the file (see [FileValue](#filevalue)). DSP-API
+uses [Sipi](https://github.com/dhlab-basel/Sipi) to store files. The DSP-API provides ways to create file values.
 
 A resource that has a file value must belong to one of the subclasses of
 `kb:Representation`. Its subclasses include:
 
-- `StillImageRepresentation`: A representation containing a still image file.
+- `StillImageRepresentation`: A representation referring to a still image file which can be stored in Sipi or an external IIIF server.
 
 - `MovingImageRepresentation`: A representation containing a video file.
 
@@ -156,7 +155,7 @@ Each of these other resources can extend a different subclass of `Representation
 
 #### Standard Resource Classes
 
-In general, each project using Knora must define its own subclasses of `kb:Resource`. However, the Knora base ontology
+In general, each project must define its own subclasses of `kb:Resource`. However, the Knora base ontology
 provides some standard subclasses of `kb:Resource`, which are intended to be used by any project:
 
 - `Region`: Represents a region of a `Representation` (see [Representations](#representations)).
@@ -208,7 +207,7 @@ data from a deleted value.
 
 - `attachedToUser` (1): The user who owns the value.
 
-- `valueHasString` (1): A human-readable string representation of the value's contents, which is available to Knora's
+- `valueHasString` (1): A human-readable string representation of the value's contents, which is available to DSP-API's
   full-text search index.
 
 - `valueHasOrder` (0-1): A resource may have several properties of the same type with different values (which will be of
@@ -253,7 +252,7 @@ A text value can have a specified language:
 
 ##### DateValue
 
-Humanities data includes many different types of dates. In Knora, a date has a specified calendar, and is always
+Humanities data includes many different types of dates. A date has a specified calendar, and is always
 represented as a period with start and end points (which may be equal), each of which has a precision (`DAY`, `MONTH`,
 or `YEAR`). For `GREGORIAN` and `JULIAN` calendars, an optional `ERA` indicator term (`BCE`, `CE`, or `BC`, `AD`) can be
 added to the date, when no era is provided the default era `AD` will be considered. Internally, the start and end points
@@ -356,7 +355,7 @@ Each `ListNode` can have the following properties:
 
 ##### FileValue
 
-Knora stores certain kinds of data outside the triplestore, in files (see [Representations](#representations)). Each
+DSP-API can store certain kinds of data outside the triplestore, in files (see [Representations](#representations)). Each
 digital object that is stored outside the triplestore has associated metadata, which is stored in the triplestore in
 a `kb:FileValue`. The base class `FileValue`, which is not intended to be used directly, has these properties:
 
@@ -369,11 +368,11 @@ a `kb:FileValue`. The base class `FileValue`, which is not intended to be used d
 - `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to the Knora API server.
 
 - `isPreview` (0-1): A boolean indicating whether the file is a preview, i.e. a small image representing the contents of
-  the file. A preview is always a `StillImageFileValue`, regardless of the type of the enclosing `Representation`.
+  the file. A preview is always a `StillImageAbstractFileValue`, regardless of the type of the enclosing `Representation`.
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageFileValue`: Contains metadata about a still image file.
+- `StillImageAbstractFileValue`: Contains metadata about a still image file, which can be either `StillImageFileValue` (an image stored in Sipi) or `StillImageExternalFileValue` (a reference to an image stored in an external IIIF service).
 
 - `MovingImageFileValue`: Contains metadata about a video file.
 
@@ -390,7 +389,7 @@ The subclasses of `FileValue`, which are intended to be used directly in data, i
 Each of these classes contains properties that are specific to the type of file it describes. For example, still image
 files have dimensions, video files have frame rates, and so on.
 
-`FileValue` objects are versioned like other values, and the actual files stored by Knora are also versioned. Version 1
+`FileValue` objects are versioned like other values, and the actual files stored by DSP-API are also versioned. Version 1
 of the DSP-API does not provide a way to retrieve a previous version of a file, but this feature will be added in a
 subsequent version of the API.
 
@@ -418,13 +417,13 @@ of `rdf:Statement` as well as of `Value`. It has these properties:
 (see [StandoffLinkTag](#standofflinktag)). Otherwise, the reference count will always be 1 (if the link exists) or 0 (if
 it has been deleted).
 
-For details about how links are created in Knora, see
+For details about how links are created in DSP-API, see
 [Links Between Resources](#links-between-resources).
 
 ##### ExternalResValue
 
-Represents a resource that is not stored in the RDF triplestore managed by Knora, but instead resides in an external
-repository managed by some other software. The `ExternalResValue` contains the information that Knora needs in order to
+Represents a resource that is not stored in the RDF triplestore managed by DSP-API, but instead resides in an external
+repository managed by some other software. The `ExternalResValue` contains the information that DSP-API needs in order to
 access the resource, assuming that a suitable gateway plugin is installed.
 
 `extResAccessInfo` (1)
@@ -446,12 +445,12 @@ A link between two resources is expressed, first of all, as a triple, in which t
 source of the link, the predicate is a "link property" (a subproperty of `kb:hasLinkTo`), and the object is the resource
 that is the target of the link.
 
-It is also useful to store metadata about links. For example, Knora needs to know who owns the link, who has permission
+It is also useful to store metadata about links. For example, DSP-API needs to know who owns the link, who has permission
 to modify it, when it was created, and so on. Such metadata cannot simply describe the link property, because then it
 would refer to that property in general, not to any particular instance in which that property is used to connect two
 particular resources. To attach metadata to a specific link in RDF, it is necessary to create an RDF "reification". A
 reification makes statements about a particular triple (subject, predicate, object), in this case the triple that
-expresses the link between the resources. Knora uses reifications of type `kb:LinkValue` (described in
+expresses the link between the resources. DSP-API uses reifications of type `kb:LinkValue` (described in
 [LinkValue](#linkvalue) to store metadata about links.
 
 For example, suppose a project describes paintings that belong to collections. The project can define an ontology as
@@ -567,7 +566,7 @@ containing metadata about the link. We can visualise the result as the following
 
 ![Figure 2](knora-base-fig2.dot.png "Figure 2")
 
-Knora allows a user to see a link if the requesting user has permission to see the source and target resources as well
+DSP-API allows a user to see a link if the requesting user has permission to see the source and target resources as well
 as the `kb:LinkValue`.
 
 ### Part-Whole-Relations between Resources
@@ -709,7 +708,7 @@ a `StandoffLinkTag` connects the name to the Knora resource describing that pers
 
 One of the design goals of the Knora base ontology is to make it easy and efficient to find out which resources contain
 references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when
-a text value contains a resource reference in its standoff nodes, Knora automatically creates a direct link between the
+a text value contains a resource reference in its standoff nodes, DSP-API automatically creates a direct link between the
 containing resource and the target resource, along with an RDF reification (a `kb:LinkValue`) describing the link, as
 discussed in [Links Between Resources](#links-between-resources). In this case, the link property is
 always `kb:hasStandoffLinkTo`, and the link value property (which points to the `LinkValue`) is always
@@ -874,7 +873,7 @@ select * where {
 
 ### Users and Groups
 
-Each Knora user is represented by an object belonging to the class
+Each DSP-API user is represented by an object belonging to the class
 `kb:User`, which is a subclass of `foaf:Person`, and has the following properties:
 
 `userid` (1)
@@ -905,16 +904,16 @@ Each Knora user is represented by an object belonging to the class
 
 :   The user's given name.
 
-Knora's concept of access control is that an object (a resource or value) can grant permissions to groups of users (but
+DSP-API's concept of access control is that an object (a resource or value) can grant permissions to groups of users (but
 not to individual users). There are several built-in groups:
 
 `knora-admin:UnknownUser`
 
-:   Any user who has not logged into Knora is automatically assigned to this group.
+:   Any user who has not logged into DSP-API is automatically assigned to this group.
 
 `knora-admin:KnownUser`
 
-:   Any user who has logged into Knora is automatically assigned to this group.
+:   Any user who has logged into DSP-API is automatically assigned to this group.
 
 `knora-admin:ProjectMember`
 
@@ -933,7 +932,7 @@ administrator of the project that the object belongs to.
 
 `knora-admin:SystemAdmin`
 
-:   The group of Knora system administrators.
+:   The group of DSP-API system administrators.
 
 A user-created ontology can define additional groups, which must belong to the OWL class `knora-admin:UserGroup`.
 
@@ -995,7 +994,7 @@ V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember
 
 ### Consistency Checking
 
-Knora tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and
+DSP-API tries to enforce repository consistency by checking constraints that are specified in the Knora base ontology and
 in user-created ontologies. Three types of consistency rules are enforced:
 
 - Cardinalities in OWL class definitions must be satisfied.
@@ -1010,7 +1009,7 @@ allowed to have a property that is a subproperty of `kb:hasValue` or `kb:hasLink
 some cardinality for that property. Similarly, a value is allowed to have a subproperty of `kb:valueHas`
 only if the value's class has some cardinality for that property.
 
-Knora supports, and attempts to enforce, the following cardinality constraints:
+DSP-API supports, and attempts to enforce, the following cardinality constraints:
 
 - `owl:cardinality 1`:
   _Exactly One `1`_ - A resource of this class must have exactly one instance of the specified property.
@@ -1024,7 +1023,7 @@ Knora supports, and attempts to enforce, the following cardinality constraints:
 - `owl:minCardinality 0`:
   _Unbounded `0-n`_ - A resource of this class may have zero or more instances of the specified property.
 
-Knora requires cardinalities to be defined using blank nodes, as in the following example from `knora-base`:
+DSP-API requires cardinalities to be defined using blank nodes, as in the following example from `knora-base`:
 
 ```
 :Representation rdf:type owl:Class ;
@@ -1047,7 +1046,7 @@ displayed in a GUI
 (see [The SALSAH GUI Ontology](salsah-gui.md)).
 
 A resource class inherits cardinalities from its superclasses. This follows from the rules of
-[RDFS](http://www.w3.org/TR/2014/REC-rdf-schema-20140225/) inference. Also, in Knora, cardinalities in the subclass can
+[RDFS](http://www.w3.org/TR/2014/REC-rdf-schema-20140225/) inference. Also, in DSP-API, cardinalities in the subclass can
 override cardinalities that would otherwise be inherited from the superclass. Specifically, if a superclass has a
 cardinality on a property P, and a subclass has a cardinality on a subproperty of P, the subclass's cardinality
 overrides the superclass's cardinality. In the example above,
@@ -1072,19 +1071,19 @@ possible, as subjects) of the property. This is done using the following Knora-s
 `subjectClassConstraint`
 
 :   Specifies the class that subjects of the property must belong to. This constraint is recommended but not required.
-Knora will attempt to enforce this constraint.
+DSP-API will attempt to enforce this constraint.
 
 `objectClassConstraint`
 
 :   If the property is an object property, specifies the class that objects of the property must belong to. Every
 subproperty of
 `kb:hasValue` or a `kb:hasLinkTo` (i.e. every property of a resource that points to a `kb:Value` or to another resource)
-is required to have this constraint, because Knora relies on it to know what type of object to expect for the property.
-Knora will attempt to enforce this constraint.
+is required to have this constraint, because DSP-API relies on it to know what type of object to expect for the property.
+DSP-API will attempt to enforce this constraint.
 
 `objectDatatypeConstraint`
 
-:   If the property is a datatype property, specifies the type of literals that can be objects of the property. Knora
+:   If the property is a datatype property, specifies the type of literals that can be objects of the property. DSP-API
 will not attempt to enforce this constraint, but it is useful for documentation purposes.
 
 Note that it is possible for a subproperty to have a more restrictive contraint than its base property, by specifing a
@@ -1165,6 +1164,6 @@ public discussion on proposed entities to be shared. Once a consensus was reache
 ## Knora Ontology Versions
 
 The Knora base ontology has the property `kb:ontologyVersion`, whose object is a string that indicates the deployed
-version of all the Knora built-in ontologies. This allows the
+version of all the DSP-API built-in ontologies. This allows the
 [repository update program](../04-publishing-deployment/updates.md) to determine which repository updates are needed
-when Knora is upgraded.
+when DSP-API is upgraded.

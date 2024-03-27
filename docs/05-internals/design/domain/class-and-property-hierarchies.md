@@ -186,6 +186,9 @@ classDiagram
     integer dimX
     integer dimY
   }
+  class StillImageExternalFileValue {
+    anyUri externalUrl
+  }
   class TextFileValue
 
 
@@ -229,6 +232,7 @@ classDiagram
   FileValue <|-- DocumentFileValue
   FileValue <|-- MovingImageFileValue
   FileValue <|-- StillImageFileValue
+  FileValue <|-- StillImageExternalFileValue
   FileValue <|-- TextFileValue
   ValueBase .. StandoffInternalReferenceTag
   ColorBase .. StandoffColorTag
