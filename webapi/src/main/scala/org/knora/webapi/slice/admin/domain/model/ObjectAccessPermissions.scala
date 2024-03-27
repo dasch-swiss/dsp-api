@@ -63,7 +63,7 @@ object ObjectAccessPermissions {
     ObjectAccessPermission.RestrictedView,
     ObjectAccessPermission.View,
   )
-  val allCodes: Set[Int]        = all.map(_.code)
-  val allTokens: Set[String]    = all.map(_.token)
-  val byToken: Map[String, Int] = all.map(p => p.token -> p.code).toMap
+  val allCodes: Set[Int]            = all.map(_.code)
+  val allTokens: Set[String]        = all.map(_.token)
+  val codeByToken: Map[String, Int] = all.map(p => p.token -> p.code).toMap
 }

@@ -1624,11 +1624,11 @@ final case class PermissionsResponderADMLive(
     validateDOAPHasPermissions(hasPermissions)
     hasPermissions.map { permission =>
       val code: Int = permission.permissionCode match {
-        case None       => ObjectAccessPermissions.byToken(permission.name)
+        case None       => ObjectAccessPermissions.codeByToken(permission.name)
         case Some(code) => code
       }
       val name = if (permission.name.isEmpty) {
-        val nameCodeSet: Option[(String, Int)] = ObjectAccessPermissions.byToken.find { case (_, code) =>
+        val nameCodeSet: Option[(String, Int)] = ObjectAccessPermissions.codeByToken.find { case (_, code) =>
           code == permission.permissionCode.get
         }
         nameCodeSet.get._1

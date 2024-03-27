@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
@@ -35,28 +34,6 @@ import org.knora.webapi.slice.admin.domain.model.User
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
  */
 object PermissionUtilADM extends LazyLogging {
-
-  private val levelsByToken = ObjectAccessPermissions.all.map(level => level.token -> level).toMap
-
-  /**
-   * A set of assertions that are relevant for calculating permissions.
-   */
-  private val permissionRelevantAssertions = Set(
-    OntologyConstants.KnoraBase.AttachedToUser,
-    OntologyConstants.KnoraBase.AttachedToProject,
-    OntologyConstants.KnoraBase.HasPermissions,
-  )
-
-  /**
-   * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
-   * is the case if the property is [[OntologyConstants.KnoraBase.AttachedToUser]],
-   * [[OntologyConstants.KnoraBase.AttachedToProject]], or
-   * or [[OntologyConstants.KnoraBase.HasPermissions]].
-   *
-   * @param p the IRI of the property.
-   * @return `true` if the property is relevant to calculating permissions.
-   */
-  def isPermissionRelevant(p: IRI): Boolean = permissionRelevantAssertions.contains(p)
 
   /**
    * Calculates the highest permission level a user can be granted on a entity.
@@ -181,7 +158,6 @@ object PermissionUtilADM extends LazyLogging {
    * - [[AEqualToB]] if `permissionLiteralA` and `permissionLiteralB` would give the user the same permission.
    * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
    *
-   * @param entityCreator      the IRI of the user that created the entity.
    * @param entityProject      the IRI of the entity's project.
    * @param permissionLiteralA the first permission string.
    * @param permissionLiteralB the second permission string.
@@ -546,7 +522,7 @@ object PermissionUtilADM extends LazyLogging {
 
           /* Sort permissions in descending order */
           val sortedPermissions: Array[(String, String)] = groupedPermissions.toArray.sortWith { (left, right) =>
-            levelsByToken(left._1) > levelsByToken(right._1)
+            ObjectAccessPermissions.codeByToken(left._1) > ObjectAccessPermissions.codeByToken(right._1)
           }
 
           /* create the permissions string */
@@ -578,24 +554,6 @@ object PermissionUtilADM extends LazyLogging {
           throw InconsistentRepositoryDataException("Permissions cannot be empty")
         }
       case PermissionType.DOAP => ???
-    }
-
-  /////////////////////////////////////////
-  // API v1 methods
-
-  /**
-   * Checks whether an integer permission code implies a particular permission property.
-   *
-   * @param userHasPermissionCode the integer permission code that the user has, or [[None]] if the user has no permissions
-   *                              (in which case this method returns `false`).
-   * @param userNeedsPermission   the abbreviation of the permission that the user needs.
-   * @return `true` if the user has the needed permission.
-   */
-  def impliesPermissionCodeV1(userHasPermissionCode: Option[Int], userNeedsPermission: String): Boolean =
-    userHasPermissionCode match {
-      case Some(permissionCode) =>
-        permissionCode >= levelsByToken(userNeedsPermission).code
-      case None => false
     }
 }
 
@@ -654,6 +612,5 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 }
 
 object PermissionUtilADMLive {
-  val layer: URLayer[StringFormatter & MessageRelay, PermissionUtilADMLive] =
-    ZLayer.fromFunction(PermissionUtilADMLive.apply _)
+  val layer = ZLayer.derive[PermissionUtilADMLive]
 }
