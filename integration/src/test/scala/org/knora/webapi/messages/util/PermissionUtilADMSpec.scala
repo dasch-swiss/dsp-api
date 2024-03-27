@@ -115,11 +115,11 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
         "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-admin:UnknownUser"
 
       val permissionsSet = Set(
-        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
-        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-        PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
-        PermissionADM.viewPermission("http://rdfh.ch/groups/customgroup"),
-        ObjectAccessPermission.View.toPermissionADM(OntologyConstants.KnoraAdmin.UnknownUser),
+        PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.Creator),
+        PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+        PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.KnownUser),
+        PermissionADM.from(ObjectAccessPermission.View, "http://rdfh.ch/groups/customgroup"),
+        PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.UnknownUser),
       )
 
       PermissionUtilADM.parsePermissionsWithType(
@@ -161,39 +161,38 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     "remove duplicate permissions" in {
 
       val duplicatedPermissions = Seq(
-        ObjectAccessPermission.View.toPermissionADM("1"),
-        ObjectAccessPermission.View.toPermissionADM("1"),
-        ObjectAccessPermission.View.toPermissionADM("2"),
-        PermissionADM.changeRightsPermission("2"),
-        PermissionADM.changeRightsPermission("3"),
-        PermissionADM.changeRightsPermission("3"),
+        PermissionADM.from(ObjectAccessPermission.View, "1"),
+        PermissionADM.from(ObjectAccessPermission.View, "1"),
+        PermissionADM.from(ObjectAccessPermission.View, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "3"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "3"),
       )
 
       val deduplicatedPermissions = Set(
-        ObjectAccessPermission.View.toPermissionADM("1"),
-        ObjectAccessPermission.View.toPermissionADM("2"),
-        PermissionADM.changeRightsPermission("2"),
-        PermissionADM.changeRightsPermission("3"),
+        PermissionADM.from(ObjectAccessPermission.View, "1"),
+        PermissionADM.from(ObjectAccessPermission.View, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "3"),
       )
 
       val result = PermissionUtilADM.removeDuplicatePermissions(duplicatedPermissions)
       result.size should equal(deduplicatedPermissions.size)
       result should contain allElementsOf deduplicatedPermissions
-
     }
 
     "remove lesser permissions" in {
       val withLesserPermissions = Set(
-        ObjectAccessPermission.View.toPermissionADM("1"),
-        PermissionADM.viewPermission("1"),
-        PermissionADM.modifyPermission("2"),
-        PermissionADM.changeRightsPermission("1"),
-        PermissionADM.deletePermission("2"),
+        PermissionADM.from(ObjectAccessPermission.View, "1"),
+        PermissionADM.from(ObjectAccessPermission.View, "1"),
+        PermissionADM.from(ObjectAccessPermission.Modify, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "1"),
+        PermissionADM.from(ObjectAccessPermission.Delete, "2"),
       )
 
       val withoutLesserPermissions = Set(
-        PermissionADM.changeRightsPermission("1"),
-        PermissionADM.deletePermission("2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "1"),
+        PermissionADM.from(ObjectAccessPermission.Delete, "2"),
       )
 
       val result = PermissionUtilADM.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
@@ -203,11 +202,11 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
 
     "create permissions string" in {
       val permissions = Set(
-        PermissionADM.changeRightsPermission("1"),
-        PermissionADM.deletePermission("2"),
-        PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-        PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, "1"),
+        PermissionADM.from(ObjectAccessPermission.Delete, "2"),
+        PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
+        PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+        PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.KnownUser),
       )
 
       val permissionsString = "CR 1,knora-admin:Creator|D 2|M knora-admin:ProjectMember|V knora-admin:KnownUser"

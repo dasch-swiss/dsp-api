@@ -440,35 +440,35 @@ object PermissionUtilADM extends LazyLogging {
 
       case ObjectAccessPermission.ChangeRights.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.changeRightsPermission(iri))
+          iris.map(iri => PermissionADM.from(ObjectAccessPermission.ChangeRights, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
       case ObjectAccessPermission.Delete.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.deletePermission(iri))
+          iris.map(iri => PermissionADM.from(ObjectAccessPermission.Delete, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
       case ObjectAccessPermission.Modify.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.modifyPermission(iri))
+          iris.map(iri => PermissionADM.from(ObjectAccessPermission.Modify, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
       case ObjectAccessPermission.View.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.viewPermission(iri))
+          iris.map(iri => PermissionADM.from(ObjectAccessPermission.View, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
       case ObjectAccessPermission.RestrictedView.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.restrictedViewPermission(iri))
+          iris.map(iri => PermissionADM.from(ObjectAccessPermission.RestrictedView, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
@@ -480,12 +480,8 @@ object PermissionUtilADM extends LazyLogging {
    * @param permissions the sequence of permissions with possible duplicates.
    * @return a set containing only unique permission.
    */
-  def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
-
-    val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
-    // log.debug(s"removeDuplicatePermissions - result: $result")
-    result
-  }
+  def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] =
+    permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
 
   /**
    * Helper method used to remove lesser permissions, i.e. permissions which are already given by
@@ -652,9 +648,7 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>
-                                             groupIris.map { groupIri =>
-                                               entityPermission.toPermissionADM(groupIri)
-                                             }
+                                             groupIris.map(PermissionADM.from(entityPermission, _))
                                            }.toSet
     } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
 }

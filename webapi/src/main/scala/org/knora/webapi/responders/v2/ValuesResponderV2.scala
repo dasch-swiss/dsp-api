@@ -2380,8 +2380,8 @@ final case class ValuesResponderV2Live(
    */
   private lazy val standoffLinkValuePermissions: String = {
     val permissions: Set[PermissionADM] = Set(
-      PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
-      PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser),
+      PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.SystemUser),
+      PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.UnknownUser),
     )
 
     PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

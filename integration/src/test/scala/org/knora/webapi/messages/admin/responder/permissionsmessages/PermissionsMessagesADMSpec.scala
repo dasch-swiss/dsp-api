@@ -422,7 +422,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.imagesUser01,
         ),
@@ -437,7 +438,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(groupIri),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.imagesUser01,
         ),
@@ -453,7 +455,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.imagesUser01,
         ),
@@ -569,7 +572,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-            hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.RestrictedView, SharedTestDataADM.thingSearcherGroup.id)),
           ),
           SharedTestDataADM.anythingUser2,
         ),
@@ -587,7 +591,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.rootUser,
         ),
@@ -602,7 +607,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.rootUser,
         ),
@@ -616,7 +622,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.rootUser,
         ),
@@ -630,7 +637,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.rootUser,
         ),
@@ -646,7 +654,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         PermissionsRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+            hasPermissions =
+              Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember)),
           ),
           SharedTestDataADM.rootUser,
         ),

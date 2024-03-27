@@ -769,26 +769,6 @@ object PermissionADM {
       additionalInformation = None,
       permissionCode = None,
     )
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Object Access Permissions
-  ///////////////////////////////////////////////////////////////////////////
-
-  def changeRightsPermission(restriction: IRI): PermissionADM =
-    PermissionADM.from(ObjectAccessPermission.ChangeRights, restriction)
-
-  def deletePermission(restriction: IRI): PermissionADM =
-    PermissionADM.from(ObjectAccessPermission.Delete, restriction)
-
-  def modifyPermission(restriction: IRI): PermissionADM =
-    PermissionADM.from(ObjectAccessPermission.Modify, restriction)
-
-  def viewPermission(restriction: IRI): PermissionADM =
-    PermissionADM.from(ObjectAccessPermission.View, restriction)
-
-  def restrictedViewPermission(restriction: IRI): PermissionADM =
-    PermissionADM.from(ObjectAccessPermission.RestrictedView, restriction)
-
 }
 
 /**

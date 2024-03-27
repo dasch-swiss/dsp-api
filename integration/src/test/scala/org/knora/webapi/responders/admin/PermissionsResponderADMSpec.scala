@@ -440,7 +440,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = SharedTestDataADM.anythingProjectIri,
                 forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-                hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)),
+                hasPermissions = Set(
+                  PermissionADM.from(ObjectAccessPermission.RestrictedView, SharedTestDataADM.thingSearcherGroup.id),
+                ),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -452,7 +454,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         assert(actual.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
         assert(
           actual.defaultObjectAccessPermission.hasPermissions.contains(
-            PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id),
+            PermissionADM.from(ObjectAccessPermission.RestrictedView, SharedTestDataADM.thingSearcherGroup.id),
           ),
         )
       }
@@ -466,7 +468,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
                 id = Some(customIri),
                 forProject = SharedTestDataADM.anythingProjectIri,
                 forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
-                hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)),
+                hasPermissions = Set(
+                  PermissionADM.from(ObjectAccessPermission.RestrictedView, OntologyConstants.KnoraAdmin.UnknownUser),
+                ),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -478,7 +482,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.anythingProjectIri)
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(unknownUser)),
+            .contains(PermissionADM.from(ObjectAccessPermission.RestrictedView, unknownUser)),
         )
       }
 
@@ -489,7 +493,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = imagesProjectIri,
                 forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-                hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)),
+                hasPermissions =
+                  Set(PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.KnownUser)),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -503,7 +508,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         assert(
           actual.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.modifyPermission(knownUser)),
+            .contains(PermissionADM.from(ObjectAccessPermission.Modify, knownUser)),
         )
       }
 
@@ -514,7 +519,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = imagesProjectIri,
                 forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-                hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)),
+                hasPermissions =
+                  Set(PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator)),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -528,7 +534,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         assert(
           actual.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.changeRightsPermission(creator)),
+            .contains(PermissionADM.from(ObjectAccessPermission.ChangeRights, creator)),
         )
       }
 
@@ -539,7 +545,9 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               CreateDefaultObjectAccessPermissionAPIRequestADM(
                 forProject = SharedTestDataADM2.incunabulaProjectIri,
                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember)),
+                hasPermissions = Set(
+                  PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectMember),
+                ),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -564,8 +572,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
                 forProject = SharedTestDataADM2.incunabulaProjectIri,
                 forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
                 hasPermissions = Set(
-                  PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                  PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
+                  PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                 ),
               ),
               rootUser,
@@ -591,7 +599,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
                 forProject = SharedTestDataADM2.incunabulaProjectIri,
                 forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
                 hasPermissions = Set(
-                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser),
+                  PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.KnownUser),
                 ),
               ),
               rootUser,
@@ -618,8 +626,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
                 forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
                 forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
                 hasPermissions = Set(
-                  PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-                  PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                  PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
+                  PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                 ),
               ),
               rootUser,
@@ -663,7 +671,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         assert(actual.defaultObjectAccessPermission.forGroup.contains(unknownUser))
         assert(
           actual.defaultObjectAccessPermission.hasPermissions.contains(
-            PermissionADM.restrictedViewPermission(unknownUser),
+            PermissionADM.from(ObjectAccessPermission.RestrictedView, unknownUser),
           ),
         )
       }
@@ -1061,8 +1069,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "update hasPermissions of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
-          PermissionADM.changeRightsPermission(creator),
-          PermissionADM.modifyPermission(projectMember),
+          PermissionADM.from(ObjectAccessPermission.ChangeRights, creator),
+          PermissionADM.from(ObjectAccessPermission.Modify, projectMember),
         )
 
         val actual = UnsafeZioRun.runOrThrow(

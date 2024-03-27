@@ -29,6 +29,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -233,8 +234,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
               ),
             )
         }
@@ -248,8 +249,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
               ),
             )
         }

@@ -1419,7 +1419,7 @@ final case class PermissionsResponderADMLive(
       _ =
         if (permissionsListBuffer.isEmpty) {
           val defaultFallbackPermission = Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+            PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
         } else {
@@ -2242,8 +2242,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
                hasPermissions = Set(
-                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,
@@ -2257,8 +2257,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                hasPermissions = Set(
-                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,
