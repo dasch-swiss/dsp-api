@@ -47,6 +47,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"
       urlFull  <- ZIO.fromEither(URL.decode(urlStr)).orDie
+      _        <- ZIO.logDebug(s"GET   ${urlFull.encode}")
       bearer    = token.map(Header.Authorization.Bearer(_)).toList
       response <- client.url(urlFull).addHeaders(Headers(bearer)).get("/").orDie
     } yield response
@@ -54,8 +55,8 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
   def sendGetRequestStringOrFail(url: String, token: Option[String] = None): ZIO[env, String, String] =
     for {
       response <- sendGetRequest(url, token)
-      _        <- ZIO.fail(s"Failed request: Status ${response.status}").when(response.status != Status.Ok)
       data     <- response.body.asString.orDie
+      _        <- ZIO.fail(s"Failed request: Status ${response.status} - $data").when(response.status != Status.Ok)
     } yield data
 
   def sendGetRequestAsOrFail[B](url: String, token: Option[String] = None)(implicit
@@ -71,6 +72,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"
       urlFull  <- ZIO.fromEither(URL.decode(urlStr)).mapError(_.getMessage)
+      _        <- ZIO.logDebug(s"POST  ${urlFull.encode}")
       body      = Body.fromString(data)
       bearer    = token.map(Header.Authorization.Bearer(_))
       headers   = Headers(List(Header.ContentType(MediaType.application.json)) ++ bearer.toList)

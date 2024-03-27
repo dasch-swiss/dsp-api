@@ -61,7 +61,7 @@ object SampleE2ESpec extends E2EZSpec {
   private val getTokenTest = test("check get token") {
     for {
       token <- getToken("root@example.com", "test")
-      _     <- sendGetRequestStringOrFail("/admin/users")
+      _     <- sendGetRequestStringOrFail("/admin/users", Some(token))
     } yield assertTrue(token.nonEmpty)
   }
 }
