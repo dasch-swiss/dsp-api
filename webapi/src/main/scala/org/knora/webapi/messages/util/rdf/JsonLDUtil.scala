@@ -19,7 +19,6 @@ import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -32,6 +31,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import java.net.URL
 
 /*
 
@@ -1186,6 +1187,9 @@ object JsonLDUtil {
       ),
     )
   }
+
+  def makeUrlObject(url: URL)(implicit sf: StringFormatter): JsonLDObject =
+    datatypeValueToJsonLDObject(url.toString, OntologyConstants.Xsd.Uri.toSmartIri)
 
   /**
    * Given a map of language codes to predicate values, returns a JSON-LD array in which each element

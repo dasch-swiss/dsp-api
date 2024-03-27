@@ -9,7 +9,6 @@ import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -50,6 +49,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
+
+import java.net.URI
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -2810,15 +2811,14 @@ case class StillImageExternalFileValueContentV2(
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
             StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
-              .datatypeValueToJsonLDObject(
-                value = {
+              .makeUrlObject(
+                {
                   val uri = externalUrl.value.toURI
-                  if (uri.getPort == -1) s"${uri.getScheme}://${uri.getHost}"
-                  else s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
+                  if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
+                  else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
                 },
-                datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
-            StillImageFileValueHasExternalUrl -> JsonLDString(externalUrl.value.toString),
+            StillImageFileValueHasExternalUrl -> JsonLDUtil.makeUrlObject(externalUrl.value),
           ),
         )
     }
