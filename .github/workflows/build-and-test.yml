@@ -1,10 +1,7 @@
 name: CI-build-and-test
 
 on:
-  push:
-    branches-ignore:
-      - main
-      - "release-*"
+  push
 
 jobs:
   build-and-test:
@@ -13,29 +10,40 @@ jobs:
     strategy:
       matrix:
         java: [ "21" ]
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all tests
+        if: ${{ env.IS_NOOP == 'false' }}
         run: ./sbtx -v coverage "webapi/test" coverageAggregate
       - name: WebApi Unit Test Report
         uses: dorny/test-reporter@v1
-        if: success() || failure()
+        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }} 
         with:
           name: WebApi Unit Test Results
           path: ./webapi/target/test-reports/TEST-*.xml
           reporter: java-junit
       - name: Upload coverage data to codacy
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release branches, skipping this job."
 
   integration-test:
     name: Build and integration-test
@@ -46,70 +54,119 @@ jobs:
     concurrency:
       group: ${{ github.ref }}-${{ matrix.java }}-it
       cancel-in-progress: true
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all integration tests
+        if: ${{ env.IS_NOOP == 'false' }}
         run: make integration-test
       - name: WebApi Integration Test Report
         uses: dorny/test-reporter@v1
-        if: success() || failure()
+        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }} 
         with:
           name: WebApi Integration Test Results
           path: ./integration/target/test-reports/TEST-*.xml
           reporter: java-junit
       - name: Upload coverage data to codacy
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: Upload coverage data to codecov
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release branches, skipping this job."
 
   test-client-test-data:
     name: Test client-test-data
     runs-on: ubuntu-latest
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Create client-test-data
+        if: ${{ env.IS_NOOP == 'false' }}
         run: make client-test-data
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release branches, skipping this job."
 
   test-repository-upgrade:
     name: Test repository upgrade
     runs-on: ubuntu-latest
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Test repository upgrade
+        if: ${{ env.IS_NOOP == 'false' }}
         run: make test-repository-upgrade
       - name: Dump docker logs
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: jwalton/gh-docker-logs@v2
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release branches, skipping this job."
 
   test-docs-build:
     name: Test docs
     runs-on: ubuntu-latest
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Checkout source
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: actions/checkout@v3
       - name: Install requirements (pip, npm, apt)
+        if: ${{ env.IS_NOOP == 'false' }}
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
           sudo apt-get install graphviz
       - name: Build docs
+        if: ${{ env.IS_NOOP == 'false' }}
         run: make docs-build
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release branches, skipping this job."
 
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
+    env:
+      IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
+      - name: Inform on no-op
+        run: echo "Running this as a no-op job... ${{ env.IS_NOOP}}"
       - name: Run preparatory steps
+        if: ${{ env.IS_NOOP == 'false' }}
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Check formatting
+        if: ${{ env.IS_NOOP == 'false' }}
         run: make check
+      - name: No-op step
+        if: ${{ env.IS_NOOP == 'true' }}
+        run: echo "No checks on main or release-please branches, skipping this job."
