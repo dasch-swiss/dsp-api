@@ -1,5 +1,25 @@
 # Changelog
 
+## [30.10.1](https://github.com/dasch-swiss/dsp-api/compare/v30.10.0...v30.10.1) (2024-03-27)
+
+
+### Maintenance
+
+* Bump Sipi to 3.10.0 ([#3141](https://github.com/dasch-swiss/dsp-api/issues/3141)) ([e9bf316](https://github.com/dasch-swiss/dsp-api/commit/e9bf31640ade75b69929949c0b89c4cd2818eb6b))
+* Bump sipi to 3.10.1 ([#3150](https://github.com/dasch-swiss/dsp-api/issues/3150)) ([97b8b82](https://github.com/dasch-swiss/dsp-api/commit/97b8b8277d7695b8456a879188ed0423e3712171))
+* Remove methods from ProjectResponderADM ([#3140](https://github.com/dasch-swiss/dsp-api/issues/3140)) ([26796b1](https://github.com/dasch-swiss/dsp-api/commit/26796b13b378b174526e636993b662e5d0ac918c))
+* Remove ProjectsResponder ([#3143](https://github.com/dasch-swiss/dsp-api/issues/3143)) ([fcd2f13](https://github.com/dasch-swiss/dsp-api/commit/fcd2f13ac2f4705bfbb00b8142ae4a19e6ad2f2e))
+* Set up plumbing for ZIO Test based E2E-Tests ([#3148](https://github.com/dasch-swiss/dsp-api/issues/3148)) ([a9a7993](https://github.com/dasch-swiss/dsp-api/commit/a9a7993f0226bd30ee168ff2210d6066aa36f767))
+* Simplify OntologyFormatsE2ESpec ([#3146](https://github.com/dasch-swiss/dsp-api/issues/3146)) ([6770b25](https://github.com/dasch-swiss/dsp-api/commit/6770b25018e04b320b3f047c51e0084d7988a082))
+* Try to skip checks for release branch ([#3149](https://github.com/dasch-swiss/dsp-api/issues/3149)) ([6e88812](https://github.com/dasch-swiss/dsp-api/commit/6e88812d070eb27436f0cb8946a458350dcd80e4))
+* Update dsp-app to v11.7.4 ([#3145](https://github.com/dasch-swiss/dsp-api/issues/3145)) ([c6e231e](https://github.com/dasch-swiss/dsp-api/commit/c6e231ea158bb90af1ceab397f7a194479e052ba))
+* Use explicit label for actuated ([#3147](https://github.com/dasch-swiss/dsp-api/issues/3147)) ([72476e3](https://github.com/dasch-swiss/dsp-api/commit/72476e30c4bcc5fc9d24829bca0b663adca1549c))
+
+
+### Bug Fixes
+
+* Error message does not interpolate invalid property IRI ([#3144](https://github.com/dasch-swiss/dsp-api/issues/3144)) ([b87f6c1](https://github.com/dasch-swiss/dsp-api/commit/b87f6c1c84e558eb0f67755fe17272ae880dff9c))
+
 ## [30.10.0](https://github.com/dasch-swiss/dsp-api/compare/v30.9.0...v30.10.0) (2024-03-22)
 
 
