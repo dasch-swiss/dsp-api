@@ -17,7 +17,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 
-  private lazy val testLayers = util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
+  private val testLayers =
+    util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
@@ -55,21 +56,34 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       result   <- ZIO.fromEither(response.fromJson[B])
     } yield result
 
-  def sendPostRequestString(url: String, data: String): ZIO[env, String, String] =
+  private def sendPostRequest(url: String, data: String, token: Option[String]): ZIO[env, String, Response] =
     for {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"
       urlFull  <- ZIO.fromEither(URL.decode(urlStr)).mapError(_.getMessage)
       body      = Body.fromString(data)
-      header    = Header.ContentType(MediaType.application.json)
-      response <- client.url(urlFull).addHeader(header).post("")(body).mapError(_.getMessage)
+      bearer    = token.map(Header.Authorization.Bearer(_))
+      headers   = Headers(List(Header.ContentType(MediaType.application.json)) ++ bearer.toList)
+      response <- client.url(urlFull).addHeaders(headers).post("")(body).mapError(_.getMessage)
+    } yield response
+
+  def sendPostRequestStringOrFail(url: String, data: String, token: Option[String] = None): ZIO[env, String, String] =
+    for {
+      response <- sendPostRequest(url, data, token)
+      data     <- response.body.asString.mapError(_.getMessage)
+      _        <- ZIO.fail(s"Failed request: Status ${response.status} - $data").when(response.status != Status.Ok)
+    } yield data
+
+  def sendPostRequestString(url: String, data: String, token: Option[String] = None): ZIO[env, String, String] =
+    for {
+      response <- sendPostRequest(url, data, token)
       data     <- response.body.asString.mapError(_.getMessage)
     } yield data
 
   def getToken(email: String, password: String): ZIO[env, String, String] =
     for {
       response <-
-        sendPostRequestString(
+        sendPostRequestStringOrFail(
           "/v2/authentication",
           s"""|{
               |  "email": "$email",
