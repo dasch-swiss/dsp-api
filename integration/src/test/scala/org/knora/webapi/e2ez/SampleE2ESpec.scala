@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e
+package org.knora.webapi.e2ez
 
 import zio.json._
 import zio.test._
