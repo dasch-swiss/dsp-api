@@ -1093,13 +1093,7 @@ object ValueContentV2 {
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
-            case StillImageExternalFileValue =>
-              for {
-                content <-
-                  StillImageExternalFileValueContentV2.fromJsonLdObject(
-                    jsonLdObject,
-                  )
-              } yield content
+            case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
             case DocumentFileValue =>
               for {
                 info <-

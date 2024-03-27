@@ -5628,6 +5628,20 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:stillImageFileValueHasExternalUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:stillImageFileValueHasIIIFBaseUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -8369,6 +8383,21 @@
                 "@id": "knora-api:StillImageFileValue"
             },
             "rdfs:comment": "The vertical dimension of a still image file value."
+        },
+        {
+            "rdfs:label": "External Url to the image",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "knora-api:stillImageFileValueHasExternalUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageExternalFileValue"
+            },
+            "rdfs:comment": "External Url to the image"
         },
         {
             "rdfs:label": "Still image file value has IIIF base URL",
