@@ -15,10 +15,12 @@ import zio.ZIO
 
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.URL
 import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -31,8 +33,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
-import java.net.URL
 
 /*
 

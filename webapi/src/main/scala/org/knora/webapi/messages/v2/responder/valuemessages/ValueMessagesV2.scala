@@ -7,8 +7,10 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import zio.ZIO
 
+import java.net.URI
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -49,8 +51,6 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
-
-import java.net.URI
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
