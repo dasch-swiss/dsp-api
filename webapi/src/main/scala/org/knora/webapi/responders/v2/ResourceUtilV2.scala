@@ -22,13 +22,13 @@ import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanent
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -42,13 +42,13 @@ trait ResourceUtilV2 {
    * Checks that a user has the specified permission on a resource.
    *
    * @param resourceInfo             the resource to be updated.
-   * @param permissionNeeded         the necessary EntityPermission,
+   * @param permissionNeeded         the necessary ObjectAccessPermission,
    * @param requestingUser           the requesting user.
    * @return [[ForbiddenException]]  if user does not have permission needed on the resource.
    */
   def checkResourcePermission(
     resourceInfo: ReadResourceV2,
-    permissionNeeded: EntityPermission,
+    permissionNeeded: ObjectAccessPermission,
     requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
@@ -57,14 +57,14 @@ trait ResourceUtilV2 {
    *
    * @param resourceInfo              the resource containing the value.
    * @param valueInfo                 the value to be updated.
-   * @param permissionNeeded          the necessary EntityPermission,
+   * @param permissionNeeded          the necessary ObjectAccessPermission,
    * @param requestingUser            the requesting user.
    * @return  [[ForbiddenException]]  if user does not have permissions on the value.
    */
   def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
-    permissionNeeded: EntityPermission,
+    permissionNeeded: ObjectAccessPermission,
     requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
@@ -124,15 +124,15 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
    * Checks that a user has the specified permission on a resource.
    *
    * @param resourceInfo     the resource to be updated.
-   * @param permissionNeeded the necessary EntityPermission,
+   * @param permissionNeeded the necessary ObjectAccessPermission,
    * @param requestingUser   the requesting user.
    */
   override def checkResourcePermission(
     resourceInfo: ReadResourceV2,
-    permissionNeeded: EntityPermission,
+    permissionNeeded: ObjectAccessPermission,
     requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
-    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+    val maybeUserPermission: Option[ObjectAccessPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = resourceInfo.permissions,
@@ -140,14 +140,14 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
-      case None                                   => false
+      case Some(userPermission: ObjectAccessPermission) => userPermission >= permissionNeeded
+      case None                                         => false
     }
 
     ZIO
       .fail(
         ForbiddenException(
-          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>",
+          s"User ${requestingUser.email} does not have ${permissionNeeded.token} on resource <${resourceInfo.resourceIri}>",
         ),
       )
       .when(!hasRequiredPermission)
@@ -159,16 +159,16 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
    *
    * @param resourceInfo     the resource containing the value.
    * @param valueInfo        the value to be updated.
-   * @param permissionNeeded the necessary EntityPermission,
+   * @param permissionNeeded the necessary ObjectAccessPermission,
    * @param requestingUser   the requesting user.
    */
   override def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
-    permissionNeeded: EntityPermission,
+    permissionNeeded: ObjectAccessPermission,
     requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
-    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+    val maybeUserPermission: Option[ObjectAccessPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = valueInfo.permissions,
@@ -176,14 +176,14 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
-      case None                                   => false
+      case Some(userPermission: ObjectAccessPermission) => userPermission >= permissionNeeded
+      case None                                         => false
     }
 
     ZIO
       .fail(
         ForbiddenException(
-          s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>",
+          s"User ${requestingUser.email} does not have ${permissionNeeded.token} on value <${valueInfo.valueIri}>",
         ),
       )
       .when(!hasRequiredPermission)

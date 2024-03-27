@@ -46,8 +46,8 @@ object ObjectAccessPermission {
 
   val maxPermission: ObjectAccessPermission           = ChangeRights
   def from(code: Int): Option[ObjectAccessPermission] = ObjectAccessPermissions.all.find(_.code == code)
-  def from(shortString: String): Option[ObjectAccessPermission] =
-    ObjectAccessPermissions.all.find(_.token == shortString)
+  def fromToken(token: String): Option[ObjectAccessPermission] =
+    ObjectAccessPermissions.all.find(_.token == token)
 }
 
 object ObjectAccessPermissions {

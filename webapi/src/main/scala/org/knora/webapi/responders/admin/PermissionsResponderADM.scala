@@ -1674,7 +1674,7 @@ final case class PermissionsResponderADMLive(
       }
       if (permission.permissionCode.nonEmpty && permission.name.nonEmpty) {
         val code = permission.permissionCode.get
-        if (!ObjectAccessPermission.from(permission.name).map(_.code).contains(code)) {
+        if (!ObjectAccessPermission.fromToken(permission.name).map(_.code).contains(code)) {
           throw BadRequestException(
             s"Given permission code $code and permission name ${permission.name} are not consistent.",
           )

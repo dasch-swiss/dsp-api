@@ -13,11 +13,11 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 
 import pekko.actor.ActorSystem
 
@@ -34,7 +34,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     resourceIri = "",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ChangeRightsPermission,
+    userPermission = ObjectAccessPermission.ChangeRights,
     attachedToUser = testUser1,
     resourceClassIri = booksBookIri.toSmartIri,
     projectADM = SharedTestDataADM.anythingProject,
@@ -53,7 +53,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     valueHasUUID = UuidUtil.decode("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ModifyPermission,
+    userPermission = ObjectAccessPermission.Modify,
     previousValueIri = None,
     valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
     attachedToUser = testUser2,
@@ -137,7 +137,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
+        userPermission = ObjectAccessPermission.RestrictedView,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
@@ -156,7 +156,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasUUID = UuidUtil.decode("c3295339"),
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-              userPermission = ViewPermission,
+              userPermission = ObjectAccessPermission.View,
               previousValueIri = None,
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -173,7 +173,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
+        userPermission = ObjectAccessPermission.RestrictedView,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
@@ -192,7 +192,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasUUID = UuidUtil.decode("d9a522845006"),
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-              userPermission = ViewPermission,
+              userPermission = ObjectAccessPermission.View,
               previousValueIri = None,
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",

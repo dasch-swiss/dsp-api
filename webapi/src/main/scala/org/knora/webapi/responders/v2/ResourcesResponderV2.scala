@@ -27,8 +27,6 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
-import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -45,6 +43,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -238,7 +237,7 @@ final case class ResourcesResponderV2(
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
                resource,
-               ModifyPermission,
+               ObjectAccessPermission.Modify,
                updateResourceMetadataRequestV2.requestingUser,
              )
 
@@ -383,7 +382,11 @@ final case class ResourcesResponderV2(
              }
 
         // Check that the user has permission to mark the resource as deleted.
-        _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
+        _ <- resourceUtilV2.checkResourcePermission(
+               resource,
+               ObjectAccessPermission.Delete,
+               deleteResourceV2.requestingUser,
+             )
 
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM).value
