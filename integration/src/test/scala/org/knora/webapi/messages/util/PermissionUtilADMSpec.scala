@@ -119,7 +119,7 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
         PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
         PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.KnownUser),
         PermissionADM.from(ObjectAccessPermission.View, "http://rdfh.ch/groups/customgroup"),
-        PermissionADM.from(ObjectAccessPermission.View, OntologyConstants.KnoraAdmin.UnknownUser),
+        PermissionADM.from(ObjectAccessPermission.RestrictedView, OntologyConstants.KnoraAdmin.UnknownUser),
       )
 
       PermissionUtilADM.parsePermissionsWithType(
