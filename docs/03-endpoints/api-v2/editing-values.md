@@ -321,7 +321,7 @@ Sipi.
 
 #### Still Images
 
-Still Image may be stored in Sipi or in an external IIIF server. 
+Still Image may be stored in SIPI or in an external IIIF server. 
 
 **Images stored in Sipi**
 
