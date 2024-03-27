@@ -16,7 +16,8 @@ final case class IiifImageRequestUrl(value: URL) extends AnyVal with Value[URL]
 
 object IiifImageRequestUrl extends WithFrom[String, IiifImageRequestUrl] {
 
-  private val iiifImageUrlRegex1 = """^(https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+(?:/.*)?)$""".r
+  private val iiifImageUrlRegex1 = """^(https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+(?:/.+)?)$""".r
+
   def from(value: String): Either[String, IiifImageRequestUrl] =
     Try(URI.create(value).toURL).toEither.left.map(_ => s"Invalid URL: $value").flatMap { url =>
       value match {

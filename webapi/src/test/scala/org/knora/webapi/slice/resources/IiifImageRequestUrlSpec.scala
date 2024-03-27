@@ -18,7 +18,7 @@ import java.net.URI
 object IiifImageRequestUrlSpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment with Scope, Nothing] = suite("IiifImageRequestUrl")(
-    test("should accept a IIIF image request url version 1") {
+    test("should accept a IIIF image request url") {
       val validUrls =
         Seq(
           // V1 https://iiif.io/api/image/1.0/#21-image-request-url-syntax
@@ -49,6 +49,7 @@ object IiifImageRequestUrlSpec extends ZIOSpecDefault {
           // V3 https://iiif.io/api/image/3.0/#21-image-request-uri-syntax
           "http://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/full/max/0/default.jpg",
           "https://www.example.org/prefix1/prefix2/prefix3/prefix4/abcd1234/square/%5Emax/0/gray.webp",
+          "https://iiif.dasch.swiss/0811/1Oi7mdiLsG7-FmFgp0xz2xU.jp2/full/max/0/default.jpg",
         )
       check(Gen.fromIterable(validUrls)) { url =>
         val actual = IiifImageRequestUrl.from(url)
