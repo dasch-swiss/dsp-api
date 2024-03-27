@@ -27,6 +27,8 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermissions
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -42,86 +44,53 @@ object PermissionUtilADM extends LazyLogging {
    */
   sealed trait EntityPermission extends Ordered[EntityPermission] {
 
+    def permission: ObjectAccessPermission
+
     /**
      * Represents this [[EntityPermission]] as an integer, as required by Knora API v1.
      */
-    def toInt: Int
+    final def toInt: Int = permission.code
 
-    override def compare(that: EntityPermission): Int = this.toInt - that.toInt
+    override def compare(that: EntityPermission): Int = this.permission.code - that.permission.code
 
-    def getName: String
-
-    def toPermissionADM(groupIri: IRI): PermissionADM
+    final override def toString: String                     = permission.token
+    final def getName: String                               = permission.token
+    final def toPermissionADM(groupIri: IRI): PermissionADM = PermissionADM.from(permission, groupIri)
   }
 
   /**
    * Represents restricted view permission on an entity.
    */
   case object RestrictedViewPermission extends EntityPermission {
-    override def toInt: Int = 1
-
-    override def toString: String = OntologyConstants.KnoraBase.RestrictedViewPermission
-
-    override val getName: String = "restricted view permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.restrictedViewPermission(groupIri)
+    override def permission: ObjectAccessPermission = ObjectAccessPermission.RestrictedView
   }
 
   /**
    * Represents unrestricted view permission on an entity.
    */
   case object ViewPermission extends EntityPermission {
-    override def toInt: Int = 2
-
-    override def toString: String = OntologyConstants.KnoraBase.ViewPermission
-
-    override val getName: String = "view permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.viewPermission(groupIri)
+    override def permission: ObjectAccessPermission = ObjectAccessPermission.View
   }
 
   /**
    * Represents modify permission on an entity.
    */
   case object ModifyPermission extends EntityPermission {
-    override def toInt: Int = 6
-
-    override def toString: String = OntologyConstants.KnoraBase.ModifyPermission
-
-    override val getName: String = "modify permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.modifyPermission(groupIri)
+    override def permission: ObjectAccessPermission = ObjectAccessPermission.Modify
   }
 
   /**
    * Represents delete permission on an entity.
    */
   case object DeletePermission extends EntityPermission {
-    override def toInt: Int = 7
-
-    override def toString: String = OntologyConstants.KnoraBase.DeletePermission
-
-    override val getName: String = "delete permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.deletePermission(groupIri)
+    override def permission: ObjectAccessPermission = ObjectAccessPermission.Delete
   }
 
   /**
    * Represents permission to change the permissions on an entity.
    */
   case object ChangeRightsPermission extends EntityPermission {
-    override def toInt: Int = 8
-
-    override def toString: String = OntologyConstants.KnoraBase.ChangeRightsPermission
-
-    override val getName: String = "change rights permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.changeRightsPermission(groupIri)
+    override def permission: ObjectAccessPermission = ObjectAccessPermission.ChangeRights
   }
 
   /**
@@ -429,7 +398,7 @@ object PermissionUtilADM extends LazyLogging {
 
       val abbreviation: String = splitPermission(0)
 
-      if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
+      if (!ObjectAccessPermissions.allTokens.contains(abbreviation)) {
         errorFun(permissionLiteral)
       }
 
@@ -487,7 +456,7 @@ object PermissionUtilADM extends LazyLogging {
                 }
 
               case PermissionType.OAP =>
-                if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
+                if (!ObjectAccessPermissions.allTokens.contains(abbreviation)) {
                   throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                 }
                 val shortGroups: Array[String] =
@@ -543,35 +512,35 @@ object PermissionUtilADM extends LazyLogging {
       case OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission =>
         Set(PermissionADM.ProjectAdminRightsAllPermission)
 
-      case OntologyConstants.KnoraBase.ChangeRightsPermission =>
+      case ObjectAccessPermission.ChangeRights.token =>
         if (iris.nonEmpty) {
           iris.map(iri => PermissionADM.changeRightsPermission(iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.DeletePermission =>
+      case ObjectAccessPermission.Delete.token =>
         if (iris.nonEmpty) {
           iris.map(iri => PermissionADM.deletePermission(iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.ModifyPermission =>
+      case ObjectAccessPermission.Modify.token =>
         if (iris.nonEmpty) {
           iris.map(iri => PermissionADM.modifyPermission(iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.ViewPermission =>
+      case ObjectAccessPermission.View.token =>
         if (iris.nonEmpty) {
           iris.map(iri => PermissionADM.viewPermission(iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.RestrictedViewPermission =>
+      case ObjectAccessPermission.RestrictedView.token =>
         if (iris.nonEmpty) {
           iris.map(iri => PermissionADM.restrictedViewPermission(iri))
         } else {
@@ -702,8 +671,9 @@ object PermissionUtilADM extends LazyLogging {
    */
   def impliesPermissionCodeV1(userHasPermissionCode: Option[Int], userNeedsPermission: String): Boolean =
     userHasPermissionCode match {
-      case Some(permissionCode) => permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).toInt
-      case None                 => false
+      case Some(permissionCode) =>
+        permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).permission.code
+      case None => false
     }
 }
 

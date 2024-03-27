@@ -20,13 +20,11 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
@@ -40,6 +38,8 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermissions
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -103,7 +103,7 @@ trait PermissionsResponderADM {
    * Delete a permission.
    *
    * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser the [[User]] of the requesting user.
    * @param apiRequestID   the API request ID.
    * @return [[PermissionDeleteResponseADM]].
    *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
@@ -1624,16 +1624,16 @@ final case class PermissionsResponderADMLive(
     validateDOAPHasPermissions(hasPermissions)
     hasPermissions.map { permission =>
       val code: Int = permission.permissionCode match {
-        case None       => PermissionTypeAndCodes(permission.name)
+        case None       => ObjectAccessPermissions.byToken(permission.name)
         case Some(code) => code
       }
-      val name = permission.name.isEmpty match {
-        case true =>
-          val nameCodeSet: Option[(String, Int)] = PermissionTypeAndCodes.find { case (_, code) =>
-            code == permission.permissionCode.get
-          }
-          nameCodeSet.get._1
-        case false => permission.name
+      val name = if (permission.name.isEmpty) {
+        val nameCodeSet: Option[(String, Int)] = ObjectAccessPermissions.byToken.find { case (_, code) =>
+          code == permission.permissionCode.get
+        }
+        nameCodeSet.get._1
+      } else {
+        permission.name
       }
       PermissionADM(
         name = name,
@@ -1653,17 +1653,17 @@ final case class PermissionsResponderADMLive(
       if (permission.additionalInformation.isEmpty) {
         throw BadRequestException(s"additionalInformation of a default object access permission type cannot be empty.")
       }
-      if (permission.name.nonEmpty && !EntityPermissionAbbreviations.contains(permission.name))
+      if (permission.name.nonEmpty && !ObjectAccessPermissions.allTokens(permission.name))
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
-            s"${EntityPermissionAbbreviations.toString}",
+            s"${ObjectAccessPermissions.allTokens.mkString(", ")}",
         )
       if (permission.permissionCode.nonEmpty) {
         val code = permission.permissionCode.get
-        if (!PermissionTypeAndCodes.values.toSet.contains(code)) {
+        if (ObjectAccessPermission.from(code).isEmpty) {
           throw BadRequestException(
             s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-              s"${PermissionTypeAndCodes.values.toString}",
+              s"${ObjectAccessPermissions.allCodes.mkString(", ")}",
           )
         }
       }
@@ -1674,7 +1674,7 @@ final case class PermissionsResponderADMLive(
       }
       if (permission.permissionCode.nonEmpty && permission.name.nonEmpty) {
         val code = permission.permissionCode.get
-        if (PermissionTypeAndCodes(permission.name) != code) {
+        if (!ObjectAccessPermission.from(permission.name).map(_.code).contains(code)) {
           throw BadRequestException(
             s"Given permission code $code and permission name ${permission.name} are not consistent.",
           )

@@ -19,8 +19,6 @@ import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -36,6 +34,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermissions
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -671,14 +671,14 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a DefaultObjectAccessPermission for project and property even if permissionCode of a permission was missing" in {
         val hasPermissions = Set(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.DeletePermission,
+            name = ObjectAccessPermission.Delete.token,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None,
           ),
         )
         val expectedPermissions = Set(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.DeletePermission,
+            name = ObjectAccessPermission.Delete.token,
             additionalInformation = Some(projectAdmin),
             permissionCode = Some(7),
           ),
@@ -1094,7 +1094,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         val expectedHasPermissions = Set(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.ChangeRightsPermission,
+            name = ObjectAccessPermission.ChangeRights.token,
             additionalInformation = Some(creator),
             permissionCode = Some(8),
           ),
@@ -1119,7 +1119,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.DeletePermission,
+            name = ObjectAccessPermission.Delete.token,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None,
           ),
@@ -1127,7 +1127,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         val expectedHasPermissions = Set(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.DeletePermission,
+            name = ObjectAccessPermission.Delete.token,
             additionalInformation = Some(projectAdmin),
             permissionCode = Some(7),
           ),
@@ -1150,7 +1150,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "not update hasPermissions of a default object access permission, if both name and project code of a permission were missing" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val code          = 1
-        val name          = OntologyConstants.KnoraBase.DeletePermission
+        val name          = ObjectAccessPermission.Delete.token
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = name,
@@ -1198,7 +1198,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         assertFailsWithA[BadRequestException](
           exit,
           s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
-            s"${EntityPermissionAbbreviations.toString}",
+            s"${ObjectAccessPermissions.allTokens.mkString(", ")}",
         )
       }
 
@@ -1207,7 +1207,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val code          = 10
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
-            name = OntologyConstants.KnoraBase.DeletePermission,
+            name = ObjectAccessPermission.Delete.token,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(code),
           ),
@@ -1226,7 +1226,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         assertFailsWithA[BadRequestException](
           exit,
           s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-            s"${PermissionTypeAndCodes.values.toString}",
+            s"${ObjectAccessPermissions.allCodes.mkString(", ")}",
         )
       }
 

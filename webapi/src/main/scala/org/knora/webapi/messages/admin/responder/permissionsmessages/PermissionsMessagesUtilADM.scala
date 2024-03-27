@@ -8,21 +8,12 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
-import org.knora.webapi.messages.OntologyConstants.KnoraBase._
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 /**
  * Providing helper methods.
  */
 object PermissionsMessagesUtilADM {
-
-  val PermissionTypeAndCodes: Map[String, Int] = Map(
-    RestrictedViewPermission -> 1,
-    ViewPermission           -> 2,
-    ModifyPermission         -> 6,
-    DeletePermission         -> 7,
-    ChangeRightsPermission   -> 8,
-  )
 
   ////////////////////
   // Helper Methods //

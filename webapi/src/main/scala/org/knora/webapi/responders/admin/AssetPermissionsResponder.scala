@@ -73,7 +73,7 @@ final case class AssetPermissionsResponder(
 
       PermissionUtilADM
         .getUserPermissionFromAssertionsADM(fileValueIriSubject.toString, assertions, requestingUser)
-        .map(_.toInt)
+        .map(_.permission.code)
         .getOrElse(0)
     }
 

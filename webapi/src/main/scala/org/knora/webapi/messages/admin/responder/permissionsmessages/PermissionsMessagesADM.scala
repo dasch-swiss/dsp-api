@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 
@@ -720,6 +721,9 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
  */
 object PermissionADM {
 
+  def from(permission: ObjectAccessPermission, restriction: IRI): PermissionADM =
+    PermissionADM(permission.token, Some(restriction), Some(permission.code))
+
   ///////////////////////////////////////////////////////////////////////////
   // Administrative Permissions
   ///////////////////////////////////////////////////////////////////////////
@@ -771,39 +775,19 @@ object PermissionADM {
   ///////////////////////////////////////////////////////////////////////////
 
   def changeRightsPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ChangeRightsPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(8),
-    )
+    PermissionADM.from(ObjectAccessPermission.ChangeRights, restriction)
 
   def deletePermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.DeletePermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(7),
-    )
+    PermissionADM.from(ObjectAccessPermission.Delete, restriction)
 
   def modifyPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ModifyPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(6),
-    )
+    PermissionADM.from(ObjectAccessPermission.Modify, restriction)
 
   def viewPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ViewPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(2),
-    )
+    PermissionADM.from(ObjectAccessPermission.View, restriction)
 
   def restrictedViewPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.RestrictedViewPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(1),
-    )
+    PermissionADM.from(ObjectAccessPermission.RestrictedView, restriction)
 
 }
 
