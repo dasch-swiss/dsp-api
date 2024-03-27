@@ -38,12 +38,12 @@ object SampleE2ESpec extends E2EZSpec {
   override def e2eSpec = suite("SampleE2ESpec")(
     versionTest,
     healthTest,
-    getTokenTest @@ withResettedTriplestore, // this is not actually needed, it just shows how to use it
+    getTokenTest, // @@ withResettedTriplestore, // this is not actually needed, it just shows how to use it
   )
 
-  val versionTest = test("check version endpoint") {
+  private val versionTest = test("check version endpoint") {
     for {
-      response <- sendGetRequest[VersionResponse]("/version")
+      response <- sendGetRequestAsOrFail[VersionResponse]("/version")
     } yield assertTrue(
       response.name == "version",
       response.webapi.startsWith("v"),
@@ -51,16 +51,17 @@ object SampleE2ESpec extends E2EZSpec {
     )
   }
 
-  val healthTest = test("check health endpoint") {
+  private val healthTest = test("check health endpoint") {
     for {
-      response <- sendGetRequest[HealthResponse]("/health")
+      response <- sendGetRequestAsOrFail[HealthResponse]("/health")
       expected  = HealthResponse("AppState", "non fatal", true, "Application is healthy")
     } yield assertTrue(response == expected)
   }
 
-  val getTokenTest = test("foo") {
+  private val getTokenTest = test("check get token") {
     for {
       token <- getToken("root@example.com", "test")
+      _     <- sendGetRequestStringOrFail("/admin/users")
     } yield assertTrue(token.nonEmpty)
   }
 }

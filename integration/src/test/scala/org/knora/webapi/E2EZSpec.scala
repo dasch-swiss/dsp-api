@@ -40,23 +40,33 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       @@ TestAspect.beforeAll(prepare)
       @@ TestAspect.sequential
   ).provideShared(testLayers, Client.default, Scope.default)
+    @@ TestAspect.withLiveEnvironment
 
-  def sendGetRequestString(url: String): ZIO[env, String, String] =
+  def sendGetRequest(url: String, token: Option[String] = None): URIO[env, Response] =
     for {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"
-      urlFull  <- ZIO.fromEither(URL.decode(urlStr)).mapError(_.getMessage)
-      response <- client.url(urlFull).get("/").mapError(_.getMessage)
-      data     <- response.body.asString.mapError(_.getMessage)
+      urlFull  <- ZIO.fromEither(URL.decode(urlStr)).orDie
+      bearer    = token.map(Header.Authorization.Bearer(_)).toList
+      response <- client.url(urlFull).addHeaders(Headers(bearer)).get("/").orDie
+    } yield response
+
+  def sendGetRequestStringOrFail(url: String, token: Option[String] = None): ZIO[env, String, String] =
+    for {
+      response <- sendGetRequest(url, token)
+      _        <- ZIO.fail(s"Failed request: Status ${response.status}").when(response.status != Status.Ok)
+      data     <- response.body.asString.orDie
     } yield data
 
-  def sendGetRequest[B](url: String)(implicit dec: JsonDecoder[B]): ZIO[env, String, B] =
+  def sendGetRequestAsOrFail[B](url: String, token: Option[String] = None)(implicit
+    dec: JsonDecoder[B],
+  ): ZIO[env, String, B] =
     for {
-      response <- sendGetRequestString(url)
+      response <- sendGetRequestStringOrFail(url, token)
       result   <- ZIO.fromEither(response.fromJson[B])
     } yield result
 
-  private def sendPostRequest(url: String, data: String, token: Option[String]): ZIO[env, String, Response] =
+  def sendPostRequest(url: String, data: String, token: Option[String] = None): ZIO[env, String, Response] =
     for {
       client   <- ZIO.service[Client]
       urlStr    = s"http://localhost:3333$url"
