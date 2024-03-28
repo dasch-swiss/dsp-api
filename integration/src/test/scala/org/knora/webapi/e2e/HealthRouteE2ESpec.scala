@@ -6,6 +6,8 @@
 package org.knora.webapi.e2e
 
 import org.apache.pekko
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.testkit.RouteTestTimeout
 import zio.Unsafe
 import zio.ZIO
 
@@ -15,9 +17,6 @@ import scala.concurrent.duration.NANOSECONDS
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
@@ -80,15 +79,11 @@ class HealthRouteE2ESpec extends E2ESpec {
           .getOrThrow()
       }
 
-      // appActor ! SetAppState(AppState.Stopped)
-
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
 
-      logger.debug(response.toString())
-
-      response.status should be(StatusCodes.ServiceUnavailable)
+      response.status should be(StatusCodes.ServiceUnavailable, responseStr)
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -118,9 +113,7 @@ class HealthRouteE2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
 
-      logger.debug(response.toString())
-
-      response.status should be(StatusCodes.ServiceUnavailable)
+      response.status should be(StatusCodes.ServiceUnavailable, responseStr)
 
       clientTestDataCollector.addFile(
         TestDataFileContent(

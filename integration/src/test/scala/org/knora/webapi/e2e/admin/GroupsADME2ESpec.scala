@@ -6,6 +6,10 @@
 package org.knora.webapi.e2e.admin
 
 import org.apache.pekko
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers._
+import pekko.http.scaladsl.testkit.RouteTestTimeout
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -20,11 +24,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers._
-import pekko.http.scaladsl.testkit.RouteTestTimeout
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
@@ -50,7 +49,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         val request =
           Get(baseApiUrl + s"/admin/groups") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -69,7 +67,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -183,7 +180,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, createGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
@@ -207,7 +203,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         val iri = groupInfo.id
         newGroupIri.set(iri)
-        // log.debug("newGroupIri: {}", newGroupIri.get)
       }
 
       "UPDATE a group" in {
@@ -233,8 +228,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, updateGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
@@ -262,8 +256,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
@@ -309,8 +302,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
@@ -339,8 +331,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(

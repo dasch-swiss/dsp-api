@@ -296,8 +296,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, createProjectRequest),
         ) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
 
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.shortname should be("newproject")
@@ -609,8 +608,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
@@ -621,8 +619,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
@@ -684,8 +681,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords.size should be(21)
@@ -707,8 +703,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords should be(SharedTestDataADM.incunabulaProject.keywords)
@@ -730,8 +725,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords should be(Seq.empty[String])
@@ -743,8 +737,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
           BasicHttpCredentials(rootEmail, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.NotFound)
+        assert(response.status === StatusCodes.NotFound, responseToString(response))
       }
     }
 

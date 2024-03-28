@@ -96,8 +96,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           HttpEntity(ContentTypes.`application/json`, updateNodeName),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
@@ -139,8 +138,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           HttpEntity(ContentTypes.`application/json`, updateNodeLabels),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
@@ -184,8 +182,7 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           HttpEntity(ContentTypes.`application/json`, updateCommentsLabels),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
