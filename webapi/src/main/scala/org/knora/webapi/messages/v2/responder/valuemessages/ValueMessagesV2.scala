@@ -1487,9 +1487,6 @@ case class TextValueContentV2(
 
         // Should we render standoff as XML?
         val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
-          // println(s"Word count: ${maybeValueHasString.get.split("\\W+").length}")
-          // println(s"Standoff tag count: ${standoff.size}")
-
           val definedMappingIri =
             mappingIri.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
           val definedMapping =

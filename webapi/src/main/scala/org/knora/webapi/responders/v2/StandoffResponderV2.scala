@@ -839,8 +839,6 @@ final case class StandoffResponderV2(
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    // TODO: think about refactoring the mapping so it uses SmartIris (that would also have to include `StandoffProperties`)
-
     // invert the mapping so standoff class Iris become keys
     val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV2.invertXMLToStandoffMapping(mappingXMLtoStandoff)
 

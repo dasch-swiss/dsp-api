@@ -25,9 +25,8 @@ final class SipiTestContainer
 
   def sipiBaseUrl: URL = {
     val urlString = s"http://${SipiTestContainer.localHostAddress}:$getFirstMappedPort"
-    println(s"SIPI URL String: $urlString")
-    val url = URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
-    println(s"SIPI URL: $url")
+    val url       = URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    logger.info(s"SIPI URL: ${url.encode}")
     url
   }
 }

@@ -24,8 +24,6 @@ import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 class CardinalitiesV2E2ESpec extends E2ESpec {
 
-  // TODO: this test should be merged with OntologyV2R2RSpec, but that one is an R2R spec, which is Akka dependent
-
   private def createProject(shortname: String, shortcode: String) = {
     val payload =
       s"""|{

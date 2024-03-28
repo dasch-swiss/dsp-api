@@ -54,7 +54,6 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag))
         .withTest(Input.fromString(backToXml))
         .build()
-      // println(xmlDiff.getDifferences)
       xmlDiff.hasDifferences should be(false)
     }
 
@@ -73,7 +72,6 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags))
         .withTest(Input.fromString(backToXml))
         .build()
-      // println(xmlDiff.getDifferences)
       xmlDiff.hasDifferences should be(false)
     }
 
@@ -223,8 +221,6 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         derivedText = criticalTextWithStandoff.text,
         standoffDiffs = criticalTextDiffs,
       )
-
-      // println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
 
       val expectedCriticalTextDiffsAsXml =
         """<?xml version="1.0" encoding="UTF-8"?>

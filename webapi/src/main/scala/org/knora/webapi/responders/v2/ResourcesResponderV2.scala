@@ -1175,8 +1175,6 @@ final case class ResourcesResponderV2(
 
               // Filter out edges we've already traversed.
               val isRedundant: Boolean = traversedEdges.contains(edge)
-              // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
-
               hasPermission && !isRedundant
             }.toSet
 

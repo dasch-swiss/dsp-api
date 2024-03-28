@@ -86,8 +86,3 @@ Turtle file containing the graph of shapes.
 - The Jena-based implementation, in package `org.knora.webapi.messages.util.rdf.jenaimpl`.
 
 - The RDF4J-based implementation, in package `org.knora.webapi.messages.util.rdf.rdf4jimpl`.
-
-
-## TODO
-
-- SHACL validation.

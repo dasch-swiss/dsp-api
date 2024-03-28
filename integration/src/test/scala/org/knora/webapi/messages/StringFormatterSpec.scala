@@ -903,7 +903,7 @@ class StringFormatterSpec extends CoreSpec {
       val parseEnd            = System.currentTimeMillis
       val parseDuration       = (parseEnd - parseStart).toDouble
       val parseDurationPerIri = parseDuration / totalIris.toDouble
-      println(f"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri%1.5f ms")
+      logger.info(f"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri%1.5f ms")
 
       val retrieveStart = System.currentTimeMillis
 
@@ -916,7 +916,7 @@ class StringFormatterSpec extends CoreSpec {
       val retrieveDuration       = (retrieveEnd - retrieveStart).toDouble
       val retrieveDurationPerIri = retrieveDuration / totalIris.toDouble
 
-      println(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
+      logger.info(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
     }
 
     "should convert link value prop to link prop" in {

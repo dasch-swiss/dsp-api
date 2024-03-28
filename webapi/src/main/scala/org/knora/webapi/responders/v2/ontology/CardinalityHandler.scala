@@ -138,8 +138,6 @@ final case class CardinalityHandlerLive(
               currentClassDefinition.directCardinalities - submittedPropertyToDelete,
         )
 
-      // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
-
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
       allBaseClassIrisWithoutInternal =
@@ -284,8 +282,6 @@ final case class CardinalityHandlerLive(
             } else
               currentClassDefinition.directCardinalities - submittedPropertyToDelete,
         )
-
-      // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 

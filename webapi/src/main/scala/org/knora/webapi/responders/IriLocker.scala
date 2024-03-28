@@ -148,13 +148,11 @@ object IriLocker {
     // Do we have the lock?
     if (newLock.apiRequestID == apiRequestID) {
       // Yes.
-      // println(s"acquired lock on $iri for $apiRequestID")
       ()
     } else {
       // No, another API request has it. Can we wait and retry?
       if (tries > 1) {
         // Yes.
-        // println(s"waiting for lock on $iri for $apiRequestID")
         Thread.sleep(LOCK_RETRY_MILLIS)
         acquireOrIncrementLock(iri, apiRequestID, tries - 1)
       } else {
@@ -183,11 +181,9 @@ object IriLocker {
               // We have the lock. Should we decrement its entry count or release it?
               if (currentLock.entryCount > 1) {
                 // Decrement its entry count.
-                // println(s"decrementing lock on $iri for $apiRequestID")
                 currentLock.copy(entryCount = currentLock.entryCount - 1)
               } else {
                 // Release it.
-                // println(s"releasing lock on $iri for $apiRequestID")
                 null
               }
             } else {

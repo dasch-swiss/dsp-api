@@ -222,8 +222,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
           HttpEntity(ContentTypes.`application/json`, createListRequest),
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK, responseToString(response))
 
         val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
@@ -290,8 +289,7 @@ class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
             anythingUserCreds.basicHttpCredentials,
           )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.Forbidden)
+        response.status should be(StatusCodes.Forbidden, responseToString(response))
       }
 
       "return a BadRequestException during list creation when request does not contain a projectIri" in {
