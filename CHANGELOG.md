@@ -1,5 +1,18 @@
 # Changelog
 
+## [30.11.0](https://github.com/dasch-swiss/dsp-api/compare/v30.10.1...v30.11.0) (2024-03-28)
+
+
+### Maintenance
+
+* Improve E2EZSpec ([#3153](https://github.com/dasch-swiss/dsp-api/issues/3153)) ([eb72704](https://github.com/dasch-swiss/dsp-api/commit/eb72704183d50b7abed89b661e2c2df97ae92aa4))
+* Switch JWT library to use ZIO-JSON instead of Spray JSON ([#3154](https://github.com/dasch-swiss/dsp-api/issues/3154)) ([a209acf](https://github.com/dasch-swiss/dsp-api/commit/a209acf7e9ae140081244c3139c427e6f486cc27))
+
+
+### Enhancements
+
+* Support external IIIF URLs in resource creation and update (DEV-3341) ([#3131](https://github.com/dasch-swiss/dsp-api/issues/3131)) ([45863c9](https://github.com/dasch-swiss/dsp-api/commit/45863c90c1affd0da24e6c25c7a0b7a02004e7a5))
+
 ## [30.10.1](https://github.com/dasch-swiss/dsp-api/compare/v30.10.0...v30.10.1) (2024-03-27)
 
 
