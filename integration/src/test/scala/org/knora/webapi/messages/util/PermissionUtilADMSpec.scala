@@ -102,10 +102,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
       ) should equal(Some(ModifyPermission)) // modify permissions
     }
 
-    "return user's max permission on link value" ignore {
-      // TODO
-    }
-
     "return parsed permissions string as 'Map[IRI, Set[String]]" in {
       PermissionUtilADM.parsePermissions(permissionLiteral) should equal(parsedPermissionLiteral)
     }

@@ -34,8 +34,6 @@ import org.knora.webapi.slice.admin.domain.model.User
  */
 object PermissionUtilADM extends LazyLogging {
 
-  // TODO: unify EntityPermission with PermissionADM.
-
   /**
    * Represents a permission granted to a group on an entity. The `toString` method of an `EntityPermission`
    * returns one of the codes in [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]].
