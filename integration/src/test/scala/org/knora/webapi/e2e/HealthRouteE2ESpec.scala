@@ -84,7 +84,7 @@ class HealthRouteE2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
 
-      response.status should be(StatusCodes.ServiceUnavailable, responseStr)
+      response.status should be(StatusCodes.ServiceUnavailable)
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -114,7 +114,7 @@ class HealthRouteE2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
 
-      response.status should be(StatusCodes.ServiceUnavailable, responseStr)
+      response.status should be(StatusCodes.ServiceUnavailable)
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
