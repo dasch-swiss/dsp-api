@@ -307,7 +307,7 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
   requestingUser: User,
   apiRequestID: UUID,
 ) extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(defaultObjectAccessPermissionIri)
+  PermissionIri.from(defaultObjectAccessPermissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 /**
@@ -398,7 +398,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
  */
 case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
+  PermissionIri.from(permissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

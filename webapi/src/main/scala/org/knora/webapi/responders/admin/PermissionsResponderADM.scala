@@ -707,8 +707,29 @@ final case class PermissionsResponderADMLive(
       GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
     }
 
-    PermissionsMessagesUtilADM.verifyHasPermissionsAP(req.hasPermissions)
+    verifyHasPermissionsAP(req.hasPermissions)
+
   }.unit
+
+  /**
+   * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
+   * This method, validates the content of hasPermissions collection by only keeping the values of name params.
+   * @param hasPermissions       Set of the permissions.
+   */
+  private def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] =
+    hasPermissions
+      .map(_.name)
+      .map { name =>
+        Permission.Administrative
+          .fromToken(name)
+          .getOrElse(
+            throw BadRequestException(
+              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " + s"${Permission.Administrative.allTokens
+                  .mkString(", ")}",
+            ),
+          )
+      }
+      .map(PermissionADM.from)
 
   override def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
@@ -1817,7 +1838,7 @@ final case class PermissionsResponderADMLive(
                       case ap: AdministrativePermissionADM =>
                         // Yes.
                         val verifiedPermissions =
-                          PermissionsMessagesUtilADM.verifyHasPermissionsAP(newHasPermissions.toSet)
+                          verifyHasPermissionsAP(newHasPermissions.toSet)
                         for {
                           formattedPermissions <-
                             ZIO.attempt(
