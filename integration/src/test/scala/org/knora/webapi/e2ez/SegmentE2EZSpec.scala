@@ -25,7 +25,7 @@ object SegmentE2EZSpec extends E2EZSpec {
       test("Create an instance of `knora-base:VideoSegment`") {
         val createPayload =
           """|{
-             |  "@type": "knora-api:Resource",
+             |  "@type": "knora-api:VideoSegment",
              |  "knora-api:hasComment": {
              |    "@type": "knora-api:TextValue",
              |    "knora-api:valueAsString": "This is a test video segment."
