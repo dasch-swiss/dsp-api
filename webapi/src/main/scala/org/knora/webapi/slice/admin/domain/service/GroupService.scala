@@ -7,7 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
-import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -29,7 +29,7 @@ final case class GroupService(
     for {
       project <-
         projectService.findById(
-          knoraGroup.belongsToProject.getOrElse(throw BadRequestException("Mo ProjectIri found.")),
+          knoraGroup.belongsToProject.getOrElse(throw NotFoundException("Mo ProjectIri found.")),
         )
       group <-
         ZIO.attempt(
@@ -38,7 +38,7 @@ final case class GroupService(
             name = knoraGroup.groupName.value,
             descriptions = knoraGroup.groupDescriptions.value,
             project = project.getOrElse(
-              throw BadRequestException(s"Project with IRI: ${knoraGroup.belongsToProject} not found."),
+              throw NotFoundException(s"Project with IRI: ${knoraGroup.belongsToProject} not found."),
             ),
             status = knoraGroup.status.value,
             selfjoin = knoraGroup.hasSelfJoinEnabled.value,
@@ -46,7 +46,7 @@ final case class GroupService(
         )
     } yield group
 
-  private def toKnoraGroup(group: Group): Task[KnoraGroup] =
+  def toKnoraGroup(group: Group): Task[KnoraGroup] =
     for {
       knoraGroup <-
         ZIO.attempt(
