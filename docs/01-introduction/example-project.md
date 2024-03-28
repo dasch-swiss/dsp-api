@@ -487,7 +487,7 @@ It must have at least one instance of the property
 
   :subjectClassConstraint :StillImageRepresentation ;
 
-  :objectClassConstraint :StillImageFileValue .              
+  :objectClassConstraint :AbstractStillImageFileValue .              
 ```
 
 Because `hasStillImageFileValue` is a subproperty of `hasFileValue`, the
@@ -498,7 +498,7 @@ general cardinality in the superclass is replaced by a more specific
 cardinality in the base class. Since `incunabula:page` is a subclass of
 `StillImageRepresentation`, it inherits the cardinality on
 `hasStillImageFileValue`. As a result, a page must have at least one
-image file attached to it.
+image file value attached to it.
 
 Here's another example of cardinality inheritance. The class
 `knora-base:Resource` has a cardinality for `knora-base:seqnum`. The

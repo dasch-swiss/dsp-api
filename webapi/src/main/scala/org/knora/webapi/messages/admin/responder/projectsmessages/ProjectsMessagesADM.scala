@@ -18,79 +18,19 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.prelude.Validation
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.admin.ProjectsResponderADM]].
- */
-sealed trait ProjectsResponderRequestADM extends KnoraRequestADM with RelayedMessage
-
-// Requests
-/**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectGetResponse]]. External use.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetRequestADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
- * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
- * of [[ProjectADM]]. Internal use only.
- *
- * @param identifier           the IRI, email, or username of the project.
- */
-case class ProjectGetADM(identifier: ProjectIdentifierADM) extends ProjectsResponderRequestADM
-
-/**
- * Requests the creation of a new project.
- *
- * @param createRequest  the [[ProjectCreateRequest]] information for the creation of a new project.
- * @param requestingUser the user making the request.
- * @param apiRequestID   the ID of the API request.
- */
-case class ProjectCreateRequestADM(
-  createRequest: ProjectCreateRequest,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends ProjectsResponderRequestADM
-
-/**
- * Requests updating an existing project.
- *
- * @param projectIri            the IRI of the project to be updated.
- * @param projectUpdatePayload  the [[ProjectUpdateRequest]]
- * @param requestingUser        the user making the request.
- * @param apiRequestID          the ID of the API request.
- */
-case class ProjectChangeRequestADM(
-  projectIri: ProjectIri,
-  projectUpdatePayload: ProjectUpdateRequest,
-  requestingUser: User,
-  apiRequestID: UUID,
-) extends ProjectsResponderRequestADM
-
-// Responses
 
 object ProjectCodec {
   implicit val projectCodec: JsonCodec[Project] = DeriveJsonCodec.gen[Project]
@@ -171,6 +111,9 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
+
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsGetResponseADM =
+    ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
 }
 
 /**
@@ -397,6 +340,12 @@ case class ProjectRestrictedViewSettingsADM(size: Option[String], watermark: Boo
 object ProjectRestrictedViewSettingsADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsADM]
+
+  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsADM =
+    restrictedView match {
+      case RestrictedView.Watermark(value) => ProjectRestrictedViewSettingsADM(None, value)
+      case RestrictedView.Size(value)      => ProjectRestrictedViewSettingsADM(Some(value), false)
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -43,19 +43,19 @@ final case class ProjectsEndpointsHandler(
   val getAdminProjectsByProjectIriHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectIri,
-      (id: IriIdentifier) => restService.findProject(id),
+      (id: IriIdentifier) => restService.findById(id.value),
     )
 
   val getAdminProjectsByProjectShortcodeHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortcode,
-      (id: ShortcodeIdentifier) => restService.findProject(id),
+      (id: ShortcodeIdentifier) => restService.findByShortcode(id.value),
     )
 
   val getAdminProjectsByProjectShortnameHandler =
     PublicEndpointHandler(
       projectsEndpoints.Public.getAdminProjectsByProjectShortname,
-      (id: ShortnameIdentifier) => restService.findProject(id),
+      (id: ShortnameIdentifier) => restService.findByShortname(id.value),
     )
 
   val getAdminProjectsKeywordsByProjectIriHandler =
@@ -142,7 +142,7 @@ final case class ProjectsEndpointsHandler(
   val deleteAdminProjectsByIriHandler =
     SecuredEndpointHandler(
       projectsEndpoints.Secured.deleteAdminProjectsByIri,
-      user => (id: IriIdentifier) => restService.deleteProject(id, user),
+      user => (id: IriIdentifier) => restService.deleteProject(id.value, user),
     )
 
   val getAdminProjectsExportsHandler =
@@ -179,7 +179,7 @@ final case class ProjectsEndpointsHandler(
     SecuredEndpointHandler[(IriIdentifier, ProjectUpdateRequest), ProjectOperationResponseADM](
       projectsEndpoints.Secured.putAdminProjectsByIri,
       user => { case (id: IriIdentifier, changeReq: ProjectUpdateRequest) =>
-        restService.updateProject(id, changeReq, user)
+        restService.updateProject(id.value, changeReq, user)
       },
     )
 

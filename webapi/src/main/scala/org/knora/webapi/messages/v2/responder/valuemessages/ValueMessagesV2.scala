@@ -7,6 +7,7 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import zio.ZIO
 
+import java.net.URI
 import java.time.Instant
 import java.util.UUID
 
@@ -47,6 +48,7 @@ import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 
@@ -1091,6 +1093,7 @@ object ValueContentV2 {
                   ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
+            case StillImageExternalFileValue => StillImageExternalFileValueContentV2.fromJsonLdObject(jsonLdObject)
             case DocumentFileValue =>
               for {
                 info <-
@@ -2759,6 +2762,104 @@ object StillImageFileValueContentV2 {
         FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
       dimX = metadata.width.getOrElse(0),
       dimY = metadata.height.getOrElse(0),
+      comment = comment,
+    )
+}
+
+/**
+ * Represents the external image file metadata.
+ *
+ * @param fileValue the basic metadata about the file value.
+ * @param dimX      the with of the the image in pixels.
+ * @param dimY      the height of the the image in pixels.
+ * @param comment   a comment on this `StillImageFileValueContentV2`, if any.
+ */
+case class StillImageExternalFileValueContentV2(
+  ontologySchema: OntologySchema,
+  fileValue: FileValueV2,
+  externalUrl: IiifImageRequestUrl,
+  comment: Option[IRI] = None,
+) extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.StillImageExternalFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema) =
+    copy(ontologySchema = targetSchema)
+
+  def makeFileUrl: String = externalUrl.value.toString
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: Project,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDValue =
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(makeFileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(
+          toJsonLDObjectMapInComplexSchema(makeFileUrl) ++ Map(
+            StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil
+              .makeUriObject(
+                {
+                  val uri = externalUrl.value.toURI
+                  if (uri.getPort == -1) URI.create(s"${uri.getScheme}://${uri.getHost}").toURL
+                  else URI.create(s"${uri.getScheme}://${uri.getHost}:${uri.getPort}").toURL
+                },
+              ),
+            StillImageFileValueHasExternalUrl -> JsonLDUtil.makeUriObject(externalUrl.value),
+          ),
+        )
+    }
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
+    that match {
+      case thatStillImage: StillImageExternalFileValueContentV2 =>
+        externalUrl == thatStillImage.externalUrl
+      case _: StillImageFileValueContentV2 => false
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
+    currentVersion match {
+      case thatStillImage: StillImageExternalFileValueContentV2 =>
+        wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
+      case _: StillImageFileValueContentV2 => false
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+
+}
+
+/**
+ * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
+ */
+object StillImageExternalFileValueContentV2 {
+  def fromJsonLdObject(
+    jsonLDObject: JsonLDObject,
+  ): ZIO[StringFormatter, Throwable, StillImageExternalFileValueContentV2] =
+    for {
+      comment          <- JsonLDUtil.getComment(jsonLDObject)
+      externalUrlEither = jsonLDObject.getRequiredString(FileValueHasExternalUrl).flatMap(IiifImageRequestUrl.from)
+      externalUrl      <- ZIO.fromEither(externalUrlEither).mapError(BadRequestException.apply)
+    } yield StillImageExternalFileValueContentV2(
+      ontologySchema = ApiV2Complex,
+      fileValue = FileValueV2(
+        "internalFilename",
+        "internalMimeType",
+        Some("originalFilename"),
+        Some("originalMimeType"),
+      ),
+      externalUrl = externalUrl,
       comment = comment,
     )
 }

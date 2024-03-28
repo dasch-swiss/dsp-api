@@ -22,9 +22,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponse
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
@@ -54,7 +51,10 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -420,6 +420,7 @@ final case class ConstructResponseUtilV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
   standoffTagUtilV2: StandoffTagUtilV2,
+  projectService: ProjectService,
   implicit val stringFormatter: StringFormatter,
 ) extends ConstructResponseUtilV2 {
 
@@ -1076,6 +1077,18 @@ final case class ConstructResponseUtilV2Live(
           ),
         )
 
+      case OntologyConstants.KnoraBase.StillImageExternalFileValue =>
+        ZIO.succeed(
+          StillImageExternalFileValueContentV2(
+            InternalSchema,
+            fileValue,
+            IiifImageRequestUrl.unsafeFrom(
+              valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
+            ),
+            comment = valueCommentOption,
+          ),
+        )
+
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         ZIO.succeed(
           DocumentFileValueContentV2(
@@ -1537,15 +1550,9 @@ final case class ConstructResponseUtilV2Live(
       }
 
     for {
-      projectResponse <-
-        messageRelay
-          .ask[ProjectGetResponse](
-            ProjectGetRequestADM(identifier =
-              IriIdentifier
-                .fromString(resourceAttachedToProject)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage)),
-            ),
-          )
+      projectIri <- ZIO.fromEither(ProjectIri.from(resourceAttachedToProject)).mapError(BadRequestException.apply)
+      project <-
+        projectService.findById(projectIri).someOrFail(NotFoundException(s"Project '${projectIri.value}' not found"))
 
       valueObjects <- ZioHelper.sequence(valueObjectFutures.map { case (k, v) => k -> ZIO.collectAll(v) })
     } yield ReadResourceV2(
@@ -1553,7 +1560,7 @@ final case class ConstructResponseUtilV2Live(
       resourceClassIri = resourceClass,
       label = resourceLabel,
       attachedToUser = resourceAttachedToUser,
-      projectADM = projectResponse.project,
+      projectADM = project,
       permissions = resourcePermissions,
       userPermission = resourceWithValueRdfData.userPermission.get,
       values = valueObjects,
@@ -1671,7 +1678,7 @@ final case class ConstructResponseUtilV2Live(
                   )
                 }
               } else {
-                ZIO.succeed(None)
+                ZIO.none
               }
           } yield mapping.mappingIri -> MappingAndXSLTransformation(
             mapping = mapping.mapping,
@@ -1686,8 +1693,5 @@ final case class ConstructResponseUtilV2Live(
 }
 
 object ConstructResponseUtilV2Live {
-  val layer: URLayer[
-    AppConfig & MessageRelay & StandoffTagUtilV2 & StringFormatter,
-    ConstructResponseUtilV2,
-  ] = ZLayer.fromFunction(ConstructResponseUtilV2Live.apply _)
+  val layer = ZLayer.derive[ConstructResponseUtilV2Live]
 }

@@ -4,7 +4,8 @@
  */
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.Accept
 import org.scalatest.Inspectors.forEvery
 import spray.json._
 
@@ -24,9 +25,6 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.Accept
-
 class OntologyFormatsE2ESpec extends E2ESpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] =
@@ -40,32 +38,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
    *
    * @param urlPath                     the URL path to be used in the request.
    * @param fileBasename                the basename of the test data file containing the expected response.
-   * @param maybeClientTestDataBasename the basename of the client test data file, if any, to be collected by
+   * @param clientTestDataBasename      the basename of the client test data file, if any, to be collected by
    *                                    [[org.knora.webapi.e2e.ClientTestDataCollector]].
-   * @param disableWrite                if true, this [[HttpGetTest]] will not write the expected response file when `writeFile` is called.
-   *                                    This is useful if two tests share the same file.
    */
   private case class HttpGetTest(
     urlPath: String,
     fileBasename: String,
     clientTestDataBasename: Option[String] = None,
   ) {
-    private def makeFile(suffix: String): Path =
-      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
-
-    /**
-     * Writes the expected response file.
-     *
-     * @param responseStr the contents of the file to be written.
-     * @param mediaType   the media type of the response.
-     */
-    def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
-      val newOutputFile = makeFile(mediaType.fileExtensions.head)
-
-      Files.createDirectories(newOutputFile.getParent)
-      FileUtil.writeTextFile(newOutputFile, responseStr)
-      ()
-    }
+    private def makeFile(): Path =
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.jsonld")
 
     /**
      * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
@@ -82,14 +64,14 @@ class OntologyFormatsE2ESpec extends E2ESpec {
      * @param mediaType the media type of the response.
      * @return the contents of the file.
      */
-    def readFile(mediaType: MediaType.NonBinary): String =
-      FileUtil.readTextFile(makeFile(mediaType.fileExtensions.head))
+    def readFile(): String =
+      FileUtil.readTextFile(makeFile())
 
-    def fileExists(mediaType: MediaType.NonBinary): Boolean =
-      Files.exists(makeFile(mediaType.fileExtensions.head))
+    def fileExists: Boolean =
+      Files.exists(makeFile())
 
-    def writeReceived(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
-      val newOutputFile = makeFile(s"received.${mediaType.fileExtensions.head}")
+    def writeReceived(responseStr: String): Unit = {
+      val newOutputFile = makeFile()
 
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
@@ -115,22 +97,26 @@ class OntologyFormatsE2ESpec extends E2ESpec {
   private def urlEncodeIri(iri: IRI): String =
     URLEncoder.encode(iri, "UTF-8")
 
-  private def checkJsonLdTestCase(httpGetTest: HttpGetTest) = {
-    val mediaType   = RdfMediaTypes.`application/ld+json`
-    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (!httpGetTest.fileExists(mediaType)) {
-      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+  private def checkTestCase(httpGetTest: HttpGetTest) = {
+    val responseJsonLd = getResponse(httpGetTest.urlPath, RdfMediaTypes.`application/ld+json`)
+    val responseTtl    = getResponse(httpGetTest.urlPath, RdfMediaTypes.`text/turtle`)
+    val responseRdfXml = getResponse(httpGetTest.urlPath, RdfMediaTypes.`application/rdf+xml`)
+
+    if (!httpGetTest.fileExists) {
+      httpGetTest.writeReceived(responseJsonLd)
       throw new AssertionError(s"No approved data available in file ${httpGetTest.fileBasename}")
     }
-    if (JsonParser(responseStr) != JsonParser(httpGetTest.readFile(mediaType))) {
-      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
+
+    val approvedJsonLd = httpGetTest.readFile()
+    if (JsonParser(responseJsonLd) != JsonParser(approvedJsonLd)) {
+      httpGetTest.writeReceived(responseJsonLd)
       throw new AssertionError(
         s"""|
             |The response did not equal the approved data.
             |
             |Response:
             |
-            |$responseStr
+            |$responseJsonLd
             |
             |
             |${"=" * 120}
@@ -138,50 +124,16 @@ class OntologyFormatsE2ESpec extends E2ESpec {
             |
             |Approved data:
             |
-            |${httpGetTest.readFile(mediaType)}
+            |$approvedJsonLd
             |
             |""".stripMargin,
       )
     }
-    httpGetTest.storeClientTestData(responseStr)
-  }
 
-  private def checkTurleTestCase(httpGetTest: HttpGetTest) = {
-    val mediaType   = RdfMediaTypes.`text/turtle`
-    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    if (!httpGetTest.fileExists(mediaType)) {
-      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
-      throw new AssertionError(s"No approved data available in file ${httpGetTest.fileBasename}")
-    }
-    if (parseTurtle(responseStr) != parseTurtle(httpGetTest.readFile(mediaType))) {
-      if (writeTestDataFiles) httpGetTest.writeReceived(responseStr, mediaType)
-      throw new AssertionError(
-        s"""|
-            |The response did not equal the approved data.
-            |
-            |Response:
-            |
-            |$responseStr
-            |
-            |
-            |${"=" * 120}
-            |
-            |
-            |Approved data:
-            |
-            |${httpGetTest.readFile(mediaType)}
-            |
-            |""".stripMargin,
-      )
-    }
-  }
+    assert(parseTurtle(responseTtl) == parseJsonLd(responseJsonLd))
+    assert(parseRdfXml(responseRdfXml) == parseJsonLd(responseJsonLd))
 
-  private def checkRdfXmlTestCase(httpGetTest: HttpGetTest) = {
-    val mediaType   = RdfMediaTypes.`application/rdf+xml`
-    val responseStr = getResponse(httpGetTest.urlPath, mediaType)
-    // RDF XML can be compared agains the persisted turtle file, so does not need to br written to a file.
-    if (writeTestDataFiles) ()
-    else assert(parseRdfXml(responseStr) == parseTurtle(httpGetTest.readFile(RdfMediaTypes.`text/turtle`)))
+    httpGetTest.storeClientTestData(responseJsonLd)
   }
 
   private def getResponse(url: String, mediaType: MediaType.NonBinary) = {
@@ -321,18 +273,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     )
   }
 
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
-  // If false, the responses from the server are compared to the contents fo the expected response files.
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = false
-
   "The Ontologies v2 Endpoint" should {
     "serve the ontologies in JSON-LD, turtle and RDF-XML" in {
       forEvery(TestCases.testCases) { testCase =>
-        checkTurleTestCase(testCase)
-        checkJsonLdTestCase(testCase)
-        checkRdfXmlTestCase(testCase)
+        checkTestCase(testCase)
       }
     }
 

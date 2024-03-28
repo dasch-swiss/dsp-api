@@ -107,22 +107,14 @@ sealed abstract case class UploadFileRequest private (
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val projectOrDefault = project match {
-      case Some(p) => p
-      case None    => SharedTestDataADM.anythingProject
-    }
-    val resourceIRIOrDefault = resourceIri match {
-      case Some(value) => value
-      case None        => stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode)
-    }
-    val resourceClassIRIOrDefault: SmartIri = resourceClassIRI match {
-      case Some(iri) => iri
-      case None      => FileModelUtil.getFileRepresentationClassIri(fileType)
-    }
-    val fileValuePropertyIRIOrDefault: SmartIri = valuePropertyIRI match {
-      case Some(iri) => iri
-      case None      => FileModelUtil.getFileRepresentationPropertyIri(fileType)
-    }
+    val projectOrDefault =
+      project.getOrElse(SharedTestDataADM.anythingProject)
+    val resourceIRIOrDefault =
+      resourceIri.getOrElse(stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode))
+    val resourceClassIRIOrDefault: SmartIri =
+      resourceClassIRI.getOrElse(FileModelUtil.getFileRepresentationClassIri(fileType))
+    val fileValuePropertyIRIOrDefault: SmartIri =
+      valuePropertyIRI.getOrElse(FileModelUtil.getFileRepresentationPropertyIri(fileType))
     val valueContent = FileModelUtil.getFileValueContent(
       fileType = fileType,
       internalFilename = internalFilename,
@@ -141,13 +133,12 @@ sealed abstract case class UploadFileRequest private (
         permissions = valuePermissions,
       ),
     )
-    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIRIOrDefault -> values)
 
     CreateResourceV2(
       resourceIri = Some(resourceIRIOrDefault.toSmartIri),
       resourceClassIri = resourceClassIRIOrDefault,
       label = label,
-      values = inputValues,
+      values = Map(fileValuePropertyIRIOrDefault -> values),
       projectADM = projectOrDefault,
       permissions = resourcePermissions,
       creationDate = resourceCreationDate,
