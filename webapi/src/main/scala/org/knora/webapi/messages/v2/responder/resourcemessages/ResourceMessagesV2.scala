@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
@@ -383,7 +383,7 @@ case class ReadResourceV2(
   attachedToUser: IRI,
   projectADM: Project,
   permissions: String,
-  userPermission: ObjectAccessPermission,
+  userPermission: Permission.ObjectAccess,
   values: Map[SmartIri, Seq[ReadValueV2]],
   creationDate: Instant,
   lastModificationDate: Option[Instant],

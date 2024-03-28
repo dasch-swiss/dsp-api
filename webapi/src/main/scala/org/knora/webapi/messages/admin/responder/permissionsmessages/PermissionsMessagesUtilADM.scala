@@ -7,8 +7,7 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermissions
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 /**
@@ -27,10 +26,10 @@ object PermissionsMessagesUtilADM {
    */
   def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] = {
     val updatedPermissions = hasPermissions.map { permission =>
-      if (AdministrativePermission.fromToken(permission.name).isEmpty)
+      if (Permission.Administrative.fromToken(permission.name).isEmpty)
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
-            s"${AdministrativePermissions.allTokens.mkString(", ")}",
+            s"${Permission.Administrative.allTokens.mkString(", ")}",
         )
       PermissionADM(
         name = permission.name,

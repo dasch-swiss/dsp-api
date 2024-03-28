@@ -2607,7 +2607,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "not update a value with custom permissions if the requesting user does not have ObjectAccessPermission.ChangeRights on the value" in {
+    "not update a value with custom permissions if the requesting user does not have Permission.ObjectAccess.ChangeRights on the value" in {
       val resourceIri: IRI      = aThingIri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val permissions           = "CR knora-admin:Creator"
@@ -2733,7 +2733,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       updatedValueFromTriplestore.permissions should ===(permissions)
     }
 
-    "not update a value, changing only its permissions, if the requesting user does not have ObjectAccessPermission.ChangeRights on the value" in {
+    "not update a value, changing only its permissions, if the requesting user does not have Permission.ObjectAccess.ChangeRights on the value" in {
       val resourceIri: IRI      = aThingIri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val permissions           = "CR knora-admin:Creator"

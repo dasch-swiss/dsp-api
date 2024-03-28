@@ -43,7 +43,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.resources.CreateResourceV2Handler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -237,7 +237,7 @@ final case class ResourcesResponderV2(
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
                resource,
-               ObjectAccessPermission.Modify,
+               Permission.ObjectAccess.Modify,
                updateResourceMetadataRequestV2.requestingUser,
              )
 
@@ -384,7 +384,7 @@ final case class ResourcesResponderV2(
         // Check that the user has permission to mark the resource as deleted.
         _ <- resourceUtilV2.checkResourcePermission(
                resource,
-               ObjectAccessPermission.Delete,
+               Permission.ObjectAccess.Delete,
                deleteResourceV2.requestingUser,
              )
 

@@ -18,7 +18,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAtt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 
 class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
@@ -32,7 +32,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
             ReadOtherValueV2(
@@ -47,7 +47,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("F2xCr0S2QfWRQxJDWY9L0g"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
             ReadOtherValueV2(
@@ -62,7 +62,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("yVTqO37cRkCSvXbFc3vTyw"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -86,7 +86,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
-        userPermission = ObjectAccessPermission.View,
+        userPermission = Permission.ObjectAccess.View,
         values = Map(),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
@@ -107,7 +107,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -126,7 +126,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
                     creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(),
                     projectADM = SharedTestDataADM.anythingProject,
                     lastModificationDate = None,
@@ -141,7 +141,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("UgSp5mXTTSKdI02ZU1KIAA"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -158,7 +158,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -182,7 +182,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-        userPermission = ObjectAccessPermission.View,
+        userPermission = Permission.ObjectAccess.View,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
             ReadOtherValueV2(
@@ -197,7 +197,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
-              userPermission = ObjectAccessPermission.View,
+              userPermission = Permission.ObjectAccess.View,
               deletionInfo = None,
             ),
           ),
@@ -221,7 +221,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
             ReadTextValueV2(
@@ -275,7 +275,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("1"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
             ReadTextValueV2(
@@ -329,7 +329,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("2"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -350,7 +350,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
                     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(),
                     projectADM = SharedTestDataADM.anythingProject,
                     lastModificationDate = None,
@@ -365,7 +365,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("0"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -390,7 +390,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -410,7 +410,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
                     creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
                         ReadTextValueV2(
@@ -428,7 +428,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("d9a522845006"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -447,7 +447,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -465,7 +465,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("fae17f4f6106"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -483,7 +483,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
             ReadLinkValueV2(
@@ -503,7 +503,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
                     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
                         ReadTextValueV2(
@@ -521,7 +521,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("c3295339"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -540,7 +540,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -558,7 +558,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("53feeaf80a"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -583,7 +583,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
             ReadTextValueV2(
@@ -601,7 +601,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("c3295339"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -623,7 +623,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
                         ReadLinkValueV2(
@@ -643,7 +643,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -661,7 +661,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("53feeaf80a"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -680,7 +680,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -698,7 +698,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-        userPermission = ObjectAccessPermission.ChangeRights,
+        userPermission = Permission.ObjectAccess.ChangeRights,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
             ReadTextValueV2(
@@ -716,7 +716,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("d9a522845006"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),
@@ -738,7 +738,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                     creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                    userPermission = ObjectAccessPermission.ChangeRights,
+                    userPermission = Permission.ObjectAccess.ChangeRights,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
                         ReadLinkValueV2(
@@ -758,7 +758,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -776,7 +776,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("fae17f4f6106"),
-                          userPermission = ObjectAccessPermission.ChangeRights,
+                          userPermission = Permission.ObjectAccess.ChangeRights,
                           deletionInfo = None,
                         ),
                       ),
@@ -795,7 +795,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
-              userPermission = ObjectAccessPermission.ChangeRights,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               deletionInfo = None,
             ),
           ),

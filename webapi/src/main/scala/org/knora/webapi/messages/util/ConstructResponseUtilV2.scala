@@ -51,7 +51,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -360,7 +360,7 @@ object ConstructResponseUtilV2 {
     valueObjectClass: SmartIri,
     nestedResource: Option[ResourceWithValueRdfData] = None,
     isIncomingLink: Boolean = false,
-    userPermission: ObjectAccessPermission,
+    userPermission: Permission.ObjectAccess,
     assertions: FlatPredicateObjects,
     standoff: FlatStatements,
   ) extends RdfData
@@ -378,7 +378,7 @@ object ConstructResponseUtilV2 {
     subjectIri: IRI,
     assertions: FlatPredicateObjects,
     isMainResource: Boolean,
-    userPermission: Option[ObjectAccessPermission],
+    userPermission: Option[Permission.ObjectAccess],
     valuePropertyAssertions: RdfPropertyValues,
   ) extends RdfData
 
@@ -414,7 +414,7 @@ object ConstructResponseUtilV2 {
    */
   case class RdfWithUserPermission(
     assertions: ConstructPredicateObjects,
-    maybeUserPermission: Option[ObjectAccessPermission],
+    maybeUserPermission: Option[Permission.ObjectAccess],
   )
 
 }
@@ -520,7 +520,7 @@ final case class ConstructResponseUtilV2Live(
           case (pred: SmartIri, objs: Seq[LiteralV2]) => pred -> objs.head
         }
 
-        val userPermission: Option[ObjectAccessPermission] =
+        val userPermission: Option[Permission.ObjectAccess] =
           PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
 
         // Make a ResourceWithValueRdfData for each resource IRI.

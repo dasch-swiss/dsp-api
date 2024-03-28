@@ -24,9 +24,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 
@@ -564,7 +563,7 @@ case class PermissionsDataADM(
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
   def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean =
     administrativePermissionsPerProject.get(projectIri) match {
-      case Some(permissions) => permissions(PermissionADM.from(AdministrativePermission.ProjectAdminAll))
+      case Some(permissions) => permissions(PermissionADM.from(Permission.Administrative.ProjectAdminAll))
       case None              => false
     }
 
@@ -586,8 +585,8 @@ case class PermissionsDataADM(
         case ResourceCreateOperation(resourceClassIri) =>
           this.administrativePermissionsPerProject.get(insideProject) match {
             case Some(set) =>
-              set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)) || set(
-                PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, resourceClassIri),
+              set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)) || set(
+                PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, resourceClassIri),
               )
             case None => {
               // println("FALSE: No administrative permissions defined for this project.")
@@ -639,7 +638,7 @@ case class PermissionsDataADM(
 }
 
 /**
- * Represents 'knora-base:AdministrativePermission'
+ * Represents 'knora-base:Permission.Administrative'
  *
  * @param iri            the IRI of the permission.
  * @param permissionType the type of the permission.
@@ -669,7 +668,7 @@ case class ObjectAccessPermissionADM(
 }
 
 /**
- * Represents 'knora-base:AdministrativePermission'
+ * Represents 'knora-base:Permission.Administrative'
  *
  * @param iri            the IRI of the administrative permission.
  * @param forProject     the project this permission applies to.
@@ -724,14 +723,16 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
  */
 object PermissionADM {
 
-  def from(permission: ObjectAccessPermission, restriction: IRI): PermissionADM =
-    PermissionADM(permission.token, Some(restriction), Some(permission.code))
+  def from(permission: Permission): PermissionADM =
+    PermissionADM(permission.token, None, codeFrom(permission))
 
-  def from(permission: AdministrativePermission): PermissionADM =
-    PermissionADM(permission.token, None, None)
+  def from(permission: Permission, restriction: IRI): PermissionADM =
+    PermissionADM(permission.token, Some(restriction), codeFrom(permission))
 
-  def from(permission: AdministrativePermission, restriction: IRI): PermissionADM =
-    PermissionADM(permission.token, Some(restriction), None)
+  private def codeFrom(permission: Permission) = permission match {
+    case oa: Permission.ObjectAccess  => Some(oa.code)
+    case _: Permission.Administrative => None
+  }
 }
 
 /**
@@ -761,10 +762,10 @@ object PermissionProfileType {
 sealed trait PermissionType
 object PermissionType {
   case object OAP extends PermissionType {
-    override def toString: String = "ObjectAccessPermission"
+    override def toString: String = "Permission.ObjectAccess"
   }
   case object AP extends PermissionType {
-    override def toString: String = "AdministrativePermission"
+    override def toString: String = "Permission.Administrative"
   }
   case object DOAP extends PermissionType {
     override def toString: String = "DefaultObjectAccessPermission"

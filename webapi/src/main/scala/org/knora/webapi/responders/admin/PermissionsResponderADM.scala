@@ -35,12 +35,10 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermissions
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -1420,7 +1418,7 @@ final case class PermissionsResponderADMLive(
       _ =
         if (permissionsListBuffer.isEmpty) {
           val defaultFallbackPermission = Set(
-            PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
+            PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
         } else {
@@ -1625,11 +1623,11 @@ final case class PermissionsResponderADMLive(
     validateDOAPHasPermissions(hasPermissions)
     hasPermissions.map { permission =>
       val code: Int = permission.permissionCode match {
-        case None       => ObjectAccessPermissions.codeByToken(permission.name)
+        case None       => Permission.ObjectAccess.codeByToken(permission.name)
         case Some(code) => code
       }
       val name = if (permission.name.isEmpty) {
-        val nameCodeSet: Option[(String, Int)] = ObjectAccessPermissions.codeByToken.find { case (_, code) =>
+        val nameCodeSet: Option[(String, Int)] = Permission.ObjectAccess.codeByToken.find { case (_, code) =>
           code == permission.permissionCode.get
         }
         nameCodeSet.get._1
@@ -1654,17 +1652,17 @@ final case class PermissionsResponderADMLive(
       if (permission.additionalInformation.isEmpty) {
         throw BadRequestException(s"additionalInformation of a default object access permission type cannot be empty.")
       }
-      if (permission.name.nonEmpty && !ObjectAccessPermissions.allTokens(permission.name))
+      if (permission.name.nonEmpty && !Permission.ObjectAccess.allTokens(permission.name))
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
-            s"${ObjectAccessPermissions.allTokens.mkString(", ")}",
+            s"${Permission.ObjectAccess.allTokens.mkString(", ")}",
         )
       if (permission.permissionCode.nonEmpty) {
         val code = permission.permissionCode.get
-        if (ObjectAccessPermission.from(code).isEmpty) {
+        if (Permission.ObjectAccess.from(code).isEmpty) {
           throw BadRequestException(
             s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-              s"${ObjectAccessPermissions.allCodes.mkString(", ")}",
+              s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
           )
         }
       }
@@ -1675,7 +1673,7 @@ final case class PermissionsResponderADMLive(
       }
       if (permission.permissionCode.nonEmpty && permission.name.nonEmpty) {
         val code = permission.permissionCode.get
-        if (!ObjectAccessPermission.fromToken(permission.name).map(_.code).contains(code)) {
+        if (!Permission.ObjectAccess.fromToken(permission.name).map(_.code).contains(code)) {
           throw BadRequestException(
             s"Given permission code $code and permission name ${permission.name} are not consistent.",
           )
@@ -2219,8 +2217,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
                hasPermissions = Set(
-                 PermissionADM.from(AdministrativePermission.ProjectAdminAll),
-                 PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+                 PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+                 PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
                ),
              ),
              SystemUser,
@@ -2232,7 +2230,7 @@ final case class PermissionsResponderADMLive(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-               hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
+               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
              ),
              SystemUser,
              UUID.randomUUID(),
@@ -2245,8 +2243,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
                hasPermissions = Set(
-                 PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,
@@ -2260,8 +2258,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                hasPermissions = Set(
-                 PermissionADM.from(ObjectAccessPermission.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.from(ObjectAccessPermission.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,

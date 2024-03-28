@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
-import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -42,13 +42,13 @@ trait ResourceUtilV2 {
    * Checks that a user has the specified permission on a resource.
    *
    * @param resourceInfo             the resource to be updated.
-   * @param permissionNeeded         the necessary ObjectAccessPermission,
+   * @param permissionNeeded         the necessary Permission.ObjectAccess,
    * @param requestingUser           the requesting user.
    * @return [[ForbiddenException]]  if user does not have permission needed on the resource.
    */
   def checkResourcePermission(
     resourceInfo: ReadResourceV2,
-    permissionNeeded: ObjectAccessPermission,
+    permissionNeeded: Permission.ObjectAccess,
     requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
@@ -57,14 +57,14 @@ trait ResourceUtilV2 {
    *
    * @param resourceInfo              the resource containing the value.
    * @param valueInfo                 the value to be updated.
-   * @param permissionNeeded          the necessary ObjectAccessPermission,
+   * @param permissionNeeded          the necessary Permission.ObjectAccess,
    * @param requestingUser            the requesting user.
    * @return  [[ForbiddenException]]  if user does not have permissions on the value.
    */
   def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
-    permissionNeeded: ObjectAccessPermission,
+    permissionNeeded: Permission.ObjectAccess,
     requestingUser: User,
   ): IO[ForbiddenException, Unit]
 
@@ -124,15 +124,15 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
    * Checks that a user has the specified permission on a resource.
    *
    * @param resourceInfo     the resource to be updated.
-   * @param permissionNeeded the necessary ObjectAccessPermission,
+   * @param permissionNeeded the necessary Permission.ObjectAccess,
    * @param requestingUser   the requesting user.
    */
   override def checkResourcePermission(
     resourceInfo: ReadResourceV2,
-    permissionNeeded: ObjectAccessPermission,
+    permissionNeeded: Permission.ObjectAccess,
     requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
-    val maybeUserPermission: Option[ObjectAccessPermission] = PermissionUtilADM.getUserPermissionADM(
+    val maybeUserPermission: Option[Permission.ObjectAccess] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = resourceInfo.permissions,
@@ -140,8 +140,8 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: ObjectAccessPermission) => userPermission >= permissionNeeded
-      case None                                         => false
+      case Some(userPermission: Permission.ObjectAccess) => userPermission >= permissionNeeded
+      case None                                          => false
     }
 
     ZIO
@@ -159,16 +159,16 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
    *
    * @param resourceInfo     the resource containing the value.
    * @param valueInfo        the value to be updated.
-   * @param permissionNeeded the necessary ObjectAccessPermission,
+   * @param permissionNeeded the necessary Permission.ObjectAccess,
    * @param requestingUser   the requesting user.
    */
   override def checkValuePermission(
     resourceInfo: ReadResourceV2,
     valueInfo: ReadValueV2,
-    permissionNeeded: ObjectAccessPermission,
+    permissionNeeded: Permission.ObjectAccess,
     requestingUser: User,
   ): IO[ForbiddenException, Unit] = {
-    val maybeUserPermission: Option[ObjectAccessPermission] = PermissionUtilADM.getUserPermissionADM(
+    val maybeUserPermission: Option[Permission.ObjectAccess] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
       entityPermissionLiteral = valueInfo.permissions,
@@ -176,8 +176,8 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     )
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
-      case Some(userPermission: ObjectAccessPermission) => userPermission >= permissionNeeded
-      case None                                         => false
+      case Some(userPermission: Permission.ObjectAccess) => userPermission >= permissionNeeded
+      case None                                          => false
     }
 
     ZIO
