@@ -638,7 +638,7 @@ case class PermissionsDataADM(
 }
 
 /**
- * Represents 'knora-base:Permission.Administrative'
+ * Represents 'knora-base:AdministrativePermission'
  *
  * @param iri            the IRI of the permission.
  * @param permissionType the type of the permission.
@@ -668,7 +668,7 @@ case class ObjectAccessPermissionADM(
 }
 
 /**
- * Represents 'knora-base:Permission.Administrative'
+ * Represents 'knora-base:AdministrativePermission'
  *
  * @param iri            the IRI of the administrative permission.
  * @param forProject     the project this permission applies to.
