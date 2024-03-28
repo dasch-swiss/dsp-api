@@ -713,7 +713,7 @@ final case class PermissionsResponderADMLive(
 
   /**
    * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
-   * This method, validates the content of hasPermissions collection by only keeping the values of name params.
+   * This method validates the content of hasPermissions collection by only keeping the values of name params.
    * @param hasPermissions       Set of the permissions.
    */
   private def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] =
