@@ -20,6 +20,8 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageExternalFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
@@ -681,11 +683,7 @@ final case class ValuesResponderV2Live(
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
-      valueCreationDate: Instant =
-        valueToCreate.customValueCreationDate match {
-          case Some(customValueCreationDate) => customValueCreationDate
-          case None                          => resourceCreationDate
-        }
+      valueCreationDate: Instant = valueToCreate.customValueCreationDate.getOrElse(resourceCreationDate)
 
       // Generate the SPARQL.
       insertSparql: String =
@@ -885,6 +883,7 @@ final case class ValuesResponderV2Live(
     ): Task[ResourcePropertyValue] =
       for {
         submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
+        submittedInternalValueType   <- ZIO.attempt(submittedExternalValueType.toOntologySchema(InternalSchema))
 
         // Get ontology information about the submitted property.
         propertyInfoRequestForSubmittedProperty =
@@ -958,9 +957,14 @@ final case class ValuesResponderV2Live(
                 s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>",
               ),
             )
-        // Check that the current value has the submitted value type.
+        isSameType = currentValue.valueContent.valueType == submittedInternalValueType
+        isStillImageTypes = {
+          val stillImageFileValues = List(StillImageExternalFileValue, StillImageFileValue)
+          stillImageFileValues.contains(submittedInternalValueType.toInternalIri.value) &&
+          stillImageFileValues.contains(currentValue.valueContent.valueType.toInternalIri.value)
+        }
         _ <-
-          ZIO.when(currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema))(
+          ZIO.when(!(isSameType || isStillImageTypes))(
             ZIO.fail(
               BadRequestException(
                 s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>",
@@ -1350,7 +1354,7 @@ final case class ValuesResponderV2Live(
                        propertyIri = propertyIri,
                        currentValueIri = currentValue.valueIri,
                        newValueIri = newValueIri,
-                       valueTypeIri = newValueVersion.valueType,
+                       valueTypeIri = currentValue.valueContent.valueType,
                        value = newValueVersion,
                        valueCreator = valueCreator,
                        valuePermissions = valuePermissions,
@@ -2433,10 +2437,7 @@ final case class ValuesResponderV2Live(
 }
 
 object ValuesResponderV2Live {
-  val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & SearchResponderV2 & StringFormatter,
-    ValuesResponderV2,
-  ] = ZLayer.fromZIO {
+  val layer = ZLayer.fromZIO {
     for {
       config  <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]

@@ -136,7 +136,7 @@ object LayersLive {
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
-      ResourcesResponderV2Live.layer,
+      ResourcesResponderV2.layer,
       RestCardinalityServiceLive.layer,
       SearchApiRoutes.layer,
       SearchEndpoints.layer,

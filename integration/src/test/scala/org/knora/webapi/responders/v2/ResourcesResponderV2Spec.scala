@@ -10,6 +10,7 @@ import org.apache.pekko.actor.Status.Failure
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.ZIO
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -38,6 +39,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -403,6 +405,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val resourcesResponderV2SpecFullData          = new ResourcesResponderV2SpecFullData
+  private val ResourcesResponderV2                      = ZIO.serviceWithZIO[ResourcesResponderV2]
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
 
@@ -1116,8 +1119,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with a still image file value" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
@@ -1142,6 +1143,37 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val outputResource = getResource(resourceIri)
 
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile,
+      )
+    }
+
+    "create a resource with an external still image file value" in {
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val imageRequestUrl = IiifImageRequestUrl.unsafeFrom(
+        "https://iiif.ub.unibe.ch/image/v2.1/632664f2-20cb-43e4-8584-2fa3988c63a2/full/max/0/default.jpg",
+      )
+      val inputResource: CreateResourceV2 = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageExternalFile(imageRequestUrl),
+          internalFilename = "IQUO3t1AABm-TTTTTTTTTTT.jp2",
+        )
+        .toMessage(resourceIri = Some(resourceIri))
+
+      UnsafeZioRun.runOrThrow(
+        ResourcesResponderV2(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)).logError,
+        ),
+      )
+
+      // Get the resource from the triplestore and check it.
+      val outputResource = getResource(resourceIri)
       checkCreateResource(
         inputResourceIri = resourceIri,
         inputResource = inputResource,

@@ -205,7 +205,7 @@
                             "a fichier d'image"@fr,
                             "ha file imagine"@it ;
     rdfs:comment            "Connects a Representation to an image file"@en ;
-    :objectClassConstraint  :StillImageFileValue ;
+    :objectClassConstraint  :StillImageAbstractFileValue ;
     :subjectClassConstraint :StillImageRepresentation ;
     :isEditable             true ;
     salsah-gui:guiElement   salsah-gui:Fileupload ;
@@ -993,6 +993,15 @@
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :FileValue ;
     :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#externalUrl
+
+:externalUrl
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:subPropertyOf        :valueHas ;
+    :subjectClassConstraint   :StillImageExternalFileValue ;
+    :objectDatatypeConstraint xsd:anyURI.
 
 
 ###  http://www.knora.org/ontology/knora-base#originalMimeType
@@ -1968,13 +1977,32 @@
 
 :StillImageFileValue
     rdf:type        owl:Class ;
-    rdfs:subClassOf :FileValue,
+    rdfs:subClassOf :StillImageAbstractFileValue,
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :dimY ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :dimX ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:comment    "A file containing a two-dimensional still image"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StillImageExternalFileValue
+
+:StillImageExternalFileValue
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :StillImageAbstractFileValue,
+                    [ rdf:type        owl:Restriction ;
+                      owl:onProperty  :externalUrl ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:comment    "A file containing a two-dimensional still image"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StillImageAbstractFileValue
+
+:StillImageAbstractFileValue
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :FileValue ;
     rdfs:comment    "A file containing a two-dimensional still image"@en .
 
 

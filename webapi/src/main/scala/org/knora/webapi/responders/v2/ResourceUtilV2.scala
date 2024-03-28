@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -255,13 +256,14 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
     updateTask: Task[T],
     valueContents: Seq[FileValueContentV2],
     requestingUser: User,
-  ): Task[T] =
+  ): Task[T] = {
+    val valuesToConsider = valueContents.filter(!_.isInstanceOf[StillImageExternalFileValueContentV2])
     // Was this update a success?
     updateTask.foldZIO(
       (e: Throwable) => {
         // The update failed. Ask Sipi to delete the temporary files and return the original failure.
         val deleteRequests =
-          valueContents.map(value => DeleteTemporaryFileRequest(value.fileValue.internalFilename, requestingUser))
+          valuesToConsider.map(value => DeleteTemporaryFileRequest(value.fileValue.internalFilename, requestingUser))
         val sipiResults = ZIO.foreachDiscard(deleteRequests)(messageRelay.ask[SuccessResponseV2](_).logError)
         sipiResults.ignore *> ZIO.fail(e)
       },
@@ -269,12 +271,13 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
         // Yes. Ask Sipi to move the file to permanent storage.
         // If Sipi succeeds, return the original result.
         // Otherwise, return the failures from Sipi.
-        val moveRequests = valueContents
+        val moveRequests = valuesToConsider
           .map(_.fileValue.internalFilename)
           .map(MoveTemporaryFileToPermanentStorageRequest(_, updateInProject.projectADM.shortcode, requestingUser))
-        ZIO.foreachDiscard(moveRequests)(messageRelay.ask[SuccessResponseV2](_)) *> ZIO.succeed(updateInProject)
+        ZIO.foreachDiscard(moveRequests)(messageRelay.ask[SuccessResponseV2](_)).as(updateInProject)
       },
     )
+  }
 }
 
 object ResourceUtilV2Live {

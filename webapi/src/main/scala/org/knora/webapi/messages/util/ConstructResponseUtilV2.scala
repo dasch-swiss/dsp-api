@@ -54,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -1076,6 +1077,18 @@ final case class ConstructResponseUtilV2Live(
           ),
         )
 
+      case OntologyConstants.KnoraBase.StillImageExternalFileValue =>
+        ZIO.succeed(
+          StillImageExternalFileValueContentV2(
+            InternalSchema,
+            fileValue,
+            IiifImageRequestUrl.unsafeFrom(
+              valueObject.requireStringObject(OntologyConstants.KnoraBase.ExternalUrl.toSmartIri),
+            ),
+            comment = valueCommentOption,
+          ),
+        )
+
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         ZIO.succeed(
           DocumentFileValueContentV2(
@@ -1665,7 +1678,7 @@ final case class ConstructResponseUtilV2Live(
                   )
                 }
               } else {
-                ZIO.succeed(None)
+                ZIO.none
               }
           } yield mapping.mappingIri -> MappingAndXSLTransformation(
             mapping = mapping.mapping,
