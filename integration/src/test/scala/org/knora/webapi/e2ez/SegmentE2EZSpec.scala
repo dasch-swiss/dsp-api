@@ -61,7 +61,6 @@ object SegmentE2EZSpec extends E2EZSpec {
              |}
              |""".stripMargin
         for {
-          _        <- Clock.currentDateTime.debug
           token    <- getToken("root@example.com", "test")
           response <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
         } yield assertTrue(response.contains("knora-base:Segment"))
