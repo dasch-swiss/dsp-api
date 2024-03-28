@@ -16,6 +16,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -138,12 +139,12 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
           imagesProjectIri -> Set(
-            PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -213,8 +214,8 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
-            PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -239,7 +240,7 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -267,10 +268,12 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
-            PermissionADM.projectResourceCreateRestrictedPermission(
+            PermissionADM.from(
+              Permission.Administrative.ProjectResourceCreateRestricted,
               s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
             ),
-            PermissionADM.projectResourceCreateRestrictedPermission(
+            PermissionADM.from(
+              Permission.Administrative.ProjectResourceCreateRestricted,
               s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat",
             ),
           ),
@@ -377,8 +380,8 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -403,7 +406,7 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -428,7 +431,7 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -545,8 +548,8 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
-            PermissionADM.ProjectAdminAllPermission,
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -573,7 +576,7 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -597,7 +600,7 @@ object SharedTestDataADM {
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
-            PermissionADM.ProjectResourceCreateAllPermission,
+            PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
           ),
         ),
       ),
@@ -687,7 +690,7 @@ object SharedTestDataADM {
       ),
       administrativePermissionsPerProject = Map(
         beolProjectIri -> Set(
-          PermissionADM.ProjectAdminAllPermission,
+          PermissionADM.from(Permission.Administrative.ProjectAdminAll),
         ),
       ),
     ),

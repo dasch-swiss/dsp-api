@@ -31,7 +31,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
@@ -46,6 +45,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -342,7 +342,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
   /**
    * The permission that the requesting user has on the value.
    */
-  def userPermission: EntityPermission
+  def userPermission: Permission.ObjectAccess
 
   /**
    * The date when the value was created.
@@ -493,7 +493,7 @@ case class ReadTextValueV2(
   valueIri: IRI,
   attachedToUser: IRI,
   permissions: String,
-  userPermission: EntityPermission,
+  userPermission: Permission.ObjectAccess,
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: TextValueContentV2,
@@ -532,7 +532,7 @@ case class ReadLinkValueV2(
   valueIri: IRI,
   attachedToUser: IRI,
   permissions: String,
-  userPermission: EntityPermission,
+  userPermission: Permission.ObjectAccess,
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: LinkValueContentV2,
@@ -569,7 +569,7 @@ case class ReadOtherValueV2(
   valueIri: IRI,
   attachedToUser: IRI,
   permissions: String,
-  userPermission: EntityPermission,
+  userPermission: Permission.ObjectAccess,
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: ValueContentV2,

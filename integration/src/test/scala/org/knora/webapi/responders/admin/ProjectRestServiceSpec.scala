@@ -29,6 +29,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -204,7 +205,10 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
             ap.hasPermissions.equals(
-              Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
+              Set(
+                PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+                PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
+              ),
             )
         }
 
@@ -214,7 +218,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
           (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
-            ap.hasPermissions.equals(Set(PermissionADM.ProjectResourceCreateAllPermission))
+            ap.hasPermissions.equals(Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)))
         }
         hasAPForProjectMember.size shouldBe 1
 
@@ -233,8 +237,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
               ),
             )
         }
@@ -248,8 +252,8 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
               ),
             )
         }
