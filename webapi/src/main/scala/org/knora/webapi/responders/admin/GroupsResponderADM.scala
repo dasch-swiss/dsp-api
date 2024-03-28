@@ -63,8 +63,9 @@ final case class GroupsResponderADM(
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case r: GroupGetADM => groupGetADM(r.groupIri)
-    case other          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
+    case r: GroupGetADM                 => groupGetADM(r.groupIri)
+    case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
+    case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
   /**
@@ -125,6 +126,19 @@ final case class GroupsResponderADM(
       maybeGroup <- statements.map(convertStatementsToGroupADM).map(_.map(Some(_))).getOrElse(ZIO.succeed(None))
     } yield maybeGroup
   }
+
+  /**
+   * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
+   *
+   * @param groupIris      the IRIs of the groups being requested
+   * @return information about the group as a set of [[GroupGetResponseADM]] objects.
+   */
+  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
+    ZioHelper.sequence(groupIris.map { iri =>
+      groupGetADM(iri)
+        .flatMap(ZIO.fromOption(_))
+        .mapBoth(_ => NotFoundException(s"Group <$iri> not found."), GroupGetResponseADM.apply)
+    })
 
   /**
    * Gets the members with the given group IRI and returns the information as a sequence of [[User]].
