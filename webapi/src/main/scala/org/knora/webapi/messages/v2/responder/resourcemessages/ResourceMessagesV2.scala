@@ -569,10 +569,8 @@ case class ReadResourceV2(
               val withDeletedSeq = valueSequence
                 .map(value =>
                   value.deletionInfo match {
-                    case Some(_) =>
-                      println()
-                      (delIri, value.asDeletedValue())
-                    case None => (iri, value)
+                    case Some(_) => (delIri, value.asDeletedValue())
+                    case None    => (iri, value)
                   },
                 )
               aggregator ++ withDeletedSeq
