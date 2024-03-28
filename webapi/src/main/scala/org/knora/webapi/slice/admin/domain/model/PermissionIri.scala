@@ -7,15 +7,16 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
-
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.DefaultPermissionProperties
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.common.StringValueCompanion
+import org.knora.webapi.slice.common.Value.StringValue
 
-final case class PermissionIri private (value: String) extends AnyVal
+final case class PermissionIri private (value: String) extends AnyVal with StringValue
 
-object PermissionIri {
+object PermissionIri extends StringValueCompanion[PermissionIri] {
 
   implicit val tapirCodec: Codec[String, PermissionIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(PermissionIri.from)(_.value)
@@ -39,9 +40,6 @@ object PermissionIri {
     case _ if isPermissionIriValid(value) => Right(PermissionIri(value))
     case _                                => Left(s"Invalid permission IRI: $value.")
   }
-
-  def unsafeFrom(value: String): PermissionIri =
-    from(value).fold(msg => throw new IllegalArgumentException(msg), identity)
 
   /**
    * Creates a new permission IRI based on a UUID.
