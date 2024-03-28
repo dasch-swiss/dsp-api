@@ -35,5 +35,3 @@ upload-graph ../../test_data/project_ontologies/webern-onto.ttl http://www.knora
 upload-graph ../../test_data/project_data/webern-data.ttl http://www.knora.org/data/0806/webern
 upload-graph ../../test_data/project_ontologies/freetest-onto.ttl http://www.knora.org/ontology/0001/freetest
 upload-graph ../../test_data/project_data/freetest-data.ttl http://www.knora.org/data/0001/freetest
-upload-graph ../../test_data/project_ontologies/sequences-onto.ttl http://www.knora.org/ontology/0001/sequences
-upload-graph ../../test_data/project_data/sequences-data.ttl http://www.knora.org/data/0001/sequences

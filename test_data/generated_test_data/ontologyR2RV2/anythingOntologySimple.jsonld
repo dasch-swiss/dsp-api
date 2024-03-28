@@ -4,66 +4,6 @@
     "rdfs:label": "The anything ontology",
     "@graph": [
         {
-            "rdfs:label": "Audio Sequence Thing",
-            "rdfs:subClassOf": [
-                {
-                    "@id": "knora-api:Resource"
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:arkUrl"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasIncomingLink"
-                    },
-                    "owl:minCardinality": 0
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasStandoffLinkTo"
-                    },
-                    "owl:minCardinality": 0
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:versionArkUrl"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "rdfs:label"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasSequenceBounds"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:isSequenceOf"
-                    },
-                    "owl:cardinality": 1
-                }
-            ],
-            "rdfs:comment": "A Resource representing a subsequence of an audio",
-            "@type": "owl:Class",
-            "@id": "anything:AudioSequenceThing"
-        },
-        {
             "rdfs:label": "Audio Thing",
             "rdfs:subClassOf": [
                 {
@@ -939,66 +879,6 @@
             "@type": "owl:Class",
             "knora-api:resourceIcon": "thing.png",
             "@id": "anything:TrivialThing"
-        },
-        {
-            "rdfs:label": "Video Sequence Thing",
-            "rdfs:subClassOf": [
-                {
-                    "@id": "knora-api:Resource"
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:arkUrl"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasIncomingLink"
-                    },
-                    "owl:minCardinality": 0
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasStandoffLinkTo"
-                    },
-                    "owl:minCardinality": 0
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:versionArkUrl"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "rdfs:label"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:hasSequenceBounds"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:isSequenceOf"
-                    },
-                    "owl:cardinality": 1
-                }
-            ],
-            "rdfs:comment": "A Resource representing a subsequence of a video",
-            "@type": "owl:Class",
-            "@id": "anything:VideoSequenceThing"
         },
         {
             "rdfs:label": "Video Thing",
