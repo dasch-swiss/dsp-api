@@ -167,8 +167,8 @@ final case class JwtServiceLive(
           None
         }
 
-      case Failure(_) =>
-        logger.debug("Invalid JWT")
+      case Failure(f) =>
+        logger.debug(s"Invalid JWT: $f")
         None
     }
 }
