@@ -762,10 +762,10 @@ object PermissionProfileType {
 sealed trait PermissionType
 object PermissionType {
   case object OAP extends PermissionType {
-    override def toString: String = "Permission.ObjectAccess"
+    override def toString: String = "ObjectAccessPermission"
   }
   case object AP extends PermissionType {
-    override def toString: String = "Permission.Administrative"
+    override def toString: String = "AdministrativePermission"
   }
   case object DOAP extends PermissionType {
     override def toString: String = "DefaultObjectAccessPermission"
