@@ -28,6 +28,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -205,7 +206,10 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
           (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
             ap.hasPermissions.equals(
-              Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
+              Set(
+                PermissionADM.from(AdministrativePermission.ProjectAdminAll),
+                PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+              ),
             )
         }
 
@@ -215,7 +219,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
           (ap: AdministrativePermissionADM) =>
             ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
-            ap.hasPermissions.equals(Set(PermissionADM.ProjectResourceCreateAllPermission))
+            ap.hasPermissions.equals(Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)))
         }
         hasAPForProjectMember.size shouldBe 1
 

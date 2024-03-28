@@ -35,6 +35,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -2217,8 +2218,10 @@ final case class PermissionsResponderADMLive(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
-               hasPermissions =
-                 Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
+               hasPermissions = Set(
+                 PermissionADM.from(AdministrativePermission.ProjectAdminAll),
+                 PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+               ),
              ),
              SystemUser,
              UUID.randomUUID(),
@@ -2229,7 +2232,7 @@ final case class PermissionsResponderADMLive(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-               hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+               hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
              ),
              SystemUser,
              UUID.randomUUID(),

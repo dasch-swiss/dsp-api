@@ -499,22 +499,6 @@ object OntologyConstants {
     val ForResourceClass: IRI              = KnoraAdminPrefixExpansion + "forResourceClass"
     val ForProperty: IRI                   = KnoraAdminPrefixExpansion + "forProperty"
 
-    val ProjectResourceCreateAllPermission: String        = "ProjectResourceCreateAllPermission"
-    val ProjectResourceCreateRestrictedPermission: String = "ProjectResourceCreateRestrictedPermission"
-    val ProjectAdminAllPermission: String                 = "ProjectAdminAllPermission"
-    val ProjectAdminGroupAllPermission: String            = "ProjectAdminGroupAllPermission"
-    val ProjectAdminGroupRestrictedPermission: String     = "ProjectAdminGroupRestrictedPermission"
-    val ProjectAdminRightsAllPermission: String           = "ProjectAdminRightsAllPermission"
-
-    val AdministrativePermissionAbbreviations: Seq[String] = Seq(
-      ProjectResourceCreateAllPermission,
-      ProjectResourceCreateRestrictedPermission,
-      ProjectAdminAllPermission,
-      ProjectAdminGroupAllPermission,
-      ProjectAdminGroupRestrictedPermission,
-      ProjectAdminRightsAllPermission,
-    )
-
     val HasDefaultRestrictedViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultRestrictedViewPermission"
     val HasDefaultViewPermission: IRI           = KnoraAdminPrefixExpansion + "hasDefaultViewPermission"
     val HasDefaultModifyPermission: IRI         = KnoraAdminPrefixExpansion + "hasDefaultModifyPermission"

@@ -16,6 +16,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 
 import pekko.testkit.ImplicitSender
@@ -133,10 +134,16 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
         "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#bild>,<http://www.knora.org/ontology/00FF/images#bildformat>"
 
       val permissionsSet = Set(
-        PermissionADM.ProjectResourceCreateAllPermission,
-        PermissionADM.ProjectAdminAllPermission,
-        PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
-        PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat"),
+        PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+        PermissionADM.from(AdministrativePermission.ProjectAdminAll),
+        PermissionADM.from(
+          AdministrativePermission.ProjectResourceCreateRestricted,
+          "http://www.knora.org/ontology/00FF/images#bild",
+        ),
+        PermissionADM.from(
+          AdministrativePermission.ProjectResourceCreateRestricted,
+          "http://www.knora.org/ontology/00FF/images#bildformat",
+        ),
       )
 
       PermissionUtilADM.parsePermissionsWithType(
@@ -147,13 +154,13 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
 
     "build a 'PermissionADM' object" in {
       PermissionUtilADM.buildPermissionObject(
-        name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
+        name = AdministrativePermission.ProjectResourceCreateRestricted.token,
         iris = Set("1", "2", "3"),
       ) should equal(
         Set(
-          PermissionADM.projectResourceCreateRestrictedPermission("1"),
-          PermissionADM.projectResourceCreateRestrictedPermission("2"),
-          PermissionADM.projectResourceCreateRestrictedPermission("3"),
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, "1"),
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, "2"),
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, "3"),
         ),
       )
     }
@@ -179,25 +186,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
       val result = PermissionUtilADM.removeDuplicatePermissions(duplicatedPermissions)
       result.size should equal(deduplicatedPermissions.size)
       result should contain allElementsOf deduplicatedPermissions
-    }
-
-    "remove lesser permissions" in {
-      val withLesserPermissions = Set(
-        PermissionADM.from(ObjectAccessPermission.View, "1"),
-        PermissionADM.from(ObjectAccessPermission.View, "1"),
-        PermissionADM.from(ObjectAccessPermission.Modify, "2"),
-        PermissionADM.from(ObjectAccessPermission.ChangeRights, "1"),
-        PermissionADM.from(ObjectAccessPermission.Delete, "2"),
-      )
-
-      val withoutLesserPermissions = Set(
-        PermissionADM.from(ObjectAccessPermission.ChangeRights, "1"),
-        PermissionADM.from(ObjectAccessPermission.Delete, "2"),
-      )
-
-      val result = PermissionUtilADM.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
-      result.size should equal(withoutLesserPermissions.size)
-      result should contain allElementsOf withoutLesserPermissions
     }
 
     "create permissions string" in {

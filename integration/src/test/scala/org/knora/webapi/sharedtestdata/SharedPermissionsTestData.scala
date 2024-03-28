@@ -12,6 +12,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.ObjectAcces
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 
 /* Helper case classes */
@@ -92,7 +93,7 @@ object SharedPermissionsTestData {
         forProject = imagesProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
         hasPermissions = Set(
-          PermissionADM.ProjectResourceCreateAllPermission,
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
         ),
       ),
     )
@@ -105,8 +106,8 @@ object SharedPermissionsTestData {
         forProject = imagesProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(
-          PermissionADM.ProjectResourceCreateAllPermission,
-          PermissionADM.ProjectAdminAllPermission,
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+          PermissionADM.from(AdministrativePermission.ProjectAdminAll),
         ),
       ),
     )
@@ -119,8 +120,11 @@ object SharedPermissionsTestData {
         forProject = imagesProjectIri,
         forGroup = "http://rdfh.ch/groups/00FF/images-reviewer",
         hasPermissions = Set(
-          PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
-          PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat"),
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, s"$IMAGES_ONTOLOGY_IRI#bild"),
+          PermissionADM.from(
+            AdministrativePermission.ProjectResourceCreateRestricted,
+            s"$IMAGES_ONTOLOGY_IRI#bildformat",
+          ),
         ),
       ),
     )
@@ -179,7 +183,7 @@ object SharedPermissionsTestData {
         iri = "http://rdfh.ch/permissions/003-a1",
         forProject = SharedTestDataADM2.incunabulaProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+        hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
       ),
     )
 
@@ -191,8 +195,8 @@ object SharedPermissionsTestData {
         forProject = SharedTestDataADM2.incunabulaProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(
-          PermissionADM.ProjectResourceCreateAllPermission,
-          PermissionADM.ProjectAdminAllPermission,
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+          PermissionADM.from(AdministrativePermission.ProjectAdminAll),
         ),
       ),
     )
@@ -314,7 +318,7 @@ object SharedPermissionsTestData {
         iri = "http://rdfh.ch/permissions/00FF/XFozeICsTE2gHSOsm4ZMIw",
         forProject = SharedTestDataADM2.anythingProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+        hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
       ),
     )
 
@@ -326,8 +330,8 @@ object SharedPermissionsTestData {
         forProject = SharedTestDataADM2.anythingProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(
-          PermissionADM.ProjectResourceCreateAllPermission,
-          PermissionADM.ProjectAdminAllPermission,
+          PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll),
+          PermissionADM.from(AdministrativePermission.ProjectAdminAll),
         ),
       ),
     )

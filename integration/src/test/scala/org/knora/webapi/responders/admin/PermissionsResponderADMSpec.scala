@@ -32,6 +32,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
@@ -226,7 +227,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               CreateAdministrativePermissionAPIRequestADM(
                 forProject = imagesProjectIri,
                 forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+                hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -251,7 +252,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
                 id = Some(customIri),
                 forProject = SharedTestDataADM.anythingProjectIri,
                 forGroup = SharedTestDataADM.thingSearcherGroup.id,
-                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+                hasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll)),
               ),
               rootUser,
               UUID.randomUUID(),
@@ -267,18 +268,12 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val customIri = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
         val hasPermissions = Set(
           PermissionADM(
-            name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
+            name = AdministrativePermission.ProjectResourceCreateAll.token,
             additionalInformation = Some("blabla"),
             permissionCode = Some(8),
           ),
         )
-        val expectedHasPermissions = Set(
-          PermissionADM(
-            name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
-            additionalInformation = None,
-            permissionCode = None,
-          ),
-        )
+        val expectedHasPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll))
         val actual = UnsafeZioRun.runOrThrow(
           ZIO.serviceWithZIO[PermissionsResponderADM](
             _.createAdministrativePermission(
@@ -1001,7 +996,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask to update hasPermissions of a permission" should {
       "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
+        val hasPermissions = NonEmptyChunk(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll))
 
         val exit = UnsafeZioRun.run(
           ZIO.serviceWithZIO[PermissionsResponderADM](
@@ -1022,7 +1017,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "update hasPermissions of an administrative permission" in {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
+        val hasPermissions = NonEmptyChunk(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll))
         val actual = UnsafeZioRun.runOrThrow(
           ZIO.serviceWithZIO[PermissionsResponderADM](
             _.updatePermissionHasPermissions(
@@ -1044,7 +1039,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = NonEmptyChunk(
           PermissionADM(
-            name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
+            name = AdministrativePermission.ProjectAdminAll.token,
             additionalInformation = Some("aIRI"),
             permissionCode = Some(1),
           ),
@@ -1062,7 +1057,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         assert(ap.iri == permissionIri)
         ap.hasPermissions.size should be(1)
-        val expectedSetOfPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+        val expectedSetOfPermissions = Set(PermissionADM.from(AdministrativePermission.ProjectAdminAll))
         assert(ap.hasPermissions.equals(expectedSetOfPermissions))
       }
 

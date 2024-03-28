@@ -26,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.ObjectAccessPermissions
 import org.knora.webapi.slice.admin.domain.model.User
@@ -337,7 +338,7 @@ object PermissionUtilADM extends LazyLogging {
 
             permissionType match {
               case PermissionType.AP =>
-                if (!OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations.contains(abbreviation)) {
+                if (AdministrativePermission.fromToken(abbreviation).isEmpty) {
                   throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                 }
 
@@ -388,31 +389,32 @@ object PermissionUtilADM extends LazyLogging {
    */
   def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionADM] =
     name match {
-      case OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission =>
-        Set(PermissionADM.ProjectResourceCreateAllPermission)
+      case AdministrativePermission.ProjectResourceCreateAll.token =>
+        Set(PermissionADM.from(AdministrativePermission.ProjectResourceCreateAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission =>
+      case AdministrativePermission.ProjectResourceCreateRestricted.token =>
         if (iris.nonEmpty) {
           logger.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
-          iris.map(iri => PermissionADM.projectResourceCreateRestrictedPermission(iri))
+          iris.map(iri => PermissionADM.from(AdministrativePermission.ProjectResourceCreateRestricted, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminAllPermission => Set(PermissionADM.ProjectAdminAllPermission)
+      case AdministrativePermission.ProjectAdminAll.token =>
+        Set(PermissionADM.from(AdministrativePermission.ProjectAdminAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminGroupAllPermission =>
-        Set(PermissionADM.ProjectAdminGroupAllPermission)
+      case AdministrativePermission.ProjectAdminGroupAll.token =>
+        Set(PermissionADM.from(AdministrativePermission.ProjectAdminGroupAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminGroupRestrictedPermission =>
+      case AdministrativePermission.ProjectAdminGroupRestricted.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.projectAdminGroupRestrictedPermission(iri))
+          iris.map(PermissionADM.from(AdministrativePermission.ProjectAdminGroupRestricted, _))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission =>
-        Set(PermissionADM.ProjectAdminRightsAllPermission)
+      case AdministrativePermission.ProjectAdminRightsAll.token =>
+        Set(PermissionADM.from(AdministrativePermission.ProjectAdminRightsAll))
 
       case ObjectAccessPermission.ChangeRights.token =>
         if (iris.nonEmpty) {
@@ -458,34 +460,6 @@ object PermissionUtilADM extends LazyLogging {
    */
   def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] =
     permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
-
-  /**
-   * Helper method used to remove lesser permissions, i.e. permissions which are already given by
-   * the highest permission.
-   *
-   * @param permissions    a set of permissions possibly containing lesser permissions.
-   * @param permissionType the type of permissions.
-   * @return a set of permissions without possible lesser permissions.
-   */
-  def removeLesserPermissions(permissions: Set[PermissionADM], permissionType: PermissionType): Set[PermissionADM] =
-    permissionType match {
-      case PermissionType.OAP =>
-        if (permissions.nonEmpty) {
-          /* Handling object access permissions which always have 'additionalInformation' and 'permissionCode' set */
-          permissions
-            .groupBy(_.additionalInformation)
-            .map { case (_, perms) =>
-              // sort in descending order and then take the first one (the highest permission)
-              perms.toArray.sortWith(_.permissionCode.get > _.permissionCode.get).head
-            }
-            .toSet
-        } else {
-          Set.empty[PermissionADM]
-        }
-
-      case PermissionType.AP   => ???
-      case PermissionType.DOAP => ???
-    }
 
   /**
    * Helper method used to transform a set of permissions into a permissions string ready to be written into the
