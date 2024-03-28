@@ -7,7 +7,7 @@ package org.knora.webapi.routing
 
 import org.apache.pekko
 import pdi.jwt.JwtAlgorithm
-import pdi.jwt.JwtSprayJson
+import pdi.jwt.JwtZIOJson
 import spray.json.JsString
 import zio.ZIO
 
@@ -45,7 +45,7 @@ class JwtServiceSpec extends CoreSpec with ImplicitSender {
     def createTokenAndExtractAudience(user: User) = for {
       token     <- ZIO.serviceWithZIO[JwtService](_.createJwt(user))
       jwtConfig <- ZIO.service[JwtConfig]
-      decoded    = JwtSprayJson.decodeAll(token.jwtString, jwtConfig.secret, Seq(JwtAlgorithm.HS256))
+      decoded    = JwtZIOJson.decodeAll(token.jwtString, jwtConfig.secret, Seq(JwtAlgorithm.HS256))
       audience   = decoded.toOption.flatMap { case (_, claims, _) => claims.audience }.head
     } yield audience
 
