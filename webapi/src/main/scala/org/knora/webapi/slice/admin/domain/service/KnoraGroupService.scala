@@ -12,6 +12,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 
 case class KnoraGroupService(knoraGroupRepo: KnoraGroupRepo) {
+  def findAll: Task[List[KnoraGroup]] = knoraGroupRepo.findAll()
 
   def findById(id: GroupIri): Task[Option[KnoraGroup]] = knoraGroupRepo.findById(id)
 
