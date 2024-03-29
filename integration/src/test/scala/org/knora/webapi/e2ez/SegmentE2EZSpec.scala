@@ -241,8 +241,9 @@ object SegmentE2EZSpec extends E2EZSpec {
     }
 
   // private val audioSegmentWithSubclasses =
-  //   suite("Segments using subcalsses of knora-base classes")(
-  //   )
+  //   suiteAll("Create an Audio Segment using subclasses of knora-base classes") {
+  //     TODO: implement this
+  //   }
 
   override def e2eSpec: Spec[env, Any] =
     suite("SegmentE2EZSpec")(
