@@ -21,6 +21,8 @@ import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Simple
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.RdfFormatUtil
+import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
@@ -46,8 +48,8 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     fileBasename: String,
     clientTestDataBasename: Option[String] = None,
   ) {
-    private def makeFile(): Path =
-      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.jsonld")
+    private def makeFile(fileEnding: String = "jsonld"): Path =
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
 
     /**
      * If `maybeClientTestDataBasename` is defined, stores the response string in [[org.knora.webapi.e2e.ClientTestDataCollector]].
@@ -57,6 +59,15 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         case Some(clientTestDataBasename) => CollectClientTestData(clientTestDataBasename, responseStr)
         case None                         => ()
       }
+
+    def storeAsTtl = {
+      val jsonStr = readFile()
+      val model   = parseJsonLd(jsonStr)
+      val ttlStr  = RdfFormatUtil.format(model, Turtle)
+      val newFile = makeFile("ttl")
+      Files.createDirectories(newFile.getParent)
+      FileUtil.writeTextFile(newFile, ttlStr)
+    }
 
     /**
      * Reads the expected response file.
@@ -202,7 +213,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         fileBasename = "anythingOntologySimple",
       )
 
-    private val anythingOntologyComplex =
+    val anythingOntologyComplex: HttpGetTest =
       HttpGetTest(
         urlPath =
           s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",
@@ -324,6 +335,10 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       )
       val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`application/rdf+xml`)
       assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
+    }
+
+    "explicitely generate test data in other formats" in {
+      TestCases.anythingOntologyComplex.storeAsTtl
     }
   }
 }
