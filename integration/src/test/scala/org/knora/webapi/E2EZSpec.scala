@@ -106,6 +106,9 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       token  <- ZIO.fromOption(result.get("token")).orElseFail("No token in response")
     } yield token
 
+  def getRootToken: ZIO[env, String, String] =
+    getToken("root@example.com", "test")
+
   def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
 
 }

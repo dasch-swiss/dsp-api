@@ -63,7 +63,7 @@ object SegmentE2EZSpec extends E2EZSpec {
              |}
              |""".stripMargin
         for {
-          token       <- getToken("root@example.com", "test")
+          token       <- getRootToken
           responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
           response <-
             ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
@@ -78,7 +78,7 @@ object SegmentE2EZSpec extends E2EZSpec {
 
       test("Get the created instance of `knora-base:VideoSegment`") {
         for {
-          token       <- getToken("root@example.com", "test")
+          token       <- getRootToken
           responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(videoSegmentIri)}", Some(token))
           response <-
             ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.VideoSegmentResourceResponse])
