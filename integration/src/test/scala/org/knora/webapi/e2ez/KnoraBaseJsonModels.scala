@@ -129,5 +129,25 @@ object KnoraBaseJsonModels {
     object VideoSegmentResourceResponse {
       implicit val codec: JsonCodec[VideoSegmentResourceResponse] = DeriveJsonCodec.gen[VideoSegmentResourceResponse]
     }
+
+    final case class AudioSegmentResourceResponse(
+      `@id`: String,
+      `@type`: String,
+      `rdfs:label`: String,
+      // `knora-api:isAudioSegmentOf`: AnyUri, // TODO: Why is this not set? Should it be?
+      `knora-api:isAudioSegmentOfValue`: LinkValue,
+      `knora-api:hasSegmentBounds`: IntervalValue,
+      `knora-api:hasComment`: TextValue,
+      `knora-api:attachedToProject`: InternalIri,
+      `knora-api:attachedToUser`: InternalIri,
+      `knora-api:hasPermissions`: String,
+      `knora-api:userHasPermission`: String,
+      `knora-api:arkUrl`: AnyUri,
+      `knora-api:versionArkUrl`: AnyUri,
+      `@context`: Map[String, String],
+    )
+    object AudioSegmentResourceResponse {
+      implicit val codec: JsonCodec[AudioSegmentResourceResponse] = DeriveJsonCodec.gen[AudioSegmentResourceResponse]
+    }
   }
 }

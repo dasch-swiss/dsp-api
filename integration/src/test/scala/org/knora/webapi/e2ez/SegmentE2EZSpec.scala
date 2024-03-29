@@ -24,6 +24,7 @@ object SegmentE2EZSpec extends E2EZSpec {
   private val videoSegmentWithoutSubclasses =
     suiteAll("Create a Video Segment using knora-base classes directly") {
       var videoSegmentIri: String = ""
+
       test("Create an instance of `knora-base:VideoSegment`") {
         val createPayload =
           """|{
@@ -165,8 +166,79 @@ object SegmentE2EZSpec extends E2EZSpec {
   //   }
 
   private val audioSegmentWithoutSubclasses =
-    suite("Create an Audio Segment using knora-base classes directly")(
-    )
+    suiteAll("Create an Audio Segment using knora-base classes directly") {
+      var audioSegmentIri: String = ""
+
+      test("Create an instance of `knora-base:AudioSegment`") {
+        val createPayload =
+          """|{
+             |  "@type": "knora-api:AudioSegment",
+             |  "knora-api:hasComment": {
+             |    "@type": "knora-api:TextValue",
+             |    "knora-api:valueAsString": "This is a test audio segment."
+             |  },
+             |  "knora-api:hasSegmentBounds": {
+             |    "@type": "knora-api:IntervalValue",
+             |    "knora-api:intervalValueHasStart" : {
+             |      "@type" : "xsd:decimal",
+             |      "@value" : "1.0"
+             |    },
+             |    "knora-api:intervalValueHasEnd" : {
+             |      "@type" : "xsd:decimal",
+             |      "@value" : "3.0"
+             |    }
+             |  },
+             |  "knora-api:isAudioSegmentOfValue": {
+             |    "@type": "knora-api:LinkValue",
+             |    "knora-api:linkValueHasTargetIri": {
+             |      "@id": "http://rdfh.ch/0001/gT2msR9wS-CeLWXaj3N2aA"
+             |    }
+             |  },
+             |  "rdfs:label": "Test Audio Segment",
+             |  "knora-api:attachedToProject": {
+             |    "@id": "http://rdfh.ch/projects/0001"
+             |  },
+             |  "@context": {
+             |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+             |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+             |  }
+             |}
+             |""".stripMargin
+        for {
+          token       <- getRootToken
+          responseStr <- sendPostRequestStringOrFail("/v2/resources", createPayload, Some(token))
+          response <-
+            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse])
+          _ = audioSegmentIri = response.`@id`
+        } yield assertTrue(
+          response.`@type` == "knora-api:AudioSegment",
+          response.`rdfs:label` == "Test Audio Segment",
+          response.`knora-api:attachedToProject`.`@id` == "http://rdfh.ch/projects/0001",
+          response.`knora-api:attachedToUser`.`@id` == "http://rdfh.ch/users/root",
+        )
+      }
+
+      test("Get the created instance of `knora-base:AudioSegment`") {
+        for {
+          token       <- getRootToken
+          responseStr <- sendGetRequestStringOrFail(s"/v2/resources/${urlEncode(audioSegmentIri)}", Some(token))
+          response <-
+            ZIO.fromEither(responseStr.fromJson[KnoraBaseJsonModels.ResourceResponses.AudioSegmentResourceResponse])
+        } yield assertTrue(
+          response.`@type` == "knora-api:AudioSegment",
+          response.`rdfs:label` == "Test Audio Segment",
+          response.`knora-api:attachedToProject`.`@id` == "http://rdfh.ch/projects/0001",
+          response.`knora-api:attachedToUser`.`@id` == "http://rdfh.ch/users/root",
+          response.`knora-api:hasComment`.`knora-api:valueAsString` == "This is a test audio segment.",
+          BigDecimal(response.`knora-api:hasSegmentBounds`.`knora-api:intervalValueHasStart`.`@value`) == 1.0,
+          BigDecimal(response.`knora-api:hasSegmentBounds`.`knora-api:intervalValueHasEnd`.`@value`) == 3.0,
+          response.`knora-api:isAudioSegmentOfValue`.`knora-api:linkValueHasTarget`.`@id` == "http://rdfh.ch/0001/gT2msR9wS-CeLWXaj3N2aA",
+        )
+      }
+    }
 
   // private val audioSegmentWithSubclasses =
   //   suite("Segments using subcalsses of knora-base classes")(
