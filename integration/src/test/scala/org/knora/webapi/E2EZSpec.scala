@@ -49,7 +49,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       urlFull  <- ZIO.fromEither(URL.decode(urlStr)).orDie
       _        <- ZIO.logDebug(s"GET   ${urlFull.encode}")
       bearer    = token.map(Header.Authorization.Bearer(_)).toList
-      response <- client.url(urlFull).addHeaders(Headers(bearer)).get("/").orDie
+      response <- client.url(urlFull).addHeaders(Headers(bearer)).get("").orDie
     } yield response
 
   def sendGetRequestStringOrFail(url: String, token: Option[String] = None): ZIO[env, String, String] =
@@ -105,5 +105,7 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
       result <- ZIO.fromEither(response.fromJson[Map[String, String]])
       token  <- ZIO.fromOption(result.get("token")).orElseFail("No token in response")
     } yield token
+
+  def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
 
 }
