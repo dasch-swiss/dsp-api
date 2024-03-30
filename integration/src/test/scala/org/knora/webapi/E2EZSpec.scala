@@ -8,6 +8,8 @@ package org.knora.webapi
 import zio._
 import zio.http._
 import zio.json._
+import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 import zio.test._
 
 import org.knora.webapi.core.AppServer
@@ -110,5 +112,14 @@ abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
     getToken("root@example.com", "test")
 
   def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
+
+  def getOntologyLastModificationDate(ontlogyIri: String): ZIO[env, String, String] = {
+    val cursor = JsonCursor.field("knora-api:lastModificationDate").isObject.field("@value").isString
+    for {
+      responseStr <- sendGetRequestStringOrFail(s"/v2/ontologies/allentities/${urlEncode(ontlogyIri)}")
+      responseAst <- ZIO.fromEither(responseStr.fromJson[Json])
+      lmd         <- ZIO.fromEither(responseAst.get(cursor))
+    } yield lmd.value
+  }
 
 }
