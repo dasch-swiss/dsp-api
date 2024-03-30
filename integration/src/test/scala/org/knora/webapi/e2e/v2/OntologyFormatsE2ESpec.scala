@@ -47,6 +47,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
     urlPath: String,
     fileBasename: String,
     clientTestDataBasename: Option[String] = None,
+    persistTtl: Boolean = false,
   ) {
     private def makeFile(fileEnding: String = "jsonld"): Path =
       Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileEnding")
@@ -86,6 +87,9 @@ class OntologyFormatsE2ESpec extends E2ESpec {
 
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile, responseStr)
+
+      if (persistTtl) storeAsTtl
+
       ()
     }
   }
@@ -219,6 +223,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
           s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",
         fileBasename = "anythingOntologyWithValueObjects",
         clientTestDataBasename = Some("anything-ontology"),
+        persistTtl = true,
       )
 
     private val anythingThingWithAllLanguages =
@@ -335,10 +340,6 @@ class OntologyFormatsE2ESpec extends E2ESpec {
       )
       val knoraApiResponseRdfXml = getResponse(s"/ontology/knora-api/v2", RdfMediaTypes.`application/rdf+xml`)
       assert(parseRdfXml(ontologyAllEntitiesResponseRdfXml) == parseRdfXml(knoraApiResponseRdfXml))
-    }
-
-    "explicitely generate test data in other formats" in {
-      TestCases.anythingOntologyComplex.storeAsTtl
     }
   }
 }
