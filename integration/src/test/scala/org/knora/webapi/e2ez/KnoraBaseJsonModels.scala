@@ -80,7 +80,7 @@ object KnoraBaseJsonModels {
       `@id`: String,
       `@type`: String = "knora-api:TextValue",
       `knora-api:valueHasUUID`: String,
-      `knora-api:valueAsString`: String, // LATER: could be XML, HTML, etc.
+      `knora-api:valueAsString`: String, // Note: not yet complete, could also be XML, HTML, etc.
       `knora-api:attachedToUser`: InternalIri,
       `knora-api:valueCreationDate`: DateTimeStamp,
       `knora-api:hasPermissions`: String,
@@ -114,7 +114,6 @@ object KnoraBaseJsonModels {
       `@id`: String,
       `@type`: String,
       `rdfs:label`: String,
-      // `knora-api:isVideoSegmentOf`: AnyUri, // TODO: Why is this not set? Should it be?
       `knora-api:isVideoSegmentOfValue`: LinkValue,
       `knora-api:hasSegmentBounds`: IntervalValue,
       `knora-api:hasComment`: TextValue,
@@ -134,7 +133,6 @@ object KnoraBaseJsonModels {
       `@id`: String,
       `@type`: String,
       `rdfs:label`: String,
-      // `knora-api:isAudioSegmentOf`: AnyUri, // TODO: Why is this not set? Should it be?
       `knora-api:isAudioSegmentOfValue`: LinkValue,
       `knora-api:hasSegmentBounds`: IntervalValue,
       `knora-api:hasComment`: TextValue,
