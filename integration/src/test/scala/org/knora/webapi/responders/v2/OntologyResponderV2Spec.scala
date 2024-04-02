@@ -92,7 +92,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
   private val AnythingOntologyIri          = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
   private val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
-  private val printErrorMessages           = false
   private var fooLastModDate: Instant      = Instant.now
   private var barLastModDate: Instant      = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
@@ -137,7 +136,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -371,7 +369,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -385,7 +382,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -399,7 +395,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -460,7 +455,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       expectMsgPF(timeout) { case msg: Failure =>
         val cause: Throwable = msg.cause
         val errorMsg: String = cause.getMessage
-        if (printErrorMessages) println(errorMsg)
         cause.isInstanceOf[BadRequestException] should ===(true)
 
         val expectedSubjects = Set(
@@ -484,7 +478,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -500,7 +493,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -516,7 +508,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -532,7 +523,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -548,7 +538,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -564,7 +553,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -580,7 +568,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -596,7 +583,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -613,7 +599,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -628,7 +613,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -715,7 +699,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -1192,7 +1175,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1241,7 +1223,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1290,7 +1271,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1339,7 +1319,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1388,7 +1367,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1440,7 +1418,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1489,7 +1466,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1542,7 +1518,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1591,7 +1566,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1640,7 +1614,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1689,7 +1662,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1738,7 +1710,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1787,7 +1758,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1836,7 +1806,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1885,7 +1854,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1934,7 +1902,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1983,7 +1950,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -2033,7 +1999,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -2059,7 +2024,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -2158,7 +2122,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -2480,7 +2443,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -2520,7 +2482,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3409,7 +3370,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3449,7 +3409,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3489,7 +3448,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3529,7 +3487,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3571,7 +3528,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -3612,7 +3568,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3706,7 +3661,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -3723,7 +3677,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -3769,14 +3722,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! linkPropGetRequest
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       appActor ! linkValuePropGetRequest
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
@@ -3786,14 +3737,12 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! linkPropGetRequest
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       appActor ! linkValuePropGetRequest
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
@@ -4020,7 +3969,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4060,7 +4008,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4468,7 +4415,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4809,7 +4755,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4846,7 +4791,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4874,7 +4818,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -4932,7 +4875,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
@@ -4948,7 +4890,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -5045,7 +4986,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -5083,7 +5023,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -5128,7 +5067,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -5177,7 +5115,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -5222,7 +5159,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -6503,175 +6439,5 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         assert(readClassInfo.inheritedCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
       }
     }
-
-    "create the class anything:DifferentVideoSequenceThing with a isSequenceOf relation to anything:VideoThing" in {
-
-      val videoThingIri = AnythingOntologyIri.makeEntityIri("VideoThing")
-
-      // Create sequence class
-      val sequenceClassIri = AnythingOntologyIri.makeEntityIri("DifferentVideoSequenceThing")
-      val sequenceClassInfoContent = ClassInfoContentV2(
-        classIri = sequenceClassIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri)),
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("Different Video Sequence Thing", Some("en"))),
-          ),
-        ),
-        subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
-        ontologySchema = ApiV2Complex,
-      )
-
-      appActor ! CreateClassRequestV2(
-        classInfoContent = sequenceClassInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val metadata         = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        anythingLastModDate = newAnythingLastModDate
-      }
-
-      // Create property sequenceOf
-      val sequenceOfPropertyIri = AnythingOntologyIri.makeEntityIri("sequenceOf")
-      val sequenceOfPropertyInfoContent = PropertyInfoContentV2(
-        propertyIri = sequenceOfPropertyIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(sequenceClassIri)),
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(videoThingIri)),
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("is sequence of", Some("en"))),
-          ),
-          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri)),
-          ),
-        ),
-        subPropertyOf = Set(OntologyConstants.KnoraBase.IsSequenceOf.toSmartIri),
-        ontologySchema = ApiV2Complex,
-      )
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = sequenceOfPropertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(sequenceOfPropertyIri)
-        // check that sequenceOf is a subproperty of knora-api:isSequenceOf
-        property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsSequenceOf.toSmartIri,
-        ) should ===(true)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
-
-      // Check that the corresponding sequenceOfValue was created
-      val sequenceOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("sequenceOfValue")
-      val sequenceOfValuePropGetRequest = PropertiesGetRequestV2(
-        propertyIris = Set(sequenceOfValuePropertyIri),
-        allLanguages = true,
-        requestingUser = anythingAdminUser,
-      )
-      appActor ! sequenceOfValuePropGetRequest
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(sequenceOfValuePropertyIri)
-        // check that sequenceOfValue is a subproperty of knora-api:isSequenceOfValue
-        property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue.toSmartIri,
-        ) should ===(true)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        anythingLastModDate = newAnythingLastModDate
-      }
-
-      // Create property sequenceBounds
-      val sequenceBoundsPropertyIri = AnythingOntologyIri.makeEntityIri("sequenceBounds")
-      val sequenceBoundsPropertyInfoContent = PropertyInfoContentV2(
-        propertyIri = sequenceBoundsPropertyIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri)),
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(sequenceClassIri)),
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.IntervalValue.toSmartIri)),
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2.from("has sequence bounds", Some("en"))),
-          ),
-          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Interval".toSmartIri)),
-          ),
-        ),
-        subPropertyOf = Set(OntologyConstants.KnoraBase.HasSequenceBounds.toSmartIri),
-        ontologySchema = ApiV2Complex,
-      )
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = sequenceBoundsPropertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser,
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(sequenceBoundsPropertyIri)
-        // check that sequenceBounds is a subproperty of knora-api:hasSequenceBounds
-        property.entityInfoContent.subPropertyOf.contains(
-          OntologyConstants.KnoraApiV2Complex.HasSequenceBounds.toSmartIri,
-        ) should ===(true)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
-          throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
-        )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
-    }
-
   }
 }

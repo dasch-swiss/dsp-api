@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
-import pdi.jwt.JwtSprayJson
+import pdi.jwt.JwtZIOJson
 import spray.json.JsObject
 import spray.json.JsValue
 import zio.Clock
@@ -113,7 +113,7 @@ final case class JwtServiceLive(
                 expiration = Some(exp.getEpochSecond),
                 jwtId = Some(UuidUtil.base64Encode(uuid)),
               ).toJson
-    } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
+    } yield Jwt(JwtZIOJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -148,7 +148,7 @@ final case class JwtServiceLive(
    * @return the token's header and claim, or `None` if the token is invalid.
    */
   private def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
-    JwtSprayJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256)) match {
+    JwtZIOJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,
@@ -167,8 +167,8 @@ final case class JwtServiceLive(
           None
         }
 
-      case Failure(_) =>
-        logger.debug("Invalid JWT")
+      case Failure(f) =>
+        logger.debug(s"Invalid JWT: $f")
         None
     }
 }

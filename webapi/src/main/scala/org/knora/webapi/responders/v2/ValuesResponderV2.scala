@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
@@ -177,7 +178,7 @@ final case class ValuesResponderV2Live(
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
                resourceInfo = resourceInfo,
-               permissionNeeded = ModifyPermission,
+               permissionNeeded = Permission.ObjectAccess.Modify,
                requestingUser = requestingUser,
              )
 
@@ -1014,7 +1015,7 @@ final case class ValuesResponderV2Live(
         // Validate and reformat the submitted permissions.
         newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValuePermissionsV2.permissions)
 
-        // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
+        // Check that the user has Permission.ObjectAccess.ChangeRights on the value, and that the new permissions are
         // different from the current ones.
         currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
         newPermissionsParsed <-
@@ -1032,7 +1033,7 @@ final case class ValuesResponderV2Live(
         _ <- resourceUtilV2.checkValuePermission(
                resourceInfo = resourceInfo,
                valueInfo = currentValue,
-               permissionNeeded = ChangeRightsPermission,
+               permissionNeeded = Permission.ObjectAccess.ChangeRights,
                requestingUser = requestingUser,
              )
 
@@ -1102,7 +1103,7 @@ final case class ValuesResponderV2Live(
           }
 
         // Check that the user has permission to do the update. If they want to change the permissions
-        // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
+        // on the value, they need Permission.ObjectAccess.ChangeRights, otherwise they need Permission.ObjectAccess.Modify.
         currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
         newPermissionsParsed <-
           ZIO.attempt(
@@ -1113,8 +1114,8 @@ final case class ValuesResponderV2Live(
           )
 
         permissionNeeded =
-          if (newPermissionsParsed != currentPermissionsParsed) { ChangeRightsPermission }
-          else { ModifyPermission }
+          if (newPermissionsParsed != currentPermissionsParsed) { Permission.ObjectAccess.ChangeRights }
+          else { Permission.ObjectAccess.Modify }
 
         _ <- resourceUtilV2.checkValuePermission(
                resourceInfo = resourceInfo,
@@ -1172,7 +1173,7 @@ final case class ValuesResponderV2Live(
                  // check that the user has permission to modify the resource.
                  resourceUtilV2.checkResourcePermission(
                    resourceInfo = resourceInfo,
-                   permissionNeeded = ModifyPermission,
+                   permissionNeeded = Permission.ObjectAccess.Modify,
                    requestingUser = requestingUser,
                  )
 
@@ -1596,7 +1597,7 @@ final case class ValuesResponderV2Live(
         _ <- resourceUtilV2.checkValuePermission(
                resourceInfo = resourceInfo,
                valueInfo = currentValue,
-               permissionNeeded = DeletePermission,
+               permissionNeeded = Permission.ObjectAccess.Delete,
                requestingUser,
              )
 
@@ -2379,8 +2380,8 @@ final case class ValuesResponderV2Live(
    */
   private lazy val standoffLinkValuePermissions: String = {
     val permissions: Set[PermissionADM] = Set(
-      PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
-      PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser),
+      PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.SystemUser),
+      PermissionADM.from(Permission.ObjectAccess.View, OntologyConstants.KnoraAdmin.UnknownUser),
     )
 
     PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

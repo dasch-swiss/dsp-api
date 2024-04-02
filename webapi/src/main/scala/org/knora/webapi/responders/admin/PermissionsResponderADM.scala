@@ -20,13 +20,11 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
@@ -40,6 +38,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -103,7 +102,7 @@ trait PermissionsResponderADM {
    * Delete a permission.
    *
    * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param requestingUser the [[User]] of the requesting user.
    * @param apiRequestID   the API request ID.
    * @return [[PermissionDeleteResponseADM]].
    *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
@@ -708,8 +707,29 @@ final case class PermissionsResponderADMLive(
       GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
     }
 
-    PermissionsMessagesUtilADM.verifyHasPermissionsAP(req.hasPermissions)
+    verifyHasPermissionsAP(req.hasPermissions)
+
   }.unit
+
+  /**
+   * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
+   * This method validates the content of hasPermissions collection by only keeping the values of name params.
+   * @param hasPermissions       Set of the permissions.
+   */
+  private def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] =
+    hasPermissions
+      .map(_.name)
+      .map { name =>
+        Permission.Administrative
+          .fromToken(name)
+          .getOrElse(
+            throw BadRequestException(
+              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " + s"${Permission.Administrative.allTokens
+                  .mkString(", ")}",
+            ),
+          )
+      }
+      .map(PermissionADM.from)
 
   override def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
@@ -1419,7 +1439,7 @@ final case class PermissionsResponderADMLive(
       _ =
         if (permissionsListBuffer.isEmpty) {
           val defaultFallbackPermission = Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+            PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
         } else {
@@ -1624,16 +1644,16 @@ final case class PermissionsResponderADMLive(
     validateDOAPHasPermissions(hasPermissions)
     hasPermissions.map { permission =>
       val code: Int = permission.permissionCode match {
-        case None       => PermissionTypeAndCodes(permission.name)
+        case None       => Permission.ObjectAccess.codeByToken(permission.name)
         case Some(code) => code
       }
-      val name = permission.name.isEmpty match {
-        case true =>
-          val nameCodeSet: Option[(String, Int)] = PermissionTypeAndCodes.find { case (_, code) =>
-            code == permission.permissionCode.get
-          }
-          nameCodeSet.get._1
-        case false => permission.name
+      val name = if (permission.name.isEmpty) {
+        val nameCodeSet: Option[(String, Int)] = Permission.ObjectAccess.codeByToken.find { case (_, code) =>
+          code == permission.permissionCode.get
+        }
+        nameCodeSet.get._1
+      } else {
+        permission.name
       }
       PermissionADM(
         name = name,
@@ -1653,17 +1673,17 @@ final case class PermissionsResponderADMLive(
       if (permission.additionalInformation.isEmpty) {
         throw BadRequestException(s"additionalInformation of a default object access permission type cannot be empty.")
       }
-      if (permission.name.nonEmpty && !EntityPermissionAbbreviations.contains(permission.name))
+      if (permission.name.nonEmpty && !Permission.ObjectAccess.allTokens(permission.name))
         throw BadRequestException(
           s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
-            s"${EntityPermissionAbbreviations.toString}",
+            s"${Permission.ObjectAccess.allTokens.mkString(", ")}",
         )
       if (permission.permissionCode.nonEmpty) {
         val code = permission.permissionCode.get
-        if (!PermissionTypeAndCodes.values.toSet.contains(code)) {
+        if (Permission.ObjectAccess.from(code).isEmpty) {
           throw BadRequestException(
             s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-              s"${PermissionTypeAndCodes.values.toString}",
+              s"${Permission.ObjectAccess.allCodes.mkString(", ")}",
           )
         }
       }
@@ -1674,7 +1694,7 @@ final case class PermissionsResponderADMLive(
       }
       if (permission.permissionCode.nonEmpty && permission.name.nonEmpty) {
         val code = permission.permissionCode.get
-        if (PermissionTypeAndCodes(permission.name) != code) {
+        if (!Permission.ObjectAccess.fromToken(permission.name).map(_.code).contains(code)) {
           throw BadRequestException(
             s"Given permission code $code and permission name ${permission.name} are not consistent.",
           )
@@ -1818,7 +1838,7 @@ final case class PermissionsResponderADMLive(
                       case ap: AdministrativePermissionADM =>
                         // Yes.
                         val verifiedPermissions =
-                          PermissionsMessagesUtilADM.verifyHasPermissionsAP(newHasPermissions.toSet)
+                          verifyHasPermissionsAP(newHasPermissions.toSet)
                         for {
                           formattedPermissions <-
                             ZIO.attempt(
@@ -2217,8 +2237,10 @@ final case class PermissionsResponderADMLive(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
-               hasPermissions =
-                 Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission),
+               hasPermissions = Set(
+                 PermissionADM.from(Permission.Administrative.ProjectAdminAll),
+                 PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
+               ),
              ),
              SystemUser,
              UUID.randomUUID(),
@@ -2229,7 +2251,7 @@ final case class PermissionsResponderADMLive(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
                forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-               hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission),
+               hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
              ),
              SystemUser,
              UUID.randomUUID(),
@@ -2242,8 +2264,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
                hasPermissions = Set(
-                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,
@@ -2257,8 +2279,8 @@ final case class PermissionsResponderADMLive(
                forProject = projectIri.value,
                forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                hasPermissions = Set(
-                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
                ),
              ),
              SystemUser,
