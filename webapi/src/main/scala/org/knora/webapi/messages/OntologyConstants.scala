@@ -369,21 +369,6 @@ object OntologyConstants {
     val PermissionListDelimiter: Char = '|'
     val GroupListDelimiter: Char      = ','
 
-    val RestrictedViewPermission: String = "RV"
-    val ViewPermission: String           = "V"
-    val ModifyPermission: String         = "M"
-    val DeletePermission: String         = "D"
-    val ChangeRightsPermission: String   = "CR"
-    val MaxPermission: String            = ChangeRightsPermission
-
-    val EntityPermissionAbbreviations: Seq[String] = Seq(
-      RestrictedViewPermission,
-      ViewPermission,
-      ModifyPermission,
-      DeletePermission,
-      ChangeRightsPermission,
-    )
-
     /* Standoff */
 
     val StandoffTag: IRI                 = KnoraBasePrefixExpansion + "StandoffTag"
@@ -516,22 +501,6 @@ object OntologyConstants {
     val ForGroup: IRI                      = KnoraAdminPrefixExpansion + "forGroup"
     val ForResourceClass: IRI              = KnoraAdminPrefixExpansion + "forResourceClass"
     val ForProperty: IRI                   = KnoraAdminPrefixExpansion + "forProperty"
-
-    val ProjectResourceCreateAllPermission: String        = "ProjectResourceCreateAllPermission"
-    val ProjectResourceCreateRestrictedPermission: String = "ProjectResourceCreateRestrictedPermission"
-    val ProjectAdminAllPermission: String                 = "ProjectAdminAllPermission"
-    val ProjectAdminGroupAllPermission: String            = "ProjectAdminGroupAllPermission"
-    val ProjectAdminGroupRestrictedPermission: String     = "ProjectAdminGroupRestrictedPermission"
-    val ProjectAdminRightsAllPermission: String           = "ProjectAdminRightsAllPermission"
-
-    val AdministrativePermissionAbbreviations: Seq[String] = Seq(
-      ProjectResourceCreateAllPermission,
-      ProjectResourceCreateRestrictedPermission,
-      ProjectAdminAllPermission,
-      ProjectAdminGroupAllPermission,
-      ProjectAdminGroupRestrictedPermission,
-      ProjectAdminRightsAllPermission,
-    )
 
     val HasDefaultRestrictedViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultRestrictedViewPermission"
     val HasDefaultViewPermission: IRI           = KnoraAdminPrefixExpansion + "hasDefaultViewPermission"

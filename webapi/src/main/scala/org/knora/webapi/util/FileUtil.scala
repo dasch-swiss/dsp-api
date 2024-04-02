@@ -46,10 +46,7 @@ object FileUtil {
    * @return the contents of the file.
    */
   def readTextFile(file: Path): String = {
-    // TODO: provide apt error handling
-
     val source = Source.fromFile(file.toFile)(Codec.UTF8)
-
     try {
       source.mkString
     } finally {

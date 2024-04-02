@@ -80,13 +80,9 @@ class HealthRouteE2ESpec extends E2ESpec {
           .getOrThrow()
       }
 
-      // appActor ! SetAppState(AppState.Stopped)
-
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
-
-      logger.debug(response.toString())
 
       response.status should be(StatusCodes.ServiceUnavailable)
 
@@ -117,8 +113,6 @@ class HealthRouteE2ESpec extends E2ESpec {
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String    = responseToString(response)
-
-      logger.debug(response.toString())
 
       response.status should be(StatusCodes.ServiceUnavailable)
 

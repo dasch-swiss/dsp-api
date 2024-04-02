@@ -63,8 +63,6 @@ nav:
               - 0008 Replace Akka with Pekko: 05-internals/design/adr/ADR-0008-replace-akka-with-pekko.md
           - DSP-API Design Principles:
               - Design Overview: 05-internals/design/principles/design-overview.md
-              - Futures with Pekko: 05-internals/design/principles/futures-with-pekko.md
-              - HTTP Module: 05-internals/design/principles/http-module.md
               - Store Module: 05-internals/design/principles/store-module.md
               - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
               - Consistency Checking: 05-internals/design/principles/consistency-checking.md
