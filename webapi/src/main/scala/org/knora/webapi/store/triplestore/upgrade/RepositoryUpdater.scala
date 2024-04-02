@@ -8,6 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 import zio._
+import zio.json._
 
 import java.io.File
 import java.nio.file.Files
@@ -37,6 +38,106 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   private val log: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
 
   private val tmpDirNamePrefix: String = "knora"
+
+  private case class RepoUpdateMetric(
+    triples: Int,
+    graphs: Int,
+    durationSeconds: Double,
+  )
+  private object RepoUpdateMetric {
+    implicit val codec: JsonCodec[RepoUpdateMetric] = DeriveJsonCodec.gen[RepoUpdateMetric]
+  }
+
+  private case class RepoUpdateMetrics(metrics: List[RepoUpdateMetric])
+  private object RepoUpdateMetrics {
+    implicit val codec: JsonCodec[RepoUpdateMetrics] = DeriveJsonCodec.gen[RepoUpdateMetrics]
+
+    def make: RepoUpdateMetrics = RepoUpdateMetrics(List())
+  }
+
+  def getMigrationMetrics: Task[Unit] =
+    for {
+      durationState <- Ref.make(RepoUpdateMetrics.make)
+      graphs        <- getDataGraphs.debug("Data graphs")
+      _             <- Clock.nanoTime
+      _ <- ZIO.foreachDiscard(graphs) { graph =>
+             for {
+               _      <- triplestoreService.dropGraph(graph)
+               _      <- deleteTmpDirectories()
+               metric <- doDummieMigration()
+               _      <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric))
+             } yield ()
+           }
+      metrics    <- durationState.get
+      _          <- ZIO.logInfo(s"Migration metrics: ${metrics}")
+      metricsJson = metrics.toJsonPretty
+      _ <- ZIO.logInfo(
+             s"""|Migration metrics JSON:
+                 |
+                 |${metricsJson}
+                 |
+                 |""".stripMargin,
+           )
+    } yield ()
+
+  private def getDataGraphs: Task[Seq[String]] =
+    for {
+      response <-
+        triplestoreService.query(
+          Select("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }", isGravsearch = false),
+        )
+      bindings <- ZIO.succeed(response.results.bindings)
+      graphs   <- ZIO.succeed(bindings.map(_.rowMap("g")))
+      dataGraphs = graphs.filter { graph =>
+                     val pattern = """http://www\.knora\.org/data/(.*)/.*""".r
+                     graph match {
+                       case pattern(shortcode) =>
+                         shortcode != "0000"
+                       case _ => false
+                     }
+                   }
+    } yield dataGraphs
+
+  private def doDummieMigration(): Task[RepoUpdateMetric] =
+    for {
+      triples <- getTripleCount
+      graphs  <- getGraphCount
+      _ <- ZIO.logInfo(s"""|Migration metrics:
+                           |Triples: $triples
+                           |Graphs: $graphs
+                           |""".stripMargin)
+      start   <- Clock.nanoTime
+      dir     <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
+      file    <- createEmptyFile("downloaded-repository.nq", dir)
+      _       <- triplestoreService.downloadRepository(file, MigrateAllGraphs)
+      _       <- triplestoreService.dropDataGraphByGraph()
+      _       <- triplestoreService.uploadRepository(file)
+      end     <- Clock.nanoTime
+      duration = (end - start) / 1000000.0
+    } yield RepoUpdateMetric(triples, graphs, duration)
+
+  private def createEmptyFile(filename: String, dir: Path) = ZIO.attempt {
+    val file = dir.resolve(filename)
+    Files.deleteIfExists(file)
+    Files.createFile(file)
+  }
+  private def getTripleCount: Task[Int] =
+    for {
+      response <-
+        triplestoreService.query(Select("SELECT (COUNT(*) AS ?count) WHERE { ?s ?p ?o }", isGravsearch = false))
+      bindings <- ZIO.succeed(response.results.bindings)
+      count    <- ZIO.succeed(bindings.head.rowMap("count").toInt)
+    } yield count
+
+  private def getGraphCount: Task[Int] =
+    for {
+      response <-
+        triplestoreService.query(
+          Select("SELECT (COUNT(DISTINCT ?g) AS ?count) WHERE { GRAPH ?g { ?s ?p ?o } }", isGravsearch = false),
+        )
+      bindings <- ZIO.succeed(response.results.bindings)
+      count    <- ZIO.succeed(bindings.head.rowMap("count").toInt)
+    } yield count
 
   /**
    * Updates the repository, if necessary, to work with the current version of DSP-API.
