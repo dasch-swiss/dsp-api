@@ -587,6 +587,10 @@ is part of another resource needs to have a property `kb:seqnum` or a subpropert
 client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the pages
 of a book like in [this](../01-introduction/example-project.md#resource-classes) example).
 
+#### Segment
+
+...
+
 
 ### Text with Standoff Markup
 
