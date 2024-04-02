@@ -346,7 +346,6 @@ flowchart BT
   hasColor ---> hasValue
   hasGeometry ---> hasValue
   hasComment ---> hasValue
-  hasSequenceBounds ---> hasValue 
   seqnum ---> hasValue
   hasExtResValue ---> hasValue
   hasLinkToValue ----> hasValue 
@@ -363,14 +362,12 @@ flowchart BT
   hasAnnotationOfValue ---> hasLinkToValue
   hasRepresentationValue ---> hasLinkToValue
   hasStandoffLinkToValue ---> hasLinkToValue
-  isSequenceOfValue ---> hasLinkToValue
   isRegionOfValue ---> hasLinkToValue
 
   isPartOf ---> hasLinkTo
   isAnnotationOf ---> hasLinkTo
   hasRepresentation ---> hasLinkTo
   hasStandoffLinkTo ---> hasLinkTo
-  isSequenceOf ---> hasLinkTo
   isRegionOf ---> hasLinkTo
 ```
 
@@ -565,7 +562,6 @@ flowchart LR
   subgraph Links
     hasRepresentation
     hasLinkTo
-    isSequenceOf
     hasStandoffLinkTo
     isPartOf
   end
@@ -573,7 +569,6 @@ flowchart LR
   subgraph LinkValues
     hasRepresentationValue
     hasLinkToValue
-    isSequenceOfValue
     hasStandoffLinkToValue
     isPartOfValue
   end
@@ -593,12 +588,10 @@ flowchart LR
   Resource --> hasRepresentation --> _Representation
 
   Resource --> hasLinkTo --> _Resource
-  Resource --> isSequenceOf --> _Resource
   Resource --> hasStandoffLinkTo --> _Resource
   Resource --> isPartOf --> _Resource
 
   Resource --> hasLinkToValue --> LinkValue
-  Resource --> isSequenceOfValue --> LinkValue
   Resource --> hasStandoffLinkToValue --> LinkValue
   Resource --> hasRepresentationValue --> LinkValue
   Resource --> isPartOfValue --> LinkValue
@@ -638,7 +631,6 @@ flowchart LR
   %% Relations
   na --> deletedBy --> User
   na --> seqnum --> IntValue
-  na --> hasSequenceBounds --> IntervalValue
   na --> deleteDate --> date
   na --> isDeleted --> boolean
 ```

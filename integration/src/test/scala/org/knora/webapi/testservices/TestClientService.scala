@@ -135,7 +135,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] =
     for {
-      // _        <- ZIO.debug(request)
       _ <- getResponseString(request)
     } yield ()
 
@@ -154,7 +153,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   def getResponseJsonLD(request: pekko.http.scaladsl.model.HttpRequest): Task[JsonLDDocument] =
     for {
       body <- getResponseString(request)
-      // _    <- ZIO.debug(body)
       json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
     } yield json
 
@@ -196,10 +194,9 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     }
 
     for {
-      url    <- uploadUrl(loginToken)
-      entity <- ZIO.succeed(requestEntity)
-      req    <- ZIO.succeed(request(url, entity))
-      // _            <- ZIO.debug(req)
+      url          <- uploadUrl(loginToken)
+      entity       <- ZIO.succeed(requestEntity)
+      req          <- ZIO.succeed(request(url, entity))
       response     <- doSipiRequest(req)
       sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadResponse])
     } yield sipiResponse

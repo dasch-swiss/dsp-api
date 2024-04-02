@@ -204,17 +204,20 @@ object OntologyConstants {
     val ObjectDatatypeConstraint: IRI      = KnoraBasePrefixExpansion + "objectDatatypeConstraint"
     val StandoffParentClassConstraint: IRI = KnoraBasePrefixExpansion + "standoffParentClassConstraint"
 
-    val LinkObj: IRI           = KnoraBasePrefixExpansion + "LinkObj"
-    val HasLinkTo: IRI         = KnoraBasePrefixExpansion + "hasLinkTo"
-    val HasLinkToValue: IRI    = KnoraBasePrefixExpansion + "hasLinkToValue"
-    val IsPartOf: IRI          = KnoraBasePrefixExpansion + "isPartOf"
-    val IsPartOfValue: IRI     = KnoraBasePrefixExpansion + "isPartOfValue"
-    val Seqnum: IRI            = KnoraBasePrefixExpansion + "seqnum"
-    val IsSequenceOf: IRI      = KnoraBasePrefixExpansion + "isSequenceOf"
-    val IsSequenceOfValue: IRI = KnoraBasePrefixExpansion + "isSequenceOfValue"
-    val HasSequenceBounds: IRI = KnoraBasePrefixExpansion + "hasSequenceBounds"
-    val Region: IRI            = KnoraBasePrefixExpansion + "Region"
-    val IsRegionOf: IRI        = KnoraBasePrefixExpansion + "isRegionOf"
+    val LinkObj: IRI               = KnoraBasePrefixExpansion + "LinkObj"
+    val HasLinkTo: IRI             = KnoraBasePrefixExpansion + "hasLinkTo"
+    val HasLinkToValue: IRI        = KnoraBasePrefixExpansion + "hasLinkToValue"
+    val IsPartOf: IRI              = KnoraBasePrefixExpansion + "isPartOf"
+    val IsPartOfValue: IRI         = KnoraBasePrefixExpansion + "isPartOfValue"
+    val Seqnum: IRI                = KnoraBasePrefixExpansion + "seqnum"
+    val Region: IRI                = KnoraBasePrefixExpansion + "Region"
+    val IsRegionOf: IRI            = KnoraBasePrefixExpansion + "isRegionOf"
+    val IsSegmentOf: IRI           = KnoraBasePrefixExpansion + "isSegmentOf"
+    val IsSegmentOfValue: IRI      = KnoraBasePrefixExpansion + "isSegmentOfValue"
+    val IsAudioSegmentOf: IRI      = KnoraBasePrefixExpansion + "isAudioSegmentOf"
+    val IsAudioSegmentOfValue: IRI = KnoraBasePrefixExpansion + "isAudioSegmentOfValue"
+    val IsVideoSegmentOf: IRI      = KnoraBasePrefixExpansion + "isVideoSegmentOf"
+    val IsVideoSegmentOfValue: IRI = KnoraBasePrefixExpansion + "isVideoSegmentOfValue"
 
     val Value: IRI                         = KnoraBasePrefixExpansion + "Value"
     val ValueHas: IRI                      = KnoraBasePrefixExpansion + "valueHas"
@@ -366,21 +369,6 @@ object OntologyConstants {
     val PermissionListDelimiter: Char = '|'
     val GroupListDelimiter: Char      = ','
 
-    val RestrictedViewPermission: String = "RV"
-    val ViewPermission: String           = "V"
-    val ModifyPermission: String         = "M"
-    val DeletePermission: String         = "D"
-    val ChangeRightsPermission: String   = "CR"
-    val MaxPermission: String            = ChangeRightsPermission
-
-    val EntityPermissionAbbreviations: Seq[String] = Seq(
-      RestrictedViewPermission,
-      ViewPermission,
-      ModifyPermission,
-      DeletePermission,
-      ChangeRightsPermission,
-    )
-
     /* Standoff */
 
     val StandoffTag: IRI                 = KnoraBasePrefixExpansion + "StandoffTag"
@@ -513,22 +501,6 @@ object OntologyConstants {
     val ForGroup: IRI                      = KnoraAdminPrefixExpansion + "forGroup"
     val ForResourceClass: IRI              = KnoraAdminPrefixExpansion + "forResourceClass"
     val ForProperty: IRI                   = KnoraAdminPrefixExpansion + "forProperty"
-
-    val ProjectResourceCreateAllPermission: String        = "ProjectResourceCreateAllPermission"
-    val ProjectResourceCreateRestrictedPermission: String = "ProjectResourceCreateRestrictedPermission"
-    val ProjectAdminAllPermission: String                 = "ProjectAdminAllPermission"
-    val ProjectAdminGroupAllPermission: String            = "ProjectAdminGroupAllPermission"
-    val ProjectAdminGroupRestrictedPermission: String     = "ProjectAdminGroupRestrictedPermission"
-    val ProjectAdminRightsAllPermission: String           = "ProjectAdminRightsAllPermission"
-
-    val AdministrativePermissionAbbreviations: Seq[String] = Seq(
-      ProjectResourceCreateAllPermission,
-      ProjectResourceCreateRestrictedPermission,
-      ProjectAdminAllPermission,
-      ProjectAdminGroupAllPermission,
-      ProjectAdminGroupRestrictedPermission,
-      ProjectAdminRightsAllPermission,
-    )
 
     val HasDefaultRestrictedViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultRestrictedViewPermission"
     val HasDefaultViewPermission: IRI           = KnoraAdminPrefixExpansion + "hasDefaultViewPermission"
@@ -806,9 +778,6 @@ object OntologyConstants {
     val IsPartOf: IRI                = KnoraApiV2PrefixExpansion + "isPartOf"
     val IsPartOfValue: IRI           = KnoraApiV2PrefixExpansion + "isPartOfValue"
     val Seqnum: IRI                  = KnoraApiV2PrefixExpansion + "seqnum"
-    val IsSequenceOf: IRI            = KnoraApiV2PrefixExpansion + "isSequenceOf"
-    val IsSequenceOfValue: IRI       = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
-    val HasSequenceBounds: IRI       = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
     val IsRegionOf: IRI              = KnoraApiV2PrefixExpansion + "isRegionOf"
     val IsRegionOfValue: IRI         = KnoraApiV2PrefixExpansion + "isRegionOfValue"
     val HasGeometry: IRI             = KnoraApiV2PrefixExpansion + "hasGeometry"
@@ -957,15 +926,12 @@ object OntologyConstants {
     val HasLinkTo: IRI       = KnoraApiV2PrefixExpansion + "hasLinkTo"
     val HasIncomingLink: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLink"
 
-    val IsPartOf: IRI          = KnoraApiV2PrefixExpansion + "isPartOf"
-    val IsRegionOf: IRI        = KnoraApiV2PrefixExpansion + "isRegionOf"
-    val Seqnum: IRI            = KnoraApiV2PrefixExpansion + "seqnum"
-    val IsSequenceOf: IRI      = KnoraApiV2PrefixExpansion + "isSequenceOf"
-    val IsSequenceOfValue: IRI = KnoraApiV2PrefixExpansion + "isSequenceOfValue"
-    val HasSequenceBounds: IRI = KnoraApiV2PrefixExpansion + "hasSequenceBounds"
-    val HasGeometry: IRI       = KnoraApiV2PrefixExpansion + "hasGeometry"
-    val HasColor: IRI          = KnoraApiV2PrefixExpansion + "hasColor"
-    val HasComment: IRI        = KnoraApiV2PrefixExpansion + "hasComment"
+    val IsPartOf: IRI    = KnoraApiV2PrefixExpansion + "isPartOf"
+    val IsRegionOf: IRI  = KnoraApiV2PrefixExpansion + "isRegionOf"
+    val Seqnum: IRI      = KnoraApiV2PrefixExpansion + "seqnum"
+    val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
+    val HasColor: IRI    = KnoraApiV2PrefixExpansion + "hasColor"
+    val HasComment: IRI  = KnoraApiV2PrefixExpansion + "hasComment"
 
     val HasFile: IRI = KnoraApiV2PrefixExpansion + "hasFile"
 

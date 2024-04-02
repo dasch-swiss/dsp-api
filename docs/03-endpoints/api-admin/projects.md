@@ -6,7 +6,7 @@
 # Projects Endpoint
 
 | Scope           | Route                                                          | Operations | Explanation                                                                 |
-| --------------- | -------------------------------------------------------------- |------------|-----------------------------------------------------------------------------|
+| --------------- | -------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------- |
 | projects        | `/admin/projects`                                              | `GET`      | [get all projects](#get-all-projects)                                       |
 | projects        | `/admin/projects`                                              | `POST`     | [create a project](#create-a-new-project)                                   |
 | projects        | `/admin/projects/shortname/{shortname}`                        | `GET`      | [get a single project](#get-project-by-id)                                  |
@@ -239,7 +239,6 @@ Example response:
     "longname": "Anything Project",
     "ontologies": [
       "http://0.0.0.0:3333/ontology/0001/something/v2",
-      "http://0.0.0.0:3333/ontology/0001/sequences/v2",
       "http://0.0.0.0:3333/ontology/0001/freetest/v2",
       "http://0.0.0.0:3333/ontology/0001/minimal/v2",
       "http://0.0.0.0:3333/ontology/0001/anything/v2"
@@ -310,7 +309,6 @@ Example response:
     "longname": "other longname",
     "ontologies": [
       "http://api.knora.org/ontology/0001/something/v2",
-      "http://api.knora.org/ontology/0001/sequences/v2",
       "http://api.knora.org/ontology/0001/freetest/v2",
       "http://api.knora.org/ontology/0001/minimal/v2",
       "http://api.knora.org/ontology/0001/anything/v2"
@@ -365,7 +363,6 @@ Example response:
     "longname": "other longname",
     "ontologies": [
       "http://api.knora.org/ontology/0001/something/v2",
-      "http://api.knora.org/ontology/0001/sequences/v2",
       "http://api.knora.org/ontology/0001/freetest/v2",
       "http://api.knora.org/ontology/0001/minimal/v2",
       "http://api.knora.org/ontology/0001/anything/v2"
@@ -641,7 +638,6 @@ Example response:
                     "longname": "Anything Project",
                     "ontologies": [
                         "http://0.0.0.0:3333/ontology/0001/something/v2",
-                        "http://0.0.0.0:3333/ontology/0001/sequences/v2",
                         "http://0.0.0.0:3333/ontology/0001/freetest/v2",
                         "http://0.0.0.0:3333/ontology/0001/minimal/v2",
                         "http://0.0.0.0:3333/ontology/0001/anything/v2"
