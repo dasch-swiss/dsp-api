@@ -13,10 +13,10 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameJulian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.Permission
 
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
@@ -25,7 +25,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceIri = "http://rdfh.ch/0803/c5058f3a",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ChangeRightsPermission,
+    userPermission = Permission.ObjectAccess.ChangeRights,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
@@ -45,7 +45,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("5524469101"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -65,7 +65,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("184e99ca01"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -83,7 +83,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("db77ec0302"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -101,7 +101,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("9ea13f3d02"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -121,7 +121,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("497df9ab"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -140,7 +140,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueIri = "http://rdfh.ch/0803/c5058f3a/values/8653a672",
           valueHasUUID = UuidUtil.decode("8653a672"),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -161,7 +161,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("10e00c7acc2704"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -181,7 +181,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("92faf25701"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -201,7 +201,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("0ca74ce5"),
           permissions =
             "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -223,7 +223,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("cfd09f1e01"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -243,7 +243,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("c3295339"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -260,7 +260,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceIri = "http://rdfh.ch/0803/c5058f3a",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ChangeRightsPermission,
+    userPermission = Permission.ObjectAccess.ChangeRights,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
@@ -276,7 +276,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceIri = "http://rdfh.ch/0803/2a6221216701",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ChangeRightsPermission,
+    userPermission = Permission.ObjectAccess.ChangeRights,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
@@ -296,7 +296,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("e94fa8a09205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -316,7 +316,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("7b4a9bf89305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -334,7 +334,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("3e74ee319405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -352,7 +352,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("019e416b9405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -370,7 +370,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("c4c794a49405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -388,7 +388,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("87f1e7dd9405"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -406,7 +406,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("4a1b3b179505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -424,7 +424,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("0d458e509505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -442,7 +442,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("d06ee1899505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -460,7 +460,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("939834c39505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -480,7 +480,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("dda85bbb9105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -499,7 +499,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueIri = "http://rdfh.ch/0803/2a6221216701/values/1a7f08829105",
           valueHasUUID = UuidUtil.decode("1a7f08829105"),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -519,7 +519,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("56c287fc9505"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -540,7 +540,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("f89173afca2704"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -560,7 +560,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("ac79fbd99205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -578,7 +578,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("6fa34e139305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -596,7 +596,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("32cda14c9305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -614,7 +614,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("f5f6f4859305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -634,7 +634,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("b82048bf9305"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -654,7 +654,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("262655679205"),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -674,7 +674,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("a0d2aef49105"),
           permissions =
             "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -696,7 +696,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("63fc012e9205"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -716,7 +716,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("d1010fd69005"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -734,7 +734,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("942b620f9105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -752,7 +752,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasUUID = UuidUtil.decode("5755b5489105"),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-          userPermission = ChangeRightsPermission,
+          userPermission = Permission.ObjectAccess.ChangeRights,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
@@ -771,7 +771,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceIri = "http://rdfh.ch/0803/2a6221216701",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    userPermission = ChangeRightsPermission,
+    userPermission = Permission.ObjectAccess.ChangeRights,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     projectADM = SharedTestDataADM.incunabulaProject,
     values = Map(),
@@ -799,7 +799,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         label = "A thing with version history",
         resourceIri = "http://rdfh.ch/0001/thing-with-history",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-        userPermission = ModifyPermission,
+        userPermission = Permission.ObjectAccess.Modify,
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
@@ -816,7 +816,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",
               valueHasUUID = UuidUtil.decode("W5fm67e0QDWxRZumcXcs6g"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-              userPermission = ChangeRightsPermission,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/2a"),
@@ -835,7 +835,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               valueIri = "http://rdfh.ch/0001/thing-with-history/values/3a",
               valueHasUUID = UuidUtil.decode("IZGOjVqxTfSNO4ieKyp0SA"),
               permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-              userPermission = ModifyPermission,
+              userPermission = Permission.ObjectAccess.Modify,
               valueCreationDate = Instant.parse("2019-02-10T10:30:10Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
@@ -852,7 +852,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               valueIri = "http://rdfh.ch/0001/thing-with-history/values/1a",
               valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-              userPermission = ChangeRightsPermission,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               valueCreationDate = Instant.parse("2019-02-11T09:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               previousValueIri = None,
@@ -965,7 +965,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
-        userPermission = ModifyPermission,
+        userPermission = Permission.ObjectAccess.Modify,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
             ReadOtherValueV2(
@@ -979,7 +979,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               valueCreationDate = Instant.parse("2019-02-13T09:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
-              userPermission = ChangeRightsPermission,
+              userPermission = Permission.ObjectAccess.ChangeRights,
               previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1b"),
               deletionInfo = None,
             ),
@@ -1003,7 +1003,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
           resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
           creationDate = Instant.parse("2019-02-08T15:05:10Z"),
-          userPermission = ModifyPermission,
+          userPermission = Permission.ObjectAccess.Modify,
           values = Map(
             "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
               ReadOtherValueV2(
@@ -1017,7 +1017,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 valueCreationDate = Instant.parse("2019-02-12T09:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                 valueHasUUID = UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g"),
-                userPermission = ChangeRightsPermission,
+                userPermission = Permission.ObjectAccess.ChangeRights,
                 previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1a"),
                 deletionInfo = None,
               ),

@@ -38,7 +38,6 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyFlatStatements
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfPropertyValues
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.emptyRdfResources
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
@@ -52,6 +51,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
@@ -360,7 +360,7 @@ object ConstructResponseUtilV2 {
     valueObjectClass: SmartIri,
     nestedResource: Option[ResourceWithValueRdfData] = None,
     isIncomingLink: Boolean = false,
-    userPermission: EntityPermission,
+    userPermission: Permission.ObjectAccess,
     assertions: FlatPredicateObjects,
     standoff: FlatStatements,
   ) extends RdfData
@@ -378,7 +378,7 @@ object ConstructResponseUtilV2 {
     subjectIri: IRI,
     assertions: FlatPredicateObjects,
     isMainResource: Boolean,
-    userPermission: Option[EntityPermission],
+    userPermission: Option[Permission.ObjectAccess],
     valuePropertyAssertions: RdfPropertyValues,
   ) extends RdfData
 
@@ -412,7 +412,10 @@ object ConstructResponseUtilV2 {
    * @param assertions          RDF assertions about the entity.
    * @param maybeUserPermission the user's permission on the entity, if any.
    */
-  case class RdfWithUserPermission(assertions: ConstructPredicateObjects, maybeUserPermission: Option[EntityPermission])
+  case class RdfWithUserPermission(
+    assertions: ConstructPredicateObjects,
+    maybeUserPermission: Option[Permission.ObjectAccess],
+  )
 
 }
 
@@ -517,7 +520,7 @@ final case class ConstructResponseUtilV2Live(
           case (pred: SmartIri, objs: Seq[LiteralV2]) => pred -> objs.head
         }
 
-        val userPermission: Option[EntityPermission] =
+        val userPermission: Option[Permission.ObjectAccess] =
           PermissionUtilADM.getUserPermissionFromConstructAssertionsADM(resourceIri, assertions, requestingUser)
 
         // Make a ResourceWithValueRdfData for each resource IRI.
