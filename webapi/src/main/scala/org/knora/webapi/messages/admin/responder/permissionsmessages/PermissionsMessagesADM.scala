@@ -575,10 +575,8 @@ case class PermissionsDataADM(
    * @return a boolean value.
    */
   def hasPermissionFor(operation: OperationADM, insideProject: IRI): Boolean =
-    // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
     if (this.isSystemAdmin) {
       /* A member of the SystemAdmin group is allowed to perform any operation */
-      // println("TRUE: A member of the SystemAdmin group is allowed to perform any operation")
       true
     } else {
       operation match {
@@ -589,7 +587,6 @@ case class PermissionsDataADM(
                 PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, resourceClassIri),
               )
             case None => {
-              // println("FALSE: No administrative permissions defined for this project.")
               false
             }
           }
@@ -602,31 +599,9 @@ case class PermissionsDataADM(
   override def equals(that: Any): Boolean =
     that match {
       case that: PermissionsDataADM =>
-        that.canEqual(this) && {
-
-          val gppEqual = if (this.groupsPerProject.hashCode != that.groupsPerProject.hashCode) {
-            println("groupsPerProject not equal")
-            println(s"this (expected): ${this.groupsPerProject}")
-            println(s"that (found): ${that.groupsPerProject}")
-            false
-          } else {
-            true
-          }
-
-          val apppEqual =
-            if (
-              this.administrativePermissionsPerProject.hashCode != that.administrativePermissionsPerProject.hashCode
-            ) {
-              println("administrativePermissionsPerProject not equal")
-              println(s"this (expected): ${this.administrativePermissionsPerProject}")
-              println(s"that (found): ${that.administrativePermissionsPerProject}")
-              false
-            } else {
-              true
-            }
-
-          gppEqual && apppEqual
-        }
+        that.canEqual(this) &&
+        this.groupsPerProject.hashCode == that.groupsPerProject.hashCode &&
+        this.administrativePermissionsPerProject.hashCode == that.administrativePermissionsPerProject.hashCode
       case _ => false
     }
 

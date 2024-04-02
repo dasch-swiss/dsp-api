@@ -49,8 +49,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
 
         val iri = result
@@ -78,8 +77,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
 
@@ -103,8 +101,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
 
@@ -128,8 +125,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
         result.asInstanceOf[JsArray].elements.size should be(6)
 

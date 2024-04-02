@@ -118,7 +118,6 @@ class UsersADME2ESpec
         val request =
           Get(baseApiUrl + s"/admin/users") ~> addRootUserCredentials()
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -795,7 +794,6 @@ class UsersADME2ESpec
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest),
         ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
-        logger.debug(s"response: ${response1.toString}")
         response1.status should be(StatusCodes.OK)
 
         clientTestDataCollector.addFile(
@@ -832,7 +830,6 @@ class UsersADME2ESpec
           HttpEntity(ContentTypes.`application/json`, params01),
         ) ~> addCredentials(BasicHttpCredentials(rootUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
-        logger.debug(s"response: ${response1.toString}")
         response1.status should be(StatusCodes.OK)
 
         // check if the password was changed, i.e. if the new one is accepted
