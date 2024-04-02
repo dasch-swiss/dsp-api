@@ -873,10 +873,14 @@ object OntologyHelpers {
     val subPropertyOf: SmartIri = internalPropertyDef.subPropertyOf match {
       case subProps if subProps.contains(OntologyConstants.KnoraBase.IsPartOf.toSmartIri) =>
         OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
-      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsSequenceOf.toSmartIri) =>
-        OntologyConstants.KnoraBase.IsSequenceOfValue.toSmartIri
       case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
         OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsSegmentOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsAudioSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsAudioSegmentOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsVideoSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsVideoSegmentOfValue.toSmartIri
       case subProps
           if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
         internalPropertyDef.subPropertyOf.head.fromLinkPropToLinkValueProp
