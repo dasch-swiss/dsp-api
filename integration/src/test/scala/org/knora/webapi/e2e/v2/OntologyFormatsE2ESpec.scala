@@ -217,7 +217,7 @@ class OntologyFormatsE2ESpec extends E2ESpec {
         fileBasename = "anythingOntologySimple",
       )
 
-    val anythingOntologyComplex: HttpGetTest =
+    private val anythingOntologyComplex =
       HttpGetTest(
         urlPath =
           s"/v2/ontologies/allentities/${urlEncodeIri(SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost)}",

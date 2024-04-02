@@ -2227,13 +2227,6 @@
     rdfs:comment    "Generic representation of a deleted value that can therefore not be displayed"@en .
 
 
-#################################################################
-### temporary elements
-#################################################################
-
-
-
-
 ###  http://www.knora.org/ontology/knora-base#isSegmentOf
 
 :isSegmentOf
