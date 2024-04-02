@@ -122,7 +122,7 @@ lazy val root = (project in file("."))
     // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
     dockerCommands += Cmd(
       "RUN",
-      "apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
+      "apt update && apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null",
     ),
     dockerCommands += Cmd(
       "RUN",
