@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
@@ -27,137 +26,13 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
  */
 object PermissionUtilADM extends LazyLogging {
-
-  // TODO: unify EntityPermission with PermissionADM.
-
-  /**
-   * Represents a permission granted to a group on an entity. The `toString` method of an `EntityPermission`
-   * returns one of the codes in [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]].
-   */
-  sealed trait EntityPermission extends Ordered[EntityPermission] {
-
-    /**
-     * Represents this [[EntityPermission]] as an integer, as required by Knora API v1.
-     */
-    def toInt: Int
-
-    override def compare(that: EntityPermission): Int = this.toInt - that.toInt
-
-    def getName: String
-
-    def toPermissionADM(groupIri: IRI): PermissionADM
-  }
-
-  /**
-   * Represents restricted view permission on an entity.
-   */
-  case object RestrictedViewPermission extends EntityPermission {
-    override def toInt: Int = 1
-
-    override def toString: String = OntologyConstants.KnoraBase.RestrictedViewPermission
-
-    override val getName: String = "restricted view permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.restrictedViewPermission(groupIri)
-  }
-
-  /**
-   * Represents unrestricted view permission on an entity.
-   */
-  case object ViewPermission extends EntityPermission {
-    override def toInt: Int = 2
-
-    override def toString: String = OntologyConstants.KnoraBase.ViewPermission
-
-    override val getName: String = "view permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.viewPermission(groupIri)
-  }
-
-  /**
-   * Represents modify permission on an entity.
-   */
-  case object ModifyPermission extends EntityPermission {
-    override def toInt: Int = 6
-
-    override def toString: String = OntologyConstants.KnoraBase.ModifyPermission
-
-    override val getName: String = "modify permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.modifyPermission(groupIri)
-  }
-
-  /**
-   * Represents delete permission on an entity.
-   */
-  case object DeletePermission extends EntityPermission {
-    override def toInt: Int = 7
-
-    override def toString: String = OntologyConstants.KnoraBase.DeletePermission
-
-    override val getName: String = "delete permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.deletePermission(groupIri)
-  }
-
-  /**
-   * Represents permission to change the permissions on an entity.
-   */
-  case object ChangeRightsPermission extends EntityPermission {
-    override def toInt: Int = 8
-
-    override def toString: String = OntologyConstants.KnoraBase.ChangeRightsPermission
-
-    override val getName: String = "change rights permission"
-
-    override def toPermissionADM(groupIri: IRI): PermissionADM =
-      PermissionADM.changeRightsPermission(groupIri)
-  }
-
-  /**
-   * The highest permission, i.e. the one that is least restrictive.
-   */
-  private val MaxPermissionLevel: EntityPermission = ChangeRightsPermission
-
-  private val permissionStringsToPermissionLevels: Map[String, EntityPermission] = Set(
-    RestrictedViewPermission,
-    ViewPermission,
-    ModifyPermission,
-    DeletePermission,
-    ChangeRightsPermission,
-  ).map { level =>
-    level.toString -> level
-  }.toMap
-
-  /**
-   * A set of assertions that are relevant for calculating permissions.
-   */
-  private val permissionRelevantAssertions = Set(
-    OntologyConstants.KnoraBase.AttachedToUser,
-    OntologyConstants.KnoraBase.AttachedToProject,
-    OntologyConstants.KnoraBase.HasPermissions,
-  )
-
-  /**
-   * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
-   * is the case if the property is [[OntologyConstants.KnoraBase.AttachedToUser]],
-   * [[OntologyConstants.KnoraBase.AttachedToProject]], or
-   * or [[OntologyConstants.KnoraBase.HasPermissions]].
-   *
-   * @param p the IRI of the property.
-   * @return `true` if the property is relevant to calculating permissions.
-   */
-  def isPermissionRelevant(p: IRI): Boolean = permissionRelevantAssertions.contains(p)
 
   /**
    * Calculates the highest permission level a user can be granted on a entity.
@@ -168,18 +43,18 @@ object PermissionUtilADM extends LazyLogging {
    *         on the entity.
    */
   private def calculateHighestGrantedPermissionLevel(
-    entityPermissions: Map[EntityPermission, Set[IRI]],
+    entityPermissions: Map[Permission.ObjectAccess, Set[IRI]],
     userGroups: Set[IRI],
-  ): Option[EntityPermission] = {
+  ): Option[Permission.ObjectAccess] = {
     // Make a set of all the permissions the user can obtain for this entity.
-    val permissionLevels: Set[EntityPermission] = entityPermissions.foldLeft(Set.empty[EntityPermission]) {
-      case (acc, (permissionLevel, grantedToGroups)) =>
+    val permissionLevels: Set[Permission.ObjectAccess] =
+      entityPermissions.foldLeft(Set.empty[Permission.ObjectAccess]) { case (acc, (permissionLevel, grantedToGroups)) =>
         if (grantedToGroups.intersect(userGroups).nonEmpty) {
           acc + permissionLevel
         } else {
           acc
         }
-    }
+      }
 
     if (permissionLevels.nonEmpty) {
       // The user has some permissions; return the code of the highest one.
@@ -191,13 +66,13 @@ object PermissionUtilADM extends LazyLogging {
   }
 
   /**
-   * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
+   * Determines the permissions that a user has on a entity, and returns an [[Permission.ObjectAccess]].
    *
    * @param entityCreator           the IRI of the user that created the entity.
    * @param entityProject           the IRI of the entity's project.
    * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
    * @param requestingUser          the user making the request.
-   * @return an [[EntityPermission]] representing the user's permission level for the entity, or `None` if the user
+   * @return an [[Permission.ObjectAccess]] representing the user's permission level for the entity, or `None` if the user
    *         has no permissions on the entity.
    */
   def getUserPermissionADM(
@@ -205,16 +80,16 @@ object PermissionUtilADM extends LazyLogging {
     entityProject: IRI,
     entityPermissionLiteral: String,
     requestingUser: User,
-  ): Option[EntityPermission] = {
+  ): Option[Permission.ObjectAccess] = {
     val maybePermissionLevel =
       if (
         requestingUser.isSystemUser || requestingUser.isSystemAdmin || requestingUser.permissions
           .hasProjectAdminAllPermissionFor(entityProject)
       ) {
         // If the user is the system user, is in the SystemAdmin group, or has ProjectAdminAllPermission, just give them the maximum permission.
-        Some(MaxPermissionLevel)
+        Some(Permission.ObjectAccess.maxPermission)
       } else {
-        val entityPermissions: Map[EntityPermission, Set[IRI]] = parsePermissions(entityPermissionLiteral)
+        val entityPermissions: Map[Permission.ObjectAccess, Set[IRI]] = parsePermissions(entityPermissionLiteral)
 
         // Make a list of all the groups (both built-in and custom) that the user belongs to in relation
         // to the entity.
@@ -282,7 +157,6 @@ object PermissionUtilADM extends LazyLogging {
    * - [[AEqualToB]] if `permissionLiteralA` and `permissionLiteralB` would give the user the same permission.
    * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
    *
-   * @param entityCreator      the IRI of the user that created the entity.
    * @param entityProject      the IRI of the entity's project.
    * @param permissionLiteralA the first permission string.
    * @param permissionLiteralB the second permission string.
@@ -295,14 +169,14 @@ object PermissionUtilADM extends LazyLogging {
     permissionLiteralB: String,
     requestingUser: User,
   ): PermissionComparisonResult = {
-    val maybePermissionA: Option[EntityPermission] = getUserPermissionADM(
+    val maybePermissionA: Option[Permission.ObjectAccess] = getUserPermissionADM(
       entityCreator = requestingUser.id,
       entityProject = entityProject,
       entityPermissionLiteral = permissionLiteralA,
       requestingUser = requestingUser,
     )
 
-    val maybePermissionB: Option[EntityPermission] = getUserPermissionADM(
+    val maybePermissionB: Option[Permission.ObjectAccess] = getUserPermissionADM(
       entityCreator = requestingUser.id,
       entityProject = entityProject,
       entityPermissionLiteral = permissionLiteralB,
@@ -314,7 +188,7 @@ object PermissionUtilADM extends LazyLogging {
       case (None, Some(_)) => ALessThanB
       case (Some(_), None) => AGreaterThanB
 
-      case (Some(permissionA: EntityPermission), Some(permissionB: EntityPermission)) =>
+      case (Some(permissionA: Permission.ObjectAccess), Some(permissionB: Permission.ObjectAccess)) =>
         if (permissionA == permissionB) {
           AEqualToB
         } else if (permissionA < permissionB) {
@@ -327,7 +201,7 @@ object PermissionUtilADM extends LazyLogging {
 
   /**
    * Given data from a [[org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
-   * and returns an [[EntityPermission]].
+   * and returns an [[Permission.ObjectAccess]].
    *
    * @param entityIri      the IRI of the entity.
    * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
@@ -344,7 +218,7 @@ object PermissionUtilADM extends LazyLogging {
     entityIri: IRI,
     assertions: ConstructPredicateObjects,
     requestingUser: User,
-  ): Option[EntityPermission] = {
+  ): Option[Permission.ObjectAccess] = {
     val assertionsAsStrings: Seq[(IRI, String)] = assertions.toSeq.flatMap {
       case (pred: SmartIri, objs: Seq[LiteralV2]) =>
         objs.map { obj =>
@@ -360,7 +234,7 @@ object PermissionUtilADM extends LazyLogging {
   }
 
   /**
-   * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
+   * Determines the permissions that a user has on a entity, and returns an [[Permission.ObjectAccess]].
    *
    * @param entityIri      the IRI of the entity.
    * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
@@ -377,7 +251,7 @@ object PermissionUtilADM extends LazyLogging {
     entityIri: IRI,
     assertions: Seq[(IRI, String)],
     requestingUser: User,
-  ): Option[EntityPermission] = {
+  ): Option[Permission.ObjectAccess] = {
     // Get the entity's creator, project, and permissions.
     val assertionMap: Map[IRI, String] = assertions.toMap
 
@@ -407,16 +281,14 @@ object PermissionUtilADM extends LazyLogging {
    * Parses the literal object of the predicate `knora-base:hasPermissions`.
    *
    * @param permissionLiteral the literal to parse.
-   * @return a [[Map]] in which the keys are permission abbreviations in
-   *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
-   *         user group IRIs.
+   * @return a [[Map]] in which the keys are permission tokens, and the values are sets of user group IRIs.
    */
   def parsePermissions(
     permissionLiteral: String,
     errorFun: String => Nothing = { (permissionLiteral: String) =>
       throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral")
     },
-  ): Map[EntityPermission, Set[IRI]] = {
+  ): Map[Permission.ObjectAccess, Set[IRI]] = {
     val permissions: Seq[String] =
       permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter).toIndexedSeq
 
@@ -428,16 +300,15 @@ object PermissionUtilADM extends LazyLogging {
       }
 
       val abbreviation: String = splitPermission(0)
-
-      if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
-        errorFun(permissionLiteral)
-      }
+      val perm = Permission.ObjectAccess
+        .fromToken(abbreviation)
+        .getOrElse(errorFun(permissionLiteral))
 
       val shortGroups: Set[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
       val groups = shortGroups.map(
         _.replace(OntologyConstants.KnoraAdmin.KnoraAdminPrefix, OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion),
       )
-      (permissionStringsToPermissionLevels(abbreviation), groups)
+      (perm, groups)
     }.toMap
   }
 
@@ -445,8 +316,7 @@ object PermissionUtilADM extends LazyLogging {
    * Parses the literal object of the predicate `knora-base:hasPermissions`.
    *
    * @param maybePermissionListStr the literal to parse.
-   * @return a [[Map]] in which the keys are permission abbreviations in
-   *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
+   * @return a [[Map]] in which the keys are permission tokens, and the values are sets of
    *         user group IRIs.
    */
   def parsePermissionsWithType(
@@ -466,7 +336,7 @@ object PermissionUtilADM extends LazyLogging {
 
             permissionType match {
               case PermissionType.AP =>
-                if (!OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations.contains(abbreviation)) {
+                if (Permission.Administrative.fromToken(abbreviation).isEmpty) {
                   throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                 }
 
@@ -487,7 +357,7 @@ object PermissionUtilADM extends LazyLogging {
                 }
 
               case PermissionType.OAP =>
-                if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
+                if (!Permission.ObjectAccess.allTokens.contains(abbreviation)) {
                   throw InconsistentRepositoryDataException(s"Unrecognized permission abbreviation '$abbreviation'")
                 }
                 val shortGroups: Array[String] =
@@ -517,63 +387,64 @@ object PermissionUtilADM extends LazyLogging {
    */
   def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionADM] =
     name match {
-      case OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission =>
-        Set(PermissionADM.ProjectResourceCreateAllPermission)
+      case Permission.Administrative.ProjectResourceCreateAll.token =>
+        Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission =>
+      case Permission.Administrative.ProjectResourceCreateRestricted.token =>
         if (iris.nonEmpty) {
           logger.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
-          iris.map(iri => PermissionADM.projectResourceCreateRestrictedPermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminAllPermission => Set(PermissionADM.ProjectAdminAllPermission)
+      case Permission.Administrative.ProjectAdminAll.token =>
+        Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminGroupAllPermission =>
-        Set(PermissionADM.ProjectAdminGroupAllPermission)
+      case Permission.Administrative.ProjectAdminGroupAll.token =>
+        Set(PermissionADM.from(Permission.Administrative.ProjectAdminGroupAll))
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminGroupRestrictedPermission =>
+      case Permission.Administrative.ProjectAdminGroupRestricted.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.projectAdminGroupRestrictedPermission(iri))
+          iris.map(PermissionADM.from(Permission.Administrative.ProjectAdminGroupRestricted, _))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission =>
-        Set(PermissionADM.ProjectAdminRightsAllPermission)
+      case Permission.Administrative.ProjectAdminRightsAll.token =>
+        Set(PermissionADM.from(Permission.Administrative.ProjectAdminRightsAll))
 
-      case OntologyConstants.KnoraBase.ChangeRightsPermission =>
+      case Permission.ObjectAccess.ChangeRights.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.changeRightsPermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.ObjectAccess.ChangeRights, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.DeletePermission =>
+      case Permission.ObjectAccess.Delete.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.deletePermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.ObjectAccess.Delete, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.ModifyPermission =>
+      case Permission.ObjectAccess.Modify.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.modifyPermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.ObjectAccess.Modify, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.ViewPermission =>
+      case Permission.ObjectAccess.View.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.viewPermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.ObjectAccess.View, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
 
-      case OntologyConstants.KnoraBase.RestrictedViewPermission =>
+      case Permission.ObjectAccess.RestrictedView.token =>
         if (iris.nonEmpty) {
-          iris.map(iri => PermissionADM.restrictedViewPermission(iri))
+          iris.map(iri => PermissionADM.from(Permission.ObjectAccess.RestrictedView, iri))
         } else {
           throw InconsistentRepositoryDataException(s"Missing additional permission information.")
         }
@@ -585,40 +456,8 @@ object PermissionUtilADM extends LazyLogging {
    * @param permissions the sequence of permissions with possible duplicates.
    * @return a set containing only unique permission.
    */
-  def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
-
-    val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
-    // log.debug(s"removeDuplicatePermissions - result: $result")
-    result
-  }
-
-  /**
-   * Helper method used to remove lesser permissions, i.e. permissions which are already given by
-   * the highest permission.
-   *
-   * @param permissions    a set of permissions possibly containing lesser permissions.
-   * @param permissionType the type of permissions.
-   * @return a set of permissions without possible lesser permissions.
-   */
-  def removeLesserPermissions(permissions: Set[PermissionADM], permissionType: PermissionType): Set[PermissionADM] =
-    permissionType match {
-      case PermissionType.OAP =>
-        if (permissions.nonEmpty) {
-          /* Handling object access permissions which always have 'additionalInformation' and 'permissionCode' set */
-          permissions
-            .groupBy(_.additionalInformation)
-            .map { case (_, perms) =>
-              // sort in descending order and then take the first one (the highest permission)
-              perms.toArray.sortWith(_.permissionCode.get > _.permissionCode.get).head
-            }
-            .toSet
-        } else {
-          Set.empty[PermissionADM]
-        }
-
-      case PermissionType.AP   => ???
-      case PermissionType.DOAP => ???
-    }
+  def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] =
+    permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
 
   /**
    * Helper method used to transform a set of permissions into a permissions string ready to be written into the
@@ -633,7 +472,7 @@ object PermissionUtilADM extends LazyLogging {
       case PermissionType.OAP =>
         if (permissions.nonEmpty) {
 
-          /* a map with permission names, shortened groups, and full group names. */
+          /* a levelsByToken with permission names, shortened groups, and full group names. */
           val groupedPermissions: Map[String, String] =
             permissions.groupBy(_.name).map { case (name: String, perms: Set[PermissionADM]) =>
               val shortGroupsString = perms.toVector.sortBy(_.additionalInformation.get).foldLeft("") {
@@ -655,7 +494,7 @@ object PermissionUtilADM extends LazyLogging {
 
           /* Sort permissions in descending order */
           val sortedPermissions: Array[(String, String)] = groupedPermissions.toArray.sortWith { (left, right) =>
-            permissionStringsToPermissionLevels(left._1) > permissionStringsToPermissionLevels(right._1)
+            Permission.ObjectAccess.codeByToken(left._1) > Permission.ObjectAccess.codeByToken(right._1)
           }
 
           /* create the permissions string */
@@ -687,23 +526,6 @@ object PermissionUtilADM extends LazyLogging {
           throw InconsistentRepositoryDataException("Permissions cannot be empty")
         }
       case PermissionType.DOAP => ???
-    }
-
-  /////////////////////////////////////////
-  // API v1 methods
-
-  /**
-   * Checks whether an integer permission code implies a particular permission property.
-   *
-   * @param userHasPermissionCode the integer permission code that the user has, or [[None]] if the user has no permissions
-   *                              (in which case this method returns `false`).
-   * @param userNeedsPermission   the abbreviation of the permission that the user needs.
-   * @return `true` if the user has the needed permission.
-   */
-  def impliesPermissionCodeV1(userHasPermissionCode: Option[Int], userNeedsPermission: String): Boolean =
-    userHasPermissionCode match {
-      case Some(permissionCode) => permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).toInt
-      case None                 => false
     }
 }
 
@@ -756,14 +578,11 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>
-                                             groupIris.map { groupIri =>
-                                               entityPermission.toPermissionADM(groupIri)
-                                             }
+                                             groupIris.map(PermissionADM.from(entityPermission, _))
                                            }.toSet
     } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
 }
 
 object PermissionUtilADMLive {
-  val layer: URLayer[StringFormatter & MessageRelay, PermissionUtilADMLive] =
-    ZLayer.fromFunction(PermissionUtilADMLive.apply _)
+  val layer = ZLayer.derive[PermissionUtilADMLive]
 }
