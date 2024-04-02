@@ -589,7 +589,23 @@ of a book like in [this](../01-introduction/example-project.md#resource-classes)
 
 #### Segment
 
-...
+DSP-API supports the creation of segment resources. 
+A segment is a part of a resource which has a temporal extent; 
+the segment is defined by a start and end time relative to the resource. 
+Segments are modelled as resources of type `kb:Segment`, 
+having the properties `kb:isSegmentOf`, a [LinkValue](#linkvalue) pointing to the resource the segment is part of,
+and `kb:hasSegmentBounds`, a [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
+However, `kb:Segment` is "abstract" and cannot be used directly in data. 
+Segments may have a comment attached to them through `kb:hasComment`.
+
+There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:VideoSegment`.
+`kb:AudioSegment` has the property `kb:isAudioSegmentOf`, which points to an [AudioRepresentation](#representations),
+`kb:VideoSegment` has the property `kb:isVideoSegmentOf`, which points to a [MovingImageRepresentation](#representations). 
+Both use the `kb:hasSegmentBounds` property directly.
+
+It is possible to create subclases of `kb:AudoSegment` and `kb:VideoSegment` to add additional properties, 
+but this is discouraged and may not be supported in future versions of DSP-API. 
+Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
 
 
 ### Text with Standoff Markup
