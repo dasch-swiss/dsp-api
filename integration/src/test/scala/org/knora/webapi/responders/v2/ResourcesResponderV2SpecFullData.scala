@@ -18,7 +18,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Permission
 
-// FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
   val expectedReadResourceV2ForZeitgloecklein: ReadResourceV2 = ReadResourceV2(

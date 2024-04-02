@@ -37,8 +37,6 @@ object KnoraExceptionHandler extends LazyLogging {
 
   def apply(appConfig: AppConfig): ExceptionHandler = ExceptionHandler {
 
-    /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
-
     case rre: RequestRejectedException =>
       extractRequest { request =>
         val url = request.uri.path.toString
