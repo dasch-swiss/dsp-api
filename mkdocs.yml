@@ -105,6 +105,9 @@ nav:
   - Frequently Asked Questions: 08-faq/index.md
   - Release Notes:
       - Changelog: 09-release-notes/index.md
+  - Migration Guides:
+      - Overview: 10-migration-guides/index.md
+      - v30 to v31: 10-migration-guides/v30-to-v31.md
 
 plugins:
   - include-markdown
