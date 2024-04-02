@@ -23,7 +23,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -35,12 +34,12 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -237,11 +236,12 @@ trait PermissionsResponderADM {
 
 final case class PermissionsResponderADMLive(
   appConfig: AppConfig,
+  auth: AuthorizationRestService,
+  groupService: GroupService,
   iriService: IriService,
+  knoraProjectService: KnoraProjectService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
-  knoraProjectService: KnoraProjectService,
-  auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter,
 ) extends PermissionsResponderADM
     with MessageHandler
@@ -342,15 +342,16 @@ final case class PermissionsResponderADMLive(
     val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
         for {
-          maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(groupIri))
-
-          group = maybeGroup.getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
-                    ),
-                  )
-          res = (group.project.id, groupIri)
-        } yield res
+          iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(ValidationException(_))
+          group <-
+            groupService
+              .findById(iri)
+              .someOrFail(
+                InconsistentRepositoryDataException(
+                  s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
+                ),
+              )
+        } yield (group.project.id, groupIri)
       }
     } else {
       Seq.empty[Task[(IRI, IRI)]]
@@ -765,13 +766,18 @@ final case class PermissionsResponderADMLive(
             ZIO.succeed(createRequest.forGroup)
           } else {
             for {
-              maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(createRequest.forGroup))
-
-              // if it does not exist then throw an error
-              group: Group =
-                maybeGroup.getOrElse(
-                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
-                )
+              iri <- ZIO.fromEither(GroupIri.from(createRequest.forGroup)).mapError(ValidationException(_))
+              group <-
+                groupService
+                  .findById(iri)
+                  .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+//              maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(createRequest.forGroup))
+//
+//              // if it does not exist then throw an error
+//              group: Group =
+//                maybeGroup.getOrElse(
+//                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
+//                )
             } yield group.id
           }
 
@@ -1580,18 +1586,14 @@ final case class PermissionsResponderADMLive(
           if (createRequest.forGroup.exists(!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(_))) {
             // Yes. Check if it is a known group.
             for {
-              maybeGroup <-
-                messageRelay
-                  .ask[Option[Group]](
-                    GroupGetADM(
-                      groupIri = createRequest.forGroup.get,
-                    ),
-                  )
-
-              group: Group =
-                maybeGroup.getOrElse(
-                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
-                )
+              maybeIri <- ZIO
+                            .fromOption(createRequest.forGroup)
+                            .orElseFail(NotFoundException("Group IRI not found."))
+              groupIri <- ZIO.fromEither(GroupIri.from(maybeIri)).mapError(ValidationException(_))
+              group <-
+                groupService
+                  .findById(groupIri)
+                  .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
             } yield Some(group.id)
           } else {
             // No, return given group as it is. That means:
@@ -2291,18 +2293,19 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & GroupService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive,
   ] = ZLayer.fromZIO {
     for {
-      au      <- ZIO.service[AuthorizationRestService]
       ac      <- ZIO.service[AppConfig]
+      au      <- ZIO.service[AuthorizationRestService]
+      gs      <- ZIO.service[GroupService]
       is      <- ZIO.service[IriService]
       kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(PermissionsResponderADMLive(ac, is, mr, ts, kpr, au, sf))
+      handler <- mr.subscribe(PermissionsResponderADMLive(ac, au, gs, is, kpr, mr, ts, sf))
     } yield handler
   }
 }

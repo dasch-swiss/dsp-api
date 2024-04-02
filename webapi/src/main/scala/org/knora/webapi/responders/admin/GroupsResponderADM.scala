@@ -63,7 +63,6 @@ final case class GroupsResponderADM(
    * Receives a message extending [[GroupsResponderRequestADM]], and returns an appropriate response message
    */
   def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case r: GroupGetADM                 => groupGetADM(r.groupIri)
     case r: MultipleGroupsGetRequestADM => multipleGroupsGetRequestADM(r.groupIris)
     case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
