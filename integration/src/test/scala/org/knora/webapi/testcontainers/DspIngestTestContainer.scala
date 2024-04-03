@@ -11,8 +11,6 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
-
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest")
 
 object DspIngestTestContainer {

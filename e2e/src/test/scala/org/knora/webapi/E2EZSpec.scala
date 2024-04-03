@@ -11,9 +11,11 @@ import zio.json._
 import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.test._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-abstract class E2EZSpec extends ZIOSpecDefault with TestStartup {
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.util.TestStartupUtil
+
+abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtil {
 
   def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 

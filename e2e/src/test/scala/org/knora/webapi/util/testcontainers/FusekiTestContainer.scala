@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.testcontainers
+package org.knora.webapi.util.testcontainers
 
 import org.testcontainers.containers.GenericContainer
 

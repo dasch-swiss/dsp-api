@@ -3,19 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi
+package org.knora.webapi.util
 
 import zio._
 import zio.http._
 
+import org.knora.webapi.core
 import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util
 
-trait TestStartup {
+trait TestStartupUtil {
 
   private val data = List(
     RdfDataObject(

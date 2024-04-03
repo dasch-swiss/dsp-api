@@ -1,9 +1,9 @@
-package org.knora.webapi
+package org.knora.webapi.util
 
 import zio.json._
 
-import org.knora.webapi.KnoraBaseJsonModels.ValueObjects._
-import org.knora.webapi.KnoraBaseJsonModels.ValuePrimitives._
+import org.knora.webapi.util.KnoraBaseJsonModels.ValueObjects._
+import org.knora.webapi.util.KnoraBaseJsonModels.ValuePrimitives._
 
 object KnoraBaseJsonModels {
 

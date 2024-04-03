@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi
+package org.knora.webapi.testcases
 
 import zio._
 import zio.json._
 import zio.test._
 
+import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.util.KnoraBaseJsonModels
 
 object SegmentE2EZSpec extends E2EZSpec {
 

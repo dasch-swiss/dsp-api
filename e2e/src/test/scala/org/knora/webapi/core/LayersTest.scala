@@ -62,7 +62,7 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers._
+import org.knora.webapi.util.testcontainers.FusekiTestContainer
 
 object LayersTest {
 
