@@ -7,10 +7,7 @@ package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
-import zio.URIO
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio._
 import zio.http
 import zio.http.URL
 
@@ -18,7 +15,6 @@ import java.net.Inet6Address
 import java.net.InetAddress
 
 import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
@@ -83,7 +79,8 @@ object SipiTestContainer {
   )
 
   val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {
-    val container = ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(make(_).toZio))
+    val container =
+      ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(it => ZioTestContainers.toZio(make(it))))
     (container >>> initSipi).orDie
   }
 }
