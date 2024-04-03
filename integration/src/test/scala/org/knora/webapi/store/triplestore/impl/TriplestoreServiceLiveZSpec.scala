@@ -13,6 +13,7 @@ import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].

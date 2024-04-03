@@ -15,6 +15,7 @@ import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
 

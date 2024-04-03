@@ -27,6 +27,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCode
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.testcontainers.SharedVolumes
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 object SipiIT extends ZIOSpecDefault {
 

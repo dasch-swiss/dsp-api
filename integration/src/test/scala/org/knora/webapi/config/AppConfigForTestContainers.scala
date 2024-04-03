@@ -11,6 +11,9 @@ import zio.config._
 import zio.config.typesafe.TypesafeConfigProvider
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
+import org.knora.webapi.testcontainers.DspIngestTestContainer
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.
