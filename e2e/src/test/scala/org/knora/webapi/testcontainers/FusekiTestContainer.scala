@@ -5,6 +5,7 @@
 
 package org.knora.webapi.testcontainers
 
+import org.testcontainers.containers.GenericContainer
 import zio.Task
 import zio.ULayer
 import zio.ZIO

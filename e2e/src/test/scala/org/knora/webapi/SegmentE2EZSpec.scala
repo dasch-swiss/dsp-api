@@ -5,6 +5,12 @@
 
 package org.knora.webapi
 
+import zio._
+import zio.json._
+import zio.test._
+
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+
 object SegmentE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(

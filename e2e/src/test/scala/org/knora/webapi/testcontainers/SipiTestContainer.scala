@@ -5,6 +5,8 @@
 
 package org.knora.webapi.testcontainers
 
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
 import zio.URIO
 import zio.URLayer
 import zio.ZIO

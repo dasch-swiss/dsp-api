@@ -5,6 +5,11 @@
 
 package org.knora.webapi
 
+import zio.json._
+import zio.test._
+
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+
 object SampleE2ESpec extends E2EZSpec {
 
   // add something to this list, if particular test data should be loaded
