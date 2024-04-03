@@ -762,24 +762,16 @@ final case class PermissionsResponderADMLive(
 
         // get group
         groupIri <-
-          if (OntologyConstants.KnoraAdmin.BuiltInGroups.contains(createRequest.forGroup)) {
+          if (OntologyConstants.KnoraAdmin.BuiltInGroups.contains(createRequest.forGroup))
             ZIO.succeed(createRequest.forGroup)
-          } else {
+          else
             for {
               iri <- ZIO.fromEither(GroupIri.from(createRequest.forGroup)).mapError(ValidationException(_))
               group <-
                 groupService
                   .findById(iri)
                   .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
-//              maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(createRequest.forGroup))
-//
-//              // if it does not exist then throw an error
-//              group: Group =
-//                maybeGroup.getOrElse(
-//                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
-//                )
             } yield group.id
-          }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri <- iriService.checkOrCreateEntityIri(
