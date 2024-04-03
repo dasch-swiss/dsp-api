@@ -6,9 +6,31 @@
 package org.knora.webapi
 
 import zio._
-import zio.test.*
+import zio.http._
+import zio.json._
+import zio.json.ast.Json
+import zio.json.ast.JsonCursor
+import zio.test._
 
-abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.LayersTest
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+
+abstract class E2EZSpec extends ZIOSpecDefault {
+
+  def prepareRepository(
+    rdfDataObjects: List[RdfDataObject],
+  ): ZIO[TriplestoreService with OntologyCache, Throwable, Unit] =
+    for {
+      _   <- ZIO.logInfo("Loading test data started ...")
+      tss <- ZIO.service[TriplestoreService]
+      _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+      _   <- ZIO.logInfo("... loading test data done.")
+      _   <- OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser).orDie
+    } yield ()
 
   private val testLayers =
     util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
