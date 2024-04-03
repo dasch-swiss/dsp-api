@@ -95,9 +95,6 @@ jobs:
     strategy:
       matrix:
         java: [ "21" ]
-    concurrency:
-      group: ${{ github.ref }}-${{ matrix.java }}-it
-      cancel-in-progress: true
     env:
       IS_NOOP: ${{ github.ref_name == 'main' || startsWith(github.ref_name, 'release-') }}
     steps:
