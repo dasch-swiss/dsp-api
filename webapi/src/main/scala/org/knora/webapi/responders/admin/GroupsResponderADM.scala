@@ -67,20 +67,6 @@ final case class GroupsResponderADM(
     case other                          => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  /**
-   * Gets all the groups (without built-in groups) and returns them as a sequence of [[Group]].
-   *
-   * @return all the groups as a sequence of [[Group]].
-   */
-  def groupsGetADM: Task[Seq[Group]] = {
-    val query = Construct(sparql.admin.txt.getGroups(None))
-    for {
-      groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
-      groups          = groupsResponse.statements.map(convertStatementsToGroupADM)
-      result         <- ZioHelper.sequence(groups.toSeq)
-    } yield result.sorted
-  }
-
   private def convertStatementsToGroupADM(statements: (SubjectV2, ConstructPredicateObjects)): Task[Group] = {
     val groupIri: SubjectV2                      = statements._1
     val propertiesMap: ConstructPredicateObjects = statements._2
