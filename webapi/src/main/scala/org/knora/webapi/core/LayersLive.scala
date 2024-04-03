@@ -8,7 +8,6 @@ package org.knora.webapi.core
 import org.apache.pekko.actor.ActorSystem
 import zio.ULayer
 import zio.ZLayer
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -33,9 +32,12 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.{
+  GroupsRestService,
+  PermissionsRestService,
+  ProjectRestService,
+  UsersRestService,
+}
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -72,7 +74,7 @@ object LayersLive {
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
       AssetPermissionsResponder & Authenticator & AuthorizationRestService &
       CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
+      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
@@ -106,6 +108,7 @@ object LayersLive {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
+      GroupsRestService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

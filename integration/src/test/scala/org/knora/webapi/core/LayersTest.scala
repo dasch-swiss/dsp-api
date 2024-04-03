@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio._
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -31,9 +30,12 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.{
+  GroupsRestService,
+  PermissionsRestService,
+  ProjectRestService,
+  UsersRestService,
+}
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
@@ -86,14 +88,14 @@ object LayersTest {
   type CommonR =
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
       AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer & IIIFRequestMessageHandler &
-      InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache &
-      OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 & PermissionUtilADM &
-      PermissionsResponderADM & PermissionsRestService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectService & ProjectRestService & QueryTraverser & RepositoryUpdater &
-      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes & SearchResponderV2 &
-      StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService & UserService &
-      UsersResponder & UsersRestService & ValuesResponderV2
+      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & HttpServer &
+      IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 &
+      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
+      PermissionUtilADM & PermissionsResponderADM & PermissionsRestService & ProjectExportService &
+      ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
+      RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
+      SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
+      UserService & UsersResponder & UsersRestService & ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -115,6 +117,7 @@ object LayersTest {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
+      GroupsRestService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

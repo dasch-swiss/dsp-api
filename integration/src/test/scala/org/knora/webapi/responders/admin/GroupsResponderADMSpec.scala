@@ -8,8 +8,8 @@ package org.knora.webapi.responders.admin
 import zio._
 
 import java.util.UUID
-
 import dsp.errors._
+import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -18,6 +18,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -30,13 +31,15 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 /**
  * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
  */
-class GroupsResponderADMSpec extends CoreSpec {
+class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
+  private val groupsRestService = ZIO.serviceWithZIO[GroupsRestService]
+
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        val groups = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[GroupsResponderADM](_.groupsGetADM))
-        assert(groups.nonEmpty)
-        assert(groups.size == 2)
+        val response = UnsafeZioRun.runOrThrow(groupsRestService(_.getGroups))
+        assert(response.groups.nonEmpty)
+        assert(response.groups.size == 2)
       }
     }
 
