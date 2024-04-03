@@ -57,7 +57,6 @@ object AdminApiModule {
       FilesEndpointsHandler.layer,
       GroupsEndpoints.layer,
       GroupsEndpointsHandler.layer,
-      GroupService.layer,
       GroupsRestService.layer,
       ListRestService.layer,
       ListsEndpoints.layer,
