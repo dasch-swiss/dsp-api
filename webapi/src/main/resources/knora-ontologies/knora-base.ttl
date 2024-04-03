@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v33" .
+    :ontologyVersion   "knora-base v34" .
 
 
 #################################################################
@@ -2366,3 +2366,40 @@
                        "Video Segment"@en ;
     :canBeInstantiated true ;
     rdfs:comment       "A segment of a video resource"@en .
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOf
+
+:isSequenceOf
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Sequenz von"@de,
+                            "is sequence of"@en,
+                            "fait partie de"@fr,
+                            "fa parte di"@it ;
+    rdfs:comment            "Deprecated in favour of :Segment"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :Resource ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasLinkTo .
+
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOfValue
+
+:isSequenceOfValue
+    rdf:type                owl:ObjectProperty ;
+    :objectClassConstraint  :LinkValue ;
+    :subjectClassConstraint :Resource ;
+    :isEditable             true ;
+    rdfs:comment            "Deprecated in favour of :Segment"@en ;
+    rdfs:subPropertyOf      :hasLinkToValue .
+
+###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
+
+:hasSequenceBounds
+    rdf:type               owl:ObjectProperty ;
+    :objectClassConstraint :IntervalValue ;
+    :isEditable            true ;
+    rdfs:subPropertyOf     :hasValue ;
+    rdfs:label             "Sequenz-Grenzen"@de,
+                           "Sequence Bounds"@en ;
+    rdfs:comment           "Deprecated in favour of :Segment"@en ;
+    rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
