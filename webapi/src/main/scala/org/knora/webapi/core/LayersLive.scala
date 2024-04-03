@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import org.apache.pekko.actor.ActorSystem
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -32,12 +33,10 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.{
-  GroupsRestService,
-  PermissionsRestService,
-  ProjectRestService,
-  UsersRestService,
-}
+import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper

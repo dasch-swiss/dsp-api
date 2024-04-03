@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio._
+
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -30,12 +31,10 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.{
-  GroupsRestService,
-  PermissionsRestService,
-  ProjectRestService,
-  UsersRestService,
-}
+import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.ProjectRestService
+import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._

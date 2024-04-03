@@ -104,7 +104,7 @@ final case class GroupsResponderADM(
    * @param groupIri       the IRI of the group requested.
    * @return information about the group as a [[Group]]
    */
-  def groupGetADM(groupIri: IRI): Task[Option[Group]] = {
+  private def groupGetADM(groupIri: IRI): Task[Option[Group]] = {
     val query = Construct(sparql.admin.txt.getGroups(maybeIri = Some(groupIri)))
     for {
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.headOption)
@@ -118,7 +118,7 @@ final case class GroupsResponderADM(
    * @param groupIris      the IRIs of the groups being requested
    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
    */
-  def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
+  private def multipleGroupsGetRequestADM(groupIris: Set[IRI]): Task[Set[GroupGetResponseADM]] =
     ZioHelper.sequence(groupIris.map { iri =>
       groupGetADM(iri)
         .flatMap(ZIO.fromOption(_))

@@ -8,8 +8,8 @@ package org.knora.webapi.responders.admin
 import zio._
 
 import java.util.UUID
+
 import dsp.errors._
-import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -25,19 +25,21 @@ import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
  */
-class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
-  private val groupsRestService = ZIO.serviceWithZIO[GroupsRestService]
+class GroupsResponderADMSpec extends CoreSpec {
+  private val groupRestService = ZIO.serviceWithZIO[GroupsRestService]
+  private val groupService     = ZIO.serviceWithZIO[GroupService]
 
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        val response = UnsafeZioRun.runOrThrow(groupsRestService(_.getGroups))
+        val response = UnsafeZioRun.runOrThrow(groupRestService(_.getGroups))
         assert(response.groups.nonEmpty)
         assert(response.groups.size == 2)
       }
@@ -45,15 +47,15 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked about a group identified by 'iri' " should {
       "return group info if the group is known " in {
-        val group =
-          UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[GroupsResponderADM](_.groupGetADM(imagesReviewerGroup.id)))
-        assert(group.nonEmpty)
-        assert(group.map(_.id).contains(imagesReviewerGroup.id))
+        val iri      = GroupIri.unsafeFrom(imagesReviewerGroup.id)
+        val response = UnsafeZioRun.runOrThrow(groupService(_.findById(iri)))
+        assert(response.nonEmpty)
+        assert(response.map(_.id).contains(imagesReviewerGroup.id))
       }
 
       "return 'None' when the group is unknown " in {
-        val iri      = "http://rdfh.ch/groups/notexisting"
-        val response = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[GroupsResponderADM](_.groupGetADM(iri)))
+        val iri      = GroupIri.unsafeFrom("http://rdfh.ch/groups/0987/notexisting")
+        val response = UnsafeZioRun.runOrThrow(groupService(_.findById(iri)))
         assert(response.isEmpty)
       }
     }
