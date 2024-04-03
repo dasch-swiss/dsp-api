@@ -12,13 +12,49 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 trait TestStartup {
 
+  private val data = List(
+    RdfDataObject(
+      path = "test_data/project_data/admin-data.ttl",
+      name = "http://www.knora.org/data/admin",
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/permissions-data.ttl",
+      name = "http://www.knora.org/data/permissions",
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/system-data.ttl",
+      name = "http://www.knora.org/data/0000/SystemProject",
+    ),
+    RdfDataObject(
+      path = "knora-ontologies/knora-admin.ttl",
+      name = "http://www.knora.org/ontology/knora-admin",
+    ),
+    RdfDataObject(
+      path = "knora-ontologies/knora-base.ttl",
+      name = "http://www.knora.org/ontology/knora-base",
+    ),
+    RdfDataObject(
+      path = "knora-ontologies/salsah-gui.ttl",
+      name = "http://www.knora.org/ontology/salsah-gui",
+    ),
+    RdfDataObject(
+      path = "knora-ontologies/standoff-onto.ttl",
+      name = "http://www.knora.org/ontology/standoff",
+    ),
+    RdfDataObject(
+      path = "knora-ontologies/standoff-data.ttl",
+      name = "http://www.knora.org/data/standoff",
+    ),
+  )
+
   protected def prepareRepository(
     rdfDataObjects: List[RdfDataObject],
   ): ZIO[TriplestoreService with OntologyCache, Throwable, Unit] =
     for {
       _   <- ZIO.logInfo("Loading test data started ...")
       tss <- ZIO.service[TriplestoreService]
-      _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+      rdf  = data ::: rdfDataObjects
+      _   <- tss.resetTripleStoreContent(rdf, false).timeout(480.seconds)
       _   <- ZIO.logInfo("... loading test data done.")
       _   <- OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser).orDie
     } yield ()

@@ -15,6 +15,10 @@ object SegmentE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
+      path = "test_data/project_ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything",
+    ),
+    RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
       name = "http://www.knora.org/data/0001/anything",
     ),
