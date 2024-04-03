@@ -13,7 +13,7 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.KnoraBaseJsonModels
 
-object SegmentE2EZSpec extends E2EZSpec {
+object SegmentSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

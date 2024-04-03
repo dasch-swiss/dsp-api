@@ -11,7 +11,7 @@ import zio.test._
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
-object SampleE2ESpec extends E2EZSpec {
+object SampleSpec extends E2EZSpec {
 
   // add something to this list, if particular test data should be loaded
   override def rdfDataObjects: List[RdfDataObject] = List.empty
