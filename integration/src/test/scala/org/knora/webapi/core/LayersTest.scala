@@ -88,10 +88,10 @@ object LayersTest {
   type CommonR =
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
       AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & HttpServer &
-      IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder & ListsResponderV2 &
-      MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo & OntologyResponderV2 &
-      PermissionUtilADM & PermissionsResponderADM & PermissionsRestService & ProjectExportService &
+      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService &
+      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder &
+      ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
+      OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PermissionsRestService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
       RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
@@ -118,6 +118,7 @@ object LayersTest {
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
       GroupsRestService.layer,
+      GroupService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

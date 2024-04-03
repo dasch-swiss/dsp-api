@@ -40,7 +40,7 @@ object AdminApiModule {
 
   type Dependencies =
     AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService &
-      GroupsResponderADM & HandlerMapper & KnoraGroupService & KnoraProjectService & KnoraResponseRenderer &
+      GroupsResponderADM & GroupService & HandlerMapper & KnoraGroupService & KnoraProjectService & KnoraResponseRenderer &
       KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache &
       PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService &
       TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder

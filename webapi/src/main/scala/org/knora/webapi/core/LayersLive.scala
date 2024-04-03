@@ -74,7 +74,7 @@ object LayersLive {
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
       AssetPermissionsResponder & Authenticator & AuthorizationRestService &
       CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & HttpServer &
+      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       JwtService & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponderADM & PermissionsRestService &
@@ -109,6 +109,7 @@ object LayersLive {
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
       GroupsRestService.layer,
+      GroupService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
