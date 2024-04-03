@@ -8185,6 +8185,20 @@
             "rdfs:comment": "Indicates the bounds of a segment, i.e. the start and end point in the containing resource."
         },
         {
+            "rdfs:label": "Sequence Bounds",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "rdfs:comment": "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource.",
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:IntervalValue"
+            },
+            "@id": "knora-api:hasSequenceBounds"
+        },
+        {
             "rdfs:label": "has Standoff Link to",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
@@ -8580,6 +8594,41 @@
                 "@id": "knora-api:LinkValue"
             },
             "@id": "knora-api:isSegmentOfValue"
+        },
+        {
+            "rdfs:label": "is sequence of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasLinkTo"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:Resource"
+            },
+            "@id": "knora-api:isSequenceOf",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Deprecated in favour of :Segment"
+        },
+        {
+            "knora-api:isLinkValueProperty": true,
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasLinkToValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:LinkValue"
+            },
+            "@id": "knora-api:isSequenceOfValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Deprecated in favour of :Segment"
         },
         {
             "rdfs:label": "is shared",
