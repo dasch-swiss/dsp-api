@@ -11,42 +11,12 @@ import zio.config._
 import zio.config.typesafe.TypesafeConfigProvider
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.
  */
 object AppConfigForTestContainers {
-
-  private def alterFusekiAndSipiPort(
-    oldConfig: AppConfig,
-    fusekiContainer: FusekiTestContainer,
-    sipiContainer: SipiTestContainer,
-    dspIngestContainer: DspIngestTestContainer,
-  ): UIO[AppConfig] = {
-
-    val newFusekiPort    = fusekiContainer.getFirstMappedPort
-    val newSipiPort      = sipiContainer.getFirstMappedPort
-    val newDspIngestPort = dspIngestContainer.getFirstMappedPort
-
-    val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
-
-    val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
-    val alteredSipi        = oldConfig.sipi.copy(internalPort = newSipiPort)
-    val alteredDspIngest   = oldConfig.dspIngest.copy(baseUrl = s"http://localhost:$newDspIngestPort")
-
-    val newConfig: AppConfig =
-      oldConfig.copy(
-        allowReloadOverHttp = true,
-        triplestore = alteredTriplestore,
-        sipi = alteredSipi,
-        dspIngest = alteredDspIngest,
-      )
-
-    ZIO.succeed(newConfig)
-  }
 
   private def alterFusekiPort(
     oldConfig: AppConfig,
@@ -75,25 +45,6 @@ object AppConfigForTestContainers {
    * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
   private val config: UIO[AppConfig] = read(AppConfig.descriptor from source).orDie
-
-  /**
-   * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
-   */
-  val testcontainers
-    : ZLayer[DspIngestTestContainer & FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
-    val appConfigLayer = ZLayer {
-      for {
-        appConfig          <- config
-        fusekiContainer    <- ZIO.service[FusekiTestContainer]
-        sipiContainer      <- ZIO.service[SipiTestContainer]
-        dspIngestContainer <- ZIO.service[DspIngestTestContainer]
-        alteredConfig      <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer, dspIngestContainer)
-      } yield alteredConfig
-    }
-    AppConfig
-      .projectAppConfigurations(appConfigLayer)
-      .tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
-  }
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki.

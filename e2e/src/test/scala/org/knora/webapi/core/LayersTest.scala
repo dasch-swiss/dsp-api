@@ -58,7 +58,6 @@ import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
@@ -67,14 +66,8 @@ import org.knora.webapi.testcontainers._
 
 object LayersTest {
 
-  /**
-   * The `Environment`s that we require for the tests to run - with or without Sipi
-   */
   type DefaultTestEnvironmentWithoutSipi =
     LayersLive.DspEnvironmentLive & FusekiTestContainer
-
-  type DefaultTestEnvironmentWithSipi =
-    DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images
 
   type CommonR0 =
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtService & SipiService & StringFormatter
@@ -91,7 +84,7 @@ object LayersTest {
       StandoffResponderV2 & StandoffTagUtilV2 & State & TriplestoreService & UserService &
       UsersResponder & UsersRestService & ValuesResponderV2
 
-  private val commonLayersForAllIntegrationTests =
+  private val commonLayersForAllTests =
     ZLayer.makeSome[CommonR0, CommonR](
       AdminModule.layer,
       AdminApiModule.layer,
@@ -155,22 +148,6 @@ object LayersTest {
       ManagementEndpoints.layer,
     )
 
-  private val fusekiAndSipiTestcontainers =
-    ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & JwtService & SharedVolumes.Images &
-        SipiService & SipiTestContainer & StringFormatter,
-    ](
-      AppConfigForTestContainers.testcontainers,
-      DspIngestClientLive.layer,
-      DspIngestTestContainer.layer,
-      FusekiTestContainer.layer,
-      SipiTestContainer.layer,
-      SipiServiceLive.layer,
-      JwtServiceLive.layer,
-      SharedVolumes.Images.layer,
-      StringFormatter.test,
-    )
-
   private val fusekiTestcontainers =
     ZLayer.make[FusekiTestContainer & AppConfigurations & JwtService & SipiService & StringFormatter](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
@@ -180,34 +157,16 @@ object LayersTest {
       StringFormatter.test,
     )
 
-  /**
-   * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
-   * Sipi/IIIFService will be mocked with the [[SipiServiceMock]]
-   *
-   * @param system An optional [[pekko.actor.ActorSystem]] for use with Akka's [[pekko.testkit.TestKit]]
-   * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
-   */
-  def integrationTestsWithFusekiTestcontainers(
+  def testsWithFusekiTestcontainers(
     system: Option[pekko.actor.ActorSystem] = None,
   ): ULayer[DefaultTestEnvironmentWithoutSipi] = {
     // Due to bug in Scala 2 compiler invoking methods with by-name parameters in provide/provideSome method does not work
     // assign the layer to a temp val and use it in the ZLayer.make
     val temp = system.map(ActorSystemTest.layer).getOrElse(ActorSystem.layer)
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
-      commonLayersForAllIntegrationTests,
+      commonLayersForAllTests,
       fusekiTestcontainers,
       temp,
     )
   }
-
-  /**
-   * Provides a layer for integration tests which depend on Fuseki and Sipi as Testcontainers.
-   * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithSipi]]
-   */
-  val integrationTestsWithSipiAndFusekiTestcontainers: ULayer[DefaultTestEnvironmentWithSipi] =
-    ZLayer.make[DefaultTestEnvironmentWithSipi](
-      commonLayersForAllIntegrationTests,
-      fusekiAndSipiTestcontainers,
-      ActorSystem.layer,
-    )
 }

@@ -16,7 +16,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
  * Can be used in place of [[SipiServiceLive]] for tests without an actual Sipi server, by returning hard-coded
@@ -24,40 +23,15 @@ import org.knora.webapi.store.iiif.errors.SipiException
  */
 case class SipiServiceMock() extends SipiService {
 
-  /**
-   * A request with this filename will always cause a Sipi error.
-   */
-  private val FAILURE_FILENAME: String = "failure.jp2"
+  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] = ???
 
-  override def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse] =
-    ZIO.succeed(
-      FileMetadataSipiResponse(
-        originalFilename = Some("test2.tiff"),
-        originalMimeType = Some("image/tiff"),
-        internalMimeType = "image/jp2",
-        width = Some(512),
-        height = Some(256),
-        numpages = None,
-        duration = None,
-        fps = None,
-      ),
-    )
-
-  def moveTemporaryFileToPermanentStorage(
+  override def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest,
-  ): Task[SuccessResponseV2] =
-    if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to move file to permanent storage"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
-    }
+  ): Task[SuccessResponseV2] = ???
 
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
-    if (deleteTemporaryFileRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to delete temporary file"))
-    } else {
-      ZIO.succeed(SuccessResponseV2("Deleted temporary file"))
-    }
+  override def deleteTemporaryFile(
+    deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest,
+  ): Task[SuccessResponseV2] = ???
 
   override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = ???
 

@@ -33,7 +33,7 @@ abstract class E2EZSpec extends ZIOSpecDefault {
     } yield ()
 
   private val testLayers =
-    util.Logger.text() >>> core.LayersTest.integrationTestsWithFusekiTestcontainers()
+    util.Logger.text() >>> core.LayersTest.testsWithFusekiTestcontainers()
 
   def rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
