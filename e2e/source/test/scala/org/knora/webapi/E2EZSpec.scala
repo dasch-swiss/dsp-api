@@ -6,16 +6,7 @@
 package org.knora.webapi
 
 import zio._
-import zio.http._
-import zio.json._
-import zio.json.ast.Json
-import zio.json.ast.JsonCursor
-import zio.test._
-
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.LayersTest
-import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import zio.test.*
 
 abstract class E2EZSpec extends ZIOSpecDefault with TestStartupUtils {
 

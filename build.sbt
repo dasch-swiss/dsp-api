@@ -61,6 +61,7 @@ lazy val root: Project = Project(id = "root", file("."))
     webapi,
     sipi,
     integration,
+    e2e,
   )
   .settings(
     // values set for all sub-projects
@@ -287,7 +288,6 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
   )
@@ -295,6 +295,39 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "integration",
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    ),
+  )
+
+//////////////////////////////////////
+// E2E (./e2e)
+//////////////////////////////////////
+
+run / connectInput := true
+
+lazy val e2e: Project = Project(id = "e2e", base = file("e2e"))
+  .dependsOn(webapi, sipi)
+  .settings(buildSettings)
+  .settings(
+    inConfig(Test) {
+      Defaults.testSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(Test)
+    },
+    scalacOptions ++= customScalacOptions,
+    logLevel := Level.Info,
+    javaAgents += Dependencies.aspectjweaver,
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    Test / exportJars         := false,
+    Test / fork               := true, // run tests in a forked JVM
+    Test / testForkedParallel := false,
+    Test / parallelExecution  := false,
+    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.e2eTestDependencies,
+  )
+  .settings(LocalSettings.localScalacOptions: _*)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
+  .settings(
+    name := "e2e",
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     ),

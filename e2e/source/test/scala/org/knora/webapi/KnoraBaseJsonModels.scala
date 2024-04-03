@@ -1,9 +1,7 @@
-package org.knora.webapi.e2ez
+package org.knora.webapi
 
-import zio.json._
-
-import KnoraBaseJsonModels.ValuePrimitives._
-import KnoraBaseJsonModels.ValueObjects._
+import org.knora.webapi.KnoraBaseJsonModels.ValuePrimitives._
+import org.knora.webapi.KnoraBaseJsonModels.ValueObjects._
 
 object KnoraBaseJsonModels {
 

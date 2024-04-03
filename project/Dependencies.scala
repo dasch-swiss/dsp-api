@@ -147,6 +147,8 @@ object Dependencies {
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 
+  val e2eTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+
   val webapiDependencies = refined ++ Seq(
     pekkoActor,
     pekkoHttp,
