@@ -218,6 +218,10 @@ test: ## runs all unit tests
 integration-test: docker-build-sipi-image ## runs all integration tests
 	$(SBTX) -v coverage "integration/test" coverageAggregate
 
+.PHONY: e2e-test
+e2e-test: docker-build-sipi-image ## runs all e2e tests
+	$(SBTX) -v coverage "e2e/test" coverageAggregate
+
 
 #################################
 ## Database Management
