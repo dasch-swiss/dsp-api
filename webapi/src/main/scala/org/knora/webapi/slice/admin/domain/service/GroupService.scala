@@ -28,10 +28,11 @@ final case class GroupService(
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
-      projectIri <- ZIO
-                      .fromOption(knoraGroup.belongsToProject)
-                      .orElseFail(InconsistentRepositoryDataException("Project IRI not found."))
-                      .logError(s"Project IRI not present on KnoraGroup: $knoraGroup")
+      projectIri <-
+        ZIO
+          .fromOption(knoraGroup.belongsToProject)
+          .orElseFail(InconsistentRepositoryDataException("Project IRI not found."))
+          .logError(s"Project IRI not present on KnoraGroup: $knoraGroup")
       project <-
         projectService
           .findById(projectIri)
@@ -40,18 +41,14 @@ final case class GroupService(
               s"Project $projectIri was referenced by ${knoraGroup.id.value} but was not found in the triplestore.",
             ),
           )
-      group <-
-        ZIO.attempt(
-          Group(
-            id = knoraGroup.id.value,
-            name = knoraGroup.groupName.value,
-            descriptions = knoraGroup.groupDescriptions.value,
-            project = project,
-            status = knoraGroup.status.value,
-            selfjoin = knoraGroup.hasSelfJoinEnabled.value,
-          ),
-        )
-    } yield group
+    } yield Group(
+      id = knoraGroup.id.value,
+      name = knoraGroup.groupName.value,
+      descriptions = knoraGroup.groupDescriptions.value,
+      project = project,
+      status = knoraGroup.status.value,
+      selfjoin = knoraGroup.hasSelfJoinEnabled.value,
+    )
 
   def toKnoraGroup(group: Group): KnoraGroup =
     KnoraGroup(
