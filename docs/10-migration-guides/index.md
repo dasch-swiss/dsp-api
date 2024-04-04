@@ -42,7 +42,7 @@ Then, only the migration guides should be kept.
 
 ### `isSequenceOf` and `hasSequenceBounds`
 
-With the introduction of the new `Segment` concept in v31,
+With the introduction of the new `Segment` concept in DSP-API v31.0.0,
 the previously existing properties `knora-base:isSequenceOf` and `knora-base:hasSequenceBounds`
 have been deprecated and will be removed in a future version.
 
