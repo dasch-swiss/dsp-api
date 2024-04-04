@@ -6,6 +6,10 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.util.UUID
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
@@ -41,9 +45,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries._
 import org.knora.webapi.util.ZioHelper
-import zio._
-
-import java.util.UUID
 
 final case class GroupsResponderADM(
   triplestore: TriplestoreService,
