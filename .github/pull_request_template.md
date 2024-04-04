@@ -17,6 +17,7 @@ Issue Number: DEV-
 - [ ] perf: performance improvements
 - [ ] refactor: represents production code refactoring
 - [ ] test: adding or refactoring tests (no production code change)
+- [ ] deprecated: Deprecation warning (ideally referencing a migration guide)
 
 ### Basic requirements for bug fixes and features
 
