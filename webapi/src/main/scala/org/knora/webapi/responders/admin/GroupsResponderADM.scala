@@ -6,10 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.util.UUID
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
@@ -45,6 +41,9 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries._
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.util.UUID
 
 final case class GroupsResponderADM(
   triplestore: TriplestoreService,
@@ -317,10 +316,12 @@ final case class GroupsResponderADM(
           .someOrFail(NotFoundException(s"Group <${groupIri.value}> not found. Aborting update request."))
 
       /* Verify that the potentially new name is unique */
-      groupByNameAlreadyExists <-
-        if (request.name.nonEmpty && groupADM.project.isDefined)
-          groupByNameAndProjectExists(request.name.get.value, groupADM.project.get.id)
-        else ZIO.succeed(false)
+      groupByNameAlreadyExists <- (
+                                    for {
+                                      name    <- request.name
+                                      project <- groupADM.project
+                                    } yield groupByNameAndProjectExists(name.value, project.id)
+                                  ).getOrElse(ZIO.succeed(false))
       _ <- ZIO
              .fail(BadRequestException(s"Group with the name '${request.name.get.value}' already exists."))
              .when(groupByNameAlreadyExists)
