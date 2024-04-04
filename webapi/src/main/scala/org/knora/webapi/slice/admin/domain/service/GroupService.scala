@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
+import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
@@ -27,39 +28,37 @@ final case class GroupService(
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
+      projectIri <- ZIO.fromOption(knoraGroup.belongsToProject).orElseFail(NotFoundException("Project IRI not found."))
       project <-
-        projectService.findById(
-          knoraGroup.belongsToProject.getOrElse(throw NotFoundException("Mo ProjectIri found.")),
-        )
+        projectService
+          .findById(ProjectIri.unsafeFrom(projectIri.value))
+          .someOrFail(
+            InconsistentRepositoryDataException(
+              s"Project ${projectIri.value} was referenced by ${knoraGroup.id.value} but was not found in the triplestore.",
+            ),
+          )
       group <-
         ZIO.attempt(
           Group(
             id = knoraGroup.id.value,
             name = knoraGroup.groupName.value,
             descriptions = knoraGroup.groupDescriptions.value,
-            project = project.getOrElse(
-              throw NotFoundException(s"Project with IRI: ${knoraGroup.belongsToProject} not found."),
-            ),
+            project = project,
             status = knoraGroup.status.value,
             selfjoin = knoraGroup.hasSelfJoinEnabled.value,
           ),
         )
     } yield group
 
-  def toKnoraGroup(group: Group): Task[KnoraGroup] =
-    for {
-      knoraGroup <-
-        ZIO.attempt(
-          KnoraGroup(
-            id = GroupIri.unsafeFrom(group.id),
-            groupName = GroupName.unsafeFrom(group.name),
-            groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
-            status = GroupStatus.from(group.status),
-            belongsToProject = Some(ProjectIri.unsafeFrom(group.project.id)),
-            hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
-          ),
-        )
-    } yield knoraGroup
+  def toKnoraGroup(group: Group): KnoraGroup =
+    KnoraGroup(
+      id = GroupIri.unsafeFrom(group.id),
+      groupName = GroupName.unsafeFrom(group.name),
+      groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
+      status = GroupStatus.from(group.status),
+      belongsToProject = Some(ProjectIri.unsafeFrom(group.project.id)),
+      hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
+    )
 }
 
 object GroupService {

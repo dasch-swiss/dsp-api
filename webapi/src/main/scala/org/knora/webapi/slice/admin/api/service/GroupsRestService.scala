@@ -28,9 +28,8 @@ final case class GroupsRestService(
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
-    internal     <- groupService.findAll
-    regularGroups = internal.filter(_.groupIri.isRegularGroupIri)
-    external     <- format.toExternalADM(GroupsGetResponseADM(regularGroups))
+    internal <- groupService.findAll
+    external <- format.toExternalADM(GroupsGetResponseADM(internal))
   } yield external
 
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
