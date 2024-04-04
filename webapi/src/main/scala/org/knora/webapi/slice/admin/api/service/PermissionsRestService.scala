@@ -13,6 +13,7 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
@@ -33,15 +34,17 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class PermissionsRestService(
-                                         responder: PermissionsResponder,
-                                         knoraProjectService: KnoraProjectService,
-                                         auth: AuthorizationRestService,
-                                         format: KnoraResponseRenderer,
+  responder: PermissionsResponder,
+  knoraProjectService: KnoraProjectService,
+  auth: AuthorizationRestService,
+  format: KnoraResponseRenderer,
+  administrativePermissionService: AdministrativePermissionService,
 ) {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
@@ -170,9 +173,18 @@ final case class PermissionsRestService(
     user: User,
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value)
-      ext    <- format.toExternalADM(result)
+      _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      result <-
+        administrativePermissionService
+          .findByGroupAndProject(groupIri, projectIri)
+          .map(_.map(AdministrativePermissionADM.from))
+          .someOrFail(
+            NotFoundException(
+              s"No Administrative Permission found for project: ${projectIri.value}, group: ${groupIri.value} combination",
+            ),
+          )
+          .map(AdministrativePermissionGetResponseADM.apply)
+      ext <- format.toExternalADM(result)
     } yield ext
 }
 

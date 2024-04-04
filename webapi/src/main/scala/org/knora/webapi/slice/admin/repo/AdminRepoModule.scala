@@ -5,8 +5,9 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import zio.ZLayer
+
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo

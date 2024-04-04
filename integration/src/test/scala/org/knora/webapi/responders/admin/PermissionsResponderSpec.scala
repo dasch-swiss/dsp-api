@@ -32,6 +32,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -58,6 +59,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
     ),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
+
+  private val PermissionsRestService = ZIO.serviceWithZIO[PermissionsRestService]
 
   "The PermissionsResponderADM" when {
 
@@ -177,10 +180,11 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return Permission.Administrative for project and group" in {
         val result = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[PermissionsResponder](
+          PermissionsRestService(
             _.getPermissionsApByProjectAndGroupIri(
-              imagesProjectIri,
-              KnoraGroupRepo.builtIn.ProjectMember.id.value,
+              ProjectIri.unsafeFrom(imagesProjectIri),
+              KnoraGroupRepo.builtIn.ProjectMember.id,
+              rootUser,
             ),
           ),
         )

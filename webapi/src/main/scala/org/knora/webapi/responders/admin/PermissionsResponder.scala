@@ -11,6 +11,7 @@ import zio._
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
+
 import dsp.errors.BadRequestException
 import dsp.errors._
 import org.knora.webapi._
@@ -83,8 +84,6 @@ final case class PermissionsResponder(
       permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup)
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
-    case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, _) =>
-      administrativePermissionForProjectGroupGetADM(projectIri, groupIri)
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
       objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
@@ -357,40 +356,15 @@ final case class PermissionsResponder(
    * @param groups     the list of groups for which administrative permissions are retrieved and combined.
    * @return a set of [[PermissionADM]].
    */
-  private def administrativePermissionForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] = {
-
-    /* Get administrative permissions for each group and combine them */
-    val gpf: Seq[Task[Seq[PermissionADM]]] = for {
-      groupIri <- groups
-
-      groupPermissions: Task[Seq[PermissionADM]] =
-        administrativePermissionForProjectGroupGetADM(projectIri, groupIri).map {
-          case Some(ap: AdministrativePermissionADM) =>
-            ap.hasPermissions.toSeq
-          case None => Seq.empty[PermissionADM]
-        }
-
-    } yield groupPermissions
-
-    val allPermissionsFuture: Task[Seq[Seq[PermissionADM]]] = ZioHelper.sequence(gpf)
-
-    /* combines all permissions for each group and removes duplicates  */
-    val result: Task[Set[PermissionADM]] = for {
-      allPermissions <- allPermissionsFuture
-
-      // remove instances with empty PermissionADM sets
-      cleanedAllPermissions = allPermissions.filter(_.nonEmpty)
-
-      /* Combine permission sequences */
-      combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionADM]) { (acc, seq) =>
-                   acc ++ seq
-                 }
-      /* Remove possible duplicate permissions */
-      result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
-
-    } yield result
-    result
-  }
+  private def administrativePermissionForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] =
+    ZIO
+      .foreach(groups) { groupIri =>
+        administrativePermissionService
+          .findByGroupAndProject(GroupIri.unsafeFrom(groupIri), ProjectIri.unsafeFrom(projectIri))
+          .map(Chunk.from(_).flatMap(_.permissions.flatMap(PermissionADM.from)))
+      }
+      .map(_.flatten)
+      .map(PermissionUtilADM.removeDuplicatePermissions)
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
@@ -456,69 +430,6 @@ final case class PermissionsResponder(
                }
     } yield result
 
-  /**
-   * Gets a single administrative permission identified by project and group.
-   *
-   * @param projectIri     the project.
-   * @param groupIri       the group.
-   * @return an option containing an [[AdministrativePermissionADM]]
-   */
-  private def administrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI) =
-    for {
-      permissionQueryResponse <-
-        triplestore.query(Select(sparql.admin.txt.getAdministrativePermissionForProjectAndGroup(projectIri, groupIri)))
-
-      permissionQueryResponseRows = permissionQueryResponse.results.bindings
-
-      permission =
-        if (permissionQueryResponseRows.nonEmpty) {
-
-          /* check if we only got one administrative permission back */
-          val apCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-          if (apCount > 1)
-            throw InconsistentRepositoryDataException(
-              s"Only one administrative permission instance allowed for project: $projectIri and group: $groupIri combination, but found $apCount.",
-            )
-
-          /* get the iri of the retrieved permission */
-          val returnedPermissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
-
-          val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
-            permissionQueryResponseRows.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
-              predicate -> rows.map(_.rowMap("o"))
-            }
-          val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.AP,
-          )
-          Some(
-            permissionsmessages.AdministrativePermissionADM(
-              iri = returnedPermissionIri,
-              forProject = projectIri,
-              forGroup = groupIri,
-              hasPermissions = hasPermissions,
-            ),
-          )
-        } else {
-          None
-        }
-    } yield permission
-
-  def getPermissionsApByProjectAndGroupIri(
-    projectIri: IRI,
-    groupIri: IRI,
-  ): Task[AdministrativePermissionGetResponseADM] =
-    for {
-      ap <- administrativePermissionForProjectGroupGetADM(projectIri, groupIri)
-      result = ap match {
-                 case Some(ap) => permissionsmessages.AdministrativePermissionGetResponseADM(ap)
-                 case None =>
-                   throw NotFoundException(
-                     s"No Administrative Permission found for project: $projectIri, group: $groupIri combination",
-                   )
-               }
-    } yield result
-
   private def validate(req: CreateAdministrativePermissionAPIRequestADM): Task[Unit] = ZIO.attempt {
     req.id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
@@ -563,20 +474,24 @@ final case class PermissionsResponder(
       for {
         _ <- validate(createRequest)
         // does the permission already exist
-        checkResult <- administrativePermissionForProjectGroupGetADM(createRequest.forProject, createRequest.forGroup)
-
-        _ = checkResult match {
+        projectId <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
+        _ <- // ensure that no permission already exists for project and group
+          administrativePermissionService
+            .findByGroupAndProject(GroupIri.unsafeFrom(createRequest.forGroup), projectId)
+            .map(_.map(AdministrativePermissionADM.from))
+            .flatMap {
               case Some(ap: AdministrativePermissionADM) =>
-                throw DuplicateValueException(
-                  s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
-                    s"This permission currently has the scope '${PermissionUtilADM
-                        .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
-                    s"Use its IRI ${ap.iri} to modify it, if necessary.",
+                ZIO.fail(
+                  DuplicateValueException(
+                    s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
+                      s"This permission currently has the scope '${PermissionUtilADM
+                          .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
+                      s"Use its IRI ${ap.iri} to modify it, if necessary.",
+                  ),
                 )
-              case None => ()
+              case None => ZIO.unit
             }
 
-        projectId <- ZIO.fromEither(ProjectIri.from(createRequest.forProject)).mapError(BadRequestException.apply)
         project <-
           knoraProjectService
             .findById(projectId)

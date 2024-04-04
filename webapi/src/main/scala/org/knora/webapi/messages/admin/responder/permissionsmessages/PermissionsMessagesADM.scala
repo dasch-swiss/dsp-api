@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+import zio.Chunk
 
 import java.util.UUID
 
@@ -23,6 +24,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
+import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
@@ -172,29 +175,6 @@ case class AdministrativePermissionForIriGetRequestADM(
   apiRequestID: UUID,
 ) extends PermissionsResponderRequestADM {
   PermissionIri.from(administrativePermissionIri).fold(msg => throw BadRequestException(msg), _ => ())
-}
-
-/**
- * A message that requests an administrative permission object identified by project and group.
- * A response will contain an optional [[AdministrativePermissionGetResponseADM]] object.
- *
- * @param projectIri     the project.
- * @param groupIri       the group.
- * @param requestingUser the user initiating the request.
- */
-case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: User)
-    extends PermissionsResponderRequestADM {
-  ProjectIri.from(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
-  }
 }
 
 // Object Access Permissions
@@ -657,6 +637,16 @@ case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI,
   def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
 }
 
+object AdministrativePermissionADM {
+  def from(permission: AdministrativePermission): AdministrativePermissionADM =
+    AdministrativePermissionADM(
+      iri = permission.id.value,
+      forProject = permission.forProject.value,
+      forGroup = permission.forGroup.value,
+      hasPermissions = permission.permissions.flatMap(PermissionADM.from).toSet,
+    )
+}
+
 /**
  * Represents 'knora-base:DefaultObjectAccessPermission'
  *
@@ -709,6 +699,15 @@ object PermissionADM {
     case oa: Permission.ObjectAccess  => Some(oa.code)
     case _: Permission.Administrative => None
   }
+
+  def from(part: AdministrativePermissionPart): Chunk[PermissionADM] =
+    part match {
+      case AdministrativePermissionPart.Simple(permission) => Chunk(PermissionADM.from(permission))
+      case AdministrativePermissionPart.ResourceCreateRestricted(resourceClassIris) =>
+        resourceClassIris.map(_.value).map(PermissionADM.from(part.permission, _))
+      case AdministrativePermissionPart.ProjectAdminGroupRestricted(groupIris) =>
+        groupIris.map(_.value).map(PermissionADM.from(part.permission, _))
+    }
 }
 
 /**

@@ -35,14 +35,14 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class ProjectRestService(
-                                     format: KnoraResponseRenderer,
-                                     projectService: ProjectService,
-                                     knoraProjectService: KnoraProjectService,
-                                     permissionResponder: PermissionsResponder,
-                                     projectExportService: ProjectExportService,
-                                     projectImportService: ProjectImportService,
-                                     userService: UserService,
-                                     auth: AuthorizationRestService,
+  format: KnoraResponseRenderer,
+  projectService: ProjectService,
+  knoraProjectService: KnoraProjectService,
+  permissionResponder: PermissionsResponder,
+  projectExportService: ProjectExportService,
+  projectImportService: ProjectImportService,
+  userService: UserService,
+  auth: AuthorizationRestService,
 ) {
 
   /**

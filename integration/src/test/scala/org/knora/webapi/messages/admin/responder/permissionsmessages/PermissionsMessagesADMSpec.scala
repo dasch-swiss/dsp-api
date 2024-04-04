@@ -40,29 +40,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
-
-    "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = projectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        ),
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
-    }
   }
 
   "Administrative Permission Create Requests" should {
