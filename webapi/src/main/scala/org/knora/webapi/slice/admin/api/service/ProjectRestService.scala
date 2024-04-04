@@ -12,7 +12,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponse
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
@@ -35,14 +35,14 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class ProjectRestService(
-  format: KnoraResponseRenderer,
-  projectService: ProjectService,
-  knoraProjectService: KnoraProjectService,
-  permissionResponder: PermissionsResponderADM,
-  projectExportService: ProjectExportService,
-  projectImportService: ProjectImportService,
-  userService: UserService,
-  auth: AuthorizationRestService,
+                                     format: KnoraResponseRenderer,
+                                     projectService: ProjectService,
+                                     knoraProjectService: KnoraProjectService,
+                                     permissionResponder: PermissionsResponder,
+                                     projectExportService: ProjectExportService,
+                                     projectImportService: ProjectImportService,
+                                     userService: UserService,
+                                     auth: AuthorizationRestService,
 ) {
 
   /**

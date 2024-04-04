@@ -11,7 +11,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupsRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
@@ -41,7 +41,7 @@ object AdminApiModule {
     AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService &
       GroupsResponderADM & GroupService & HandlerMapper & KnoraProjectService & KnoraResponseRenderer &
       KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache &
-      PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService &
+      PasswordService & PermissionsResponder & ProjectExportService & ProjectImportService & ProjectService &
       TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &

@@ -11,7 +11,6 @@ import zio._
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
-
 import dsp.errors.BadRequestException
 import dsp.errors._
 import org.knora.webapi._
@@ -40,6 +39,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -51,202 +51,17 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
-/**
- * Provides information about permissions to other responders.
- */
-trait PermissionsResponderADM {
-
-  /**
-   * By providing all the projects and groups in which the user is a member of, calculate the user's
-   * administrative permissions of each project by applying the precedence rules.
-   *
-   * @param groupsPerProject the groups inside each project the user is member of.
-   * @return a the user's resulting set of administrative permissions for each project.
-   */
-  def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Task[Map[IRI, Set[PermissionADM]]]
-
-  /**
-   * Adds a new administrative permission (internal use).
-   *
-   * @param createRequest  the administrative permission to add.
-   * @param requestingUser the requesting user.
-   * @param apiRequestID   the API request ID.
-   * @return an optional [[AdministrativePermissionADM]]
-   */
-  def createAdministrativePermission(
-    createRequest: CreateAdministrativePermissionAPIRequestADM,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[AdministrativePermissionCreateResponseADM]
-
-  /**
-   * Gets a single administrative permission identified by project and group.
-   *
-   * @param projectIri the project.
-   * @param groupIri   the group.
-   * @return an [[AdministrativePermissionGetResponseADM]]
-   */
-  def getPermissionsApByProjectAndGroupIri(
-    projectIri: IRI,
-    groupIri: IRI,
-  ): Task[AdministrativePermissionGetResponseADM]
-
-  /**
-   * Gets all administrative permissions defined inside a project.
-   *
-   * @param projectIRI the IRI of the project.
-   * @return a list of IRIs of [[AdministrativePermissionADM]] objects.
-   */
-  def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM]
-
-  /**
-   * Delete a permission.
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @param apiRequestID   the API request ID.
-   * @return [[PermissionDeleteResponseADM]].
-   *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
-   *         fails with a NotFoundException if no permission is found for the given IRI.
-   */
-  def deletePermission(
-    permissionIri: PermissionIri,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[PermissionDeleteResponseADM]
-
-  def createDefaultObjectAccessPermission(
-    createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    user: User,
-    apiRequestID: UUID,
-  ): Task[DefaultObjectAccessPermissionCreateResponseADM]
-
-  /**
-   * For default object access permission, we need to make sure that the value given for the permissionCode matches
-   * the value of name parameter.
-   * This method, validates the content of hasPermissions collection by verifying that both permissionCode and name
-   * indicate the same type of permission.
-   *
-   * @param hasPermissions Set of the permissions.
-   */
-  def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]]
-
-  /**
-   * Gets all IRI's of all default object access permissions defined inside a project.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a list of IRIs of [[DefaultObjectAccessPermissionADM]] objects.
-   */
-  def getPermissionsDaopByProjectIri(
-    projectIri: ProjectIri,
-  ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM]
-
-  /**
-   * Gets all permissions defined inside a project.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a list of of [[PermissionInfoADM]] objects.
-   */
-  def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM]
-
-  /**
-   * Update a permission's group
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param groupIri       the [[GroupIri]] to change.
-   * @param requestingUser the [[User]] of the requesting user.
-   * @param apiRequestID   the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  def updatePermissionsGroup(
-    permissionIri: PermissionIri,
-    groupIri: GroupIri,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM]
-
-  /**
-   * Update a permission's set of hasPermissions.
-   *
-   * @param permissionIri     the IRI of the permission.
-   * @param newHasPermissions the request to change hasPermissions.
-   * @param requestingUser    the [[User]] of the requesting user.
-   * @param apiRequestID      the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  def updatePermissionHasPermissions(
-    permissionIri: PermissionIri,
-    newHasPermissions: NonEmptyChunk[PermissionADM],
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM]
-
-  /**
-   * Update a doap permission's resource class.
-   *
-   * @param permissionIri                 the IRI of the permission.
-   * @param changePermissionResourceClass the request to change hasPermissions.
-   * @param requestingUser                the [[User]] of the requesting user.
-   * @param apiRequestID                  the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  def updatePermissionResourceClass(
-    permissionIri: PermissionIri,
-    changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM]
-
-  /**
-   * Update a doap permission's property.
-   *
-   * @param permissionIri                   the IRI of the permission.
-   * @param changePermissionPropertyRequest the request to change hasPermissions.
-   * @param requestingUser                  the [[User]] of the requesting user.
-   * @param apiRequestID                    the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  def updatePermissionProperty(
-    permissionIri: PermissionIri,
-    changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-    requestingUser: User,
-    apiRequestID: UUID,
-  ): Task[PermissionGetResponseADM]
-
-  /**
-   * Creates the user's [[PermissionsDataADM]]
-   *
-   * @param projectIris            the projects the user is part of.
-   * @param groupIris              the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
-   * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
-   * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
-   * @return
-   */
-  def permissionsDataGetADM(
-    projectIris: Seq[IRI],
-    groupIris: Seq[IRI],
-    isInProjectAdminGroups: Seq[IRI],
-    isInSystemAdminGroup: Boolean,
-  ): Task[PermissionsDataADM]
-
-  def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit]
-}
-
-final case class PermissionsResponderADMLive(
+final case class PermissionsResponder(
   appConfig: AppConfig,
-  auth: AuthorizationRestService,
   groupService: GroupService,
   iriService: IriService,
   knoraProjectService: KnoraProjectService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
+  auth: AuthorizationRestService,
+  administrativePermissionService: AdministrativePermissionService,
   implicit val stringFormatter: StringFormatter,
-) extends PermissionsResponderADM
-    with MessageHandler
+) extends MessageHandler
     with LazyLogging {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
@@ -333,7 +148,7 @@ final case class PermissionsResponderADMLive(
    * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
    * @return
    */
-  override def permissionsDataGetADM(
+  def permissionsDataGetADM(
     projectIris: Seq[IRI],
     groupIris: Seq[IRI],
     isInProjectAdminGroups: Seq[IRI],
@@ -427,7 +242,7 @@ final case class PermissionsResponderADMLive(
    * @param groupsPerProject the groups inside each project the user is member of.
    * @return a the user's resulting set of administrative permissions for each project.
    */
-  override def userAdministrativePermissionsGetADM(
+  def userAdministrativePermissionsGetADM(
     groupsPerProject: Map[IRI, Seq[IRI]],
   ): Task[Map[IRI, Set[PermissionADM]]] = {
 
@@ -577,7 +392,7 @@ final case class PermissionsResponderADMLive(
     result
   }
 
-  override def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
+  def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       permissionsQueryResponseRows <-
         triplestore
@@ -689,7 +504,7 @@ final case class PermissionsResponderADMLive(
         }
     } yield permission
 
-  override def getPermissionsApByProjectAndGroupIri(
+  def getPermissionsApByProjectAndGroupIri(
     projectIri: IRI,
     groupIri: IRI,
   ): Task[AdministrativePermissionGetResponseADM] =
@@ -739,7 +554,7 @@ final case class PermissionsResponderADMLive(
       }
       .map(PermissionADM.from)
 
-  override def createAdministrativePermission(
+  def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
     requestingUser: User,
     apiRequestID: UUID,
@@ -917,7 +732,7 @@ final case class PermissionsResponderADMLive(
   // DEFAULT OBJECT ACCESS PERMISSIONS
   ///////////////////////////////////////////////////////////////////////////
 
-  override def getPermissionsDaopByProjectIri(
+  def getPermissionsDaopByProjectIri(
     projectIri: ProjectIri,
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
@@ -1526,7 +1341,7 @@ final case class PermissionsResponderADMLive(
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
   }
 
-  override def createDefaultObjectAccessPermission(
+  def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
     user: User,
     apiRequestID: UUID,
@@ -1642,7 +1457,7 @@ final case class PermissionsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
   }
 
-  override def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
+  def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
     validateDOAPHasPermissions(hasPermissions)
     hasPermissions.map { permission =>
       val code: Int = permission.permissionCode match {
@@ -1710,7 +1525,7 @@ final case class PermissionsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return a list of of [[PermissionInfoADM]] objects.
    */
-  override def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
+  def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     for {
       permissionsQueryResponseStatements <-
         triplestore
@@ -1727,7 +1542,7 @@ final case class PermissionsResponderADMLive(
         }.toSet
     } yield PermissionsForProjectGetResponseADM(permissionsInfo)
 
-  override def updatePermissionsGroup(
+  def updatePermissionsGroup(
     permissionIri: PermissionIri,
     groupIri: GroupIri,
     requestingUser: User,
@@ -1799,7 +1614,7 @@ final case class PermissionsResponderADMLive(
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
    */
-  override def updatePermissionHasPermissions(
+  def updatePermissionHasPermissions(
     permissionIri: PermissionIri,
     newHasPermissions: NonEmptyChunk[PermissionADM],
     requestingUser: User,
@@ -1886,7 +1701,7 @@ final case class PermissionsResponderADMLive(
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
    */
-  override def updatePermissionResourceClass(
+  def updatePermissionResourceClass(
     permissionIri: PermissionIri,
     changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
     requestingUser: User,
@@ -1958,7 +1773,7 @@ final case class PermissionsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionResourceClassChangeTask)
   }
 
-  override def updatePermissionProperty(
+  def updatePermissionProperty(
     permissionIri: PermissionIri,
     changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
     requestingUser: User,
@@ -2030,7 +1845,7 @@ final case class PermissionsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionPropertyChangeTask)
   }
 
-  override def deletePermission(
+  def deletePermission(
     permissionIri: PermissionIri,
     requestingUser: User,
     apiRequestID: UUID,
@@ -2232,7 +2047,7 @@ final case class PermissionsResponderADMLive(
 
     } yield projectIri
 
-  override def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
+  def createPermissionsForAdminsAndMembersOfNewProject(projectIri: ProjectIri): Task[Unit] =
     for {
       // Give the admins of the new project rights for any operation in project level, and rights to create resources.
       _ <- createAdministrativePermission(
@@ -2291,11 +2106,8 @@ final case class PermissionsResponderADMLive(
     } yield ()
 }
 
-object PermissionsResponderADMLive {
-  val layer: URLayer[
-    AppConfig & AuthorizationRestService & GroupService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
-    PermissionsResponderADMLive,
-  ] = ZLayer.fromZIO {
+object PermissionsResponder {
+  val layer = ZLayer.fromZIO {
     for {
       ac      <- ZIO.service[AppConfig]
       au      <- ZIO.service[AuthorizationRestService]
@@ -2305,7 +2117,8 @@ object PermissionsResponderADMLive {
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(PermissionsResponderADMLive(ac, au, gs, is, kpr, mr, ts, sf))
+      aps     <- ZIO.service[AdministrativePermissionService]
+      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, sf))
     } yield handler
   }
 }

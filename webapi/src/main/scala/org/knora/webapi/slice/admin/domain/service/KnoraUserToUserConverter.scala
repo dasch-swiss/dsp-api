@@ -5,18 +5,17 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.knora.webapi.responders.admin.PermissionsResponder
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.User
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.User
-
 final case class KnoraUserToUserConverter(
   private val projectsService: ProjectService,
   private val groupService: GroupService,
-  private val permissionService: PermissionsResponderADM,
+  private val permissionService: PermissionsResponder,
 ) {
 
   def toUser(kUser: KnoraUser): Task[User] = for {

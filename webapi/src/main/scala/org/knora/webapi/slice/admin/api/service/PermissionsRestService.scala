@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -38,10 +38,10 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class PermissionsRestService(
-  responder: PermissionsResponderADM,
-  knoraProjectService: KnoraProjectService,
-  auth: AuthorizationRestService,
-  format: KnoraResponseRenderer,
+                                         responder: PermissionsResponder,
+                                         knoraProjectService: KnoraProjectService,
+                                         auth: AuthorizationRestService,
+                                         format: KnoraResponseRenderer,
 ) {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,

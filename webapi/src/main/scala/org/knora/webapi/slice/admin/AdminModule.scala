@@ -27,7 +27,7 @@ object AdminModule {
     AppConfig & CacheService & IriService & OntologyRepo & PredicateObjectMapper & TriplestoreService
 
   type Provided =
-    GroupService & KnoraGroupService & KnoraProjectService & KnoraUserService & MaintenanceService & PasswordService & ProjectService
+    AdministrativePermissionService & GroupService & KnoraGroupService & KnoraProjectService & KnoraUserService & MaintenanceService & PasswordService & ProjectService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] = AdminRepoModule.layer >>> AdminDomainModule.layer
 }
