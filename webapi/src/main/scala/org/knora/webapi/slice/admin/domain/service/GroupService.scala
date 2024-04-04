@@ -5,10 +5,10 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.ZIO
 import zio._
 
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -28,13 +28,16 @@ final case class GroupService(
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
-      projectIri <- ZIO.fromOption(knoraGroup.belongsToProject).orElseFail(NotFoundException("Project IRI not found."))
+      projectIri <- ZIO
+                      .fromOption(knoraGroup.belongsToProject)
+                      .orElseFail(InconsistentRepositoryDataException("Project IRI not found."))
+                      .logError(s"Project IRI not present on KnoraGroup: $knoraGroup")
       project <-
         projectService
-          .findById(ProjectIri.unsafeFrom(projectIri.value))
+          .findById(projectIri)
           .someOrFail(
             InconsistentRepositoryDataException(
-              s"Project ${projectIri.value} was referenced by ${knoraGroup.id.value} but was not found in the triplestore.",
+              s"Project $projectIri was referenced by ${knoraGroup.id.value} but was not found in the triplestore.",
             ),
           )
       group <-
