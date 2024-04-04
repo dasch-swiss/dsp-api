@@ -46,7 +46,7 @@ final case class KnoraGroupRepoLive(triplestore: TriplestoreService, mapper: Rdf
   override def findById(id: GroupIri): Task[Option[KnoraGroup]] =
     super.findById(id).map(_.orElse(KnoraGroupRepo.builtIn.findOneBy(_.id == id)))
 
-  override def findAll(): Task[List[KnoraGroup]] = super.findAll().map(_ ++ KnoraGroupRepo.builtIn.all.toList)
+  override def findAll(): Task[Chunk[KnoraGroup]] = super.findAll().map(_ ++ KnoraGroupRepo.builtIn.all)
 
   override def save(group: KnoraGroup): Task[KnoraGroup] =
     ZIO

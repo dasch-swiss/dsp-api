@@ -54,7 +54,7 @@ final case class KnoraUserRepoLive(
     Chunk(isInSystemAdminGroup, isInProject, isInGroup, isInProjectAdminGroup),
   )
 
-  override def findAll(): Task[List[KnoraUser]] = super.findAll().map(_ ++ KnoraUserRepo.builtIn.all.toList)
+  override def findAll(): Task[Chunk[KnoraUser]] = super.findAll().map(_ ++ KnoraUserRepo.builtIn.all)
 
   override def findById(id: UserIri): Task[Option[KnoraUser]] =
     super.findById(id).map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.id == id)))

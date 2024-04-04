@@ -28,10 +28,10 @@ final case class ProjectService(
   private val cacheService: CacheService,
 ) {
 
-  def findAllRegularProjects: Task[List[Project]] = knoraProjectService
+  def findAllRegularProjects: Task[Chunk[Project]] = knoraProjectService
     .findAll()
     .map(_.filter(_.id.isRegularProjectIri))
-    .flatMap(ZIO.foreachPar(_)(toProject))
+    .flatMap(ZIO.foreach(_)(toProject))
 
   def findById(id: ProjectIri): Task[Option[Project]] =
     findByProjectIdentifier(ProjectIdentifierADM.from(id))

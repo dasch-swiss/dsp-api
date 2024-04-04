@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import zio.Chunk
 import zio.Ref
 import zio.ZIO
 import zio.ZLayer
@@ -23,12 +24,12 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-final case class KnoraGroupRepoInMemory(groups: Ref[List[KnoraGroup]])
+final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
     extends AbstractInMemoryCrudRepository[KnoraGroup, GroupIri](groups, _.id)
     with KnoraGroupRepo {}
 
 object KnoraGroupRepoInMemory {
-  val layer = ZLayer.fromZIO(Ref.make(List.empty[KnoraGroup])) >>>
+  val layer = ZLayer.fromZIO(Ref.make(Chunk.empty[KnoraGroup])) >>>
     ZLayer.derive[KnoraGroupRepoInMemory]
 }
 
@@ -62,7 +63,7 @@ object KnoraGroupRepoLiveSpec extends ZIOSpecDefault {
     test("should return built in users") {
       for {
         userGroup <- KnoraGroupRepo(_.findAll())
-      } yield assertTrue(userGroup.sortBy(_.id.value) == builtInGroups.toList.sortBy(_.id.value))
+      } yield assertTrue(userGroup.sortBy(_.id.value) == builtInGroups.sortBy(_.id.value))
     },
   )
 

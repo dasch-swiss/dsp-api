@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.domain.service
 
+import zio.Chunk
 import zio.Task
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -18,7 +19,7 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   override def findById(id: InternalIri): Task[Option[ReadOntologyV2]]
 
-  override def findAll(): Task[List[ReadOntologyV2]]
+  override def findAll(): Task[Chunk[ReadOntologyV2]]
 
   def findByProject(project: KnoraProject): Task[List[ReadOntologyV2]] = findByProject(project.id)
 

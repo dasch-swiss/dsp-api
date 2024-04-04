@@ -31,7 +31,7 @@ trait Repository[Entity, Id] {
    * @param ids A sequence of identifiers of type [[Id]].
    * @return All found entities. The size can be equal or less than the number of given ids.
    */
-  def findAllById(ids: Seq[Id]): Task[List[Entity]] = ZIO.foreach(ids)(findById).map(_.flatten.toList)
+  def findAllById(ids: Seq[Id]): Task[Chunk[Entity]] = ZIO.foreach(Chunk.fromIterable(ids))(findById).map(_.flatten)
 
   /**
    * Checks whether an entity with the given id exists.
@@ -53,7 +53,7 @@ trait Repository[Entity, Id] {
    *
    * @return all instances of the type.
    */
-  def findAll(): Task[List[Entity]]
+  def findAll(): Task[Chunk[Entity]]
 }
 
 /**
@@ -78,7 +78,7 @@ trait CrudRepository[Entity, Id] extends Repository[Entity, Id] {
    * @param entities The entities to be saved
    * @return the saved entities. The returned [[List]] will have the same size as the entities passed as an argument.
    */
-  def saveAll(entities: Seq[Entity]): Task[List[Entity]] = ZIO.foreach(entities)(save).map(_.toList)
+  def saveAll(entities: Seq[Entity]): Task[Chunk[Entity]] = ZIO.foreach(Chunk.fromIterable(entities))(save)
 
   /**
    * Deletes a given entity.
