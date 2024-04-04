@@ -6,6 +6,8 @@
 package org.knora.webapi.slice.admin.repo.rdf
 
 import dsp.valueobjects.LanguageCode
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
@@ -19,8 +21,12 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.repo.rdf.LangString
 
 object RdfConversions {
+
+  def withPrefixExpansion[A](f: String => Either[String, A]): String => Either[String, A] =
+    (str: String) => f(str.replace(KnoraAdminPrefix, KnoraAdminPrefixExpansion))
+
   // Group properties
-  implicit val groupIriConverter: String => Either[String, GroupIri] = GroupIri.from
+  implicit val groupIriConverter: String => Either[String, GroupIri] = withPrefixExpansion(GroupIri.from)
 
   // Project properties
   implicit val projectIriConverter: String => Either[String, ProjectIri] = ProjectIri.from

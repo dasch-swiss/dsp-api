@@ -199,7 +199,7 @@ object KnoraProjectRepoLive {
       val query = Queries
         .MODIFY()
         .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS)
-        .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
+        .`with`(Vocabulary.NamedGraphs.dataAdmin)
         .insert(toTriples(project))
         .delete {
           knoraProjectProperties.zipWithIndex
