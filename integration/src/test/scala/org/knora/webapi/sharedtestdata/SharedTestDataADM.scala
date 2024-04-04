@@ -18,6 +18,8 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 /**
  * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object
@@ -32,7 +34,7 @@ object SharedTestDataADM {
   /**
    * **********************************
    */
-  val systemProjectIri: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
+  val systemProjectIri: IRI = KnoraProjectRepo.builtIn.SystemProject.id.value // built-in project
 
   val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
 
@@ -51,7 +53,7 @@ object SharedTestDataADM {
       projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
+          systemProjectIri -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
         ),
         administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]],
       ),
@@ -72,7 +74,7 @@ object SharedTestDataADM {
       projects = Seq.empty[Project],
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin),
+          systemProjectIri -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
         ),
       ),
     )
@@ -128,13 +130,13 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
           imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
@@ -152,7 +154,7 @@ object SharedTestDataADM {
 
   /* represents the full ProjectADM of the Knora System project */
   def systemProject: Project = Project(
-    id = OntologyConstants.KnoraAdmin.SystemProject,
+    id = KnoraProjectRepo.builtIn.SystemProject.id.value,
     shortname = "SystemProject",
     shortcode = "FFFF",
     longname = Some("Knora System Project"),
@@ -208,8 +210,8 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           imagesProjectIri -> List(
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
@@ -236,7 +238,7 @@ object SharedTestDataADM {
       projects = Seq(imagesProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
+          imagesProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
           imagesProjectIri -> Set(
@@ -263,7 +265,7 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           imagesProjectIri -> List(
             "http://rdfh.ch/groups/00FF/images-reviewer",
-            OntologyConstants.KnoraAdmin.ProjectMember,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
@@ -374,8 +376,8 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
@@ -402,7 +404,7 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
+          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
@@ -427,7 +429,7 @@ object SharedTestDataADM {
       projects = Seq(incunabulaProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
+          incunabulaProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
           incunabulaProjectIri -> Set(
@@ -542,8 +544,8 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           anythingProjectIri -> List(
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           ),
         ),
         administrativePermissionsPerProject = Map(
@@ -570,7 +572,7 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           anythingProjectIri -> List(
-            OntologyConstants.KnoraAdmin.ProjectMember,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
             "http://rdfh.ch/groups/0001/thing-searcher",
           ),
         ),
@@ -596,7 +598,7 @@ object SharedTestDataADM {
       projects = Seq(anythingProject),
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember),
+          anythingProjectIri -> List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
         ),
         administrativePermissionsPerProject = Map(
           anythingProjectIri -> Set(
@@ -686,7 +688,10 @@ object SharedTestDataADM {
     projects = Seq(beolProject),
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
-        beolProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin),
+        beolProjectIri -> List(
+          KnoraGroupRepo.builtIn.ProjectMember.id.value,
+          KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
+        ),
       ),
       administrativePermissionsPerProject = Map(
         beolProjectIri -> Set(

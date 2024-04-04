@@ -5,14 +5,18 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import zio.Chunk
 import zio.NonEmptyChunk
 import zio.ZIO
+import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
+import zio.test.check
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Keyword
@@ -24,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
@@ -47,7 +52,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
         |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
         |
-        |<graph1> {
+        |<${AdminConstants.adminDataNamedGraph.value}> {
         |  <http://rdfh.ch/projects/1234> a knora-admin:knoraProject ;
         |    knora-admin:projectShortcode "1234" ;
         |    knora-admin:projectShortname "project1" ;
@@ -61,74 +66,103 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |}
         |""".stripMargin
 
-  private def findAll: ZIO[KnoraProjectRepoLive, Throwable, List[KnoraProject]] =
-    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findAll())
-
-  private def findById(id: ProjectIdentifierADM): ZIO[KnoraProjectRepoLive, Throwable, Option[KnoraProject]] =
-    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findById(id))
-  private def findById(id: ProjectIri): ZIO[KnoraProjectRepoLive, Throwable, Option[KnoraProject]] =
-    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.findById(id))
-  private def save(project: KnoraProject): ZIO[KnoraProjectRepoLive, Throwable, KnoraProject] =
-    ZIO.serviceWithZIO[KnoraProjectRepoLive](_.save(project))
+  private val KnoraProjectRepo = ZIO.serviceWithZIO[KnoraProjectRepo]
+  private val builtInProjects  = org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.all
 
   override def spec: Spec[Any, Any] = suite("KnoraProjectRepoLive")(
-    suite("save")(test("save a project") {
-      for {
-        saved   <- save(someProject)
-        project <- findById(someProject.id)
-      } yield assertTrue(project.contains(someProject), saved == someProject)
-    }),
+    suite("save")(
+      test("save a project") {
+        for {
+          saved   <- KnoraProjectRepo(_.save(someProject))
+          project <- KnoraProjectRepo(_.findById(someProject.id))
+        } yield assertTrue(project.contains(someProject), saved == someProject)
+      },
+      test("die for built in projects") {
+        check(Gen.fromIterable(builtInProjects)) { project =>
+          for {
+            exit <- KnoraProjectRepo(_.save(project)).exit
+          } yield assertTrue(exit.isFailure)
+        }
+      },
+    ),
     suite("findAll")(
       test("return all projects if some exist") {
         for {
           _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-          projects <- findAll
-        } yield assertTrue(projects == List(someProject))
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).toList.sortBy(_.id.value),
+        )
       },
-      test("return empty list if no projects exist") {
+      test("return all built in projects") {
         for {
-          projects <- findAll
-        } yield assertTrue(projects.isEmpty)
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(projects.sortBy(_.id.value) == builtInProjects.toList.sortBy(_.id.value))
       },
     ),
-    suite("findById")(
-      suite("find by IRI")(
+    suite("findBy ...")(
+      suite("findById")(
         test("return project if it exists") {
           for {
-            _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234"))
+            _ <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+            project <- KnoraProjectRepo(
+                         _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234")),
+                       )
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <- findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234"))
+            project <- KnoraProjectRepo(
+                         _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234")),
+                       )
           } yield assertTrue(project.isEmpty)
+        },
+        test("should find all built in projects") {
+          check(Gen.fromIterable(builtInProjects)) { project =>
+            for {
+              found <- KnoraProjectRepo(_.findById(project.id))
+            } yield assertTrue(found.contains(project))
+          }
         },
       ),
       suite("find by Shortcode")(
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234"))
+            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234")))
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <- findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234"))
+            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortcodeIdentifier.unsafeFrom("1234")))
           } yield assertTrue(project.isEmpty)
+        },
+        test("should find all built in projects") {
+          check(Gen.fromIterable(builtInProjects)) { project =>
+            for {
+              found <- KnoraProjectRepo(_.findByShortcode(project.shortcode))
+            } yield assertTrue(found.contains(project))
+          }
         },
       ),
       suite("find by Shortname")(
         test("return project if it exists") {
           for {
             _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
-            project <- findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1"))
+            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1")))
           } yield assertTrue(project.contains(someProject))
         },
         test("return None if project does not exist") {
           for {
-            project <- findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1"))
+            project <- KnoraProjectRepo(_.findById(ProjectIdentifierADM.ShortnameIdentifier.unsafeFrom("project1")))
           } yield assertTrue(project.isEmpty)
+        },
+        test("should find all built in projects") {
+          check(Gen.fromIterable(builtInProjects)) { project =>
+            for {
+              found <- KnoraProjectRepo(_.findByShortname(project.shortname))
+            } yield assertTrue(found.contains(project))
+          }
         },
       ),
     ),

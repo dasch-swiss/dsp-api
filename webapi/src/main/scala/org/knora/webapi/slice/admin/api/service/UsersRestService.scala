@@ -53,7 +53,7 @@ final case class UsersRestService(
 
   def getAllUsers(requestingUser: User): Task[UsersGetResponseADM] = for {
     _ <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
-    internal <- userService.findAll
+    internal <- userService.findAllRegularUsers
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
                   .map(_.map(_.filterUserInformation(requestingUser, UserInformationType.Restricted)).sorted)
                   .map(UsersGetResponseADM.apply)

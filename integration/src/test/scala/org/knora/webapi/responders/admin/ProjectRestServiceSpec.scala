@@ -17,7 +17,6 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -31,6 +30,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -203,7 +203,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter {
           (ap: AdministrativePermissionADM) =>
-            ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
+            ap.forProject == received.project.id && ap.forGroup == KnoraGroupRepo.builtIn.ProjectAdmin.id.value &&
             ap.hasPermissions.equals(
               Set(
                 PermissionADM.from(Permission.Administrative.ProjectAdminAll),
@@ -217,7 +217,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         // Check Administrative Permission of ProjectMember
         val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
           (ap: AdministrativePermissionADM) =>
-            ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
+            ap.forProject == received.project.id && ap.forGroup == KnoraGroupRepo.builtIn.ProjectMember.id.value &&
             ap.hasPermissions.equals(Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)))
         }
         hasAPForProjectMember.size shouldBe 1
@@ -233,12 +233,12 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
           (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
-              OntologyConstants.KnoraAdmin.ProjectAdmin,
+              KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             )
         }
@@ -248,12 +248,12 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
           (doap: DefaultObjectAccessPermissionADM) =>
             doap.forProject == received.project.id && doap.forGroup.contains(
-              OntologyConstants.KnoraAdmin.ProjectMember,
+              KnoraGroupRepo.builtIn.ProjectMember.id.value,
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
             )
         }

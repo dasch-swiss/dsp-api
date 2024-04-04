@@ -23,7 +23,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.cache.CacheService
-import org.knora.webapi.store.triplestore.TestDatasetBuilder
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -42,20 +41,19 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
   )
   private val testValueIri = "http://rdfh.ch/some-value-iri"
 
-  private def saveStillImageFileValueWithDimensions(width: Int, height: Int) = TestDatasetBuilder
-    .datasetFromTriG(s"""
-                        | @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-                        | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
-                        | @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                        | 
-                        | <$projectDataNamedGraphIri> {
-                        |   <$testValueIri> a knora-base:StillImageFileValue;
-                        |     knora-base:dimX "${width}"^^xsd:integer;
-                        |     knora-base:dimY "${height}"^^xsd:integer;
-                        |     knora-base:internalFilename "$testAssetId.jp2"^^xsd:string;
-                        |  }
-                        |""".stripMargin)
-    .flatMap(ds => ZIO.serviceWithZIO[TestTripleStore](_.setDataset(ds)))
+  private def saveStillImageFileValueWithDimensions(width: Int, height: Int) = TestTripleStore
+    .setDatasetFromTriG(s"""
+                           | @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+                           | @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+                           | @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                           | 
+                           | <$projectDataNamedGraphIri> {
+                           |   <$testValueIri> a knora-base:StillImageFileValue;
+                           |     knora-base:dimX "${width}"^^xsd:integer;
+                           |     knora-base:dimY "${height}"^^xsd:integer;
+                           |     knora-base:internalFilename "$testAssetId.jp2"^^xsd:string;
+                           |  }
+                           |""".stripMargin)
 
   def queryForDim() = for {
     rowMap <- TriplestoreService
