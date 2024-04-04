@@ -32,11 +32,11 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
       .delete(s.has(p, o))
-      .from(Vocabulary.NamedGraphs.knoraAdminIri)
+      .from(Vocabulary.NamedGraphs.dataAdmin)
       .where(
         s.isA(Rdf.iri(KnoraAdminPrefixExpansion, "Institution"))
           .andHas(p, o)
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
   }
 
@@ -47,8 +47,8 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
       .delete(s.has(belongsToInstitution, o))
-      .from(Vocabulary.NamedGraphs.knoraAdminIri)
-      .where(s.has(belongsToInstitution, o).from(Vocabulary.NamedGraphs.knoraAdminIri))
+      .from(Vocabulary.NamedGraphs.dataAdmin)
+      .where(s.has(belongsToInstitution, o).from(Vocabulary.NamedGraphs.dataAdmin))
   }
 
   override def getQueries: List[ModifyQuery] = List(

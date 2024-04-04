@@ -56,8 +56,23 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
   def getDataset: UIO[Dataset]
-  def printDataset: UIO[Unit]
+  def printDataset(prefix: String = ""): UIO[Unit]
   def datasetStatements: RIO[Scope, List[model.Statement]]
+}
+
+object TestTripleStore {
+
+  def setDatasetFromTriG(triG: String) =
+    TestDatasetBuilder.datasetFromTriG(triG).flatMap(TriplestoreServiceInMemory.setDataset)
+
+  def setDataset(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
+
+  def getDataset: RIO[TestTripleStore, Dataset] =
+    ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
+
+  def printDataset(prefix: String = ""): RIO[TestTripleStore, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.printDataset(prefix))
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
@@ -246,11 +261,11 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def getDataset: UIO[Dataset] =
     datasetRef.get
 
-  override def printDataset: UIO[Unit] =
+  override def printDataset(prefix: String = ""): UIO[Unit] =
     for {
-      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+//      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
       ds <- getDataset
-      _  <- Console.printLine(s"TriplestoreServiceInMemory.printDataset:").orDie
+      _  <- Console.printLine(s"${prefix}TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
     } yield ()
 
@@ -293,9 +308,6 @@ object TriplestoreServiceInMemory {
 
   def getDataset: RIO[TestTripleStore, Dataset] =
     ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
-
-  def printDataset: RIO[TestTripleStore, Unit] =
-    ZIO.serviceWithZIO[TestTripleStore](_.printDataset)
 
   def setDataSetFromTriG(triG: String): ZIO[TestTripleStore, Throwable, Unit] = TestDatasetBuilder
     .datasetFromTriG(triG)
