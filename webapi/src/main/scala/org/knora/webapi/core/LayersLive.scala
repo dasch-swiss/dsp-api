@@ -107,7 +107,6 @@ object LayersLive {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
-      GroupsRestService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,

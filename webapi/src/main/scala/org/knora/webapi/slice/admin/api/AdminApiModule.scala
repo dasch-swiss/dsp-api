@@ -46,7 +46,7 @@ object AdminApiModule {
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
-    UsersRestService & ProjectRestService & PermissionsRestService
+    GroupsRestService & UsersRestService & ProjectRestService & PermissionsRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](
