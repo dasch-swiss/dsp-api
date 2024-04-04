@@ -341,7 +341,7 @@ final case class PermissionsResponderADMLive(
   ): Task[PermissionsDataADM] = {
     // find out which project each group belongs to
 
-    val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
+    val groupFutures: Seq[Task[(Option[IRI], IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
         for {
           iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(ValidationException(_))
@@ -353,14 +353,19 @@ final case class PermissionsResponderADMLive(
                   s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
                 ),
               )
-        } yield (group.project.id, groupIri)
+        } yield (group.project.map(_.id), groupIri)
       }
     } else {
-      Seq.empty[Task[(IRI, IRI)]]
+      Seq.empty
     }
 
     for {
-      groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
+      groups <- ZioHelper
+                  .sequence(groupFutures)
+                  .map(_.flatMap {
+                    case (Some(projectIri), groupIri) => Some((projectIri, groupIri))
+                    case _                            => None
+                  })
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
       projectMembers =

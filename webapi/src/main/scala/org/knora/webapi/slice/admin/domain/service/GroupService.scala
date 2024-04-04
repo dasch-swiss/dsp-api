@@ -8,7 +8,6 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.ZIO
 import zio._
 
-import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -22,25 +21,15 @@ final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
   private val projectService: ProjectService,
 ) {
-  def findAll: Task[List[Group]] = knoraGroupService.findAll.flatMap(ZIO.foreachPar(_)(toGroup))
+  def findAllRegularGroups: Task[List[Group]] = knoraGroupService.findAll
+    .map(_.filter(_.id.isRegularGroupIri))
+    .flatMap(ZIO.foreachPar(_)(toGroup))
 
   def findById(id: GroupIri): Task[Option[Group]] = knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
-      projectIri <-
-        ZIO
-          .fromOption(knoraGroup.belongsToProject)
-          .orElseFail(InconsistentRepositoryDataException("Project IRI not found."))
-          .logError(s"Project IRI not present on KnoraGroup: $knoraGroup")
-      project <-
-        projectService
-          .findById(projectIri)
-          .someOrFail(
-            InconsistentRepositoryDataException(
-              s"Project $projectIri was referenced by ${knoraGroup.id.value} but was not found in the triplestore.",
-            ),
-          )
+      project <- knoraGroup.belongsToProject.map(projectService.findById).getOrElse(ZIO.none)
     } yield Group(
       id = knoraGroup.id.value,
       name = knoraGroup.groupName.value,
@@ -56,7 +45,7 @@ final case class GroupService(
       groupName = GroupName.unsafeFrom(group.name),
       groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
       status = GroupStatus.from(group.status),
-      belongsToProject = Some(ProjectIri.unsafeFrom(group.project.id)),
+      belongsToProject = group.project.map(it => ProjectIri.unsafeFrom(it.id)),
       hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
     )
 }

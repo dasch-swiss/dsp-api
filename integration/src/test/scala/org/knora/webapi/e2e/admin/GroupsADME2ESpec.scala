@@ -187,7 +187,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         groupInfo.name should be("NewGroup")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("NewGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 
@@ -235,7 +235,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 
@@ -263,7 +263,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(false)
         groupInfo.selfjoin should be(false)
 
@@ -309,7 +309,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 

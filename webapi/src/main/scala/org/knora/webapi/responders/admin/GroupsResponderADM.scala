@@ -89,7 +89,7 @@ final case class GroupsResponderADM(
       descriptions <- getOrFail[StringLiteralV2](GroupDescriptions)
       status       <- getFirstValueOrFail[BooleanLiteralV2](StatusProp).map(_.value)
       selfjoin     <- getFirstValueOrFail[BooleanLiteralV2](HasSelfJoinEnabled).map(_.value)
-    } yield Group(groupIri.toString, name, descriptions, project, status, selfjoin)
+    } yield Group(groupIri.toString, name, descriptions, Some(project), status, selfjoin)
   }
 
   private def findProjectByIriOrFail(iri: String, failReason: Throwable): Task[Project] =
@@ -146,7 +146,7 @@ final case class GroupsResponderADM(
              .fail(ForbiddenException("Project members can only be retrieved by a project or system admin."))
              .when {
                val userPermissions = requestingUser.permissions
-               !userPermissions.isProjectAdmin(group.project.id) &&
+               !group.project.exists(it => userPermissions.isProjectAdmin(it.id)) &&
                !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
              }
 
@@ -318,8 +318,8 @@ final case class GroupsResponderADM(
 
       /* Verify that the potentially new name is unique */
       groupByNameAlreadyExists <-
-        if (request.name.nonEmpty)
-          groupByNameAndProjectExists(request.name.get.value, groupADM.project.id)
+        if (request.name.nonEmpty && groupADM.project.isDefined)
+          groupByNameAndProjectExists(request.name.get.value, groupADM.project.get.id)
         else ZIO.succeed(false)
       _ <- ZIO
              .fail(BadRequestException(s"Group with the name '${request.name.get.value}' already exists."))

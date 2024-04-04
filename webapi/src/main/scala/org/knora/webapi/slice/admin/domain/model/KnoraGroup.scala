@@ -52,7 +52,7 @@ case class Group(
   id: IRI,
   name: String,
   descriptions: Seq[StringLiteralV2],
-  project: Project,
+  project: Option[Project],
   status: Boolean,
   selfjoin: Boolean,
 ) extends Ordered[Group] {

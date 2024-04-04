@@ -316,7 +316,7 @@ object SharedTestDataADM {
     id = "-",
     name = "ProjectAdmin",
     descriptions = Seq(StringLiteralV2.from(value = "Default Project Admin Group", language = Some("en"))),
-    project = imagesProject,
+    project = Some(imagesProject),
     status = true,
     selfjoin = false,
   )
@@ -326,7 +326,7 @@ object SharedTestDataADM {
     id = "-",
     name = "ProjectMember",
     descriptions = Seq(StringLiteralV2.from(value = "Default Project Member Group", language = Some("en"))),
-    project = imagesProject,
+    project = Some(imagesProject),
     status = true,
     selfjoin = false,
   )
@@ -336,7 +336,7 @@ object SharedTestDataADM {
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
     descriptions = Seq(StringLiteralV2.from(value = "A group for image reviewers.", language = Some("en"))),
-    project = imagesProject,
+    project = Some(imagesProject),
     status = true,
     selfjoin = false,
   )
@@ -346,7 +346,7 @@ object SharedTestDataADM {
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
     descriptions = Seq(StringLiteralV2.from(value = "A group for image reviewers.", language = Some("en"))),
-    project = imagesProjectExternal,
+    project = Some(imagesProjectExternal),
     status = true,
     selfjoin = false,
   )
@@ -642,7 +642,7 @@ object SharedTestDataADM {
     id = "http://rdfh.ch/groups/0001/thing-searcher",
     name = "Thing searcher",
     descriptions = Seq(StringLiteralV2.from(value = "A group for thing searchers.", language = Some("en"))),
-    project = anythingProject,
+    project = Some(anythingProject),
     status = true,
     selfjoin = true,
   )
