@@ -65,7 +65,11 @@ case class Group(
   def compare(that: Group): Int = this.id.compareTo(that.id)
 }
 
-final case class GroupIri private (override val value: String) extends AnyVal with StringValue
+final case class GroupIri private (override val value: String) extends AnyVal with StringValue {
+  def isBuiltInGroupIri: Boolean = GroupIri.isBuiltInGroupIri(value)
+  def isRegularGroupIri: Boolean = !isBuiltInGroupIri
+
+}
 
 object GroupIri extends StringValueCompanion[GroupIri] {
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
@@ -87,7 +91,11 @@ object GroupIri extends StringValueCompanion[GroupIri] {
   private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,40}$""".r
 
   private def isGroupIriValid(iri: String): Boolean =
-    (Iri.isIri(iri) && groupIriRegEx.matches(iri)) || BuiltInGroups.contains(iri)
+    (Iri.isIri(iri) && isRegularGroupIri(iri)) || isBuiltInGroupIri(iri)
+
+  private def isRegularGroupIri(iri: String) = groupIriRegEx.matches(iri)
+
+  private def isBuiltInGroupIri(iri: String): Boolean = BuiltInGroups.contains(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
     case _ if value.isEmpty          => Left("Group IRI cannot be empty.")

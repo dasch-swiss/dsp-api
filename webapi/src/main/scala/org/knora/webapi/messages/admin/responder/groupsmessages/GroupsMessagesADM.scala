@@ -25,14 +25,6 @@ import org.knora.webapi.slice.admin.domain.model.Group
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Get everything about a single group identified through its IRI. A successful response will be
- * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
- *
- * @param groupIri             IRI of the group.
- */
-case class GroupGetADM(groupIri: IRI) extends GroupsResponderRequestADM
-
-/**
  * Get everything about a multiple groups identified by their IRIs. The response will be a
  * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
  *

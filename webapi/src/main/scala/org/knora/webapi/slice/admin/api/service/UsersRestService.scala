@@ -16,7 +16,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
-import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.BasicUserInformationChangeRequest
@@ -31,6 +30,7 @@ import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
 import org.knora.webapi.slice.admin.domain.service.PasswordService
@@ -41,7 +41,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class UsersRestService(
   auth: AuthorizationRestService,
-  groupsResponder: GroupsResponderADM,
+  groupService: GroupService,
   userService: UserService,
   knoraUserService: KnoraUserService,
   knoraUserToUserConverter: KnoraUserToUserConverter,
@@ -271,9 +271,9 @@ final case class UsersRestService(
       _     <- ensureNotABuiltInUser(userIri)
       _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       kUser <- getKnoraUserOrNotFound(userIri)
-      group <- groupsResponder
-                 .groupGetADM(groupIri.value)
-                 .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
+      group <- groupService
+                 .findById(groupIri)
+                 .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
       updatedKUser <- knoraUserService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
       external     <- asExternalUserResponseADM(requestingUser, updatedKUser)
     } yield external
@@ -287,9 +287,9 @@ final case class UsersRestService(
       _    <- ensureNotABuiltInUser(userIri)
       _    <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
       user <- getKnoraUserOrNotFound(userIri)
-      group <- groupsResponder
-                 .groupGetADM(groupIri.value)
-                 .someOrFail(BadRequestException(s"Group with iri ${groupIri.value} not found."))
+      group <- groupService
+                 .findById(groupIri)
+                 .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
       updateUser <- knoraUserService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
       response   <- asExternalUserResponseADM(requestingUser, updateUser)
     } yield response
