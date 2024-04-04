@@ -143,7 +143,7 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(s.has(p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+            .from(Vocabulary.NamedGraphs.dataAdmin),
         )
       Construct(query.getQueryString)
     }
@@ -156,7 +156,7 @@ object KnoraUserRepoLive {
           userIri
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(projectIri.value)))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+            .from(Vocabulary.NamedGraphs.dataAdmin),
         )
       Construct(query.getQueryString)
     }
@@ -169,7 +169,7 @@ object KnoraUserRepoLive {
           userIri
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(projectIri.value)))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+            .from(Vocabulary.NamedGraphs.dataAdmin),
         )
       Construct(query.getQueryString)
     }
@@ -184,7 +184,7 @@ object KnoraUserRepoLive {
           s
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .and(tp(s, p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+            .from(Vocabulary.NamedGraphs.dataAdmin),
         )
       Construct(query)
     }
@@ -205,7 +205,7 @@ object KnoraUserRepoLive {
             .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
             .andHas(property, Rdf.literalOf(propertyValue))
             .andHas(p, o)
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
+            .from(Vocabulary.NamedGraphs.dataAdmin),
         )
       Construct(query)
     }
