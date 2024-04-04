@@ -117,7 +117,6 @@ object LayersTest {
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
       GroupsRestService.layer,
-      GroupService.layer,
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
