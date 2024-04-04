@@ -88,7 +88,7 @@ private object KnoraUserGroupQueries {
         s
           .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
           .and(s.has(p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
     Construct(query.getQueryString)
   }
@@ -103,7 +103,7 @@ private object KnoraUserGroupQueries {
         s
           .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
           .and(tp(s, p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
     Construct(query)
   }
