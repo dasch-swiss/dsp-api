@@ -15,10 +15,10 @@ object ProjectImportResponse {
   implicit val codec: JsonCodec[ProjectImportResponse] = DeriveJsonCodec.gen[ProjectImportResponse]
 }
 
-case class ProjectExportInfoResponse(projectShortname: String, location: String)
+case class ProjectExportInfoResponse(projectShortcode: String, location: String)
 object ProjectExportInfoResponse {
   def apply(info: ProjectExportInfo) =
-    new ProjectExportInfoResponse(info.projectShortname, info.path.toFile.toPath.toAbsolutePath.toString)
+    new ProjectExportInfoResponse(info.projectShortcode, info.path.toFile.toPath.toAbsolutePath.toString)
 
   implicit val codec: JsonCodec[ProjectExportInfoResponse] = DeriveJsonCodec.gen[ProjectExportInfoResponse]
 }
