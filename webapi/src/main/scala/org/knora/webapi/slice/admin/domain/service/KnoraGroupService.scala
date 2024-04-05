@@ -20,6 +20,7 @@ case class KnoraGroupService(knoraGroupRepo: KnoraGroupRepo) {
 
   def findById(id: GroupIri): Task[Option[KnoraGroup]] = knoraGroupRepo.findById(id)
 
+  def findAllById(ids: Seq[GroupIri]): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findAllById(ids)
 }
 
 object KnoraGroupService {

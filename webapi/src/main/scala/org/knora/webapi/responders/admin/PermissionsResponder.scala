@@ -6,19 +6,12 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.util.UUID
-import scala.collection.immutable.Iterable
-import scala.collection.mutable.ListBuffer
-
-import dsp.errors.BadRequestException
 import dsp.errors._
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
@@ -26,7 +19,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -34,14 +27,25 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.Email
+import org.knora.webapi.slice.admin.domain.model.FamilyName
+import org.knora.webapi.slice.admin.domain.model.GivenName
+import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraUser
+import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.UserStatus
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -51,6 +55,11 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import zio._
+import zio.prelude.ForEachOps
+
+import java.util.UUID
+import scala.collection.mutable.ListBuffer
 
 final case class PermissionsResponder(
   appConfig: AppConfig,
@@ -61,6 +70,7 @@ final case class PermissionsResponder(
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
+  knoraGroupService: KnoraGroupService,
   implicit val stringFormatter: StringFormatter,
 ) extends MessageHandler
     with LazyLogging {
@@ -77,11 +87,30 @@ final case class PermissionsResponder(
     case PermissionDataGetADM(
           projectIris,
           groupIris,
-          isInProjectAdminGroup,
-          isInSystemAdminGroup,
+          projectAdminIris,
+          isSystemAdmin,
           _,
-        ) =>
-      permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup)
+        ) => {
+      val isInProject           = projectIris.map(ProjectIri.unsafeFrom).toChunk
+      val isInSystemAdminGroup  = SystemAdmin.from(isSystemAdmin)
+      val isInProjectAdminGroup = projectAdminIris.map(ProjectIri.unsafeFrom).toChunk
+      val isInGroups            = groupIris.map(GroupIri.unsafeFrom).toChunk
+      val user = KnoraUser(
+        UserIri.unsafeFrom("http://rdfh.ch/users/dummy"),
+        Username.unsafeFrom("dummy"),
+        Email.unsafeFrom("dummy@exmple.com"),
+        FamilyName.unsafeFrom("dummy"),
+        GivenName.unsafeFrom("dummy"),
+        PasswordHash.unsafeFrom("dummy"),
+        LanguageCode.en,
+        UserStatus.Active,
+        isInProject,
+        isInGroups,
+        isInSystemAdminGroup,
+        isInProjectAdminGroup,
+      )
+      permissionsDataGetADM(user)
+    }
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
@@ -141,45 +170,40 @@ final case class PermissionsResponder(
   /**
    * Creates the user's [[PermissionsDataADM]]
    *
-   * @param projectIris            the projects the user is part of.
-   * @param groupIris              the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
-   * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
-   * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
-   * @return
+   * @param user the user is for which to create the PermissionData.
    */
-  def permissionsDataGetADM(
-    projectIris: Seq[IRI],
-    groupIris: Seq[IRI],
-    isInProjectAdminGroups: Seq[IRI],
-    isInSystemAdminGroup: Boolean,
-  ): Task[PermissionsDataADM] = {
+  def permissionsDataGetADM(user: KnoraUser): Task[PermissionsDataADM] = {
+    val projectIris: Seq[IRI]            = user.isInProject.map(_.value)
+    val groupIris: Seq[IRI]              = user.isInGroup.map(_.value)
+    val isInProjectAdminGroups: Seq[IRI] = user.isInProjectAdminGroup.map(_.value)
+    val isInSystemAdminGroup: Boolean    = user.isInSystemAdminGroup.value
+
     // find out which project each group belongs to
 
-    val groupFutures: Seq[Task[(Option[IRI], IRI)]] = if (groupIris.nonEmpty) {
+    val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
         for {
           iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(ValidationException(_))
           group <-
             groupService
               .findById(iri)
+              .map(_.flatMap {
+                case group: Group if group.project.isDefined => Some(group)
+                case _                                       => None
+              })
               .someOrFail(
                 InconsistentRepositoryDataException(
                   s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
                 ),
               )
-        } yield (group.project.map(_.id), groupIri)
+        } yield (group.project.get.id, groupIri)
       }
     } else {
-      Seq.empty
+      Seq.empty[Task[(IRI, IRI)]]
     }
 
     for {
-      groups <- ZioHelper
-                  .sequence(groupFutures)
-                  .map(_.flatMap {
-                    case (Some(projectIri), groupIri) => Some((projectIri, groupIri))
-                    case _                            => None
-                  })
+      groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
       projectMembers =
@@ -187,6 +211,7 @@ final case class PermissionsResponder(
           for {
             projectIri <- projectIris.toVector
             res         = (projectIri, KnoraGroupRepo.builtIn.ProjectMember.id.value)
+
           } yield res
         } else {
           Seq.empty[(IRI, IRI)]
@@ -241,9 +266,7 @@ final case class PermissionsResponder(
    * @param groupsPerProject the groups inside each project the user is member of.
    * @return a the user's resulting set of administrative permissions for each project.
    */
-  def userAdministrativePermissionsGetADM(
-    groupsPerProject: Map[IRI, Seq[IRI]],
-  ): Task[Map[IRI, Set[PermissionADM]]] = {
+  def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Task[Map[IRI, Set[PermissionADM]]] = {
 
     /* Get all permissions per project, applying permission precedence rule */
     def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Task[(IRI, Set[PermissionADM])] = {
@@ -511,7 +534,7 @@ final case class PermissionsResponder(
             } yield group.id
           }
 
-        customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+        customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => stringFormatter.toSmartIri(iri))
         newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
                               PermissionIri.makeNew(project.shortcode).value,
@@ -811,7 +834,7 @@ final case class PermissionsResponder(
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI],
   ): Task[DefaultObjectAccessPermissionGetResponseADM] = {
-    val projectIriInternal = projectIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    val projectIriInternal = stringFormatter.toSmartIri(projectIri).toOntologySchema(InternalSchema).toString
     defaultObjectAccessPermissionGetADM(projectIriInternal, groupIri, resourceClassIri, propertyIri).flatMap {
       case Some(doap) => ZIO.attempt(DefaultObjectAccessPermissionGetResponseADM(doap))
       case None       =>
@@ -1305,7 +1328,7 @@ final case class PermissionsResponder(
               case None => ()
             }
 
-        customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+        customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => stringFormatter.toSmartIri(iri))
         newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
                               PermissionIri.makeNew(project.shortcode).value,
@@ -1535,7 +1558,8 @@ final case class PermissionsResponder(
     requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal =
+      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
     /*Verify that hasPermissions is updated successfully*/
     def verifyUpdateOfHasPermissions(expectedPermissions: Set[PermissionADM]): Task[PermissionItemADM] =
       for {
@@ -1622,7 +1646,8 @@ final case class PermissionsResponder(
     requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal =
+      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
     /*Verify that resource class of doap is updated successfully*/
     val verifyUpdateOfResourceClass =
       for {
@@ -1694,7 +1719,8 @@ final case class PermissionsResponder(
     requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal =
+      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
     /*Verify that property of doap is updated successfully*/
     def verifyUpdateOfProperty: Task[PermissionItemADM] =
       for {
@@ -1765,7 +1791,8 @@ final case class PermissionsResponder(
     requestingUser: User,
     apiRequestID: UUID,
   ): Task[PermissionDeleteResponseADM] = {
-    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal =
+      stringFormatter.toSmartIri(permissionIri.value).toOntologySchema(InternalSchema).toString
     def permissionDeleteTask(): Task[PermissionDeleteResponseADM] =
       for {
         // check that there is a permission with a given IRI
@@ -1974,7 +2001,7 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
                ),
              ),
-             SystemUser,
+             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
 
@@ -1985,7 +2012,7 @@ final case class PermissionsResponder(
                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
                hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
              ),
-             SystemUser,
+             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
 
@@ -2000,7 +2027,7 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                ),
              ),
-             SystemUser,
+             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
 
@@ -2015,7 +2042,7 @@ final case class PermissionsResponder(
                  PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                ),
              ),
-             SystemUser,
+             KnoraSystemInstances.Users.SystemUser,
              UUID.randomUUID(),
            )
     } yield ()
@@ -2031,9 +2058,10 @@ object PermissionsResponder {
       kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
+      kgs     <- ZIO.service[KnoraGroupService]
       sf      <- ZIO.service[StringFormatter]
       aps     <- ZIO.service[AdministrativePermissionService]
-      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, sf))
+      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, kgs, sf))
     } yield handler
   }
 }

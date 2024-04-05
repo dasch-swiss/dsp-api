@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.ZIO
 import zio._
+import zio.prelude.ForEachOps
 
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
@@ -27,6 +28,9 @@ final case class GroupService(
     .flatMap(ZIO.foreachPar(_)(toGroup))
 
   def findById(id: GroupIri): Task[Option[Group]] = knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
+
+  def findAllById(ids: Seq[GroupIri]): Task[Chunk[Group]] =
+    knoraGroupService.findAllById(ids).flatMap(ZIO.foreachPar(_)(toGroup)).map(_.toChunk)
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
