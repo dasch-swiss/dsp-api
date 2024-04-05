@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.1...v0.8.2) (2024-04-02)
+
+
+### Maintenance
+
+* Fix failing docker build while installing dependencies because of missing 'apt-update' ([#197](https://github.com/dasch-swiss/dsp-ingest/issues/197)) ([e985cf2](https://github.com/dasch-swiss/dsp-ingest/commit/e985cf2e190045067486298007bd4fe1d1ac90c9))
+* Major dependency updates ([#194](https://github.com/dasch-swiss/dsp-ingest/issues/194)) ([07689a9](https://github.com/dasch-swiss/dsp-ingest/commit/07689a9b30bdb98a717bca2c4282f9ef2d94cd43))
+* Minor dependency updates ([#193](https://github.com/dasch-swiss/dsp-ingest/issues/193)) ([7f9e0a6](https://github.com/dasch-swiss/dsp-ingest/commit/7f9e0a64f358f4f4c6e368fc3be94af6dfa0ec04))
+* Patch dependency updates ([#192](https://github.com/dasch-swiss/dsp-ingest/issues/192)) ([fc3c478](https://github.com/dasch-swiss/dsp-ingest/commit/fc3c4780069f2e1122183c64fc7847871ec6305f))
+
 ## [0.8.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.0...v0.8.1) (2024-03-15)
 
 
