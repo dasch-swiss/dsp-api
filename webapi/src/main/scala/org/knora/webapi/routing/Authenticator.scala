@@ -17,6 +17,7 @@ import zio._
 import zio.macros.accessible
 
 import java.util.Base64
+
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
