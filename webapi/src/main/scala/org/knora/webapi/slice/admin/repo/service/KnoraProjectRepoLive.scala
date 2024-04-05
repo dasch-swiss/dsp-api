@@ -71,7 +71,7 @@ final case class KnoraProjectRepoLive(
     findOneByTriplePattern(_.has(Vocabulary.KnoraAdmin.projectShortname, shortname.value))
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortname == shortname)))
 
-  override def findAll(): Task[List[KnoraProject]] = super.findAll().map(_ ++ KnoraProjectRepo.builtIn.all.toList)
+  override def findAll(): Task[Chunk[KnoraProject]] = super.findAll().map(_ ++ KnoraProjectRepo.builtIn.all)
 
   override def save(project: KnoraProject): Task[KnoraProject] =
     ZIO

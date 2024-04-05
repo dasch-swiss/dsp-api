@@ -91,13 +91,13 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
           projects <- KnoraProjectRepo(_.findAll())
         } yield assertTrue(
-          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).toList.sortBy(_.id.value),
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).sortBy(_.id.value),
         )
       },
       test("return all built in projects") {
         for {
           projects <- KnoraProjectRepo(_.findAll())
-        } yield assertTrue(projects.sortBy(_.id.value) == builtInProjects.toList.sortBy(_.id.value))
+        } yield assertTrue(projects.sortBy(_.id.value) == builtInProjects.sortBy(_.id.value))
       },
     ),
     suite("findBy ...")(

@@ -58,9 +58,9 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   protected def namedGraphIri: Iri
   protected def entityProperties: EntityProperties
 
-  override def findAll(): Task[List[E]] = {
+  override def findAll(): Task[Chunk[E]] = {
     val sub = variable("s")
-    findAllByQuery(Construct(entityQuery(tripleP(sub), graphP(sub)).getQueryString)).map(_.toList)
+    findAllByQuery(Construct(entityQuery(tripleP(sub), graphP(sub)).getQueryString))
   }
 
   override def findById(id: Id): Task[Option[E]] = {

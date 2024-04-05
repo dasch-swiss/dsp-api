@@ -138,7 +138,7 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
         found <- AdministrativePermissionRepo(_.findAll())
       } yield assertTrue(
         found.sortBy(_.id.value) ==
-          List(
+          Chunk(
             AdministrativePermission(
               permissionIri,
               KnoraGroupRepo.builtIn.ProjectMember.id,

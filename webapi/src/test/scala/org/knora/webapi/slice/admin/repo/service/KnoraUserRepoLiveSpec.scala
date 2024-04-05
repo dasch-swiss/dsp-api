@@ -177,13 +177,13 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           users <- KnoraUserRepo(_.findAll())
         } yield assertTrue(
           users.sortBy(_.id.value) ==
-            (builtInUsers ++ Chunk(testUser, testUserWithoutAnyGroups)).toList.sortBy(_.id.value),
+            (builtInUsers ++ Chunk(testUser, testUserWithoutAnyGroups)).sortBy(_.id.value),
         )
       },
       test("given no users present should return only built in users") {
         for {
           users <- KnoraUserRepo(_.findAll())
-        } yield assertTrue(users.sortBy(_.id.value) == builtInUsers.toList.sortBy(_.id.value))
+        } yield assertTrue(users.sortBy(_.id.value) == builtInUsers.sortBy(_.id.value))
       },
     ),
     suite("save")(
