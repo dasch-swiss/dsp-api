@@ -108,7 +108,7 @@ final case class PermissionsResponder(
         isInSystemAdminGroup,
         isInProjectAdminGroup,
       )
-      permissionsDataGetADM(user)
+      getPermissionData(user)
     }
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
@@ -171,7 +171,7 @@ final case class PermissionsResponder(
    *
    * @param user the user is for which to create the PermissionData.
    */
-  def permissionsDataGetADM(user: KnoraUser): Task[PermissionsDataADM] = {
+  def getPermissionData(user: KnoraUser): Task[PermissionsDataADM] = {
     // materialize implicit memberships from User properties
     val projectMembers: Chunk[(ProjectIri, GroupIri)] = user.isInProject.map((_, builtIn.ProjectMember.id))
     val projectAdmins                                 = user.isInProjectAdminGroup.map((_, builtIn.ProjectAdmin.id))
