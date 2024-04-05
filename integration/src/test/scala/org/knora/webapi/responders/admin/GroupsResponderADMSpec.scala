@@ -93,7 +93,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         newGroupInfo.descriptions should equal(
           Seq(StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", Some("en"))),
         )
-        newGroupInfo.project should equal(imagesProject)
+        newGroupInfo.project should equal(Some(imagesProject))
         newGroupInfo.status should equal(true)
         newGroupInfo.selfjoin should equal(false)
 
@@ -149,7 +149,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         updatedGroupInfo.descriptions should equal(
           Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
         )
-        updatedGroupInfo.project should equal(imagesProject)
+        updatedGroupInfo.project should equal(Some(imagesProject))
         updatedGroupInfo.status should equal(true)
         updatedGroupInfo.selfjoin should equal(false)
       }

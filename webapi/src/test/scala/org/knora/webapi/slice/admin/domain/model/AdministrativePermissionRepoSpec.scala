@@ -10,10 +10,10 @@ import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectMember
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TestTripleStore
@@ -54,7 +54,7 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
         found.contains(
           AdministrativePermission(
             permissionIri,
-            GroupIri.unsafeFrom(ProjectMember),
+            KnoraGroupRepo.builtIn.ProjectMember.id,
             ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
             Chunk(
               AdministrativePermissionPart.Simple.unsafeFrom(Permission.Administrative.ProjectAdminGroupAll),
@@ -88,7 +88,7 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
         found.contains(
           AdministrativePermission(
             permissionIri,
-            GroupIri.unsafeFrom(ProjectMember),
+            KnoraGroupRepo.builtIn.ProjectMember.id,
             ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
             Chunk(
               AdministrativePermissionPart.Simple.unsafeFrom(Permission.Administrative.ProjectAdminGroupAll),
@@ -138,10 +138,10 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
         found <- AdministrativePermissionRepo(_.findAll())
       } yield assertTrue(
         found.sortBy(_.id.value) ==
-          List(
+          Chunk(
             AdministrativePermission(
               permissionIri,
-              GroupIri.unsafeFrom(ProjectMember),
+              KnoraGroupRepo.builtIn.ProjectMember.id,
               ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
               Chunk(
                 AdministrativePermissionPart.Simple.unsafeFrom(Permission.Administrative.ProjectAdminGroupAll),
@@ -150,7 +150,7 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
             ),
             AdministrativePermission(
               permissionIri2,
-              GroupIri.unsafeFrom(ProjectMember),
+              KnoraGroupRepo.builtIn.ProjectMember.id,
               ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
               Chunk(
                 AdministrativePermissionPart.Simple.unsafeFrom(Permission.Administrative.ProjectAdminGroupAll),
@@ -173,7 +173,7 @@ object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
         PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/1234567890")
       val permission = AdministrativePermission(
         id,
-        GroupIri.unsafeFrom(ProjectMember),
+        KnoraGroupRepo.builtIn.ProjectMember.id,
         ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
         Chunk(
           AdministrativePermissionPart.Simple.unsafeFrom(Permission.Administrative.ProjectAdminGroupAll),

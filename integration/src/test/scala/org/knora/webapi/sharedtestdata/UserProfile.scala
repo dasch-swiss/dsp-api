@@ -9,6 +9,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 /**
  * Represents a user's profile.
@@ -16,7 +17,6 @@ import org.knora.webapi.slice.admin.domain.model.User
  * @param userData       basic information about the user.
  * @param groups         the groups that the user belongs to.
  * @param projects_info  the projects that the user belongs to.
- * @param sessionId      the sessionId,.
  * @param permissionData the user's permission data.
  */
 case class UserProfile(
@@ -35,7 +35,7 @@ object UserProfile {
       val v1Groups: Seq[IRI] = userADM.groups.map(_.id)
 
       val projectsWithoutBuiltinProjects = userADM.projects
-        .filter(_.id != OntologyConstants.KnoraAdmin.SystemProject)
+        .filter(_.id != KnoraProjectRepo.builtIn.SystemProject.id.value)
         .filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject)
       val projectInfosV1 = projectsWithoutBuiltinProjects.map(ProjectInfo.from)
       val projects_info_v1: Map[IRI, ProjectInfo] =

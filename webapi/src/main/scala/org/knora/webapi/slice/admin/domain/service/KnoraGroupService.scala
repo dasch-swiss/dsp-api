@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
 import zio.Task
 import zio.ZLayer
 
@@ -12,7 +13,10 @@ import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 
 case class KnoraGroupService(knoraGroupRepo: KnoraGroupRepo) {
-  def findAll: Task[List[KnoraGroup]] = knoraGroupRepo.findAll()
+
+  def findAllRegularGroups(): Task[Chunk[KnoraGroup]] = findAll().map(_.filter(_.id.isRegularGroupIri))
+
+  def findAll(): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findAll()
 
   def findById(id: GroupIri): Task[Option[KnoraGroup]] = knoraGroupRepo.findById(id)
 

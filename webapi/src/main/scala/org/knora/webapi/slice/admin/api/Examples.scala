@@ -102,7 +102,7 @@ object Examples {
         StringLiteralV2.from(s"${groupName.value} description in English", Some("en")),
         StringLiteralV2.from(s"${groupName.value} Beschreibung auf Deutsch", Some("de")),
       ),
-      project = project,
+      project = Some(project),
       status = GroupStatus.active.value,
       selfjoin = GroupSelfJoin.disabled.value,
     )

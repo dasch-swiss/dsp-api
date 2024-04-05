@@ -15,7 +15,6 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
@@ -28,6 +27,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -549,16 +550,16 @@ case class PermissionsDataADM(
   /* Is the user a member of the SystemAdmin group */
   def isSystemAdmin: Boolean =
     groupsPerProject
-      .getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI])
-      .contains(OntologyConstants.KnoraAdmin.SystemAdmin)
+      .getOrElse(KnoraProjectRepo.builtIn.SystemProject.id.value, List.empty[IRI])
+      .contains(KnoraGroupRepo.builtIn.SystemAdmin.id.value)
 
   /* Is the user a member of the ProjectAdmin group in any project */
   def isProjectAdminInAnyProject(): Boolean =
-    groupsPerProject.flatMap(_._2).toSeq.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+    groupsPerProject.flatMap(_._2).toSeq.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Is the user a member of the ProjectAdmin group */
   def isProjectAdmin(projectIri: IRI): Boolean =
-    groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+    groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
   def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean =
