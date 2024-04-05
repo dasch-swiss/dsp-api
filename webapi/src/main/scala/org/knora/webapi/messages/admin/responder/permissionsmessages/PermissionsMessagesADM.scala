@@ -140,25 +140,6 @@ case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) extends Permi
  */
 sealed trait PermissionsResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
-/**
- * A message that requests the user's [[PermissionsDataADM]].
- *
- * @param projectIris            the projects the user is part of.
- * @param groupIris              the groups the user is member of.
- * @param isInProjectAdminGroups the projects for which the user is member of the ProjectAdmin group.
- * @param isInSystemAdminGroup   the flag denoting users membership in the SystemAdmin group.
- */
-case class PermissionDataGetADM(
-  projectIris: Seq[IRI],
-  groupIris: Seq[IRI],
-  isInProjectAdminGroups: Seq[IRI],
-  isInSystemAdminGroup: Boolean,
-  requestingUser: User,
-) extends PermissionsResponderRequestADM {
-
-  if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
-}
-
 // Administrative Permissions
 
 /**

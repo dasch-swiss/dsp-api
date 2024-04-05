@@ -6,8 +6,12 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.util.UUID
+import scala.collection.mutable.ListBuffer
+
 import dsp.errors._
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -27,20 +31,12 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo._
@@ -54,11 +50,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-import zio._
-import zio.prelude.ForEachOps
-
-import java.util.UUID
-import scala.collection.mutable.ListBuffer
 
 final case class PermissionsResponder(
   appConfig: AppConfig,
@@ -83,33 +74,6 @@ final case class PermissionsResponder(
     message.isInstanceOf[PermissionsResponderRequestADM]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case PermissionDataGetADM(
-          projectIris,
-          groupIris,
-          projectAdminIris,
-          isSystemAdmin,
-          _,
-        ) => {
-      val isInProject           = projectIris.map(ProjectIri.unsafeFrom).toChunk
-      val isInSystemAdminGroup  = SystemAdmin.from(isSystemAdmin)
-      val isInProjectAdminGroup = projectAdminIris.map(ProjectIri.unsafeFrom).toChunk
-      val isInGroups            = groupIris.map(GroupIri.unsafeFrom).toChunk
-      val user = KnoraUser(
-        UserIri.unsafeFrom("http://rdfh.ch/users/dummy"),
-        Username.unsafeFrom("dummy"),
-        Email.unsafeFrom("dummy@exmple.com"),
-        FamilyName.unsafeFrom("dummy"),
-        GivenName.unsafeFrom("dummy"),
-        PasswordHash.unsafeFrom("dummy"),
-        LanguageCode.en,
-        UserStatus.Active,
-        isInProject,
-        isInGroups,
-        isInSystemAdminGroup,
-        isInProjectAdminGroup,
-      )
-      getPermissionData(user)
-    }
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
