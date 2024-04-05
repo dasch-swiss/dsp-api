@@ -21,8 +21,9 @@ final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
   private val projectService: ProjectService,
 ) {
-  def findAllRegularGroups: Task[List[Group]] = knoraGroupService.findAll
-    .map(_.filter(_.id.isRegularGroupIri))
+
+  def findAllRegularGroups: Task[Chunk[Group]] = knoraGroupService
+    .findAllRegularGroups()
     .flatMap(ZIO.foreachPar(_)(toGroup))
 
   def findById(id: GroupIri): Task[Option[Group]] = knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
