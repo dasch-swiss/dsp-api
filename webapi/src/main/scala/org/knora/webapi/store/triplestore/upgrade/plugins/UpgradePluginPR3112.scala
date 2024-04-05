@@ -30,13 +30,13 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS)
       .delete(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark))
-      .from(Vocabulary.NamedGraphs.knoraAdminIri)
+      .from(Vocabulary.NamedGraphs.dataAdmin)
       .where(
         project
           .isA(Vocabulary.KnoraAdmin.KnoraProject)
           .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark)
           .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize)
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
   }
 
@@ -45,14 +45,14 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
     Queries
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS)
-      .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
+      .`with`(Vocabulary.NamedGraphs.dataAdmin)
       .insert(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, Rdf.literalOf(Size.default.value)))
       .where(
         project
           .isA(Vocabulary.KnoraAdmin.KnoraProject)
           .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, variable("size")))
           .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, variable("watermark")))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
   }
 
@@ -61,16 +61,16 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
     Queries
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS)
-      .`with`(Vocabulary.NamedGraphs.knoraAdminIri)
+      .`with`(Vocabulary.NamedGraphs.dataAdmin)
       .insert(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, Rdf.literalOf(Size.default.value)))
       .delete(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, Rdf.literalOf(false)))
-      .from(Vocabulary.NamedGraphs.knoraAdminIri)
+      .from(Vocabulary.NamedGraphs.dataAdmin)
       .where(
         project
           .isA(Vocabulary.KnoraAdmin.KnoraProject)
           .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, Rdf.literalOf(false))
           .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, variable("size")))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+          .from(Vocabulary.NamedGraphs.dataAdmin),
       )
   }
 

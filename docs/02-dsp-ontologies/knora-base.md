@@ -451,7 +451,7 @@ would refer to that property in general, not to any particular instance in which
 particular resources. To attach metadata to a specific link in RDF, it is necessary to create an RDF "reification". A
 reification makes statements about a particular triple (subject, predicate, object), in this case the triple that
 expresses the link between the resources. DSP-API uses reifications of type `kb:LinkValue` (described in
-[LinkValue](#linkvalue) to store metadata about links.
+[LinkValue](#linkvalue)) to store metadata about links.
 
 For example, suppose a project describes paintings that belong to collections. The project can define an ontology as
 follows (expressed here in [Turtle](http://www.w3.org/TR/turtle/) format, and simplified for the purposes of
@@ -587,21 +587,26 @@ is part of another resource needs to have a property `kb:seqnum` or a subpropert
 client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the pages
 of a book like in [this](../01-introduction/example-project.md#resource-classes) example).
 
-#### isSequenceOf
+#### Segment
 
-Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resources that have
-a time dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of
-`kb:MovingImageRepresentation` and `kb:AudioRepresentation`.
+DSP-API supports the creation of segment resources. 
+A segment is a part of a resource which has a temporal extent; 
+the segment is defined by a start and end time relative to the resource. 
+Segments are modelled as resources of type `kb:Segment`, 
+having the properties `kb:isSegmentOf`, a [LinkValue](#linkvalue) pointing to the resource the segment is part of,
+and `kb:hasSegmentBounds`, a [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
+However, `kb:Segment` is "abstract" and cannot be used directly in data. 
+Segments may have a comment attached to them through `kb:hasComment`.
 
-`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a
-`kb:IntervalValue`. This defines the start and end point of the subseqence in relation to the entire audio/video
-resource as an [interval](#intervalvalue). When the properties are used in this combination, a dedicated behavior in the
-frontend allows to display the sequences alongside the main resource.
+There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:VideoSegment`.
+`kb:AudioSegment` has the property `kb:isAudioSegmentOf`, which points to an [AudioRepresentation](#representations),
+`kb:VideoSegment` has the property `kb:isVideoSegmentOf`, which points to a [MovingImageRepresentation](#representations). 
+Both use the `kb:hasSegmentBounds` property directly.
 
-There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a*
-`kb:StillImageRepresentation` and the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the
-whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`. The parts only define which sub-sequence of
-this representation they are.
+It is possible to create subclases of `kb:AudoSegment` and `kb:VideoSegment` to add additional properties, 
+but this is discouraged and may not be supported in future versions of DSP-API. 
+Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
+
 
 ### Text with Standoff Markup
 

@@ -16,13 +16,12 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
-import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.AkkaHttpUtils
 
 /**
@@ -42,15 +41,13 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       "return a group's administrative permission" in {
         val projectIri =
           URLEncoder.encode(ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id).value, "utf-8")
-        val groupIri =
-          URLEncoder.encode(GroupIri.unsafeFrom(OntologyConstants.KnoraAdmin.ProjectMember).value, "utf-8")
+        val groupIri = URLEncoder.encode(KnoraGroupRepo.builtIn.ProjectMember.id.value, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass),
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
 
         val iri = result
@@ -78,8 +75,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
 
@@ -103,8 +99,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
         result.asInstanceOf[JsArray].elements.size should be(3)
 
@@ -128,8 +123,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
 
         val response = singleAwaitingRequest(request, 1.seconds)
-        logger.debug("==>> " + response.toString)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
         result.asInstanceOf[JsArray].elements.size should be(6)
 

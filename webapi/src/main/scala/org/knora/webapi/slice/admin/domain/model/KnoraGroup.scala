@@ -8,15 +8,17 @@ package org.knora.webapi.slice.admin.domain.model
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+import zio.Chunk
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.BuiltInGroups
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -34,7 +36,7 @@ final case class KnoraGroup(
   status: GroupStatus,
   belongsToProject: Option[ProjectIri],
   hasSelfJoinEnabled: GroupSelfJoin,
-)
+) extends EntityWithId[GroupIri]
 
 /**
  * Represents user's group.
@@ -50,7 +52,7 @@ case class Group(
   id: IRI,
   name: String,
   descriptions: Seq[StringLiteralV2],
-  project: Project,
+  project: Option[Project],
   status: Boolean,
   selfjoin: Boolean,
 ) extends Ordered[Group] {
@@ -63,11 +65,19 @@ case class Group(
   def compare(that: Group): Int = this.id.compareTo(that.id)
 }
 
-final case class GroupIri private (override val value: String) extends AnyVal with StringValue
+final case class GroupIri private (override val value: String) extends AnyVal with StringValue {
+  def isBuiltInGroupIri: Boolean = GroupIri.isBuiltInGroupIri(value)
+  def isRegularGroupIri: Boolean = !isBuiltInGroupIri
+
+}
 
 object GroupIri extends StringValueCompanion[GroupIri] {
   implicit val tapirCodec: Codec[String, GroupIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(GroupIri.from)(_.value)
+
+  private val BuiltInGroups =
+    Chunk("UnknownUser", "KnownUser", "Creator", "ProjectMember", "ProjectAdmin", "SystemAdmin")
+      .map(KnoraAdminPrefixExpansion + _)
 
   /**
    * Explanation of the group IRI regex:
@@ -81,7 +91,11 @@ object GroupIri extends StringValueCompanion[GroupIri] {
   private val groupIriRegEx = """^http://rdfh\.ch/groups/\p{XDigit}{4}/[a-zA-Z0-9_-]{4,40}$""".r
 
   private def isGroupIriValid(iri: String): Boolean =
-    (Iri.isIri(iri) && groupIriRegEx.matches(iri)) || BuiltInGroups.contains(iri)
+    (Iri.isIri(iri) && isRegularGroupIri(iri)) || isBuiltInGroupIri(iri)
+
+  private def isRegularGroupIri(iri: String) = groupIriRegEx.matches(iri)
+
+  private def isBuiltInGroupIri(iri: String): Boolean = BuiltInGroups.contains(iri)
 
   def from(value: String): Either[String, GroupIri] = value match {
     case _ if value.isEmpty          => Left("Group IRI cannot be empty.")
@@ -117,9 +131,9 @@ final case class GroupDescriptions private (value: Seq[StringLiteralV2])
 object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescriptions] {
   def from(value: Seq[StringLiteralV2]): Either[String, GroupDescriptions] =
     value.toList match {
-      case descriptions @ (v2String :: _) if v2String.value.nonEmpty => Right(GroupDescriptions(descriptions))
-      case _ :: _                                                    => Left(GroupErrorMessages.GroupDescriptionsInvalid)
-      case _                                                         => Left(GroupErrorMessages.GroupDescriptionsMissing)
+      case descriptions @ v2String :: _ if v2String.value.nonEmpty => Right(GroupDescriptions(descriptions))
+      case _ :: _                                                  => Left(GroupErrorMessages.GroupDescriptionsInvalid)
+      case _                                                       => Left(GroupErrorMessages.GroupDescriptionsMissing)
     }
 
   def fromOne(value: StringLiteralV2): Either[String, StringLiteralV2] =

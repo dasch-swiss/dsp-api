@@ -13,13 +13,16 @@ import scala.util.matching.Regex
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationType
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.IntValueCompanion
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -42,7 +45,7 @@ final case class KnoraUser(
   isInGroup: Chunk[GroupIri],
   isInSystemAdminGroup: SystemAdmin,
   isInProjectAdminGroup: Chunk[ProjectIri],
-)
+) extends EntityWithId[UserIri]
 
 /**
  * Represents a user's profile.
@@ -118,16 +121,16 @@ final case class User(
    */
   def isSystemAdmin: Boolean =
     permissions.groupsPerProject
-      .getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[String])
-      .contains(OntologyConstants.KnoraAdmin.SystemAdmin)
+      .getOrElse(KnoraProjectRepo.builtIn.SystemProject.id.value, List.empty[String])
+      .contains(KnoraGroupRepo.builtIn.SystemAdmin.id.value)
 
-  def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
+  def isSystemUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.SystemUser.id.value)
 
   def isActive: Boolean = status
 
   def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
 
-  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
+  def isAnonymousUser: Boolean = id.equalsIgnoreCase(KnoraUserRepo.builtIn.AnonymousUser.id.value)
 
   def filterUserInformation(requestingUser: User, infoType: UserInformationType): User =
     if (requestingUser.permissions.isSystemAdmin || requestingUser.id == this.id || requestingUser.isSystemUser)
@@ -159,11 +162,7 @@ object UserIri extends StringValueCompanion[UserIri] {
    */
   private val userIriRegEx = """^http://rdfh\.ch/users/[a-zA-Z0-9_-]{4,36}$""".r
 
-  private val builtInIris = Seq(
-    OntologyConstants.KnoraAdmin.SystemUser,
-    OntologyConstants.KnoraAdmin.AnonymousUser,
-    OntologyConstants.KnoraAdmin.SystemAdmin,
-  )
+  private val builtInIris = Seq("SystemUser", "AnonymousUser").map(KnoraAdminPrefixExpansion + _)
 
   private def isValid(iri: String) =
     builtInIris.contains(iri) || (Iri.isIri(iri) && userIriRegEx.matches(iri))

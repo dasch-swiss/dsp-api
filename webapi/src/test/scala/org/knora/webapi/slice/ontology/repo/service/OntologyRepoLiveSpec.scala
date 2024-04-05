@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import zio.Chunk
 import zio.Scope
 import zio.ZIO
 import zio.test.ZIOSpecDefault
@@ -90,7 +91,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           for {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- findAll()
-          } yield assertTrue(actual == List(ontology))
+          } yield assertTrue(actual == Chunk(ontology))
         },
       ),
       suite("findAllSubclassesBy")(
@@ -103,7 +104,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article)),
             )
           for {
-            _      <- OntologyCacheFake.set(data.build).debug
+            _      <- OntologyCacheFake.set(data.build)
             actual <- findAllSubclassesBy(Biblio.Class.Publication)
           } yield assertTrue(actual.isEmpty)
         },
@@ -131,7 +132,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .addOntology(anythingOntologyDefinition)
             .addOntology(biblioOntologyDefinition)
           for {
-            _         <- OntologyCacheFake.set(data.build).debug
+            _         <- OntologyCacheFake.set(data.build)
             actual    <- findAllSubclassesBy(Biblio.Class.Publication)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Biblio.Class.JournalArticle))
@@ -147,7 +148,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
                 .addClassInfo(ReadClassInfoV2Builder.builder(Biblio.Class.Article)),
             )
           for {
-            _      <- OntologyCacheFake.set(data.build).debug
+            _      <- OntologyCacheFake.set(data.build)
             actual <- findAllSuperClassesBy(Biblio.Class.Article)
           } yield assertTrue(actual.isEmpty)
         },
@@ -173,7 +174,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
             .addOntology(anythingOntologyDefinition)
             .addOntology(biblioOntologyDefinition)
           for {
-            _         <- OntologyCacheFake.set(data.build).debug
+            _         <- OntologyCacheFake.set(data.build)
             actual    <- findAllSuperClassesBy(Biblio.Class.JournalArticle)
             actualIris = actual.map(_.entityInfoContent.classIri.toInternalIri)
           } yield assertTrue(actualIris == List(Biblio.Class.Article, Anything.Class.Thing, Biblio.Class.Publication))

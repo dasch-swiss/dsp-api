@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -873,10 +874,14 @@ object OntologyHelpers {
     val subPropertyOf: SmartIri = internalPropertyDef.subPropertyOf match {
       case subProps if subProps.contains(OntologyConstants.KnoraBase.IsPartOf.toSmartIri) =>
         OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
-      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsSequenceOf.toSmartIri) =>
-        OntologyConstants.KnoraBase.IsSequenceOfValue.toSmartIri
       case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
         OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsSegmentOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsAudioSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsAudioSegmentOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsVideoSegmentOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsVideoSegmentOfValue.toSmartIri
       case subProps
           if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
         internalPropertyDef.subPropertyOf.head.fromLinkPropToLinkValueProp
@@ -1622,9 +1627,9 @@ final case class OntologyHelpersLive(
               }
 
               if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
-                if (projectIri.toString == OntologyConstants.KnoraAdmin.SystemProject) {
+                if (projectIri.toString == KnoraProjectRepo.builtIn.SystemProject.id.value) {
                   throw InconsistentRepositoryDataException(
-                    s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraAdmin.SystemProject}",
+                    s"Ontology $internalOntologyIri cannot be in project ${KnoraProjectRepo.builtIn.SystemProject.id.value}",
                   )
                 }
 

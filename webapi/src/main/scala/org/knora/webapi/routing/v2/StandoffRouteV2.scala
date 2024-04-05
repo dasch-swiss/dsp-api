@@ -56,17 +56,12 @@ final case class StandoffRouteV2()(
           val allPartsFuture: Future[Map[Name, String]] = formData.parts
             .mapAsync[(Name, String)](1) {
               case b: BodyPart if b.name == jsonPartKey =>
-                // Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
                 b.toStrict(2.seconds).map { strict =>
-                  // Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
               case b: BodyPart if b.name == xmlPartKey =>
-                // Logger.debug(s"inside allPartsFuture - processing $XML_PART")
-
                 b.toStrict(2.seconds).map { strict =>
-                  // Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 

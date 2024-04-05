@@ -14,6 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 
 /**
@@ -26,7 +27,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
     ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-    projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
+    projectIri = Some(KnoraProjectRepo.builtIn.SystemProject.id.value.toSmartIri),
     label = Some("The knora-api ontology in the simple schema"),
   )
 

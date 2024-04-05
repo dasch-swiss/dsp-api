@@ -122,6 +122,9 @@
                     "@id": "knora-api:Representation"
                 },
                 {
+                    "@id": "http://www.w3.org/ns/ma-ont#AudioTrack"
+                },
+                {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:arkUrl"
@@ -167,6 +170,73 @@
             "rdfs:comment": "Represents a file containing audio data",
             "@type": "owl:Class",
             "@id": "knora-api:AudioRepresentation"
+        },
+        {
+            "rdfs:label": "Audio Segment",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Segment"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasComment"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSegmentBounds"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isAudioSegmentOf"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A segment of an audio resource",
+            "@type": "owl:Class",
+            "@id": "knora-api:AudioSegment"
         },
         {
             "rdfs:label": "Color literal",
@@ -468,6 +538,9 @@
                     "@id": "knora-api:Representation"
                 },
                 {
+                    "@id": "http://www.w3.org/ns/ma-ont#VideoTrack"
+                },
+                {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:arkUrl"
@@ -686,6 +759,76 @@
             "@id": "knora-api:Resource"
         },
         {
+            "rdfs:label": "Segment",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#Track"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasComment"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSegmentBounds"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSegmentOf"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A resource representing a sub-segment of another resource",
+            "@type": "owl:Class",
+            "@id": "knora-api:Segment"
+        },
+        {
             "@id": "knora-api:StillImageAbstractFileValue",
             "@type": "owl:Class",
             "rdfs:comment": "A file containing a two-dimensional still image"
@@ -695,6 +838,9 @@
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Representation"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#Image"
                 },
                 {
                     "@type": "owl:Restriction",
@@ -795,6 +941,73 @@
             "rdfs:comment": "A resource containing a text file",
             "@type": "owl:Class",
             "@id": "knora-api:TextRepresentation"
+        },
+        {
+            "rdfs:label": "Video Segment",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Segment"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasComment"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSegmentBounds"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isVideoSegmentOf"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "A segment of a video resource",
+            "@type": "owl:Class",
+            "@id": "knora-api:VideoSegment"
         },
         {
             "rdfs:label": "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.",
@@ -1058,6 +1271,21 @@
             "@id": "knora-api:hasRepresentation"
         },
         {
+            "rdfs:label": "Segment Bounds",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "rdfs:comment": "Indicates the bounds of a segment, i.e. the start and end point in the containing resource.",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Segment"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Interval"
+            },
+            "@id": "knora-api:hasSegmentBounds"
+        },
+        {
             "rdfs:label": "Sequence Bounds",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
@@ -1141,6 +1369,21 @@
             "@id": "knora-api:isAnnotationOf"
         },
         {
+            "rdfs:label": "is audio segment of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:isSegmentOf"
+            },
+            "rdfs:comment": "Indicates that this resource is a segment of an audio resource",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:AudioSegment"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:AudioRepresentation"
+            },
+            "@id": "knora-api:isAudioSegmentOf"
+        },
+        {
             "rdfs:comment": "Indicates if the given resource is the main resource of a request or a resource referred to by a link property.",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
@@ -1182,11 +1425,31 @@
             "@id": "knora-api:isRegionOf"
         },
         {
+            "rdfs:label": "is segment of",
+            "rdfs:subPropertyOf": [
+                {
+                    "@id": "knora-api:hasLinkTo"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#isFragmentOf"
+                }
+            ],
+            "rdfs:comment": "Indicates that this resource is a segment of a video or audio resource",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Segment"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Representation"
+            },
+            "@id": "knora-api:isSegmentOf"
+        },
+        {
             "rdfs:label": "is sequence of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
             },
-            "rdfs:comment": "Indicates that this resource is a sequence of a video or audio resource",
+            "rdfs:comment": "Deprecated in favour of :Segment",
             "@type": "owl:ObjectProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
@@ -1195,6 +1458,21 @@
                 "@id": "knora-api:Resource"
             },
             "@id": "knora-api:isSequenceOf"
+        },
+        {
+            "rdfs:label": "is video segment of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:isSegmentOf"
+            },
+            "rdfs:comment": "Indicates that this resource is a segment of a video resource",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:VideoSegment"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:MovingImageRepresentation"
+            },
+            "@id": "knora-api:isVideoSegmentOf"
         },
         {
             "rdfs:label": "May have more results",

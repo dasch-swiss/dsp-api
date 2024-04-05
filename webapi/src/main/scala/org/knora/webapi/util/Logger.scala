@@ -12,12 +12,18 @@ import zio.logging._
 import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {
+  private val envLogLevel = sys.env.getOrElse("DSP_API_LOG_LEVEL", "INFO").toUpperCase
+
+  private def rootLogLevel: LogLevel =
+    LogLevel.levels
+      .find(_.label == envLogLevel)
+      .getOrElse(throw new Exception(s"Expected a log level, but found $envLogLevel"))
 
   private val logFilter = LogFilter.LogLevelByNameConfig(
-    LogLevel.Info,
-      // Uncomment the following lines to change the log level for specific loggers:
-      // , ("zio.logging.slf4j", LogLevel.Debug)
-      // , ("SLF4J-LOGGER", LogLevel.Warning)
+    rootLogLevel,
+    // Uncomment the following lines to change the log level for specific loggers:
+    // , ("zio.logging.slf4j", LogLevel.Debug)
+    // , ("SLF4J-LOGGER", LogLevel.Warning)
   )
 
   private val logFormatText: LogFormat =

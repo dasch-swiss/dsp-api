@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.repo
 
+import zio.Chunk
 import zio.Ref
 import zio.Task
 import zio.ULayer
@@ -19,7 +20,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 
-final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
+final case class KnoraProjectRepoInMemory(projects: Ref[Chunk[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, ProjectIri](projects, _.id)
     with KnoraProjectRepo {
 
@@ -34,5 +35,5 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
 
 object KnoraProjectRepoInMemory {
   val layer: ULayer[KnoraProjectRepoInMemory] =
-    ZLayer.fromZIO(Ref.make(List.empty[KnoraProject]).map(KnoraProjectRepoInMemory(_)))
+    ZLayer.fromZIO(Ref.make(Chunk.empty[KnoraProject]).map(KnoraProjectRepoInMemory(_)))
 }

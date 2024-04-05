@@ -15,8 +15,6 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 object ValuesValidator {
-  // TODO: I think we should rename this to `ValuesConvertor` as it fits better what it's doing
-
   def validateBoolean(s: String): Option[Boolean] = s.toBooleanOption
 
   def validateInt(s: String): Option[Int] = s.toIntOption

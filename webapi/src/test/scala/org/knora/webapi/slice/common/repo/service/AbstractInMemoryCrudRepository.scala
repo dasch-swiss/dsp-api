@@ -7,7 +7,7 @@ package org.knora.webapi.slice.common.repo.service
 
 import zio._
 
-abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Entity]], getId: Entity => Id)
+abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[Entity]], getId: Entity => Id)
     extends CrudRepository[Entity, Id] {
 
   /**
@@ -17,7 +17,7 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Ent
    * @return the saved entity.
    */
   override def save(entity: Entity): Task[Entity] =
-    entities.update(entity :: _).as(entity)
+    entities.update(_.appended(entity)).as(entity)
 
   /**
    * Deletes a given entity.
@@ -47,5 +47,5 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Ent
    *
    * @return all instances of the type.
    */
-  override def findAll(): Task[List[Entity]] = entities.get
+  override def findAll(): Task[Chunk[Entity]] = entities.get
 }

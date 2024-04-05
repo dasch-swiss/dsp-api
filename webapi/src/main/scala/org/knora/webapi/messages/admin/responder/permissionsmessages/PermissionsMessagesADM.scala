@@ -15,16 +15,20 @@ import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Full
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Restricted
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -304,7 +308,7 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
   requestingUser: User,
   apiRequestID: UUID,
 ) extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(defaultObjectAccessPermissionIri)
+  PermissionIri.from(defaultObjectAccessPermissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 /**
@@ -395,7 +399,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
  */
 case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User)
     extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
+  PermissionIri.from(permissionIri).fold(e => throw BadRequestException(e), _.value)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -546,21 +550,21 @@ case class PermissionsDataADM(
   /* Is the user a member of the SystemAdmin group */
   def isSystemAdmin: Boolean =
     groupsPerProject
-      .getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI])
-      .contains(OntologyConstants.KnoraAdmin.SystemAdmin)
+      .getOrElse(KnoraProjectRepo.builtIn.SystemProject.id.value, List.empty[IRI])
+      .contains(KnoraGroupRepo.builtIn.SystemAdmin.id.value)
 
   /* Is the user a member of the ProjectAdmin group in any project */
   def isProjectAdminInAnyProject(): Boolean =
-    groupsPerProject.flatMap(_._2).toSeq.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+    groupsPerProject.flatMap(_._2).toSeq.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Is the user a member of the ProjectAdmin group */
   def isProjectAdmin(projectIri: IRI): Boolean =
-    groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+    groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
 
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
   def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean =
     administrativePermissionsPerProject.get(projectIri) match {
-      case Some(permissions) => permissions(PermissionADM.ProjectAdminAllPermission)
+      case Some(permissions) => permissions(PermissionADM.from(Permission.Administrative.ProjectAdminAll))
       case None              => false
     }
 
@@ -572,21 +576,18 @@ case class PermissionsDataADM(
    * @return a boolean value.
    */
   def hasPermissionFor(operation: OperationADM, insideProject: IRI): Boolean =
-    // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
     if (this.isSystemAdmin) {
       /* A member of the SystemAdmin group is allowed to perform any operation */
-      // println("TRUE: A member of the SystemAdmin group is allowed to perform any operation")
       true
     } else {
       operation match {
         case ResourceCreateOperation(resourceClassIri) =>
           this.administrativePermissionsPerProject.get(insideProject) match {
             case Some(set) =>
-              set(PermissionADM.ProjectResourceCreateAllPermission) || set(
-                PermissionADM.projectResourceCreateRestrictedPermission(resourceClassIri),
+              set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)) || set(
+                PermissionADM.from(Permission.Administrative.ProjectResourceCreateRestricted, resourceClassIri),
               )
             case None => {
-              // println("FALSE: No administrative permissions defined for this project.")
               false
             }
           }
@@ -599,31 +600,9 @@ case class PermissionsDataADM(
   override def equals(that: Any): Boolean =
     that match {
       case that: PermissionsDataADM =>
-        that.canEqual(this) && {
-
-          val gppEqual = if (this.groupsPerProject.hashCode != that.groupsPerProject.hashCode) {
-            println("groupsPerProject not equal")
-            println(s"this (expected): ${this.groupsPerProject}")
-            println(s"that (found): ${that.groupsPerProject}")
-            false
-          } else {
-            true
-          }
-
-          val apppEqual =
-            if (
-              this.administrativePermissionsPerProject.hashCode != that.administrativePermissionsPerProject.hashCode
-            ) {
-              println("administrativePermissionsPerProject not equal")
-              println(s"this (expected): ${this.administrativePermissionsPerProject}")
-              println(s"that (found): ${that.administrativePermissionsPerProject}")
-              false
-            } else {
-              true
-            }
-
-          gppEqual && apppEqual
-        }
+        that.canEqual(this) &&
+        this.groupsPerProject.hashCode == that.groupsPerProject.hashCode &&
+        this.administrativePermissionsPerProject.hashCode == that.administrativePermissionsPerProject.hashCode
       case _ => false
     }
 
@@ -720,91 +699,16 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
  */
 object PermissionADM {
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Administrative Permissions
-  ///////////////////////////////////////////////////////////////////////////
+  def from(permission: Permission): PermissionADM =
+    PermissionADM(permission.token, None, codeFrom(permission))
 
-  val ProjectResourceCreateAllPermission: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
-      additionalInformation = None,
-      permissionCode = None,
-    )
+  def from(permission: Permission, restriction: IRI): PermissionADM =
+    PermissionADM(permission.token, Some(restriction), codeFrom(permission))
 
-  def projectResourceCreateRestrictedPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = None,
-    )
-
-  val ProjectAdminAllPermission: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
-      additionalInformation = None,
-      permissionCode = None,
-    )
-
-  val ProjectAdminGroupAllPermission: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectAdminGroupAllPermission,
-      additionalInformation = None,
-      permissionCode = None,
-    )
-
-  def projectAdminGroupRestrictedPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectAdminGroupRestrictedPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = None,
-    )
-
-  val ProjectAdminRightsAllPermission: PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission,
-      additionalInformation = None,
-      permissionCode = None,
-    )
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Object Access Permissions
-  ///////////////////////////////////////////////////////////////////////////
-
-  def changeRightsPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ChangeRightsPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(8),
-    )
-
-  def deletePermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.DeletePermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(7),
-    )
-
-  def modifyPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ModifyPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(6),
-    )
-
-  def viewPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.ViewPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(2),
-    )
-
-  def restrictedViewPermission(restriction: IRI): PermissionADM =
-    PermissionADM(
-      name = OntologyConstants.KnoraBase.RestrictedViewPermission,
-      additionalInformation = Some(restriction),
-      permissionCode = Some(1),
-    )
-
+  private def codeFrom(permission: Permission) = permission match {
+    case oa: Permission.ObjectAccess  => Some(oa.code)
+    case _: Permission.Administrative => None
+  }
 }
 
 /**
@@ -854,7 +758,6 @@ trait PermissionsADMJsonProtocol
     with TriplestoreJsonProtocol {
 
   implicit object PermissionProfileTypeFormat extends JsonFormat[PermissionProfileType] {
-    import PermissionProfileType.*
 
     /**
      * Not implemented.

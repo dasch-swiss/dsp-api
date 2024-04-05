@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
 import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
@@ -27,7 +28,7 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, cacheSe
   def existsById(id: ProjectIri): Task[Boolean]                      = knoraProjectRepo.existsById(id)
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = knoraProjectRepo.findById(id)
   def findByShortcode(code: Shortcode): Task[Option[KnoraProject]]   = knoraProjectRepo.findByShortcode(code)
-  def findAll(): Task[List[KnoraProject]]                            = knoraProjectRepo.findAll()
+  def findAll(): Task[Chunk[KnoraProject]]                           = knoraProjectRepo.findAll()
   def setProjectRestrictedView(project: KnoraProject, settings: RestrictedView): Task[RestrictedView] = {
     val newSettings = settings match {
       case RestrictedView.Watermark(false) => RestrictedView.default

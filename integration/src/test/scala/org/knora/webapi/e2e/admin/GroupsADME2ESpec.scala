@@ -50,7 +50,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         val request =
           Get(baseApiUrl + s"/admin/groups") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -69,7 +68,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -183,14 +181,13 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, createGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("NewGroup")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("NewGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 
@@ -207,7 +204,6 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
         val iri = groupInfo.id
         newGroupIri.set(iri)
-        // log.debug("newGroupIri: {}", newGroupIri.get)
       }
 
       "UPDATE a group" in {
@@ -233,14 +229,13 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, updateGroupRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 
@@ -262,14 +257,13 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(false)
         groupInfo.selfjoin should be(false)
 
@@ -309,14 +303,13 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest),
         ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
-        logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
 
         val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
         groupInfo.name should be("UpdatedGroupName")
         groupInfo.descriptions should be(Seq(StringLiteralV2.from("UpdatedGroupDescription", Some("en"))))
-        groupInfo.project should be(SharedTestDataADM.imagesProjectExternal)
+        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
 
@@ -339,8 +332,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           BasicHttpCredentials(imagesUser01Email, testPass),
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: {}", response)
-        assert(response.status === StatusCodes.OK)
+        assert(response.status === StatusCodes.OK, responseToString(response))
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
