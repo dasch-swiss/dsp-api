@@ -1,5 +1,39 @@
 # Changelog
 
+## [30.11.0](https://github.com/dasch-swiss/dsp-api/compare/v30.10.1...v30.11.0) (2024-04-04)
+
+
+### Maintenance
+
+* Add `Deprecated` as a category in our release notes ([#3160](https://github.com/dasch-swiss/dsp-api/issues/3160)) ([937480c](https://github.com/dasch-swiss/dsp-api/commit/937480c62ec6aaeed989875207fbf65ca2a9dc1d))
+* Dependency updates ([#3159](https://github.com/dasch-swiss/dsp-api/issues/3159)) ([680e764](https://github.com/dasch-swiss/dsp-api/commit/680e764d82fdfafe1c530b343c4303025f14a51a))
+* Extract ObjectAccess and Administrative permissions into Permission model in admin slice ([#3152](https://github.com/dasch-swiss/dsp-api/issues/3152)) ([e8f6060](https://github.com/dasch-swiss/dsp-api/commit/e8f6060dbb30ce6ea36a618c7ecbe21fb11d9fa8))
+* GroupsResponderADM cleanup (DEV-3292) ([#3139](https://github.com/dasch-swiss/dsp-api/issues/3139)) ([772b160](https://github.com/dasch-swiss/dsp-api/commit/772b160cae43c862edd66b3396f1d7cc9f139ac3))
+* Improve E2EZSpec ([#3153](https://github.com/dasch-swiss/dsp-api/issues/3153)) ([eb72704](https://github.com/dasch-swiss/dsp-api/commit/eb72704183d50b7abed89b661e2c2df97ae92aa4))
+* Introduce AdministrativePermissionRepo and AbstractEntityRepo ([#3167](https://github.com/dasch-swiss/dsp-api/issues/3167)) ([aaa8ffc](https://github.com/dasch-swiss/dsp-api/commit/aaa8ffc0e1769b90d4c126b9b3eba2997898e066))
+* Minor dependency updates ([#3157](https://github.com/dasch-swiss/dsp-api/issues/3157)) ([79dc239](https://github.com/dasch-swiss/dsp-api/commit/79dc239ee259659b088ad68e0ab4466af0ce1440))
+* Patch dependency updates ([#3156](https://github.com/dasch-swiss/dsp-api/issues/3156)) ([1f949a0](https://github.com/dasch-swiss/dsp-api/commit/1f949a0487af3cfa752320f69e1dd2ac44779247))
+* Remove unused constants ([#3164](https://github.com/dasch-swiss/dsp-api/issues/3164)) ([0cf9e43](https://github.com/dasch-swiss/dsp-api/commit/0cf9e43934106c91d4a5be9b8e6fc3f5054e858a))
+* Spring cleaning the code base ([#3155](https://github.com/dasch-swiss/dsp-api/issues/3155)) ([802ed0c](https://github.com/dasch-swiss/dsp-api/commit/802ed0c2f58477ad99bc087c78b7df4a42cdb321))
+* Switch JWT library to use ZIO-JSON instead of Spray JSON ([#3154](https://github.com/dasch-swiss/dsp-api/issues/3154)) ([a209acf](https://github.com/dasch-swiss/dsp-api/commit/a209acf7e9ae140081244c3139c427e6f486cc27))
+* Use env variable for root log level (DEV-3410) ([#3165](https://github.com/dasch-swiss/dsp-api/issues/3165)) ([d616d68](https://github.com/dasch-swiss/dsp-api/commit/d616d686d07b81a016dd4c3c0f91690fd35025a7))
+
+
+### Enhancements
+
+* Remove isSequenceOf and instead add Segment to DSP-API (DEV-3326) ([1beb192](https://github.com/dasch-swiss/dsp-api/commit/1beb19234241d09318f2a8400c63461ac422b5ca))
+* Support external IIIF URLs in resource creation and update (DEV-3341) ([#3131](https://github.com/dasch-swiss/dsp-api/issues/3131)) ([45863c9](https://github.com/dasch-swiss/dsp-api/commit/45863c90c1affd0da24e6c25c7a0b7a02004e7a5))
+
+
+### Bug Fixes
+
+* Temporarily bring back support for `isSequenceOf` while it exists in data ([#3162](https://github.com/dasch-swiss/dsp-api/issues/3162)) ([d22adfd](https://github.com/dasch-swiss/dsp-api/commit/d22adfd2b0fcf699def349a2f63da4d5cdf02937))
+
+
+### Deprecated
+
+* Mark `isSequenceOf` as deprecated and document `Segment` as alternative (DEV-3455) ([#3161](https://github.com/dasch-swiss/dsp-api/issues/3161)) ([e45b41a](https://github.com/dasch-swiss/dsp-api/commit/e45b41aac386ca32e3278f9051555b1cc15bd034))
+
 ## [30.10.1](https://github.com/dasch-swiss/dsp-api/compare/v30.10.0...v30.10.1) (2024-03-27)
 
 
