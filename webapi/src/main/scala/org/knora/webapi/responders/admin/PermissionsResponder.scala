@@ -30,7 +30,6 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -44,7 +43,7 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo._
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -173,90 +172,22 @@ final case class PermissionsResponder(
    * @param user the user is for which to create the PermissionData.
    */
   def permissionsDataGetADM(user: KnoraUser): Task[PermissionsDataADM] = {
-    val projectIris: Seq[IRI]            = user.isInProject.map(_.value)
-    val groupIris: Seq[IRI]              = user.isInGroup.map(_.value)
-    val isInProjectAdminGroups: Seq[IRI] = user.isInProjectAdminGroup.map(_.value)
-    val isInSystemAdminGroup: Boolean    = user.isInSystemAdminGroup.value
-
-    // find out which project each group belongs to
-
-    val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
-      groupIris.map { groupIri =>
-        for {
-          iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(ValidationException(_))
-          group <-
-            groupService
-              .findById(iri)
-              .map(_.flatMap {
-                case group: Group if group.project.isDefined => Some(group)
-                case _                                       => None
-              })
-              .someOrFail(
-                InconsistentRepositoryDataException(
-                  s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
-                ),
-              )
-        } yield (group.project.get.id, groupIri)
-      }
-    } else {
-      Seq.empty[Task[(IRI, IRI)]]
-    }
-
+    // materialize implicit memberships from User properties
+    val projectMembers: Chunk[(ProjectIri, GroupIri)] = user.isInProject.map((_, builtIn.ProjectMember.id))
+    val projectAdmins                                 = user.isInProjectAdminGroup.map((_, builtIn.ProjectAdmin.id))
+    val systemAdmin =
+      if (user.isInSystemAdminGroup.value) {
+        Seq((KnoraProjectRepo.builtIn.SystemProject.id, builtIn.SystemAdmin.id))
+      } else { Seq.empty }
+    val materializedGroups: Chunk[(ProjectIri, GroupIri)] = projectMembers ++ projectAdmins ++ systemAdmin
     for {
-      groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
-
-      /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
-      projectMembers =
-        if (projectIris.nonEmpty) {
-          for {
-            projectIri <- projectIris.toVector
-            res         = (projectIri, KnoraGroupRepo.builtIn.ProjectMember.id.value)
-
-          } yield res
-        } else {
-          Seq.empty[(IRI, IRI)]
-        }
-
-      /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
-      projectAdmins =
-        if (projectIris.nonEmpty) {
-          for {
-            projectAdminForGroup <- isInProjectAdminGroups
-            res                   = (projectAdminForGroup, KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
-          } yield res
-        } else {
-          Seq.empty[(IRI, IRI)]
-        }
-
-      /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-      systemAdmin =
-        if (isInSystemAdminGroup) {
-          Seq((KnoraProjectRepo.builtIn.SystemProject.id.value, KnoraGroupRepo.builtIn.SystemAdmin.id.value))
-        } else {
-          Seq.empty[(IRI, IRI)]
-        }
-
-      /* combine explicit groups with materialized implicit groups */
-      /* here we don't add the KnownUser group, as this would inflate the whole thing. */
-      allGroups        = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
-      groupsPerProject = allGroups.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-
-      /* retrieve the administrative permissions for each group per project the user is member of */
-      administrativePermissionsPerProjectFuture: Task[Map[IRI, Set[PermissionADM]]] =
-        if (projectIris.nonEmpty) {
-          userAdministrativePermissionsGetADM(groupsPerProject)
-        } else {
-          ZIO.attempt(Map.empty[IRI, Set[PermissionADM]])
-        }
-      administrativePermissionsPerProject <- administrativePermissionsPerProjectFuture
-
-      /* construct the permission profile from the different parts */
-      result = PermissionsDataADM(
-                 groupsPerProject = groupsPerProject,
-                 administrativePermissionsPerProject = administrativePermissionsPerProject,
-               )
-
-    } yield result
+      groups <- knoraGroupService
+                  .findAllById(user.isInGroup)
+                  .map(_.filter(_.belongsToProject.isDefined))
+                  .map(_.map(group => (group.belongsToProject.get, group.id)))
+      groupsPerProject                     = (groups ++ materializedGroups).groupMap { case (p, _) => p.value } { case (_, g) => g.value }
+      administrativePermissionsPerProject <- userAdministrativePermissionsGetADM(groupsPerProject)
+    } yield PermissionsDataADM(groupsPerProject, administrativePermissionsPerProject)
   }
 
   /**
@@ -282,10 +213,10 @@ final case class PermissionsResponder(
         administrativePermissionsOnProjectAdminGroup <-
           administrativePermissionForGroupsGetADM(
             projectIri,
-            List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+            List(builtIn.ProjectAdmin.id.value),
           )
         _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
-              if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)) {
+              if (extendedUserGroups.contains(builtIn.ProjectAdmin.id.value)) {
                 permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
               }
             }
@@ -293,9 +224,9 @@ final case class PermissionsResponder(
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
         administrativePermissionsOnCustomGroups <- {
           val customGroups = extendedUserGroups diff List(
-            KnoraGroupRepo.builtIn.KnownUser.id.value,
-            KnoraGroupRepo.builtIn.ProjectMember.id.value,
-            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
+            builtIn.KnownUser.id.value,
+            builtIn.ProjectMember.id.value,
+            builtIn.ProjectAdmin.id.value,
           )
           if (customGroups.nonEmpty) {
             administrativePermissionForGroupsGetADM(projectIri, customGroups)
@@ -313,11 +244,11 @@ final case class PermissionsResponder(
         administrativePermissionsOnProjectMemberGroup <-
           administrativePermissionForGroupsGetADM(
             projectIri,
-            List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+            List(builtIn.ProjectMember.id.value),
           )
         _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value)) {
+                if (extendedUserGroups.contains(builtIn.ProjectMember.id.value)) {
                   permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
                 }
               }
@@ -326,11 +257,11 @@ final case class PermissionsResponder(
         /* Get administrative permissions for the knora-base:KnownUser group */
         administrativePermissionsOnKnownUserGroup <- administrativePermissionForGroupsGetADM(
                                                        projectIri,
-                                                       List(KnoraGroupRepo.builtIn.KnownUser.id.value),
+                                                       List(builtIn.KnownUser.id.value),
                                                      )
         _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.KnownUser.id.value)) {
+                if (extendedUserGroups.contains(builtIn.KnownUser.id.value)) {
                   permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
                 }
               }
@@ -354,15 +285,16 @@ final case class PermissionsResponder(
       (projectIri, groups) <- groupsPerProject
 
       /* Explicitly add 'KnownUser' group */
-      extendedUserGroups = groups :+ KnoraGroupRepo.builtIn.KnownUser.id.value
+      extendedUserGroups = groups :+ builtIn.KnownUser.id.value
 
       result = calculatePermission(projectIri, extendedUserGroups)
 
     } yield result
 
-    val result: Task[Map[IRI, Set[PermissionADM]]] = ZioHelper.sequence(permissionsPerProject.toSeq).map(_.toMap)
-
-    result
+    ZioHelper
+      .sequence(permissionsPerProject.toSeq)
+      .map(_.toMap)
+      .map(_.filter { case (_, permissions) => permissions.nonEmpty })
   }
 
   /**
@@ -460,7 +392,7 @@ final case class PermissionsResponder(
 
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
-    if (!KnoraGroupRepo.builtIn.all.map(_.id.value).contains(req.forGroup)) {
+    if (!builtIn.all.map(_.id.value).contains(req.forGroup)) {
       GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
     }
 
@@ -522,7 +454,7 @@ final case class PermissionsResponder(
 
         // get group
         groupIri <-
-          if (KnoraGroupRepo.builtIn.all.map(_.id.value).contains(createRequest.forGroup)) {
+          if (builtIn.all.map(_.id.value).contains(createRequest.forGroup)) {
             ZIO.succeed(createRequest.forGroup)
           } else {
             for {
@@ -989,9 +921,9 @@ final case class PermissionsResponder(
       /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
       extendedUserGroups: List[IRI] =
         if (targetUser.permissions.isSystemAdmin) {
-          KnoraGroupRepo.builtIn.SystemAdmin.id.value :: KnoraGroupRepo.builtIn.KnownUser.id.value :: userGroups.toList
+          builtIn.SystemAdmin.id.value :: builtIn.KnownUser.id.value :: userGroups.toList
         } else {
-          KnoraGroupRepo.builtIn.KnownUser.id.value :: userGroups.toList
+          builtIn.KnownUser.id.value :: userGroups.toList
         }
 
       /* List buffer holding default object access permissions tagged with the precedence level:
@@ -1006,12 +938,12 @@ final case class PermissionsResponder(
       /* Get the default object access permissions for the knora-base:ProjectAdmin group */
       defaultPermissionsOnProjectAdminGroup <- defaultObjectAccessPermissionsForGroupsGetADM(
                                                  projectIri,
-                                                 List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                                                 List(builtIn.ProjectAdmin.id.value),
                                                )
       _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
             if (
-              extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value) || extendedUserGroups.contains(
-                KnoraGroupRepo.builtIn.SystemAdmin.id.value,
+              extendedUserGroups.contains(builtIn.ProjectAdmin.id.value) || extendedUserGroups.contains(
+                builtIn.SystemAdmin.id.value,
               )
             ) {
               permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
@@ -1134,10 +1066,10 @@ final case class PermissionsResponder(
       defaultPermissionsOnCustomGroups <- {
         if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
           val customGroups: List[IRI] = extendedUserGroups diff List(
-            KnoraGroupRepo.builtIn.KnownUser.id.value,
-            KnoraGroupRepo.builtIn.ProjectMember.id.value,
-            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
-            KnoraGroupRepo.builtIn.SystemAdmin.id.value,
+            builtIn.KnownUser.id.value,
+            builtIn.ProjectMember.id.value,
+            builtIn.ProjectAdmin.id.value,
+            builtIn.SystemAdmin.id.value,
           )
           if (customGroups.nonEmpty) {
             defaultObjectAccessPermissionsForGroupsGetADM(projectIri, customGroups)
@@ -1159,15 +1091,15 @@ final case class PermissionsResponder(
       /* Get the default object access permissions for the knora-base:ProjectMember group */
       defaultPermissionsOnProjectMemberGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(KnoraGroupRepo.builtIn.ProjectMember.id.value))
+          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(builtIn.ProjectMember.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
       }
       _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
             if (
-              extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value) || extendedUserGroups.contains(
-                KnoraGroupRepo.builtIn.SystemAdmin.id.value,
+              extendedUserGroups.contains(builtIn.ProjectMember.id.value) || extendedUserGroups.contains(
+                builtIn.SystemAdmin.id.value,
               )
             ) {
               permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
@@ -1180,13 +1112,13 @@ final case class PermissionsResponder(
       /* Get the default object access permissions for the knora-base:KnownUser group */
       defaultPermissionsOnKnownUserGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(KnoraGroupRepo.builtIn.KnownUser.id.value))
+          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(builtIn.KnownUser.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
       }
       _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
-            if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.KnownUser.id.value)) {
+            if (extendedUserGroups.contains(builtIn.KnownUser.id.value)) {
               permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
             }
           }
@@ -1198,7 +1130,7 @@ final case class PermissionsResponder(
       _ =
         if (permissionsListBuffer.isEmpty) {
           val defaultFallbackPermission = Set(
-            PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+            PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.Creator.id.value),
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
         } else {
@@ -1336,7 +1268,7 @@ final case class PermissionsResponder(
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri <-
-          if (createRequest.forGroup.exists(!KnoraGroupRepo.builtIn.all.map(_.id.value).contains(_))) {
+          if (createRequest.forGroup.exists(!builtIn.all.map(_.id.value).contains(_))) {
             // Yes. Check if it is a known group.
             for {
               maybeIri <- ZIO
@@ -1995,7 +1927,7 @@ final case class PermissionsResponder(
       _ <- createAdministrativePermission(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
+               forGroup = builtIn.ProjectAdmin.id.value,
                hasPermissions = Set(
                  PermissionADM.from(Permission.Administrative.ProjectAdminAll),
                  PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
@@ -2009,7 +1941,7 @@ final case class PermissionsResponder(
       _ <- createAdministrativePermission(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
+               forGroup = builtIn.ProjectMember.id.value,
                hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
              ),
              KnoraSystemInstances.Users.SystemUser,
@@ -2021,10 +1953,10 @@ final case class PermissionsResponder(
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+               forGroup = Some(builtIn.ProjectAdmin.id.value),
                hasPermissions = Set(
-                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, builtIn.ProjectMember.id.value),
                ),
              ),
              KnoraSystemInstances.Users.SystemUser,
@@ -2036,10 +1968,10 @@ final case class PermissionsResponder(
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+               forGroup = Some(builtIn.ProjectMember.id.value),
                hasPermissions = Set(
-                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, builtIn.ProjectAdmin.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, builtIn.ProjectMember.id.value),
                ),
              ),
              KnoraSystemInstances.Users.SystemUser,
