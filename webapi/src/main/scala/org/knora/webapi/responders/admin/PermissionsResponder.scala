@@ -226,17 +226,7 @@ final case class PermissionsResponder(
               }
             }
 
-        projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
-                                                                        case 1 =>
-                                                                          (projectIri, permissionsListBuffer.head)
-                                                                        case 0 => (projectIri, Set.empty[PermissionADM])
-                                                                        case _ =>
-                                                                          throw AssertionException(
-                                                                            "The permissions list buffer holding default object permissions should never be larger then 1.",
-                                                                          )
-                                                                      }
-
-      } yield projectAdministrativePermissions
+      } yield (projectIri, permissionsListBuffer.headOption.getOrElse(Set.empty[PermissionADM]))
     }
 
     ZIO
