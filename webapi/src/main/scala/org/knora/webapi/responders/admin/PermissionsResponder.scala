@@ -6,11 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.util.UUID
-import scala.collection.mutable.ListBuffer
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -50,6 +45,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+import zio._
+
+import java.util.UUID
+import scala.collection.mutable.ListBuffer
 
 final case class PermissionsResponder(
   appConfig: AppConfig,
@@ -245,18 +244,10 @@ final case class PermissionsResponder(
       } yield projectAdministrativePermissions
     }
 
-    val permissionsPerProject: Iterable[Task[(IRI, Set[PermissionADM])]] = for {
-      (projectIri, groups) <- groupsPerProject
-
-      /* Explicitly add 'KnownUser' group */
-      extendedUserGroups = groups :+ builtIn.KnownUser.id.value
-
-      result = calculatePermission(projectIri, extendedUserGroups)
-
-    } yield result
-
-    ZioHelper
-      .sequence(permissionsPerProject.toSeq)
+    ZIO
+      .foreach(groupsPerProject) { case (projectIri, groups) =>
+        calculatePermission(projectIri, groups :+ builtIn.KnownUser.id.value)
+      }
       .map(_.toMap)
       .map(_.filter { case (_, permissions) => permissions.nonEmpty })
   }
