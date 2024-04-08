@@ -6,6 +6,11 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.util.UUID
+import scala.collection.mutable.ListBuffer
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -45,10 +50,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import zio._
-
-import java.util.UUID
-import scala.collection.mutable.ListBuffer
 
 final case class PermissionsResponder(
   appConfig: AppConfig,
@@ -166,7 +167,7 @@ final case class PermissionsResponder(
       /* Follow the precedence rule:
          1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
          Permissions are added following the precedence level from the highest to the lowest. As soon as one set
-         of permissions is written into the buffer, any additionally found permissions are ignored. */
+         of permissions is written into the buffer, any additionally permissions do not need to be added. */
       val precedence = Seq(
         List(builtIn.ProjectAdmin.id.value),
         (extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value)),
