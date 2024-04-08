@@ -11,7 +11,7 @@ import scala.collection.immutable.Seq
 
 object Dependencies {
   // should be the same version as in docker-compose.yml,
-  // make sure to use the same version when deploying new DSP releases ops-deploy!
+  // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
   val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-1"
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v3.12.2"
