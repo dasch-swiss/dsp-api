@@ -27,8 +27,8 @@ final case class KnoraUserToUserConverter(
 ) {
 
   def toUser(kUser: KnoraUser): Task[User] = for {
-    projects       <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
-    groups         <- ZIO.foreach(kUser.isInGroup)(groupService.findById).map(_.flatten)
+    projects       <- projectsService.findByIds(kUser.isInProject)
+    groups         <- groupService.findByIds(kUser.isInGroup)
     permissionData <- getPermissionData(kUser)
   } yield User(
     kUser.id.value,
