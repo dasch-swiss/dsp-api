@@ -21,7 +21,7 @@ final case class GroupService(
 
   def findById(id: GroupIri): Task[Option[Group]] = knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
 
-  def findByIds(ids: Seq[GroupIri]): Task[Chunk[Group]] = knoraGroupService.findAllById(ids).flatMap(toGroups)
+  def findByIds(ids: Seq[GroupIri]): Task[Chunk[Group]] = knoraGroupService.findByIds(ids).flatMap(toGroups)
 
   private def toGroups(knoraGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(knoraGroups)(toGroup)
 

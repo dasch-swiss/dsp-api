@@ -59,7 +59,7 @@ final case class KnoraUserToUserConverter(
     val materializedGroups: Chunk[(ProjectIri, GroupIri)] = projectMembers ++ projectAdmins ++ systemAdmin
     for {
       groups <- knoraGroupService
-                  .findAllById(user.isInGroup)
+                  .findByIds(user.isInGroup)
                   .map(_.filter(_.belongsToProject.isDefined))
                   .map(_.map(group => (group.belongsToProject.get, group.id)))
       groupsPerProject                     = (groups ++ materializedGroups).groupMap { case (p, _) => p } { case (_, g) => g }
