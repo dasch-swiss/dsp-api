@@ -167,7 +167,7 @@ final case class PermissionsResponder(
          1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
          Permissions are added following the precedence level from the highest to the lowest. As soon as one set
          of permissions is written into the buffer, any additionally found permissions are ignored. */
-      val permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionADM])]
+      val permissionsListBuffer = ListBuffer.empty[Set[PermissionADM]]
 
       for {
         /* Get administrative permissions for the knora-base:ProjectAdmin group */
@@ -176,7 +176,7 @@ final case class PermissionsResponder(
 
         _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
               if (extendedUserGroups.contains(builtIn.ProjectAdmin.id.value)) {
-                permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
+                permissionsListBuffer += administrativePermissionsOnProjectAdminGroup
               }
             }
 
@@ -195,7 +195,7 @@ final case class PermissionsResponder(
         }
         _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
-                permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
+                permissionsListBuffer += administrativePermissionsOnCustomGroups
               }
             }
 
@@ -208,7 +208,7 @@ final case class PermissionsResponder(
         _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
                 if (extendedUserGroups.contains(builtIn.ProjectMember.id.value)) {
-                  permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
+                  permissionsListBuffer += administrativePermissionsOnProjectMemberGroup
                 }
               }
             }
@@ -221,15 +221,14 @@ final case class PermissionsResponder(
         _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
                 if (extendedUserGroups.contains(builtIn.KnownUser.id.value)) {
-                  permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
+                  permissionsListBuffer += administrativePermissionsOnKnownUserGroup
                 }
               }
             }
 
         projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
                                                                         case 1 =>
-                                                                          (projectIri, permissionsListBuffer.head._2)
-
+                                                                          (projectIri, permissionsListBuffer.head)
                                                                         case 0 => (projectIri, Set.empty[PermissionADM])
                                                                         case _ =>
                                                                           throw AssertionException(
