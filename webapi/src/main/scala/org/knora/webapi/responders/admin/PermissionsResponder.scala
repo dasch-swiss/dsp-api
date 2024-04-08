@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo._
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -182,16 +183,8 @@ final case class PermissionsResponder(
 
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
         administrativePermissionsOnCustomGroups <- {
-          val customGroups = extendedUserGroups diff List(
-            builtIn.KnownUser.id.value,
-            builtIn.ProjectMember.id.value,
-            builtIn.ProjectAdmin.id.value,
-          )
-          if (customGroups.nonEmpty) {
-            administrativePermissionForGroupsGetADM(projectIri, customGroups)
-          } else {
-            ZIO.attempt(Set.empty[PermissionADM])
-          }
+          val customGroups = extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value)
+          administrativePermissionForGroupsGetADM(projectIri, customGroups)
         }
         _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
