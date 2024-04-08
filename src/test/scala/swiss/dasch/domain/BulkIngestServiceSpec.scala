@@ -10,19 +10,19 @@ import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
 import zio.nio.file.Files
 import zio.test.{ZIOSpecDefault, assertTrue}
-import zio.{Fiber, ZIO}
+import zio.*
 
 import java.io.IOException
+import zio.test.TestAspect
 
 object BulkIngestServiceSpec extends ZIOSpecDefault {
-
   // accessor functions for testing
-  def finalizeBulkIngest(
+  private def finalizeBulkIngest(
     shortcode: ProjectShortcode,
   ): ZIO[BulkIngestService, Option[Nothing], Fiber.Runtime[IOException, Unit]] =
     ZIO.serviceWithZIO[BulkIngestService](_.finalizeBulkIngest(shortcode))
 
-  def getBulkIngestMappingCsv(
+  private def getBulkIngestMappingCsv(
     shortcode: ProjectShortcode,
   ): ZIO[BulkIngestService, Option[IOException], Option[String]] =
     ZIO.serviceWithZIO[BulkIngestService](_.getBulkIngestMappingCsv(shortcode))
@@ -65,9 +65,24 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
     } yield assertTrue(mappingCsvFileExists && mappingCsv.contains("1,2,3"))
   })
 
+  private val checkSemaphoresReleased = suite("check semaphores released")(test("check semaphores") {
+    for {
+      shortcode <- ZIO.succeed(ProjectShortcode.unsafeFrom("0001"))
+      importDir <- StorageService.getTempFolder().map(_ / "import" / shortcode.value).tap(Files.createDirectories(_))
+      _         <- Files.createFile(importDir.parent.head / s"mapping-$shortcode.csv")
+
+      _ <- getBulkIngestMappingCsv(shortcode)
+      _ <- finalizeBulkIngest(shortcode)
+      _ <- getBulkIngestMappingCsv(shortcode)
+      _ <- finalizeBulkIngest(shortcode)
+
+    } yield assertTrue(true)
+  })
+
   val spec = suite("BulkIngestServiceLive")(
     finalizeBulkIngestSuite,
     getBulkIngestMappingCsvSuite,
+    checkSemaphoresReleased,
   ).provide(
     AssetInfoServiceLive.layer,
     BulkIngestService.layer,
@@ -81,5 +96,5 @@ object BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
     StorageServiceLive.layer,
-  )
+  ) @@ TestAspect.timeout(1.second)
 }

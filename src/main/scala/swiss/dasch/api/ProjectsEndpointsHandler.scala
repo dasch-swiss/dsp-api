@@ -87,11 +87,10 @@ final case class ProjectsEndpointsHandler(
       code =>
         bulkIngestService
           .startBulkIngest(code)
-          .unsome
-          .flatMap {
-            case None    => ZIO.fail(failBulkIngestInProgress(code))
-            case Some(_) => ZIO.succeed(ProjectResponse.from(code))
-          },
+          .mapBoth(
+            _ => failBulkIngestInProgress(code),
+            _ => ProjectResponse.from(code),
+          ),
     )
 
   private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
@@ -99,11 +98,10 @@ final case class ProjectsEndpointsHandler(
       code =>
         bulkIngestService
           .finalizeBulkIngest(code)
-          .unsome
-          .flatMap {
-            case None    => ZIO.fail(failBulkIngestInProgress(code))
-            case Some(_) => ZIO.succeed(ProjectResponse.from(code))
-          },
+          .mapBoth(
+            _ => failBulkIngestInProgress(code),
+            _ => ProjectResponse.from(code),
+          ),
     )
 
   private val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =
@@ -114,13 +112,11 @@ final case class ProjectsEndpointsHandler(
             bulkIngestService
               .getBulkIngestMappingCsv(code)
               .mapError {
-                case None              => failBulkIngestInProgress(code)
-                case Some(ioException) => InternalServerError(ioException)
+                case None                           => failBulkIngestInProgress(code)
+                case Some(ioException: IOException) => InternalServerError(ioException)
               }
-              .flatMap {
-                case None      => ZIO.fail(NotFound(code))
-                case Some(str) => ZIO.succeed(str)
-              }
+              .some
+              .mapError(_ => NotFound(code))
           },
       )
 

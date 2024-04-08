@@ -28,23 +28,26 @@ final case class BulkIngestService(
   config: IngestConfig,
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
+  private def getSemaphore(key: ProjectShortcode): UIO[TSemaphore] =
+    (for {
+      semaphore <- semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1))
+      _         <- semaphoresPerProject.put(key, semaphore)
+    } yield semaphore).commit
 
-  private def getSemaphore(key: ProjectShortcode) =
-    semaphoresPerProject.getOrElseSTM(key, TSemaphore.make(1)).tap(semaphoresPerProject.put(key, _)).commit
+  private def acquireWithTimeout(sem: TSemaphore): UIO[Unit] =
+    sem.acquire.commit.timeout(Duration.fromMillis(400)).as(())
 
-  private def acquireWithTimeout(sem: TSemaphore) =
-    sem.acquire.as(sem).commit.timeout(Duration.fromMillis(400)).some
-
-  private def withSemaphoreFork[E, A](
-    key: ProjectShortcode,
-    zio: ProjectShortcode => IO[E, A],
-  ): IO[Option[Nothing], Fiber.Runtime[E, A]] =
+  private def withSemaphore[E, A](key: ProjectShortcode)(
+    zio: IO[E, A],
+  ): IO[Option[E], A] =
     getSemaphore(key)
-      .flatMap(acquireWithTimeout)
-      .flatMap(sem => zio.apply(key).logError.ensuring(sem.release.commit).forkDaemon)
+      .tap(acquireWithTimeout(_).asSomeError)
+      .flatMap(sem => zio.logError.ensuring(sem.release.commit).asSomeError)
 
-  def startBulkIngest(project: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, IngestResult]] =
-    withSemaphoreFork(project, doBulkIngest)
+  def startBulkIngest(shortcode: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, IngestResult]] =
+    withSemaphore(shortcode) {
+      doBulkIngest(shortcode).forkDaemon
+    }
 
   private def doBulkIngest(project: ProjectShortcode) =
     for {
@@ -106,7 +109,9 @@ final case class BulkIngestService(
     }
 
   def finalizeBulkIngest(shortcode: ProjectShortcode): IO[Option[Nothing], Fiber.Runtime[IOException, Unit]] =
-    withSemaphoreFork(shortcode, doFinalize)
+    withSemaphore(shortcode) {
+      doFinalize(shortcode).forkDaemon
+    }
 
   private def doFinalize(shortcode: ProjectShortcode): ZIO[Any, IOException, Unit] =
     for {
@@ -119,17 +124,15 @@ final case class BulkIngestService(
     } yield ()
 
   def getBulkIngestMappingCsv(shortcode: ProjectShortcode): IO[Option[IOException], Option[String]] =
-    for {
-      _         <- getSemaphore(shortcode).flatMap(acquireWithTimeout)
-      importDir <- getImportFolder(shortcode).asSomeError
-      mappingCsv = getMappingCsvFile(importDir, shortcode)
-      mapping <- ZIO
-                   .ifZIO(Files.exists(mappingCsv))(
-                     Files.readAllLines(mappingCsv).map(it => Some(it.mkString("\n"))),
-                     ZIO.none,
-                   )
-                   .asSomeError
-    } yield mapping
+    withSemaphore(shortcode) {
+      for {
+        importDir <- getImportFolder(shortcode)
+        mappingCsv = getMappingCsvFile(importDir, shortcode)
+        mapping <- ZIO.whenZIO(Files.exists(mappingCsv)) {
+                     Files.readAllLines(mappingCsv).map(_.mkString("\n"))
+                   }
+      } yield mapping
+    }
 }
 
 object BulkIngestService {
