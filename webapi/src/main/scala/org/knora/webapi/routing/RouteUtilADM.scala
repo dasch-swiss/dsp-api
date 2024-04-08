@@ -52,7 +52,7 @@ object RouteUtilADM {
       }
 
       def groupAsExternalRepresentation(group: Group): Group = {
-        val projectExternal = projectAsExternalRepresentation(group.project)
+        val projectExternal = group.project.map(projectAsExternalRepresentation)
         group.copy(project = projectExternal)
       }
 

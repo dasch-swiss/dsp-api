@@ -23,7 +23,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.twirl.queries.sparql
@@ -35,12 +34,14 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -237,11 +238,12 @@ trait PermissionsResponderADM {
 
 final case class PermissionsResponderADMLive(
   appConfig: AppConfig,
+  auth: AuthorizationRestService,
+  groupService: GroupService,
   iriService: IriService,
+  knoraProjectService: KnoraProjectService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
-  knoraProjectService: KnoraProjectService,
-  auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter,
 ) extends PermissionsResponderADM
     with MessageHandler
@@ -339,32 +341,38 @@ final case class PermissionsResponderADMLive(
   ): Task[PermissionsDataADM] = {
     // find out which project each group belongs to
 
-    val groupFutures: Seq[Task[(IRI, IRI)]] = if (groupIris.nonEmpty) {
+    val groupFutures: Seq[Task[(Option[IRI], IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
         for {
-          maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(groupIri))
-
-          group = maybeGroup.getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
-                    ),
-                  )
-          res = (group.project.id, groupIri)
-        } yield res
+          iri <- ZIO.fromEither(GroupIri.from(groupIri)).mapError(ValidationException(_))
+          group <-
+            groupService
+              .findById(iri)
+              .someOrFail(
+                InconsistentRepositoryDataException(
+                  s"Cannot find information for group: '$groupIri'. Please report as possible bug.",
+                ),
+              )
+        } yield (group.project.map(_.id), groupIri)
       }
     } else {
-      Seq.empty[Task[(IRI, IRI)]]
+      Seq.empty
     }
 
     for {
-      groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
+      groups <- ZioHelper
+                  .sequence(groupFutures)
+                  .map(_.flatMap {
+                    case (Some(projectIri), groupIri) => Some((projectIri, groupIri))
+                    case _                            => None
+                  })
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
       projectMembers =
         if (projectIris.nonEmpty) {
           for {
             projectIri <- projectIris.toVector
-            res         = (projectIri, OntologyConstants.KnoraAdmin.ProjectMember)
+            res         = (projectIri, KnoraGroupRepo.builtIn.ProjectMember.id.value)
           } yield res
         } else {
           Seq.empty[(IRI, IRI)]
@@ -375,7 +383,7 @@ final case class PermissionsResponderADMLive(
         if (projectIris.nonEmpty) {
           for {
             projectAdminForGroup <- isInProjectAdminGroups
-            res                   = (projectAdminForGroup, OntologyConstants.KnoraAdmin.ProjectAdmin)
+            res                   = (projectAdminForGroup, KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
           } yield res
         } else {
           Seq.empty[(IRI, IRI)]
@@ -384,7 +392,7 @@ final case class PermissionsResponderADMLive(
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
       systemAdmin =
         if (isInSystemAdminGroup) {
-          Seq((OntologyConstants.KnoraAdmin.SystemProject, OntologyConstants.KnoraAdmin.SystemAdmin))
+          Seq((KnoraProjectRepo.builtIn.SystemProject.id.value, KnoraGroupRepo.builtIn.SystemAdmin.id.value))
         } else {
           Seq.empty[(IRI, IRI)]
         }
@@ -437,10 +445,10 @@ final case class PermissionsResponderADMLive(
         administrativePermissionsOnProjectAdminGroup <-
           administrativePermissionForGroupsGetADM(
             projectIri,
-            List(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
           )
         _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
-              if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)) {
+              if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)) {
                 permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
               }
             }
@@ -448,9 +456,9 @@ final case class PermissionsResponderADMLive(
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
         administrativePermissionsOnCustomGroups <- {
           val customGroups = extendedUserGroups diff List(
-            OntologyConstants.KnoraAdmin.KnownUser,
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
+            KnoraGroupRepo.builtIn.KnownUser.id.value,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
           )
           if (customGroups.nonEmpty) {
             administrativePermissionForGroupsGetADM(projectIri, customGroups)
@@ -468,11 +476,11 @@ final case class PermissionsResponderADMLive(
         administrativePermissionsOnProjectMemberGroup <-
           administrativePermissionForGroupsGetADM(
             projectIri,
-            List(OntologyConstants.KnoraAdmin.ProjectMember),
+            List(KnoraGroupRepo.builtIn.ProjectMember.id.value),
           )
         _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember)) {
+                if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value)) {
                   permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
                 }
               }
@@ -481,11 +489,11 @@ final case class PermissionsResponderADMLive(
         /* Get administrative permissions for the knora-base:KnownUser group */
         administrativePermissionsOnKnownUserGroup <- administrativePermissionForGroupsGetADM(
                                                        projectIri,
-                                                       List(OntologyConstants.KnoraAdmin.KnownUser),
+                                                       List(KnoraGroupRepo.builtIn.KnownUser.id.value),
                                                      )
         _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
               if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
+                if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.KnownUser.id.value)) {
                   permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
                 }
               }
@@ -509,7 +517,7 @@ final case class PermissionsResponderADMLive(
       (projectIri, groups) <- groupsPerProject
 
       /* Explicitly add 'KnownUser' group */
-      extendedUserGroups = groups :+ OntologyConstants.KnoraAdmin.KnownUser
+      extendedUserGroups = groups :+ KnoraGroupRepo.builtIn.KnownUser.id.value
 
       result = calculatePermission(projectIri, extendedUserGroups)
 
@@ -703,7 +711,7 @@ final case class PermissionsResponderADMLive(
 
     if (req.hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
-    if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(req.forGroup)) {
+    if (!KnoraGroupRepo.builtIn.all.map(_.id.value).contains(req.forGroup)) {
       GroupIri.from(req.forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI ${req.forGroup}"))
     }
 
@@ -761,17 +769,15 @@ final case class PermissionsResponderADMLive(
 
         // get group
         groupIri <-
-          if (OntologyConstants.KnoraAdmin.BuiltInGroups.contains(createRequest.forGroup)) {
+          if (KnoraGroupRepo.builtIn.all.map(_.id.value).contains(createRequest.forGroup)) {
             ZIO.succeed(createRequest.forGroup)
           } else {
             for {
-              maybeGroup <- messageRelay.ask[Option[Group]](GroupGetADM(createRequest.forGroup))
-
-              // if it does not exist then throw an error
-              group: Group =
-                maybeGroup.getOrElse(
-                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
-                )
+              iri <- ZIO.fromEither(GroupIri.from(createRequest.forGroup)).mapError(ValidationException(_))
+              group <-
+                groupService
+                  .findById(iri)
+                  .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
             } yield group.id
           }
 
@@ -1081,7 +1087,7 @@ final case class PermissionsResponderADMLive(
       case None       =>
         /* if the query was for a property, then we need to additionally check if it is a system property */
         if (propertyIri.isDefined) {
-          val systemProject = OntologyConstants.KnoraAdmin.SystemProject
+          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri).map {
             case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap)
             case None =>
@@ -1230,9 +1236,9 @@ final case class PermissionsResponderADMLive(
       /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
       extendedUserGroups: List[IRI] =
         if (targetUser.permissions.isSystemAdmin) {
-          OntologyConstants.KnoraAdmin.SystemAdmin :: OntologyConstants.KnoraAdmin.KnownUser :: userGroups.toList
+          KnoraGroupRepo.builtIn.SystemAdmin.id.value :: KnoraGroupRepo.builtIn.KnownUser.id.value :: userGroups.toList
         } else {
-          OntologyConstants.KnoraAdmin.KnownUser :: userGroups.toList
+          KnoraGroupRepo.builtIn.KnownUser.id.value :: userGroups.toList
         }
 
       /* List buffer holding default object access permissions tagged with the precedence level:
@@ -1247,12 +1253,12 @@ final case class PermissionsResponderADMLive(
       /* Get the default object access permissions for the knora-base:ProjectAdmin group */
       defaultPermissionsOnProjectAdminGroup <- defaultObjectAccessPermissionsForGroupsGetADM(
                                                  projectIri,
-                                                 List(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                                                 List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
                                                )
       _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
             if (
-              extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin) || extendedUserGroups.contains(
-                OntologyConstants.KnoraAdmin.SystemAdmin,
+              extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectAdmin.id.value) || extendedUserGroups.contains(
+                KnoraGroupRepo.builtIn.SystemAdmin.id.value,
               )
             ) {
               permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
@@ -1286,7 +1292,7 @@ final case class PermissionsResponderADMLive(
       /* system resource class / property combination */
       defaultPermissionsOnSystemResourceClassProperty <- {
         if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = OntologyConstants.KnoraAdmin.SystemProject
+          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassPropertyGetADM(
             projectIri = systemProject,
             resourceClassIri = resourceClassIri,
@@ -1321,7 +1327,7 @@ final case class PermissionsResponderADMLive(
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
       defaultPermissionsOnSystemResourceClass <- {
         if (entityType == ResourceEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = OntologyConstants.KnoraAdmin.SystemProject
+          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForResourceClassGetADM(
             projectIri = systemProject,
             resourceClassIri = resourceClassIri,
@@ -1355,7 +1361,7 @@ final case class PermissionsResponderADMLive(
       /* system property */
       defaultPermissionsOnSystemProperty <- {
         if (entityType == PropertyEntityType && permissionsListBuffer.isEmpty) {
-          val systemProject = OntologyConstants.KnoraAdmin.SystemProject
+          val systemProject = KnoraProjectRepo.builtIn.SystemProject.id.value
           defaultObjectAccessPermissionsForPropertyGetADM(
             projectIri = systemProject,
             propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")),
@@ -1375,10 +1381,10 @@ final case class PermissionsResponderADMLive(
       defaultPermissionsOnCustomGroups <- {
         if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
           val customGroups: List[IRI] = extendedUserGroups diff List(
-            OntologyConstants.KnoraAdmin.KnownUser,
-            OntologyConstants.KnoraAdmin.ProjectMember,
-            OntologyConstants.KnoraAdmin.ProjectAdmin,
-            OntologyConstants.KnoraAdmin.SystemAdmin,
+            KnoraGroupRepo.builtIn.KnownUser.id.value,
+            KnoraGroupRepo.builtIn.ProjectMember.id.value,
+            KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
+            KnoraGroupRepo.builtIn.SystemAdmin.id.value,
           )
           if (customGroups.nonEmpty) {
             defaultObjectAccessPermissionsForGroupsGetADM(projectIri, customGroups)
@@ -1400,15 +1406,15 @@ final case class PermissionsResponderADMLive(
       /* Get the default object access permissions for the knora-base:ProjectMember group */
       defaultPermissionsOnProjectMemberGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectMember))
+          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(KnoraGroupRepo.builtIn.ProjectMember.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
       }
       _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
             if (
-              extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember) || extendedUserGroups.contains(
-                OntologyConstants.KnoraAdmin.SystemAdmin,
+              extendedUserGroups.contains(KnoraGroupRepo.builtIn.ProjectMember.id.value) || extendedUserGroups.contains(
+                KnoraGroupRepo.builtIn.SystemAdmin.id.value,
               )
             ) {
               permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
@@ -1421,13 +1427,13 @@ final case class PermissionsResponderADMLive(
       /* Get the default object access permissions for the knora-base:KnownUser group */
       defaultPermissionsOnKnownUserGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.KnownUser))
+          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(KnoraGroupRepo.builtIn.KnownUser.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
       }
       _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
-            if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
+            if (extendedUserGroups.contains(KnoraGroupRepo.builtIn.KnownUser.id.value)) {
               permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
             }
           }
@@ -1439,7 +1445,7 @@ final case class PermissionsResponderADMLive(
       _ =
         if (permissionsListBuffer.isEmpty) {
           val defaultFallbackPermission = Set(
-            PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
+            PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
           )
           permissionsListBuffer += (("Fallback", defaultFallbackPermission))
         } else {
@@ -1577,21 +1583,17 @@ final case class PermissionsResponderADMLive(
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri <-
-          if (createRequest.forGroup.exists(!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(_))) {
+          if (createRequest.forGroup.exists(!KnoraGroupRepo.builtIn.all.map(_.id.value).contains(_))) {
             // Yes. Check if it is a known group.
             for {
-              maybeGroup <-
-                messageRelay
-                  .ask[Option[Group]](
-                    GroupGetADM(
-                      groupIri = createRequest.forGroup.get,
-                    ),
-                  )
-
-              group: Group =
-                maybeGroup.getOrElse(
-                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."),
-                )
+              maybeIri <- ZIO
+                            .fromOption(createRequest.forGroup)
+                            .orElseFail(NotFoundException("Group IRI not found."))
+              groupIri <- ZIO.fromEither(GroupIri.from(maybeIri)).mapError(ValidationException(_))
+              group <-
+                groupService
+                  .findById(groupIri)
+                  .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
             } yield Some(group.id)
           } else {
             // No, return given group as it is. That means:
@@ -2236,7 +2238,7 @@ final case class PermissionsResponderADMLive(
       _ <- createAdministrativePermission(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
+               forGroup = KnoraGroupRepo.builtIn.ProjectAdmin.id.value,
                hasPermissions = Set(
                  PermissionADM.from(Permission.Administrative.ProjectAdminAll),
                  PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll),
@@ -2250,7 +2252,7 @@ final case class PermissionsResponderADMLive(
       _ <- createAdministrativePermission(
              CreateAdministrativePermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
                hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
              ),
              SystemUser,
@@ -2262,10 +2264,10 @@ final case class PermissionsResponderADMLive(
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+               forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
                hasPermissions = Set(
-                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                ),
              ),
              SystemUser,
@@ -2277,10 +2279,10 @@ final case class PermissionsResponderADMLive(
       _ <- createDefaultObjectAccessPermission(
              CreateDefaultObjectAccessPermissionAPIRequestADM(
                forProject = projectIri.value,
-               forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
                hasPermissions = Set(
-                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
+                 PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectAdmin.id.value),
+                 PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
                ),
              ),
              SystemUser,
@@ -2291,18 +2293,19 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    AppConfig & AuthorizationRestService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & GroupService & IriService & KnoraProjectService & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive,
   ] = ZLayer.fromZIO {
     for {
-      au      <- ZIO.service[AuthorizationRestService]
       ac      <- ZIO.service[AppConfig]
+      au      <- ZIO.service[AuthorizationRestService]
+      gs      <- ZIO.service[GroupService]
       is      <- ZIO.service[IriService]
       kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(PermissionsResponderADMLive(ac, is, mr, ts, kpr, au, sf))
+      handler <- mr.subscribe(PermissionsResponderADMLive(ac, au, gs, is, kpr, mr, ts, sf))
     } yield handler
   }
 }

@@ -9,14 +9,14 @@ import zio.NonEmptyChunk
 
 import scala.util.matching.Regex
 
-import dsp.valueobjects.Iri.DefaultSharedOntologiesProject
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.repo.service.EntityWithId
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.Value.BooleanValue
@@ -34,7 +34,7 @@ case class KnoraProject(
   status: Status,
   selfjoin: SelfJoin,
   restrictedView: RestrictedView,
-)
+) extends EntityWithId[ProjectIri]
 
 object KnoraProject {
 
@@ -45,7 +45,8 @@ object KnoraProject {
 
   object ProjectIri extends StringValueCompanion[ProjectIri] {
 
-    private val BuiltInProjects: Seq[String] = Seq(SystemProject, DefaultSharedOntologiesProject)
+    private val BuiltInProjects: Seq[String] =
+      Seq("SystemProject", "DefaultSharedOntologiesProject").map(KnoraAdminPrefixExpansion + _)
 
     /**
      * Explanation of the project IRI regex:

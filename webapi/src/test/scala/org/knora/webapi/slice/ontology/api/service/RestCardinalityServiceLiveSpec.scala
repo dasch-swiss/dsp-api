@@ -10,10 +10,10 @@ import zio.test._
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
@@ -44,7 +44,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
   private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
   private val userWithAccess: User =
     SystemUser.copy(permissions =
-      SystemUser.permissions.copy(groupsPerProject = Map(projectIri -> List(OntologyConstants.KnoraAdmin.ProjectAdmin))),
+      SystemUser.permissions.copy(groupsPerProject =
+        Map(projectIri -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)),
+      ),
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =

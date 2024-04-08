@@ -4,12 +4,13 @@
  */
 
 package org.knora.webapi.store.triplestore.api
+
 import org.apache.jena.query._
 import org.apache.jena.rdf.model
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.tdb.TDB
+import org.apache.jena.tdb1.TDB1
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
@@ -56,8 +57,23 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 trait TestTripleStore extends TriplestoreService {
   def setDataset(ds: Dataset): UIO[Unit]
   def getDataset: UIO[Dataset]
-  def printDataset: UIO[Unit]
+  def printDataset(prefix: String = ""): UIO[Unit]
   def datasetStatements: RIO[Scope, List[model.Statement]]
+}
+
+object TestTripleStore {
+
+  def setDatasetFromTriG(triG: String) =
+    TestDatasetBuilder.datasetFromTriG(triG).flatMap(TriplestoreServiceInMemory.setDataset)
+
+  def setDataset(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
+
+  def getDataset: RIO[TestTripleStore, Dataset] =
+    ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
+
+  def printDataset(prefix: String = ""): RIO[TestTripleStore, Unit] =
+    ZIO.serviceWithZIO[TestTripleStore](_.printDataset(prefix))
 }
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
@@ -246,11 +262,11 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def getDataset: UIO[Dataset] =
     datasetRef.get
 
-  override def printDataset: UIO[Unit] =
+  override def printDataset(prefix: String = ""): UIO[Unit] =
     for {
-      _  <- Console.printLine(s"TDB Context:\n${TDB.getContext}\n").orDie
+//      _  <- Console.printLine(s"TDB Context:\n${TDB1.getContext}\n").orDie
       ds <- getDataset
-      _  <- Console.printLine(s"TriplestoreServiceInMemory.printDataset:").orDie
+      _  <- Console.printLine(s"${prefix}TriplestoreServiceInMemory.printDataset:").orDie
       _   = printDatasetContents(ds)
     } yield ()
 
@@ -294,22 +310,19 @@ object TriplestoreServiceInMemory {
   def getDataset: RIO[TestTripleStore, Dataset] =
     ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
 
-  def printDataset: RIO[TestTripleStore, Unit] =
-    ZIO.serviceWithZIO[TestTripleStore](_.printDataset)
-
   def setDataSetFromTriG(triG: String): ZIO[TestTripleStore, Throwable, Unit] = TestDatasetBuilder
     .datasetFromTriG(triG)
     .flatMap(TriplestoreServiceInMemory.setDataset)
 
   /**
-   * Creates an empty TBD2 [[Dataset]].
+   * Creates an empty TDB2 [[Dataset]].
    *
    * Currently does not (yet) support create a [[Dataset]] which supports Lucene indexing.
    * TODO: https://jena.apache.org/documentation/query/text-query.html#configuration-by-code
    */
   val createEmptyDataset: UIO[Dataset] =
     ZIO
-      .succeed(TDB.getContext.set(TDB.symUnionDefaultGraph, true))
+      .succeed(TDB1.getContext.set(TDB1.symUnionDefaultGraph, true))
       .as(TDB2Factory.createDataset())
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))

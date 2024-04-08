@@ -9,20 +9,19 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 
 final case class KnoraUserToUserConverter(
   private val projectsService: ProjectService,
-  private val groupsResponder: GroupsResponderADM,
+  private val groupService: GroupService,
   private val permissionService: PermissionsResponderADM,
 ) {
 
   def toUser(kUser: KnoraUser): Task[User] = for {
     projects <- ZIO.foreach(kUser.isInProject)(projectsService.findById).map(_.flatten)
-    groups   <- ZIO.foreach(kUser.isInGroup.map(_.value))(groupsResponder.groupGetADM).map(_.flatten)
+    groups   <- ZIO.foreach(kUser.isInGroup)(groupService.findById).map(_.flatten)
     permissionData <-
       permissionService.permissionsDataGetADM(
         kUser.isInProject.map(_.value),

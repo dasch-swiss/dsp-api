@@ -5,20 +5,16 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.model.vocabulary._
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.common.net.ParsedIRI
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
+import zio.IO
+import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.stream.ZStream
 
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
@@ -36,224 +32,92 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
-import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive.UserQueries
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin._
+import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
+import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class KnoraUserRepoLive(triplestore: TriplestoreService, cacheService: CacheService) extends KnoraUserRepo {
+final case class KnoraUserRepoLive(
+  private val triplestore: TriplestoreService,
+  private val cacheService: CacheService,
+  private val mapper: RdfEntityMapper[KnoraUser],
+) extends AbstractEntityRepo[KnoraUser, UserIri](triplestore, mapper)
+    with KnoraUserRepo {
 
-  override def findById(id: UserIri): Task[Option[KnoraUser]] = {
-    val construct = UserQueries.findById(id)
-    for {
-      model    <- triplestore.queryRdfModel(construct)
-      resource <- model.getResource(id.value)
-      user     <- ZIO.foreach(resource)(toUser)
-    } yield user
-  }
-  override def findByEmail(email: Email): Task[Option[KnoraUser]] =
-    findOneByQuery(UserQueries.findByEmail(email))
+  override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.User)
+  override protected val namedGraphIri: Iri       = Rdf.iri(adminDataNamedGraph.value)
 
-  override def findByUsername(username: Username): Task[Option[KnoraUser]] =
-    findOneByQuery(UserQueries.findByUsername(username))
+  override protected def entityProperties: EntityProperties = EntityProperties(
+    NonEmptyChunk(username, email, givenName, familyName, status, preferredLanguage, password),
+    Chunk(isInSystemAdminGroup, isInProject, isInGroup, isInProjectAdminGroup),
+  )
 
-  private def findOneByQuery(construct: Construct) =
-    for {
-      model <- triplestore.queryRdfModel(construct)
-      resource <- model
-                    .getResourcesRdfType(KnoraAdmin.User)
-                    .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
-      user <- ZIO.foreach(resource.nextOption())(toUser)
-    } yield user
+  override def findAll(): Task[Chunk[KnoraUser]] = super.findAll().map(_ ++ KnoraUserRepo.builtIn.all)
 
-  private def toUser(resource: RdfResource) = {
-    for {
-      userIri <-
-        resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value))).mapError(TriplestoreResponseException.apply)
-      username                  <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)
-      email                     <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)
-      familyName                <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)
-      givenName                 <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)
-      passwordHash              <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
-      preferredLanguage         <- resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
-      status                    <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
-      isInProjectIris           <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProject)
-      isInGroupIris             <- resource.getObjectIrisConvert[GroupIri](KnoraAdmin.IsInGroup)
-      isInSystemAdminGroup      <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
-      isInProjectAdminGroupIris <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProjectAdminGroup)
-    } yield KnoraUser(
-      userIri,
-      username,
-      email,
-      familyName,
-      givenName,
-      passwordHash,
-      preferredLanguage,
-      status,
-      isInProjectIris,
-      isInGroupIris,
-      isInSystemAdminGroup,
-      isInProjectAdminGroupIris,
-    )
-  }.mapError(e => TriplestoreResponseException(e.toString))
-
-  /**
-   * Returns all instances of the type.
-   *
-   * @return all instances of the type.
-   */
-  override def findAll(): Task[List[KnoraUser]] =
-    for {
-      model     <- triplestore.queryRdfModel(UserQueries.findAll)
-      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
-      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
-    } yield users.toList
-
-  override def findByProjectMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    for {
-      model     <- triplestore.queryRdfModel(UserQueries.findProjectMembers(projectIri))
-      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
-      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
-    } yield users
+  override def findById(id: UserIri): Task[Option[KnoraUser]] =
+    super.findById(id).map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.id == id)))
 
   override def findByProjectAdminMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    for {
-      model     <- triplestore.queryRdfModel(UserQueries.findProjectAdminMembers(projectIri))
-      resources <- model.getResourcesRdfType(KnoraAdmin.User).option.map(_.getOrElse(Iterator.empty))
-      users     <- ZStream.fromIterator(resources).mapZIO(toUser).runCollect
-    } yield users
+    findAllByTriplePattern(_.has(isInProjectAdminGroup, Rdf.iri(projectIri.value)))
+      .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProjectAdminGroup.contains(projectIri)))
+
+  override def findByProjectMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
+    findAllByTriplePattern(_.has(isInProject, Rdf.iri(projectIri.value)))
+      .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProject.contains(projectIri)))
+
+  override def findByEmail(mail: Email): Task[Option[KnoraUser]] =
+    findOneByTriplePattern(_.has(email, Rdf.literalOf(mail.value)))
+      .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.email == mail)))
+
+  override def findByUsername(name: Username): Task[Option[KnoraUser]] =
+    findOneByTriplePattern(_.has(username, Rdf.literalOf(name.value)))
+      .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.username == name)))
 
   override def save(user: KnoraUser): Task[KnoraUser] =
-    cacheService.invalidateUser(user.id) *> triplestore.query(UserQueries.save(user)).as(user)
+    ZIO
+      .die(new IllegalArgumentException("Update not supported for built-in users"))
+      .when(KnoraUserRepo.builtIn.findOneBy(_.id == user.id).isDefined) *>
+      cacheService.invalidateUser(user.id) *> super.save(user)
 }
 
 object KnoraUserRepoLive {
-  private object UserQueries {
 
-    def findAll: Construct = {
-      val (s, p, o) = (variable("s"), variable("p"), variable("o"))
-      val query = Queries
-        .CONSTRUCT(tp(s, p, o))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-        .where(
-          s
-            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .and(s.has(p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
-        )
-      Construct(query.getQueryString)
-    }
-    def findProjectMembers(projectIri: ProjectIri): Construct = {
-      val (userIri, p, o) = (variable("s"), variable("p"), variable("o"))
-      val query = Queries
-        .CONSTRUCT(tp(userIri, p, o))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-        .where(
-          userIri
-            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProject, Rdf.iri(projectIri.value)))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
-        )
-      Construct(query.getQueryString)
-    }
-    def findProjectAdminMembers(projectIri: ProjectIri): Construct = {
-      val (userIri, p, o) = (variable("s"), variable("p"), variable("o"))
-      val query = Queries
-        .CONSTRUCT(tp(userIri, p, o))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-        .where(
-          userIri
-            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .and(userIri.has(p, o).andHas(Vocabulary.KnoraAdmin.isInProjectAdminGroup, Rdf.iri(projectIri.value)))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
-        )
-      Construct(query.getQueryString)
-    }
+  private val mapper = new RdfEntityMapper[KnoraUser] {
+    override def toEntity(resource: RdfResource): IO[RdfError, KnoraUser] =
+      for {
+        userIri                   <- resource.iri.flatMap(it => ZIO.fromEither(UserIri.from(it.value).left.map(ConversionError.apply)))
+        username                  <- resource.getStringLiteralOrFail[Username](KnoraAdmin.Username)
+        email                     <- resource.getStringLiteralOrFail[Email](KnoraAdmin.Email)
+        familyName                <- resource.getStringLiteralOrFail[FamilyName](KnoraAdmin.FamilyName)
+        givenName                 <- resource.getStringLiteralOrFail[GivenName](KnoraAdmin.GivenName)
+        passwordHash              <- resource.getStringLiteralOrFail[PasswordHash](KnoraAdmin.Password)
+        preferredLanguage         <- resource.getStringLiteralOrFail[LanguageCode](KnoraAdmin.PreferredLanguage)
+        status                    <- resource.getBooleanLiteralOrFail[UserStatus](KnoraAdmin.StatusProp)
+        isInProjectIris           <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProject)
+        isInGroupIris             <- resource.getObjectIrisConvert[GroupIri](KnoraAdmin.IsInGroup)
+        isInSystemAdminGroup      <- resource.getBooleanLiteralOrFail[SystemAdmin](KnoraAdmin.IsInSystemAdminGroup)
+        isInProjectAdminGroupIris <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.IsInProjectAdminGroup)
+      } yield KnoraUser(
+        userIri,
+        username,
+        email,
+        familyName,
+        givenName,
+        passwordHash,
+        preferredLanguage,
+        status,
+        isInProjectIris.sortBy(_.value),
+        isInGroupIris,
+        isInSystemAdminGroup,
+        isInProjectAdminGroupIris,
+      )
 
-    def findById(id: UserIri): Construct = {
-      val s      = Rdf.iri(id.value)
-      val (p, o) = (variable("p"), variable("o"))
-      val query: ConstructQuery = Queries
-        .CONSTRUCT(tp(s, p, o))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-        .where(
-          s
-            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .and(tp(s, p, o))
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
-        )
-      Construct(query)
-    }
-
-    def findByEmail(email: Email): Construct =
-      findByProperty(Vocabulary.KnoraAdmin.email, email.value)
-
-    def findByUsername(username: Username): Construct =
-      findByProperty(Vocabulary.KnoraAdmin.username, username.value)
-
-    private def findByProperty(property: Iri, propertyValue: String) = {
-      val (s, p, o) = (variable("s"), variable("p"), variable("o"))
-      val query: ConstructQuery = Queries
-        .CONSTRUCT(tp(s, p, o))
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-        .where(
-          s
-            .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
-            .andHas(property, Rdf.literalOf(propertyValue))
-            .andHas(p, o)
-            .from(Vocabulary.NamedGraphs.knoraAdminIri),
-        )
-      Construct(query)
-    }
-
-    private def deleteWhere(
-      id: Iri,
-      rdfType: Iri,
-      query: ModifyQuery,
-      iris: List[Iri],
-    ): ModifyQuery =
-      query
-        .delete(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType)) { case (p, (iri, index)) =>
-          p.andHas(iri, variable(s"n${index}"))
-        })
-        .where(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType).optional()) { case (p, (iri, index)) =>
-          p.and(id.has(iri, variable(s"n${index}")).optional())
-        })
-
-    def save(u: KnoraUser): Update = {
-      val query: ModifyQuery =
-        Queries
-          .MODIFY()
-          .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-          .`with`(Rdf.iri(adminDataNamedGraph.value))
-          .insert(toTriples(u))
-
-      Update(deleteWhere(Rdf.iri(u.id.value), Vocabulary.KnoraAdmin.User, query, deletionFields))
-    }
-
-    private val deletionFields: List[Iri] = List(
-      Vocabulary.KnoraAdmin.username,
-      Vocabulary.KnoraAdmin.email,
-      Vocabulary.KnoraAdmin.givenName,
-      Vocabulary.KnoraAdmin.familyName,
-      Vocabulary.KnoraAdmin.status,
-      Vocabulary.KnoraAdmin.preferredLanguage,
-      Vocabulary.KnoraAdmin.password,
-      Vocabulary.KnoraAdmin.isInSystemAdminGroup,
-      Vocabulary.KnoraAdmin.isInProject,
-      Vocabulary.KnoraAdmin.isInGroup,
-      Vocabulary.KnoraAdmin.isInProjectAdminGroup,
-    )
-
-    private def toTriples(u: KnoraUser) = {
-      import Vocabulary.KnoraAdmin._
+    override def toTriples(u: KnoraUser): TriplePattern =
       Rdf
         .iri(u.id.value)
-        .has(RDF.TYPE, User)
+        .isA(User)
         .andHas(username, Rdf.literalOf(u.username.value))
         .andHas(email, Rdf.literalOf(u.email.value))
         .andHas(givenName, Rdf.literalOf(u.givenName.value))
@@ -265,7 +129,7 @@ object KnoraUserRepoLive {
         .andHas(isInProject, u.isInProject.map(p => Rdf.iri(p.value)).toList: _*)
         .andHas(isInGroup, u.isInGroup.map(p => Rdf.iri(p.value)).toList: _*)
         .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
-    }
   }
-  val layer = ZLayer.derive[KnoraUserRepoLive]
+
+  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraUserRepoLive]
 }

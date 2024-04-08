@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserToUserConverter
@@ -37,11 +38,15 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminApiModule {
 
   type Dependencies =
-    AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService & GroupsResponderADM & HandlerMapper & KnoraProjectService & KnoraResponseRenderer & KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache & PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService & TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
+    AppConfig & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheService &
+      GroupsResponderADM & GroupService & HandlerMapper & KnoraProjectService & KnoraResponseRenderer &
+      KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache &
+      PasswordService & PermissionsResponderADM & ProjectExportService & ProjectImportService & ProjectService &
+      TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
-    UsersRestService & ProjectRestService & PermissionsRestService
+    GroupsRestService & UsersRestService & ProjectRestService & PermissionsRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](

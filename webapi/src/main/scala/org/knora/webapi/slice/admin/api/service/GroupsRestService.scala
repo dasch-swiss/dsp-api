@@ -16,24 +16,26 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class GroupsRestService(
   auth: AuthorizationRestService,
+  groupService: GroupService,
   responder: GroupsResponderADM,
   format: KnoraResponseRenderer,
 ) {
 
   def getGroups: Task[GroupsGetResponseADM] = for {
-    internal <- responder.groupsGetADM.map(GroupsGetResponseADM.apply)
-    external <- format.toExternalADM(internal)
+    internal <- groupService.findAllRegularGroups
+    external <- format.toExternalADM(GroupsGetResponseADM(internal))
   } yield external
 
   def getGroupByIri(iri: GroupIri): Task[GroupGetResponseADM] =
     for {
-      internal <- responder
-                    .groupGetADM(iri.value)
+      internal <- groupService
+                    .findById(iri)
                     .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
                     .map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)

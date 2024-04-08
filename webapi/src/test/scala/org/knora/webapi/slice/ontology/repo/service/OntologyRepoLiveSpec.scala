@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import zio.Chunk
 import zio.Scope
 import zio.ZIO
 import zio.test.ZIOSpecDefault
@@ -90,7 +91,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
           for {
             _      <- OntologyCacheFake.set(cacheData)
             actual <- findAll()
-          } yield assertTrue(actual == List(ontology))
+          } yield assertTrue(actual == Chunk(ontology))
         },
       ),
       suite("findAllSubclassesBy")(

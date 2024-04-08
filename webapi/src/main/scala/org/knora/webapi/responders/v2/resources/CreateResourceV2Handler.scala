@@ -37,6 +37,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.resources.CheckObjectClassConstraints
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -113,7 +114,7 @@ final case class CreateResourceV2Handler(
       projectIri = createResourceRequestV2.createResource.projectADM.id
       _ <-
         ZIO.when(
-          projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+          projectIri == KnoraProjectRepo.builtIn.SystemProject.id.value || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         )(ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")))
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.

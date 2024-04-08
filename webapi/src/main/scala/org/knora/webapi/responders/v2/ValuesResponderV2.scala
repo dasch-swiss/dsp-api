@@ -40,6 +40,8 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -492,7 +494,7 @@ final case class ValuesResponderV2Live(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
-                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
                   valuePermissions = standoffLinkValuePermissions,
                 )
               }.toVector
@@ -811,7 +813,7 @@ final case class ValuesResponderV2Live(
             linkTargetIri = targetIri,
             currentReferenceCount = 0,
             newReferenceCount = initialReferenceCount,
-            newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+            newLinkValueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
             newLinkValuePermissions = standoffLinkValuePermissions,
           )
       }
@@ -1308,7 +1310,7 @@ final case class ValuesResponderV2Live(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
-                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
                   valuePermissions = standoffLinkValuePermissions,
                 )
               }
@@ -1323,7 +1325,7 @@ final case class ValuesResponderV2Live(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = removedTargetResource,
-                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
                   valuePermissions = standoffLinkValuePermissions,
                 )
               }
@@ -1822,7 +1824,7 @@ final case class ValuesResponderV2Live(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
             targetResourceIri = removedTargetResource,
-            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+            valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
             valuePermissions = standoffLinkValuePermissions,
           )
         }
@@ -2380,8 +2382,8 @@ final case class ValuesResponderV2Live(
    */
   private lazy val standoffLinkValuePermissions: String = {
     val permissions: Set[PermissionADM] = Set(
-      PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.SystemUser),
-      PermissionADM.from(Permission.ObjectAccess.View, OntologyConstants.KnoraAdmin.UnknownUser),
+      PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraUserRepo.builtIn.SystemUser.id.value),
+      PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.UnknownUser.id.value),
     )
 
     PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

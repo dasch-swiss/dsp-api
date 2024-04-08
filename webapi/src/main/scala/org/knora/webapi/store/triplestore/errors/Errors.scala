@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.Logger
 
 import dsp.errors.ExceptionUtil
 import dsp.errors.InternalServerException
+import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 
 /**
  * An abstract class for exceptions indicating that something went wrong with the triplestore.
@@ -91,6 +92,10 @@ final case class TriplestoreResponseException(message: String, cause: Option[Thr
     extends TriplestoreException(message, cause)
 
 object TriplestoreResponseException {
+
+  def apply(e: RdfError): TriplestoreResponseException =
+    TriplestoreResponseException(e.toString, None)
+
   def apply(message: String, e: Throwable, log: Logger): TriplestoreResponseException =
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 

@@ -7,7 +7,7 @@
         knora-admin:projectShortname "test-project"^^xsd:string ;
         knora-admin:projectShortcode "0105"^^xsd:string ;
         knora-admin:projectDescription "Project description"^^xsd:string ;
-        knora-admin:projectKeywords "Keyword"^^xsd:string ;
+        knora-admin:projectKeyword "Keyword"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 

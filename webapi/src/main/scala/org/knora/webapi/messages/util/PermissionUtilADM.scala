@@ -28,6 +28,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
@@ -95,12 +96,12 @@ object PermissionUtilADM extends LazyLogging {
         // to the entity.
         val userGroups: Set[IRI] = if (requestingUser.isAnonymousUser) {
           // The user is an unknown user; put them in the UnknownUser built-in group.
-          Set(OntologyConstants.KnoraAdmin.UnknownUser)
+          Set(KnoraGroupRepo.builtIn.UnknownUser.id.value)
         } else {
           // The user is a known user.
           // If the user is the creator of the entity, put the user in the "creator" built-in group.
           val creatorOption = if (requestingUser.id == entityCreator) {
-            Some(OntologyConstants.KnoraAdmin.Creator)
+            Some(KnoraGroupRepo.builtIn.Creator.id.value)
           } else {
             None
           }
@@ -112,7 +113,7 @@ object PermissionUtilADM extends LazyLogging {
 
           // Make the complete list of the user's groups: KnownUser, the user's built-in (e.g., ProjectAdmin,
           // ProjectMember) and non-built-in groups, possibly creator, and possibly SystemAdmin.
-          Set(OntologyConstants.KnoraAdmin.KnownUser) ++ otherGroups ++ creatorOption
+          Set(KnoraGroupRepo.builtIn.KnownUser.id.value) ++ otherGroups ++ creatorOption
         }
 
         // Find the highest permission that can be granted to the user.
@@ -122,7 +123,7 @@ object PermissionUtilADM extends LazyLogging {
           case None =>
             // If the result is that they would get no permissions, give them user whatever permission an
             // unknown user would have.
-            calculateHighestGrantedPermissionLevel(entityPermissions, Set(OntologyConstants.KnoraAdmin.UnknownUser))
+            calculateHighestGrantedPermissionLevel(entityPermissions, Set(KnoraGroupRepo.builtIn.UnknownUser.id.value))
         }
       }
 
@@ -564,7 +565,7 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 
       // Get the group IRIs that are mentioned, minus the built-in groups.
       projectSpecificGroupIris: Set[IRI] =
-        parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups
+        parsedPermissions.values.flatten.toSet -- KnoraGroupRepo.builtIn.all.map(_.id.value)
 
       validatedProjectSpecificGroupIris <-
         ZIO.attempt(

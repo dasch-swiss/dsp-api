@@ -13,13 +13,13 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.5" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.10.1" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:v3.12.2" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.13"
 
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
-  val JenaVersion       = "4.10.0"
+  val JenaVersion       = "5.0.0"
   val Rdf4jVersion      = "4.3.10"
 
   val ZioConfigVersion            = "4.0.1"

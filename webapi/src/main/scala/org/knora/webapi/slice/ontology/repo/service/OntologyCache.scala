@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheKey
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheName
@@ -549,7 +550,7 @@ final case class OntologyCacheLive(
             case None =>
               attachedToProject match {
                 case Some(iri: SmartIri) =>
-                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
+                  if (iri != KnoraProjectRepo.builtIn.SystemProject.id.value.toSmartIri) {
                     throw MissingLastModificationDateOntologyException(
                       s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`",
                     )
