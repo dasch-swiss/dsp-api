@@ -5,6 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -13,10 +18,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn
-import zio.Chunk
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class KnoraUserToUserConverter(
   private val projectsService: ProjectService,
