@@ -6,11 +6,6 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-
-import java.util.UUID
-import scala.collection.mutable.ListBuffer
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -50,6 +45,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import zio._
+
+import java.util.UUID
+import scala.collection.mutable.ListBuffer
 
 final case class PermissionsResponder(
   appConfig: AppConfig,
@@ -176,13 +175,16 @@ final case class PermissionsResponder(
       )
       ZIO
         .foldLeft(precedence)(None: Option[Set[PermissionADM]])((result, groups) =>
-          if (result.isEmpty) {
-            administrativePermissionForGroupsGetADM(projectIri, groups)
-              .when(groups.forall(extendedUserGroups.contains))
-              .map(_.filter(_.nonEmpty))
-          } else { ZIO.succeed(result) },
+          result match {
+            case Some(value) => ZIO.some(value)
+            case None =>
+              administrativePermissionForGroupsGetADM(projectIri, groups)
+                .when(groups.forall(extendedUserGroups.contains))
+                .map(_.filter(_.nonEmpty))
+          },
         )
-        .map(r => (projectIri, r.getOrElse(Set.empty[PermissionADM])))
+        .map(_.getOrElse(Set.empty))
+        .map((projectIri, _))
     }
 
     ZIO
