@@ -174,14 +174,15 @@ final case class PermissionsResponder(
         List(builtIn.KnownUser.id.value),
       )
       ZIO
-        .foldLeft(precedence)(None: Option[Set[PermissionADM]])((result, groups) =>
-          result match {
-            case Some(value) => ZIO.some(value)
-            case None =>
-              administrativePermissionForGroupsGetADM(projectIri, groups)
-                .when(groups.forall(extendedUserGroups.contains))
-                .map(_.filter(_.nonEmpty))
-          },
+        .foldLeft(precedence)(None: Option[Set[PermissionADM]])(
+          (result: Option[Set[PermissionADM]], groups: Seq[IRI]) =>
+            result match {
+              case Some(value) => ZIO.some(value)
+              case None =>
+                administrativePermissionForGroupsGetADM(projectIri, groups)
+                  .when(groups.forall(extendedUserGroups.contains))
+                  .map(_.filter(_.nonEmpty))
+            },
         )
         .map(_.getOrElse(Set.empty))
         .map((projectIri, _))
