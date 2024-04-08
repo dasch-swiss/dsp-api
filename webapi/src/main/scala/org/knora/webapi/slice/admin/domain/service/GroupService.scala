@@ -23,18 +23,18 @@ final case class GroupService(
 
   def findAllById(ids: Seq[GroupIri]): Task[Chunk[Group]] = knoraGroupService.findAllById(ids).flatMap(toGroups)
 
-  private def toGroups(kGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(kGroups)(toGroup)
+  private def toGroups(knoraGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(knoraGroups)(toGroup)
 
-  private def toGroup(kGroup: KnoraGroup): Task[Group] =
+  private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
-      project <- kGroup.belongsToProject.map(projectService.findById).getOrElse(ZIO.none)
+      project <- knoraGroup.belongsToProject.map(projectService.findById).getOrElse(ZIO.none)
     } yield Group(
-      id = kGroup.id.value,
-      name = kGroup.groupName.value,
-      descriptions = kGroup.groupDescriptions.value,
+      id = knoraGroup.id.value,
+      name = knoraGroup.groupName.value,
+      descriptions = knoraGroup.groupDescriptions.value,
       project = project,
-      status = kGroup.status.value,
-      selfjoin = kGroup.hasSelfJoinEnabled.value,
+      status = knoraGroup.status.value,
+      selfjoin = knoraGroup.hasSelfJoinEnabled.value,
     )
 }
 
