@@ -44,7 +44,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 import zio._
 
 import java.util.UUID
@@ -750,31 +749,15 @@ final case class PermissionsResponder(
    * @param groups     the list of groups for which default object access permissions are retrieved and combined.
    * @return a set of [[PermissionADM]].
    */
-  private def defaultObjectAccessPermissionsForGroupsGetADM(
-    projectIri: IRI,
-    groups: Seq[IRI],
-  ): Task[Set[PermissionADM]] = {
-
-    /* Get default object access permissions for each group and combine them */
-    val gpf: Seq[Task[Seq[PermissionADM]]] = for {
-      groupIri <- groups
-
-      groupPermissions: Task[Seq[PermissionADM]] = defaultObjectAccessPermissionGetADM(
-                                                     projectIri = projectIri,
-                                                     groupIri = Some(groupIri),
-                                                     resourceClassIri = None,
-                                                     propertyIri = None,
-                                                   ).map {
-                                                     case Some(doap: DefaultObjectAccessPermissionADM) =>
-                                                       doap.hasPermissions.toSeq
-                                                     case None => Seq.empty[PermissionADM]
-                                                   }
-
-    } yield groupPermissions
-
-    /* combines all permissions for each group and removes duplicates  */
-    ZioHelper.sequence(gpf).map(_.flatten).map(PermissionUtilADM.removeDuplicatePermissions(_))
-  }
+  private def getDefaultObjectAccessPermissions(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] =
+    ZIO
+      .foreach(groups) { groupIri =>
+        defaultObjectAccessPermissionGetADM(projectIri, Some(groupIri), None, None).map {
+          _.map(_.hasPermissions).getOrElse(Set.empty[PermissionADM])
+        }
+      }
+      .map(_.flatten)
+      .map(PermissionUtilADM.removeDuplicatePermissions)
 
   /**
    * Convenience method returning a set with default object access permissions defined on a resource class.
@@ -891,7 +874,7 @@ final case class PermissionsResponder(
       // PROJECT ADMIN
       ///////////////////////
       /* Get the default object access permissions for the knora-base:ProjectAdmin group */
-      defaultPermissionsOnProjectAdminGroup <- defaultObjectAccessPermissionsForGroupsGetADM(
+      defaultPermissionsOnProjectAdminGroup <- getDefaultObjectAccessPermissions(
                                                  projectIri,
                                                  List(builtIn.ProjectAdmin.id.value),
                                                )
@@ -1027,7 +1010,7 @@ final case class PermissionsResponder(
             builtIn.SystemAdmin.id.value,
           )
           if (customGroups.nonEmpty) {
-            defaultObjectAccessPermissionsForGroupsGetADM(projectIri, customGroups)
+            getDefaultObjectAccessPermissions(projectIri, customGroups)
           } else {
             ZIO.attempt(Set.empty[PermissionADM])
           }
@@ -1046,7 +1029,7 @@ final case class PermissionsResponder(
       /* Get the default object access permissions for the knora-base:ProjectMember group */
       defaultPermissionsOnProjectMemberGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(builtIn.ProjectMember.id.value))
+          getDefaultObjectAccessPermissions(projectIri, List(builtIn.ProjectMember.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
@@ -1067,7 +1050,7 @@ final case class PermissionsResponder(
       /* Get the default object access permissions for the knora-base:KnownUser group */
       defaultPermissionsOnKnownUserGroup <- {
         if (permissionsListBuffer.isEmpty) {
-          defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(builtIn.KnownUser.id.value))
+          getDefaultObjectAccessPermissions(projectIri, List(builtIn.KnownUser.id.value))
         } else {
           ZIO.attempt(Set.empty[PermissionADM])
         }
