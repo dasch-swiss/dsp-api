@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -62,9 +61,12 @@ final case class KnoraUserToUserConverter(
                   .findAllById(user.isInGroup)
                   .map(_.filter(_.belongsToProject.isDefined))
                   .map(_.map(group => (group.belongsToProject.get, group.id)))
-      groupsPerProject                     = (groups ++ materializedGroups).groupMap { case (p, _) => p.value } { case (_, g) => g.value }
+      groupsPerProject                     = (groups ++ materializedGroups).groupMap { case (p, _) => p } { case (_, g) => g }
       administrativePermissionsPerProject <- userAdministrativePermissionsGetADM(groupsPerProject)
-    } yield PermissionsDataADM(groupsPerProject, administrativePermissionsPerProject)
+    } yield PermissionsDataADM(
+      groupsPerProject.map { case (projectIri, groupIris) => (projectIri.value, groupIris.map(_.value)) },
+      administrativePermissionsPerProject.map { case (projectIri, permissions) => (projectIri.value, permissions) },
+    )
   }
 
   /**
@@ -75,24 +77,27 @@ final case class KnoraUserToUserConverter(
    * @return a the user's resulting set of administrative permissions for each project.
    */
   private def userAdministrativePermissionsGetADM(
-    groupsPerProject: Map[IRI, Seq[IRI]],
-  ): Task[Map[IRI, Set[PermissionADM]]] = {
+    groupsPerProject: Map[ProjectIri, Seq[GroupIri]],
+  ): Task[Map[ProjectIri, Set[PermissionADM]]] = {
 
     /* Get all permissions per project, applying permission precedence rule */
-    def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Task[(IRI, Set[PermissionADM])] = {
+    def calculatePermission(
+      projectIri: ProjectIri,
+      extendedUserGroups: Seq[GroupIri],
+    ): Task[(ProjectIri, Set[PermissionADM])] = {
       /* Follow the precedence rule:
          1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
          Permissions are added following the precedence level from the highest to the lowest. As soon as one set
          of permissions is written into the buffer, any additionally permissions do not need to be added. */
       val precedence = Seq(
-        List(builtIn.ProjectAdmin.id.value),
-        extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value),
-        List(builtIn.ProjectMember.id.value),
-        List(builtIn.KnownUser.id.value),
+        List(builtIn.ProjectAdmin.id),
+        extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id),
+        List(builtIn.ProjectMember.id),
+        List(builtIn.KnownUser.id),
       )
       ZIO
         .foldLeft(precedence)(None: Option[Set[PermissionADM]])(
-          (result: Option[Set[PermissionADM]], groups: Seq[IRI]) =>
+          (result: Option[Set[PermissionADM]], groups: Seq[GroupIri]) =>
             result match {
               case Some(value) => ZIO.some(value)
               case None =>
@@ -111,11 +116,14 @@ final case class KnoraUserToUserConverter(
       .map(_.filter { case (_, permissions) => permissions.nonEmpty })
   }
 
-  private def administrativePermissionForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] =
+  private def administrativePermissionForGroupsGetADM(
+    projectIri: ProjectIri,
+    groups: Seq[GroupIri],
+  ): Task[Set[PermissionADM]] =
     ZIO
       .foreach(groups) { groupIri =>
         administrativePermissionService
-          .findByGroupAndProject(GroupIri.unsafeFrom(groupIri), ProjectIri.unsafeFrom(projectIri))
+          .findByGroupAndProject(groupIri, projectIri)
           .map(Chunk.from(_).flatMap(_.permissions.flatMap(PermissionADM.from)))
       }
       .map(_.flatten)
