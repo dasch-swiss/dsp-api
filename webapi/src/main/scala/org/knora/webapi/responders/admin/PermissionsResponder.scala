@@ -163,22 +163,10 @@ final case class PermissionsResponder(
 
     /* Get all permissions per project, applying permission precedence rule */
     def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Task[(IRI, Set[PermissionADM])] = {
-
-      /* List buffer holding default object access permissions tagged with the precedence level:
+      /* Follow the precedence rule:
          1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
          Permissions are added following the precedence level from the highest to the lowest. As soon as one set
          of permissions is written into the buffer, any additionally found permissions are ignored. */
-      val permissionsListBuffer = ListBuffer.empty[Set[PermissionADM]]
-
-      def checkAndFoo(checkThis: Seq[String]) = for {
-        administrativePermissionsOnProjectMemberGroup <- administrativePermissionForGroupsGetADM(projectIri, checkThis)
-        _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
-              if (permissionsListBuffer.isEmpty && checkThis.forall(extendedUserGroups.contains)) {
-                permissionsListBuffer += administrativePermissionsOnProjectMemberGroup
-              }
-            }
-      } yield ()
-
       val precedence = Seq(
         List(builtIn.ProjectAdmin.id.value),
         (extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value)),
@@ -186,8 +174,14 @@ final case class PermissionsResponder(
         List(builtIn.KnownUser.id.value),
       )
       ZIO
-        .foreachDiscard(precedence)(checkAndFoo)
-        .as((projectIri, permissionsListBuffer.headOption.getOrElse(Set.empty[PermissionADM])))
+        .foldLeft(precedence)(None: Option[Set[PermissionADM]])((result, groups) =>
+          if (result.isEmpty) {
+            administrativePermissionForGroupsGetADM(projectIri, groups)
+              .when(groups.forall(extendedUserGroups.contains))
+              .map(_.filter(_.nonEmpty))
+          } else { ZIO.succeed(result) },
+        )
+        .map(r => (projectIri, r.getOrElse(Set.empty[PermissionADM])))
     }
 
     ZIO
