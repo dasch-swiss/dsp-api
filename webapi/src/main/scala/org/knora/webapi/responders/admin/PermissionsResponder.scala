@@ -170,56 +170,24 @@ final case class PermissionsResponder(
          of permissions is written into the buffer, any additionally found permissions are ignored. */
       val permissionsListBuffer = ListBuffer.empty[Set[PermissionADM]]
 
-      for {
-        /* Get administrative permissions for the knora-base:ProjectAdmin group */
-        administrativePermissionsOnProjectAdminGroup <-
-          administrativePermissionForGroupsGetADM(projectIri, List(builtIn.ProjectAdmin.id.value))
-
-        _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
-              if (extendedUserGroups.contains(builtIn.ProjectAdmin.id.value)) {
-                permissionsListBuffer += administrativePermissionsOnProjectAdminGroup
-              }
-            }
-
-        /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
-        administrativePermissionsOnCustomGroups <- {
-          val customGroups = extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value)
-          administrativePermissionForGroupsGetADM(projectIri, customGroups)
-        }
-        _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
-              if (permissionsListBuffer.isEmpty) {
-                permissionsListBuffer += administrativePermissionsOnCustomGroups
-              }
-            }
-
-        /* Get administrative permissions for the knora-base:ProjectMember group */
-        administrativePermissionsOnProjectMemberGroup <-
-          administrativePermissionForGroupsGetADM(
-            projectIri,
-            List(builtIn.ProjectMember.id.value),
-          )
+      def checkAndFoo(checkThis: Seq[String]) = for {
+        administrativePermissionsOnProjectMemberGroup <- administrativePermissionForGroupsGetADM(projectIri, checkThis)
         _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
-              if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(builtIn.ProjectMember.id.value)) {
-                  permissionsListBuffer += administrativePermissionsOnProjectMemberGroup
-                }
+              if (permissionsListBuffer.isEmpty && checkThis.forall(extendedUserGroups.contains)) {
+                permissionsListBuffer += administrativePermissionsOnProjectMemberGroup
               }
             }
+      } yield ()
 
-        /* Get administrative permissions for the knora-base:KnownUser group */
-        administrativePermissionsOnKnownUserGroup <- administrativePermissionForGroupsGetADM(
-                                                       projectIri,
-                                                       List(builtIn.KnownUser.id.value),
-                                                     )
-        _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
-              if (permissionsListBuffer.isEmpty) {
-                if (extendedUserGroups.contains(builtIn.KnownUser.id.value)) {
-                  permissionsListBuffer += administrativePermissionsOnKnownUserGroup
-                }
-              }
-            }
-
-      } yield (projectIri, permissionsListBuffer.headOption.getOrElse(Set.empty[PermissionADM]))
+      val precedence = Seq(
+        List(builtIn.ProjectAdmin.id.value),
+        (extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value)),
+        List(builtIn.ProjectMember.id.value),
+        List(builtIn.KnownUser.id.value),
+      )
+      ZIO
+        .foreachDiscard(precedence)(checkAndFoo)
+        .as((projectIri, permissionsListBuffer.headOption.getOrElse(Set.empty[PermissionADM])))
     }
 
     ZIO
