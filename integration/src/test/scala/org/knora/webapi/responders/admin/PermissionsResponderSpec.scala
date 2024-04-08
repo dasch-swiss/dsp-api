@@ -7,19 +7,15 @@ package org.knora.webapi.responders.admin
 
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
-import zio.Chunk
 import zio.NonEmptyChunk
 import zio.ZIO
-import zio.prelude.ForEachOps
 
 import java.util.UUID
-import scala.collection.Map
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -36,19 +32,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
-import org.knora.webapi.slice.admin.domain.model.Email
-import org.knora.webapi.slice.admin.domain.model.FamilyName
-import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraUser
-import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.slice.admin.domain.model.SystemAdmin
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.model.UserStatus
-import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -57,8 +44,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  */
 class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
-  private val rootUser      = SharedTestDataADM.rootUser
-  private val multiuserUser = SharedTestDataADM.multiuserUser
+  private val rootUser = SharedTestDataADM.rootUser
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path =
@@ -76,177 +62,6 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
   private val PermissionsResponder   = ZIO.serviceWithZIO[PermissionsResponder]
 
   "The PermissionsResponderADM" when {
-
-    "ask about the permission profile" should {
-
-      def createDummyUser(
-        isInProject: Iterable[IRI],
-        isInGroup: Iterable[IRI],
-        systemAdmin: SystemAdmin,
-        isInProjectAdminGroup: Iterable[IRI],
-      ) = KnoraUser(
-        UserIri.unsafeFrom("http://rdfh.ch/users/dummy"),
-        Username.unsafeFrom("dummy"),
-        Email.unsafeFrom("dummy@example.com"),
-        FamilyName.unsafeFrom("dummy"),
-        GivenName.unsafeFrom("dummy"),
-        PasswordHash.unsafeFrom("dummy"),
-        LanguageCode.en,
-        UserStatus.Active,
-        isInProject.map(ProjectIri.unsafeFrom).toChunk,
-        isInGroup.map(GroupIri.unsafeFrom).toChunk,
-        systemAdmin,
-        isInProjectAdminGroup.map(ProjectIri.unsafeFrom).toChunk,
-      )
-
-      "return the permissions profile (root user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.rootUser.projects_info.keys,
-                SharedTestDataADM2.rootUser.groups,
-                SystemAdmin.IsSystemAdmin,
-                Chunk.empty,
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.rootUser.permissionData)
-      }
-
-      "return the permissions profile (multi group user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.multiuserUser.projects_info.keys,
-                SharedTestDataADM2.multiuserUser.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri),
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.multiuserUser.permissionData)
-      }
-
-      "return the permissions profile (incunabula project admin user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys,
-                SharedTestDataADM2.incunabulaProjectAdminUser.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk(SharedTestDataADM.incunabulaProjectIri),
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.incunabulaProjectAdminUser.permissionData)
-      }
-
-      "return the permissions profile (incunabula creator user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys,
-                SharedTestDataADM2.incunabulaCreatorUser.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk.empty,
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.incunabulaCreatorUser.permissionData)
-      }
-
-      "return the permissions profile (incunabula normal project member user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys,
-                SharedTestDataADM2.incunabulaMemberUser.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk.empty,
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.incunabulaMemberUser.permissionData)
-      }
-
-      "return the permissions profile (images user 01)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.imagesUser01.projects_info.keys,
-                SharedTestDataADM2.imagesUser01.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk(imagesProjectIri),
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.imagesUser01.permissionData)
-      }
-
-      "return the permissions profile (images-reviewer-user)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.imagesReviewerUser.projects_info.keys,
-                SharedTestDataADM2.imagesReviewerUser.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk.empty,
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.imagesReviewerUser.permissionData)
-      }
-
-      "return the permissions profile (anything user 01)" in {
-        val actual = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.getPermissionData(
-              createDummyUser(
-                SharedTestDataADM2.anythingUser1.projects_info.keys,
-                SharedTestDataADM2.anythingUser1.groups,
-                SystemAdmin.IsNotSystemAdmin,
-                Chunk.empty,
-              ),
-            ),
-          ),
-        )
-
-        assert(actual == SharedTestDataADM2.anythingUser1.permissionData)
-      }
-    }
-    "ask for userAdministrativePermissionsGetADM" should {
-      "return user's administrative permissions (helper method used in queries before)" in {
-        val result: Map[IRI, Set[PermissionADM]] = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(
-            _.userAdministrativePermissionsGetADM(
-              multiuserUser.permissions.groupsPerProject,
-            ),
-          ),
-        )
-        result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
-      }
-    }
 
     "ask about administrative permissions " should {
 

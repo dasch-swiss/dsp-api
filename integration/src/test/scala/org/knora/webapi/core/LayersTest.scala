@@ -88,7 +88,7 @@ object LayersTest {
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
       AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
       DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService &
-      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder &
+      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & KnoraUserToUserConverter & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
       OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionsRestService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &

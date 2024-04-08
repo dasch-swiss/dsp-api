@@ -33,15 +33,12 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.GroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo._
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -60,7 +57,6 @@ final case class PermissionsResponder(
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
-  knoraGroupService: KnoraGroupService,
   implicit val stringFormatter: StringFormatter,
 ) extends MessageHandler
     with LazyLogging {
@@ -125,99 +121,6 @@ final case class PermissionsResponder(
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
-
-  ///////////////////////////////////////////////////////////////////////////
-  // PERMISSION DATA
-  ///////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Creates the user's [[PermissionsDataADM]]
-   *
-   * @param user the user is for which to create the PermissionData.
-   */
-  def getPermissionData(user: KnoraUser): Task[PermissionsDataADM] = {
-    // materialize implicit memberships from User properties
-    val projectMembers: Chunk[(ProjectIri, GroupIri)] = user.isInProject.map((_, builtIn.ProjectMember.id))
-    val projectAdmins                                 = user.isInProjectAdminGroup.map((_, builtIn.ProjectAdmin.id))
-    val systemAdmin =
-      if (user.isInSystemAdminGroup.value) { Seq((KnoraProjectRepo.builtIn.SystemProject.id, builtIn.SystemAdmin.id)) }
-      else { Seq.empty }
-    val materializedGroups: Chunk[(ProjectIri, GroupIri)] = projectMembers ++ projectAdmins ++ systemAdmin
-    for {
-      groups <- knoraGroupService
-                  .findAllById(user.isInGroup)
-                  .map(_.filter(_.belongsToProject.isDefined))
-                  .map(_.map(group => (group.belongsToProject.get, group.id)))
-      groupsPerProject                     = (groups ++ materializedGroups).groupMap { case (p, _) => p.value } { case (_, g) => g.value }
-      administrativePermissionsPerProject <- userAdministrativePermissionsGetADM(groupsPerProject)
-    } yield PermissionsDataADM(groupsPerProject, administrativePermissionsPerProject)
-  }
-
-  /**
-   * By providing all the projects and groups in which the user is a member of, calculate the user's
-   * administrative permissions of each project by applying the precedence rules.
-   *
-   * @param groupsPerProject the groups inside each project the user is member of.
-   * @return a the user's resulting set of administrative permissions for each project.
-   */
-  def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Task[Map[IRI, Set[PermissionADM]]] = {
-
-    /* Get all permissions per project, applying permission precedence rule */
-    def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Task[(IRI, Set[PermissionADM])] = {
-      /* Follow the precedence rule:
-         1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
-         Permissions are added following the precedence level from the highest to the lowest. As soon as one set
-         of permissions is written into the buffer, any additionally permissions do not need to be added. */
-      val precedence = Seq(
-        List(builtIn.ProjectAdmin.id.value),
-        extendedUserGroups diff KnoraGroupRepo.builtIn.all.map(_.id.value),
-        List(builtIn.ProjectMember.id.value),
-        List(builtIn.KnownUser.id.value),
-      )
-      ZIO
-        .foldLeft(precedence)(None: Option[Set[PermissionADM]])(
-          (result: Option[Set[PermissionADM]], groups: Seq[IRI]) =>
-            result match {
-              case Some(value) => ZIO.some(value)
-              case None =>
-                administrativePermissionForGroupsGetADM(projectIri, groups)
-                  .when(groups.forall(extendedUserGroups.contains))
-                  .map(_.filter(_.nonEmpty))
-            },
-        )
-        .map(_.getOrElse(Set.empty))
-        .map((projectIri, _))
-    }
-
-    ZIO
-      .foreach(groupsPerProject)(calculatePermission)
-      .map(_.toMap)
-      .map(_.filter { case (_, permissions) => permissions.nonEmpty })
-  }
-
-  /**
-   * **********************************************************************
-   */
-  /* ADMINISTRATIVE PERMISSIONS                                            */
-  /**
-   * **********************************************************************
-   */
-  /**
-   * Convenience method returning a set with combined administrative permission.
-   *
-   * @param projectIri the IRI of the project.
-   * @param groups     the list of groups for which administrative permissions are retrieved and combined.
-   * @return a set of [[PermissionADM]].
-   */
-  private def administrativePermissionForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Task[Set[PermissionADM]] =
-    ZIO
-      .foreach(groups) { groupIri =>
-        administrativePermissionService
-          .findByGroupAndProject(GroupIri.unsafeFrom(groupIri), ProjectIri.unsafeFrom(projectIri))
-          .map(Chunk.from(_).flatMap(_.permissions.flatMap(PermissionADM.from)))
-      }
-      .map(_.flatten)
-      .map(PermissionUtilADM.removeDuplicatePermissions)
 
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
@@ -1872,10 +1775,9 @@ object PermissionsResponder {
       kpr     <- ZIO.service[KnoraProjectService]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
-      kgs     <- ZIO.service[KnoraGroupService]
       sf      <- ZIO.service[StringFormatter]
       aps     <- ZIO.service[AdministrativePermissionService]
-      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, kgs, sf))
+      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, sf))
     } yield handler
   }
 }
