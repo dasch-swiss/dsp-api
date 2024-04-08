@@ -138,9 +138,8 @@ final case class PermissionsResponder(
     val projectMembers: Chunk[(ProjectIri, GroupIri)] = user.isInProject.map((_, builtIn.ProjectMember.id))
     val projectAdmins                                 = user.isInProjectAdminGroup.map((_, builtIn.ProjectAdmin.id))
     val systemAdmin =
-      if (user.isInSystemAdminGroup.value) {
-        Seq((KnoraProjectRepo.builtIn.SystemProject.id, builtIn.SystemAdmin.id))
-      } else { Seq.empty }
+      if (user.isInSystemAdminGroup.value) { Seq((KnoraProjectRepo.builtIn.SystemProject.id, builtIn.SystemAdmin.id)) }
+      else { Seq.empty }
     val materializedGroups: Chunk[(ProjectIri, GroupIri)] = projectMembers ++ projectAdmins ++ systemAdmin
     for {
       groups <- knoraGroupService
@@ -173,10 +172,8 @@ final case class PermissionsResponder(
       for {
         /* Get administrative permissions for the knora-base:ProjectAdmin group */
         administrativePermissionsOnProjectAdminGroup <-
-          administrativePermissionForGroupsGetADM(
-            projectIri,
-            List(builtIn.ProjectAdmin.id.value),
-          )
+          administrativePermissionForGroupsGetADM(projectIri, List(builtIn.ProjectAdmin.id.value))
+
         _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
               if (extendedUserGroups.contains(builtIn.ProjectAdmin.id.value)) {
                 permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
@@ -244,9 +241,7 @@ final case class PermissionsResponder(
     }
 
     ZIO
-      .foreach(groupsPerProject) { case (projectIri, groups) =>
-        calculatePermission(projectIri, groups :+ builtIn.KnownUser.id.value)
-      }
+      .foreach(groupsPerProject)(calculatePermission)
       .map(_.toMap)
       .map(_.filter { case (_, permissions) => permissions.nonEmpty })
   }
