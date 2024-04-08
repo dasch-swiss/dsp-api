@@ -10,12 +10,12 @@ import com.typesafe.scalalogging.Logger
 import java.time.Instant
 
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.AttachedToProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.LastModificationDate
 import org.knora.webapi.messages.OntologyConstants.Owl.Ontology
 import org.knora.webapi.messages.OntologyConstants.Xsd.DateTime
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.SystemProject
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
@@ -68,7 +68,7 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
         pred = Some(JenaNodeFactory.makeIriNode(AttachedToProject)),
         obj = None,
       )
-      .filter(triple => (triple.obj == JenaNodeFactory.makeIriNode(SystemProject)))
+      .filter(triple => triple.obj == JenaNodeFactory.makeIriNode(SystemProject.id.value))
       .map(_.subj)
       .toSet
 

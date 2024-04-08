@@ -13,7 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService.exportFileEnding
 
-case class ProjectExportInfo(projectShortname: String, path: Path)
+case class ProjectExportInfo(projectShortcode: String, path: Path)
 
 trait ProjectExportStorageService {
 

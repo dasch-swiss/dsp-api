@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+import zio.prelude.ForEachOps
 
 import scala.annotation.tailrec
 
@@ -44,7 +46,7 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
   private def findByClassIri(classIri: SmartIri, cache: OntologyCacheData): Option[ReadOntologyV2] =
     findById(classIri.getOntologyFromEntity, cache)
 
-  override def findAll(): Task[List[ReadOntologyV2]] = getCache.map(_.ontologies.values.toList)
+  override def findAll(): Task[Chunk[ReadOntologyV2]] = getCache.map(_.ontologies.values.toChunk)
 
   override def findByProject(projectId: ProjectIri): Task[List[ReadOntologyV2]] =
     smartIriMapCache(InternalIri(projectId.value))(findByProject)

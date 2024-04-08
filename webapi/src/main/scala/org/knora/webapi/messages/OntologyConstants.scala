@@ -457,23 +457,6 @@ object OntologyConstants {
     val GroupDescriptions: IRI = KnoraAdminPrefixExpansion + "groupDescriptions"
     val BelongsToProject: IRI  = KnoraAdminPrefixExpansion + "belongsToProject"
 
-    /* Built-In Groups */
-    val UnknownUser: IRI   = KnoraAdminPrefixExpansion + "UnknownUser"
-    val KnownUser: IRI     = KnoraAdminPrefixExpansion + "KnownUser"
-    val ProjectMember: IRI = KnoraAdminPrefixExpansion + "ProjectMember"
-    val Creator: IRI       = KnoraAdminPrefixExpansion + "Creator"
-    val SystemAdmin: IRI   = KnoraAdminPrefixExpansion + "SystemAdmin"
-    val ProjectAdmin: IRI  = KnoraAdminPrefixExpansion + "ProjectAdmin"
-
-    val BuiltInGroups: Set[IRI] = Set(
-      UnknownUser,
-      KnownUser,
-      ProjectMember,
-      Creator,
-      SystemAdmin,
-      ProjectAdmin,
-    )
-
     /* Permissions */
     val Permission: IRI                    = KnoraAdminPrefixExpansion + "Permission"
     val AdministrativePermission: IRI      = KnoraAdminPrefixExpansion + "AdministrativePermission"
@@ -497,19 +480,7 @@ object OntologyConstants {
       HasDefaultChangeRightsPermission,
     )
 
-    val SystemProject: IRI                  = KnoraAdminPrefixExpansion + "SystemProject"
     val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
-
-    /**
-     * The system user is the owner of objects that are created by the system, rather than directly by the user,
-     * such as link values for standoff resource references.
-     */
-    val SystemUser: IRI = KnoraAdminPrefixExpansion + "SystemUser"
-
-    /**
-     * Every user not logged-in is per default an anonymous user.
-     */
-    val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
   }
 
   object Standoff {

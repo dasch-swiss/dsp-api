@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 
 object Vocabulary {
   object KnoraAdmin {
@@ -51,6 +52,11 @@ object Vocabulary {
     val projectLongname: Iri                = Rdf.iri(KnoraAdminPrefixExpansion, "projectLongname")
     val projectShortcode: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "projectShortcode")
     val projectShortname: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "projectShortname")
+
+    // permission properties
+    val AdministrativePermission: Iri = Rdf.iri(KnoraAdminPrefixExpansion, "AdministrativePermission")
+    val forProject: Iri               = Rdf.iri(KnoraAdminPrefixExpansion, "forProject")
+    val forGroup: Iri                 = Rdf.iri(KnoraAdminPrefixExpansion, "forGroup")
   }
 
   object KnoraBase {
@@ -58,9 +64,12 @@ object Vocabulary {
 
     // property IRIs
     val attachedToProject: Iri = Rdf.iri(KnoraBasePrefixExpansion, "attachedToProject")
+
+    val hasPermissions: Iri = Rdf.iri(KnoraBasePrefixExpansion, "hasPermissions")
   }
 
   object NamedGraphs {
-    val knoraAdminIri: Iri = Rdf.iri(adminDataNamedGraph.value)
+    val dataAdmin: Iri       = Rdf.iri(adminDataNamedGraph.value)
+    val dataPermissions: Iri = Rdf.iri(permissionsDataNamedGraph.value)
   }
 }

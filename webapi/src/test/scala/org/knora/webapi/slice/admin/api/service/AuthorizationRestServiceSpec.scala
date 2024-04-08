@@ -12,13 +12,12 @@ import zio.test._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectAdmin
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemAdmin
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.SystemProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -33,7 +32,9 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
   private val inactiveNormalUser = activeNormalUser.copy(status = false)
 
   private val activeSystemAdmin =
-    activeNormalUser.copy(permissions = PermissionsDataADM(Map(SystemProject -> List(SystemAdmin))))
+    activeNormalUser.copy(permissions =
+      PermissionsDataADM(Map(SystemProject.id.value -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value))),
+    )
 
   private val inactiveSystemAdmin = activeSystemAdmin.copy(status = false)
 
@@ -94,7 +95,9 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
           userIsAdmin =
-            activeNormalUser.copy(permissions = PermissionsDataADM(Map(project.id.value -> List(ProjectAdmin))))
+            activeNormalUser.copy(permissions =
+              PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
+            )
           actualProject <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id)
         } yield assertTrue(project == actualProject)
       },
@@ -103,7 +106,9 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       ) {
         val project = TestDataFactory.someProject
         val userIsAdmin =
-          activeNormalUser.copy(permissions = PermissionsDataADM(Map(project.id.value -> List(ProjectAdmin))))
+          activeNormalUser.copy(permissions =
+            PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
+          )
         for {
           exit <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id).exit
         } yield assert(exit)(failsWithA[ForbiddenException])

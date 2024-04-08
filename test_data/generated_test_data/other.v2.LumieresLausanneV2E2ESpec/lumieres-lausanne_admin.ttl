@@ -15,7 +15,12 @@
         knora-admin:projectShortname "lumieres-lausanne"^^xsd:string ;
         knora-admin:projectShortcode "0113"^^xsd:string ;
 		knora-admin:projectDescription "Lumières.Lausanne est une plateforme qui met à la disposition des chercheurs et de toute personne intéressée par le riche passé culturel de la Suisse francophone à l'époque des Lumières des sources inédites, de la littérature secondaire et des fiches biographiques sur des personnalités qui l’ont marqué (lien vers la recherche avancée). Cet instrument de recherche est également un support de publication et un outil d'enseignement académique."^^xsd:string ;
-		knora-admin:projectKeywords "Lumières, Lausanne, Suisse francophone, sources, littérature secondaire, personnalités"^^xsd:string ;
+		knora-admin:projectKeyword "Lumières"^^xsd:string ;
+		knora-admin:projectKeyword "Lausanne"^^xsd:string ;
+		knora-admin:projectKeyword "Suisse francophone"^^xsd:string ;
+		knora-admin:projectKeyword "sources"^^xsd:string ;
+		knora-admin:projectKeyword "littérature secondaire"^^xsd:string ;
+		knora-admin:projectKeyword "personnalités"^^xsd:string ;
 		knora-admin:projectOntology <http://www.knora.org/ontology/0113/lumieres-lausanne> ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .

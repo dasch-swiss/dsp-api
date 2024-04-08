@@ -32,8 +32,8 @@ class UpgradePluginPR3111 extends AbstractSparqlUpdatePlugin {
       .MODIFY()
       .prefix(Vocabulary.KnoraAdmin.NS)
       .delete(invalidTriple)
-      .from(Vocabulary.NamedGraphs.knoraAdminIri)
-      .where(invalidTriple.from(Vocabulary.NamedGraphs.knoraAdminIri))
+      .from(Vocabulary.NamedGraphs.dataAdmin)
+      .where(invalidTriple.from(Vocabulary.NamedGraphs.dataAdmin))
   }
 
   override def getQueries: List[ModifyQuery] = List(removeInvalidRestrictedViewWatermarkTriples)

@@ -17,6 +17,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
 import pekko.testkit.ImplicitSender
 
@@ -26,10 +27,10 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"
 
   val parsedPermissionLiteral: Map[Permission.ObjectAccess, Set[IRI]] = Map(
-    Permission.ObjectAccess.RestrictedView -> Set(OntologyConstants.KnoraAdmin.UnknownUser),
-    Permission.ObjectAccess.View           -> Set(OntologyConstants.KnoraAdmin.KnownUser),
-    Permission.ObjectAccess.Modify         -> Set(OntologyConstants.KnoraAdmin.ProjectMember),
-    Permission.ObjectAccess.ChangeRights   -> Set(OntologyConstants.KnoraAdmin.Creator),
+    Permission.ObjectAccess.RestrictedView -> Set(KnoraGroupRepo.builtIn.UnknownUser.id.value),
+    Permission.ObjectAccess.View           -> Set(KnoraGroupRepo.builtIn.KnownUser.id.value),
+    Permission.ObjectAccess.Modify         -> Set(KnoraGroupRepo.builtIn.ProjectMember.id.value),
+    Permission.ObjectAccess.ChangeRights   -> Set(KnoraGroupRepo.builtIn.Creator.id.value),
   )
 
   "PermissionUtil" should {
@@ -111,11 +112,11 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
         "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-admin:UnknownUser"
 
       val permissionsSet = Set(
-        PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.Creator),
-        PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
-        PermissionADM.from(Permission.ObjectAccess.View, OntologyConstants.KnoraAdmin.KnownUser),
+        PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.Creator.id.value),
+        PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+        PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.KnownUser.id.value),
         PermissionADM.from(Permission.ObjectAccess.View, "http://rdfh.ch/groups/customgroup"),
-        PermissionADM.from(Permission.ObjectAccess.RestrictedView, OntologyConstants.KnoraAdmin.UnknownUser),
+        PermissionADM.from(Permission.ObjectAccess.RestrictedView, KnoraGroupRepo.builtIn.UnknownUser.id.value),
       )
 
       PermissionUtilADM.parsePermissionsWithType(
@@ -187,9 +188,9 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
       val permissions = Set(
         PermissionADM.from(Permission.ObjectAccess.ChangeRights, "1"),
         PermissionADM.from(Permission.ObjectAccess.Delete, "2"),
-        PermissionADM.from(Permission.ObjectAccess.ChangeRights, OntologyConstants.KnoraAdmin.Creator),
-        PermissionADM.from(Permission.ObjectAccess.Modify, OntologyConstants.KnoraAdmin.ProjectMember),
-        PermissionADM.from(Permission.ObjectAccess.View, OntologyConstants.KnoraAdmin.KnownUser),
+        PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+        PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+        PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.KnownUser.id.value),
       )
 
       val permissionsString = "CR 1,knora-admin:Creator|D 2|M knora-admin:ProjectMember|V knora-admin:KnownUser"

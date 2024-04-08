@@ -5,24 +5,20 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary._
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.{`var` => variable}
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.tp
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.Chunk
+import zio.IO
+import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.stream.ZStream
 
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions._
@@ -31,125 +27,65 @@ import org.knora.webapi.slice.admin.domain.model._
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
+import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin._
+import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
+import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
-final case class KnoraGroupRepoLive(triplestore: TriplestoreService) extends KnoraGroupRepo {
-  override def findById(id: GroupIri): Task[Option[KnoraGroup]] = for {
-    model     <- triplestore.queryRdfModel(KnoraUserGroupQueries.findById(id))
-    resource  <- model.getResource(id.value)
-    userGroup <- ZIO.foreach(resource)(toGroup)
-  } yield userGroup
+final case class KnoraGroupRepoLive(triplestore: TriplestoreService, mapper: RdfEntityMapper[KnoraGroup])
+    extends AbstractEntityRepo[KnoraGroup, GroupIri](triplestore, mapper)
+    with KnoraGroupRepo {
+  override protected def resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.UserGroup)
+  override protected def namedGraphIri: Iri       = Vocabulary.NamedGraphs.dataAdmin
+  override protected def entityProperties: EntityProperties = EntityProperties(
+    NonEmptyChunk(groupName, groupDescriptions, status, hasSelfJoinEnabled),
+    Chunk(belongsToProject),
+  )
 
-  override def findAll(): Task[List[KnoraGroup]] = for {
-    model <- triplestore.queryRdfModel(KnoraUserGroupQueries.findAll)
-    resources <-
-      model.getResourcesRdfType(KnoraAdmin.UserGroup).option.map(_.getOrElse(Iterator.empty))
-    groups <- ZStream.fromIterator(resources).mapZIO(toGroup).runCollect
-  } yield groups.toList
+  override def findById(id: GroupIri): Task[Option[KnoraGroup]] =
+    super.findById(id).map(_.orElse(KnoraGroupRepo.builtIn.findOneBy(_.id == id)))
 
-  def save(userGroup: KnoraGroup): Task[KnoraGroup] =
-    triplestore.query(KnoraUserGroupQueries.save(userGroup)).as(userGroup)
+  override def findAll(): Task[Chunk[KnoraGroup]] = super.findAll().map(_ ++ KnoraGroupRepo.builtIn.all)
 
-  private def toGroup(resource: RdfResource): Task[KnoraGroup] = {
-    for {
-      id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value)))
-      groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
-      groupDescriptions  <- resource.getLangStringLiteralsOrFail[StringLiteralV2](KnoraAdmin.GroupDescriptions)
-      groupDescriptions  <- ZIO.fromEither(GroupDescriptions.from(groupDescriptions))
-      groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
-      belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)
-      hasSelfJoinEnabled <- resource.getBooleanLiteralOrFail[GroupSelfJoin](KnoraAdmin.HasSelfJoinEnabled)
-    } yield KnoraGroup(
-      id,
-      groupName,
-      groupDescriptions,
-      groupStatus,
-      belongsToProject,
-      hasSelfJoinEnabled,
-    )
-  }.mapError(it => TriplestoreResponseException(it.toString))
+  override def save(group: KnoraGroup): Task[KnoraGroup] =
+    ZIO
+      .die(new IllegalArgumentException("Update not supported for built-in groups"))
+      .when(KnoraGroupRepo.builtIn.findOneBy(_.id == group.id).isDefined) *>
+      super.save(group)
 }
 
 object KnoraGroupRepoLive {
-  val layer = ZLayer.derive[KnoraGroupRepoLive]
-}
 
-private object KnoraUserGroupQueries {
-  def findAll: Construct = {
-    val (s, p, o) = (variable("s"), variable("p"), variable("o"))
-    val query = Queries
-      .CONSTRUCT(tp(s, p, o))
-      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-      .where(
-        s
-          .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
-          .and(s.has(p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
+  private val mapper = new RdfEntityMapper[KnoraGroup] {
+    override def toEntity(resource: RdfResource): IO[RdfError, KnoraGroup] =
+      for {
+        id                 <- resource.iri.flatMap(it => ZIO.fromEither(GroupIri.from(it.value).left.map(ConversionError.apply)))
+        groupName          <- resource.getStringLiteralOrFail[GroupName](KnoraAdmin.GroupName)
+        groupDescriptions  <- resource.getLangStringLiteralsOrFail[StringLiteralV2](KnoraAdmin.GroupDescriptions)
+        groupDescriptions  <- ZIO.fromEither(GroupDescriptions.from(groupDescriptions).left.map(ConversionError.apply))
+        groupStatus        <- resource.getBooleanLiteralOrFail[GroupStatus](KnoraAdmin.StatusProp)
+        belongsToProject   <- resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.BelongsToProject).map(_.headOption)
+        hasSelfJoinEnabled <- resource.getBooleanLiteralOrFail[GroupSelfJoin](KnoraAdmin.HasSelfJoinEnabled)
+      } yield KnoraGroup(
+        id,
+        groupName,
+        groupDescriptions,
+        groupStatus,
+        belongsToProject,
+        hasSelfJoinEnabled,
       )
-    Construct(query.getQueryString)
+
+    override def toTriples(group: KnoraGroup): TriplePattern =
+      Rdf
+        .iri(group.id.value)
+        .has(RDF.TYPE, Rdf.iri(KnoraAdmin.UserGroup))
+        .andHas(groupName, Rdf.literalOf(group.groupName.value))
+        .andHas(groupDescriptions, group.groupDescriptions.toRdfLiterals: _*)
+        .andHas(status, Rdf.literalOf(group.status.value))
+        .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList: _*)
+        .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
   }
 
-  def findById(id: GroupIri): Construct = {
-    val s      = Rdf.iri(id.value)
-    val (p, o) = (variable("p"), variable("o"))
-    val query: ConstructQuery = Queries
-      .CONSTRUCT(tp(s, p, o))
-      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS))
-      .where(
-        s
-          .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
-          .and(tp(s, p, o))
-          .from(Vocabulary.NamedGraphs.knoraAdminIri),
-      )
-    Construct(query)
-  }
-
-  private def deleteWhere(
-    id: Iri,
-    rdfType: Iri,
-    query: ModifyQuery,
-    iris: List[Iri],
-  ): ModifyQuery =
-    query
-      .delete(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType)) { case (p, (iri, index)) =>
-        p.andHas(iri, variable(s"n${index}"))
-      })
-      .where(iris.zipWithIndex.foldLeft(id.has(RDF.TYPE, rdfType).optional()) { case (p, (iri, index)) =>
-        p.and(id.has(iri, variable(s"n${index}")).optional())
-      })
-
-  def save(group: KnoraGroup): Update = {
-    val query: ModifyQuery =
-      Queries
-        .MODIFY()
-        .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-        .`with`(Rdf.iri(adminDataNamedGraph.value))
-        .insert(toTriples(group))
-
-    Update(deleteWhere(Rdf.iri(group.id.value), Vocabulary.KnoraAdmin.UserGroup, query, deletionFields))
-  }
-
-  private val deletionFields: List[Iri] = List(
-    Vocabulary.KnoraAdmin.groupName,
-    Vocabulary.KnoraAdmin.groupDescriptions,
-    Vocabulary.KnoraAdmin.status,
-    Vocabulary.KnoraAdmin.belongsToProject,
-    Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
-  )
-
-  private def toTriples(group: KnoraGroup) = {
-    import Vocabulary.KnoraAdmin.*
-    Rdf
-      .iri(group.id.value)
-      .has(RDF.TYPE, UserGroup)
-      .andHas(groupName, Rdf.literalOf(group.groupName.value))
-      .andHas(groupDescriptions, group.groupDescriptions.toRdfLiterals: _*)
-      .andHas(status, Rdf.literalOf(group.status.value))
-      .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList: _*)
-      .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
-  }
+  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraGroupRepoLive]
 }

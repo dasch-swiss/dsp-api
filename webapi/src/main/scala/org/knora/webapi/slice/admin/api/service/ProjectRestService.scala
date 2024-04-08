@@ -54,7 +54,7 @@ final case class ProjectRestService(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project was found
    */
   def listAllProjects(): Task[ProjectsGetResponse] = for {
-    internal <- projectService.findAll
+    internal <- projectService.findAllRegularProjects
     projects  = internal.filter(_.projectIri.isRegularProjectIri)
     external <- format.toExternal(ProjectsGetResponse(projects))
   } yield external

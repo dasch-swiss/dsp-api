@@ -26,9 +26,6 @@ final case class UserService(
   def findUserByIri(iri: UserIri): Task[Option[User]] =
     fromCacheOrRepo(iri, cacheService.getUserByIri, knoraUserService.findById)
 
-  def findUsersByIris(iris: Seq[UserIri]): Task[Seq[User]] =
-    ZIO.foreach(iris)(findUserByIri).map(_.flatten)
-
   def findUserByEmail(email: Email): Task[Option[User]] =
     fromCacheOrRepo(email, cacheService.getUserByEmail, knoraUserService.findByEmail)
 
@@ -41,8 +38,11 @@ final case class UserService(
   def findByProjectAdminMembership(project: KnoraProject): Task[Seq[User]] =
     knoraUserService.findByProjectAdminMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
-  def findAll: Task[Seq[User]] =
-    knoraUserService.findAll().flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+  def findAllRegularUsers: Task[Seq[User]] =
+    knoraUserService
+      .findAll()
+      .map(_.filter(_.id.isRegularUser))
+      .flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
 
   private def fromCacheOrRepo[A](
     id: A,
