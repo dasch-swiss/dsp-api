@@ -31,7 +31,7 @@ trait Repository[Entity, Id] {
    * @param ids A sequence of identifiers of type [[Id]].
    * @return All found entities. The size can be equal or less than the number of given ids.
    */
-  def findAllById(ids: Seq[Id]): Task[Chunk[Entity]] = ZIO.foreach(Chunk.fromIterable(ids))(findById).map(_.flatten)
+  def findByIds(ids: Seq[Id]): Task[Chunk[Entity]] = ZIO.foreach(Chunk.fromIterable(ids))(findById).map(_.flatten)
 
   /**
    * Checks whether an entity with the given id exists.

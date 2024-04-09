@@ -38,7 +38,7 @@ object InMemoryCrudRepositorySpec extends ZIOSpecDefault {
       } yield assertTrue(actual.contains(saved), count == 1, exists)),
       test("should save all and find all by id")(for {
         _      <- repo(_.saveAll(twoEntities))
-        actual <- repo(_.findAllById(twoEntities.map(_.id)))
+        actual <- repo(_.findByIds(twoEntities.map(_.id)))
       } yield assert(actual)(hasSameElements(List(otherEntity, someEntity)))),
       test("should save all and delete one")(for {
         _      <- repo(_.saveAll(twoEntities))

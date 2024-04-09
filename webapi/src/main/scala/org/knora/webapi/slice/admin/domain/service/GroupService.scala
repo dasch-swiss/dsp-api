@@ -9,24 +9,21 @@ import zio.ZIO
 import zio._
 
 import org.knora.webapi.slice.admin.domain.model.Group
-import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.GroupName
-import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
-import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
   private val projectService: ProjectService,
 ) {
 
-  def findAllRegularGroups: Task[Chunk[Group]] = knoraGroupService
-    .findAllRegularGroups()
-    .flatMap(ZIO.foreachPar(_)(toGroup))
+  def findAllRegularGroups: Task[Chunk[Group]] = knoraGroupService.findAllRegularGroups().flatMap(toGroups)
 
   def findById(id: GroupIri): Task[Option[Group]] = knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
+
+  def findByIds(ids: Seq[GroupIri]): Task[Chunk[Group]] = knoraGroupService.findByIds(ids).flatMap(toGroups)
+
+  private def toGroups(knoraGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(knoraGroups)(toGroup)
 
   private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
@@ -38,16 +35,6 @@ final case class GroupService(
       project = project,
       status = knoraGroup.status.value,
       selfjoin = knoraGroup.hasSelfJoinEnabled.value,
-    )
-
-  def toKnoraGroup(group: Group): KnoraGroup =
-    KnoraGroup(
-      id = GroupIri.unsafeFrom(group.id),
-      groupName = GroupName.unsafeFrom(group.name),
-      groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
-      status = GroupStatus.from(group.status),
-      belongsToProject = group.project.map(it => ProjectIri.unsafeFrom(it.id)),
-      hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
     )
 }
 

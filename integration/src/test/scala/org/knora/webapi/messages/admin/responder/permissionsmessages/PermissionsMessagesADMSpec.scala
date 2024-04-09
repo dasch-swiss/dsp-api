@@ -12,7 +12,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
@@ -39,29 +39,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
-
-    "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = projectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        ),
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
     }
   }
 
@@ -488,7 +465,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         "Invalid value for name parameter of hasPermissions: invalid, it should be one of " +
@@ -507,7 +484,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
@@ -525,7 +502,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Given permission code 2 and permission name CR are not consistent.",
@@ -543,7 +520,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"One of permission code or permission name must be provided for a default object access permission.",
@@ -560,7 +537,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"additionalInformation of a default object access permission type cannot be empty.",

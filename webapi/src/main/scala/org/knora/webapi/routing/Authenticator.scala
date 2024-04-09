@@ -35,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.cache.CacheUtil
@@ -392,7 +393,10 @@ final case class AuthenticatorLive(
                       _ <-
                         ZIO
                           .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-                          .when(!user.password.exists(passwordService.matchesStr(passCreds.password, _)))
+                          .when(
+                            KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined ||
+                              !user.password.exists(passwordService.matchesStr(passCreds.password, _)),
+                          )
                     } yield true
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                     ZIO
