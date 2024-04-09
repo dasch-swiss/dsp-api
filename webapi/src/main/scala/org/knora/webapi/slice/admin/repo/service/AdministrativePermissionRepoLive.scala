@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
+import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
@@ -51,6 +52,15 @@ final case class AdministrativePermissionRepoLive(
         Vocabulary.KnoraAdmin.forGroup,
         Vocabulary.KnoraAdmin.forProject,
       ),
+    )
+
+  override def findByGroupAndProject(
+    groupIri: GroupIri,
+    projectIri: ProjectIri,
+  ): Task[Option[AdministrativePermission]] =
+    findOneByTriplePattern(
+      _.has(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(groupIri.value))
+        .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)),
     )
 }
 

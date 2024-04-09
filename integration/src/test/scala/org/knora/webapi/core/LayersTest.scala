@@ -88,9 +88,9 @@ object LayersTest {
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
       AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
       DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService &
-      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder &
+      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & KnoraUserToUserConverter & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PermissionsRestService & ProjectExportService &
+      OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionsRestService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
       RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
@@ -134,7 +134,7 @@ object LayersTest {
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
-      PermissionsResponderADMLive.layer,
+      PermissionsResponder.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,

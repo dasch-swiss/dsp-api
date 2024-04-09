@@ -54,5 +54,8 @@ object AdministrativePermissionPart {
 }
 
 trait AdministrativePermissionRepo extends Repository[AdministrativePermission, PermissionIri] {
+
+  def findByGroupAndProject(groupIri: GroupIri, projectIri: ProjectIri): Task[Option[AdministrativePermission]]
+
   def save(permission: AdministrativePermission): Task[AdministrativePermission]
 }
