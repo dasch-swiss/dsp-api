@@ -57,6 +57,7 @@ final case class AppServer(
   private def upgradeRepository(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.UpdatingRepository)
+      _  = requiresRepository
 //      _ <- ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message)).when(requiresRepository)
       _ <- ru.getMigrationMetrics
       _ <- state.set(AppState.RepositoryUpToDate)
