@@ -13,6 +13,7 @@ import zio.json._
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 import scala.reflect.io.Directory
 
 import dsp.errors.InconsistentRepositoryDataException
@@ -106,14 +107,14 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                            |Triples: $triples
                            |Graphs: $graphs
                            |""".stripMargin)
-      start   <- Clock.nanoTime
+      start   <- Clock.currentTime(TimeUnit.MILLISECONDS)
       dir     <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
       file    <- createEmptyFile("downloaded-repository.nq", dir)
       _       <- triplestoreService.downloadRepository(file, MigrateAllGraphs)
       _       <- triplestoreService.dropDataGraphByGraph()
       _       <- triplestoreService.uploadRepository(file)
-      end     <- Clock.nanoTime
-      duration = (end - start) / 1000000.0
+      end     <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      duration = (end - start) / 1000.0
     } yield RepoUpdateMetric(triples, graphs, duration)
 
   private def createEmptyFile(filename: String, dir: Path) = ZIO.attempt {

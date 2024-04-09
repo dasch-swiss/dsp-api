@@ -49,6 +49,7 @@ import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fusekiServerFormat
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
@@ -322,8 +323,7 @@ case class TriplestoreServiceLive(
     request.addHeader("Accept", mimeTypeApplicationJson)
 
     def checkForExpectedDataset(response: String) = ZIO.attempt {
-      val nameShouldBe = fusekiConfig.repositoryName
-      import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.*
+      val nameShouldBe               = fusekiConfig.repositoryName
       val fusekiServer: FusekiServer = JsonParser(response).convertTo[FusekiServer]
       val neededDataset: Option[FusekiDataset] =
         fusekiServer.datasets.find(dataset => dataset.dsName == s"/$nameShouldBe" && dataset.dsState)
