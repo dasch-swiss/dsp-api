@@ -50,6 +50,7 @@ trait JwtService {
    * @return a [[String]] containing the JWT.
    */
   def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt]
+
   def createJwtForDspIngest(): UIO[Jwt]
 
   /**
@@ -139,7 +140,7 @@ final case class JwtServiceLive(
    * @return an optional [[IRI]].
    */
   override def extractUserIriFromToken(token: String): Task[Option[IRI]] =
-    ZIO.attempt(decodeToken(token)).map(_.flatMap { case (_, claims) => claims.subject })
+    ZIO.attempt(decodeToken(token)).debug.map(_.flatMap { case (_, claims) => claims.subject })
 
   /**
    * Decodes and validates a JWT token.
