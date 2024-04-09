@@ -61,24 +61,32 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
       durationState <- Ref.make(RepoUpdateMetrics.make)
       _             <- ZIO.logInfo("Starting dummy migration process...")
       graphs        <- getDataGraphs.debug("Data graphs")
-      _             <- Clock.nanoTime
+      metric1       <- doDummieMigration()
+      _             <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric1))
       _ <- ZIO.foreachDiscard(graphs) { graph =>
              for {
-               _      <- ZIO.logInfo(s"Removing graph for next dummy migration: $graph")
-               _      <- triplestoreService.dropGraph(graph) // TODO: this should be done after the migration
-               _      <- deleteTmpDirectories()
-               metric <- doDummieMigration()
-               _      <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric))
+               _               <- ZIO.logInfo(s"Removing graph for next dummy migration: $graph")
+               _               <- triplestoreService.dropGraph(graph)
+               metric          <- doDummieMigration()
+               _               <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric))
+               intermedMetrics <- durationState.get
+               _ <- ZIO.logInfo(
+                      s"""|Intermediate metrics:
+                          |${intermedMetrics.toJsonPretty}
+                          |""".stripMargin,
+                    )
              } yield ()
            }
       metrics    <- durationState.get
-      _          <- ZIO.logInfo(s"Migration metrics: ${metrics}")
+      _          <- ZIO.logInfo(s"Metrics: ${metrics}")
       metricsJson = metrics.toJsonPretty
       _ <- ZIO.logInfo(
-             s"""|Migration metrics JSON:
+             s"""|***********************
+                 |Final Metrics JSON:
                  |
                  |${metricsJson}
                  |
+                 |***********************
                  |""".stripMargin,
            )
     } yield ()
@@ -103,21 +111,31 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
 
   private def doDummieMigration(): Task[RepoUpdateMetric] =
     for {
+      _       <- ZIO.logInfo("Starting dummy migration...")
       triples <- getTripleCount
       graphs  <- getGraphCount
-      _ <- ZIO.logInfo(s"""|Migration metrics:
+      _ <- ZIO.logInfo(s"""|Dummy Migration metrics:
                            |Triples: $triples
                            |Graphs: $graphs
                            |""".stripMargin)
       start   <- Clock.currentTime(TimeUnit.MILLISECONDS)
-      dir     <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
+      dir     <- ZIO.attempt(Files.createTempDirectory("dummy-migration"))
       file    <- createEmptyFile("downloaded-repository.nq", dir)
+      _       <- ZIO.logInfo(s"Downloading repository to file: $file")
       _       <- triplestoreService.downloadRepository(file, MigrateAllGraphs)
+      size    <- ZIO.attempt(Files.size(file))
+      _       <- ZIO.logInfo(s"Downloaded file size: $size")
       _       <- triplestoreService.dropDataGraphByGraph()
+      _       <- ZIO.logInfo("Done dropping graphs. Uploading repository...")
       _       <- triplestoreService.uploadRepository(file)
+      _       <- ZIO.logInfo("Done uploading repository.")
+      _       <- ZIO.attempt(Files.delete(file))
+      _       <- ZIO.logInfo("Deleted downloaded file.")
       end     <- Clock.currentTime(TimeUnit.MILLISECONDS)
       duration = (end - start) / 1000.0
-    } yield RepoUpdateMetric(triples, graphs, duration)
+      metric   = RepoUpdateMetric(triples, graphs, duration)
+      _       <- ZIO.logInfo(s"Dummy migration done. Metrics: $metric")
+    } yield metric
 
   private def createEmptyFile(filename: String, dir: Path) = ZIO.attempt {
     val file = dir.resolve(filename)

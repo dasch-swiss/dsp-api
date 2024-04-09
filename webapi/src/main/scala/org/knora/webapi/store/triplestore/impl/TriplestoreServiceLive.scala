@@ -420,7 +420,7 @@ case class TriplestoreServiceLive(
              val endTime  = java.lang.System.nanoTime()
              val duration = Duration.fromNanos(endTime - startTime)
              ZIO.when(duration >= trackingThreshold) {
-               ZIO.logInfo(
+               ZIO.logWarning(
                  s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}",
                )
              }
