@@ -59,10 +59,12 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   def getMigrationMetrics: Task[Unit] =
     for {
       durationState <- Ref.make(RepoUpdateMetrics.make)
+      _             <- ZIO.logInfo("Starting dummy migration process...")
       graphs        <- getDataGraphs.debug("Data graphs")
       _             <- Clock.nanoTime
       _ <- ZIO.foreachDiscard(graphs) { graph =>
              for {
+               _      <- ZIO.logInfo(s"Removing graph for next dummy migration: $graph")
                _      <- triplestoreService.dropGraph(graph)
                _      <- deleteTmpDirectories()
                metric <- doDummieMigration()
