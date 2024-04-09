@@ -65,7 +65,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
       _ <- ZIO.foreachDiscard(graphs) { graph =>
              for {
                _      <- ZIO.logInfo(s"Removing graph for next dummy migration: $graph")
-               _      <- triplestoreService.dropGraph(graph)
+               _      <- triplestoreService.dropGraph(graph) // TODO: this should be done after the migration
                _      <- deleteTmpDirectories()
                metric <- doDummieMigration()
                _      <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric))
