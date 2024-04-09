@@ -5,18 +5,7 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import dsp.valueobjects.UuidUtil
 import net.sf.ehcache.CacheManager
-import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -36,6 +25,18 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 object JwtServiceSpec extends ZIOSpecDefault {
 

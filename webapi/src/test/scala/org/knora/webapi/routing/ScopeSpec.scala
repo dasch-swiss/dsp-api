@@ -1,11 +1,12 @@
 package org.knora.webapi.routing
 
-import org.knora.webapi.routing.ScopeValue.Admin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
+
+import org.knora.webapi.routing.ScopeValue.Admin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 final case class Scope(values: Set[ScopeValue]) {
   self =>
