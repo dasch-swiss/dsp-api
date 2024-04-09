@@ -40,13 +40,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 object JwtServiceSpec extends ZIOSpecDefault {
 
-  private val jwtService = ZIO.serviceWithZIO[JwtService]
-
-  private val userIri = UserIri.makeNew
+  private val JwtService = ZIO.serviceWithZIO[JwtService]
 
   private val user: User =
     User(
-      id = userIri.value,
+      id = UserIri.makeNew.value,
       username = "testuser",
       email = "test@example.com",
       givenName = "given",
@@ -92,7 +90,7 @@ object JwtServiceSpec extends ZIOSpecDefault {
   val spec: Spec[TestEnvironment with Scope, Any] = suite("JwtService")(
     test("create a token") {
       for {
-        token    <- jwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
+        token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
         _         = println(token)
         userIri  <- getUserIri(token.jwtString)
         audience <- getAudience(token.jwtString)
@@ -100,8 +98,8 @@ object JwtServiceSpec extends ZIOSpecDefault {
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
-        token            <- jwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
-        userIriByService <- jwtService(_.extractUserIriFromToken(token.jwtString))
+        token            <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
+        userIriByService <- JwtService(_.extractUserIriFromToken(token.jwtString))
         userIri          <- getUserIri(token.jwtString)
         audience         <- getAudience(token.jwtString)
       } yield assertTrue(
@@ -112,21 +110,21 @@ object JwtServiceSpec extends ZIOSpecDefault {
     },
     test("create a token for dsp-ingest") {
       for {
-        token    <- jwtService(_.createJwtForDspIngest())
+        token    <- JwtService(_.createJwtForDspIngest())
         userIri  <- getUserIri(token.jwtString)
         audience <- getAudience(token.jwtString)
       } yield assertTrue(userIri.contains(issuerStr), audience.contains("https://dsp-ingest/audience"))
     },
     test("validate a self issued token") {
       for {
-        token   <- jwtService(_.createJwt(user))
-        isValid <- jwtService(_.validateToken(token.jwtString))
+        token   <- JwtService(_.createJwt(user))
+        isValid <- JwtService(_.validateToken(token.jwtString))
       } yield assertTrue(isValid)
     },
     test("fail to validate an invalid token") {
       def createClaim(
         issuer: Option[String] = Some(issuerStr),
-        subject: Option[String] = Some(userIri.value),
+        subject: Option[String] = Some(UserIri.makeNew.value),
         audience: Option[Set[String]] = Some(Set("Knora", "Sipi")),
         issuedAt: Option[Long] = Some(Instant.now.getEpochSecond),
         expiration: Option[Long] = Some(Instant.now.plusSeconds(10).getEpochSecond),
@@ -151,7 +149,7 @@ object JwtServiceSpec extends ZIOSpecDefault {
         for {
           secret  <- ZIO.serviceWith[JwtConfig](_.secret)
           token    = JwtZIOJson.encode("""{"typ":"JWT","alg":"HS256"}""", claim.toJson, secret, JwtAlgorithm.HS256)
-          isValid <- jwtService(_.validateToken(token))
+          isValid <- JwtService(_.validateToken(token))
         } yield assertTrue(!isValid)
       }
     },
