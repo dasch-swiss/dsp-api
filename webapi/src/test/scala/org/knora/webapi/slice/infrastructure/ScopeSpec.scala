@@ -1,64 +1,11 @@
-package org.knora.webapi.routing
+package org.knora.webapi.slice.infrastructure
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
-
-import org.knora.webapi.routing.ScopeValue.Admin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-
-final case class Scope(values: Set[ScopeValue]) {
-  self =>
-  def toScopeString: String = values.map(_.toScopeString).mkString(" ")
-  def +(add: ScopeValue): Scope =
-    if (values.contains(Admin) || add == Admin) {
-      Scope(Set(Admin))
-    } else {
-      values.find(_.merge(add).size == 1) match {
-        case Some(value) => Scope(values - value ++ value.merge(add))
-        case None        => Scope(values + add)
-      }
-    }
-}
-
-object Scope {
-  val empty: Scope = Scope(Set.empty)
-  val admin: Scope = Scope(Set(ScopeValue.Admin))
-
-  def from(scopeValue: ScopeValue)       = Scope(Set(scopeValue))
-  def from(scopeValues: Seq[ScopeValue]) = scopeValues.foldLeft(Scope.empty)(_ + _)
-}
-
-sealed trait ScopeValue {
-  def toScopeString: String
-  final def merge(other: ScopeValue): Set[ScopeValue] = ScopeValue.merge(this, other)
-}
-
-object ScopeValue {
-  final case class Read(project: Shortcode) extends ScopeValue {
-    override def toScopeString: String = s"read:${project.value}"
-  }
-
-  final case class Write(project: Shortcode) extends ScopeValue {
-    override def toScopeString: String = s"write:${project.value}"
-  }
-
-  final case object Admin extends ScopeValue {
-    override def toScopeString: String = "admin"
-  }
-
-  def merge(one: ScopeValue, two: ScopeValue): Set[ScopeValue] =
-    (one, two) match {
-      case (Admin, _)                         => Set(Admin)
-      case (_, Admin)                         => Set(Admin)
-      case (Write(p1), Write(p2)) if p1 == p2 => Set(Write(p1))
-      case (Read(p1), Write(p2)) if p1 == p2  => Set(Write(p1))
-      case (Write(p1), Read(p2)) if p1 == p2  => Set(Write(p1))
-      case (Read(p1), Read(p2)) if p1 == p2   => Set(Read(p1))
-      case (a, b)                             => Set(a, b)
-    }
-}
 
 object ScopeSpec extends ZIOSpecDefault {
   private val prj1             = Shortcode.unsafeFrom("0001")
@@ -149,6 +96,22 @@ object ScopeSpec extends ZIOSpecDefault {
     test("adding a read scope to a write scope merges") {
       val scope = Scope(Set(writeScopeValue1, readScopeValue2))
       assertTrue(scope + readScopeValue1 == Scope(Set(writeScopeValue1, readScopeValue2)))
+    },
+    test("rendering a read scope to string is successful") {
+      val scope = Scope(Set(readScopeValue1))
+      assertTrue(scope.toScopeString == s"read:project:0001")
+    },
+    test("rendering a write scope to string is successful") {
+      val scope = Scope(Set(writeScopeValue2))
+      assertTrue(scope.toScopeString == s"write:project:0002")
+    },
+    test("rendering an admin scope to string is successful") {
+      val scope = Scope.admin
+      assertTrue(scope.toScopeString == s"admin")
+    },
+    test("rendering a combined scope to string is successful") {
+      val scope = Scope(Set(readScopeValue1, writeScopeValue2))
+      assertTrue(scope.toScopeString == s"read:project:0001 write:project:0002")
     },
   )
 

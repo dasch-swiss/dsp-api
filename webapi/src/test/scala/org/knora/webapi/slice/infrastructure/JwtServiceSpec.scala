@@ -5,7 +5,18 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import dsp.valueobjects.UuidUtil
 import net.sf.ehcache.CacheManager
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -14,6 +25,9 @@ import spray.json.JsString
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
+import zio.json.DecoderOps
+import zio.json.EncoderOps
+import zio.json.ast.Json
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.TestAspect
@@ -25,18 +39,6 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 object JwtServiceSpec extends ZIOSpecDefault {
 
@@ -75,11 +77,8 @@ object JwtServiceSpec extends ZIOSpecDefault {
       ZIO.fromTry(JwtZIOJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256))).orDie
     }
 
-  private def getAudience(token: String) =
-    decodeToken(token).map { case (_, claims, _) => claims.audience.head }
-
-  private def getUserIri(token: String) =
-    decodeToken(token).map { case (_, claims, _) => claims.subject }
+  private def getClaim[A](token: String, lens: JwtClaim => A) =
+    decodeToken(token).map { case (_, claims, _) => lens(claims) }
 
   def initCache = ZIO.succeed {
     val cacheManager = CacheManager.getInstance()
@@ -92,16 +91,16 @@ object JwtServiceSpec extends ZIOSpecDefault {
       for {
         token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
         _         = println(token)
-        userIri  <- getUserIri(token.jwtString)
-        audience <- getAudience(token.jwtString)
+        userIri  <- getClaim(token.jwtString, _.subject)
+        audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
       } yield assertTrue(userIri.contains(user.id), audience == Set("Knora", "Sipi"))
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
         token            <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
         userIriByService <- JwtService(_.extractUserIriFromToken(token.jwtString))
-        userIri          <- getUserIri(token.jwtString)
-        audience         <- getAudience(token.jwtString)
+        userIri          <- getClaim(token.jwtString, _.subject)
+        audience         <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
       } yield assertTrue(
         userIriByService == userIri,
         userIri.contains(user.id),
@@ -111,8 +110,8 @@ object JwtServiceSpec extends ZIOSpecDefault {
     test("create a token for dsp-ingest") {
       for {
         token    <- JwtService(_.createJwtForDspIngest())
-        userIri  <- getUserIri(token.jwtString)
-        audience <- getAudience(token.jwtString)
+        userIri  <- getClaim(token.jwtString, _.subject)
+        audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
       } yield assertTrue(userIri.contains(issuerStr), audience.contains("https://dsp-ingest/audience"))
     },
     test("validate a self issued token") {
