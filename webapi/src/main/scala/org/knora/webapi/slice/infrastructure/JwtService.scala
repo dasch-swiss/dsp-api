@@ -25,7 +25,6 @@ import zio.durationInt
 
 import scala.util.Failure
 import scala.util.Success
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
@@ -33,6 +32,7 @@ import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.infrastructure.Scope
 import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
@@ -83,7 +83,12 @@ final case class JwtServiceLive(
   override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
     val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
     else { Set("Knora", "Sipi") }
-    createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)))
+    val scope = if (user.isSystemAdmin) {
+      Scope.admin
+    } else {
+      Scope.empty
+    }
+    createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)), scope = scope)
   }
 
   override def createJwtForDspIngest(): UIO[Jwt] =
@@ -100,6 +105,7 @@ final case class JwtServiceLive(
     audience: Set[String],
     content: Option[JsObject] = None,
     expiration: Option[Duration] = None,
+    scope: Scope = Scope.empty,
   ) =
     for {
       now  <- Clock.instant
@@ -113,8 +119,8 @@ final case class JwtServiceLive(
                 issuedAt = Some(now.getEpochSecond),
                 expiration = Some(exp.getEpochSecond),
                 jwtId = Some(UuidUtil.base64Encode(uuid)),
-              ).toJson
-    } yield Jwt(JwtZIOJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
+              ) + ("scope", scope.toScopeString)
+    } yield Jwt(JwtZIOJson.encode(header, claim.toJson, jwtConfig.secret, algorithm), exp.getEpochSecond)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated

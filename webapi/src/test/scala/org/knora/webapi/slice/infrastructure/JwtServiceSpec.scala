@@ -22,12 +22,13 @@ import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
 import spray.json.JsString
+import zio.IO
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
 import zio.json.DecoderOps
-import zio.json.EncoderOps
-import zio.json.ast.Json
+import zio.json.DeriveJsonDecoder
+import zio.json.JsonDecoder
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.TestAspect
@@ -39,6 +40,11 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
+final case class ScopeJs(scope: String)
+object ScopeJs {
+  implicit val decoder: JsonDecoder[ScopeJs] = DeriveJsonDecoder.gen[ScopeJs]
+}
 
 object JwtServiceSpec extends ZIOSpecDefault {
 
@@ -77,10 +83,16 @@ object JwtServiceSpec extends ZIOSpecDefault {
       ZIO.fromTry(JwtZIOJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256))).orDie
     }
 
-  private def getClaim[A](token: String, lens: JwtClaim => A) =
-    decodeToken(token).map { case (_, claims, _) => lens(claims) }
+  private def getClaim[A](token: String, extract: JwtClaim => A) =
+    decodeToken(token).map { case (_, claims, _) => extract(claims) }
 
-  def initCache = ZIO.succeed {
+  private def getClaimZIO[A](token: String, extract: JwtClaim => IO[String, A]) =
+    decodeToken(token).flatMap { case (_, claims, _) => extract(claims).mapError(new Exception(_)) }
+
+  private def getScopeClaimValue(token: String) =
+    getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
+
+  private def initCache = ZIO.succeed {
     val cacheManager = CacheManager.getInstance()
     cacheManager.addCacheIfAbsent(AUTHENTICATION_INVALIDATION_CACHE_NAME)
     cacheManager.clearAll()
@@ -90,10 +102,20 @@ object JwtServiceSpec extends ZIOSpecDefault {
     test("create a token") {
       for {
         token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
-        _         = println(token)
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
-      } yield assertTrue(userIri.contains(user.id), audience == Set("Knora", "Sipi"))
+        scope    <- getScopeClaimValue(token.jwtString)
+      } yield assertTrue(
+        userIri.contains(user.id),
+        audience == Set("Knora", "Sipi"),
+        scope == "",
+      )
+    },
+    test("create a token with admin scope for system admins") {
+      for {
+        token <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
+        scope <- getScopeClaimValue(token.jwtString)
+      } yield assertTrue(scope == "admin")
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
@@ -154,4 +176,5 @@ object JwtServiceSpec extends ZIOSpecDefault {
     },
   ).provide(dspIngestConfigLayer, jwtConfigLayer, JwtServiceLive.layer) @@ TestAspect.withLiveEnvironment @@ TestAspect
     .beforeAll(initCache)
+
 }

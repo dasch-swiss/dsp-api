@@ -1,11 +1,12 @@
 package org.knora.webapi.slice.infrastructure
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 
 object ScopeSpec extends ZIOSpecDefault {
   private val prj1             = Shortcode.unsafeFrom("0001")
