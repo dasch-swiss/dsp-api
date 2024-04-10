@@ -2984,7 +2984,7 @@ object OntologyResponderV2Live {
       ts       <- ZIO.service[TriplestoreService]
       cache    <- ZIO.service[CacheService]
       responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, cache, sf)
-      _        <- MessageRelay.subscribe(responder)
+      _        <- ZIO.serviceWithZIO[MessageRelay](_.subscribe(responder))
     } yield responder
   }
 }
