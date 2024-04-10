@@ -6,6 +6,21 @@
 package org.knora.webapi.routing
 
 import com.typesafe.scalalogging.Logger
+import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.IRI
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.infrastructure.Scope
+import org.knora.webapi.slice.infrastructure.ScopeValue
+import org.knora.webapi.util.cache.CacheUtil
 import org.slf4j.LoggerFactory
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
@@ -24,21 +39,6 @@ import zio.durationInt
 
 import scala.util.Failure
 import scala.util.Success
-
-import dsp.valueobjects.Iri
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi.IRI
-import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.infrastructure.Scope
-import org.knora.webapi.slice.infrastructure.ScopeValue
-import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
 
@@ -99,30 +99,29 @@ final case class JwtServiceLive(
     if (user.isSystemAdmin || user.isSystemUser) {
       ZIO.succeed(Scope.admin)
     } else {
-      val foo: ZIO[Any, Nothing, Map[KnoraProject.Shortcode, Set[Option[ScopeValue.Write]]]] = ZIO
-        .foreach(user.permissions.administrativePermissionsPerProject) { case (iriStr, permission) =>
-          for {
-            project  <- knoraProjectService.findById(ProjectIri.unsafeFrom(iriStr)).orDie
-            shortcode = project.get.shortcode
-            scopeValues =
-              permission
-                .map(_.name)
-                .flatMap(Administrative.fromToken)
-                .map {
-                  case Administrative.ProjectResourceCreateAll        => Some(ScopeValue.Write(shortcode))
-                  case Administrative.ProjectResourceCreateRestricted => Some(ScopeValue.Write(shortcode))
-                  case Administrative.ProjectAdminAll                 => Some(ScopeValue.Write(shortcode))
-                  case Administrative.ProjectAdminGroupAll            => None
-                  case Administrative.ProjectAdminGroupRestricted     => None
-                  case Administrative.ProjectAdminRightsAll           => None
-                }
-          } yield (shortcode, scopeValues)
+      ZIO
+        .foreach(user.permissions.administrativePermissionsPerProject.toSeq) { case (iriStr, permission) =>
+          knoraProjectService
+            .findById(ProjectIri.unsafeFrom(iriStr))
+            .orDie
+            .map(_.map(prj => mapPermissionToScope(permission, prj.shortcode)).getOrElse(Seq.empty))
         }
-      for {
-        scopeValues <- foo.map(_.values.flatten.flatten)
-        scope        = scopeValues.foldLeft(Scope.empty)(_ + _)
-      } yield scope
+        .map(_.flatten)
+        .map(_.foldLeft(Scope.empty)(_ + _))
     }
+
+  private def mapPermissionToScope(permission: Set[PermissionADM], shortcode: Shortcode): Seq[ScopeValue.Write] =
+    permission.toSeq
+      .map(_.name)
+      .flatMap(Administrative.fromToken)
+      .flatMap {
+        case Administrative.ProjectResourceCreateAll        => Some(ScopeValue.Write(shortcode))
+        case Administrative.ProjectResourceCreateRestricted => Some(ScopeValue.Write(shortcode))
+        case Administrative.ProjectAdminAll                 => Some(ScopeValue.Write(shortcode))
+        case Administrative.ProjectAdminGroupAll            => None
+        case Administrative.ProjectAdminGroupRestricted     => None
+        case Administrative.ProjectAdminRightsAll           => None
+      }
 
   override def createJwtForDspIngest(): UIO[Jwt] =
     createJwtToken(
