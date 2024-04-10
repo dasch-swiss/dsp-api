@@ -509,9 +509,11 @@ final case class OntologiesRouteV2()(
                             .validate(validatedGuiAttributes, validatedGuiElement)
                             .flatMap(values => GuiObject.make(values._1, values._2))
 
-              ontologyIri         <- IriConverter.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString)
+              ontologyIri <-
+                ZIO.serviceWithZIO[IriConverter](_.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString))
               lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-              propertyIri         <- IriConverter.asSmartIri(propertyInfoContent.propertyIri.toString)
+              propertyIri <- ZIO
+                               .serviceWithZIO[IriConverter](_.asSmartIri(propertyInfoContent.propertyIri.toString))
               subClassConstraintSmartIri <-
                 RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
               subjectType <-
@@ -520,9 +522,9 @@ final case class OntologiesRouteV2()(
                   case Some(value) =>
                     value.objects.head match {
                       case objectType: SmartIriLiteralV2 =>
-                        IriConverter
-                          .asSmartIri(
-                            objectType.value.toOntologySchema(InternalSchema).toString,
+                        ZIO
+                          .serviceWithZIO[IriConverter](
+                            _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
                           )
                           .map(Some(_))
                       case other =>
@@ -538,7 +540,10 @@ final case class OntologiesRouteV2()(
                   case Some(value) =>
                     value.objects.head match {
                       case objectType: SmartIriLiteralV2 =>
-                        IriConverter.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString)
+                        ZIO
+                          .serviceWithZIO[IriConverter](
+                            _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
+                          )
                       case other =>
                         ZIO.fail(ValidationException(s"Unexpected object type for $other"))
                     }

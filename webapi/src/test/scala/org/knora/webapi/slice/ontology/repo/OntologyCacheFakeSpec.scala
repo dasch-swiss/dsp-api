@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test._
 
@@ -24,7 +25,7 @@ object OntologyCacheFakeSpec extends ZIOSpecDefault {
     suite("with empty cache when setting new data")(test("should return set cache") {
       val somePropertyIri = InternalIri("http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute")
       for {
-        someIri <- IriConverter.asInternalSmartIri(somePropertyIri)
+        someIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(somePropertyIri))
         newData  = OntologyCacheFake.emptyData.copy(standoffProperties = Set(someIri))
         _       <- OntologyCacheFake.set(newData)
         actual  <- OntologyCache.getCacheData

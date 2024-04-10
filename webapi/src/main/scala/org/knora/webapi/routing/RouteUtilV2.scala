@@ -114,8 +114,8 @@ object RouteUtilV2 {
     val maybeProjectIriStr =
       requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptProject).map(_.value())
     ZIO.foreach(maybeProjectIriStr)(iri =>
-      IriConverter
-        .asSmartIri(iri)
+      ZIO
+        .serviceWithZIO[IriConverter](_.asSmartIri(iri))
         .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader")),
     )
   }

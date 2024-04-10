@@ -5,6 +5,7 @@
 
 package dsp.valueobjects
 
+import zio.ZIO
 import zio.test.Assertion._
 import zio.test._
 
@@ -19,6 +20,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
 
+  private val iriConverter = ZIO.serviceWithZIO[IriConverter]
+
   def spec: Spec[Any, Any] =
     createPropertyCommandTest.provide(IriConverter.layer, StringFormatter.test)
 
@@ -27,10 +30,10 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
       val lastModificationDate = Instant.now()
       val subjectType          = None
       (for {
-        ontologyIri       <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything")
-        propertyIri       <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someProperty")
-        objectType        <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#SomeClass")
-        superProperty     <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someSuperCoolProperty")
+        ontologyIri       <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0001/anything"))
+        propertyIri       <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0001/anything#someProperty"))
+        objectType        <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0001/anything#SomeClass"))
+        superProperty     <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0001/anything#someSuperCoolProperty"))
         label             <- LangString.make(LanguageCode.en, "some label").toZIO
         commentLangString <- LangString.make(LanguageCode.en, "some comment").toZIO
         comment            = Some(commentLangString)
