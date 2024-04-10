@@ -96,7 +96,7 @@ object LayersLive {
       AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthenticatorLive.layer,
-      AuthorizationRestServiceLive.layer,
+      AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CacheService.layer,
       CacheServiceRequestMessageHandlerLive.layer,

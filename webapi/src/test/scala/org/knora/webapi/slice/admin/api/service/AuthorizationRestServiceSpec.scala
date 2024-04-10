@@ -21,10 +21,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.Syst
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
-import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
 import org.knora.webapi.store.cache.CacheService
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
+
+  private val authorizationRestService = ZIO.serviceWithZIO[AuthorizationRestService]
 
   private val activeNormalUser =
     User("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
@@ -45,7 +46,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- AuthorizationRestService.ensureSystemAdmin(inactiveSystemAdmin).exit
+          actual <- authorizationRestService(_.ensureSystemAdmin(inactiveSystemAdmin)).exit
         } yield assertTrue(
           actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")),
         )
@@ -57,7 +58,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       },
       test("when ensureSystemAdmin succeed") {
         for {
-          _ <- AuthorizationRestService.ensureSystemAdmin(activeSystemAdmin)
+          _ <- authorizationRestService(_.ensureSystemAdmin(activeSystemAdmin))
         } yield assertCompletes
       },
     ),
@@ -67,7 +68,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- AuthorizationRestService.ensureSystemAdmin(inactiveNormalUser).exit
+          actual <- authorizationRestService(_.ensureSystemAdmin(inactiveNormalUser)).exit
         } yield assertTrue(
           actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")),
         )
@@ -79,7 +80,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- AuthorizationRestService.ensureSystemAdmin(activeNormalUser).exit
+          actual <- authorizationRestService(_.ensureSystemAdmin(activeNormalUser)).exit
         } yield assertTrue(
           actual == Exit.fail(
             ForbiddenException(
@@ -98,7 +99,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
             activeNormalUser.copy(permissions =
               PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
             )
-          actualProject <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id)
+          actualProject <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id))
         } yield assertTrue(project == actualProject)
       },
       test(
@@ -110,7 +111,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
             PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
           )
         for {
-          exit <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id).exit
+          exit <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsAdmin, project.id)).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
       test(
@@ -120,12 +121,12 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
         for {
           _             <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
           userIsNotAdmin = activeNormalUser.copy(permissions = PermissionsDataADM(Map.empty))
-          exit          <- AuthorizationRestService.ensureSystemAdminOrProjectAdmin(userIsNotAdmin, project.id).exit
+          exit          <- authorizationRestService(_.ensureSystemAdminOrProjectAdmin(userIsNotAdmin, project.id)).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
       },
     ),
   ).provide(
-    AuthorizationRestServiceLive.layer,
+    AuthorizationRestService.layer,
     CacheService.layer,
     KnoraProjectService.layer,
     KnoraProjectRepoInMemory.layer,
