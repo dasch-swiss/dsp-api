@@ -17,9 +17,9 @@ import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class GroupsEndpointsHandler(
-                                   endpoints: GroupsEndpoints,
-                                   restService: GroupRestService,
-                                   mapper: HandlerMapper,
+  endpoints: GroupsEndpoints,
+  restService: GroupRestService,
+  mapper: HandlerMapper,
 ) {
   private val getGroupsHandler =
     PublicEndpointHandler(

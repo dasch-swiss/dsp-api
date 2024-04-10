@@ -25,9 +25,9 @@ import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class UsersEndpointsHandler(
-                                  usersEndpoints: UsersEndpoints,
-                                  restService: UserRestService,
-                                  mapper: HandlerMapper,
+  usersEndpoints: UsersEndpoints,
+  restService: UserRestService,
+  mapper: HandlerMapper,
 ) {
 
   private val getUsersHandler = SecuredEndpointHandler[Unit, UsersGetResponseADM](

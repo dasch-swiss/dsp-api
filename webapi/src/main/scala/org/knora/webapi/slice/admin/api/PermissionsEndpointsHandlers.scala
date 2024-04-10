@@ -29,9 +29,9 @@ import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class PermissionsEndpointsHandlers(
-                                               permissionsEndpoints: PermissionsEndpoints,
-                                               restService: PermissionRestService,
-                                               mapper: HandlerMapper,
+  permissionsEndpoints: PermissionsEndpoints,
+  restService: PermissionRestService,
+  mapper: HandlerMapper,
 ) {
 
   private val postPermissionsApHandler =
