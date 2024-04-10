@@ -334,8 +334,8 @@ case class TriplestoreServiceLive(
   }
 
   override def compact(): Task[Unit] = {
-    val request = new HttpPost("/$/compact" + fusekiConfig.repositoryName)
-    doHttpRequest(request, _ => ZIO.unit).unit
+    val request = new HttpPost("/$/compact/" + fusekiConfig.repositoryName)
+    doHttpRequest(request, x => ZIO.succeed(x)).tap(x => ZIO.logDebug(s"Compaction Response: $x")).logError.unit
   }
 
   /**
