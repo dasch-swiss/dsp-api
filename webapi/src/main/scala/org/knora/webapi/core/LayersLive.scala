@@ -36,7 +36,7 @@ import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -81,7 +81,7 @@ object LayersLive {
       ProjectImportService & ProjectRestService & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
-      TriplestoreService & UserService & UsersResponder & UsersRestService & ValuesResponderV2
+      TriplestoreService & UserService & UsersResponder & UserRestService & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`

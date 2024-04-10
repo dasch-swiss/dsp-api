@@ -29,7 +29,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequ
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.model._
@@ -47,7 +47,7 @@ class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   private val ProjectRestService = ZIO.serviceWithZIO[ProjectRestService]
-  private val UsersRestService   = ZIO.serviceWithZIO[UsersRestService]
+  private val UsersRestService   = ZIO.serviceWithZIO[UserRestService]
 
   "The UsersRestService" when {
     "calling getAllUsers" should {
