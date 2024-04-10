@@ -60,6 +60,8 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
     for {
       durationState <- Ref.make(RepoUpdateMetrics.make)
       _             <- ZIO.logInfo("Starting dummy migration process...")
+      compactFiber  <- scheduleCompact.fork
+      _             <- deleteTmpDirectories()
       graphs        <- getDataGraphs.debug("Data graphs")
       metric1       <- doDummieMigration()
       _             <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric1))
@@ -77,6 +79,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                     )
              } yield ()
            }
+      _          <- compactFiber.interrupt
       metrics    <- durationState.get
       _          <- ZIO.logInfo(s"Metrics: ${metrics}")
       metricsJson = metrics.toJsonPretty
@@ -90,6 +93,11 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                  |""".stripMargin,
            )
     } yield ()
+
+  private def scheduleCompact: Task[Nothing] =
+    compact.repeat(Schedule.fixed(40.minutes)).forever
+
+  private def compact: Task[Unit] = triplestoreService.compact()
 
   private def getDataGraphs: Task[Seq[String]] =
     for {
@@ -119,7 +127,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                            |Graphs: $graphs
                            |""".stripMargin)
       start   <- Clock.currentTime(TimeUnit.MILLISECONDS)
-      dir     <- ZIO.attempt(Files.createTempDirectory("dummy-migration"))
+      dir     <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
       file    <- createEmptyFile("downloaded-repository.nq", dir)
       _       <- ZIO.logInfo(s"Downloading repository to file: $file")
       _       <- triplestoreService.downloadRepository(file, MigrateAllGraphs)

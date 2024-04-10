@@ -143,6 +143,8 @@ trait TriplestoreService {
   def uploadRepository(inputFile: Path): Task[Unit]
 
   def dropGraph(graphName: String): Task[Unit]
+
+  def compact(): Task[Unit]
 }
 
 object TriplestoreService {

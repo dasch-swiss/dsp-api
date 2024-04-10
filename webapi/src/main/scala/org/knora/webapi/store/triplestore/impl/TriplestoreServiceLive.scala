@@ -333,6 +333,11 @@ case class TriplestoreServiceLive(
     doHttpRequest(request, returnResponseAsString).flatMap(checkForExpectedDataset)
   }
 
+  override def compact(): Task[Unit] = {
+    val request = new HttpPost("/$/compact" + fusekiConfig.repositoryName)
+    doHttpRequest(request, _ => ZIO.unit).unit
+  }
+
   /**
    * Initialize the Jena Fuseki triplestore. Currently only works for
    * 'knora-test' and 'knora-test-unit' repository names. To be used, the
