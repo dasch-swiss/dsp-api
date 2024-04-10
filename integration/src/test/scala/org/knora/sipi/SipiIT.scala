@@ -24,11 +24,81 @@ import scala.util.Try
 import org.knora.sipi.MockDspApiServer.verify._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.common.repo.service.CrudRepository
+import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
+
+final case class KnoraProjectRepoInMemory(projects: Ref[Chunk[KnoraProject]])
+    extends AbstractInMemoryCrudRepository[KnoraProject, ProjectIri](projects, _.id)
+    with KnoraProjectRepo {
+
+  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
+    _.find(id match {
+      case ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
+      case ShortnameIdentifier(shortname) => _.shortname == shortname
+      case IriIdentifier(iri)             => _.id.value == iri.value
+    }),
+  )
+}
+
+abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[Chunk[Entity]], getId: Entity => Id)
+    extends CrudRepository[Entity, Id] {
+
+  /**
+   * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the entity instance completely.
+   *
+   * @param entity The entity to be saved.
+   * @return the saved entity.
+   */
+  override def save(entity: Entity): Task[Entity] = entities.update(_.appended(entity)).as(entity)
+
+  /**
+   * Deletes a given entity.
+   *
+   * @param entity The entity to be deleted
+   */
+  override def delete(entity: Entity): Task[Unit] = deleteById(getId(entity))
+
+  /**
+   * Deletes the entity with the given id.
+   * If the entity is not found in the persistence store it is silently ignored.
+   *
+   * @param id The identifier to the entity to be deleted
+   */
+  override def deleteById(id: Id): Task[Unit] = entities.update(_.filterNot(getId(_) == id))
+
+  /**
+   * Retrieves an entity by its id.
+   *
+   * @param id The identifier of type [[Id]].
+   * @return the entity with the given id or [[None]] if none found.
+   */
+  override def findById(id: Id): Task[Option[Entity]] = entities.get.map(_.find(getId(_) == id))
+
+  /**
+   * Returns all instances of the type.
+   *
+   * @return all instances of the type.
+   */
+  override def findAll(): Task[Chunk[Entity]] = entities.get
+}
+
+object KnoraProjectRepoInMemory {
+  val layer: ULayer[KnoraProjectRepoInMemory] =
+    ZLayer.fromZIO(Ref.make(Chunk.empty[KnoraProject]).map(KnoraProjectRepoInMemory(_)))
+}
 
 object SipiIT extends ZIOSpecDefault {
 
@@ -46,7 +116,13 @@ object SipiIT extends ZIOSpecDefault {
     ZIO
       .serviceWithZIO[JwtService](_.createJwt(SystemUser))
       .map(_.jwtString)
-      .provide(JwtServiceLive.layer, AppConfig.layer)
+      .provide(
+        JwtServiceLive.layer,
+        AppConfig.layer,
+        KnoraProjectService.layer,
+        CacheService.layer,
+        KnoraProjectRepoInMemory.layer,
+      )
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(
