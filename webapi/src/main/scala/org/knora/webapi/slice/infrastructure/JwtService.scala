@@ -35,10 +35,14 @@ import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectAdminAll
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateAll
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.infrastructure.Scope
 import org.knora.webapi.slice.infrastructure.ScopeValue
+import org.knora.webapi.slice.infrastructure.ScopeValue.Write
 import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
@@ -90,10 +94,8 @@ final case class JwtServiceLive(
   override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
     val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
     else { Set("Knora", "Sipi") }
-    for {
-      scope <- calculateScope(user)
-      token <- createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)), scope = scope)
-    } yield token
+    calculateScope(user)
+      .flatMap(scope => createJwtToken(jwtConfig.issuerAsString(), user.id, audience, scope, Some(JsObject(content))))
   }
 
   private def calculateScope(user: User) =
@@ -102,25 +104,21 @@ final case class JwtServiceLive(
 
   private def mapUserPermissionsToScope(user: User): UIO[Scope] =
     ZIO
-      .foreach(user.permissions.administrativePermissionsPerProject.toSeq) { case (iriStr, permission) =>
+      .foreach(user.permissions.administrativePermissionsPerProject.toSeq) { case (prjIri, permission) =>
         knoraProjectService
-          .findById(ProjectIri.unsafeFrom(iriStr))
+          .findById(ProjectIri.unsafeFrom(prjIri))
           .orDie
-          .map(_.map(prj => mapPermissionToScope(permission, prj.shortcode)).getOrElse(Seq.empty))
+          .map(_.map(prj => mapPermissionToScope(permission, prj.shortcode)).getOrElse(Set.empty))
       }
       .map(scopeValues => Scope.from(scopeValues.flatten))
 
-  private def mapPermissionToScope(permission: Set[PermissionADM], shortcode: Shortcode): Seq[ScopeValue.Write] =
-    permission.toSeq
+  private def mapPermissionToScope(permission: Set[PermissionADM], shortcode: Shortcode): Set[ScopeValue] =
+    permission
       .map(_.name)
       .flatMap(Administrative.fromToken)
       .flatMap {
-        case Administrative.ProjectResourceCreateAll        => Some(ScopeValue.Write(shortcode))
-        case Administrative.ProjectResourceCreateRestricted => Some(ScopeValue.Write(shortcode))
-        case Administrative.ProjectAdminAll                 => Some(ScopeValue.Write(shortcode))
-        case Administrative.ProjectAdminGroupAll            => None
-        case Administrative.ProjectAdminGroupRestricted     => None
-        case Administrative.ProjectAdminRightsAll           => None
+        case ProjectResourceCreateAll | ProjectResourceCreateRestricted | ProjectAdminAll => Some(Write(shortcode))
+        case _                                                                            => None
       }
 
   override def createJwtForDspIngest(): UIO[Jwt] =
@@ -128,17 +126,17 @@ final case class JwtServiceLive(
       jwtConfig.issuerAsString(),
       jwtConfig.issuerAsString(),
       Set(dspIngestConfig.audience),
+      Scope.admin,
       expiration = Some(10.minutes),
-      scope = Scope.admin,
     )
 
   private def createJwtToken(
-    issuer: String,
-    subject: String,
-    audience: Set[String],
+    issuer: IRI,
+    subject: IRI,
+    audience: Set[IRI],
+    scope: Scope,
     content: Option[JsObject] = None,
     expiration: Option[Duration] = None,
-    scope: Scope,
   ) =
     for {
       now  <- Clock.instant
@@ -179,7 +177,7 @@ final case class JwtServiceLive(
    * @return an optional [[IRI]].
    */
   override def extractUserIriFromToken(token: String): Task[Option[IRI]] =
-    ZIO.attempt(decodeToken(token)).debug.map(_.flatMap { case (_, claims) => claims.subject })
+    ZIO.attempt(decodeToken(token)).map(_.flatMap { case (_, claims) => claims.subject })
 
   /**
    * Decodes and validates a JWT token.

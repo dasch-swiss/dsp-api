@@ -62,7 +62,7 @@ object ScopeJs {
   implicit val decoder: JsonDecoder[ScopeJs] = DeriveJsonDecoder.gen[ScopeJs]
 }
 
-object JwtServiceSpec extends ZIOSpecDefault {
+object JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private val JwtService = ZIO.serviceWithZIO[JwtService]
 
@@ -235,6 +235,5 @@ object JwtServiceSpec extends ZIOSpecDefault {
     KnoraProjectService.layer,
     dspIngestConfigLayer,
     jwtConfigLayer,
-  ) @@ TestAspect.withLiveEnvironment @@ TestAspect
-    .beforeAll(initCache)
+  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(initCache)
 }

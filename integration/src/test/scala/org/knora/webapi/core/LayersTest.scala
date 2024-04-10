@@ -99,8 +99,8 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      AdminModule.layer,
       AdminApiModule.layer,
+      AdminModule.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppRouter.layer,
@@ -114,6 +114,7 @@ object LayersTest {
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
+      DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
       HandlerMapper.layer,
@@ -122,10 +123,12 @@ object LayersTest {
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
+      JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       KnoraUserToUserConverter.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
+      ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
@@ -149,20 +152,17 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
+      SipiServiceTestDelegator.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
+      StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
       UsersResponder.layer,
       ValuesResponderV2Live.layer,
-      ManagementEndpoints.layer,
-      JwtServiceLive.layer,
-      SipiServiceTestDelegator.layer,
-      StringFormatter.live,
-      DspIngestClientLive.layer,
     )
 
   private val fusekiAndSipiTestcontainers =

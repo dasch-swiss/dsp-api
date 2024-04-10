@@ -37,6 +37,7 @@ object WhichSipiService {
 
 /**
  * A delegator for the Sipi service, used in tests.
+ * Depending on the [[WhichSipiService]] configuration, it delegates to either the [[SipiServiceLive]] or the [[SipiServiceMock]].
  */
 case class SipiServiceTestDelegator(
   private val whichSipi: WhichSipiService,
@@ -117,6 +118,6 @@ case class SipiServiceTestDelegator(
 }
 
 object SipiServiceTestDelegator {
-  val layer: ZLayer[AppConfig & DspIngestClient & JwtService with WhichSipiService, Nothing, SipiService] =
+  val layer: ZLayer[AppConfig & DspIngestClient & JwtService & WhichSipiService, Nothing, SipiService] =
     SipiServiceMock.layer >+> SipiServiceLive.layer >>> ZLayer.derive[SipiServiceTestDelegator]
 }

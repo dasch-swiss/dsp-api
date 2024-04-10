@@ -8,16 +8,17 @@ package org.knora.webapi.slice.infrastructure
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 
-final case class Scope(values: Set[ScopeValue]) {
-  self =>
-  def toScopeString: String = values.map(_.toScopeString).mkString(" ")
-  def +(add: ScopeValue): Scope =
-    if (values.contains(Admin) || add == Admin) {
+final case class Scope(values: Set[ScopeValue]) { self =>
+
+  def toScopeString: String = self.values.map(_.toScopeString).mkString(" ")
+
+  def +(addThis: ScopeValue): Scope =
+    if (self.values.contains(Admin) || addThis == Admin) {
       Scope(Set(Admin))
     } else {
-      values.find(_.merge(add).size == 1) match {
-        case Some(value) => Scope(values - value ++ value.merge(add))
-        case None        => Scope(values + add)
+      values.find(_.merge(addThis).size == 1) match {
+        case Some(value) => Scope(self.values - value ++ value.merge(addThis))
+        case None        => Scope(self.values + addThis)
       }
     }
 }
@@ -26,7 +27,6 @@ object Scope {
   val empty: Scope = Scope(Set.empty)
   val admin: Scope = Scope(Set(ScopeValue.Admin))
 
-  def from(scopeValue: ScopeValue): Scope       = Scope(Set(scopeValue))
   def from(scopeValues: Seq[ScopeValue]): Scope = scopeValues.foldLeft(Scope.empty)(_ + _)
 }
 
@@ -50,11 +50,10 @@ object ScopeValue {
 
   def merge(one: ScopeValue, two: ScopeValue): Set[ScopeValue] =
     (one, two) match {
-      case (Admin, _)                         => Set(Admin)
-      case (_, Admin)                         => Set(Admin)
+      case (Admin, _) | (_, Admin)            => Set(Admin)
       case (Write(p1), Write(p2)) if p1 == p2 => Set(Write(p1))
-      case (Read(p1), Write(p2)) if p1 == p2  => Set(Write(p1))
       case (Write(p1), Read(p2)) if p1 == p2  => Set(Write(p1))
+      case (Read(p1), Write(p2)) if p1 == p2  => Set(Write(p1))
       case (Read(p1), Read(p2)) if p1 == p2   => Set(Read(p1))
       case (a, b)                             => Set(a, b)
     }

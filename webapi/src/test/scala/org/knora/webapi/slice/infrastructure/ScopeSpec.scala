@@ -22,8 +22,8 @@ object ScopeSpec extends ZIOSpecDefault {
   private val readScopeValue2  = ScopeValue.Read(prj2)
   private val writeScopeValue2 = ScopeValue.Write(prj2)
 
-  private val scopeValueSuite = suite("scope values")(
-    test("merging any scope value with Admin should return Admin") {
+  private val scopeValueSuite = suite("ScopeValue")(
+    test("merging any ScopeValue with Admin should return Admin") {
       val adminScopeValue           = Admin
       val expected: Set[ScopeValue] = Set(Admin)
       check(Gen.fromIterable(Seq(Admin, ScopeValue.Read(prj1), ScopeValue.Write(prj2)))) { (other: ScopeValue) =>
@@ -77,7 +77,7 @@ object ScopeSpec extends ZIOSpecDefault {
     },
   )
 
-  private val scopeSuite = suite("ScopeSpec")(
+  private val scopeSuite = suite("Scope")(
     test("adding a value to an empty scope") {
       val scope = Scope.empty
       check(Gen.fromIterable(Seq(Admin, readScopeValue1, writeScopeValue1, readScopeValue2, writeScopeValue2))) {

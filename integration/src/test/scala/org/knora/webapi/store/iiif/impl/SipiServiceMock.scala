@@ -72,5 +72,5 @@ case class SipiServiceMock() extends SipiService {
 }
 
 object SipiServiceMock {
-  val layer: ZLayer[Any, Nothing, SipiServiceMock] = ZLayer.succeed(SipiServiceMock())
+  val layer: ULayer[SipiServiceMock] = ZLayer.succeed(SipiServiceMock())
 }
