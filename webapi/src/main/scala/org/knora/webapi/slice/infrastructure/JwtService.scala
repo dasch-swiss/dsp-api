@@ -90,13 +90,11 @@ final case class JwtServiceLive(
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
+  private val audience                = Set("Knora", "Sipi", dspIngestConfig.audience)
 
-  override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
-    val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
-    else { Set("Knora", "Sipi") }
+  override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
     calculateScope(user)
       .flatMap(scope => createJwtToken(jwtConfig.issuerAsString(), user.id, audience, scope, Some(JsObject(content))))
-  }
 
   private def calculateScope(user: User) =
     if (user.isSystemAdmin || user.isSystemUser) { ZIO.succeed(Scope.admin) }
