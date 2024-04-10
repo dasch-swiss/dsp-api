@@ -18,21 +18,26 @@ import zio.Duration
 import zio.Random
 import zio.Task
 import zio.UIO
-import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.durationInt
 
 import scala.util.Failure
 import scala.util.Success
+
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.infrastructure.Scope
+import org.knora.webapi.slice.infrastructure.ScopeValue
 import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
@@ -75,6 +80,7 @@ trait JwtService {
 final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
   private val dspIngestConfig: DspIngestConfig,
+  private val knoraProjectService: KnoraProjectService,
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -83,13 +89,40 @@ final case class JwtServiceLive(
   override def createJwt(user: User, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
     val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
     else { Set("Knora", "Sipi") }
-    val scope = if (user.isSystemAdmin) {
-      Scope.admin
-    } else {
-      Scope.empty
-    }
-    createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)), scope = scope)
+    for {
+      scope <- calculateScope(user)
+      token <- createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)), scope = scope)
+    } yield token
   }
+
+  private def calculateScope(user: User) =
+    if (user.isSystemAdmin || user.isSystemUser) {
+      ZIO.succeed(Scope.admin)
+    } else {
+      val foo: ZIO[Any, Nothing, Map[KnoraProject.Shortcode, Set[Option[ScopeValue.Write]]]] = ZIO
+        .foreach(user.permissions.administrativePermissionsPerProject) { case (iriStr, permission) =>
+          for {
+            project  <- knoraProjectService.findById(ProjectIri.unsafeFrom(iriStr)).orDie
+            shortcode = project.get.shortcode
+            scopeValues =
+              permission
+                .map(_.name)
+                .flatMap(Administrative.fromToken)
+                .map {
+                  case Administrative.ProjectResourceCreateAll        => Some(ScopeValue.Write(shortcode))
+                  case Administrative.ProjectResourceCreateRestricted => Some(ScopeValue.Write(shortcode))
+                  case Administrative.ProjectAdminAll                 => Some(ScopeValue.Write(shortcode))
+                  case Administrative.ProjectAdminGroupAll            => None
+                  case Administrative.ProjectAdminGroupRestricted     => None
+                  case Administrative.ProjectAdminRightsAll           => None
+                }
+          } yield (shortcode, scopeValues)
+        }
+      for {
+        scopeValues <- foo.map(_.values.flatten.flatten)
+        scope        = scopeValues.foldLeft(Scope.empty)(_ + _)
+      } yield scope
+    }
 
   override def createJwtForDspIngest(): UIO[Jwt] =
     createJwtToken(
@@ -97,6 +130,7 @@ final case class JwtServiceLive(
       jwtConfig.issuerAsString(),
       Set(dspIngestConfig.audience),
       expiration = Some(10.minutes),
+      scope = Scope.admin,
     )
 
   private def createJwtToken(
@@ -105,7 +139,7 @@ final case class JwtServiceLive(
     audience: Set[String],
     content: Option[JsObject] = None,
     expiration: Option[Duration] = None,
-    scope: Scope = Scope.empty,
+    scope: Scope,
   ) =
     for {
       now  <- Clock.instant
@@ -179,7 +213,7 @@ final case class JwtServiceLive(
         None
     }
 }
+
 object JwtServiceLive {
-  val layer: URLayer[DspIngestConfig & JwtConfig, JwtServiceLive] =
-    ZLayer.fromFunction(JwtServiceLive.apply _)
+  val layer = ZLayer.derive[JwtServiceLive]
 }

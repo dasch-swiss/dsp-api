@@ -6,11 +6,13 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
+import org.knora.sipi.SipiServiceTestDelegator
+import org.knora.sipi.WhichSipiService
 import zio._
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -59,8 +61,6 @@ import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.SipiServiceLive
-import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -82,7 +82,7 @@ object LayersTest {
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images
 
   type CommonR0 =
-    pekko.actor.ActorSystem & AppConfigurationsTest & JwtService & SipiService & StringFormatter
+    pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
 
   type CommonR =
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
@@ -94,7 +94,7 @@ object LayersTest {
       ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
       RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
-      UserService & UsersResponder & UsersRestService & ValuesResponderV2
+      UserService & UsersResponder & UsersRestService & ValuesResponderV2 & JwtService & SipiService & StringFormatter
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
@@ -113,7 +113,6 @@ object LayersTest {
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
-      DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADM.layer,
       HandlerMapper.layer,
@@ -159,31 +158,29 @@ object LayersTest {
       UsersResponder.layer,
       ValuesResponderV2Live.layer,
       ManagementEndpoints.layer,
+      JwtServiceLive.layer,
+      SipiServiceTestDelegator.layer,
+      StringFormatter.live,
+      DspIngestClientLive.layer,
     )
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & JwtService & SharedVolumes.Images &
-        SipiService & SipiTestContainer & StringFormatter,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer & WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
-      DspIngestClientLive.layer,
       DspIngestTestContainer.layer,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
-      SipiServiceLive.layer,
-      JwtServiceLive.layer,
       SharedVolumes.Images.layer,
-      StringFormatter.test,
+      WhichSipiService.live,
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer & AppConfigurations & JwtService & SipiService & StringFormatter](
+    ZLayer.make[FusekiTestContainer & AppConfigurations & WhichSipiService](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
-      SipiServiceMock.layer,
-      JwtServiceLive.layer,
-      StringFormatter.test,
+      WhichSipiService.mock,
     )
 
   /**

@@ -5,24 +5,14 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import dsp.valueobjects.UuidUtil
 import net.sf.ehcache.CacheManager
-import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
 import pdi.jwt.JwtZIOJson
 import spray.json.JsString
 import zio.IO
+import zio.NonEmptyChunk
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
@@ -40,6 +30,32 @@ import zio.test.check
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.store.cache.CacheService
 
 final case class ScopeJs(scope: String)
 object ScopeJs {
@@ -68,6 +84,26 @@ object JwtServiceSpec extends ZIOSpecDefault {
   private val systemAdminPermissions = PermissionsDataADM(
     groupsPerProject =
       Map(KnoraProjectRepo.builtIn.SystemProject.id.value -> Seq(KnoraGroupRepo.builtIn.SystemAdmin.id.value)),
+  )
+
+  private val shortcode  = Shortcode.unsafeFrom("0001")
+  private val projectIri = ProjectIri.makeNew
+  private val project1 = KnoraProject(
+    projectIri,
+    Shortname.unsafeFrom("project1"),
+    shortcode,
+    None,
+    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.unsafeFrom("foo", None))),
+    List.empty,
+    None,
+    Status.Active,
+    SelfJoin.CannotJoin,
+    RestrictedView.default,
+  )
+
+  private val projectAdminProject1Permissions = PermissionsDataADM(
+    administrativePermissionsPerProject =
+      Map(project1.id.value -> Set(PermissionADM.from(Administrative.ProjectAdminAll))),
   )
 
   private val issuerStr = "https://dsp-api"
@@ -116,6 +152,19 @@ object JwtServiceSpec extends ZIOSpecDefault {
         token <- JwtService(_.createJwt(user.copy(permissions = systemAdminPermissions)))
         scope <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(scope == "admin")
+    },
+    test("create a token for dspIngest") {
+      for {
+        token <- JwtService(_.createJwtForDspIngest())
+        scope <- getScopeClaimValue(token.jwtString)
+      } yield assertTrue(scope == "admin")
+    },
+    test("create a token with admin scope for project admins") {
+      for {
+        _     <- ZIO.serviceWithZIO[KnoraProjectRepo](_.save(project1))
+        token <- JwtService(_.createJwt(user.copy(permissions = projectAdminProject1Permissions)))
+        scope <- getScopeClaimValue(token.jwtString)
+      } yield assertTrue(scope == "write:project:0001")
     },
     test("create a token with dsp-ingest audience for sys admins") {
       for {
@@ -174,7 +223,13 @@ object JwtServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(!isValid)
       }
     },
-  ).provide(dspIngestConfigLayer, jwtConfigLayer, JwtServiceLive.layer) @@ TestAspect.withLiveEnvironment @@ TestAspect
+  ).provide(
+    CacheService.layer,
+    JwtServiceLive.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    dspIngestConfigLayer,
+    jwtConfigLayer,
+  ) @@ TestAspect.withLiveEnvironment @@ TestAspect
     .beforeAll(initCache)
-
 }
