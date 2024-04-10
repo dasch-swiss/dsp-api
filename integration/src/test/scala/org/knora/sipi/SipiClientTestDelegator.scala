@@ -1,4 +1,14 @@
+/*
+ * Copyright © 2021 - 2024 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.sipi
+
+import zio.Task
+import zio.ULayer
+import zio.ZLayer
+import zio.nio.file.Path
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
@@ -17,10 +27,6 @@ import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
-import zio.Task
-import zio.ULayer
-import zio.ZLayer
-import zio.nio.file.Path
 
 case class WhichSipiService(useLive: Boolean)
 
