@@ -9,6 +9,7 @@ import zio._
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -17,8 +18,6 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrProjectAdminInAnyProject
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemAdminOrUser
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isSystemOrProjectAdmin
-
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 final case class AuthorizationRestService(
   knoraProjectService: KnoraProjectService,

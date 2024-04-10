@@ -132,7 +132,7 @@ object LayersLive {
       PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
-      ProjectImportServiceLive.layer,
+      ProjectImportService.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
