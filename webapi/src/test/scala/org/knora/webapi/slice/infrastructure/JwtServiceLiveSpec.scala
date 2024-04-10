@@ -38,8 +38,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -55,6 +53,8 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.store.cache.CacheService
 
 final case class ScopeJs(scope: String)

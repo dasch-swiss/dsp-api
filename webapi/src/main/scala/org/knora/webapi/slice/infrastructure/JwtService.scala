@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.infrastructure
 
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory

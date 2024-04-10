@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
