@@ -6,21 +6,10 @@
 package org.knora.webapi.slice.infrastructure
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 
 final case class Scope(values: Set[ScopeValue]) { self =>
-
-  def toScopeString: String = self.values.map(_.toScopeString).mkString(" ")
-
-  def +(addThis: ScopeValue): Scope =
-    if (self.values.contains(Admin) || addThis == Admin) {
-      Scope(Set(Admin))
-    } else {
-      values.find(_.merge(addThis).size == 1) match {
-        case Some(value) => Scope(self.values - value ++ value.merge(addThis))
-        case None        => Scope(self.values + addThis)
-      }
-    }
+  def toScopeString: String         = self.values.map(_.toScopeString).mkString(" ")
+  def +(addThis: ScopeValue): Scope = Scope(values.foldLeft(Set(addThis)) { case (s, old) => s.flatMap(_.merge(old)) })
 }
 
 object Scope {
