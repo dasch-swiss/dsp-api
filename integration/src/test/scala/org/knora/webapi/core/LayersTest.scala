@@ -85,16 +85,58 @@ object LayersTest {
     pekko.actor.ActorSystem & AppConfigurationsTest & JwtService & SipiService & StringFormatter
 
   type CommonR =
-    ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
-      AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService &
-      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & KnoraUserToUserConverter & ListsResponder &
-      ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionRestService & ProjectExportService &
-      ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
-      RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
-      SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
-      UserService & UsersResponder & UserRestService & ValuesResponderV2
+    AdminApiEndpoints &
+      ApiRoutes &
+      ApiV2Endpoints &
+      AppRouter &
+      AssetPermissionsResponder &
+      Authenticator &
+      AuthorizationRestService &
+      CacheServiceRequestMessageHandler &
+      CardinalityHandler &
+      ConstructResponseUtilV2 &
+      DspIngestClient &
+      GravsearchTypeInspectionRunner &
+      GroupRestService &
+      GroupService &
+      GroupsResponderADM &
+      HttpServer &
+      IIIFRequestMessageHandler &
+      InferenceOptimizationService &
+      IriConverter &
+      KnoraUserToUserConverter &
+      ListsResponder &
+      ListsResponderV2 &
+      MessageRelay &
+      OntologyCache &
+      OntologyHelpers &
+      OntologyInferencer &
+      OntologyRepo &
+      OntologyResponderV2 &
+      PermissionRestService &
+      PermissionUtilADM &
+      PermissionsResponder &
+      ProjectExportService &
+      ProjectExportStorageService &
+      ProjectImportService &
+      ProjectRestService &
+      ProjectService &
+      QueryTraverser &
+      RepositoryUpdater &
+      ResourceUtilV2 &
+      ResourcesResponderV2 &
+      RestCardinalityService &
+      SearchApiRoutes &
+      SearchResponderV2 &
+      StandoffResponderV2 &
+      StandoffTagUtilV2 &
+      State &
+      TestClientService &
+      TriplestoreService &
+      UserRestService &
+      UserService &
+      UsersResponder &
+      ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](

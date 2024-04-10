@@ -70,18 +70,62 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
-    ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
-      AssetPermissionsResponder & Authenticator & AuthorizationRestService &
-      CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService & HttpServer &
-      IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
-      JwtService & KnoraUserToUserConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyInferencer & OntologyResponderV2 & PermissionsResponder & PermissionRestService &
-      PermissionUtilADM & ProjectService & ProjectExportService & ProjectExportStorageService &
-      ProjectImportService & ProjectRestService & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
-      ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &
-      SearchResponderV2 & SipiService & StandoffResponderV2 & StandoffTagUtilV2 & State & StringFormatter &
-      TriplestoreService & UserService & UsersResponder & UserRestService & ValuesResponderV2
+    ActorSystem &
+      AdminApiEndpoints &
+      ApiRoutes &
+      ApiV2Endpoints &
+      AppConfigurations &
+      AppRouter &
+      AssetPermissionsResponder &
+      Authenticator &
+      AuthorizationRestService &
+      CacheServiceRequestMessageHandler &
+      CardinalityHandler &
+      ConstructResponseUtilV2 &
+      GravsearchTypeInspectionRunner &
+      GroupRestService &
+      GroupService &
+      GroupsResponderADM &
+      HttpServer &
+      IIIFRequestMessageHandler &
+      InferenceOptimizationService &
+      InstrumentationServerConfig &
+      IriConverter &
+      JwtService &
+      KnoraUserToUserConverter &
+      ListsResponder &
+      ListsResponderV2 &
+      MessageRelay &
+      OntologyCache &
+      OntologyHelpers &
+      OntologyInferencer &
+      OntologyResponderV2 &
+      PermissionRestService &
+      PermissionUtilADM &
+      PermissionsResponder &
+      ProjectExportService &
+      ProjectExportStorageService &
+      ProjectImportService &
+      ProjectRestService &
+      ProjectService &
+      QueryTraverser &
+      RepositoryUpdater &
+      ResourceUtilV2 &
+      ResourceUtilV2 &
+      ResourcesResponderV2 &
+      RestCardinalityService &
+      SearchApiRoutes &
+      SearchResponderV2 &
+      SipiService &
+      StandoffResponderV2 &
+      StandoffTagUtilV2 &
+      State &
+      StringFormatter &
+      TriplestoreService &
+      UserRestService &
+      UserService &
+      UsersResponder &
+      ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`
