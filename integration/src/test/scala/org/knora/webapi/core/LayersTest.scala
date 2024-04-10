@@ -32,7 +32,7 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.GroupRestService
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
@@ -90,7 +90,7 @@ object LayersTest {
       DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService &
       HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & KnoraUserToUserConverter & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionsRestService & ProjectExportService &
+      OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionRestService & ProjectExportService &
       ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
       RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
       SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &

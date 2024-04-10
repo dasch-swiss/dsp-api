@@ -34,7 +34,7 @@ import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.GroupRestService
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
 import org.knora.webapi.slice.admin.domain.service._
@@ -76,7 +76,7 @@ object LayersLive {
       GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       JwtService & KnoraUserToUserConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyInferencer & OntologyResponderV2 & PermissionsResponder & PermissionsRestService &
+      OntologyInferencer & OntologyResponderV2 & PermissionsResponder & PermissionRestService &
       PermissionUtilADM & ProjectService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectRestService & QueryTraverser & RepositoryUpdater & ResourcesResponderV2 &
       ResourceUtilV2 & ResourceUtilV2 & RestCardinalityService & SearchApiRoutes &

@@ -15,7 +15,7 @@ import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.admin.UsersResponder
 import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.StoreRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
@@ -47,7 +47,7 @@ object AdminApiModule {
 
   type Provided = AdminApiEndpoints & AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
-    GroupRestService & UsersRestService & ProjectRestService & PermissionsRestService
+    GroupRestService & UsersRestService & ProjectRestService & PermissionRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](
@@ -66,7 +66,7 @@ object AdminApiModule {
       MaintenanceEndpointsHandlers.layer,
       PermissionsEndpoints.layer,
       PermissionsEndpointsHandlers.layer,
-      PermissionsRestService.layer,
+      PermissionRestService.layer,
       ProjectRestService.layer,
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,

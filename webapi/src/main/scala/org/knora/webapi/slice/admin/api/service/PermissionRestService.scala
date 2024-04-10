@@ -39,7 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class PermissionsRestService(
+final case class PermissionRestService(
   responder: PermissionsResponder,
   knoraProjectService: KnoraProjectService,
   auth: AuthorizationRestService,
@@ -188,18 +188,18 @@ final case class PermissionsRestService(
     } yield ext
 }
 
-object PermissionsRestService {
+object PermissionRestService {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
     user: User,
-  ): ZIO[PermissionsRestService, Throwable, AdministrativePermissionCreateResponseADM] =
+  ): ZIO[PermissionRestService, Throwable, AdministrativePermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
 
   def createDefaultObjectAccessPermission(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
     user: User,
-  ): ZIO[PermissionsRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
+  ): ZIO[PermissionRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
 
-  val layer = ZLayer.derive[PermissionsRestService]
+  val layer = ZLayer.derive[PermissionRestService]
 }
