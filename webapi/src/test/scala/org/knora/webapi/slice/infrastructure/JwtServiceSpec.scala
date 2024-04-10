@@ -183,7 +183,12 @@ object JwtServiceSpec extends ZIOSpecDefault {
         token    <- JwtService(_.createJwtForDspIngest())
         userIri  <- getClaim(token.jwtString, _.subject)
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
-      } yield assertTrue(userIri.contains(issuerStr), audience.contains("https://dsp-ingest/audience"))
+        scope    <- getScopeClaimValue(token.jwtString)
+      } yield assertTrue(
+        userIri.contains(issuerStr),
+        audience.contains("https://dsp-ingest/audience"),
+        scope == "admin",
+      )
     },
     test("validate a self issued token") {
       for {
