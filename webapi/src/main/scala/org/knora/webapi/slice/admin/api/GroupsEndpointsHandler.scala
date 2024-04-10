@@ -10,16 +10,16 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.PublicEndpointHandler
 import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class GroupsEndpointsHandler(
-  endpoints: GroupsEndpoints,
-  restService: GroupsRestService,
-  mapper: HandlerMapper,
+                                   endpoints: GroupsEndpoints,
+                                   restService: GroupRestService,
+                                   mapper: HandlerMapper,
 ) {
   private val getGroupsHandler =
     PublicEndpointHandler(

@@ -18,7 +18,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -33,7 +33,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec {
-  private val groupRestService = ZIO.serviceWithZIO[GroupsRestService]
+  private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]
 
   "The GroupsResponder " when {

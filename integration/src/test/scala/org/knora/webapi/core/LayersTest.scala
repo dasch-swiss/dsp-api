@@ -31,7 +31,7 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
@@ -87,7 +87,7 @@ object LayersTest {
   type CommonR =
     ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
       AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService &
+      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService &
       HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & KnoraUserToUserConverter & ListsResponder &
       ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
       OntologyResponderV2 & PermissionUtilADM & PermissionsResponder & PermissionsRestService & ProjectExportService &

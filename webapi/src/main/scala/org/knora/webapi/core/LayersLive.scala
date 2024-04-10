@@ -33,7 +33,7 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UsersRestService
@@ -73,7 +73,7 @@ object LayersLive {
     ActorSystem & AdminApiEndpoints & ApiRoutes & ApiV2Endpoints & AppConfigurations & AppRouter &
       AssetPermissionsResponder & Authenticator & AuthorizationRestService &
       CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService & HttpServer &
+      GravsearchTypeInspectionRunner & GroupsResponderADM & GroupRestService & GroupService & HttpServer &
       IIIFRequestMessageHandler & InferenceOptimizationService & InstrumentationServerConfig & IriConverter &
       JwtService & KnoraUserToUserConverter & ListsResponder & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyInferencer & OntologyResponderV2 & PermissionsResponder & PermissionsRestService &
