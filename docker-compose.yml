@@ -10,7 +10,9 @@ services:
       - knora-net
 
   db:
-    image: daschswiss/apache-jena-fuseki:2.1.5 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    # should be the same version as in Dependencies.scala,
+    # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
+    image: daschswiss/apache-jena-fuseki:5.0.0-1
     ports:
       - "3030:3030"
     volumes:
