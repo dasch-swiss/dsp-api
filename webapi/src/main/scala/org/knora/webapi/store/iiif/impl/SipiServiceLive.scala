@@ -412,7 +412,7 @@ object SipiServiceLive {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig & DspIngestClient & JwtService, SipiService] =
+  val layer: URLayer[AppConfig & DspIngestClient & JwtService, SipiServiceLive] =
     ZLayer.scoped {
       for {
         config          <- ZIO.serviceWith[AppConfig](_.sipi)
