@@ -58,8 +58,8 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
   )
 
-  private val PermissionsRestService = ZIO.serviceWithZIO[PermissionRestService]
-  private val PermissionsResponder   = ZIO.serviceWithZIO[PermissionsResponder]
+  private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
+  private val permissionsResponder  = ZIO.serviceWithZIO[PermissionsResponder]
 
   "The PermissionsResponderADM" when {
 
@@ -67,7 +67,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return all Permission.Administrative for project" in {
         val result = UnsafeZioRun.runOrThrow(
-          PermissionsResponder(_.getPermissionsApByProjectIri(imagesProjectIri)),
+          permissionsResponder(_.getPermissionsApByProjectIri(imagesProjectIri)),
         )
         result shouldEqual AdministrativePermissionsForProjectGetResponseADM(
           Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p),
@@ -76,7 +76,7 @@ class PermissionsResponderSpec extends CoreSpec with ImplicitSender {
 
       "return Permission.Administrative for project and group" in {
         val result = UnsafeZioRun.runOrThrow(
-          PermissionsRestService(
+          permissionRestService(
             _.getPermissionsApByProjectAndGroupIri(
               ProjectIri.unsafeFrom(imagesProjectIri),
               KnoraGroupRepo.builtIn.ProjectMember.id,
