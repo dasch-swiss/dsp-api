@@ -37,7 +37,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-class UsersRestServiceSpec extends CoreSpec with ImplicitSender {
+class UserRestServiceSpec extends CoreSpec with ImplicitSender {
 
   private val rootUser   = SharedTestDataADM.rootUser
   private val normalUser = SharedTestDataADM.normalUser
