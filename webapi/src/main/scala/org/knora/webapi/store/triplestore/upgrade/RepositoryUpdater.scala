@@ -97,7 +97,8 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   private def scheduleCompact: Task[Nothing] =
     compact.repeat(Schedule.fixed(40.minutes)).forever
 
-  private def compact: Task[Unit] = triplestoreService.compact()
+  private def compact: Task[Unit] =
+    ZIO.logInfo("Triggered compaction.") *> triplestoreService.compact()
 
   private def getDataGraphs: Task[Seq[String]] =
     for {
