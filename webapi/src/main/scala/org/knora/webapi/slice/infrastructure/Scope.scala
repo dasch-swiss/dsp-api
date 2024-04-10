@@ -26,8 +26,8 @@ object Scope {
   val empty: Scope = Scope(Set.empty)
   val admin: Scope = Scope(Set(ScopeValue.Admin))
 
-  def from(scopeValue: ScopeValue)       = Scope(Set(scopeValue))
-  def from(scopeValues: Seq[ScopeValue]) = scopeValues.foldLeft(Scope.empty)(_ + _)
+  def from(scopeValue: ScopeValue): Scope       = Scope(Set(scopeValue))
+  def from(scopeValues: Seq[ScopeValue]): Scope = scopeValues.foldLeft(Scope.empty)(_ + _)
 }
 
 sealed trait ScopeValue {
