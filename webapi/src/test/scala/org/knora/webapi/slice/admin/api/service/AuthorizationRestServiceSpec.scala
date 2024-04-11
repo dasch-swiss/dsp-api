@@ -9,7 +9,6 @@ import zio.Exit
 import zio.ZIO
 import zio.test.Assertion.failsWithA
 import zio.test._
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM

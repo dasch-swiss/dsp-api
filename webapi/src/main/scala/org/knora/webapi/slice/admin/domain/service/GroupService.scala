@@ -8,6 +8,8 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.ZIO
 import zio._
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.Project
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
@@ -36,6 +38,12 @@ final case class GroupService(
       status = knoraGroup.status.value,
       selfjoin = knoraGroup.hasSelfJoinEnabled.value,
     )
+
+  def createGroup(request: GroupCreateRequest, project: Project): Task[Group] =
+    for {
+      knoraGroup <- knoraGroupService.createGroup(request, project)
+      group      <- toGroup(knoraGroup)
+    } yield group
 }
 
 object GroupService {

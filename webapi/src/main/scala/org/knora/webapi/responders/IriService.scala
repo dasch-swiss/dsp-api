@@ -15,6 +15,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -70,6 +72,15 @@ final case class IriService(
                    .fromEither(UserIri.from(userIriStr))
                    .orElseFail(BadRequestException(s"Invalid User IRI: $userIriStr"))
     } yield userIri
+
+  def checkOrCreateNewGroupIri(entityIri: Option[GroupIri], shortcode: Shortcode): Task[GroupIri] =
+    for {
+      iriToSmartIri            <- ZIO.foreach(entityIri.map(_.value))(iriConverter.asSmartIri)
+      checkedCustomIriOrNewIri <- checkOrCreateEntityIri(iriToSmartIri, GroupIri.makeNew(shortcode).value)
+      iri <- ZIO
+               .fromEither(GroupIri.from(checkedCustomIriOrNewIri))
+               .orElseFail(BadRequestException(s"Invalid Group IRI: $checkedCustomIriOrNewIri"))
+    } yield iri
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
