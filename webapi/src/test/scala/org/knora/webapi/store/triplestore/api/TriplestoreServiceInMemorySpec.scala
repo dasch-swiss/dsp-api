@@ -57,7 +57,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
       suite("DROP")(
         test("dropDataGraphByGraph") {
           for {
-            _ <- TriplestoreService.dropDataGraphByGraph()
+            _ <- ZIO.serviceWithZIO[TriplestoreService](_.dropDataGraphByGraph())
             query = s"""
                        |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                        |                          
@@ -65,7 +65,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                        |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                        |}
                        |""".stripMargin
-            result <- TriplestoreService.query(Ask(query))
+            result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))
           } yield assertTrue(!result)
         },
       ),
@@ -82,7 +82,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |}
                |""".stripMargin
           for {
-            response <- TriplestoreService.query(Construct(query))
+            response <- ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query)))
           } yield assertTrue(
             response.statements ==
               Map(
@@ -108,7 +108,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             sf       <- ZIO.service[StringFormatter]
-            response <- TriplestoreService.query(Construct(query)).flatMap(_.asExtended(sf))
+            response <- ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query))).flatMap(_.asExtended(sf))
           } yield {
             val subject: SubjectV2 = IriSubjectV2(value = "http://anArticle")
             assertTrue(
@@ -141,8 +141,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                           |}
                           |""".stripMargin
         for {
-          _      <- TriplestoreService.query(Update(updateQuery))
-          result <- TriplestoreService.query(Ask(askQuery))
+          _      <- ZIO.serviceWithZIO[TriplestoreService](_.query(Update(updateQuery)))
+          result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(askQuery)))
         } yield assertTrue(result)
       }),
       suite("ASK")(
@@ -154,8 +154,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                          |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                          |}
                          |""".stripMargin
-          TriplestoreService
-            .query(Ask(query))
+          ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))
             .map(result => assertTrue(result))
         },
         test("should return false if thing does not exist") {
@@ -168,7 +167,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.query(Ask(query)).negate
+            result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query))).negate
           } yield assertTrue(result)
         },
       ),
@@ -187,7 +186,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |}
                            |""".stripMargin
             for {
-              result <- TriplestoreService.query(Select(query))
+              result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
               hasSameElements(List("http://anArticle")),
             )
@@ -205,7 +204,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |}
                            |""".stripMargin
             for {
-              result <- TriplestoreService.query(Select(query))
+              result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
               hasSameElements(List("http://anArticle", "http://aJournalArticle")),
             )
@@ -221,7 +220,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.query(Select(query))
+            result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
           } yield assertTrue(result.results.bindings.isEmpty)
         },
         test("find an existing thing") {
@@ -234,7 +233,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.query(Select(query))
+            result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(query)))
           } yield assertTrue(
             result == SparqlSelectResult(
               SparqlSelectResultHeader(List("p", "o")),
@@ -255,14 +254,14 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
       suite("insertDataIntoTriplestore")(
         test("given an empty list insertDataIntoTriplestore will insert the defaults") {
           for {
-            _       <- TriplestoreService.insertDataIntoTriplestore(List.empty, prependDefaults = true)
+            _       <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(List.empty, prependDefaults = true))
             ds      <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
             contains = DefaultRdfData.data.map(_.name).map(namedModelExists(ds, _)).forall(_ == true)
           } yield assertTrue(contains)
         },
         test("given an empty list insertDataIntoTriplestore will insert the defauls") {
           for {
-            _ <- TriplestoreService.insertDataIntoTriplestore(
+            _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(
                    List(
                      RdfDataObject(
                        path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
@@ -270,7 +269,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                      ),
                    ),
                    prependDefaults = false,
-                 )
+                 ))
             ds                <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
             containsAdmin      = namedModelExists(ds, "http://www.knora.org/ontology/knora-admin")
             doesNotContainBase = !namedModelExists(ds, "http://www.knora.org/ontology/knora-base")
@@ -283,7 +282,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         val testFile = zio.nio.file.Path.fromJava(tempDir.toAbsolutePath.resolve("test.ttl"))
         ZIO.scoped {
           for {
-            _ <- TriplestoreService.insertDataIntoTriplestore(
+            _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(
                    List(
                      RdfDataObject(
                        path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
@@ -291,12 +290,12 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                      ),
                    ),
                    prependDefaults = false,
-                 )
-            _ <- TriplestoreService.downloadGraph(
+                 ))
+            _ <- ZIO.serviceWithZIO[TriplestoreService](_.downloadGraph(
                    InternalIri("http://www.knora.org/ontology/knora-base"),
                    testFile,
                    TriG,
-                 )
+                 ))
           } yield assertTrue({ val fileExists = Files.exists(testFile.toFile.toPath); fileExists })
         }
       }),

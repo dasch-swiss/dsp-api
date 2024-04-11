@@ -529,7 +529,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
     val actual = UnsafeZioRun.runOrThrow(
-      TriplestoreService.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid))),
+      ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid)))),
     )
     actual.results.bindings.map(_.rowMap("standoffTag")).toSet
   }
@@ -2345,13 +2345,13 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       for (erasedIriToCheck <- erasedIrisToCheck) {
         val query = sparql.admin.txt.checkIriExists(erasedIriToCheck.toString)
-        UnsafeZioRun.runOrThrow(TriplestoreService.query(Ask(query))) should be(false)
+        UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
       }
 
       // Check that the deleted link value that pointed to the resource has also been erased.
       val query =
         sparql.v2.txt.isEntityUsed(resourceIriToErase.get.toSmartIri.toInternalIri, ignoreKnoraConstraints = true)
-      UnsafeZioRun.runOrThrow(TriplestoreService.query(Ask(query))) should be(false)
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))) should be(false)
     }
   }
   "When given a custom IRI" should {

@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2.ontology
 
 import java.util.UUID
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -22,6 +21,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import zio.ZIO
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
@@ -53,7 +53,7 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
           |  ?blanknode owl:onProperty <$propertyIri>
           |}
           |""".stripMargin
-    val result = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlCountQuery)))
+    val result = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlCountQuery))))
     result.results.bindings.head.rowMap.values.head
   }
 

@@ -5784,7 +5784,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        TriplestoreService.query(
+        ZIO.serviceWithZIO[TriplestoreService](_.query(
           Select(
             """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -5796,7 +5796,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               |  ?restriction owl:onProperty ?cardinalityProp .
               |}""".stripMargin,
           ),
-        ),
+        )),
       )
 
       assert(
@@ -6088,7 +6088,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        TriplestoreService.query(
+        ZIO.serviceWithZIO[TriplestoreService](_.query(
           Select(
             """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -6100,7 +6100,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
               |  ?restriction owl:onProperty ?cardinalityProp .
               |}""".stripMargin,
           ),
-        ),
+        )),
       )
 
       assert(

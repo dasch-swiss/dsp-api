@@ -366,7 +366,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |}
          |""".stripMargin
 
-    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
+    val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlQuery))))
 
     val rows = actual.results.bindings
     if (rows.isEmpty) {
@@ -387,7 +387,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
          |}""".stripMargin
 
-    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
+    val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlQuery))))
 
     val rows = actual.results.bindings
     if (rows.isEmpty) {
