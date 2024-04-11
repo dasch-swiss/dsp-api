@@ -288,18 +288,12 @@ final case class ProjectRestService(
     exportInfo <- projectExportService.exportProject(project).logError
   } yield exportInfo
 
-  def importProject(
-    shortcode: Shortcode,
-    user: User,
-  ): Task[ProjectImportResponse] = for {
+  def importProject(shortcode: Shortcode, user: User): Task[ProjectImportResponse] = for {
     _ <- auth.ensureSystemAdmin(user)
-    path <-
-      projectImportService
-        .importProject(shortcode, user)
-        .flatMap {
-          case Some(export) => export.toAbsolutePath.map(_.toString)
-          case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
-        }
+    path <- projectImportService.importProject(shortcode).flatMap {
+              case Some(export) => export.toAbsolutePath.map(_.toString)
+              case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
+            }
   } yield ProjectImportResponse(path)
 
   def listExports(user: User): Task[Chunk[ProjectExportInfoResponse]] = for {

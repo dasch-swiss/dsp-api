@@ -140,22 +140,24 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .fromOption(params.get("resourceClass"))
         .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
         .flatMap(iri =>
-          IriConverter.asSmartIri(iri).orElseFail(BadRequestException(s"Invalid resource class IRI: $iri")),
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(iri))
+            .orElseFail(BadRequestException(s"Invalid resource class IRI: $iri")),
         )
         .filterOrElseWith(it => it.isKnoraApiV2EntityIri && it.isApiV2ComplexSchema)(it =>
           ZIO.fail(BadRequestException(s"Invalid resource class IRI: $it")),
         )
-        .flatMap(IriConverter.asInternalSmartIri)
+        .flatMap(it => ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(it)))
 
       val getOrderByProperty: ZIO[IriConverter, Throwable, Option[SmartIri]] =
         ZIO.foreach(params.get("orderByProperty")) { orderByPropertyStr =>
-          IriConverter
-            .asSmartIri(orderByPropertyStr)
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(orderByPropertyStr))
             .orElseFail(BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
             .filterOrFail(iri => iri.isKnoraApiV2EntityIri && iri.isApiV2ComplexSchema)(
               BadRequestException(s"Invalid property IRI: $orderByPropertyStr"),
             )
-            .flatMap(IriConverter.asInternalSmartIri)
+            .flatMap(it => ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(it)))
         }
 
       val getPage = ZIO
@@ -346,8 +348,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       val getExcludeProperty: ZIO[IriConverter, BadRequestException, Option[SmartIri]] = params
         .get(ExcludeProperty)
         .map(propIriStr =>
-          IriConverter
-            .asSmartIri(propIriStr)
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(propIriStr))
             .mapBoth(_ => BadRequestException(s"Invalid property IRI: <$propIriStr>"), Some(_)),
         )
         .getOrElse(ZIO.none)
@@ -415,8 +417,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       .fromOption(params.get(Text_Property))
       .orElseFail(BadRequestException(s"param $Text_Property not set"))
       .flatMap { textPropIriStr =>
-        IriConverter
-          .asSmartIri(textPropIriStr)
+        ZIO
+          .serviceWithZIO[IriConverter](_.asSmartIri(textPropIriStr))
           .orElseFail(BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
           .filterOrFail(_.isKnoraApiV2EntityIri)(
             BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI"),

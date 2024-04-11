@@ -957,7 +957,7 @@ object UpdateResourceMetadataRequestV2 {
     obj: JsonLDObject,
   ): ZIO[IriConverter, BadRequestException, Option[Instant]] = {
     val getTimeStamp = for {
-      tsDataType <- IriConverter.asSmartIri(Xsd.DateTimeStamp).orDie
+      tsDataType <- ZIO.serviceWithZIO[IriConverter](_.asSmartIri(Xsd.DateTimeStamp)).orDie
       tsString   <- obj.getDataTypeValueInObject(key, tsDataType)
       tsDate <- ZIO.foreach(tsString)(tsStr =>
                   ZIO
