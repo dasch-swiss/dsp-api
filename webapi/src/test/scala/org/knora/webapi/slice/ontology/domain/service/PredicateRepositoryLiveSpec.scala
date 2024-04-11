@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.domain.service
 import org.apache.jena.query.Dataset
 import zio.Ref
+import zio.ZIO
 import zio.ZLayer
 import zio.test.Assertion._
 import zio.test._
@@ -64,9 +65,11 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is not used by any instance of the class then return empty List") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
-              Biblio.Property.hasTitle,
-              Biblio.Class.Publication,
+            ZIO.serviceWithZIO[PredicateRepository](
+              _.getCountForPropertyUsedNumberOfTimesWithClass(
+                Biblio.Property.hasTitle,
+                Biblio.Class.Publication,
+              ),
             )
         } yield assertTrue(result == List.empty)
       },
@@ -75,9 +78,11 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is in use by a single instance of the class return this instance with a count of one") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
-              Biblio.Property.hasTitle,
-              Biblio.Class.Publication,
+            ZIO.serviceWithZIO[PredicateRepository](
+              _.getCountForPropertyUsedNumberOfTimesWithClass(
+                Biblio.Property.hasTitle,
+                Biblio.Class.Publication,
+              ),
             )
         } yield assertTrue(result == List((InternalIri("http://aPublication"), 1)))
       },
@@ -86,9 +91,11 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is in use by multiple instances of the class return each instance and the times used") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
-              Biblio.Property.hasTitle,
-              Biblio.Class.Publication,
+            ZIO.serviceWithZIO[PredicateRepository](
+              _.getCountForPropertyUsedNumberOfTimesWithClass(
+                Biblio.Property.hasTitle,
+                Biblio.Class.Publication,
+              ),
             )
         } yield assert(result)(
           hasSameElements(

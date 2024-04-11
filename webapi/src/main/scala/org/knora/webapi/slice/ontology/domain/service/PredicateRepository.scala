@@ -7,11 +7,9 @@ package org.knora.webapi.slice.ontology.domain.service
 
 import zio.Task
 import zio.ZIO
-import zio.macros.accessible
 
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
-@accessible
 trait PredicateRepository {
 
   /**

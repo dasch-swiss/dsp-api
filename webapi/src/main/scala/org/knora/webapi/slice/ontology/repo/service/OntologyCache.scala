@@ -7,7 +7,6 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-import zio.macros.accessible
 
 import java.time.Instant
 
@@ -425,7 +424,6 @@ object OntologyCache {
 
 }
 
-@accessible
 trait OntologyCache {
 
   /**

@@ -287,7 +287,8 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
         val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, newPassword.value)
-        val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
+        val resF =
+          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(credentials))))
 
         resF map { res => assert(res) }
       }
@@ -309,7 +310,8 @@ class UserRestServiceSpec extends CoreSpec with ImplicitSender {
         // need to be able to authenticate credentials with new password
         val cedId       = CredentialsIdentifier.UsernameIdentifier(Username.unsafeFrom(normalUser.username))
         val credentials = KnoraCredentialsV2.KnoraPasswordCredentialsV2(cedId, "test654321")
-        val resF        = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(credentials)))
+        val resF =
+          UnsafeZioRun.runToFuture(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(credentials))))
 
         resF map { res => assert(res) }
       }
