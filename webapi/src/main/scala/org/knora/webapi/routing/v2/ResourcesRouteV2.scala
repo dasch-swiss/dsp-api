@@ -89,7 +89,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
                            .validateAndEscapeIri(resourceIriStr)
                            .toZIO
                            .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
-          user <- Authenticator.getUserADM(requestContext)
+          user <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourceIIIFManifestGetRequestV2(resourceIri, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -101,7 +101,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         {
           val requestTask = for {
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             header          = "X-Asset-Ingested"
             ingestState = if (requestContext.request.headers.exists(_.name == header)) AssetIngested
@@ -122,7 +122,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         {
           val requestMessageFuture = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage
@@ -183,7 +183,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         targetSchema <- targetSchemaTask.zip(RouteUtilV2.getSchemaOptions(requestContext)).map {
                           case (schema, options) => SchemaRendering(schema, options)
                         }
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         response <- ZIO.serviceWithZIO[SearchResponderV2](
                       _.searchResourcesByProjectAndClassV2(
                         projectIri,
@@ -216,7 +216,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           resourceIri    <- getResourceIri
           startDate      <- getStartDate
           endDate        <- getEndDate
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourceVersionHistoryGetRequestV2(
           resourceIri,
           withDeletedResource = false,
@@ -246,8 +246,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
   private def getResourceHistoryEvents(): Route =
     path(resourcesBasePath / "resourceHistoryEvents" / Segment) { (resourceIri: IRI) =>
       get { requestContext =>
-        val requestTask = Authenticator
-          .getUserADM(requestContext)
+        val requestTask = ZIO
+          .serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           .map(ResourceHistoryEventsGetRequestV2(resourceIri, _))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -257,7 +257,9 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     path(resourcesBasePath / "projectHistoryEvents" / Segment) { (projectIri: IRI) =>
       get { requestContext =>
         val requestTask =
-          Authenticator.getUserADM(requestContext).map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
+          ZIO
+            .serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+            .map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
@@ -272,7 +274,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         resourceIris   <- getResourceIris(resIris)
         versionDate    <- getInstantFromParams(params, "version", "version date", versionDateParser)
         targetSchema   <- targetSchemaTask
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         schemaOptions  <- schemaOptionsTask
       } yield ResourcesGetRequestV2(
         resourceIris,
@@ -303,7 +305,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         val requestTask = for {
           resourceIris <- getResourceIris(resIris)
           targetSchema <- targetSchemaTask
-          user         <- Authenticator.getUserADM(requestContext)
+          user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourcesPreviewGetRequestV2(resourceIris, withDeletedResource = true, targetSchema, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
@@ -323,7 +325,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         textProperty          <- getTextPropertyFromParams(params)
         gravsearchTemplateIri <- getGravsearchTemplateIriFromParams(params)
         headerXSLTIri         <- getHeaderXSLTIriFromParams(params)
-        user                  <- Authenticator.getUserADM(requestContext)
+        user                  <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, user)
       RouteUtilV2.runTEIXMLRoute(requestTask, requestContext)
     }
@@ -368,7 +370,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         excludeProperty    <- getExcludeProperty
         t                  <- getInboundOutbound
         (inbound, outbound) = t
-        requestingUser     <- Authenticator.getUserADM(requestContext)
+        requestingUser     <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, requestingUser)
       RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
@@ -381,7 +383,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           val requestTask = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             msg            <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
@@ -397,7 +399,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           val requestTask = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage.copy(erase = true)
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)

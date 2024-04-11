@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko
+import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -35,13 +36,13 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
     rdfDataObjs: List[RdfDataObject],
   ): Either[Status.Failure, SuccessResponseV2] = {
     UnsafeZioRun.runOrThrow(
-      TriplestoreService
-        .resetTripleStoreContent(rdfDataObjs)
+      ZIO
+        .serviceWithZIO[TriplestoreService](_.resetTripleStoreContent(rdfDataObjs))
         .timeout(java.time.Duration.ofMinutes(5)),
     )
 
     UnsafeZioRun
-      .run(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      .run(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
       .toEither
       .map(_ => SuccessResponseV2("OK"))
       .left

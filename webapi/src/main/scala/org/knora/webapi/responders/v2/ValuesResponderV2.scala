@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import org.apache.pekko.http.scaladsl.util.FastFuture
 import zio._
-import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
@@ -54,7 +53,6 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Handles requests to read and write Knora values.
  */
-@accessible
 trait ValuesResponderV2 {
   def createValueV2(
     createValue: CreateValueV2,

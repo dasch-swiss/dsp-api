@@ -6,6 +6,7 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import zio.ZIO
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -181,8 +182,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
 
     "authenticate with token in cookie" in {
-      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
-      val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, token.get)
+      val KnoraAuthenticationCookieName =
+        UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
+      val cookieHeader = headers.Cookie(KnoraAuthenticationCookieName, token.get)
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(request)
@@ -190,8 +192,9 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
 
     "fail authentication with invalid token in cookie" in {
-      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
-      val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, "not_a_valid_token")
+      val KnoraAuthenticationCookieName =
+        UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
+      val cookieHeader = headers.Cookie(KnoraAuthenticationCookieName, "not_a_valid_token")
 
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(request)

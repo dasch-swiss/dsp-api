@@ -57,7 +57,7 @@ final case class ValuesRouteV2()(
                              )
                              .orElseFail(BadRequestException(s"Invalid version date: $versionStr"))
                          }
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           targetSchema   <- targetSchemaTask
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
@@ -82,10 +82,11 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(ctx)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               valueToCreate  <- CreateValueV2.fromJsonLd(AssetIngestState.AssetInTemp, jsonLdString, requestingUser)
-              response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -100,10 +101,11 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(ctx)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               updateValue    <- UpdateValueV2.fromJsonLd(jsonLdString, requestingUser)
-              response       <- ValuesResponderV2.updateValueV2(updateValue, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.updateValueV2(updateValue, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -118,10 +120,11 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               apiRequestId   <- RouteUtilZ.randomUuid()
               deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
-              response       <- ValuesResponderV2.deleteValueV2(deleteValue, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
             } yield response,
             requestContext,
           )

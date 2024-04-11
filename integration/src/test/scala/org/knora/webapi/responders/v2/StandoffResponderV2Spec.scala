@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko
+import zio.ZIO
 
 import scala.concurrent.duration._
 
@@ -28,7 +29,7 @@ class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
   override implicit val timeout: FiniteDuration = 30.seconds
 
   private def getMapping(iri: String): SparqlConstructResponse =
-    UnsafeZioRun.runOrThrow(TriplestoreService.query(Construct(sparql.v2.txt.getMapping(iri))))
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(sparql.v2.txt.getMapping(iri)))))
 
   "The standoff responder" should {
     "create a standoff mapping" in {

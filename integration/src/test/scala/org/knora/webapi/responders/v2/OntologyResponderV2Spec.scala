@@ -419,7 +419,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
 
       // Reload the ontologies from the triplestore and check again.
-      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         requestingUser = imagesUser,
@@ -777,7 +779,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -885,7 +889,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -3732,7 +3738,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! linkPropGetRequest
 
@@ -5784,17 +5792,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        TriplestoreService.query(
-          Select(
-            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-              |
-              |SELECT ?cardinalityProp
-              |WHERE {
-              |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
-              |  FILTER isBlank(?restriction)
-              |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin,
+        ZIO.serviceWithZIO[TriplestoreService](
+          _.query(
+            Select(
+              """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |
+                |SELECT ?cardinalityProp
+                |WHERE {
+                |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
+                |  FILTER isBlank(?restriction)
+                |  ?restriction owl:onProperty ?cardinalityProp .
+                |}""".stripMargin,
+            ),
           ),
         ),
       )
@@ -6088,17 +6098,19 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        TriplestoreService.query(
-          Select(
-            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-              |
-              |SELECT ?cardinalityProp
-              |WHERE {
-              |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
-              |  FILTER isBlank(?restriction)
-              |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin,
+        ZIO.serviceWithZIO[TriplestoreService](
+          _.query(
+            Select(
+              """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |
+                |SELECT ?cardinalityProp
+                |WHERE {
+                |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
+                |  FILTER isBlank(?restriction)
+                |  ?restriction owl:onProperty ?cardinalityProp .
+                |}""".stripMargin,
+            ),
           ),
         ),
       )
