@@ -5784,19 +5784,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TriplestoreService](_.query(
-          Select(
-            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-              |
-              |SELECT ?cardinalityProp
-              |WHERE {
-              |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
-              |  FILTER isBlank(?restriction)
-              |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin,
+        ZIO.serviceWithZIO[TriplestoreService](
+          _.query(
+            Select(
+              """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |
+                |SELECT ?cardinalityProp
+                |WHERE {
+                |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
+                |  FILTER isBlank(?restriction)
+                |  ?restriction owl:onProperty ?cardinalityProp .
+                |}""".stripMargin,
+            ),
           ),
-        )),
+        ),
       )
 
       assert(
@@ -6088,19 +6090,21 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Check that the correct blank nodes were stored for the cardinalities.
       val actual = UnsafeZioRun.runOrThrow(
-        ZIO.serviceWithZIO[TriplestoreService](_.query(
-          Select(
-            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-              |
-              |SELECT ?cardinalityProp
-              |WHERE {
-              |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
-              |  FILTER isBlank(?restriction)
-              |  ?restriction owl:onProperty ?cardinalityProp .
-              |}""".stripMargin,
+        ZIO.serviceWithZIO[TriplestoreService](
+          _.query(
+            Select(
+              """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |
+                |SELECT ?cardinalityProp
+                |WHERE {
+                |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
+                |  FILTER isBlank(?restriction)
+                |  ?restriction owl:onProperty ?cardinalityProp .
+                |}""".stripMargin,
+            ),
           ),
-        )),
+        ),
       )
 
       assert(

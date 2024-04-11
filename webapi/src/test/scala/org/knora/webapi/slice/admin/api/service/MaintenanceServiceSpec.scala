@@ -56,17 +56,20 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
                            |""".stripMargin)
 
   def queryForDim() = for {
-    rowMap <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(s"""
-                                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |
-                                 |SELECT ?width ?height
-                                 |FROM <$projectDataNamedGraphIri>
-                                 |WHERE {
-                                 |   <$testValueIri> a knora-base:StillImageFileValue ;
-                                 |                   knora-base:dimX ?width ;
-                                 |                   knora-base:dimY ?height .
-                                 |}
-                                 |""".stripMargin)))
+    rowMap <- ZIO
+                .serviceWithZIO[TriplestoreService](
+                  _.query(Select(s"""
+                                    |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                                    |
+                                    |SELECT ?width ?height
+                                    |FROM <$projectDataNamedGraphIri>
+                                    |WHERE {
+                                    |   <$testValueIri> a knora-base:StillImageFileValue ;
+                                    |                   knora-base:dimX ?width ;
+                                    |                   knora-base:dimY ?height .
+                                    |}
+                                    |""".stripMargin)),
+                )
                 .map(_.results.bindings.head.rowMap)
     width  <- ZIO.fromOption(rowMap.get("width").map(_.toInt))
     height <- ZIO.fromOption(rowMap.get("height").map(_.toInt))

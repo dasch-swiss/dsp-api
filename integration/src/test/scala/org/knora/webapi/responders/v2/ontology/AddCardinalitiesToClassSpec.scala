@@ -5,7 +5,10 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import zio.ZIO
+
 import java.util.UUID
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -21,7 +24,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import zio.ZIO
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].

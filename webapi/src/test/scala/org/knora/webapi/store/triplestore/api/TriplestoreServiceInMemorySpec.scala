@@ -154,7 +154,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                          |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                          |}
                          |""".stripMargin
-          ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query)))
+          ZIO
+            .serviceWithZIO[TriplestoreService](_.query(Ask(query)))
             .map(result => assertTrue(result))
         },
         test("should return false if thing does not exist") {
@@ -261,15 +262,17 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         },
         test("given an empty list insertDataIntoTriplestore will insert the defauls") {
           for {
-            _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(
-                   List(
-                     RdfDataObject(
-                       path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
-                       name = "http://www.knora.org/ontology/knora-admin",
+            _ <- ZIO.serviceWithZIO[TriplestoreService](
+                   _.insertDataIntoTriplestore(
+                     List(
+                       RdfDataObject(
+                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         name = "http://www.knora.org/ontology/knora-admin",
+                       ),
                      ),
+                     prependDefaults = false,
                    ),
-                   prependDefaults = false,
-                 ))
+                 )
             ds                <- ZIO.serviceWithZIO[Ref[Dataset]](_.get)
             containsAdmin      = namedModelExists(ds, "http://www.knora.org/ontology/knora-admin")
             doesNotContainBase = !namedModelExists(ds, "http://www.knora.org/ontology/knora-base")
@@ -282,20 +285,24 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         val testFile = zio.nio.file.Path.fromJava(tempDir.toAbsolutePath.resolve("test.ttl"))
         ZIO.scoped {
           for {
-            _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(
-                   List(
-                     RdfDataObject(
-                       path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
-                       name = "http://www.knora.org/ontology/knora-base",
+            _ <- ZIO.serviceWithZIO[TriplestoreService](
+                   _.insertDataIntoTriplestore(
+                     List(
+                       RdfDataObject(
+                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         name = "http://www.knora.org/ontology/knora-base",
+                       ),
                      ),
+                     prependDefaults = false,
                    ),
-                   prependDefaults = false,
-                 ))
-            _ <- ZIO.serviceWithZIO[TriplestoreService](_.downloadGraph(
-                   InternalIri("http://www.knora.org/ontology/knora-base"),
-                   testFile,
-                   TriG,
-                 ))
+                 )
+            _ <- ZIO.serviceWithZIO[TriplestoreService](
+                   _.downloadGraph(
+                     InternalIri("http://www.knora.org/ontology/knora-base"),
+                     testFile,
+                     TriG,
+                   ),
+                 )
           } yield assertTrue({ val fileExists = Files.exists(testFile.toFile.toPath); fileExists })
         }
       }),
