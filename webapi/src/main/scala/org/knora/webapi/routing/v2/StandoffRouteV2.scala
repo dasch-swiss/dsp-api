@@ -75,7 +75,7 @@ final case class StandoffRouteV2()(
             .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
           val requestMessageTask = for {
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             allParts       <- ZIO.fromFuture(_ => allPartsFuture)
             jsonldDoc <-
               ZIO

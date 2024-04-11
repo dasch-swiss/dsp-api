@@ -57,7 +57,7 @@ final case class ValuesRouteV2()(
                              )
                              .orElseFail(BadRequestException(s"Invalid version date: $versionStr"))
                          }
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           targetSchema   <- targetSchemaTask
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
@@ -82,7 +82,7 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(ctx)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               valueToCreate  <- CreateValueV2.fromJsonLd(AssetIngestState.AssetInTemp, jsonLdString, requestingUser)
               response <-
@@ -101,7 +101,7 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(ctx)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(ctx))
               apiRequestId   <- Random.nextUUID
               updateValue    <- UpdateValueV2.fromJsonLd(jsonLdString, requestingUser)
               response <-
@@ -120,7 +120,7 @@ final case class ValuesRouteV2()(
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               apiRequestId   <- RouteUtilZ.randomUuid()
               deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
               response <-

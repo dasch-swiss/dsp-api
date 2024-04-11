@@ -159,7 +159,7 @@ object RouteUtilADM {
   ): ZIO[Authenticator & StringFormatter, Throwable, IriUser] =
     for {
       validatedIri <- validateAndEscape(iri)
-      user         <- Authenticator.getUserADM(requestContext)
+      user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
     } yield IriUser(validatedIri, user)
 
   def validateAndEscape(iri: String): IO[BadRequestException, IRI] =
