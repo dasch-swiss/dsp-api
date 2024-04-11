@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.PasswordChangeRe
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.StatusChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.SystemAdminChangeRequest
 import org.knora.webapi.slice.admin.api.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -26,7 +26,7 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 case class UsersEndpointsHandler(
   usersEndpoints: UsersEndpoints,
-  restService: UsersRestService,
+  restService: UserRestService,
   mapper: HandlerMapper,
 ) {
 

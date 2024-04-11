@@ -39,7 +39,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class UsersRestService(
+final case class UserRestService(
   auth: AuthorizationRestService,
   groupService: GroupService,
   userService: UserService,
@@ -295,6 +295,6 @@ final case class UsersRestService(
     } yield response
 }
 
-object UsersRestService {
-  val layer = ZLayer.derive[UsersRestService]
+object UserRestService {
+  val layer = ZLayer.derive[UserRestService]
 }

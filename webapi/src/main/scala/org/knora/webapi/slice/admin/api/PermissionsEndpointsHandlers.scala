@@ -22,7 +22,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.common.api.HandlerMapper
@@ -30,7 +30,7 @@ import org.knora.webapi.slice.common.api.SecuredEndpointHandler
 
 final case class PermissionsEndpointsHandlers(
   permissionsEndpoints: PermissionsEndpoints,
-  restService: PermissionsRestService,
+  restService: PermissionRestService,
   mapper: HandlerMapper,
 ) {
 

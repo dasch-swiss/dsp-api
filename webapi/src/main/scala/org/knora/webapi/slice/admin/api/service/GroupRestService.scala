@@ -20,7 +20,7 @@ import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class GroupsRestService(
+final case class GroupRestService(
   auth: AuthorizationRestService,
   groupService: GroupService,
   responder: GroupsResponderADM,
@@ -80,6 +80,6 @@ final case class GroupsRestService(
     } yield external
 }
 
-object GroupsRestService {
-  val layer = ZLayer.derive[GroupsRestService]
+object GroupRestService {
+  val layer = ZLayer.derive[GroupRestService]
 }
