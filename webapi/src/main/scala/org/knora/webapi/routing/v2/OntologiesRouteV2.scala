@@ -278,7 +278,8 @@ final case class OntologiesRouteV2()(
           user           <- Authenticator.getUserADM(requestContext)
           property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
           newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
-          canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
+          canChange <-
+            ZIO.serviceWithZIO[RestCardinalityService](_.canChangeCardinality(classIri, user, property, newCardinality))
         } yield canChange
         completeResponse(response, requestContext)
       }
