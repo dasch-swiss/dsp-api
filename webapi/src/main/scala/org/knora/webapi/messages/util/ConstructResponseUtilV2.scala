@@ -424,8 +424,8 @@ final case class ConstructResponseUtilV2Live(
   messageRelay: MessageRelay,
   standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
-  implicit val stringFormatter: StringFormatter,
-) extends ConstructResponseUtilV2 {
+)(implicit val stringFormatter: StringFormatter)
+    extends ConstructResponseUtilV2 {
 
   private val inferredPredicates = Set(
     OntologyConstants.KnoraBase.HasValue,

@@ -77,8 +77,8 @@ final case class CardinalityHandlerLive(
   triplestoreService: TriplestoreService,
   messageRelay: MessageRelay,
   ontologyHelpers: OntologyHelpers,
-  implicit val stringFormatter: StringFormatter,
-) extends CardinalityHandler {
+)(implicit val stringFormatter: StringFormatter)
+    extends CardinalityHandler {
 
   /**
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
@@ -487,8 +487,5 @@ final case class CardinalityHandlerLive(
 }
 
 object CardinalityHandlerLive {
-  val layer: URLayer[
-    OntologyCache & TriplestoreService & MessageRelay & OntologyHelpers & StringFormatter,
-    CardinalityHandler,
-  ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
+  val layer = ZLayer.derive[CardinalityHandlerLive]
 }
