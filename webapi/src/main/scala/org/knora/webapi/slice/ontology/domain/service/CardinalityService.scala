@@ -8,7 +8,6 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
@@ -28,7 +27,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.EitherUtil.joinOnLeft
 import org.knora.webapi.util.EitherUtil.joinOnLeftList
 
-@accessible
 trait CardinalityService {
 
   /**
