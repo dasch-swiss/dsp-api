@@ -85,7 +85,8 @@ final case class ValuesRouteV2()(
               requestingUser <- Authenticator.getUserADM(ctx)
               apiRequestId   <- Random.nextUUID
               valueToCreate  <- CreateValueV2.fromJsonLd(AssetIngestState.AssetInTemp, jsonLdString, requestingUser)
-              response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(valueToCreate, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -103,7 +104,8 @@ final case class ValuesRouteV2()(
               requestingUser <- Authenticator.getUserADM(ctx)
               apiRequestId   <- Random.nextUUID
               updateValue    <- UpdateValueV2.fromJsonLd(jsonLdString, requestingUser)
-              response       <- ValuesResponderV2.updateValueV2(updateValue, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.updateValueV2(updateValue, requestingUser, apiRequestId))
             } yield response,
             ctx,
           )
@@ -121,7 +123,8 @@ final case class ValuesRouteV2()(
               requestingUser <- Authenticator.getUserADM(requestContext)
               apiRequestId   <- RouteUtilZ.randomUuid()
               deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
-              response       <- ValuesResponderV2.deleteValueV2(deleteValue, requestingUser, apiRequestId)
+              response <-
+                ZIO.serviceWithZIO[ValuesResponderV2](_.deleteValueV2(deleteValue, requestingUser, apiRequestId))
             } yield response,
             requestContext,
           )

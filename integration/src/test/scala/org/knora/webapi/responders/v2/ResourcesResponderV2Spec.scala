@@ -2187,22 +2187,24 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Update the value.
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueIri = firstValueIriToErase.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is some other text with standoff"),
-              standoff = Vector(sampleStandoffForErasingResource.head),
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = resourceClassIri,
+              propertyIri = propertyIri,
+              valueIri = firstValueIriToErase.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some("this is some other text with standoff"),
+                standoff = Vector(sampleStandoffForErasingResource.head),
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            anythingUserProfile,
+            UUID.randomUUID,
           ),
-          anythingUserProfile,
-          UUID.randomUUID,
         ),
       )
       secondValueIriToErase.set(updateValueResponse.valueIri)
@@ -2301,16 +2303,18 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Delete the link.
       UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.deleteValueV2(
-          DeleteValueV2(
-            resourceIri = resourceWithLinkIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = linkValuePropertyIri,
-            valueIri = linkValue.valueIri,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.deleteValueV2(
+            DeleteValueV2(
+              resourceIri = resourceWithLinkIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = linkValuePropertyIri,
+              valueIri = linkValue.valueIri,
+              valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+            ),
+            anythingUserProfile,
+            UUID.randomUUID(),
           ),
-          anythingUserProfile,
-          UUID.randomUUID(),
         ),
       )
     }
@@ -2490,17 +2494,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Update the value permission.
       val updateValuePermissionResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValuePermissionsV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-            valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValuePermissionsV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
+            ),
+            anythingUserProfile,
+            UUID.randomUUID,
           ),
-          anythingUserProfile,
-          UUID.randomUUID,
         ),
       )
 
@@ -2527,20 +2533,22 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       // create new value.
 
       UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(testValue),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(testValue),
+              ),
+              valueIri = Some(newValueIri.toSmartIri),
+              permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
             ),
-            valueIri = Some(newValueIri.toSmartIri),
-            permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser"),
+            requestingUser = anythingUserProfile,
+            apiRequestID = UUID.randomUUID,
           ),
-          requestingUser = anythingUserProfile,
-          apiRequestID = UUID.randomUUID,
         ),
       )
 
@@ -2575,17 +2583,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // delete the new value.
       UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.deleteValueV2(
-          DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-            valueIri = valueToDelete,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-            deleteComment = Some(deleteComment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.deleteValueV2(
+            DeleteValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+              valueIri = valueToDelete,
+              valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+              deleteComment = Some(deleteComment),
+            ),
+            anythingUserProfile,
+            UUID.randomUUID,
           ),
-          anythingUserProfile,
-          UUID.randomUUID,
         ),
       )
 
