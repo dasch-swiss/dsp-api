@@ -5,58 +5,59 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
+import zio.ZIO
 import zio.test._
 
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object IriConverterLiveSpec extends ZIOSpecDefault {
 
-  private val someInternalIri: IRI = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val someExternalIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+  private val iriConverter    = ZIO.serviceWithZIO[IriConverter]
+  private val someInternalIri = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val someExternalIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
 
   def spec: Spec[Any, Throwable] =
-    suite("IriConverter")(
+    suite("iriConverter(_")(
       suite("asInternalIri(IRI)")(
         test("should not convert an already internal iri") {
           for {
-            actual <- IriConverter.asInternalIri(someInternalIri)
+            actual <- iriConverter(_.asInternalIri(someInternalIri))
           } yield assertTrue(actual == InternalIri(someInternalIri))
         },
         test("should convert an external resourceClassIri to the internal representation") {
           for {
-            actual <- IriConverter.asInternalIri(someExternalIri)
+            actual <- iriConverter(_.asInternalIri(someExternalIri))
           } yield assertTrue(actual == InternalIri(someInternalIri))
         },
         test("should fail if String is no IRI") {
           for {
-            actual <- IriConverter.asInternalIri("notAnIRI").exit
+            actual <- iriConverter(_.asInternalIri("notAnIRI")).exit
           } yield assertTrue(actual.isFailure)
         },
       ),
       suite("asSmartIri(IRI)")(
         test("when provided an internal Iri should return correct SmartIri") {
           for {
-            actual <- IriConverter.asSmartIri(someInternalIri)
+            actual <- iriConverter(_.asSmartIri(someInternalIri))
           } yield assertTrue(actual.toIri == someInternalIri)
         },
         test("when provided an external Iri should return correct SmartIri") {
           for {
-            actual <- IriConverter.asSmartIri(someExternalIri)
+            actual <- iriConverter(_.asSmartIri(someExternalIri))
           } yield assertTrue(actual.toIri == someExternalIri)
         },
       ),
       suite("asInternalSmartIri(InternalIri)")(
         test("should return correct SmartIri") {
           for {
-            actual <- IriConverter.asInternalSmartIri(someInternalIri)
+            actual <- iriConverter(_.asInternalSmartIri(someInternalIri))
           } yield assertTrue(actual.toIri == someInternalIri)
         },
         test("when provided an external Iri should return converted iri") {
           for {
-            actual <- IriConverter.asInternalSmartIri(someExternalIri)
+            actual <- iriConverter(_.asInternalSmartIri(someExternalIri))
           } yield assertTrue(actual.toIri == someInternalIri)
         },
       ),

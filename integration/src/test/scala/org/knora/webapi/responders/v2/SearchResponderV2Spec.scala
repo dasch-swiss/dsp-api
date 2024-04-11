@@ -31,6 +31,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 class SearchResponderV2Spec extends CoreSpec {
 
+  private val iriConverter                              = ZIO.serviceWithZIO[IriConverter]
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -225,8 +226,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
       val actual = UnsafeZioRun.runOrThrow {
         for {
-          limitToResourceClass <- IriConverter
-                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+          limitToResourceClass <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0803/incunabula#book"))
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
           result <- searchResourcesByLabelV2(
@@ -246,8 +246,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
       val actual = UnsafeZioRun.runOrThrow {
         for {
-          limitToResourceClass <- IriConverter
-                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+          limitToResourceClass <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0803/incunabula#book"))
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
           result <- searchResourcesByLabelV2(
@@ -268,8 +267,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
       val actual = UnsafeZioRun.runOrThrow {
         for {
-          limitToResourceClass <- IriConverter
-                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+          limitToResourceClass <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0803/incunabula#book"))
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
           result <- searchResourcesByLabelCountV2(
@@ -288,8 +286,7 @@ class SearchResponderV2Spec extends CoreSpec {
 
       val actual = UnsafeZioRun.runOrThrow {
         for {
-          limitToResourceClass <- IriConverter
-                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+          limitToResourceClass <- iriConverter(_.asSmartIri("http://www.knora.org/ontology/0803/incunabula#book"))
                                     .mapAttempt(_.toOntologySchema(ApiV2Complex))
                                     .map(Some(_))
           result <- searchResourcesByLabelCountV2(

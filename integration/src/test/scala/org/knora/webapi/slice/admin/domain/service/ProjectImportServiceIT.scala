@@ -19,7 +19,8 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
 
-  private val repositoryName = "knora-test"
+  private val projectImportService = ZIO.serviceWithZIO[ProjectImportService]
+  private val repositoryName       = "knora-test"
 
   private val storageServiceLayer: Layer[IOException, ProjectExportStorageServiceLive] = ZLayer.fromZIO {
     for {
@@ -28,7 +29,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
   }
 
   private val importServiceTestLayer
-    : URLayer[FusekiTestContainer with ProjectExportStorageService, ProjectImportServiceLive] = ZLayer.fromZIO {
+    : URLayer[FusekiTestContainer with ProjectExportStorageService, ProjectImportService] = ZLayer.fromZIO {
     (for {
       exportStorageService <- ZIO.service[ProjectExportStorageService]
       container            <- ZIO.service[FusekiTestContainer]
@@ -49,7 +50,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           ),
           profileQueries = false,
         )
-    } yield ProjectImportServiceLive(config, exportStorageService, dspIngestClient))
+    } yield ProjectImportService(config, exportStorageService, dspIngestClient))
       .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](DspIngestClientITMock.layer)
   }
 
@@ -70,9 +71,9 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
 
           filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
-          _        <- ProjectImportService.importTrigFile(filePath)
-          nrResultsInNamedGraph <- ProjectImportService
-                                     .querySelect(
+          _        <- projectImportService(_.importTrigFile(filePath))
+          nrResultsInNamedGraph <- projectImportService(
+                                     _.querySelect(
                                        """
                                          |SELECT ?subject ?predicate ?object
                                          |FROM NAMED <http://example.org/graph>
@@ -82,17 +83,19 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
                                          |  }
                                          |}
                                          |""".stripMargin,
-                                     )
+                                     ),
+                                   )
                                      .map(_.rewindable.size())
-          nrResultsInDefaultGraph <- ProjectImportService
-                                       .querySelect(
+          nrResultsInDefaultGraph <- projectImportService(
+                                       _.querySelect(
                                          """
                                            |SELECT ?subject ?predicate ?object
                                            |WHERE {
                                            |  ?subject ?predicate ?object.
                                            |}
                                            |""".stripMargin,
-                                       )
+                                       ),
+                                     )
                                        .map(_.rewindable.size())
           _ <- ZIO.logDebug("loaded")
         } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)

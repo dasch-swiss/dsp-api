@@ -6,7 +6,6 @@
 package org.knora.webapi.core
 
 import zio._
-import zio.macros.accessible
 
 import org.knora.webapi.messages.ResponderRequest
 
@@ -28,7 +27,6 @@ trait RelayedMessage extends ResponderRequest
  * However, with the current architecture there are some circular dependencies between the responders and
  * the router such that breaking these up is a task for after the ZIO migration.
  */
-@accessible
 trait MessageRelay {
 
   /**

@@ -131,7 +131,7 @@ object RouteUtilADM {
     request: KnoraRequestADM,
   ): ZIO[StringFormatter & MessageRelay, Throwable, HttpResponse] =
     for {
-      knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
+      knoraResponse         <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseADM](request))
       knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
     } yield HttpResponse(
       OK,
