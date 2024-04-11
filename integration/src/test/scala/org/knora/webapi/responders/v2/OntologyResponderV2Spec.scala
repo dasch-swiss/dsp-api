@@ -779,7 +779,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -887,7 +889,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -3734,7 +3738,9 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
+      UnsafeZioRun.runOrThrow(
+        ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)),
+      )
 
       appActor ! linkPropGetRequest
 

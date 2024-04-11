@@ -8,9 +8,11 @@ package org.knora.webapi.slice.ontology.domain
 import org.apache.jena.query.Dataset
 import zio.Random
 import zio.Ref
+import zio.ZIO
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test._
+
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -27,7 +29,6 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
 import org.knora.webapi.store.triplestore.TestDatasetBuilder._
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
-import zio.ZIO
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
 

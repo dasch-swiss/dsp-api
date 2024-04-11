@@ -5,7 +5,10 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import zio.ZIO
+
 import java.time.Instant
+
 import dsp.constants.SalsahGui
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
@@ -21,7 +24,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import zio.ZIO
 
 /**
  * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
