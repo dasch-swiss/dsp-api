@@ -44,7 +44,7 @@ object AppRouter {
                 OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
             ]
           ref = system.actorOf(
-                  Props(core.actors.RoutingActor(messageRelay, runtime)).withRouter(new RoundRobinPool(1_000)),
+                  Props(core.actors.RoutingActor(messageRelay)(runtime)).withRouter(new RoundRobinPool(1_000)),
                   "applicationManager",
                 )
         } yield AppRouter(system, ref),

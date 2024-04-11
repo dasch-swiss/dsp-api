@@ -33,7 +33,7 @@ object ScopeValue {
     override def toScopeString: String = s"write:project:${project.value}"
   }
 
-  final case object Admin extends ScopeValue {
+  case object Admin extends ScopeValue {
     override def toScopeString: String = "admin"
   }
 

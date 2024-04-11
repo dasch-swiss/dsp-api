@@ -51,8 +51,7 @@ final case class ListsResponder(
   knoraProjectService: KnoraProjectService,
   mapper: PredicateObjectMapper,
   triplestore: TriplestoreService,
-  implicit val stringFormatter: StringFormatter,
-) {
+)(implicit val stringFormatter: StringFormatter) {
 
   // The IRI used to lock user creation and update
   private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
