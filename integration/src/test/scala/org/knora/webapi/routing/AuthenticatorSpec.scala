@@ -7,6 +7,7 @@ package org.knora.webapi.routing
 
 import org.apache.pekko.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
+import zio.ZIO
 
 import dsp.errors.BadCredentialsException
 import org.knora.webapi._
@@ -39,19 +40,23 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
         val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
         val correctPasswordCreds = KnoraPasswordCredentialsV2(credId, AuthenticatorSpec.rootUserPassword)
         val isAuthenticated =
-          UnsafeZioRun.runOrThrow(Authenticator.authenticateCredentialsV2(Some(correctPasswordCreds)))
+          UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(correctPasswordCreds))),
+          )
         assert(isAuthenticated)
       }
       "fail with unknown email" in {
         val invalidCredId     = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom("wrongemail@example.com"))
         val invalidEmailCreds = KnoraPasswordCredentialsV2(invalidCredId, "wrongpassword")
-        val resF              = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidEmailCreds)))
+        val resF =
+          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidEmailCreds))))
         assertFailsWithA[BadCredentialsException](resF)
       }
       "fail with wrong password" in {
         val credId               = CredentialsIdentifier.EmailIdentifier(Email.unsafeFrom(AuthenticatorSpec.rootUserEmail))
         val invalidPasswordCreds = KnoraPasswordCredentialsV2(credId, "wrongpassword")
-        val actual               = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidPasswordCreds)))
+        val actual =
+          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidPasswordCreds))))
         assertFailsWithA[BadCredentialsException](actual)
       }
       "succeed with correct token" in {
@@ -59,7 +64,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           for {
             token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
-            result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
+            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
           } yield result,
         )
         assert(isAuthenticated)
@@ -70,20 +75,21 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
-            result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
+            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
           } yield result)
         assertFailsWithA[BadCredentialsException](actual)
       }
       "fail with wrong token" in {
         val invalidTokenCreds = KnoraJWTTokenCredentialsV2("123456")
-        val actual            = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidTokenCreds)))
+        val actual =
+          UnsafeZioRun.run(ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(invalidTokenCreds))))
         assertFailsWithA[BadCredentialsException](actual)
       }
     }
 
     "called, the 'calculateCookieName' method" should {
       "succeed with generating the name" in {
-        val cookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
+        val cookieName = UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
         cookieName should equal("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999")
       }
     }

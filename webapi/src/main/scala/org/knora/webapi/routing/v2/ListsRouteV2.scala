@@ -34,7 +34,7 @@ final case class ListsRouteV2()(
       /* return a list (a graph with all list nodes) */
       requestContext =>
         val message = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           listIri        <- RouteUtilZ.validateAndEscapeIri(lIri, s"Invalid list IRI: '$lIri'")
         } yield ListGetRequestV2(listIri, requestingUser)
         RouteUtilV2.runRdfRouteZ(message, requestContext)
@@ -46,7 +46,7 @@ final case class ListsRouteV2()(
       /* return a list node */
       requestContext =>
         val message = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           nodeIri        <- RouteUtilZ.validateAndEscapeIri(nIri, s"Invalid list IRI: '$nIri'")
         } yield NodeGetRequestV2(nodeIri, requestingUser)
         RouteUtilV2.runRdfRouteZ(message, requestContext)

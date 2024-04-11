@@ -5,6 +5,8 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import zio.ZIO
+
 import java.util.UUID
 
 import org.knora.webapi.ApiV2Complex
@@ -53,7 +55,7 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
           |  ?blanknode owl:onProperty <$propertyIri>
           |}
           |""".stripMargin
-    val result = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlCountQuery)))
+    val result = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlCountQuery))))
     result.results.bindings.head.rowMap.values.head
   }
 

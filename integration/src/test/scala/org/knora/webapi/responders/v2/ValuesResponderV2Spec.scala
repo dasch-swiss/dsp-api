@@ -366,7 +366,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |}
          |""".stripMargin
 
-    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
+    val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlQuery))))
 
     val rows = actual.results.bindings
     if (rows.isEmpty) {
@@ -387,7 +387,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
          |}""".stripMargin
 
-    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
+    val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(sparqlQuery))))
 
     val rows = actual.results.bindings
     if (rows.isEmpty) {
@@ -420,18 +420,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -464,7 +466,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val duplicateValue =
         CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal, ingestState = AssetIngestState.AssetInTemp)
 
-      val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
+      val actual = UnsafeZioRun.run(
+        ZIO.serviceWithZIO[ValuesResponderV2](_.createValueV2(duplicateValue, anythingUser1, randomUUID)),
+      )
       assertFailsWithA[DuplicateValueException](actual)
     }
 
@@ -489,19 +493,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue = 5
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -543,19 +549,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue = 40
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri =
+                "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -612,7 +620,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val updateValueResponse =
-        UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
+        UnsafeZioRun.runOrThrow(
+          ZIO.serviceWithZIO[ValuesResponderV2](_.updateValueV2(updateValueContent, anythingUser2, randomUUID)),
+        )
 
       intValueIriForFreetest.set(updateValueResponse.valueIri)
       assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
@@ -649,18 +659,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
 
       UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.deleteValueV2(
-          DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIriForFreetest.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = Some("this value was incorrect"),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.deleteValueV2(
+            DeleteValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri =
+                "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIriForFreetest.get,
+              valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              deleteComment = Some("this value was incorrect"),
+            ),
+            anythingUser2,
+            randomUUID,
           ),
-          anythingUser2,
-          randomUUID,
         ),
       )
 
@@ -678,19 +690,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 5
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -718,20 +732,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue = 5
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+                comment = Some(comment),
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -770,20 +786,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val comment               = "Added a comment"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+                comment = Some(comment),
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -811,20 +829,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue = 5
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+                comment = Some(comment),
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -866,19 +886,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val comment                                   = "Initial comment"
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+                comment = Some(comment),
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -914,19 +936,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -961,19 +985,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -987,19 +1013,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1017,20 +1045,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              valueUUID = Some(valueUUID),
+              valueCreationDate = Some(valueCreationDate),
             ),
-            valueUUID = Some(valueUUID),
-            valueCreationDate = Some(valueCreationDate),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1064,20 +1094,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueCreationDate     = Instant.parse("2019-11-29T10:00:00Z")
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueForRsyncIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              valueCreationDate = Some(valueCreationDate),
             ),
-            valueCreationDate = Some(valueCreationDate),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -1094,20 +1126,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueCreationDate = Instant.now
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueForRsyncIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              valueCreationDate = Some(valueCreationDate),
             ),
-            valueCreationDate = Some(valueCreationDate),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -1144,20 +1178,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueForRsyncIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              newValueVersionIri = Some(newValueVersionIri.toSmartIri),
             ),
-            newValueVersionIri = Some(newValueVersionIri.toSmartIri),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       intValueForRsyncIri.set(updateValueResponse.valueIri)
@@ -1188,18 +1224,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 5
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
@@ -1211,18 +1249,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1250,18 +1290,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1274,19 +1316,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              comment = Some(valueHasComment),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                comment = Some(valueHasComment),
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1319,21 +1363,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoff,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1367,21 +1413,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoffModified,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1396,18 +1444,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = DecimalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = DecimalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasDecimal = valueHasDecimal,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1436,18 +1486,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasDecimal       = BigDecimal("4.3")
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = DecimalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = DecimalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasDecimal = valueHasDecimal,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1462,18 +1514,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TimeValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TimeValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasTimeStamp = valueHasTimeStamp,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1513,15 +1567,17 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = submittedValueContent,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = submittedValueContent,
+            ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1564,15 +1620,17 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = submittedValueContent,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = submittedValueContent,
+            ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1587,18 +1645,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = BooleanValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = BooleanValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasBoolean = valueHasBoolean,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1631,18 +1691,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = GeomValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = GeomValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeometry = valueHasGeometry,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1672,18 +1734,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = GeomValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = GeomValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeometry = valueHasGeometry,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1699,19 +1763,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntervalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntervalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasIntervalStart = valueHasIntervalStart,
+                valueHasIntervalEnd = valueHasIntervalEnd,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1744,19 +1810,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasIntervalEnd   = BigDecimal("3")
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntervalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntervalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasIntervalStart = valueHasIntervalStart,
+                valueHasIntervalEnd = valueHasIntervalEnd,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1771,18 +1839,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1813,18 +1883,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode      = "http://rdfh.ch/lists/0001/treeList03"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1836,18 +1908,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode      = "http://rdfh.ch/lists/0001/nonexistent"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -1860,18 +1934,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode      = "http://rdfh.ch/lists/0001/otherTreeList"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = resourceClassIri,
+              propertyIri = propertyIri,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -1886,18 +1962,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = ColorValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = ColorValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasColor = valueHasColor,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1928,18 +2006,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasColor         = "#ff3333"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = ColorValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = ColorValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasColor = valueHasColor,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -1954,18 +2034,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = UriValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = UriValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasUri = valueHasUri,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -1996,18 +2078,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasUri           = "https://www.knora.org"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = UriValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = UriValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasUri = valueHasUri,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -2022,18 +2106,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = GeonameValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = GeonameValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeonameCode = valueHasGeonameCode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -2064,18 +2150,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasGeonameCode   = "2661604"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = GeonameValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = GeonameValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeonameCode = valueHasGeonameCode,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -2088,18 +2176,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            propertyIri = linkValuePropertyIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              propertyIri = linkValuePropertyIri,
+              resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+              valueContent = LinkValueContentV2(
+                ontologySchema = ApiV2Complex,
+                referredResourceIri = zeitglöckleinIri,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       linkValueIri.set(createValueResponse.valueIri)
@@ -2128,18 +2218,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-            propertyIri = linkValuePropertyIri,
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+              propertyIri = linkValuePropertyIri,
+              valueContent = LinkValueContentV2(
+                ontologySchema = ApiV2Complex,
+                referredResourceIri = zeitglöckleinIri,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -2150,18 +2242,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-            propertyIri = linkPropertyIri,
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+              propertyIri = linkPropertyIri,
+              valueContent = LinkValueContentV2(
+                ontologySchema = ApiV2Complex,
+                referredResourceIri = zeitglöckleinIri,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -2169,18 +2263,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create a standoff link directly" in {
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = generationeIri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+              valueContent = LinkValueContentV2(
+                ontologySchema = ApiV2Complex,
+                referredResourceIri = generationeIri,
+              ),
             ),
+            requestingUser = SharedTestDataADM.superUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = SharedTestDataADM.superUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -2192,18 +2288,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 6
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -2215,18 +2313,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -2238,18 +2338,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 2048
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            requestingUser = anythingUser1,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -2260,18 +2362,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is not a date"),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some("this is not a date"),
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[OntologyConstraintException](actual)
@@ -2283,18 +2387,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/0803/4f11adaf is already part of a book.
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0803/e41ab5695c",
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
+              propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
+              valueContent = LinkValueContentV2(
+                ontologySchema = ApiV2Complex,
+                referredResourceIri = "http://rdfh.ch/0803/e41ab5695c",
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[OntologyConstraintException](actual)
@@ -2302,18 +2408,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
 
       val actual2 = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = "http://rdfh.ch/0803/4f11adaf",
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
-            propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 1,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = "http://rdfh.ch/0803/4f11adaf",
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
+              propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = 1,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
       assertFailsWithA[OntologyConstraintException](actual2)
@@ -2344,21 +2452,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = standoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = standoff,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -2440,21 +2550,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = standoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = standoff,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -2518,19 +2630,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 3
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = firstIntValueVersionIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = firstIntValueVersionIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -2542,19 +2656,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 9
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
@@ -2568,20 +2684,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue                                  = 6
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -2614,20 +2732,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 10
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            anythingUser2,
+            randomUUID,
           ),
-          anythingUser2,
-          randomUUID,
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
@@ -2640,20 +2760,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 7
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -2666,20 +2788,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 8
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
+              permissions = Some(permissions),
             ),
-            permissions = Some(permissions),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -2702,17 +2826,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValuePermissionsV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValuePermissionsV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              permissions = permissions,
+            ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -2739,17 +2865,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "CR knora-admin:Creator"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValuePermissionsV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValuePermissionsV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              permissions = permissions,
+            ),
+            anythingUser2,
+            randomUUID,
           ),
-          anythingUser2,
-          randomUUID,
         ),
       )
       assertFailsWithA[ForbiddenException](actual)
@@ -2761,17 +2889,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValuePermissionsV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValuePermissionsV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              permissions = permissions,
+            ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[BadRequestException](actual)
@@ -2783,17 +2913,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValuePermissionsV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            permissions = permissions,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValuePermissionsV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+              permissions = permissions,
+            ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -2805,19 +2937,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 1
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri.get,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -2829,19 +2963,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
@@ -2870,22 +3006,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoffWithLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoffWithLink,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
@@ -2941,19 +3079,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -2966,21 +3106,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.createValueV2(
+            CreateValueV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoff,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            requestingUser = incunabulaUser,
+            apiRequestID = randomUUID,
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID,
         ),
       )
 
@@ -3014,22 +3156,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoff,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3042,22 +3186,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoffModified,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
 
@@ -3091,22 +3237,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+                standoff = sampleStandoffModified,
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mapping = standardMapping,
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3117,19 +3265,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = zeitglöckleinIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some(valueHasString),
+              ),
             ),
+            incunabulaUser,
+            randomUUID,
           ),
-          incunabulaUser,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3142,19 +3292,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = decimalValueIri.get,
-            valueContent = DecimalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = decimalValueIri.get,
+              valueContent = DecimalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasDecimal = valueHasDecimal,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       decimalValueIri.set(updateValueResponse.valueIri)
@@ -3182,19 +3334,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasDecimal       = BigDecimal("3.1415926")
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = decimalValueIri.get,
-            valueContent = DecimalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasDecimal = valueHasDecimal,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = decimalValueIri.get,
+              valueContent = DecimalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasDecimal = valueHasDecimal,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3207,19 +3361,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = timeValueIri.get,
-            valueContent = TimeValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = timeValueIri.get,
+              valueContent = TimeValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasTimeStamp = valueHasTimeStamp,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       timeValueIri.set(updateValueResponse.valueIri)
@@ -3247,19 +3403,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasTimeStamp     = Instant.parse("2019-08-28T16:01:46.952237Z")
 
       val value = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = timeValueIri.get,
-            valueContent = TimeValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasTimeStamp = valueHasTimeStamp,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = timeValueIri.get,
+              valueContent = TimeValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasTimeStamp = valueHasTimeStamp,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](value)
@@ -3280,16 +3438,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = dateValueIri.get,
-            valueContent = submittedValueContent,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = dateValueIri.get,
+              valueContent = submittedValueContent,
+            ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
 
@@ -3332,16 +3492,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = dateValueIri.get,
-            valueContent = submittedValueContent,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = dateValueIri.get,
+              valueContent = submittedValueContent,
+            ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3354,19 +3516,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = booleanValueIri.get,
-            valueContent = BooleanValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = booleanValueIri.get,
+              valueContent = BooleanValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasBoolean = valueHasBoolean,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       booleanValueIri.set(updateValueResponse.valueIri)
@@ -3394,19 +3558,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasBoolean       = false
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = booleanValueIri.get,
-            valueContent = BooleanValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasBoolean = valueHasBoolean,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = booleanValueIri.get,
+              valueContent = BooleanValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasBoolean = valueHasBoolean,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3420,19 +3586,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = geometryValueIri.get,
-            valueContent = GeomValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = geometryValueIri.get,
+              valueContent = GeomValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeometry = valueHasGeometry,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       geometryValueIri.set(updateValueResponse.valueIri)
@@ -3461,19 +3629,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = geometryValueIri.get,
-            valueContent = GeomValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeometry = valueHasGeometry,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = geometryValueIri.get,
+              valueContent = GeomValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeometry = valueHasGeometry,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3487,20 +3657,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intervalValueIri.get,
-            valueContent = IntervalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intervalValueIri.get,
+              valueContent = IntervalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasIntervalStart = valueHasIntervalStart,
+                valueHasIntervalEnd = valueHasIntervalEnd,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       intervalValueIri.set(updateValueResponse.valueIri)
@@ -3532,20 +3704,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasIntervalEnd   = BigDecimal("3.45")
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intervalValueIri.get,
-            valueContent = IntervalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasIntervalStart = valueHasIntervalStart,
-              valueHasIntervalEnd = valueHasIntervalEnd,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = intervalValueIri.get,
+              valueContent = IntervalValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasIntervalStart = valueHasIntervalStart,
+                valueHasIntervalEnd = valueHasIntervalEnd,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3558,19 +3732,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = listValueIri.get,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = listValueIri.get,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       listValueIri.set(updateValueResponse.valueIri)
@@ -3600,19 +3776,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode      = "http://rdfh.ch/lists/0001/treeList02"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = listValueIri.get,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = listValueIri.get,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3624,19 +3802,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode      = "http://rdfh.ch/lists/0001/nonexistent"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = listValueIri.get,
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = valueHasListNode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = listValueIri.get,
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasListNode = valueHasListNode,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[NotFoundException](actual)
@@ -3649,19 +3829,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = colorValueIri.get,
-            valueContent = ColorValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = colorValueIri.get,
+              valueContent = ColorValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasColor = valueHasColor,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       colorValueIri.set(updateValueResponse.valueIri)
@@ -3691,19 +3873,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasColor         = "#ff3334"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = colorValueIri.get,
-            valueContent = ColorValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasColor = valueHasColor,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = colorValueIri.get,
+              valueContent = ColorValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasColor = valueHasColor,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3716,19 +3900,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = uriValueIri.get,
-            valueContent = UriValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = uriValueIri.get,
+              valueContent = UriValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasUri = valueHasUri,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       uriValueIri.set(updateValueResponse.valueIri)
@@ -3758,19 +3944,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasUri           = "https://en.wikipedia.org"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = uriValueIri.get,
-            valueContent = UriValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasUri = valueHasUri,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = uriValueIri.get,
+              valueContent = UriValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasUri = valueHasUri,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3783,19 +3971,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = geonameValueIri.get,
-            valueContent = GeonameValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = geonameValueIri.get,
+              valueContent = GeonameValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeonameCode = valueHasGeonameCode,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       geonameValueIri.set(updateValueResponse.valueIri)
@@ -3825,19 +4015,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasGeonameCode   = "2988507"
 
       val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = geonameValueIri.get,
-            valueContent = GeonameValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = valueHasGeonameCode,
+        ZIO.serviceWithZIO[ValuesResponderV2](
+          _.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              propertyIri = propertyIri,
+              valueIri = geonameValueIri.get,
+              valueContent = GeonameValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasGeonameCode = valueHasGeonameCode,
+              ),
             ),
+            anythingUser1,
+            randomUUID,
           ),
-          anythingUser1,
-          randomUUID,
         ),
       )
       assertFailsWithA[DuplicateValueException](actual)
@@ -3852,19 +4044,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+            ),
           ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
     linkValueIri.set(updateValueResponse.valueIri)
@@ -3896,19 +4090,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+            ),
           ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
     assertFailsWithA[DuplicateValueException](actual)
@@ -3922,20 +4118,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val comment: String                           = "Adding a comment"
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+              comment = Some(comment),
+            ),
           ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
 
@@ -3969,20 +4167,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val comment: String                = "Adding a comment"
 
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+              comment = Some(comment),
+            ),
           ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
     assertFailsWithA[DuplicateValueException](actual)
@@ -3996,20 +4196,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val comment                                   = "An updated comment"
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+              comment = Some(comment),
+            ),
           ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
 
@@ -4045,19 +4247,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val comment                                   = "Initial comment"
 
     val createValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          propertyIri = linkValuePropertyIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = zeitglöckleinIri,
-            comment = Some(comment),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            propertyIri = linkValuePropertyIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = zeitglöckleinIri,
+              comment = Some(comment),
+            ),
           ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID,
       ),
     )
     linkValueIri.set(createValueResponse.valueIri)
@@ -4083,19 +4287,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "not update a standoff link directly" in {
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-          valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = generationeIri,
+            ),
           ),
+          SharedTestDataADM.superUser,
+          randomUUID,
         ),
-        SharedTestDataADM.superUser,
-        randomUUID,
       ),
     )
     assertFailsWithA[BadRequestException](actual)
@@ -4108,23 +4314,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
     val valueIri         = stillImageFileValueIri.get
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri,
-          thingPictureClassIri.toSmartIri,
-          OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-          valueIri,
-          FileModelUtil.getFileValueContent(
-            fileType,
-            internalFilename,
-            Some(mimeTypeJP2),
-            Some("test.tiff"),
-            Some(mimeTypeTIFF),
-            None,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri,
+            thingPictureClassIri.toSmartIri,
+            OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
+            valueIri,
+            FileModelUtil.getFileValueContent(
+              fileType,
+              internalFilename,
+              Some(mimeTypeJP2),
+              Some("test.tiff"),
+              Some(mimeTypeTIFF),
+              None,
+            ),
           ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
     assertFailsWithA[DuplicateValueException](actual)
@@ -4155,23 +4363,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val originalMimeType = Some(mimeTypeTIFF)
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri,
-          thingPictureClassIri.toSmartIri,
-          propertyIri,
-          stillImageFileValueIri.get,
-          FileModelUtil.getFileValueContent(
-            FileType.StillImageFile(dimX = dimX, dimY = dimY),
-            internalFilename,
-            Some(internalMimeType),
-            originalFilename,
-            originalMimeType,
-            None,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri,
+            thingPictureClassIri.toSmartIri,
+            propertyIri,
+            stillImageFileValueIri.get,
+            FileModelUtil.getFileValueContent(
+              FileType.StillImageFile(dimX = dimX, dimY = dimY),
+              internalFilename,
+              Some(internalMimeType),
+              originalFilename,
+              originalMimeType,
+              None,
+            ),
           ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
 
@@ -4223,16 +4433,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // Knora will reject this request.
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = thingPictureClassIri.toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = thingPictureClassIri.toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = stillImageFileValueIri.get,
+            valueContent = valueContent,
+          ),
+          incunabulaUser, // this user doesn't have the necessary permission
+          randomUUID,
         ),
-        incunabulaUser, // this user doesn't have the necessary permission
-        randomUUID,
       ),
     )
     assertFailsWithA[ForbiddenException](actual)
@@ -4256,16 +4468,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = thingPictureClassIri.toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = thingPictureClassIri.toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = stillImageFileValueIri.get,
+            valueContent = valueContent,
+          ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
     assertFailsWithA[SipiException](actual)
@@ -4276,17 +4490,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
 
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          deleteComment = Some("this value was incorrect"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment = Some("this value was incorrect"),
+          ),
+          anythingUser2,
+          randomUUID,
         ),
-        anythingUser2,
-        randomUUID,
       ),
     )
     assertFailsWithA[ForbiddenException](actual)
@@ -4300,17 +4516,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val valueIri = intValueIri.get
 
     UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = valueIri,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          deleteComment = Some("this value was incorrect"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = valueIri,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment = Some("this value was incorrect"),
+          ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
 
@@ -4330,18 +4548,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteComment                             = Some("this value was incorrect")
 
     UnsafeZioRun.run(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          deleteComment = deleteComment,
-          deleteDate = Some(deleteDate),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueForRsyncIri.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment = deleteComment,
+            deleteDate = Some(deleteDate),
+          ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
 
@@ -4357,16 +4577,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "not delete a standoff link directly" in {
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-          valueIri = standoffLinkValueIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+            valueIri = standoffLinkValueIri.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+          ),
+          SharedTestDataADM.superUser,
+          randomUUID,
         ),
-        SharedTestDataADM.superUser,
-        randomUUID,
       ),
     )
     assertFailsWithA[BadRequestException](actual)
@@ -4377,17 +4599,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
     UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-          deleteComment = Some("this value was incorrect"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+            deleteComment = Some("this value was incorrect"),
+          ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
 
@@ -4416,16 +4640,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val linkValueIRI                              = linkValueIri.get
 
     UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIRI,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            propertyIri = linkValuePropertyIri,
+            valueIri = linkValueIRI,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+          ),
+          incunabulaUser,
+          randomUUID,
         ),
-        incunabulaUser,
-        randomUUID,
       ),
     )
 
@@ -4442,16 +4668,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri
 
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.deleteValueV2(
-        DeleteValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+          ),
+          incunabulaCreatorUser,
+          randomUUID,
         ),
-        incunabulaCreatorUser,
-        randomUUID,
       ),
     )
     assertFailsWithA[OntologyConstraintException](actual)
@@ -4480,20 +4708,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
 
     val actual = UnsafeZioRun.run(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 5,
-            comment = Some("this is the number five"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five"),
+            ),
+            permissions = Some("CR knora-admin:Creator"),
           ),
-          permissions = Some("CR knora-admin:Creator"),
+          requestingUser = SharedTestDataADM.imagesReviewerUser,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = randomUUID,
       ),
     )
     assertFailsWithA[ForbiddenException](actual)
@@ -4522,20 +4752,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
 
     UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 5,
-            comment = Some("this is the number five"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five"),
+            ),
+            permissions = Some("CR knora-admin:Creator"),
           ),
-          permissions = Some("CR knora-admin:Creator"),
+          requestingUser = SharedTestDataADM.rootUser,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = randomUUID,
       ),
     )
   }
@@ -4563,20 +4795,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
 
     UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 5,
-            comment = Some("this is the number five"),
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five"),
+            ),
+            permissions = Some("CR knora-admin:Creator"),
           ),
-          permissions = Some("CR knora-admin:Creator"),
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID,
       ),
     )
   }
@@ -4588,21 +4822,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     // Create a text value with a standoff link.
 
     val createValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = sierraIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 1 for UUID checking"),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = sierraIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("Comment 1 for UUID checking"),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping,
+            ),
           ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID,
       ),
     )
 
@@ -4629,21 +4865,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     // Create a second text value with the same standoff link.
 
     val createValueResponse2 = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = sierraIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 2 for UUID checking"),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.createValueV2(
+          CreateValueV2(
+            resourceIri = sierraIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("Comment 2 for UUID checking"),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping,
+            ),
           ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID,
         ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID,
       ),
     )
 
@@ -4679,22 +4917,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     // Update the second text value.
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
-      ValuesResponderV2.updateValueV2(
-        UpdateValueContentV2(
-          resourceIri = sierraIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueIri = createValueResponse2.valueIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 3 for UUID checking"),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping,
+      ZIO.serviceWithZIO[ValuesResponderV2](
+        _.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = sierraIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueIri = createValueResponse2.valueIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("Comment 3 for UUID checking"),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping,
+            ),
           ),
+          anythingUser1,
+          randomUUID,
         ),
-        anythingUser1,
-        randomUUID,
       ),
     )
 

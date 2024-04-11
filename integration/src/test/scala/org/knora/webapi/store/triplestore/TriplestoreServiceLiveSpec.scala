@@ -6,6 +6,7 @@
 package org.knora.webapi.store.triplestore
 
 import org.apache.pekko
+import zio.ZIO
 
 import scala.concurrent.duration._
 
@@ -137,41 +138,41 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
       UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .resetTripleStoreContent(rdfDataObjects)
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.resetTripleStoreContent(rdfDataObjects))
           .timeout(java.time.Duration.ofMinutes(5)),
       )
 
-      val msg = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(countTriplesQuery)))
+      val msg = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery))))
       afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
       (afterLoadCount > 0) should ===(true)
     }
 
     "provide data receiving a Named Graph request" in {
-      val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(namedGraphQuery)))
+      val actual = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Select(namedGraphQuery))))
       actual.results.bindings.nonEmpty should ===(true)
     }
 
     "execute an update" in {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(countTriplesQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
           .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesBefore should ===(afterLoadCount)
 
-      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(insertQuery)))
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Update(insertQuery))))
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(checkInsertQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(checkInsertQuery)))
           .map(_.results.bindings.size),
       )
       checkInsertActual should ===(3)
 
       afterChangeCount = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(countTriplesQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
           .map(_.results.bindings.head.rowMap("no").toInt),
       )
       (afterChangeCount - afterLoadCount) should ===(3)
@@ -179,24 +180,24 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
     "revert back " in {
       val countTriplesBefore = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(countTriplesQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
           .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesBefore should ===(afterChangeCount)
 
-      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(revertInsertQuery)))
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TriplestoreService](_.query(Update(revertInsertQuery))))
 
       val countTriplesQueryActual = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(countTriplesQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(countTriplesQuery)))
           .map(_.results.bindings.head.rowMap("no").toInt),
       )
       countTriplesQueryActual should ===(afterLoadCount)
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .query(Select(checkInsertQuery))
+        ZIO
+          .serviceWithZIO[TriplestoreService](_.query(Select(checkInsertQuery)))
           .map(_.results.bindings.size),
       )
       checkInsertActual should ===(0)
@@ -205,8 +206,8 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
     "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
       within(1000.millis) {
         val actual = UnsafeZioRun.runOrThrow(
-          TriplestoreService
-            .query(Select(textSearchQueryFusekiValueHasString))
+          ZIO
+            .serviceWithZIO[TriplestoreService](_.query(Select(textSearchQueryFusekiValueHasString)))
             .map(_.results.bindings.size),
         )
         actual should ===(3)
@@ -216,8 +217,8 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
     "execute the search with the lucene index for 'rdfs:label' properties" in {
       within(1000.millis) {
         val actual = UnsafeZioRun.runOrThrow(
-          TriplestoreService
-            .query(Select(textSearchQueryFusekiDRFLabel))
+          ZIO
+            .serviceWithZIO[TriplestoreService](_.query(Select(textSearchQueryFusekiDRFLabel)))
             .map(_.results.bindings.size),
         )
         actual should ===(1)

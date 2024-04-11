@@ -7,7 +7,7 @@ on:
 jobs:
   create-client-test-data:
     name: Create and upload client-test-data
-    runs-on: actuated-4cpu-20gb
+    runs-on: buildjet-4vcpu-ubuntu-2204
     concurrency:
       group: ${{ github.ref }}
       cancel-in-progress: true

@@ -19,7 +19,7 @@ object OntologyCacheFakeSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] = suite("OntologyCacheFake")(
     suite("with empty cache")(test("should return empty") {
       for {
-        actual <- OntologyCache.getCacheData
+        actual <- ZIO.serviceWithZIO[OntologyCache](_.getCacheData)
       } yield assertTrue(actual == OntologyCacheFake.emptyData)
     }).provide(OntologyCacheFake.emptyCache),
     suite("with empty cache when setting new data")(test("should return set cache") {
@@ -28,7 +28,7 @@ object OntologyCacheFakeSpec extends ZIOSpecDefault {
         someIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(somePropertyIri))
         newData  = OntologyCacheFake.emptyData.copy(standoffProperties = Set(someIri))
         _       <- OntologyCacheFake.set(newData)
-        actual  <- OntologyCache.getCacheData
+        actual  <- ZIO.serviceWithZIO[OntologyCache](_.getCacheData)
       } yield assertTrue(actual == newData)
     }).provide(OntologyCacheFake.emptyCache, IriConverter.layer, StringFormatter.test),
   )

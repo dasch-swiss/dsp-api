@@ -14,7 +14,6 @@ import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
 import spray.json._
 import zio._
-import zio.macros.accessible
 
 import java.util.Base64
 
@@ -46,7 +45,6 @@ import org.knora.webapi.util.cache.CacheUtil
  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
  * session id. All private methods used in this trait can be found in the companion object.
  */
-@accessible
 trait Authenticator {
 
   /**
