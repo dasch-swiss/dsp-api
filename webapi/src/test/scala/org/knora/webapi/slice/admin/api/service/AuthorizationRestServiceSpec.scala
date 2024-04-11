@@ -9,9 +9,13 @@ import zio.Exit
 import zio.ZIO
 import zio.test.Assertion.failsWithA
 import zio.test._
+
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -20,7 +24,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.Syst
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
 
@@ -131,5 +137,10 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     KnoraProjectRepoInMemory.layer,
     KnoraGroupService.layer,
     KnoraGroupRepoInMemory.layer,
+    IriService.layer,
+    IriConverter.layer,
+    TriplestoreServiceLive.layer,
+    StringFormatter.live,
+    AppConfig.layer,
   )
 }
