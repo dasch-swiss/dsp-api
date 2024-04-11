@@ -9,7 +9,6 @@ import zio.Ref
 import zio.ZLayer
 import zio.test.Assertion._
 import zio.test._
-
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -18,6 +17,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.KnoraBase
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
+import zio.ZIO
 
 object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
   private val usedOnce: String =
@@ -64,10 +64,10 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is not used by any instance of the class then return empty List") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+            ZIO.serviceWithZIO[PredicateRepository](_.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
               Biblio.Class.Publication,
-            )
+            ))
         } yield assertTrue(result == List.empty)
       },
     ).provide(commonLayers, emptyDataset),
@@ -75,10 +75,10 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is in use by a single instance of the class return this instance with a count of one") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+            ZIO.serviceWithZIO[PredicateRepository](_.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
               Biblio.Class.Publication,
-            )
+            ))
         } yield assertTrue(result == List((InternalIri("http://aPublication"), 1)))
       },
     ).provide(commonLayers, datasetLayerFromTurtle(usedOnce)),
@@ -86,10 +86,10 @@ object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
       test("given a property is in use by multiple instances of the class return each instance and the times used") {
         for {
           result <-
-            PredicateRepository.getCountForPropertyUsedNumberOfTimesWithClass(
+            ZIO.serviceWithZIO[PredicateRepository](_.getCountForPropertyUsedNumberOfTimesWithClass(
               Biblio.Property.hasTitle,
               Biblio.Class.Publication,
-            )
+            ))
         } yield assert(result)(
           hasSameElements(
             List(
