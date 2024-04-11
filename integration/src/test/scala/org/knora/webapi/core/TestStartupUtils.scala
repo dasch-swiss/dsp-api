@@ -32,7 +32,7 @@ trait TestStartupUtils extends LazyLogging {
       tss <- ZIO.service[TriplestoreService]
       _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
       _   <- ZIO.logInfo("... loading test data done.")
-      _   <- OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser).orDie
+      _   <- ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)).orDie
     } yield ()
 
 }

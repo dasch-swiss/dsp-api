@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
@@ -22,13 +21,14 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import zio.ZIO
 
 /**
  * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
  */
 class OntologyCacheSpec extends CoreSpec {
 
-  private def getCacheData = UnsafeZioRun.runOrThrow(OntologyCache.getCacheData)
+  private def getCacheData = UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.getCacheData))
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -48,7 +48,7 @@ class OntologyCacheSpec extends CoreSpec {
   "The cache" should {
 
     "successfully load the cache data" in {
-      UnsafeZioRun.runOrThrow(OntologyCache.getCacheData.map(_.ontologies)).size should equal(13)
+      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[OntologyCache](_.getCacheData.map(_.ontologies))).size should equal(13)
     }
 
     "when a property was removed from an ontology, remove it from the cache as well." in {
@@ -70,7 +70,9 @@ class OntologyCacheSpec extends CoreSpec {
           )
 
           // update cache
-          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
+          val _ = UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[OntologyCache](_.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)),
+          )
 
           // read back the cache
           val newCachedCacheData = getCacheData
@@ -155,7 +157,9 @@ class OntologyCacheSpec extends CoreSpec {
           )
 
           // update cache
-          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks))
+          val _ = UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[OntologyCache](_.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)),
+          )
 
           // read back the cache
           val newCachedCacheData = getCacheData
@@ -245,7 +249,9 @@ class OntologyCacheSpec extends CoreSpec {
           )
 
           // update cache
-          val _ = UnsafeZioRun.runOrThrow(OntologyCache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks))
+          val _ = UnsafeZioRun.runOrThrow(
+            ZIO.serviceWithZIO[OntologyCache](_.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)),
+          )
 
           // read back the cache
           val newCachedCacheData = getCacheData

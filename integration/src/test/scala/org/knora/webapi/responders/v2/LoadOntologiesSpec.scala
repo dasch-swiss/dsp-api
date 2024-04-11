@@ -42,7 +42,7 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
     )
 
     UnsafeZioRun
-      .run(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      .run(ZIO.serviceWithZIO[OntologyCache](_.loadOntologies(KnoraSystemInstances.Users.SystemUser)))
       .toEither
       .map(_ => SuccessResponseV2("OK"))
       .left
