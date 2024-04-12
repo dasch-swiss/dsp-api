@@ -17,9 +17,8 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-final case class OntologyInferencer(
-  private val ontologyCache: OntologyCache,
-  implicit private val stringFormatter: StringFormatter,
+final case class OntologyInferencer(private val ontologyCache: OntologyCache)(implicit
+  private val stringFormatter: StringFormatter,
 ) {
 
   private def inferSubclasses(
@@ -151,6 +150,5 @@ final case class OntologyInferencer(
 }
 
 object OntologyInferencer {
-  val layer: ZLayer[OntologyCache & StringFormatter, Nothing, OntologyInferencer] =
-    ZLayer.fromFunction(OntologyInferencer.apply _)
+  val layer = ZLayer.derive[OntologyInferencer]
 }

@@ -88,8 +88,8 @@ final case class ResourcesResponderV2(
   knoraProjectService: KnoraProjectService,
   searchResponderV2: SearchResponderV2,
   ontologyRepo: OntologyRepo,
-  implicit val stringFormatter: StringFormatter,
-) extends MessageHandler
+)(implicit val stringFormatter: StringFormatter)
+    extends MessageHandler
     with LazyLogging
     with GetResources {
 
@@ -105,7 +105,6 @@ final case class ResourcesResponderV2(
     searchResponderV2,
     this,
     ontologyRepo,
-    stringFormatter,
   )
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
@@ -2019,7 +2018,7 @@ object ResourcesResponderV2 {
       sr      <- ZIO.service[SearchResponderV2]
       or      <- ZIO.service[OntologyRepo]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or, sf))
+      handler <- mr.subscribe(ResourcesResponderV2(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, or)(sf))
     } yield handler
   }
 }

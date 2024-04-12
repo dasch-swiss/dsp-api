@@ -59,8 +59,8 @@ final case class CreateResourceV2Handler(
   searchResponderV2: SearchResponderV2,
   getResources: GetResources,
   ontologyRepo: OntologyRepo,
-  implicit val stringFormatter: StringFormatter,
-) extends LazyLogging {
+)(implicit val stringFormatter: StringFormatter)
+    extends LazyLogging {
 
   /**
    * Represents a resource that is ready to be created and whose contents can be verified afterwards.

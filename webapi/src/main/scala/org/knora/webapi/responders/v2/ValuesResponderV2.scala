@@ -81,8 +81,8 @@ final case class ValuesResponderV2Live(
   resourceUtilV2: ResourceUtilV2,
   searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
-  implicit val stringFormatter: StringFormatter,
-) extends ValuesResponderV2
+)(implicit val stringFormatter: StringFormatter)
+    extends ValuesResponderV2
     with MessageHandler {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ValuesResponderRequestV2]
@@ -2448,7 +2448,7 @@ object ValuesResponderV2Live {
       ts      <- ZIO.service[TriplestoreService]
       sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts)(sf))
     } yield handler
   }
 }

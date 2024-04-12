@@ -22,9 +22,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.ActorUtil
 
-final case class RoutingActor(
-  messageRelay: MessageRelay,
-  implicit val runtime: Runtime[
+final case class RoutingActor(messageRelay: MessageRelay)(implicit
+  val runtime: Runtime[
     CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers & OntologyRepo &
       PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
   ],

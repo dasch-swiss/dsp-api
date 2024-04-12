@@ -145,8 +145,8 @@ final case class AuthenticatorLive(
   private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
-  private implicit val stringFormatter: StringFormatter,
-) extends Authenticator {
+)(private implicit val stringFormatter: StringFormatter)
+    extends Authenticator {
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.

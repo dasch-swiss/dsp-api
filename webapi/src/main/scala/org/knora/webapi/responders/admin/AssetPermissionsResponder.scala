@@ -31,8 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 final case class AssetPermissionsResponder(
   private val knoraProjectService: KnoraProjectService,
   private val triplestoreService: TriplestoreService,
-  private implicit val sf: StringFormatter,
-) {
+)(private implicit val sf: StringFormatter) {
 
   def getPermissionCodeAndProjectRestrictedViewSettings(
     shortcode: ShortcodeIdentifier,

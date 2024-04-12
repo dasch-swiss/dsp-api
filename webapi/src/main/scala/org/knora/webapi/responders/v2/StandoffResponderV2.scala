@@ -67,8 +67,8 @@ final case class StandoffResponderV2(
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
-  implicit val stringFormatter: StringFormatter,
-) extends MessageHandler
+)(implicit val stringFormatter: StringFormatter)
+    extends MessageHandler
     with LazyLogging {
 
   private val xmlMimeTypes  = Set("text/xml", "application/xml")
@@ -996,7 +996,7 @@ object StandoffResponderV2 {
         stu     <- ZIO.service[StandoffTagUtilV2]
         ps      <- ZIO.service[ProjectService]
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, sf))
+        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps)(sf))
       } yield handler
     }
 }

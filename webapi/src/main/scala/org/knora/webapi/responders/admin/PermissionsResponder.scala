@@ -57,8 +57,8 @@ final case class PermissionsResponder(
   triplestore: TriplestoreService,
   auth: AuthorizationRestService,
   administrativePermissionService: AdministrativePermissionService,
-  implicit val stringFormatter: StringFormatter,
-) extends MessageHandler
+)(implicit val stringFormatter: StringFormatter)
+    extends MessageHandler
     with LazyLogging {
 
   private val PERMISSIONS_GLOBAL_LOCK_IRI = "http://rdfh.ch/permissions"
@@ -1777,7 +1777,7 @@ object PermissionsResponder {
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
       aps     <- ZIO.service[AdministrativePermissionService]
-      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps, sf))
+      handler <- mr.subscribe(PermissionsResponder(ac, gs, is, kpr, mr, ts, au, aps)(sf))
     } yield handler
   }
 }
