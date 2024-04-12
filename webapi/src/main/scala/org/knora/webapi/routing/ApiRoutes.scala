@@ -49,8 +49,8 @@ final case class ApiRoutes(
   searchApiRoutes: SearchApiRoutes,
   managementRoutes: ManagementRoutes,
   appConfig: AppConfig,
-  implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime],
-) extends AroundDirectives {
+)(implicit val runtime: Runtime[ApiRoutes.ApiRoutesRuntime])
+    extends AroundDirectives {
 
   private implicit val system: ActorSystem = routeData.system
 
@@ -103,13 +103,7 @@ object ApiRoutes {
         managementRoutes   <- ZIO.service[ManagementRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys, router.ref, appConfig))
         runtime            <- ZIO.runtime[ApiRoutesRuntime]
-      } yield ApiRoutes(
-        routeData,
-        adminApiRoutes,
-        resourceInfoRoutes,
-        searchApiRoutes,
-        managementRoutes,
-        appConfig,
+      } yield ApiRoutes(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, managementRoutes, appConfig)(
         runtime,
       )
     }

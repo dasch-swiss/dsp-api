@@ -32,7 +32,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 
-final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
+final case class BaseEndpoints(authenticator: Authenticator)(implicit val r: zio.Runtime[Any]) {
 
   private val defaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
     oneOf[RequestRejectedException](
@@ -102,6 +102,6 @@ object BaseEndpoints {
     for {
       auth <- ZIO.service[Authenticator]
       r    <- ZIO.runtime[Any]
-    } yield BaseEndpoints(auth, r),
+    } yield BaseEndpoints(auth)(r),
   )
 }

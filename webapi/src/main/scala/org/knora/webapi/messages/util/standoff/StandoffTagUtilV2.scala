@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.util.standoff
 
 import zio.Task
-import zio.URLayer
 import zio.ZLayer
 
 import java.time.Instant
@@ -61,10 +60,8 @@ trait StandoffTagUtilV2 {
   ): Task[Vector[StandoffTagV2]]
 }
 
-final case class StandoffTagUtilV2Live(
-  messageRelay: MessageRelay,
-  implicit val stringFormatter: StringFormatter,
-) extends StandoffTagUtilV2 {
+final case class StandoffTagUtilV2Live(messageRelay: MessageRelay)(implicit val stringFormatter: StringFormatter)
+    extends StandoffTagUtilV2 {
 
   /**
    * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
@@ -268,8 +265,7 @@ final case class StandoffTagUtilV2Live(
 }
 
 object StandoffTagUtilV2Live {
-  val layer: URLayer[MessageRelay & StringFormatter, StandoffTagUtilV2] =
-    ZLayer.fromFunction(StandoffTagUtilV2Live.apply _)
+  val layer = ZLayer.derive[StandoffTagUtilV2Live]
 }
 
 object StandoffTagUtilV2 {

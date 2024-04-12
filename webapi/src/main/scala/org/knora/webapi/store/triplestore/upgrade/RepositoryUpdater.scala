@@ -12,7 +12,6 @@ import zio._
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.reflect.io.Directory
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -85,19 +84,13 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   /**
    * Deletes directories inside tmp directory starting with `tmpDirNamePrefix`.
    */
-  private def deleteTmpDirectories(): UIO[Unit] = ZIO.attempt {
+  private def deleteTmpDirectories(): UIO[Unit] = {
     val rootDir        = new File("/tmp/")
     val getTmpToDelete = rootDir.listFiles.filter(_.getName.startsWith(tmpDirNamePrefix))
-
-    if (getTmpToDelete.length != 0) {
-      getTmpToDelete.foreach { dir =>
-        val dirToDelete = new Directory(dir)
-        dirToDelete.deleteRecursively()
-      }
-      log.info(s"Deleted tmp directories: ${getTmpToDelete.map(_.getName()).mkString(", ")}")
+    ZIO.foreach(getTmpToDelete) { dir =>
+      zio.nio.file.Files.deleteRecursive(zio.nio.file.Path(dir.getPath))
     }
-    ()
-  }.orDie
+  }.unit.orDie
 
   /**
    * Determines the `knora-base` version in the repository.

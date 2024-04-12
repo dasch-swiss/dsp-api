@@ -1566,8 +1566,8 @@ final case class OntologyHelpersLive(
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
-  implicit val stringFormatter: StringFormatter,
-) extends OntologyHelpers {
+)(implicit val stringFormatter: StringFormatter)
+    extends OntologyHelpers {
 
   /**
    * Reads an ontology's metadata.
@@ -2147,13 +2147,11 @@ final case class OntologyHelpersLive(
    */
   override def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Task[Unit] =
     if (!externalOntologyIri.isKnoraOntologyIri) {
-      ZIO.fail(throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
+      ZIO.fail(BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
     } else if (!externalOntologyIri.getOntologySchema.contains(ApiV2Complex)) {
-      ZIO.fail(throw BadRequestException(s"Invalid ontology schema for request: $externalOntologyIri"))
+      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalOntologyIri"))
     } else if (externalOntologyIri.isKnoraBuiltInDefinitionIri) {
-      ZIO.fail(
-        throw BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"),
-      )
+      ZIO.fail(BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
     } else {
       ZIO.succeed(())
     }
@@ -2166,9 +2164,9 @@ final case class OntologyHelpersLive(
    */
   private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Task[Unit] =
     if (!externalEntityIri.isKnoraApiV2EntityIri) {
-      ZIO.fail(throw BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
+      ZIO.fail(BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
     } else if (!externalEntityIri.getOntologySchema.contains(ApiV2Complex)) {
-      ZIO.fail(throw BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
+      ZIO.fail(BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
     } else {
       ZIO.succeed(())
     }
@@ -2176,8 +2174,5 @@ final case class OntologyHelpersLive(
 }
 
 object OntologyHelpersLive {
-  val layer: URLayer[
-    AppConfig & IriService & MessageRelay & TriplestoreService & OntologyCache & StringFormatter,
-    OntologyHelpers,
-  ] = ZLayer.fromFunction(OntologyHelpersLive.apply _)
+  val layer = ZLayer.derive[OntologyHelpersLive]
 }

@@ -48,8 +48,8 @@ final case class GroupsResponderADM(
   iriService: IriService,
   knoraUserService: KnoraUserService,
   projectService: ProjectService,
-  implicit val stringFormatter: StringFormatter,
-) extends MessageHandler
+)(implicit val stringFormatter: StringFormatter)
+    extends MessageHandler
     with GroupsADMJsonProtocol
     with LazyLogging {
 
@@ -338,7 +338,7 @@ object GroupsResponderADM {
       kus     <- ZIO.service[KnoraUserService]
       ps      <- ZIO.service[ProjectService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(GroupsResponderADM(ts, mr, iris, kus, ps, sf))
+      handler <- mr.subscribe(GroupsResponderADM(ts, mr, iris, kus, ps)(sf))
     } yield handler
   }
 }

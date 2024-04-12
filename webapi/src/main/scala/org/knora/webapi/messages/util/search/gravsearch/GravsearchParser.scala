@@ -355,7 +355,7 @@ object GravsearchParser {
         val sourceName: String         = projectionElem.getName
         val targetName: Option[String] = projectionElem.getProjectionAlias.toScala
 
-        if (sourceName == targetName) {
+        if (targetName.contains(sourceName)) {
           throw GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
