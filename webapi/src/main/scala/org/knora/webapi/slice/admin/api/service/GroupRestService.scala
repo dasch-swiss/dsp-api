@@ -56,8 +56,8 @@ final case class GroupRestService(
                    .findById(request.project)
                    .someOrFail(NotFoundException(s"Project <${request.project}> not found."))
       internal <- groupService.createGroup(request, project).map(GroupGetResponseADM.apply)
-//      external <- format.toExternalADM(internal)
-    } yield internal
+      external <- format.toExternalADM(internal)
+    } yield external
 
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
