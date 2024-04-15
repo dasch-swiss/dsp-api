@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v34" .
+    :ontologyVersion   "knora-base v35" .
 
 
 #################################################################
@@ -385,7 +385,7 @@
     rdf:type                owl:ObjectProperty ;
     rdfs:label              "hat Standoff Link zu"@de,
                             "has Standoff Link to"@en,
-                            "a standoff lien vers"@fr,
+                            "liens intégrés"@fr,
                             "ha standoff link verso"@it ;
     rdfs:comment            "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de,
                             "Represents a link in standoff markup from one resource to another."@en ;
@@ -400,7 +400,7 @@
     rdf:type                owl:ObjectProperty ;
     rdfs:label              "hat Standoff Link zu"@de,
                             "has Standoff Link to"@en,
-                            "a standoff lien vers"@fr,
+                            "liens intégrés"@fr,
                             "ha standoff link verso"@it ;
     rdfs:comment            "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de,
                             "Represents a link in standoff markup from one resource to another."@en ;
