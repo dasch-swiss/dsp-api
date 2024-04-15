@@ -183,13 +183,13 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
-        val groupInfo: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
+        val group: Group = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[Group]
 
-        groupInfo.name should be("NewGroup")
-        groupInfo.descriptions should be(Seq(StringLiteralV2.from("NewGroupDescription", Some("en"))))
-        groupInfo.project should be(Some(SharedTestDataADM.imagesProjectExternal))
-        groupInfo.status should be(true)
-        groupInfo.selfjoin should be(false)
+        group.name should be("NewGroup")
+        group.descriptions should be(Seq(StringLiteralV2.from("NewGroupDescription", Some("en"))))
+        group.project should be(Some(SharedTestDataADM.imagesProjectExternal))
+        group.status should be(true)
+        group.selfjoin should be(false)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -202,7 +202,7 @@ class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
           ),
         )
 
-        val iri = groupInfo.id
+        val iri = group.id
         newGroupIri.set(iri)
       }
 
