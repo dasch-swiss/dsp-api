@@ -73,7 +73,7 @@ docs-serve: docs-build-dependent
     mkdocs serve
 
 docs-build: docs-build-dependent
-    mkdocs build 
+    mkdocs build --strict
 
 markdownlint:
     docker run \

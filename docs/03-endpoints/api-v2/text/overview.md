@@ -74,7 +74,7 @@ However, it does not allow for searching within the file content.
 
 ## TEI XML
 
-All text values in DSP-API using stanodff markup can be converted to TEI XML as described [here](tei-xml.md).
+All text values in DSP-API using standoff markup can be converted to TEI XML as described [here](tei-xml.md).
 
 !!! info
     Improved support for TEI XML is in planning.

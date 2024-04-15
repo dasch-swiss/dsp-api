@@ -603,7 +603,7 @@ There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:Vid
 `kb:VideoSegment` has the property `kb:isVideoSegmentOf`, which points to a [MovingImageRepresentation](#representations). 
 Both use the `kb:hasSegmentBounds` property directly.
 
-It is possible to create subclases of `kb:AudoSegment` and `kb:VideoSegment` to add additional properties, 
+It is possible to create subclasses of `kb:AudioSegment` and `kb:VideoSegment` to add additional properties, 
 but this is discouraged and may not be supported in future versions of DSP-API. 
 Instead, instances of `kb:Annotation` pointing to the segment should be used to add additional information.
 
