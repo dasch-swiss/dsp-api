@@ -126,8 +126,10 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         }
       },
       test("should return 204 and create an extended report") {
+        val url: URL =
+          URL(Root / "maintenance" / "needs-originals").addQueryParams(QueryParams(("imagesOnly", Chunk("false"))))
         val request = Request
-          .get(URL(Root / "maintenance" / "needs-originals").queryParams("imagesOnly=false"))
+          .get(url)
           .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
           response <- executeRequest(request)

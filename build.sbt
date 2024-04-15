@@ -9,7 +9,7 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val sipiVersion                 = "v30.9.0"
-val tapirVersion                = "1.10.0"
+val tapirVersion                = "1.10.4"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "4.0.1"
 val zioHttpVersion              = "3.0.0-RC4"
@@ -19,7 +19,7 @@ val zioMetricsConnectorsVersion = "2.3.1"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC23"
-val zioVersion                  = "2.0.21"
+val zioVersion                  = "2.0.22"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
@@ -72,7 +72,7 @@ lazy val root = (project in file("."))
     ),
     libraryDependencies ++= tapir ++ metrics ++ Seq(
       "com.github.jwt-scala" %% "jwt-zio-json"                      % "10.0.0",
-      "commons-io"            % "commons-io"                        % "2.16.0",
+      "commons-io"            % "commons-io"                        % "2.16.1",
       "dev.zio"              %% "zio"                               % zioVersion,
       "dev.zio"              %% "zio-config"                        % zioConfigVersion,
       "dev.zio"              %% "zio-config-magnolia"               % zioConfigVersion,

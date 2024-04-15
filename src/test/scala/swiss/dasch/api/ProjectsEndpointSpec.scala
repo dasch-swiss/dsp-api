@@ -95,23 +95,25 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
 
     suite("POST /projects/{shortcode}/import should")(
       test("given the shortcode is invalid, return 400")(for {
-        response <- postImport("invalid-shortcode", bodyFromZipFile, validContentTypeHeaders)
+        body     <- bodyFromZipFile
+        response <- postImport("invalid-shortcode", body, validContentTypeHeaders)
         status    = response.status
       } yield {
         assertTrue(status == Status.BadRequest)
       }),
       test("given the Content-Type header is invalid, return correct error")(
         for {
-          responseWrongHeader <-
-            postImport(emptyProject, bodyFromZipFile, Headers(Header.ContentType(MediaType.application.json)))
-          status = responseWrongHeader.status
+          body                <- bodyFromZipFile
+          responseWrongHeader <- postImport(emptyProject, body, Headers(Header.ContentType(MediaType.application.json)))
+          status               = responseWrongHeader.status
         } yield {
           assertTrue(status == Status.UnsupportedMediaType)
         },
       ),
       test("given the Content-Type header is not-present, return correct error")(
         for {
-          responseNoHeader <- postImport(existingProject, bodyFromZipFile, Headers.empty)
+          body             <- bodyFromZipFile
+          responseNoHeader <- postImport(existingProject, body, Headers.empty)
           status            = responseNoHeader.status
         } yield {
           assertTrue(status == Status.BadRequest)
@@ -126,11 +128,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       test("given the Body is a zip, return 200")(
         for {
           storageConfig <- ZIO.service[StorageConfig]
-          response <- postImport(
-                        emptyProject,
-                        bodyFromZipFile,
-                        validContentTypeHeaders,
-                      )
+          body          <- bodyFromZipFile
+          response      <- postImport(emptyProject, body, validContentTypeHeaders)
           importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
                             && Files.isDirectory(storageConfig.assetPath / emptyProject.toString / "fg")
           status = response.status
@@ -141,7 +140,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       test("given the Body is not a zip, will return 400") {
         for {
           storageConfig      <- ZIO.service[StorageConfig]
-          response           <- postImport(emptyProject, nonEmptyChunkBody, validContentTypeHeaders)
+          body               <- nonEmptyChunkBody
+          response           <- postImport(emptyProject, body, validContentTypeHeaders)
           importDoesNotExist <- validateImportedProjectExists(storageConfig, emptyProject).map(!_)
           status              = response.status
         } yield {
