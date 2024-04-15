@@ -36,8 +36,7 @@ and add code to `ResponderManager` to instantiate the new responder. Then add a 
 the `receive` method in `ResponderManager`, to match messages that extend your request
 message trait, and pass them to that responder's receive method.
 The responder's resulting `Future` must be passed to the `ActorUtil.future2Message`.
-See [Futures with Pekko](../principles/futures-with-pekko.md) and
-[Error Handling](../principles/design-overview.md#error-handling) for details.
+See [Error Handling](../principles/design-overview.md#error-handling) for details.
 
 ## Write a Route
 
