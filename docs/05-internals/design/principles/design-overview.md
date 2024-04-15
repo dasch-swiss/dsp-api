@@ -94,8 +94,6 @@ actors. However, the design of reply message passing from actors (by
 using `future2Message`), makes sure that any exceptions thrown inside
 actors, will reach the route, where they will be handled.
 
-See also [Futures with Akka](futures-with-pekko.md).
-
 ## API Routing
 
 The API routes in the `routing` package are defined using the DSL
