@@ -139,6 +139,7 @@ jobs:
       - name: Checkout source
         if: ${{ env.IS_NOOP == 'false' }}
         uses: actions/checkout@v3
+      - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         if: ${{ env.IS_NOOP == 'false' }}
         run: |
