@@ -31,6 +31,9 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
+import zio.json._
+import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 import zio.metrics.Metric
 
 import java.io.BufferedInputStream
@@ -333,10 +336,27 @@ case class TriplestoreServiceLive(
     doHttpRequest(request, returnResponseAsString).flatMap(checkForExpectedDataset)
   }
 
-  override def compact(): Task[Unit] = {
-    val request = new HttpPost("/$/compact/" + fusekiConfig.repositoryName)
-    doHttpRequest(request, x => ZIO.succeed(x)).tap(x => ZIO.logDebug(s"Compaction Response: $x")).logError.unit
-  }
+  override def compact(): Task[Unit] =
+    for {
+      _       <- ZIO.logInfo("Starting compaction")
+      request  = new HttpPost("/$/compact/" + fusekiConfig.repositoryName + "?deleteOld=true")
+      res     <- doHttpRequest(request, returnResponseAsString)
+      resJson <- ZIO.fromEither(res.fromJson[Json]).mapError(new RuntimeException(_))
+      cursor   = JsonCursor.field("taskId").isString
+      taskId  <- ZIO.fromEither(resJson.get(cursor)).mapBoth(new RuntimeException(_), _.value)
+      _       <- awaitCompaction(taskId)
+      _       <- ZIO.logInfo("Compaction finished.")
+    } yield ()
+
+  private def awaitCompaction(taskId: String): UIO[Unit] =
+    (for {
+      _         <- ZIO.logInfo(s"Awaiting compaction task: $taskId")
+      request    = new HttpGet("/$/tasks/" + taskId)
+      res       <- doHttpRequest(request, returnResponseAsString)
+      resJson   <- ZIO.fromEither(res.fromJson[Json]).mapError(new RuntimeException(_))
+      cursor     = JsonCursor.field("finished").isString
+      isFinished = resJson.get(cursor).isRight
+    } yield isFinished).repeatWhileEquals(false).unit.orDie
 
   /**
    * Initialize the Jena Fuseki triplestore. Currently only works for

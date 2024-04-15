@@ -60,7 +60,6 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
     for {
       durationState <- Ref.make(RepoUpdateMetrics.make)
       _             <- ZIO.logInfo("Starting dummy migration process...")
-      compactFiber  <- scheduleCompact.fork
       _             <- deleteTmpDirectories()
       graphs        <- getDataGraphs.debug("Data graphs")
       metric1       <- doDummieMigration()
@@ -68,6 +67,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
       _ <- ZIO.foreachDiscard(graphs) { graph =>
              for {
                _               <- ZIO.logInfo(s"Removing graph for next dummy migration: $graph")
+               _               <- triplestoreService.compact()
                _               <- triplestoreService.dropGraph(graph)
                metric          <- doDummieMigration()
                _               <- durationState.update(metrics => RepoUpdateMetrics(metrics.metrics :+ metric))
@@ -79,26 +79,19 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                     )
              } yield ()
            }
-      _          <- compactFiber.interrupt
       metrics    <- durationState.get
-      _          <- ZIO.logInfo(s"Metrics: ${metrics}")
+      _          <- ZIO.logInfo(s"Metrics: $metrics")
       metricsJson = metrics.toJsonPretty
       _ <- ZIO.logInfo(
              s"""|***********************
                  |Final Metrics JSON:
                  |
-                 |${metricsJson}
+                 |$metricsJson
                  |
                  |***********************
                  |""".stripMargin,
            )
     } yield ()
-
-  private def scheduleCompact: Task[Nothing] =
-    compact.repeat(Schedule.fixed(40.minutes)).forever
-
-  private def compact: Task[Unit] =
-    ZIO.logInfo("Triggered compaction.") *> triplestoreService.compact()
 
   private def getDataGraphs: Task[Seq[String]] =
     for {
