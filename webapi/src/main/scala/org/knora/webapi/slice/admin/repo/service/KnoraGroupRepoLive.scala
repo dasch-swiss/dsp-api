@@ -53,6 +53,10 @@ final case class KnoraGroupRepoLive(triplestore: TriplestoreService, mapper: Rdf
       .die(new IllegalArgumentException("Update not supported for built-in groups"))
       .when(KnoraGroupRepo.builtIn.findOneBy(_.id == group.id).isDefined) *>
       super.save(group)
+
+  override def findByName(name: GroupName): Task[Option[KnoraGroup]] =
+    findOneByTriplePattern(_.has(groupName, Rdf.literalOf(name.value)))
+      .map(_.orElse(KnoraGroupRepo.builtIn.findOneBy(_.groupName == name)))
 }
 
 object KnoraGroupRepoLive {

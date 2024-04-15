@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.repo.service
 
 import zio.Chunk
 import zio.Ref
+import zio.Task
 import zio.ZIO
 import zio.ZLayer
 import zio.test.Gen
@@ -26,7 +27,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
     extends AbstractInMemoryCrudRepository[KnoraGroup, GroupIri](groups, _.id)
-    with KnoraGroupRepo {}
+    with KnoraGroupRepo {
+  override def findByName(name: GroupName): Task[Option[KnoraGroup]] = ???
+}
 
 object KnoraGroupRepoInMemory {
   val layer = ZLayer.fromZIO(Ref.make(Chunk.empty[KnoraGroup])) >>>

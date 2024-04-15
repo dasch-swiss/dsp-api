@@ -15,10 +15,8 @@ import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.Project
@@ -30,8 +28,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model
@@ -186,58 +182,6 @@ final case class GroupsResponderADM(
     groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 
   /**
-   * Create a new group.
-   *
-   * @param request              the create request information.
-   * @param apiRequestID         the unique request ID.
-   * @return a [[GroupGetResponseADM]]
-   */
-  def createGroup(
-    request: GroupCreateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM] = {
-    val task = for {
-      nameExists <- groupByNameAndProjectExists(request.name.value, request.project.value)
-      _ <- ZIO
-             .fail(DuplicateValueException(s"Group with the name '${request.name.value}' already exists"))
-             .when(nameExists)
-
-      project <-
-        findProjectByIriOrFail(
-          request.project.value,
-          NotFoundException(s"Cannot create group inside project <${request.project}>. The project was not found."),
-        )
-
-      // check the custom IRI; if not given, create an unused IRI
-      customGroupIri: Option[SmartIri] = request.id.map(_.value).map(iri => iri.toSmartIri)
-      groupIri                        <- iriService.checkOrCreateEntityIri(customGroupIri, GroupIri.makeNew(project.getShortcode).value)
-
-      /* create the group */
-      createNewGroupSparqlString =
-        sparql.admin.txt
-          .createNewGroup(
-            AdminConstants.adminDataNamedGraph.value,
-            groupIri,
-            groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
-            name = request.name.value,
-            descriptions = request.descriptions.value,
-            projectIri = request.project.value,
-            status = request.status.value,
-            hasSelfJoinEnabled = request.selfjoin.value,
-          )
-
-      _ <- triplestore.query(Update(createNewGroupSparqlString))
-
-      /* Verify that the group was created and updated  */
-      createdGroup <-
-        groupGetADM(groupIri)
-          .someOrFail(UpdateNotPerformedException("Group was not created. Please report this as a possible bug."))
-
-    } yield GroupGetResponseADM(createdGroup)
-    IriLocker.runWithIriLock(apiRequestID, "http://rdfh.ch/groups", task)
-  }
-
-  /**
    * Change group's basic information.
    *
    * @param groupIri             the IRI of the group we want to change.
@@ -324,7 +268,7 @@ final case class GroupsResponderADM(
                                     } yield groupByNameAndProjectExists(name.value, project.id)
                                   ).getOrElse(ZIO.succeed(false))
       _ <- ZIO
-             .fail(BadRequestException(s"Group with the name '${request.name.get.value}' already exists."))
+             .fail(BadRequestException(s"Group with name: '${request.name.get.value}' already exists."))
              .when(groupByNameAlreadyExists)
 
       /* Update group */
