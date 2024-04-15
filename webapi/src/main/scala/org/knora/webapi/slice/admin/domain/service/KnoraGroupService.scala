@@ -20,7 +20,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
-  knoraProjectRepo: KnoraProjectRepo,
   iriService: IriService,
 ) {
 
