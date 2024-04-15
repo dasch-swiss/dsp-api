@@ -21,7 +21,7 @@ object Dependencies {
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "4.3.10"
+  val Rdf4jVersion      = "4.3.11"
 
   val ZioConfigVersion            = "4.0.1"
   val ZioLoggingVersion           = "2.2.2"
@@ -29,7 +29,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC23"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.21"
+  val ZioVersion                  = "2.0.22"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -67,7 +67,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.12" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22"
@@ -116,7 +116,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.0"
+  val tapirVersion = "1.10.4"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
