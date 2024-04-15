@@ -17,7 +17,7 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
@@ -25,7 +25,7 @@ final case class GroupRestService(
   auth: AuthorizationRestService,
   format: KnoraResponseRenderer,
   groupService: GroupService,
-  projectService: ProjectService,
+  knoraProjectService: KnoraProjectService,
   responder: GroupsResponderADM,
 ) {
 
@@ -52,7 +52,7 @@ final case class GroupRestService(
   def postGroup(request: GroupCreateRequest, user: User): Task[GroupGetResponseADM] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdmin(user, request.project)
-      project <- projectService
+      project <- knoraProjectService
                    .findById(request.project)
                    .someOrFail(NotFoundException(s"Project <${request.project}> not found."))
       internal <- groupService.createGroup(request, project).map(GroupGetResponseADM.apply)

@@ -11,14 +11,12 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.DuplicateValueException
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
@@ -34,18 +32,17 @@ case class KnoraGroupService(
 
   def findByIds(ids: Seq[GroupIri]): Task[Chunk[KnoraGroup]] = knoraGroupRepo.findByIds(ids)
 
-  def createGroup(request: GroupCreateRequest, project: Project): Task[KnoraGroup] =
+  def createGroup(request: GroupCreateRequest, project: KnoraProject): Task[KnoraGroup] =
     for {
       _        <- ensureGroupNameIsUnique(request.name)
-      _        <- ensureProjectExists(ProjectIri.unsafeFrom(project.id))
-      groupIri <- iriService.checkOrCreateNewGroupIri(request.id, Shortcode.unsafeFrom(project.shortcode))
+      groupIri <- iriService.checkOrCreateNewGroupIri(request.id, project.shortcode)
       group =
         KnoraGroup(
           id = groupIri,
           groupName = request.name,
           groupDescriptions = request.descriptions,
           status = request.status,
-          belongsToProject = Some(ProjectIri.unsafeFrom(project.id)),
+          belongsToProject = Some(project.id),
           hasSelfJoinEnabled = request.selfjoin,
         )
       _ <- knoraGroupRepo.save(group)
@@ -54,11 +51,6 @@ case class KnoraGroupService(
   private def ensureGroupNameIsUnique(name: GroupName) =
     ZIO.whenZIO(knoraGroupRepo.existsByName(name)) {
       ZIO.fail(DuplicateValueException(s"Group with name: '${name.value}' already exists."))
-    }
-
-  private def ensureProjectExists(iri: ProjectIri) =
-    ZIO.whenZIO(knoraProjectRepo.existsById(iri).negate) {
-      ZIO.fail(new IllegalArgumentException(s"Project with IRI: '$iri' does not exist."))
     }
 }
 
