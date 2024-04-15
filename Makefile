@@ -14,7 +14,7 @@ SBTX = ./sbtx
 .PHONY: docs-build
 docs-build: ## build docs into the local 'site' folder
 	@$(MAKE) -C docs graphvizfigures
-	mkdocs build
+	mkdocs build --strict
 
 .PHONY: docs-serve
 docs-serve: ## serve docs for local viewing

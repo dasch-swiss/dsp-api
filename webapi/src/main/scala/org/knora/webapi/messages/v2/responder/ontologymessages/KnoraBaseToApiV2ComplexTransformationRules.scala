@@ -479,6 +479,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         objectsWithLang = Map(
           LanguageCodes.DE -> "hat eingehenden Verweis",
           LanguageCodes.EN -> "has incoming link",
+          LanguageCodes.FR -> "liens entrants",
         ),
       ),
       makePredicate(
