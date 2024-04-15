@@ -344,19 +344,29 @@ case class TriplestoreServiceLive(
       resJson <- ZIO.fromEither(res.fromJson[Json]).mapError(new RuntimeException(_))
       cursor   = JsonCursor.field("taskId").isString
       taskId  <- ZIO.fromEither(resJson.get(cursor)).mapBoth(new RuntimeException(_), _.value)
+      _       <- ZIO.logInfo(s"Awaiting compaction task: $taskId")
       _       <- awaitCompaction(taskId)
       _       <- ZIO.logInfo("Compaction finished.")
     } yield ()
 
   private def awaitCompaction(taskId: String): UIO[Unit] =
+    awaitOnce(taskId).repeatWhileEquals(false).unit
+
+  private def awaitOnce(taskId: String): UIO[Boolean] =
+    isFinished(taskId).flatMap {
+      case true  => ZIO.succeed(true)
+      case false => ZIO.sleep(3.minutes).as(false)
+    }
+
+  private def isFinished(taskId: String): UIO[Boolean] =
     (for {
-      _         <- ZIO.logInfo(s"Awaiting compaction task: $taskId")
+      _         <- ZIO.logDebug(s"Checking compaction task: $taskId")
       request    = new HttpGet("/$/tasks/" + taskId)
       res       <- doHttpRequest(request, returnResponseAsString)
       resJson   <- ZIO.fromEither(res.fromJson[Json]).mapError(new RuntimeException(_))
       cursor     = JsonCursor.field("finished").isString
       isFinished = resJson.get(cursor).isRight
-    } yield isFinished).repeatWhileEquals(false).unit.orDie
+    } yield isFinished).orDie
 
   /**
    * Initialize the Jena Fuseki triplestore. Currently only works for
