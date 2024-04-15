@@ -198,11 +198,13 @@ Consistency: subject_class_constraint
 If subject `i` has a predicate `p` that requires an object of type `t`,
 and the object of `p` is not a `t`, the constraint is violated:
 
-    Consistency: object_class_constraint
-        p <knora-base:objectClassConstraint> t
-        i p j
-        ------------------------------------
-        j <rdf:type> t
+```
+Consistency: object_class_constraint
+    p <knora-base:objectClassConstraint> t
+    i p j
+    ------------------------------------
+    j <rdf:type> t
+```
 
 ### Cardinality constraints
 
