@@ -355,7 +355,7 @@ case class TriplestoreServiceLive(
   private def awaitOnce(taskId: String): UIO[Boolean] =
     isFinished(taskId).flatMap {
       case true  => ZIO.succeed(true)
-      case false => ZIO.sleep(3.minutes).as(false)
+      case false => ZIO.sleep(20.seconds).as(false)
     }
 
   private def isFinished(taskId: String): UIO[Boolean] =

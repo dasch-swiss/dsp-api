@@ -30,7 +30,7 @@ trait AroundDirectives {
     mapResponse { resp =>
       val took    = System.currentTimeMillis() - start
       val message = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${took}ms"
-      if (shouldLogWarning(resp)) metricsLogger.warn(message)
+      if (shouldLogWarning(resp)) metricsLogger.debug(message)
       else metricsLogger.debug(message)
       resp
     }

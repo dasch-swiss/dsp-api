@@ -14,7 +14,6 @@ import java.time.Instant
 import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
