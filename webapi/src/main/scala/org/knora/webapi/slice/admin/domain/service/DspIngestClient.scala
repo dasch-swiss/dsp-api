@@ -101,8 +101,9 @@ final case class DspIngestClientLive(
     for {
       importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
+      body      <- Body.fromFile(fileToImport.toFile)
       request = Request
-                  .post(importUrl, Body.fromFile(fileToImport.toFile))
+                  .post(importUrl, body)
                   .addHeaders(
                     Headers(
                       Header.Authorization.Bearer(token.jwtString),
