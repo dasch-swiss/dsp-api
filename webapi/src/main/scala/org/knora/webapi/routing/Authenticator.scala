@@ -14,7 +14,6 @@ import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.util.ByteString
 import spray.json._
 import zio._
-import zio.macros.accessible
 
 import java.util.Base64
 
@@ -35,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.util.cache.CacheUtil
@@ -44,7 +44,6 @@ import org.knora.webapi.util.cache.CacheUtil
  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
  * session id. All private methods used in this trait can be found in the companion object.
  */
-@accessible
 trait Authenticator {
 
   /**
@@ -145,8 +144,8 @@ final case class AuthenticatorLive(
   private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
-  private implicit val stringFormatter: StringFormatter,
-) extends Authenticator {
+)(private implicit val stringFormatter: StringFormatter)
+    extends Authenticator {
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
@@ -392,7 +391,10 @@ final case class AuthenticatorLive(
                       _ <-
                         ZIO
                           .fail(BadCredentialsException(BAD_CRED_NOT_VALID))
-                          .when(!user.password.exists(passwordService.matchesStr(passCreds.password, _)))
+                          .when(
+                            KnoraUserRepo.builtIn.findOneBy(_.id.value == user.id).isDefined ||
+                              !user.password.exists(passwordService.matchesStr(passCreds.password, _)),
+                          )
                     } yield true
                   case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
                     ZIO

@@ -13,6 +13,7 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
@@ -27,21 +28,23 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
-final case class PermissionsRestService(
-  responder: PermissionsResponderADM,
+final case class PermissionRestService(
+  responder: PermissionsResponder,
   knoraProjectService: KnoraProjectService,
   auth: AuthorizationRestService,
   format: KnoraResponseRenderer,
+  administrativePermissionService: AdministrativePermissionService,
 ) {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
@@ -170,24 +173,33 @@ final case class PermissionsRestService(
     user: User,
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value)
-      ext    <- format.toExternalADM(result)
+      _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      result <-
+        administrativePermissionService
+          .findByGroupAndProject(groupIri, projectIri)
+          .map(_.map(AdministrativePermissionADM.from))
+          .someOrFail(
+            NotFoundException(
+              s"No Administrative Permission found for project: ${projectIri.value}, group: ${groupIri.value} combination",
+            ),
+          )
+          .map(AdministrativePermissionGetResponseADM.apply)
+      ext <- format.toExternalADM(result)
     } yield ext
 }
 
-object PermissionsRestService {
+object PermissionRestService {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
     user: User,
-  ): ZIO[PermissionsRestService, Throwable, AdministrativePermissionCreateResponseADM] =
+  ): ZIO[PermissionRestService, Throwable, AdministrativePermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createAdministrativePermission(request, user))
 
   def createDefaultObjectAccessPermission(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
     user: User,
-  ): ZIO[PermissionsRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
+  ): ZIO[PermissionRestService, Throwable, DefaultObjectAccessPermissionCreateResponseADM] =
     ZIO.serviceWithZIO(_.createDefaultObjectAccessPermission(request, user))
 
-  val layer = ZLayer.derive[PermissionsRestService]
+  val layer = ZLayer.derive[PermissionRestService]
 }

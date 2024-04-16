@@ -1305,7 +1305,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       qt <- ZIO.service[QueryTraverser]
       mr <- ZIO.service[MessageRelay]
       sf <- ZIO.service[StringFormatter]
-    } yield GravsearchTypeInspectionRunner(qt, mr, sf)
+    } yield GravsearchTypeInspectionRunner(qt, mr)(sf)
 
   def inspectTypes(
     query: String,

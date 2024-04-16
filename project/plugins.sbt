@@ -5,7 +5,7 @@ resolvers ++= Seq(
 // please don't remove or merge uncommented to main
 //addDependencyTreePlugin
 
-addSbtPlugin("com.github.sbt"          % "sbt-native-packager" % "1.9.16")
+addSbtPlugin("com.github.sbt"          % "sbt-native-packager" % "1.10.0")
 addSbtPlugin("io.kamon"                % "sbt-aspectj-runner"  % "1.1.2")
 addSbtPlugin("org.playframework.twirl" % "sbt-twirl"           % "2.0.4")
 addSbtPlugin("com.eed3si9n"            % "sbt-assembly"        % "2.2.0")

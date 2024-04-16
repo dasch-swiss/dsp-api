@@ -74,8 +74,8 @@ case class TriplestoreServiceLive(
   triplestoreConfig: Triplestore,
   queryHttpClient: CloseableHttpClient,
   targetHost: HttpHost,
-  implicit val sf: StringFormatter,
-) extends TriplestoreService
+)(implicit val sf: StringFormatter)
+    extends TriplestoreService
     with FusekiTriplestore {
 
   private val requestTimer =
@@ -690,6 +690,6 @@ object TriplestoreServiceLive {
         config <- ZIO.service[Triplestore]
         host    = new HttpHost(config.host, config.fuseki.port, "http")
         client <- makeHttpClient(config, host)
-      } yield TriplestoreServiceLive(config, client, host, sf)
+      } yield TriplestoreServiceLive(config, client, host)(sf)
     }
 }

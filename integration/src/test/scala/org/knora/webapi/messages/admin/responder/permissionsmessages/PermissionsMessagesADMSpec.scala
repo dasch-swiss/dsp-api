@@ -12,12 +12,12 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.sharedtestdata._
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -40,35 +40,12 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
-
-    "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = projectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser01,
-        ),
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionForProjectGroupGetADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          groupIri = KnoraGroupRepo.builtIn.ProjectMember.id.value,
-          requestingUser = SharedTestDataADM.imagesUser02,
-        ),
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
-    }
   }
 
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = "invalid-project-IRI",
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
@@ -83,7 +60,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val groupIri = "invalid-group-iri"
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = groupIri,
@@ -98,7 +75,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
@@ -121,7 +98,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
@@ -139,7 +116,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
@@ -153,7 +130,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createAdministrativePermission(
+        PermissionRestService.createAdministrativePermission(
           CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = KnoraGroupRepo.builtIn.ProjectMember.id.value,
@@ -416,7 +393,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val forProject = "invalid-project-IRI"
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = forProject,
             forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -433,7 +410,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied group IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val groupIri = "invalid-group-iri"
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(groupIri),
@@ -450,7 +427,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
@@ -467,7 +444,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
@@ -488,7 +465,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         "Invalid value for name parameter of hasPermissions: invalid, it should be one of " +
@@ -507,7 +484,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
@@ -525,7 +502,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"Given permission code 2 and permission name CR are not consistent.",
@@ -543,7 +520,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
 
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"One of permission code or permission name must be provided for a default object access permission.",
@@ -560,7 +537,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
         ),
       )
       val exit =
-        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponderADM](_.verifyHasPermissionsDOAP(hasPermissions)))
+        UnsafeZioRun.run(ZIO.serviceWithZIO[PermissionsResponder](_.verifyHasPermissionsDOAP(hasPermissions)))
       assertFailsWithA[BadRequestException](
         exit,
         s"additionalInformation of a default object access permission type cannot be empty.",
@@ -569,7 +546,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
@@ -587,7 +564,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if the both group and resource class are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -604,7 +581,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id.value),
@@ -621,7 +598,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
@@ -637,7 +614,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if resourceClassIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
@@ -656,7 +633,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
     "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
       val exit = UnsafeZioRun.run(
-        PermissionsRestService.createDefaultObjectAccessPermission(
+        PermissionRestService.createDefaultObjectAccessPermission(
           CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             hasPermissions = Set(

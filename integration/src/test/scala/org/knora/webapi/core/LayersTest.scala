@@ -8,9 +8,12 @@ package org.knora.webapi.core
 import org.apache.pekko
 import zio._
 
+import org.knora.sipi.SipiServiceTestDelegator
+import org.knora.sipi.WhichSipiService
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfig.AppConfigurationsTest
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -31,10 +34,10 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.AdminModule
 import org.knora.webapi.slice.admin.api.AdminApiModule
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
-import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
+import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
-import org.knora.webapi.slice.admin.api.service.UsersRestService
+import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
@@ -59,8 +62,6 @@ import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.SipiServiceLive
-import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -82,30 +83,75 @@ object LayersTest {
     DefaultTestEnvironmentWithoutSipi & SipiTestContainer & DspIngestTestContainer & SharedVolumes.Images
 
   type CommonR0 =
-    pekko.actor.ActorSystem & AppConfigurationsTest & JwtService & SipiService & StringFormatter
+    pekko.actor.ActorSystem & AppConfigurationsTest & JwtConfig & WhichSipiService
 
   type CommonR =
-    ApiRoutes & AdminApiEndpoints & ApiV2Endpoints & AppRouter & AssetPermissionsResponder & Authenticator &
-      AuthorizationRestService & CacheServiceRequestMessageHandler & CardinalityHandler & ConstructResponseUtilV2 &
-      DspIngestClient & GravsearchTypeInspectionRunner & GroupsResponderADM & GroupsRestService & GroupService &
-      HttpServer & IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & ListsResponder &
-      ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers & OntologyInferencer & OntologyRepo &
-      OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PermissionsRestService & ProjectExportService &
-      ProjectExportStorageService & ProjectImportService & ProjectService & ProjectRestService & QueryTraverser &
-      RepositoryUpdater & ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & SearchApiRoutes &
-      SearchResponderV2 & StandoffResponderV2 & StandoffTagUtilV2 & State & TestClientService & TriplestoreService &
-      UserService & UsersResponder & UsersRestService & ValuesResponderV2
+    AdminApiEndpoints &
+      ApiRoutes &
+      ApiV2Endpoints &
+      AppRouter &
+      AssetPermissionsResponder &
+      Authenticator &
+      AuthorizationRestService &
+      CacheServiceRequestMessageHandler &
+      CardinalityHandler &
+      ConstructResponseUtilV2 &
+      DspIngestClient &
+      GravsearchTypeInspectionRunner &
+      GroupRestService &
+      GroupService &
+      GroupsResponderADM &
+      HttpServer &
+      IIIFRequestMessageHandler &
+      InferenceOptimizationService &
+      IriConverter &
+      JwtService &
+      KnoraUserToUserConverter &
+      ListsResponder &
+      ListsResponderV2 &
+      MessageRelay &
+      OntologyCache &
+      OntologyHelpers &
+      OntologyInferencer &
+      OntologyRepo &
+      OntologyResponderV2 &
+      PermissionRestService &
+      PermissionUtilADM &
+      PermissionsResponder &
+      ProjectExportService &
+      ProjectExportStorageService &
+      ProjectImportService &
+      ProjectRestService &
+      ProjectService &
+      QueryTraverser &
+      RepositoryUpdater &
+      ResourceUtilV2 &
+      ResourcesResponderV2 &
+      RestCardinalityService &
+      SearchApiRoutes &
+      SearchResponderV2 &
+      SipiService &
+      StandoffResponderV2 &
+      StandoffTagUtilV2 &
+      State &
+      StringFormatter &
+      TestClientService &
+      TriplestoreService &
+      UserRestService &
+      UserService &
+      UsersResponder &
+      ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      AdminModule.layer,
       AdminApiModule.layer,
+      AdminModule.layer,
       ApiRoutes.layer,
       ApiV2Endpoints.layer,
       AppRouter.layer,
       AssetPermissionsResponder.layer,
       AuthenticatorLive.layer,
-      AuthorizationRestServiceLive.layer,
+      AuthorizationRestService.layer,
       BaseEndpoints.layer,
       CacheService.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -122,10 +168,12 @@ object LayersTest {
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
+      JwtServiceLive.layer,
       KnoraResponseRenderer.layer,
       KnoraUserToUserConverter.layer,
       ListsResponder.layer,
       ListsResponderV2.layer,
+      ManagementEndpoints.layer,
       ManagementRoutes.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
@@ -134,12 +182,12 @@ object LayersTest {
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
-      PermissionsResponderADMLive.layer,
+      PermissionsResponder.layer,
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectExportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
-      ProjectImportServiceLive.layer,
+      ProjectImportService.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoLayers.live,
@@ -149,41 +197,36 @@ object LayersTest {
       SearchApiRoutes.layer,
       SearchEndpoints.layer,
       SearchResponderV2Live.layer,
+      SipiServiceTestDelegator.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
+      StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UserService.layer,
       UsersResponder.layer,
       ValuesResponderV2Live.layer,
-      ManagementEndpoints.layer,
     )
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & JwtService & SharedVolumes.Images &
-        SipiService & SipiTestContainer & StringFormatter,
+      AppConfigurations & DspIngestTestContainer & FusekiTestContainer & SharedVolumes.Images & SipiTestContainer & WhichSipiService,
     ](
       AppConfigForTestContainers.testcontainers,
-      DspIngestClientLive.layer,
       DspIngestTestContainer.layer,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
-      SipiServiceLive.layer,
-      JwtServiceLive.layer,
       SharedVolumes.Images.layer,
-      StringFormatter.test,
+      WhichSipiService.live,
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer & AppConfigurations & JwtService & SipiService & StringFormatter](
+    ZLayer.make[FusekiTestContainer & AppConfigurations & WhichSipiService](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
-      SipiServiceMock.layer,
-      JwtServiceLive.layer,
-      StringFormatter.test,
+      WhichSipiService.mock,
     )
 
   /**

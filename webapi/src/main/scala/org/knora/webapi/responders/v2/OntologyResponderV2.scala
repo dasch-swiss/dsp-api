@@ -77,8 +77,8 @@ final case class OntologyResponderV2Live(
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
   cacheService: CacheService,
-  implicit val stringFormatter: StringFormatter,
-) extends OntologyResponderV2
+)(implicit val stringFormatter: StringFormatter)
+    extends OntologyResponderV2
     with MessageHandler
     with LazyLogging {
 
@@ -2983,8 +2983,8 @@ object OntologyResponderV2Live {
       sf       <- ZIO.service[StringFormatter]
       ts       <- ZIO.service[TriplestoreService]
       cache    <- ZIO.service[CacheService]
-      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, cache, sf)
-      _        <- MessageRelay.subscribe(responder)
+      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, cache)(sf)
+      _        <- ZIO.serviceWithZIO[MessageRelay](_.subscribe(responder))
     } yield responder
   }
 }

@@ -11,7 +11,6 @@ import org.apache.jena.rdfconnection.RDFConnection
 import org.apache.jena.rdfconnection.RDFConnectionFuseki
 import zio._
 import zio.http.URL
-import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 
@@ -22,26 +21,17 @@ import java.net.http.HttpClient
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
-
-@accessible
-trait ProjectImportService {
-  def importProject(id: Shortcode, user: User): Task[Option[Path]]
-  def importTrigFile(file: Path): Task[Unit]
-  def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
-  def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
-}
 
 final case class Asset(belongsToProject: KnoraProject.Shortcode, internalFilename: String)
 object Asset {
   def logString(it: Asset) = s"Asset(code: ${it.belongsToProject.value}, path: ${it.internalFilename}"
 }
 
-final case class ProjectImportServiceLive(
+final case class ProjectImportService(
   private val config: Triplestore,
   private val exportStorage: ProjectExportStorageService,
   private val dspIngestClient: DspIngestClient,
-) extends ProjectImportService {
+) {
 
   private val fusekiBaseUrl: URL = {
     val str      = config.host + ":" + config.fuseki.port
@@ -63,7 +53,7 @@ final case class ProjectImportServiceLive(
     ZIO.acquireRelease(acquire(fusekiBaseUrl.path(s"/${config.fuseki.repositoryName}"), httpClient))(release)
   }
 
-  override def importTrigFile(file: Path): Task[Unit] = ZIO.scoped {
+  def importTrigFile(file: Path): Task[Unit] = ZIO.scoped {
     for {
       _            <- ZIO.logInfo(s"Importing $file into ${config.fuseki.repositoryName}")
       connection   <- connect()
@@ -73,13 +63,15 @@ final case class ProjectImportServiceLive(
     } yield ()
   }
 
-  override def query(query: String)(executor: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet] = {
+  def query(query: String)(executor: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet] = {
     val acquire                            = connect().map(_.query(query))
     def release(queryExec: QueryExecution) = ZIO.attempt(queryExec.close()).unit.logError.ignore
     ZIO.acquireRelease(acquire)(release).map(executor)
   }
 
-  override def importProject(projectShortcode: Shortcode, user: User): Task[Option[Path]] = {
+  def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
+
+  def importProject(projectShortcode: Shortcode): Task[Option[Path]] = {
     val projectImport = exportStorage.projectExportFullPath(projectShortcode)
     ZIO.whenZIO(Files.exists(projectImport))(importProject(projectImport, projectShortcode))
   }
@@ -125,6 +117,6 @@ final case class ProjectImportServiceLive(
   }
 }
 
-object ProjectImportServiceLive {
-  val layer = ZLayer.derive[ProjectImportServiceLive]
+object ProjectImportService {
+  val layer = ZLayer.derive[ProjectImportService]
 }

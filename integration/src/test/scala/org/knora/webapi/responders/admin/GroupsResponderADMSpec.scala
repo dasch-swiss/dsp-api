@@ -18,7 +18,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM._
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
-import org.knora.webapi.slice.admin.api.service.GroupsRestService
+import org.knora.webapi.slice.admin.api.service.GroupRestService
 import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
@@ -33,7 +33,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
  * This spec is used to test the messages received by the [[GroupsResponderADMSpec]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec {
-  private val groupRestService = ZIO.serviceWithZIO[GroupsRestService]
+  private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]
 
   "The GroupsResponder " when {
@@ -65,8 +65,8 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "CREATE the group and return the group's info if the supplied group name is unique" in {
         val response = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.createGroup(
+          groupRestService(
+            _.postGroup(
               GroupCreateRequest(
                 id = None,
                 name = GroupName.unsafeFrom("NewGroup"),
@@ -83,29 +83,29 @@ class GroupsResponderADMSpec extends CoreSpec {
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
 
-        val newGroupInfo = response.group
-        newGroupInfo.name should equal("NewGroup")
-        newGroupInfo.descriptions should equal(
+        val group = response.group
+        group.name should equal("NewGroup")
+        group.descriptions should equal(
           Seq(StringLiteralV2.from("""NewGroupDescription with "quotes" and <html tag>""", Some("en"))),
         )
-        newGroupInfo.project should equal(Some(imagesProject))
-        newGroupInfo.status should equal(true)
-        newGroupInfo.selfjoin should equal(false)
+        group.project should equal(Some(imagesProjectExternal))
+        group.status should equal(true)
+        group.selfjoin should equal(false)
 
         // store for later usage
-        newGroupIri.set(newGroupInfo.id)
+        newGroupIri.set(group.id)
       }
 
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         val groupName = GroupName.unsafeFrom("NewGroup")
         val exit = UnsafeZioRun.run(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.createGroup(
+          groupRestService(
+            _.postGroup(
               GroupCreateRequest(
                 id = Some(GroupIri.unsafeFrom(imagesReviewerGroup.id)),
                 name = groupName,
@@ -115,13 +115,13 @@ class GroupsResponderADMSpec extends CoreSpec {
                 status = GroupStatus.active,
                 selfjoin = GroupSelfJoin.disabled,
               ),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
         assertFailsWithA[DuplicateValueException](
           exit,
-          s"Group with the name '${groupName.value}' already exists",
+          s"Group with name: '${groupName.value}' already exists.",
         )
       }
 
@@ -200,7 +200,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         )
         assertFailsWithA[BadRequestException](
           exit,
-          s"Group with the name '${groupName.value}' already exists.",
+          s"Group with name: '${groupName.value}' already exists.",
         )
       }
 

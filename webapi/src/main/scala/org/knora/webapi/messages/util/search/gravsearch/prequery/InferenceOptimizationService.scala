@@ -30,8 +30,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 final case class InferenceOptimizationService(
   private val projectService: ProjectService,
   private val ontologyCache: OntologyCache,
-  implicit private val stringFormatter: StringFormatter,
-) {
+)(implicit private val stringFormatter: StringFormatter) {
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.

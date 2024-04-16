@@ -22,8 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 final case class GravsearchTypeInspectionRunner(
   private val queryTraverser: QueryTraverser,
   private val messageRelay: MessageRelay,
-  implicit private val stringFormatter: StringFormatter,
-) {
+)(implicit private val stringFormatter: StringFormatter) {
   private val inferringInspector: InferringGravsearchTypeInspector =
     InferringGravsearchTypeInspector(messageRelay, queryTraverser)
   private val annotationReadingInspector: AnnotationReadingGravsearchTypeInspector =
@@ -169,6 +168,5 @@ final case class GravsearchTypeInspectionRunner(
 }
 
 object GravsearchTypeInspectionRunner {
-  val layer: ZLayer[QueryTraverser & MessageRelay & StringFormatter, Nothing, GravsearchTypeInspectionRunner] =
-    ZLayer.fromFunction(GravsearchTypeInspectionRunner.apply _)
+  val layer = ZLayer.derive[GravsearchTypeInspectionRunner]
 }

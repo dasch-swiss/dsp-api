@@ -89,7 +89,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
                            .validateAndEscapeIri(resourceIriStr)
                            .toZIO
                            .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
-          user <- Authenticator.getUserADM(requestContext)
+          user <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourceIIIFManifestGetRequestV2(resourceIri, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -101,7 +101,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         {
           val requestTask = for {
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             header          = "X-Asset-Ingested"
             ingestState = if (requestContext.request.headers.exists(_.name == header)) AssetIngested
@@ -122,7 +122,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         {
           val requestMessageFuture = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage
@@ -140,22 +140,24 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .fromOption(params.get("resourceClass"))
         .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
         .flatMap(iri =>
-          IriConverter.asSmartIri(iri).orElseFail(BadRequestException(s"Invalid resource class IRI: $iri")),
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(iri))
+            .orElseFail(BadRequestException(s"Invalid resource class IRI: $iri")),
         )
         .filterOrElseWith(it => it.isKnoraApiV2EntityIri && it.isApiV2ComplexSchema)(it =>
           ZIO.fail(BadRequestException(s"Invalid resource class IRI: $it")),
         )
-        .flatMap(IriConverter.asInternalSmartIri)
+        .flatMap(it => ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(it)))
 
       val getOrderByProperty: ZIO[IriConverter, Throwable, Option[SmartIri]] =
         ZIO.foreach(params.get("orderByProperty")) { orderByPropertyStr =>
-          IriConverter
-            .asSmartIri(orderByPropertyStr)
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(orderByPropertyStr))
             .orElseFail(BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
             .filterOrFail(iri => iri.isKnoraApiV2EntityIri && iri.isApiV2ComplexSchema)(
               BadRequestException(s"Invalid property IRI: $orderByPropertyStr"),
             )
-            .flatMap(IriConverter.asInternalSmartIri)
+            .flatMap(it => ZIO.serviceWithZIO[IriConverter](_.asInternalSmartIri(it)))
         }
 
       val getPage = ZIO
@@ -181,7 +183,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         targetSchema <- targetSchemaTask.zip(RouteUtilV2.getSchemaOptions(requestContext)).map {
                           case (schema, options) => SchemaRendering(schema, options)
                         }
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         response <- ZIO.serviceWithZIO[SearchResponderV2](
                       _.searchResourcesByProjectAndClassV2(
                         projectIri,
@@ -214,7 +216,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           resourceIri    <- getResourceIri
           startDate      <- getStartDate
           endDate        <- getEndDate
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourceVersionHistoryGetRequestV2(
           resourceIri,
           withDeletedResource = false,
@@ -244,8 +246,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
   private def getResourceHistoryEvents(): Route =
     path(resourcesBasePath / "resourceHistoryEvents" / Segment) { (resourceIri: IRI) =>
       get { requestContext =>
-        val requestTask = Authenticator
-          .getUserADM(requestContext)
+        val requestTask = ZIO
+          .serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           .map(ResourceHistoryEventsGetRequestV2(resourceIri, _))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -255,7 +257,9 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     path(resourcesBasePath / "projectHistoryEvents" / Segment) { (projectIri: IRI) =>
       get { requestContext =>
         val requestTask =
-          Authenticator.getUserADM(requestContext).map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
+          ZIO
+            .serviceWithZIO[Authenticator](_.getUserADM(requestContext))
+            .map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
@@ -270,7 +274,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         resourceIris   <- getResourceIris(resIris)
         versionDate    <- getInstantFromParams(params, "version", "version date", versionDateParser)
         targetSchema   <- targetSchemaTask
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         schemaOptions  <- schemaOptionsTask
       } yield ResourcesGetRequestV2(
         resourceIris,
@@ -301,7 +305,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         val requestTask = for {
           resourceIris <- getResourceIris(resIris)
           targetSchema <- targetSchemaTask
-          user         <- Authenticator.getUserADM(requestContext)
+          user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ResourcesPreviewGetRequestV2(resourceIris, withDeletedResource = true, targetSchema, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
@@ -321,7 +325,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         textProperty          <- getTextPropertyFromParams(params)
         gravsearchTemplateIri <- getGravsearchTemplateIriFromParams(params)
         headerXSLTIri         <- getHeaderXSLTIriFromParams(params)
-        user                  <- Authenticator.getUserADM(requestContext)
+        user                  <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, user)
       RouteUtilV2.runTEIXMLRoute(requestTask, requestContext)
     }
@@ -346,8 +350,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       val getExcludeProperty: ZIO[IriConverter, BadRequestException, Option[SmartIri]] = params
         .get(ExcludeProperty)
         .map(propIriStr =>
-          IriConverter
-            .asSmartIri(propIriStr)
+          ZIO
+            .serviceWithZIO[IriConverter](_.asSmartIri(propIriStr))
             .mapBoth(_ => BadRequestException(s"Invalid property IRI: <$propIriStr>"), Some(_)),
         )
         .getOrElse(ZIO.none)
@@ -366,7 +370,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         excludeProperty    <- getExcludeProperty
         t                  <- getInboundOutbound
         (inbound, outbound) = t
-        requestingUser     <- Authenticator.getUserADM(requestContext)
+        requestingUser     <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, requestingUser)
       RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
@@ -379,7 +383,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           val requestTask = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             msg            <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield msg
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
@@ -395,7 +399,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
           val requestTask = for {
             requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage.copy(erase = true)
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
@@ -415,8 +419,8 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       .fromOption(params.get(Text_Property))
       .orElseFail(BadRequestException(s"param $Text_Property not set"))
       .flatMap { textPropIriStr =>
-        IriConverter
-          .asSmartIri(textPropIriStr)
+        ZIO
+          .serviceWithZIO[IriConverter](_.asSmartIri(textPropIriStr))
           .orElseFail(BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
           .filterOrFail(_.isKnoraApiV2EntityIri)(
             BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI"),

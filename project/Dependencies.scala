@@ -10,17 +10,18 @@ import sbt.*
 import scala.collection.immutable.Seq
 
 object Dependencies {
-
-  val fusekiImage =
-    "daschswiss/apache-jena-fuseki:2.1.5" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:v3.12.2" // base image the knora-sipi image is created from
+  // should be the same version as in docker-compose.yml,
+  // make sure to use the same version in ops-deploy repository when deploying new DSP releases!
+  val fusekiImage = "daschswiss/apache-jena-fuseki:5.0.0-1"
+  // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:v3.12.2"
 
   val ScalaVersion = "2.13.13"
 
   val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.1"
   val JenaVersion       = "5.0.0"
-  val Rdf4jVersion      = "4.3.10"
+  val Rdf4jVersion      = "4.3.11"
 
   val ZioConfigVersion            = "4.0.1"
   val ZioLoggingVersion           = "2.2.2"
@@ -28,7 +29,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.3.1"
   val ZioPreludeVersion           = "1.0.0-RC23"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.21"
+  val ZioVersion                  = "2.0.22"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -66,7 +67,7 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"  // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.12" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.13" // the logging interface
 
   // Metrics
   val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.22"
@@ -80,7 +81,7 @@ object Dependencies {
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.2.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.77"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -115,7 +116,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.10.0"
+  val tapirVersion = "1.10.4"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,

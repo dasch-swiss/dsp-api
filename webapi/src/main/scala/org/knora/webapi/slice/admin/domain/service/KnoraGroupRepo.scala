@@ -19,6 +19,10 @@ import org.knora.webapi.slice.common.repo.service.Repository
 
 trait KnoraGroupRepo extends Repository[KnoraGroup, GroupIri] {
 
+  def findByName(name: GroupName): Task[Option[KnoraGroup]]
+
+  def existsByName(name: GroupName): Task[Boolean] = findByName(name).map(_.isDefined)
+
   /**
    * Saves the user group, returns the created data. Updates not supported.
    *

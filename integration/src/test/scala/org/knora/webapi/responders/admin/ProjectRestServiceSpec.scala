@@ -198,7 +198,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
         // Check Administrative Permissions
         val receivedApAdmin =
           UnsafeZioRun.runOrThrow(
-            ZIO.serviceWithZIO[PermissionsResponderADM](_.getPermissionsApByProjectIri(received.project.id)),
+            ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(received.project.id)),
           )
 
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter {
@@ -224,7 +224,7 @@ class ProjectRestServiceSpec extends CoreSpec with ImplicitSender {
 
         // Check Default Object Access permissions
         val receivedDoaps = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[PermissionsResponderADM](
+          ZIO.serviceWithZIO[PermissionsResponder](
             _.getPermissionsDaopByProjectIri(ProjectIri.unsafeFrom(received.project.id)),
           ),
         )

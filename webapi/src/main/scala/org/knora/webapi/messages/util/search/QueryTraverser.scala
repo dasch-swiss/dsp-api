@@ -59,9 +59,7 @@ case class TransformedOrderBy(
 /**
  * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[AbstractPrequeryGenerator]].
  */
-final case class QueryTraverser(
-  private val messageRelay: MessageRelay,
-  private val ontologyCache: OntologyCache,
+final case class QueryTraverser(private val messageRelay: MessageRelay, private val ontologyCache: OntologyCache)(
   implicit private val stringFormatter: StringFormatter,
 ) {
 
@@ -321,6 +319,5 @@ final case class QueryTraverser(
 }
 
 object QueryTraverser {
-  val layer: URLayer[MessageRelay & OntologyCache & StringFormatter, QueryTraverser] =
-    ZLayer.fromFunction(QueryTraverser.apply _)
+  val layer = ZLayer.derive[QueryTraverser]
 }

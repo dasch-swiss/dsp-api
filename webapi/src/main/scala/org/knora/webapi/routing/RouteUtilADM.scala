@@ -131,7 +131,7 @@ object RouteUtilADM {
     request: KnoraRequestADM,
   ): ZIO[StringFormatter & MessageRelay, Throwable, HttpResponse] =
     for {
-      knoraResponse         <- MessageRelay.ask[KnoraResponseADM](request)
+      knoraResponse         <- ZIO.serviceWithZIO[MessageRelay](_.ask[KnoraResponseADM](request))
       knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
     } yield HttpResponse(
       OK,
@@ -159,7 +159,7 @@ object RouteUtilADM {
   ): ZIO[Authenticator & StringFormatter, Throwable, IriUser] =
     for {
       validatedIri <- validateAndEscape(iri)
-      user         <- Authenticator.getUserADM(requestContext)
+      user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
     } yield IriUser(validatedIri, user)
 
   def validateAndEscape(iri: String): IO[BadRequestException, IRI] =

@@ -10,7 +10,6 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import play.twirl.api.TxtFormat
 import zio._
-import zio.macros.accessible
 
 import java.nio.file.Path
 
@@ -27,7 +26,6 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
-@accessible
 trait TriplestoreService {
 
   /**

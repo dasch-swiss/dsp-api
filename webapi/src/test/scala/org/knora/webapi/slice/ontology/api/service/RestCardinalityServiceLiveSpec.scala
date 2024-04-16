@@ -54,8 +54,10 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
       suite("canSetCardinality")(
         test("should render a success Response") {
           for {
-            _        <- StubCardinalitiesService.setSetResponseSuccess()
-            response <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
+            _ <- StubCardinalitiesService.setSetResponseSuccess()
+            response <- ZIO.serviceWithZIO[RestCardinalityService](
+                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                        )
           } yield assertTrue(response.canDo.value)
         },
         test("should render a fail Response correctly with multiple Reasons and Context") {
@@ -73,7 +75,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                      ),
                    ),
                  )
-            response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
+            response <- ZIO.serviceWithZIO[RestCardinalityService](
+                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                        )
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
             responseJson ==
@@ -116,7 +120,9 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
                      ),
                    ),
                  )
-            response     <- RestCardinalityService.canSetCardinality(classIri, propertyIri, "1", userWithAccess)
+            response <- ZIO.serviceWithZIO[RestCardinalityService](
+                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                        )
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
             responseJson ==
@@ -142,13 +148,13 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
         test("should render a success Response") {
           for {
             _        <- StubCardinalitiesService.setReplaceResponseSuccess()
-            response <- RestCardinalityService.canReplaceCardinality(classIri, userWithAccess)
+            response <- ZIO.serviceWithZIO[RestCardinalityService](_.canReplaceCardinality(classIri, userWithAccess))
           } yield assertTrue(response.canDo.value)
         },
         test("should render a fail Response with correct reason") {
           for {
             _            <- StubCardinalitiesService.setReplaceResponseFailure(IsInUseCheckFailure)
-            response     <- RestCardinalityService.canReplaceCardinality(classIri, userWithAccess)
+            response     <- ZIO.serviceWithZIO[RestCardinalityService](_.canReplaceCardinality(classIri, userWithAccess))
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
             responseJson ==

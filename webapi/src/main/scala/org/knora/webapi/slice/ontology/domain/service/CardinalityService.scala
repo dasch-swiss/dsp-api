@@ -8,7 +8,6 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.macros.accessible
 
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
@@ -28,7 +27,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.EitherUtil.joinOnLeft
 import org.knora.webapi.util.EitherUtil.joinOnLeftList
 
-@accessible
 trait CardinalityService {
 
   /**
@@ -90,15 +88,15 @@ object ChangeCardinalityCheckResult {
   object CanReplaceCardinalityCheckResult {
     sealed trait CanReplaceCardinalityCheckResult extends ChangeCardinalityCheckResult
 
-    final case object Success extends Success with CanReplaceCardinalityCheckResult
+    case object Success extends Success with CanReplaceCardinalityCheckResult
 
     trait Failure extends ChangeCardinalityCheckResult.Failure with CanReplaceCardinalityCheckResult
 
-    final case object IsInUseCheckFailure extends CanReplaceCardinalityCheckResult.Failure {
+    case object IsInUseCheckFailure extends CanReplaceCardinalityCheckResult.Failure {
       override val reason: String = "Cardinality is in use."
     }
 
-    final case object KnoraOntologyCheckFailure
+    case object KnoraOntologyCheckFailure
         extends ChangeCardinalityCheckResult.KnoraOntologyCheckFailure
         with CanReplaceCardinalityCheckResult.Failure
   }
@@ -106,7 +104,7 @@ object ChangeCardinalityCheckResult {
   object CanSetCardinalityCheckResult {
     sealed trait CanSetCardinalityCheckResult extends ChangeCardinalityCheckResult
 
-    final case object Success extends Success with CanSetCardinalityCheckResult
+    case object Success extends Success with CanSetCardinalityCheckResult
 
     trait Failure extends ChangeCardinalityCheckResult.Failure with CanSetCardinalityCheckResult
 
@@ -126,7 +124,7 @@ object ChangeCardinalityCheckResult {
       val reason: String = "The cardinality of the current class is not included in the new cardinality."
     }
 
-    final case object KnoraOntologyCheckFailure
+    case object KnoraOntologyCheckFailure
         extends ChangeCardinalityCheckResult.KnoraOntologyCheckFailure
         with CanSetCardinalityCheckResult.Failure
   }

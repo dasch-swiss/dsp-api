@@ -72,10 +72,5 @@ case class SipiServiceMock() extends SipiService {
 }
 
 object SipiServiceMock {
-
-  val layer: ZLayer[Any, Nothing, SipiService] =
-    ZLayer
-      .succeed(SipiServiceMock())
-      .tap(_ => ZIO.logInfo(">>> Mock Sipi IIIF Service Initialized <<<"))
-
+  val layer: ULayer[SipiServiceMock] = ZLayer.succeed(SipiServiceMock())
 }

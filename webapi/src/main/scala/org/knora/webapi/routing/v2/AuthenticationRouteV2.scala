@@ -28,7 +28,7 @@ final case class AuthenticationRouteV2()(
   def makeRoute: Route =
     path("v2" / "authentication") {
       get { // authenticate credentials
-        ctx => RouteUtilV2.complete(ctx, Authenticator.doAuthenticateV2(ctx))
+        ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doAuthenticateV2(ctx)))
       } ~
         post { // login
           /* send iri, email, or username, and password in body as:
@@ -51,17 +51,17 @@ final case class AuthenticationRouteV2()(
                   .fromOption(CredentialsIdentifier.fromOptions(apiRequest.iri, apiRequest.email, apiRequest.username))
                   .orElseFail(BadRequestException("Invalid user identifier."))
               credentials = KnoraPasswordCredentialsV2(crId, apiRequest.password)
-              res        <- Authenticator.doLoginV2(credentials)
+              res        <- ZIO.serviceWithZIO[Authenticator](_.doLoginV2(credentials))
             } yield res
             RouteUtilV2.complete(requestContext, task)
           }
         } ~
         // logout
-        delete(ctx => RouteUtilV2.complete(ctx, Authenticator.doLogoutV2(ctx)))
+        delete(ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.doLogoutV2(ctx))))
     } ~
       path("v2" / "login") {
         get { // html login interface (necessary for IIIF Authentication API support)
-          ctx => RouteUtilV2.complete(ctx, Authenticator.presentLoginFormV2(ctx))
+          ctx => RouteUtilV2.complete(ctx, ZIO.serviceWithZIO[Authenticator](_.presentLoginFormV2(ctx)))
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
             formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
@@ -70,7 +70,7 @@ final case class AuthenticationRouteV2()(
                   username <-
                     ZIO.fromEither(Username.from(username)).orElseFail(BadRequestException("Invalid username."))
                   credentials = KnoraPasswordCredentialsV2(CredentialsIdentifier.UsernameIdentifier(username), password)
-                  res        <- Authenticator.doLoginV2(credentials)
+                  res        <- ZIO.serviceWithZIO[Authenticator](_.doLoginV2(credentials))
                 } yield res
                 RouteUtilV2.complete(requestContext, task)
               }

@@ -8,6 +8,7 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import zio.ZIO
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -64,8 +65,9 @@ class KnoraSipiAuthenticationITSpec
 
     "successfully get an image with provided credentials inside cookie" in {
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
-      val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
-      val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, loginToken)
+      val KnoraAuthenticationCookieName =
+        UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
+      val cookieHeader = headers.Cookie(KnoraAuthenticationCookieName, loginToken)
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =

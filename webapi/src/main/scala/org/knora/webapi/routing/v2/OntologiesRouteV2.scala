@@ -98,7 +98,7 @@ final case class OntologiesRouteV2()(
         params          = requestContext.request.uri.query().toMap
         allLanguagesStr = params.get(allLanguagesKey)
         allLanguages    = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
-        user           <- Authenticator.getUserADM(requestContext)
+        user           <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, user)
 
       val targetSchemaTask = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
@@ -139,7 +139,7 @@ final case class OntologiesRouteV2()(
       get { requestContext =>
         val requestTask = for {
           maybeProjectIri <- RouteUtilV2.getProjectIri(requestContext)
-          requestingUser  <- Authenticator.getUserADM(requestContext)
+          requestingUser  <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield OntologyMetadataGetByProjectRequestV2(maybeProjectIri.toSet, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -152,7 +152,7 @@ final case class OntologiesRouteV2()(
           {
             val requestTask = for {
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
                 ZIO.attempt(ChangeOntologyMetadataRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
@@ -167,7 +167,7 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
         val requestTask = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           validatedProjectIris <- ZIO.foreach(projectIris) { iri =>
                                     RouteUtilZ.toSmartIri(iri, s"Invalid project IRI: $iri")
                                   }
@@ -182,7 +182,7 @@ final case class OntologiesRouteV2()(
         val ontologyIriTask = validateOntologyIri(externalOntologyIriStr)
         val requestMessageTask = for {
           ontologyIri    <- ontologyIriTask
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield OntologyEntitiesGetRequestV2(ontologyIri, getLanguages(requestContext), requestingUser)
         val targetSchema = ontologyIriTask.flatMap(getTargetSchemaFromOntology)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchema)
@@ -200,7 +200,7 @@ final case class OntologiesRouteV2()(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestMessageTask = for {
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- ZIO.attempt(CreateClassRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
@@ -218,7 +218,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
@@ -243,7 +243,7 @@ final case class OntologiesRouteV2()(
                           BadRequestException(s"Invalid class IRI for request: $classIriStr"),
                         )
           lastModificationDate <- getLastModificationDate(requestContext)
-          requestingUser       <- Authenticator.getUserADM(requestContext)
+          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           apiRequestId         <- RouteUtilZ.randomUuid()
         } yield DeleteClassCommentRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
@@ -257,7 +257,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
@@ -275,10 +275,11 @@ final case class OntologiesRouteV2()(
     path(ontologiesBasePath / "canreplacecardinalities" / Segment) { (classIri: IRI) =>
       get { requestContext =>
         val response = for {
-          user           <- Authenticator.getUserADM(requestContext)
+          user           <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
           property       <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.propertyIriKey))
           newCardinality <- ZIO.attempt(getStringQueryParam(requestContext, RestCardinalityService.newCardinalityKey))
-          canChange      <- RestCardinalityService.canChangeCardinality(classIri, user, property, newCardinality)
+          canChange <-
+            ZIO.serviceWithZIO[RestCardinalityService](_.canChangeCardinality(classIri, user, property, newCardinality))
         } yield canChange
         completeResponse(response, requestContext)
       }
@@ -290,7 +291,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { reqBody => requestContext =>
           {
             val messageTask = for {
-              user         <- Authenticator.getUserADM(requestContext)
+              user         <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               document     <- RouteUtilV2.parseJsonLd(reqBody)
               apiRequestId <- RouteUtilZ.randomUuid()
               msg          <- ZIO.attempt(ReplaceClassCardinalitiesRequestV2.fromJsonLd(document, apiRequestId, user))
@@ -307,7 +308,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val messageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg <- ZIO.attempt(
@@ -328,7 +329,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg <-
@@ -347,7 +348,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               msg            <- ZIO.attempt(ChangeGuiOrderRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
@@ -385,7 +386,7 @@ final case class OntologiesRouteV2()(
 
         val requestMessageTask = for {
           classSmartIris <- classSmartIrisTask
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield ClassesGetRequestV2(classSmartIris, getLanguages(requestContext), requestingUser)
 
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext, targetSchemaTask)
@@ -404,7 +405,7 @@ final case class OntologiesRouteV2()(
               .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(
                 BadRequestException(s"Invalid class IRI for request: $classIriStr"),
               )
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeleteClassRequestV2(classSmartIri, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -423,7 +424,7 @@ final case class OntologiesRouteV2()(
                         .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
           lastModificationDate <- getLastModificationDate(requestContext)
           apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- Authenticator.getUserADM(requestContext)
+          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield DeleteClassRequestV2(classIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -448,7 +449,7 @@ final case class OntologiesRouteV2()(
                            .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
           lastModificationDate <- getLastModificationDate(requestContext)
           apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- Authenticator.getUserADM(requestContext)
+          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield DeleteOntologyCommentRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
@@ -461,7 +462,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser                            <- Authenticator.getUserADM(requestContext)
+              requestingUser                            <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc                                <- RouteUtilV2.parseJsonLd(jsonRequest)
               inputOntology                             <- getInputOntology(requestDoc)
               propertyUpdateInfo                        <- getPropertyDef(inputOntology)
@@ -509,9 +510,11 @@ final case class OntologiesRouteV2()(
                             .validate(validatedGuiAttributes, validatedGuiElement)
                             .flatMap(values => GuiObject.make(values._1, values._2))
 
-              ontologyIri         <- IriConverter.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString)
+              ontologyIri <-
+                ZIO.serviceWithZIO[IriConverter](_.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString))
               lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-              propertyIri         <- IriConverter.asSmartIri(propertyInfoContent.propertyIri.toString)
+              propertyIri <- ZIO
+                               .serviceWithZIO[IriConverter](_.asSmartIri(propertyInfoContent.propertyIri.toString))
               subClassConstraintSmartIri <-
                 RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
               subjectType <-
@@ -520,9 +523,9 @@ final case class OntologiesRouteV2()(
                   case Some(value) =>
                     value.objects.head match {
                       case objectType: SmartIriLiteralV2 =>
-                        IriConverter
-                          .asSmartIri(
-                            objectType.value.toOntologySchema(InternalSchema).toString,
+                        ZIO
+                          .serviceWithZIO[IriConverter](
+                            _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
                           )
                           .map(Some(_))
                       case other =>
@@ -538,7 +541,10 @@ final case class OntologiesRouteV2()(
                   case Some(value) =>
                     value.objects.head match {
                       case objectType: SmartIriLiteralV2 =>
-                        IriConverter.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString)
+                        ZIO
+                          .serviceWithZIO[IriConverter](
+                            _.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString),
+                          )
                       case other =>
                         ZIO.fail(ValidationException(s"Unexpected object type for $other"))
                     }
@@ -638,7 +644,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageTask = for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               apiRequestId   <- RouteUtilZ.randomUuid()
               requestMessage <-
@@ -662,7 +668,7 @@ final case class OntologiesRouteV2()(
                            .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
           lastModificationDate <- getLastModificationDate(requestContext)
           apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- Authenticator.getUserADM(requestContext)
+          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield DeletePropertyCommentRequestV2(propertyIri, lastModificationDate, apiRequestId, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -675,7 +681,7 @@ final case class OntologiesRouteV2()(
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestTask = for {
-              requestingUser      <- Authenticator.getUserADM(requestContext)
+              requestingUser      <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
               requestDoc          <- RouteUtilV2.parseJsonLd(jsonRequest)
               inputOntology       <- getInputOntology(requestDoc)
               propertyUpdateInfo  <- getPropertyDef(inputOntology)
@@ -726,7 +732,7 @@ final case class OntologiesRouteV2()(
 
         val requestTask = for {
           propertyIris   <- propertyIrisTask
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield PropertiesGetRequestV2(propertyIris, getLanguages(requestContext), requestingUser)
 
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
@@ -741,7 +747,7 @@ final case class OntologiesRouteV2()(
                            .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
                            .flatMap(RouteUtilZ.ensureExternalOntologyName)
                            .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeletePropertyRequestV2(propertyIri, requestingUser)
         RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
       }
@@ -761,7 +767,7 @@ final case class OntologiesRouteV2()(
               .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
           lastModificationDate <- getLastModificationDate(requestContext)
           apiRequestId         <- RouteUtilZ.randomUuid()
-          requestingUser       <- Authenticator.getUserADM(requestContext)
+          requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield DeletePropertyRequestV2(
           propertyIri,
           lastModificationDate,
@@ -778,7 +784,7 @@ final case class OntologiesRouteV2()(
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val t = for {
-            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
@@ -797,7 +803,7 @@ final case class OntologiesRouteV2()(
                            .toSmartIri(ontologyIriStr, s"Invalid ontology IRI for request $ontologyIriStr")
                            .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
                            .flatMap(RouteUtilZ.ensureExternalOntologyName)
-          requestingUser <- Authenticator.getUserADM(requestContext)
+          requestingUser <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
         } yield CanDeleteOntologyRequestV2(ontologyIri, requestingUser)
 
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
@@ -814,7 +820,7 @@ final case class OntologiesRouteV2()(
                          .flatMap(RouteUtilZ.ensureApiV2ComplexSchema)
         lastModificationDate <- getLastModificationDate(requestContext)
         apiRequestId         <- RouteUtilZ.randomUuid()
-        requestingUser       <- Authenticator.getUserADM(requestContext)
+        requestingUser       <- ZIO.serviceWithZIO[Authenticator](_.getUserADM(requestContext))
       } yield DeleteOntologyRequestV2(ontologyIri, lastModificationDate, apiRequestId, requestingUser)
       RouteUtilV2.runRdfRouteZ(requestMessageTask, requestContext)
     }

@@ -777,8 +777,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[IriConverter, String, SmartIri] =
     ZIO.fromEither(getString(JsonLDKeywords.TYPE)).flatMap {
       case Some(str) =>
-        IriConverter
-          .asSmartIri(str)
+        ZIO
+          .serviceWithZIO[IriConverter](_.asSmartIri(str))
           .mapError(_.getMessage)
           .filterOrFail(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(
             s"Invalid Knora API v2 complex type IRI: $str",

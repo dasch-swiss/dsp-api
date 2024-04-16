@@ -7,6 +7,7 @@ package org.knora.webapi.e2e.admin
 
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import zio.ZIO
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.PermissionCodeAndProjectRestrictedViewSettings
@@ -28,7 +29,7 @@ class AdminFilesE2ESpec extends E2ESpec with TriplestoreJsonProtocol {
   private val normalUserEmail    = SharedTestDataADM2.normalUser.userData.email.get
   private val testPass           = "test"
 
-  val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
+  val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(ZIO.serviceWith[Authenticator](_.calculateCookieName()))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

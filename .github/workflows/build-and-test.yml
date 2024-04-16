@@ -25,7 +25,7 @@ jobs:
         run: ./sbtx -v coverage "webapi/test" coverageAggregate
       - name: WebApi Unit Test Report
         uses: dorny/test-reporter@v1
-        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }} 
+        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }}
         with:
           name: WebApi Unit Test Results
           path: ./webapi/target/test-reports/TEST-*.xml
@@ -47,7 +47,7 @@ jobs:
 
   integration-test:
     name: Build and integration-test
-    runs-on: actuated-4cpu-20gb
+    runs-on: buildjet-4vcpu-ubuntu-2204
     strategy:
       matrix:
         java: [ "21" ]
@@ -69,7 +69,7 @@ jobs:
         run: make integration-test
       - name: WebApi Integration Test Report
         uses: dorny/test-reporter@v1
-        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }} 
+        if: ${{ env.IS_NOOP == 'false' && (success() || failure()) }}
         with:
           name: WebApi Integration Test Results
           path: ./integration/target/test-reports/TEST-*.xml
@@ -139,16 +139,19 @@ jobs:
       - name: Checkout source
         if: ${{ env.IS_NOOP == 'false' }}
         uses: actions/checkout@v3
+      - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         if: ${{ env.IS_NOOP == 'false' }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
+          just docs-install-requirements
           npm install --global typedoc
           sudo apt-get install graphviz
+      - name: markdownlint
+        if: ${{ env.IS_NOOP == 'false' }}
+        run: just markdownlint
       - name: Build docs
         if: ${{ env.IS_NOOP == 'false' }}
-        run: make docs-build
+        run: just docs-build
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."

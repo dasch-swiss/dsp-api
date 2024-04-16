@@ -7,7 +7,6 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-import zio.macros.accessible
 
 import java.time.Instant
 
@@ -424,7 +423,6 @@ object OntologyCache {
 
 }
 
-@accessible
 trait OntologyCache {
 
   /**
@@ -486,10 +484,8 @@ trait OntologyCache {
   ): Task[OntologyCacheData]
 }
 
-final case class OntologyCacheLive(
-  triplestore: TriplestoreService,
-  implicit val stringFormatter: StringFormatter,
-) extends OntologyCache
+final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val stringFormatter: StringFormatter)
+    extends OntologyCache
     with LazyLogging {
 
   /**
@@ -1071,6 +1067,5 @@ final case class OntologyCacheLive(
 }
 
 object OntologyCacheLive {
-  val layer: URLayer[TriplestoreService & StringFormatter, OntologyCache] =
-    ZLayer.fromFunction(OntologyCacheLive.apply _)
+  val layer = ZLayer.derive[OntologyCacheLive]
 }
