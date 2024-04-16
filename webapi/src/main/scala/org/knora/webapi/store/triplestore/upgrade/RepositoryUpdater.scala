@@ -43,7 +43,11 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
   private case class RepoUpdateMetric(
     triples: Int,
     graphs: Int,
-    durationSeconds: Double,
+    totalDuration: Double,
+    downloadDuration: Double,
+    noopMigrationDuration: Double,
+    dropGraphsDuration: Double,
+    uploadDuration: Double,
   )
   private object RepoUpdateMetric {
     implicit val codec: JsonCodec[RepoUpdateMetric] = DeriveJsonCodec.gen[RepoUpdateMetric]
@@ -120,24 +124,55 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
                            |Triples: $triples
                            |Graphs: $graphs
                            |""".stripMargin)
-      start   <- Clock.currentTime(TimeUnit.MILLISECONDS)
-      dir     <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
-      file    <- createEmptyFile("downloaded-repository.nq", dir)
-      _       <- ZIO.logInfo(s"Downloading repository to file: $file")
-      _       <- triplestoreService.downloadRepository(file, MigrateAllGraphs)
-      size    <- ZIO.attempt(Files.size(file))
-      _       <- ZIO.logInfo(s"Downloaded file size: $size")
-      _       <- triplestoreService.dropDataGraphByGraph()
-      _       <- ZIO.logInfo("Done dropping graphs. Uploading repository...")
-      _       <- triplestoreService.uploadRepository(file)
-      _       <- ZIO.logInfo("Done uploading repository.")
-      _       <- ZIO.attempt(Files.delete(file))
-      _       <- ZIO.logInfo("Deleted downloaded file.")
-      end     <- Clock.currentTime(TimeUnit.MILLISECONDS)
-      duration = (end - start) / 1000.0
-      metric   = RepoUpdateMetric(triples, graphs, duration)
-      _       <- ZIO.logInfo(s"Dummy migration done. Metrics: $metric")
+      start                <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      dir                  <- ZIO.attempt(Files.createTempDirectory(tmpDirNamePrefix))
+      file                 <- createEmptyFile("downloaded-repository.nq", dir)
+      _                    <- ZIO.logInfo(s"Downloading repository to file: $file")
+      _                    <- triplestoreService.downloadRepository(file, MigrateAllGraphs)
+      size                 <- ZIO.attempt(Files.size(file))
+      _                    <- ZIO.logInfo(s"Downloaded file size: $size")
+      downloadedAt         <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      _                    <- doNoopMigration(file)
+      noopMigrationDoneAt  <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      _                    <- triplestoreService.dropDataGraphByGraph()
+      _                    <- ZIO.logInfo("Done dropping graphs. Uploading repository...")
+      dropGraphsDoneAt     <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      _                    <- triplestoreService.uploadRepository(file)
+      _                    <- ZIO.logInfo("Done uploading repository.")
+      _                    <- ZIO.attempt(Files.delete(file))
+      _                    <- ZIO.logInfo("Deleted downloaded file.")
+      end                  <- Clock.currentTime(TimeUnit.MILLISECONDS)
+      totalDuration         = (end - start) / 1000.0
+      downloadDuration      = (downloadedAt - start) / 1000.0
+      noopMigrationDuration = (noopMigrationDoneAt - downloadedAt) / 1000.0
+      dropGraphsDuration    = (dropGraphsDoneAt - noopMigrationDoneAt) / 1000.0
+      uploadDuration        = (end - dropGraphsDoneAt) / 1000.0
+      metric = RepoUpdateMetric(
+                 triples,
+                 graphs,
+                 totalDuration,
+                 downloadDuration,
+                 noopMigrationDuration,
+                 dropGraphsDuration,
+                 uploadDuration,
+               )
+      _ <- ZIO.logInfo(s"Dummy migration done. Metrics: $metric")
     } yield metric
+
+  private def doNoopMigration(file: Path): Task[Unit] =
+    for {
+      _       <- ZIO.logInfo("Starting noop migration...")
+      model    = RdfFormatUtil.fileToRdfModel(file, NQuads)
+      _       <- ZIO.logInfo(s"Read ${model.size} statements.")
+      _        = model.foreach(_ => ())
+      _       <- ZIO.logInfo("Noop migration done.")
+      tmpFile <- createEmptyFile("transformed-repository.nq", file.getParent)
+      _       <- ZIO.logInfo(s"Writing output file $tmpFile (${model.size} statements)...")
+      _        = RdfFormatUtil.rdfModelToFile(model, tmpFile, NQuads)
+      _       <- ZIO.logInfo("Wrote output file.")
+      _       <- ZIO.attempt(tmpFile.toFile.delete())
+      _       <- ZIO.logInfo("Temp file deleted. Noop migration done.")
+    } yield ()
 
   private def createEmptyFile(filename: String, dir: Path) = ZIO.attempt {
     val file = dir.resolve(filename)
