@@ -139,16 +139,19 @@ jobs:
       - name: Checkout source
         if: ${{ env.IS_NOOP == 'false' }}
         uses: actions/checkout@v3
+      - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         if: ${{ env.IS_NOOP == 'false' }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
+          just docs-install-requirements
           npm install --global typedoc
           sudo apt-get install graphviz
+      - name: markdownlint
+        if: ${{ env.IS_NOOP == 'false' }}
+        run: just markdownlint
       - name: Build docs
         if: ${{ env.IS_NOOP == 'false' }}
-        run: make docs-build
+        run: just docs-build
       - name: No-op step
         if: ${{ env.IS_NOOP == 'true' }}
         run: echo "No checks on main or release branches, skipping this job."
