@@ -182,25 +182,6 @@ final case class GroupsResponderADM(
     groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
 
   /**
-   * Change group's basic information.
-   *
-   * @param groupIri             the IRI of the group we want to change.
-   * @param request              the change request.
-   * @param apiRequestID         the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def updateGroup(
-    groupIri: GroupIri,
-    request: GroupUpdateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM] = {
-    val task = for {
-      result <- updateGroupHelper(groupIri, request)
-    } yield result
-    IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
-  }
-
-  /**
    * Change group's status.
    *
    * @param groupIri             the IRI of the group we want to change.
