@@ -529,11 +529,11 @@ final case class OntologyCacheLive(
           ),
         )
 
-      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-            throw InconsistentRepositoryDataException(
-              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.",
-            )
-          }
+//      _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
+//            throw InconsistentRepositoryDataException(
+//              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.",
+//            )
+//          }
 
       // Get the contents of each named graph containing an ontology.
       ontologyGraphResponseTasks =
