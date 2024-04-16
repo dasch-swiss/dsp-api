@@ -24,8 +24,11 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
         .name("action-name")
         .description("""The name of the maintenance action to be executed.
                        |Maintenance actions are executed asynchronously in the background.
+                       |The following actions are available:
+                       |  - fix-top-left: Fixes the top-left coordinates of all images in the specified projects.
+                       |  - ...
                        |""".stripMargin)
-        .example("fix-top-left-dimensions"),
+        .example("fix-top-left"),
     )
     .in(
       zioJsonBody[Option[Json]]
