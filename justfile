@@ -60,6 +60,7 @@ docs-openapi-generate:
     ./sbtx "webapi/runMain org.knora.webapi.slice.common.api.DocsGenerator {{ openapiDir }}"
 
 docs-install-requirements:
+    python -m pip install --upgrade pip
     pip3 install -r docs/requirements.txt
 
 docs-clean:
@@ -73,3 +74,10 @@ docs-serve: docs-build-dependent
 
 docs-build: docs-build-dependent
     mkdocs build --strict
+
+markdownlint:
+    docker run \
+    -v $PWD:/workdir ghcr.io/igorshubovych/markdownlint-cli:latest \
+    --config .markdownlint.yml \
+    --disable MD013 MD040 -- \
+    "docs/**/*.md"

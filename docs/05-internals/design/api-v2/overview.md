@@ -155,7 +155,7 @@ not schema-specific (and are not cached). If a data IRI has been
 received from a client request, it is better just to validate it using
 `StringFormatter.validateAndEscapeIri`.
 
-#### Implementation
+#### Smart IRI Implementation
 
 The smart IRI implementation, `SmartIriImpl`, is nested in the
 `StringFormatter` class, because it uses Knora's
