@@ -9,10 +9,15 @@ import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.api.GroupsRequests.{GroupCreateRequest, GroupUpdateRequest}
-import org.knora.webapi.slice.admin.domain.model.{Group, GroupIri, GroupName, KnoraGroup, KnoraProject}
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,

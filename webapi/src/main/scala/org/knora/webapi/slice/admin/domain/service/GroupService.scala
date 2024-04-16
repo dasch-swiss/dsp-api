@@ -7,18 +7,18 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.ZIO
 import zio._
-import org.knora.webapi.slice.admin.api.GroupsRequests.{GroupCreateRequest, GroupUpdateRequest}
+
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.{
-  Group,
-  GroupDescriptions,
-  GroupIri,
-  GroupName,
-  GroupSelfJoin,
-  GroupStatus,
-  KnoraGroup,
-  KnoraProject,
-}
 
 final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
