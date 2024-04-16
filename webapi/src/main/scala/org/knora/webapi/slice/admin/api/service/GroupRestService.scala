@@ -6,8 +6,7 @@
 package org.knora.webapi.slice.admin.api.service
 
 import zio._
-
-import dsp.errors.NotFoundException
+import dsp.errors.{BadRequestException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.responders.admin.GroupsResponderADM
@@ -61,9 +60,14 @@ final case class GroupRestService(
 
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
-      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      uuid     <- Random.nextUUID
-      internal <- responder.updateGroup(iri, request, uuid)
+      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      _ <- ZIO
+             .fail(BadRequestException("No data would be changed. Aborting update request."))
+             .when(List(request.name, request.descriptions, request.status, request.selfjoin).flatten.isEmpty)
+      groupToUpdate <- groupService
+                         .findById(iri)
+                         .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
+      internal <- groupService.updateGroup(groupToUpdate, request).map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
 

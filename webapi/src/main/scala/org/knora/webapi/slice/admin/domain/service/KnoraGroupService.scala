@@ -9,14 +9,10 @@ import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.GroupName
-import org.knora.webapi.slice.admin.domain.model.KnoraGroup
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.api.GroupsRequests.{GroupCreateRequest, GroupUpdateRequest}
+import org.knora.webapi.slice.admin.domain.model.{Group, GroupIri, GroupName, KnoraGroup, KnoraProject}
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
@@ -46,6 +42,24 @@ case class KnoraGroupService(
         )
       _ <- knoraGroupRepo.save(group)
     } yield group
+
+  def updateGroup(groupToUpdate: KnoraGroup, request: GroupUpdateRequest): Task[KnoraGroup] =
+    for {
+      _ <- request.name match {
+             case Some(value) => ensureGroupNameIsUnique(value)
+             case None        => ZIO.unit
+           }
+
+      updatedGroup <-
+        knoraGroupRepo.save(
+          groupToUpdate.copy(
+            groupName = request.name.getOrElse(groupToUpdate.groupName),
+            groupDescriptions = request.descriptions.getOrElse(groupToUpdate.groupDescriptions),
+            status = request.status.getOrElse(groupToUpdate.status),
+            hasSelfJoinEnabled = request.selfjoin.getOrElse(groupToUpdate.hasSelfJoinEnabled),
+          ),
+        )
+    } yield updatedGroup
 
   private def ensureGroupNameIsUnique(name: GroupName) =
     ZIO.whenZIO(knoraGroupRepo.existsByName(name)) {
