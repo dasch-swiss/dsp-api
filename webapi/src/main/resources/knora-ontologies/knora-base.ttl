@@ -2411,13 +2411,16 @@
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasDescription ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasKeyword ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :relatesTo ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :relatesToValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:label         "Segment"@de,
                        "Segment"@en ;
     :canBeInstantiated false ;
