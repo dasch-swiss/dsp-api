@@ -7,11 +7,11 @@
 @prefix owl:         <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 @prefix ma:          <http://www.w3.org/ns/ma-ont#> .
 @prefix foaf:        <http://xmlns.com/foaf/0.1/> .
 @prefix dcterms:     <http://purl.org/dc/terms/> .
+@prefix schema:      <http://schema.org/> .
 @prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @base <http://www.knora.org/ontology/knora-base> .
@@ -1161,7 +1161,8 @@
 
 :valueHasIntervalEnd
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:subPropertyOf        :valueHas ;
+    rdfs:subPropertyOf        :valueHas ,
+                              schema:endOffset ;
     :subjectClassConstraint   :IntervalBase ;
     :objectDatatypeConstraint xsd:decimal .
 
@@ -1170,7 +1171,8 @@
 
 :valueHasIntervalStart
     rdf:type                  owl:DatatypeProperty ;
-    rdfs:subPropertyOf        :valueHas ;
+    rdfs:subPropertyOf        :valueHas ,
+                              schema:startOffset ;
     :subjectClassConstraint   :IntervalBase ;
     :objectDatatypeConstraint xsd:decimal .
 
@@ -2227,6 +2229,80 @@
     rdfs:comment    "Generic representation of a deleted value that can therefore not be displayed"@en .
 
 
+### http://www.knora.org/ontology/knora-base#hasTitle
+
+:hasTitle
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has title"@en ;
+    rdfs:comment            "Indicates the title of a resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :TextValue ;
+    salsah-gui:guiElement   salsah-gui:SimpleText ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasValue ,
+                            schema:headline ,
+                            dcterms:title ,
+                            ma:title .
+
+
+### http://www.knora.org/ontology/knora-base#hasDescription
+
+:hasDescription
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has description"@en ;
+    rdfs:comment            "Indicates the description of a resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :TextValue ;
+    salsah-gui:guiElement   salsah-gui:Richtext ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasValue ,
+                            schema:abstract ,
+                            dcterms:description ,
+                            ma:description .
+
+
+### http://www.knora.org/ontology/knora-base#hasKeyword
+
+:hasKeyword
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "has keyword"@en ;
+    rdfs:comment            "Indicates a keyword of a resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :TextValue ;
+    salsah-gui:guiElement   salsah-gui:SimpleText ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasValue ,
+                            schema:keywords ,
+                            dcterms:subject ,
+                            ma:hasKeyword .
+
+
+### http://www.knora.org/ontology/knora-base#relatesTo
+
+:relatesTo
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "relates to"@en ;
+    rdfs:comment            "Indicates that this resource relates to another resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :Resource ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasLinkTo,
+                            ma:hasRelatedResource ,
+                            dcterms:relation .
+
+
+
+### http://www.knora.org/ontology/knora-base#relatesToValue
+
+:relatesToValue
+    rdf:type                owl:ObjectProperty ;
+    :objectClassConstraint  :LinkValue ;
+    :subjectClassConstraint :Resource ;
+    :isEditable             true ;
+    rdfs:subPropertyOf      :hasLinkToValue .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#isSegmentOf
 
 :isSegmentOf
@@ -2238,6 +2314,7 @@
     :objectClassConstraint  :Representation ;
     :isEditable             true ;
     rdfs:subPropertyOf      :hasLinkTo,
+                            schema:isPartOf ,
                             ma:isFragmentOf .
 
 
@@ -2314,8 +2391,9 @@
 
 :Segment
     rdf:type           owl:Class ;
-    rdfs:subClassOf    :Resource,
-                       ma:Track,
+    rdfs:subClassOf    :Resource ,
+                       ma:Track ,
+                       schema:Clip ,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasComment ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ],
@@ -2327,7 +2405,19 @@
                          owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                        [ rdf:type           owl:Restriction ;
                          owl:onProperty     :hasSegmentBounds ;
-                         owl:cardinality    "1"^^xsd:nonNegativeInteger ] ;
+                         owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :hasTitle ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :hasDescription ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :hasKeyword ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
+                       [ rdf:type           owl:Restriction ;
+                         owl:onProperty     :relatesTo ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
     rdfs:label         "Segment"@de,
                        "Segment"@en ;
     :canBeInstantiated false ;
