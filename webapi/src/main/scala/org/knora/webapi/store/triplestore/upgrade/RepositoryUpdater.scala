@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade
 
-import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
 import zio._
 import zio.json._
 
@@ -14,18 +12,12 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
-import scala.reflect.io.Directory
 
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
-
-  /**
-   * Provides logging.
-   */
-  private val log: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
 
   private val tmpDirNamePrefix: String = "knora"
 
