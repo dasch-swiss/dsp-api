@@ -50,10 +50,7 @@ case class KnoraGroupService(
 
   def updateGroup(groupToUpdate: KnoraGroup, request: GroupUpdateRequest): Task[KnoraGroup] =
     for {
-      _ <- request.name match {
-             case Some(value) => ensureGroupNameIsUnique(value)
-             case None        => ZIO.unit
-           }
+      _ <- ZIO.foreachDiscard(request.name)(ensureGroupNameIsUnique)
 
       updatedGroup <-
         knoraGroupRepo.save(
@@ -73,7 +70,5 @@ case class KnoraGroupService(
 }
 
 object KnoraGroupService {
-  object KnoraGroupService {
-    val layer = ZLayer.derive[KnoraGroupService]
-  }
+  val layer = ZLayer.derive[KnoraGroupService]
 }

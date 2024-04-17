@@ -1,26 +1,29 @@
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Scope
+import zio.ZIO
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test._
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.admin.domain.model.{
-  Group,
-  GroupDescriptions,
-  GroupIri,
-  GroupName,
-  GroupSelfJoin,
-  GroupStatus,
-  KnoraGroup,
-}
+import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
-import org.knora.webapi.slice.admin.repo.service.{KnoraGroupRepoInMemory, KnoraGroupRepoLive}
-import org.knora.webapi.slice.ontology.repo.service.{OntologyCacheLive, OntologyRepoLive}
+import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
-import zio.{Scope, ZIO}
-import zio.test._
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault}
 
 object GroupServiceSpec extends ZIOSpecDefault {
   private val exampleGroup = new Group(
@@ -60,7 +63,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
       IriConverter.layer,
       IriService.layer,
       KnoraGroupRepoInMemory.layer,
-      KnoraGroupService.KnoraGroupService.layer,
+      KnoraGroupService.layer,
       KnoraProjectRepoInMemory.layer,
       KnoraProjectService.layer,
       OntologyCacheLive.layer,
