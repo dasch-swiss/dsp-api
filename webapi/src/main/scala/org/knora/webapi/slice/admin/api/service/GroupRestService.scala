@@ -75,9 +75,11 @@ final case class GroupRestService(
 
   def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
-      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      uuid     <- Random.nextUUID
-      internal <- responder.updateGroupStatus(iri, request, uuid)
+      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      groupToUpdate <- groupService
+                         .findById(iri)
+                         .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
+      internal <- groupService.updateGroupStatus(groupToUpdate, request.status).map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
 

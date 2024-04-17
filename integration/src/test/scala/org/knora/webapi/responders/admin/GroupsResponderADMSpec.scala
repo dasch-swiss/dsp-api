@@ -154,7 +154,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         group.selfjoin should equal(false)
       }
 
-      "return 'NotFound' if a not-existing group IRI is submitted during update" in {
+      "return 'NotFoundException' if a not-existing group IRI is submitted during update" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
           groupRestService(
@@ -204,7 +204,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         )
       }
 
-      "return 'BadRequest' if nothing would be changed during the update" in {
+      "return 'BadRequestException' if nothing would be changed during the update" in {
         val exit = UnsafeZioRun.run(
           groupRestService(
             _.putGroup(

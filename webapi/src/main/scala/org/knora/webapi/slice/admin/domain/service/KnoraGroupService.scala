@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
@@ -62,6 +63,9 @@ case class KnoraGroupService(
           ),
         )
     } yield updatedGroup
+
+  def updateGroupStatus(groupToUpdate: KnoraGroup, status: GroupStatus): Task[KnoraGroup] =
+    knoraGroupRepo.save(groupToUpdate.copy(status = status))
 
   private def ensureGroupNameIsUnique(name: GroupName) =
     ZIO.whenZIO(knoraGroupRepo.existsByName(name)) {

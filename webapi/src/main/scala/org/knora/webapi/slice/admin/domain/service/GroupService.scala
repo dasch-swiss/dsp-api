@@ -60,6 +60,9 @@ final case class GroupService(
 
   def updateGroup(groupToUpdate: Group, request: GroupUpdateRequest): Task[Group] =
     knoraGroupService.updateGroup(toKnoraGroup(groupToUpdate), request).flatMap(toGroup)
+
+  def updateGroupStatus(groupToUpdate: Group, status: GroupStatus): Task[Group] =
+    knoraGroupService.updateGroupStatus(toKnoraGroup(groupToUpdate), status).flatMap(toGroup)
 }
 
 object GroupService {
