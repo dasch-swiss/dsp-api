@@ -390,7 +390,7 @@ all the necessary information.
 The following graphs show the class hierarchy and the structure of each
 permission class.
 
-**Permission Class Hierarchy**
+**Permission Class Hierarchy**:
 
 ![Figure 1](administration-fig4.dot.png "Figure 4")
 

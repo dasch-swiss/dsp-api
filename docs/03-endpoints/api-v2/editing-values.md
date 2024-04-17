@@ -323,7 +323,7 @@ SIPI.
 
 Still Image may be stored in SIPI or in an external IIIF server. 
 
-**Images stored in SIPI**
+##### Images stored in SIPI
 
 Here is an example of a request to create a resource of class `anything:ThingPicture` with a still image stored in SIPI. 
 The resource's class is a subclass of `knora-api:StillImageRepresentation` and therefore has the property `knora-api:hasStillImageFileValue`.
@@ -355,7 +355,7 @@ If the client's request to DSP-API is valid, DSP-API saves the file value in the
 Otherwise, the temporary file that was stored by SIPI is deleted.
 
 
-**Images stored in an external IIIF server**
+##### Images stored in an external IIIF server
 
 In the case of a Still image stored in an external IIIF server, the request is similar to the one above, but the file value is of type `knora-api:StillImageExternalFileValue`
 and the `knora-api:externalUrl` property is used to provide the URL of the image in the IIIF server:

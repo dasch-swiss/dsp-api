@@ -194,7 +194,21 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasDescription"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasKeyword"
                     },
                     "owl:minCardinality": 0
                 },
@@ -215,9 +229,23 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:isAudioSegmentOf"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:relatesTo"
+                    },
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",
@@ -765,6 +793,9 @@
                     "@id": "knora-api:Resource"
                 },
                 {
+                    "@id": "http://schema.org/Clip"
+                },
+                {
                     "@id": "http://www.w3.org/ns/ma-ont#Track"
                 },
                 {
@@ -784,7 +815,21 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasDescription"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasKeyword"
                     },
                     "owl:minCardinality": 0
                 },
@@ -805,9 +850,23 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:isSegmentOf"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:relatesTo"
+                    },
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",
@@ -965,7 +1024,21 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasDescription"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasKeyword"
                     },
                     "owl:minCardinality": 0
                 },
@@ -986,9 +1059,23 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:isVideoSegmentOf"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:relatesTo"
+                    },
+                    "owl:minCardinality": 0
                 },
                 {
                     "@type": "owl:Restriction",
@@ -1166,6 +1253,32 @@
             "@id": "knora-api:hasDDDFile"
         },
         {
+            "rdfs:label": "has description",
+            "rdfs:subPropertyOf": [
+                {
+                    "@id": "knora-api:hasValue"
+                },
+                {
+                    "@id": "http://purl.org/dc/terms/description"
+                },
+                {
+                    "@id": "http://schema.org/abstract"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#description"
+                }
+            ],
+            "rdfs:comment": "Indicates the description of a resource",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasDescription"
+        },
+        {
             "rdfs:label": "has document",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasFile"
@@ -1224,6 +1337,32 @@
                 "@id": "knora-api:Resource"
             },
             "@id": "knora-api:hasIncomingLink"
+        },
+        {
+            "rdfs:label": "has keyword",
+            "rdfs:subPropertyOf": [
+                {
+                    "@id": "knora-api:hasValue"
+                },
+                {
+                    "@id": "http://purl.org/dc/terms/subject"
+                },
+                {
+                    "@id": "http://schema.org/keywords"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#hasKeyword"
+                }
+            ],
+            "rdfs:comment": "Indicates a keyword of a resource",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasKeyword"
         },
         {
             "rdfs:label": "has Link to",
@@ -1343,6 +1482,32 @@
             "@id": "knora-api:hasTextFile"
         },
         {
+            "rdfs:label": "has title",
+            "rdfs:subPropertyOf": [
+                {
+                    "@id": "knora-api:hasValue"
+                },
+                {
+                    "@id": "http://purl.org/dc/terms/title"
+                },
+                {
+                    "@id": "http://schema.org/headline"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#title"
+                }
+            ],
+            "rdfs:comment": "Indicates the title of a resource",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasTitle"
+        },
+        {
             "rdfs:label": "has value",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:resourceProperty"
@@ -1431,6 +1596,9 @@
                     "@id": "knora-api:hasLinkTo"
                 },
                 {
+                    "@id": "http://schema.org/isPartOf"
+                },
+                {
                     "@id": "http://www.w3.org/ns/ma-ont#isFragmentOf"
                 }
             ],
@@ -1488,6 +1656,29 @@
             "@type": "rdf:Property",
             "rdfs:label": "Object type",
             "rdfs:comment": "Specifies the required type of the objects of a property"
+        },
+        {
+            "rdfs:label": "relates to",
+            "rdfs:subPropertyOf": [
+                {
+                    "@id": "knora-api:hasLinkTo"
+                },
+                {
+                    "@id": "http://purl.org/dc/terms/relation"
+                },
+                {
+                    "@id": "http://www.w3.org/ns/ma-ont#hasRelatedResource"
+                }
+            ],
+            "rdfs:comment": "Indicates that this resource relates to another resource",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Resource"
+            },
+            "@id": "knora-api:relatesTo"
         },
         {
             "@id": "knora-api:resourceIcon",
