@@ -23,12 +23,15 @@ final case class MaintenanceRestService(
   maintenanceService: MaintenanceService,
 ) {
 
-  private val fixTopLeftAction = "fix-top-left"
+  private val fixTopLeftAction            = "fix-top-left"
+  private val ekwsSequenceToSegmentAction = "ekws-sequence-to-segment"
+
   def executeMaintenanceAction(user: User, action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
-        case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)
-        case _                  => ZIO.fail(BadRequestException(s"Unknown action $action"))
+        case `fixTopLeftAction`            => executeTopLeftAction(jsonMaybe)
+        case `ekwsSequenceToSegmentAction` => executeEkwsSegmentAction()
+        case _                             => ZIO.fail(BadRequestException(s"Unknown action $action"))
       }
     }
 
@@ -49,6 +52,9 @@ final case class MaintenanceRestService(
       report <- getParamsAs[ProjectsWithBakfilesReport](topLeftParams, fixTopLeftAction)
       _      <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
     } yield ()
+
+  private def executeEkwsSegmentAction(): Task[Unit] =
+    maintenanceService.convertEkwsSequenceToSegment().logError.forkDaemon.unit
 }
 
 object MaintenanceRestService {

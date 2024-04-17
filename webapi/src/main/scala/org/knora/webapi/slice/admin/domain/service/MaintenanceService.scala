@@ -13,6 +13,7 @@ import zio.stream.ZStream
 
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.maintenance.EkwsSegmentMaintenance
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -24,6 +25,11 @@ final case class MaintenanceService(
   triplestoreService: TriplestoreService,
   mapper: PredicateObjectMapper,
 ) {
+
+  def convertEkwsSequenceToSegment(): Task[Unit] =
+    ZIO.logInfo(s"Starting convert EKWS sequence to segment maintenance action") *>
+      EkwsSegmentMaintenance(triplestoreService).convertEkwsSequenceToSegment() *>
+      ZIO.logInfo(s"Finished convert EKWS sequence to segment maintenance action")
 
   def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
     def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
