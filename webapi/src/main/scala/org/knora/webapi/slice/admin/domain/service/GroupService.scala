@@ -33,7 +33,7 @@ final case class GroupService(
 
   private def toGroups(knoraGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(knoraGroups)(toGroup)
 
-  private def toGroup(knoraGroup: KnoraGroup): Task[Group] =
+  private[service] def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
       project <- knoraGroup.belongsToProject.map(projectService.findById).getOrElse(ZIO.none)
     } yield Group(
@@ -45,7 +45,7 @@ final case class GroupService(
       selfjoin = knoraGroup.hasSelfJoinEnabled.value,
     )
 
-  private def toKnoraGroup(group: Group): KnoraGroup =
+  private[service] def toKnoraGroup(group: Group): KnoraGroup =
     KnoraGroup(
       id = GroupIri.unsafeFrom(group.id),
       groupName = GroupName.unsafeFrom(group.name),
