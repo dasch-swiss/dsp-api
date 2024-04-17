@@ -127,9 +127,9 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "UPDATE a group" in {
         val response = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroup(
-              groupIri = GroupIri.unsafeFrom(newGroupIri.get),
+          groupRestService(
+            _.putGroup(
+              GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
@@ -140,26 +140,26 @@ class GroupsResponderADMSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
-        val updatedGroupInfo = response.group
-        updatedGroupInfo.name should equal("UpdatedGroupName")
-        updatedGroupInfo.descriptions should equal(
+        val group = response.group
+        group.name should equal("UpdatedGroupName")
+        group.descriptions should equal(
           Seq(StringLiteralV2.from("""UpdatedDescription with "quotes" and <html tag>""", Some("en"))),
         )
-        updatedGroupInfo.project should equal(Some(imagesProject))
-        updatedGroupInfo.status should equal(true)
-        updatedGroupInfo.selfjoin should equal(false)
+        group.project should equal(Some(imagesProjectExternal))
+        group.status should equal(true)
+        group.selfjoin should equal(false)
       }
 
       "return 'NotFound' if a not-existing group IRI is submitted during update" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroup(
-              groupIri = GroupIri.unsafeFrom(groupIri),
+          groupRestService(
+            _.putGroup(
+              GroupIri.unsafeFrom(groupIri),
               GroupUpdateRequest(
                 name = Some(GroupName.unsafeFrom("UpdatedGroupName")),
                 descriptions = Some(
@@ -169,21 +169,21 @@ class GroupsResponderADMSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
         assertFailsWithA[NotFoundException](
           exit,
-          s"Group <$groupIri> not found. Aborting update request.",
+          s"Group <$groupIri> not found.",
         )
       }
 
-      "return 'BadRequest' if the new group name already exists inside the project" in {
+      "return 'DuplicateValueException' if the new group name already exists inside the project" in {
         val groupName = GroupName.unsafeFrom("Image reviewer")
         val exit = UnsafeZioRun.run(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroup(
+          groupRestService(
+            _.putGroup(
               GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(
                 name = Some(groupName),
@@ -194,11 +194,11 @@ class GroupsResponderADMSpec extends CoreSpec {
                 status = Some(GroupStatus.active),
                 selfjoin = Some(GroupSelfJoin.disabled),
               ),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
-        assertFailsWithA[BadRequestException](
+        assertFailsWithA[DuplicateValueException](
           exit,
           s"Group with name: '${groupName.value}' already exists.",
         )
@@ -206,11 +206,11 @@ class GroupsResponderADMSpec extends CoreSpec {
 
       "return 'BadRequest' if nothing would be changed during the update" in {
         val exit = UnsafeZioRun.run(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroup(
+          groupRestService(
+            _.putGroup(
               GroupIri.unsafeFrom(newGroupIri.get),
               GroupUpdateRequest(None, None, None, None),
-              UUID.randomUUID,
+              rootUser,
             ),
           ),
         )
