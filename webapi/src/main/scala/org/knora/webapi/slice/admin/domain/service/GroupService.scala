@@ -9,10 +9,16 @@ import zio.ZIO
 import zio._
 
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.Group
+import org.knora.webapi.slice.admin.domain.model.GroupDescriptions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final case class GroupService(
   private val knoraGroupService: KnoraGroupService,
@@ -39,8 +45,21 @@ final case class GroupService(
       selfjoin = knoraGroup.hasSelfJoinEnabled.value,
     )
 
+  private def toKnoraGroup(group: Group): KnoraGroup =
+    KnoraGroup(
+      id = GroupIri.unsafeFrom(group.id),
+      groupName = GroupName.unsafeFrom(group.name),
+      groupDescriptions = GroupDescriptions.unsafeFrom(group.descriptions),
+      status = GroupStatus.from(group.status),
+      belongsToProject = group.project.map(it => ProjectIri.unsafeFrom(it.id)),
+      hasSelfJoinEnabled = GroupSelfJoin.from(group.selfjoin),
+    )
+
   def createGroup(request: GroupCreateRequest, project: KnoraProject): Task[Group] =
     knoraGroupService.createGroup(request, project).flatMap(toGroup)
+
+  def updateGroup(groupToUpdate: Group, request: GroupUpdateRequest): Task[Group] =
+    knoraGroupService.updateGroup(toKnoraGroup(groupToUpdate), request).flatMap(toGroup)
 }
 
 object GroupService {
