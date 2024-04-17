@@ -25,8 +25,8 @@ final case class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
         .description("""The name of the maintenance action to be executed.
                        |Maintenance actions are executed asynchronously in the background.
                        |The following actions are available:
-                       |  - fix-top-left: Fixes the top-left coordinates of all images in the specified projects.
-                       |  - ...
+                       |  - `fix-top-left`: Fixes the top-left coordinates of all images in the specified projects.
+                       |  - `ekws-sequence-to-segment`: Converts `isSequenceOf` etc. to `Segment`. (Touches only data, not the ontology.)
                        |""".stripMargin)
         .example("fix-top-left"),
     )
