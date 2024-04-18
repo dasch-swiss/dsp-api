@@ -62,13 +62,13 @@ final case class GroupRestService(
 
   def putGroup(iri: GroupIri, request: GroupUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
+      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       _ <- ZIO
              .fail(BadRequestException("No data would be changed. Aborting update request."))
              .when(List(request.name, request.descriptions, request.status, request.selfjoin).flatten.isEmpty)
       groupToUpdate <- groupService
                          .findById(iri)
                          .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
-      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
       internal <- groupService.updateGroup(groupToUpdate, request).map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
