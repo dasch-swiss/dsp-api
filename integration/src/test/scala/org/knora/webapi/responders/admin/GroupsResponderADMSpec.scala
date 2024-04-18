@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import java.util.UUID
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -245,11 +243,11 @@ class GroupsResponderADMSpec extends CoreSpec {
         group.members.size shouldBe 2
 
         val statusChangeResponse = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroupStatus(
+          groupRestService(
+            _.putGroupStatus(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               GroupStatusUpdateRequest(GroupStatus.inactive),
-              UUID.randomUUID(),
+              rootUser,
             ),
           ),
         )

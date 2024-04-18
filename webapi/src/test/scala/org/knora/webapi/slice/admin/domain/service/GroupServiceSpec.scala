@@ -12,6 +12,7 @@ import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test._
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.IriService
@@ -24,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -63,6 +65,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(knoraGroup == exampleKnoraGroup)
       },
     ).provide(
+      AppConfig.layer,
       CacheService.layer,
       GroupService.layer,
       IriConverter.layer,
@@ -71,8 +74,11 @@ object GroupServiceSpec extends ZIOSpecDefault {
       KnoraGroupService.layer,
       KnoraProjectRepoInMemory.layer,
       KnoraProjectService.layer,
+      KnoraUserRepoLive.layer,
+      KnoraUserService.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
+      PasswordService.layer,
       ProjectService.layer,
       StringFormatter.test,
       TriplestoreServiceInMemory.emptyLayer,

@@ -10,6 +10,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
@@ -22,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
+  knoraUserService: KnoraUserService,
   iriService: IriService,
 ) {
 
@@ -65,7 +67,14 @@ case class KnoraGroupService(
     } yield updatedGroup
 
   def updateGroupStatus(groupToUpdate: KnoraGroup, status: GroupStatus): Task[KnoraGroup] =
-    knoraGroupRepo.save(groupToUpdate.copy(status = status))
+    for {
+      group <- knoraGroupRepo.save(groupToUpdate.copy(status = status))
+      _ <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
+             ZIO.foreachDiscard(members)(user =>
+               knoraUserService.removeUserFromKnoraGroup(user, group).mapError(BadRequestException.apply),
+             )
+           })
+    } yield group
 
   private def ensureGroupNameIsUnique(name: GroupName) =
     ZIO.whenZIO(knoraGroupRepo.existsByName(name)) {

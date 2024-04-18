@@ -67,6 +67,11 @@ final case class KnoraUserRepoLive(
     findAllByTriplePattern(_.has(isInProject, Rdf.iri(projectIri.value)))
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProject.contains(projectIri)))
 
+  override def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] = {
+    findAllByTriplePattern(_.has(isInGroup, Rdf.iri(groupIri.value)))
+      .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInGroup.contains(groupIri)))
+  }
+
   override def findByEmail(mail: Email): Task[Option[KnoraUser]] =
     findOneByTriplePattern(_.has(email, Rdf.literalOf(mail.value)))
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.email == mail)))

@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -50,6 +51,9 @@ case class KnoraUserService(
     userRepo.findByProjectMembership(project.id)
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectAdminMembership(project.id)
+
+  def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
+    userRepo.findByGroupMembership(groupIri)
 
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))
@@ -140,6 +144,16 @@ case class KnoraUserService(
            .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.groupIri.value}."))
            .when(!user.isInGroup.contains(group.groupIri))
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
+  } yield user
+
+  def removeUserFromKnoraGroup(user: User, group: KnoraGroup): IO[UserServiceError, KnoraUser] =
+    userRepo.findById(user.userIri).someOrFailException.orDie.flatMap(removeUserFromKnoraGroup(_, group))
+
+  def removeUserFromKnoraGroup(user: KnoraUser, group: KnoraGroup): IO[UserServiceError, KnoraUser] = for {
+    _ <- ZIO
+           .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.id.value}."))
+           .when(!user.isInGroup.contains(group.id))
+    user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.id)))).orDie
   } yield user
 
   def addUserToProject(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] = for {
