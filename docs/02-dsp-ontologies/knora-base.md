@@ -595,8 +595,15 @@ the segment is defined by a start and end time relative to the resource.
 Segments are modelled as resources of type `kb:Segment`, 
 having the properties `kb:isSegmentOf`, a [LinkValue](#linkvalue) pointing to the resource the segment is part of,
 and `kb:hasSegmentBounds`, a [IntervalValue](#intervalvalue) representing the temporal extent of the segment.
-However, `kb:Segment` is "abstract" and cannot be used directly in data. 
-Segments may have a comment attached to them through `kb:hasComment`.
+However, `kb:Segment` is "abstract" and cannot be used directly in data.
+
+Segments have a number of optional, generic properties to add additional information:
+
+- `kb:hasTitle` (0-1): A [TextValue](#textvalue) for adding a title or name to the segment.
+- `kb:hasDescription` (0-n): A [TextValue](#textvalue) for providing one or more descriptions of the segment.
+- `kb:hasKeyword` (0-n): A [TextValue](#textvalue) for adding one or more keywords to the segment.
+- `kb:relatesTo`/`kb:relatesToValue` (0-n): A [LinkValue](#linkvalue) for relating the segment to another resource.
+- `kb:hasComment` (0-1): A [TextValue](#textvalue) for a comment on the segment.
 
 There are two concrete subclasses of `kb:Segment`: `kb:AudioSegment` and `kb:VideoSegment`.
 `kb:AudioSegment` has the property `kb:isAudioSegmentOf`, which points to an [AudioRepresentation](#representations),
