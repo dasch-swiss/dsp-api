@@ -11,9 +11,6 @@ import org.ehcache.config.CacheConfiguration
 import org.ehcache.config.builders.CacheConfigurationBuilder
 import org.ehcache.config.builders.CacheManagerBuilder
 import org.ehcache.config.builders.ResourcePoolsBuilder
-import org.knora.webapi.slice.admin.repo.service.CacheManager.defaultCacheConfigBuilder
-import org.knora.webapi.slice.admin.repo.service.CacheManager.getClassOf
-import org.knora.webapi.slice.common.Value.StringValue
 import zio.Ref
 import zio.Scope
 import zio.UIO
@@ -25,6 +22,10 @@ import zio.ZLayer
 
 import scala.annotation.nowarn
 import scala.reflect.ClassTag
+
+import org.knora.webapi.slice.admin.repo.service.CacheManager.defaultCacheConfigBuilder
+import org.knora.webapi.slice.admin.repo.service.CacheManager.getClassOf
+import org.knora.webapi.slice.common.Value.StringValue
 
 final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
   def put(key: K, value: V): Unit = cache.put(key, value)

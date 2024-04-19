@@ -6,6 +6,10 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
+import java.time.Instant
+
 import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
@@ -29,9 +33,6 @@ import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import zio._
-
-import java.time.Instant
 
 object OntologyCache {
   // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
