@@ -76,7 +76,7 @@ final case class KnoraProjectRepoLive(
   override def save(project: KnoraProject): Task[KnoraProject] =
     ZIO
       .die(new IllegalArgumentException("Update not supported for built-in projects"))
-      .when(KnoraProjectRepo.builtIn.findOneBy(_.id == project.id).isDefined) *>
+      .when(project.id.isBuiltInProjectIri) *>
       super.save(project)
 }
 
