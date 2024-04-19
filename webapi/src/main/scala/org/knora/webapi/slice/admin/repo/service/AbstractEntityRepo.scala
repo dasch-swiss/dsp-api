@@ -148,15 +148,3 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     Update(query.getQueryString)
   }
 }
-
-abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
-  triplestore: TriplestoreService,
-  mapper: RdfEntityMapper[E],
-  private val cache: EntityCache[Id, E],
-) extends AbstractEntityRepo[E, Id](triplestore, mapper) {
-
-  override def findById(id: Id): Task[Option[E]] =
-    cache.get(id).fold(super.findById(id).map(_.map(cache.put)))(ZIO.some(_))
-
-  override def save(entity: E): Task[E] = super.save(entity).map(cache.put)
-}
