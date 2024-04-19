@@ -51,6 +51,9 @@ case class KnoraUserService(
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectAdminMembership(project.id)
 
+  def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
+    userRepo.findByGroupMembership(groupIri)
+
   def updateSystemAdminStatus(knoraUser: KnoraUser, status: SystemAdmin): Task[KnoraUser] =
     updateUser(knoraUser, UserChangeRequest(systemAdmin = Some(status)))
 
@@ -138,9 +141,12 @@ case class KnoraUserService(
   def removeUserFromGroup(user: KnoraUser, group: Group): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.groupIri.value}."))
-           .when(!user.isInGroup.contains(group.groupIri))
+           .unless(user.isInGroup.contains(group.groupIri))
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
   } yield user
+
+  def removeUserFromKnoraGroup(user: KnoraUser, groupIri: GroupIri): UIO[KnoraUser] =
+    userRepo.save(user.copy(isInGroup = user.isInGroup.filterNot(_ == groupIri))).orDie
 
   def addUserToProject(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
@@ -163,7 +169,7 @@ case class KnoraUserService(
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not member of project ${project.projectIri.value}."))
-           .when(!user.isInProject.contains(project.projectIri))
+           .unless(user.isInProject.contains(project.projectIri))
     projectIri               = project.projectIri
     newIsInProject           = user.isInProject.filterNot(_ == projectIri)
     newIsInProjectAdminGroup = user.isInProjectAdminGroup.filterNot(_ == projectIri)
@@ -194,7 +200,7 @@ case class KnoraUserService(
         val msg =
           s"User ${user.id.value} is not a member of project ${project.projectIri.value}. A user needs to be a member of the project to be added as project admin."
         UserServiceError(msg)
-      }.when(!user.isInProject.contains(project.projectIri))
+      }.unless(user.isInProject.contains(project.projectIri))
     theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup :+ project.projectIri))
     user     <- updateUser(user, theChange).orDie
   } yield user
@@ -213,7 +219,7 @@ case class KnoraUserService(
   ): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO
            .fail(UserServiceError(s"User ${user.id.value} is not admin member of project ${project.projectIri.value}."))
-           .when(!user.isInProjectAdminGroup.contains(project.projectIri))
+           .unless(user.isInProjectAdminGroup.contains(project.projectIri))
     theChange = UserChangeRequest(projectsAdmin = Some(user.isInProjectAdminGroup.filterNot(_ == project.projectIri)))
     user     <- updateUser(user, theChange).orDie
   } yield user

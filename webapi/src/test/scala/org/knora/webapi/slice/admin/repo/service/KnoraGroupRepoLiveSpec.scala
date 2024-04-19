@@ -28,7 +28,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
     extends AbstractInMemoryCrudRepository[KnoraGroup, GroupIri](groups, _.id)
     with KnoraGroupRepo {
-  override def findByName(name: GroupName): Task[Option[KnoraGroup]] = ???
+  override def findByName(name: GroupName): Task[Option[KnoraGroup]] =
+    groups.get.map(_.find(_.groupName == name))
 }
 
 object KnoraGroupRepoInMemory {

@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import zio._
 
-import java.util.UUID
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -45,7 +43,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
     }
 
-    "asked about a group identified by 'iri' " should {
+    "asked about a group identified by IRI " should {
       "return group info if the group is known " in {
         val iri      = GroupIri.unsafeFrom(imagesReviewerGroup.id)
         val response = UnsafeZioRun.runOrThrow(groupService(_.findById(iri)))
@@ -154,7 +152,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         group.selfjoin should equal(false)
       }
 
-      "return 'NotFound' if a not-existing group IRI is submitted during update" in {
+      "return 'ForbiddenException' if a not-existing group IRI is submitted during update" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
           groupRestService(
@@ -173,9 +171,9 @@ class GroupsResponderADMSpec extends CoreSpec {
             ),
           ),
         )
-        assertFailsWithA[NotFoundException](
+        assertFailsWithA[ForbiddenException](
           exit,
-          s"Group <$groupIri> not found.",
+          s"Group with IRI '$groupIri' not found",
         )
       }
 
@@ -204,7 +202,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         )
       }
 
-      "return 'BadRequest' if nothing would be changed during the update" in {
+      "return 'BadRequestException' if nothing would be changed during the update" in {
         val exit = UnsafeZioRun.run(
           groupRestService(
             _.putGroup(
@@ -245,11 +243,11 @@ class GroupsResponderADMSpec extends CoreSpec {
         group.members.size shouldBe 2
 
         val statusChangeResponse = UnsafeZioRun.runOrThrow(
-          ZIO.serviceWithZIO[GroupsResponderADM](
-            _.updateGroupStatus(
+          groupRestService(
+            _.putGroupStatus(
               GroupIri.unsafeFrom(imagesReviewerGroup.id),
               GroupStatusUpdateRequest(GroupStatus.inactive),
-              UUID.randomUUID(),
+              rootUser,
             ),
           ),
         )

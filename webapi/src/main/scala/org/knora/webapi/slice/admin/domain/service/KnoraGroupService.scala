@@ -16,11 +16,13 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 case class KnoraGroupService(
   knoraGroupRepo: KnoraGroupRepo,
+  knoraUserService: KnoraUserService,
   iriService: IriService,
 ) {
 
@@ -50,10 +52,7 @@ case class KnoraGroupService(
 
   def updateGroup(groupToUpdate: KnoraGroup, request: GroupUpdateRequest): Task[KnoraGroup] =
     for {
-      _ <- request.name match {
-             case Some(value) => ensureGroupNameIsUnique(value)
-             case None        => ZIO.unit
-           }
+      _ <- ZIO.foreachDiscard(request.name)(ensureGroupNameIsUnique)
 
       updatedGroup <-
         knoraGroupRepo.save(
@@ -66,6 +65,14 @@ case class KnoraGroupService(
         )
     } yield updatedGroup
 
+  def updateGroupStatus(groupToUpdate: KnoraGroup, status: GroupStatus): Task[KnoraGroup] =
+    for {
+      group <- knoraGroupRepo.save(groupToUpdate.copy(status = status))
+      _ <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
+             ZIO.foreachDiscard(members)(user => knoraUserService.removeUserFromKnoraGroup(user, group.id))
+           })
+    } yield group
+
   private def ensureGroupNameIsUnique(name: GroupName) =
     ZIO.whenZIO(knoraGroupRepo.existsByName(name)) {
       ZIO.fail(DuplicateValueException(s"Group with name: '${name.value}' already exists."))
@@ -73,7 +80,5 @@ case class KnoraGroupService(
 }
 
 object KnoraGroupService {
-  object KnoraGroupService {
-    val layer = ZLayer.derive[KnoraGroupService]
-  }
+  val layer = ZLayer.derive[KnoraGroupService]
 }

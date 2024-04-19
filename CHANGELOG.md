@@ -1,5 +1,50 @@
 # Changelog
 
+## [30.12.0](https://github.com/dasch-swiss/dsp-api/compare/v30.11.0...v30.12.0) (2024-04-19)
+
+
+### Maintenance
+
+* Align rest services naming & make layers more readable ([#3179](https://github.com/dasch-swiss/dsp-api/issues/3179)) ([5a3374a](https://github.com/dasch-swiss/dsp-api/commit/5a3374a87838849783d2db577c7dede16cf7f270))
+* Build docs in strict mode, so that mistakes are detected (DEV-3481) ([#3186](https://github.com/dasch-swiss/dsp-api/issues/3186)) ([a806f39](https://github.com/dasch-swiss/dsp-api/commit/a806f3914f0978d42dc9a4506d9fbcfdb061a66a))
+* Bump jena to 5.0.0 (DEV-3426) ([#3170](https://github.com/dasch-swiss/dsp-api/issues/3170)) ([a622e4f](https://github.com/dasch-swiss/dsp-api/commit/a622e4f4da70506d0fccd7f6128dedbb2e0ed73a))
+* Bump Sipi to v3.12.2 ([#3173](https://github.com/dasch-swiss/dsp-api/issues/3173)) ([266537f](https://github.com/dasch-swiss/dsp-api/commit/266537fe7733429e8bdd42cbfc06f64bd88f4a06))
+* Dependency updates ([#3189](https://github.com/dasch-swiss/dsp-api/issues/3189)) ([3188b2b](https://github.com/dasch-swiss/dsp-api/commit/3188b2b1cdf3208e580094265b4904e2e0e67188))
+* Fix checks order in Group update method (DEV-3292) ([#3198](https://github.com/dasch-swiss/dsp-api/issues/3198)) ([bc22ade](https://github.com/dasch-swiss/dsp-api/commit/bc22adee2803b907e3166f487f772bfbf9253f0f))
+* Introduce administrative permission service ([#3172](https://github.com/dasch-swiss/dsp-api/issues/3172)) ([80ca581](https://github.com/dasch-swiss/dsp-api/commit/80ca581eee2249db521e485116245ffbbea183d7))
+* Migrate repositories to use AbstractEntityRepo with builtIn entities and remove constants ([#3163](https://github.com/dasch-swiss/dsp-api/issues/3163)) ([1dd0314](https://github.com/dasch-swiss/dsp-api/commit/1dd03142b21491d9acd009f590119b643ddea7ee))
+* Minor dependency updates ([#3188](https://github.com/dasch-swiss/dsp-api/issues/3188)) ([146f10c](https://github.com/dasch-swiss/dsp-api/commit/146f10c16fc44c680a8ab8d9e0211398ee0402f1))
+* Move creation Group from responder to services ([#3185](https://github.com/dasch-swiss/dsp-api/issues/3185)) ([a21a34f](https://github.com/dasch-swiss/dsp-api/commit/a21a34fda9ba2e250a74c47ce11eaf739b7c57eb))
+* Move Group update from responder to services (DEV-3292)  ([#3194](https://github.com/dasch-swiss/dsp-api/issues/3194)) ([682f5b6](https://github.com/dasch-swiss/dsp-api/commit/682f5b6d291dc7a7907e1e6f9bf6451e30f05905))
+* Move GroupStatus update from responder to services (DEV-3292) ([#3195](https://github.com/dasch-swiss/dsp-api/issues/3195)) ([3e08df7](https://github.com/dasch-swiss/dsp-api/commit/3e08df729e60c35718684cdb5e8cd2afa025cb7b))
+* Patch dependency updates ([#3187](https://github.com/dasch-swiss/dsp-api/issues/3187)) ([d4c8c02](https://github.com/dasch-swiss/dsp-api/commit/d4c8c02b68942ed4deabe802a044705c209bc63f))
+* Remove [@accessible](https://github.com/accessible) (Scala3 preparation) ([#3183](https://github.com/dasch-swiss/dsp-api/issues/3183)) ([993538d](https://github.com/dasch-swiss/dsp-api/commit/993538d3bff2232281e3c1342a158cf172ab195f))
+* Remove [@accessible](https://github.com/accessible) macro from some places ([#3181](https://github.com/dasch-swiss/dsp-api/issues/3181)) ([28a085b](https://github.com/dasch-swiss/dsp-api/commit/28a085b4f6666d3eeff196a81d1b40da7c413b0e))
+* Remove unused dependency from KnoraGroupService ([#3192](https://github.com/dasch-swiss/dsp-api/issues/3192)) ([26e62f8](https://github.com/dasch-swiss/dsp-api/commit/26e62f83145c4de477df55e8b576c11d1a0cd79e))
+* Scala3 preparation (introduce at least one parameter list without implicits) ([#3184](https://github.com/dasch-swiss/dsp-api/issues/3184)) ([a79812f](https://github.com/dasch-swiss/dsp-api/commit/a79812fc24dca44d95c4e0e2244b465093c70a27))
+* Update apache-jena-fuseki to v5.0.0-1 ([#3176](https://github.com/dasch-swiss/dsp-api/issues/3176)) ([68de1c6](https://github.com/dasch-swiss/dsp-api/commit/68de1c65d06a2f711b65f93b952e723bc2a3808e))
+* Update dsp-app to v11.8.0 ([#3175](https://github.com/dasch-swiss/dsp-api/issues/3175)) ([752e350](https://github.com/dasch-swiss/dsp-api/commit/752e350301f140753c445b8b69a89e192227bba2))
+* Update sbt-buildinfo to v0.12.0 ([#3174](https://github.com/dasch-swiss/dsp-api/issues/3174)) ([5e97a25](https://github.com/dasch-swiss/dsp-api/commit/5e97a257e7fd1f3859fe5f36fe72b019598fab44))
+* Use buildjet instead of actuated ([#3182](https://github.com/dasch-swiss/dsp-api/issues/3182)) ([93fd50f](https://github.com/dasch-swiss/dsp-api/commit/93fd50ff83ab0b2b66f589abab7767afb7e82d71))
+
+
+### Documentation
+
+* Add documentation for additional properties on Segment ([#3196](https://github.com/dasch-swiss/dsp-api/issues/3196)) ([d5f2294](https://github.com/dasch-swiss/dsp-api/commit/d5f22949b9fa9c42e2bf2e37b054adb0407a9361))
+* Add markdownlint check to CI ([#3191](https://github.com/dasch-swiss/dsp-api/issues/3191)) ([7a1ae2c](https://github.com/dasch-swiss/dsp-api/commit/7a1ae2ca4f937ea3e53a358eca2f0d16cae7303c))
+
+
+### Enhancements
+
+* Add scopes to tokens issued by JwtService (DEV-3451) ([#3178](https://github.com/dasch-swiss/dsp-api/issues/3178)) ([73fc75f](https://github.com/dasch-swiss/dsp-api/commit/73fc75ff72284206bdc20024e77a6ce9b28fca01))
+* Extend the model of `Segment` with additional properties (DEV-3505) ([#3193](https://github.com/dasch-swiss/dsp-api/issues/3193)) ([54a439c](https://github.com/dasch-swiss/dsp-api/commit/54a439cff86c4426a638c53e9a94e1c01bd62a53))
+
+
+### Bug Fixes
+
+* **translation:** Update some French translations (DEV-3431) ([#3190](https://github.com/dasch-swiss/dsp-api/issues/3190)) ([c82749f](https://github.com/dasch-swiss/dsp-api/commit/c82749fa00f234cda261a9e69b1167d0d2faac41))
+* Use shortname for project export (DEV-3430) ([#3169](https://github.com/dasch-swiss/dsp-api/issues/3169)) ([f25cfa9](https://github.com/dasch-swiss/dsp-api/commit/f25cfa912da7063910147791210b1ed3dfa05b81))
+
 ## [30.11.0](https://github.com/dasch-swiss/dsp-api/compare/v30.10.1...v30.11.0) (2024-04-04)
 
 
