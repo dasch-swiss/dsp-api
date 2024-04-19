@@ -5,7 +5,6 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain
 import zio.Random
 import zio.test.*
 

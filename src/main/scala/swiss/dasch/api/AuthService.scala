@@ -5,27 +5,37 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.domain.AuthScope
 import pdi.jwt.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
+import zio.json.*
 import zio.prelude.Validation
+import swiss.dasch.api.AuthService.JwtContents
 
 trait AuthService {
-  def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], JwtClaim]
+  def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], Principal]
 }
 
 object AuthService {
-  def authenticate(token: String): ZIO[AuthService, NonEmptyChunk[AuthenticationError], JwtClaim] =
+  def authenticate(token: String): ZIO[AuthService, NonEmptyChunk[AuthenticationError], Principal] =
     ZIO.serviceWithZIO[AuthService](_.authenticate(token))
+
+  case class JwtContents(scope: Option[String] = None)
+
+  implicit val JwtContentsCodec: JsonCodec[JwtContents] = DeriveJsonCodec.gen[JwtContents]
 }
 
 sealed trait AuthenticationError { def message: String }
 object AuthenticationError {
   final case class JwtProblem(message: String)      extends AuthenticationError
+  final case class InvalidContents(message: String) extends AuthenticationError
   final case class InvalidAudience(message: String) extends AuthenticationError
   final case class InvalidIssuer(message: String)   extends AuthenticationError
   final case class SubjectMissing(message: String)  extends AuthenticationError
   def jwtProblem(e: Throwable): AuthenticationError = JwtProblem(e.getMessage)
+  def invalidContents(error: String): AuthenticationError =
+    InvalidContents(s"Invalid contents: $error")
   def invalidAudience(jwtConfig: JwtConfig): AuthenticationError =
     InvalidAudience(s"Invalid audience: expected ${jwtConfig.audience}")
   def invalidIssuer(jwtConfig: JwtConfig): AuthenticationError =
@@ -40,36 +50,39 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
   private val audience = jwtConfig.audience
   private val issuer   = jwtConfig.issuer
 
-  def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], JwtClaim] =
-    if (jwtConfig.disableAuth) { ZIO.succeed(JwtClaim(subject = Some("developer"))) }
-    else {
+  def authenticate(jwtString: String): IO[NonEmptyChunk[AuthenticationError], Principal] =
+    if (jwtConfig.disableAuth) {
+      ZIO.succeed(Principal("developer", AuthScope(Set(AuthScope.ScopeValue.Admin))))
+    } else {
       ZIO
         .fromTry(JwtZIOJson.decode(jwtString, secret, alg))
         .mapError(e => NonEmptyChunk(AuthenticationError.jwtProblem(e)))
         .flatMap(verifyClaim)
     }
 
-  private def verifyClaim(claim: JwtClaim): IO[NonEmptyChunk[AuthenticationError], JwtClaim] = {
-    val audVal = if (claim.audience.getOrElse(Set.empty).contains(audience)) { Validation.succeed(claim) }
+  private def verifyClaim(claim: JwtClaim): IO[NonEmptyChunk[AuthenticationError], Principal] = {
+    val audVal = if (claim.audience.getOrElse(Set.empty).contains(audience)) { Validation.succeed(()) }
     else { Validation.fail(AuthenticationError.invalidAudience(jwtConfig)) }
 
-    val issVal = if (claim.issuer.contains(issuer)) { Validation.succeed(claim) }
+    val issVal = if (claim.issuer.contains(issuer)) { Validation.succeed(()) }
     else { Validation.fail(AuthenticationError.invalidIssuer(jwtConfig)) }
 
-    val subVal = if (claim.subject.isDefined) { Validation.succeed(claim) }
-    else { Validation.fail(AuthenticationError.subjectMissing()) }
+    val subVal = Validation.fromEither(claim.subject.toRight(AuthenticationError.subjectMissing()))
 
-    ZIO.fromEither(
+    val authScope =
       Validation
-        .validateWith(issVal, audVal, subVal)(
-          (
-            _,
-            _,
-            _,
-          ) => claim,
+        .fromEither(
+          for {
+            contents  <- Right(Some(claim.content).filter(_.nonEmpty))
+            parsed    <- contents.map(_.fromJson[JwtContents]).getOrElse(Right(JwtContents()))
+            authScope <- parsed.scope.map(AuthScope.parse).getOrElse(Right(AuthScope.Empty))
+          } yield authScope,
         )
-        .toEither,
-    )
+        .mapError(AuthenticationError.invalidContents)
+
+    Validation
+      .validateWith(authScope, issVal, audVal, subVal)((authScope, _, _, subject) => Principal(subject, authScope))
+      .toZIOParallelErrors
   }
 }
 

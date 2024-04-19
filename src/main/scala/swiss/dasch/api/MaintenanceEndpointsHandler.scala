@@ -17,72 +17,80 @@ final case class MaintenanceEndpointsHandler(
   maintenanceEndpoints: MaintenanceEndpoints,
   projectService: ProjectService,
   sipiClient: SipiClient,
+  authorizationHandler: AuthorizationHandler,
 ) extends HandlerFunctions {
 
-  private val postMaintenanceEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.postMaintenanceActionEndpoint
-    .serverLogic(_ => { case (action, shortcodes) =>
-      for {
-        paths <-
-          ZIO
-            .ifZIO(ZIO.succeed(shortcodes.isEmpty))(
-              projectService.listAllProjects(),
-              projectService.findProjects(shortcodes),
-            )
-            .mapError(ApiProblem.InternalServerError(_))
-        _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
-        _ <- action match {
-               case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
-               case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
-             }
-      } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
-    })
+  private val postMaintenanceEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.postMaintenanceActionEndpoint
+      .serverLogic(userSession => { case (action, shortcodes) =>
+        for {
+          _ <- authorizationHandler.ensureAdminScope(userSession)
+          paths <-
+            ZIO
+              .ifZIO(ZIO.succeed(shortcodes.isEmpty))(
+                projectService.listAllProjects(),
+                projectService.findProjects(shortcodes),
+              )
+              .mapError(ApiProblem.InternalServerError(_))
+          _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
+          _ <- action match {
+                 case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
+                 case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
+               }
+        } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
+      })
 
   val createOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.createOriginalsEndpoint
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       (shortcode, mappings) =>
-        projectService
-          .findProject(shortcode)
-          .some
-          .flatMap(projectPath =>
-            maintenanceActions
-              .createOriginals(projectPath, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
-              .tap(count => ZIO.logInfo(s"Created $count originals for ${projectPath.path}"))
-              .logError
-              .forkDaemon,
-          )
-          .mapError(projectNotFoundOrServerError(_, shortcode))
-          .unit,
+        authorizationHandler.ensureAdminScope(userSession) *>
+          projectService
+            .findProject(shortcode)
+            .some
+            .flatMap(projectPath =>
+              maintenanceActions
+                .createOriginals(projectPath, mappings.map(e => e.internalFilename -> e.originalFilename).toMap)
+                .tap(count => ZIO.logInfo(s"Created $count originals for ${projectPath.path}"))
+                .logError
+                .forkDaemon,
+            )
+            .mapError(projectNotFoundOrServerError(_, shortcode))
+            .unit,
     )
 
   val needsOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsOriginalsEndpoint
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       imagesOnlyMaybe =>
-        maintenanceActions
-          .createNeedsOriginalsReport(imagesOnlyMaybe.getOrElse(true))
-          .forkDaemon
-          .logError
-          .as("work in progress"),
-    )
-
-  val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsTopLeftCorrectionEndpoint
-    .serverLogic(_ =>
-      _ =>
-        maintenanceActions
-          .createNeedsTopLeftCorrectionReport()
-          .forkDaemon
-          .logError
-          .as("work in progress"),
-    )
-
-  val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] =
-    maintenanceEndpoints.wasTopLeftCorrectionAppliedEndpoint
-      .serverLogic(_ =>
-        _ =>
+        authorizationHandler.ensureAdminScope(userSession) *>
           maintenanceActions
-            .createWasTopLeftCorrectionAppliedReport()
+            .createNeedsOriginalsReport(imagesOnlyMaybe.getOrElse(true))
             .forkDaemon
             .logError
             .as("work in progress"),
+    )
+
+  val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.needsTopLeftCorrectionEndpoint
+      .serverLogic(userSession =>
+        _ =>
+          authorizationHandler.ensureAdminScope(userSession) *>
+            maintenanceActions
+              .createNeedsTopLeftCorrectionReport()
+              .forkDaemon
+              .logError
+              .as("work in progress"),
+      )
+
+  val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.wasTopLeftCorrectionAppliedEndpoint
+      .serverLogic(userSession =>
+        _ =>
+          authorizationHandler.ensureAdminScope(userSession) *>
+            maintenanceActions
+              .createWasTopLeftCorrectionAppliedReport()
+              .forkDaemon
+              .logError
+              .as("work in progress"),
       )
 
   val endpoints: List[ZServerEndpoint[Any, Any]] =

@@ -5,18 +5,27 @@
 
 package swiss.dasch.api
 
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import swiss.dasch.api.ProjectsEndpointsResponses.{AssetInfoResponse, ProjectResponse}
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.CommandExecutorLive
-import swiss.dasch.test.SpecConstants.Projects.{emptyProject, existingProject, nonExistentProject}
-import swiss.dasch.test.{SpecConfigurations, SpecPaths}
+import swiss.dasch.test.SpecConfigurations
+import swiss.dasch.test.SpecConstants.Projects.emptyProject
+import swiss.dasch.test.SpecConstants.Projects.existingProject
+import swiss.dasch.test.SpecConstants.Projects.nonExistentProject
+import swiss.dasch.test.SpecPaths
+import zio.Chunk
+import zio.UIO
+import zio.ZIO
+import zio.http
 import zio.http.*
 import zio.json.*
 import zio.nio.file.Files
-import zio.test.{ZIOSpecDefault, assertTrue}
-import zio.{Chunk, UIO, ZIO, http}
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
 
@@ -290,6 +299,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
   ).provide(
     AssetInfoServiceLive.layer,
     AuthServiceLive.layer,
+    AuthorizationHandlerLive.layer,
     BaseEndpoints.layer,
     BulkIngestService.layer,
     CsvService.layer,

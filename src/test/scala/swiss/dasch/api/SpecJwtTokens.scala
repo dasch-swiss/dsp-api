@@ -8,8 +8,11 @@ package swiss.dasch.api
 import pdi.jwt.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
+import zio.json.*
 
 import java.time.Instant
+
+import AuthService.*
 
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()
@@ -24,11 +27,13 @@ object SpecJwtTokens {
     audience: Option[Set[String]] = None,
     expiration: Option[Instant] = None,
     secret: Option[String] = None,
+    scope: Option[String] = None,
   ): URIO[JwtConfig, String] =
     for {
       now       <- Clock.instant
       jwtConfig <- ZIO.service[JwtConfig]
       claim = JwtClaim(
+                content = JwtContents(scope).toJson,
                 issuer = issuer.orElse(Some(jwtConfig.issuer)),
                 subject = subject,
                 audience = audience.orElse(Some(Set(jwtConfig.audience))),

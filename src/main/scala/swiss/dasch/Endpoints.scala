@@ -23,12 +23,11 @@ final case class Endpoints(
   private val maintenance: MaintenanceEndpointsHandler,
   private val reports: ReportEndpointsHandler,
 ) {
-  val api = monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints ++ reports.endpoints
+  val api: List[ZServerEndpoint[Any, ZioStreams]] =
+    monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints ++ reports.endpoints
 
-  val endpoints: List[ZServerEndpoint[Any, ZioStreams]] = {
-    val docs = createDocs(api)
-    api ++ docs
-  }
+  val endpoints: List[ZServerEndpoint[Any, ZioStreams]] =
+    api ++ createDocs(api)
 
   private def createDocs(apiEndpoints: List[ZServerEndpoint[Any, ZioStreams]]): List[ZServerEndpoint[Any, ZioStreams]] =
     SwaggerInterpreter().fromServerEndpoints[Task](apiEndpoints, BuildInfo.name, BuildInfo.version)

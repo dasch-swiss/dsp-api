@@ -168,6 +168,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     .provide(
       AssetInfoServiceLive.layer,
       AuthServiceLive.layer,
+      AuthorizationHandlerLive.layer,
       BaseEndpoints.layer,
       CommandExecutorMock.layer,
       FileChecksumServiceLive.layer,

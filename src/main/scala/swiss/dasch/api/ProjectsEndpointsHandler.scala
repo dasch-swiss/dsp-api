@@ -8,17 +8,20 @@ package swiss.dasch.api
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
+import swiss.dasch.api.ApiProblem.BadRequest
+import swiss.dasch.api.ApiProblem.Conflict
+import swiss.dasch.api.ApiProblem.InternalServerError
+import swiss.dasch.api.ApiProblem.NotFound
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.api.*
-import swiss.dasch.api.ApiProblem.{BadRequest, Conflict, InternalServerError, NotFound}
-import swiss.dasch.api.ProjectsEndpointsResponses.{
-  AssetCheckResultResponse,
-  AssetInfoResponse,
-  ProjectResponse,
-  UploadResponse,
-}
 import swiss.dasch.domain.*
+import zio.ZIO
+import zio.ZLayer
+import zio.stream
 import zio.stream.ZStream
-import zio.{ZIO, ZLayer, stream}
 
 import java.io.IOException
 
@@ -29,86 +32,93 @@ final case class ProjectsEndpointsHandler(
   projectService: ProjectService,
   reportService: ReportService,
   assetInfoService: AssetInfoService,
+  authorizationHandler: AuthorizationHandler,
 ) extends HandlerFunctions {
 
   val getProjectsEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsEndpoint
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       _ =>
-        projectService
-          .listAllProjects()
-          .mapBoth(
-            InternalServerError(_),
-            list =>
-              (list.map(ProjectResponse.from), ContentRange("items", Some(0, list.size), Some(list.size)).toString),
-          ),
+        authorizationHandler.ensureAdminScope(userSession) *>
+          projectService
+            .listAllProjects()
+            .mapBoth(
+              InternalServerError(_),
+              list =>
+                (list.map(ProjectResponse.from), ContentRange("items", Some(0, list.size), Some(list.size)).toString),
+            ),
     )
 
   val getProjectByShortcodeEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectByShortcodeEndpoint
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       shortcode =>
-        projectService
-          .findProject(shortcode)
-          .some
-          .mapBoth(
-            projectNotFoundOrServerError(_, shortcode),
-            _ => ProjectResponse.from(shortcode),
-          ),
+        authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
+          projectService
+            .findProject(shortcode)
+            .some
+            .mapBoth(
+              projectNotFoundOrServerError(_, shortcode),
+              _ => ProjectResponse.from(shortcode),
+            ),
     )
 
   private val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsChecksumReport
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       shortcode =>
-        reportService
-          .checksumReport(shortcode)
-          .some
-          .mapBoth(
-            projectNotFoundOrServerError(_, shortcode),
-            AssetCheckResultResponse.from,
-          ),
+        authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
+          reportService
+            .checksumReport(shortcode)
+            .some
+            .mapBoth(
+              projectNotFoundOrServerError(_, shortcode),
+              AssetCheckResultResponse.from,
+            ),
     )
 
   private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsAssetsInfo
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       (shortcode, assetId) =>
         {
           val ref = AssetRef(assetId, shortcode)
-          assetInfoService
-            .findByAssetRef(ref)
-            .some
-            .mapBoth(
-              assetRefNotFoundOrServerError(_, ref),
-              AssetInfoResponse.from,
-            )
+          authorizationHandler.ensureProjectReadable(userSession, shortcode) *>
+            assetInfoService
+              .findByAssetRef(ref)
+              .some
+              .mapBoth(
+                assetRefNotFoundOrServerError(_, ref),
+                AssetInfoResponse.from,
+              )
         },
     )
 
   private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       code =>
-        bulkIngestService
-          .startBulkIngest(code)
-          .mapBoth(
-            _ => failBulkIngestInProgress(code),
-            _ => ProjectResponse.from(code),
-          ),
+        authorizationHandler.ensureAdminScope(userSession) *>
+          bulkIngestService
+            .startBulkIngest(code)
+            .mapBoth(
+              _ => failBulkIngestInProgress(code),
+              _ => ProjectResponse.from(code),
+            ),
     )
 
   private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       code =>
-        bulkIngestService
-          .finalizeBulkIngest(code)
-          .mapBoth(
-            _ => failBulkIngestInProgress(code),
-            _ => ProjectResponse.from(code),
-          ),
+        authorizationHandler.ensureAdminScope(userSession) *>
+          bulkIngestService
+            .finalizeBulkIngest(code)
+            .mapBoth(
+              _ => failBulkIngestInProgress(code),
+              _ => ProjectResponse.from(code),
+            ),
     )
 
   private val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =
     projectEndpoints.getBulkIngestMappingCsv
-      .serverLogic(_ =>
+      .serverLogic(userSession =>
         code =>
-          {
+          authorizationHandler.ensureAdminScope(userSession) *>
             bulkIngestService
               .getBulkIngestMappingCsv(code)
               .mapError {
@@ -116,44 +126,45 @@ final case class ProjectsEndpointsHandler(
                 case Some(ioException: IOException) => InternalServerError(ioException)
               }
               .some
-              .mapError(_ => NotFound(code))
-          },
+              .mapError(_ => NotFound(code)),
       )
 
   private def failBulkIngestInProgress(code: ProjectShortcode) =
     Conflict(s"A bulk ingest is currently in progress for project ${code.value}.")
 
   private val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postExport
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       shortcode =>
-        projectService
-          .zipProject(shortcode)
-          .some
-          .mapBoth(
-            projectNotFoundOrServerError(_, shortcode),
-            path =>
-              (
-                s"attachment; filename=export-$shortcode.zip",
-                "application/zip",
-                ZStream.fromFile(path.toFile).orDie,
-              ),
-          ),
+        authorizationHandler.ensureAdminScope(userSession) *>
+          projectService
+            .zipProject(shortcode)
+            .some
+            .mapBoth(
+              projectNotFoundOrServerError(_, shortcode),
+              path =>
+                (
+                  s"attachment; filename=export-$shortcode.zip",
+                  "application/zip",
+                  ZStream.fromFile(path.toFile).orDie,
+                ),
+            ),
     )
 
   private val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
-    .serverLogic(_ =>
+    .serverLogic(userSession =>
       (shortcode, stream) =>
-        importService
-          .importZipStream(shortcode, stream.orDie)
-          .mapBoth(
-            {
-              case IoError(e)       => InternalServerError(s"Import of project ${shortcode.value} failed.", e)
-              case EmptyFile        => BadRequest.invalidBody("The uploaded file is empty.")
-              case NoZipFile        => BadRequest.invalidBody("The uploaded file is not a zip file.")
-              case InvalidChecksums => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
-            },
-            _ => UploadResponse(),
-          ),
+        authorizationHandler.ensureAdminScope(userSession) *>
+          importService
+            .importZipStream(shortcode, stream.orDie)
+            .mapBoth(
+              {
+                case IoError(e)       => InternalServerError(s"Import of project ${shortcode.value} failed.", e)
+                case EmptyFile        => BadRequest.invalidBody("The uploaded file is empty.")
+                case NoZipFile        => BadRequest.invalidBody("The uploaded file is not a zip file.")
+                case InvalidChecksums => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
+              },
+              _ => UploadResponse(),
+            ),
     )
 
   val endpoints: List[ZServerEndpoint[Any, ZioStreams]] =

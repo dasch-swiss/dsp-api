@@ -27,6 +27,7 @@ object Main extends ZIOAppDefault {
       .provide(
         AssetInfoServiceLive.layer,
         AuthServiceLive.layer,
+        AuthorizationHandlerLive.layer,
         BaseEndpoints.layer,
         BulkIngestService.layer,
         CommandExecutorLive.layer,
@@ -57,6 +58,6 @@ object Main extends ZIOAppDefault {
         SipiClientLive.layer,
         StillImageService.layer,
         StorageServiceLive.layer,
-//        ZLayer.Debug.mermaid ,
+        // ZLayer.Debug.mermaid,
       )
 }

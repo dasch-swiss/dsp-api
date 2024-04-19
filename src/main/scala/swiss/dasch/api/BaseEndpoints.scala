@@ -7,33 +7,32 @@ package swiss.dasch.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
+import sttp.tapir.Codec
+import sttp.tapir.EndpointOutput
+import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.oneOf
+import sttp.tapir.oneOfVariant
+import sttp.tapir.statusCode
 import sttp.tapir.ztapir.*
-import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint, oneOf, oneOfVariant, statusCode}
+import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
+import zio.IO
 import zio.ZLayer
 
-case class UserSession(subject: String)
-
 case class BaseEndpoints(authService: AuthService) {
-
   val publicEndpoint: PublicEndpoint[Unit, ApiProblem, Unit, Any] = endpoint
     .errorOut(defaultErrorOutputs)
 
-  val secureEndpoint: ZPartialServerEndpoint[Any, String, UserSession, Unit, ApiProblem, Unit, Any] = endpoint
+  val secureEndpoint: ZPartialServerEndpoint[Any, String, Principal, Unit, ApiProblem, Unit, Any] = endpoint
     .errorOut(defaultErrorOutputs)
     .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
-    .zServerSecurityLogic[Any, UserSession](handleAuth)
+    .zServerSecurityLogic[Any, Principal](handleAuth)
 
-  private def handleAuth(token: String) = authService
+  private def handleAuth(token: String): IO[Unauthorized, Principal] = authService
     .authenticate(token)
-    .map(_.subject)
-    .some
-    .mapBoth(
-      e => ApiProblem.Unauthorized(e.map(_.map(_.message).mkString(", ")).getOrElse("")),
-      subject => UserSession(subject),
-    )
+    .mapError(e => ApiProblem.Unauthorized(e.map(_.message).mkString(", ")))
 }
 
 object BaseEndpoints {
