@@ -9,6 +9,7 @@ import zio.Exit
 import zio.ZIO
 import zio.test.Assertion.failsWithA
 import zio.test._
+
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -28,7 +29,6 @@ import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
@@ -136,7 +136,6 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
   ).provide(
     AppConfig.layer,
     AuthorizationRestService.layer,
-    CacheService.layer,
     CacheManager.layer,
     IriConverter.layer,
     IriService.layer,

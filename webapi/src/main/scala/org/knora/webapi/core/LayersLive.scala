@@ -53,9 +53,6 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
-import org.knora.webapi.store.cache.CacheService
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -79,7 +76,6 @@ object LayersLive {
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
-      CacheServiceRequestMessageHandler &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       GravsearchTypeInspectionRunner &
@@ -142,8 +138,6 @@ object LayersLive {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CacheService.layer,
-      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,

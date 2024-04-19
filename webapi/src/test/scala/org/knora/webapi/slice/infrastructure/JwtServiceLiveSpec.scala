@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import net.sf.ehcache.CacheManager
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -55,7 +54,7 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
 
 final case class ScopeJs(scope: String)
 object ScopeJs {
@@ -128,13 +127,13 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   private def getScopeClaimValue(token: String) =
     getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
 
-  private def initCache = ZIO.succeed {
-    val cacheManager = CacheManager.getInstance()
-    cacheManager.addCacheIfAbsent(AUTHENTICATION_INVALIDATION_CACHE_NAME)
-    cacheManager.clearAll()
-  }
+  private def initCache = for {
+    cacheManager <- ZIO.serviceWith[CacheManager](_.manager)
+    _             = cacheManager.addCacheIfAbsent(AUTHENTICATION_INVALIDATION_CACHE_NAME)
+    _             = cacheManager.clearAll()
+  } yield ()
 
-  val spec: Spec[TestEnvironment with Scope, Any] = suite("JwtService")(
+  val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
         token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
@@ -228,12 +227,13 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(!isValid)
       }
     },
-  ).provide(
-    CacheService.layer,
-    JwtServiceLive.layer,
-    KnoraProjectRepoInMemory.layer,
-    KnoraProjectService.layer,
-    dspIngestConfigLayer,
-    jwtConfigLayer,
-  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(initCache)
+  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(initCache))
+    .provide(
+      CacheManager.layer,
+      JwtServiceLive.layer,
+      KnoraProjectRepoInMemory.layer,
+      KnoraProjectService.layer,
+      dspIngestConfigLayer,
+      jwtConfigLayer,
+    )
 }

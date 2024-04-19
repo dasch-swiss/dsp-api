@@ -21,9 +21,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.Project
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
@@ -36,8 +33,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProject
-import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -157,28 +152,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       fooLastModDate = metadata.lastModificationDate.getOrElse(
         throw AssertionException(s"${metadata.ontologyIri} has no last modification date"),
       )
-    }
-
-    "invalidate cached project information when adding an ontology to a project" in {
-      // Ensure that the project is cached
-      UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[ProjectRestService](_.findById(imagesProject.projectIri)))
-
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProjectBefore = expectMsgType[Option[Project]](timeout)
-      assert(cachedProjectBefore.isDefined)
-      // create an ontology
-      appActor ! CreateOntologyRequestV2(
-        ontologyName = "foo-two",
-        projectIri = imagesProjectIri,
-        label = "The foo-two ontology",
-        apiRequestID = UUID.randomUUID,
-        requestingUser = imagesUser,
-      )
-      expectMsgType[ReadOntologyMetadataV2](timeout)
-      // ensure that the project is no longer cached
-      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
-      val cachedProject = expectMsgType[Option[Project]](timeout)
-      assert(cachedProject.isEmpty)
     }
 
     "change the label in the metadata of 'foo'" in {

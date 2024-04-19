@@ -9,12 +9,16 @@ import izumi.reflect.Tag
 import net.sf.ehcache.Cache
 import net.sf.ehcache.Element
 import net.sf.ehcache.config.CacheConfiguration
+import org.knora.webapi.slice.admin.repo.service.EntityWithId
+import org.knora.webapi.slice.common.Value.StringValue
 import zio.ULayer
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
-trait EntityCache[I, E] {
+import scala.annotation.nowarn
+
+trait EntityCache[I <: StringValue, E <: EntityWithId[I]] {
   def put(value: E): E
   def get(id: I): Option[E]
   def remove(id: I): Boolean
@@ -22,8 +26,9 @@ trait EntityCache[I, E] {
 
 object EntityCache {
 
-  private final case class SimpleEntityCache[I, E](cache: EhCache[I, E], getId: E => I) extends EntityCache[I, E] {
-    override def put(value: E): E       = { cache.put(getId(value), value); value }
+  private final case class SimpleEntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCache[I, E])
+      extends EntityCache[I, E] {
+    override def put(value: E): E       = { cache.put(value.id, value); value }
     override def get(id: I): Option[E]  = cache.get(id)
     override def remove(id: I): Boolean = cache.remove(id)
   }
@@ -48,12 +53,15 @@ object EntityCache {
   // a simple config for an in memory cache with 1000 elements
   private def defaultCacheConfig = new CacheConfiguration().maxEntriesLocalHeap(1_000).eternal(true)
 
-  def createSimpleCache[I, E](cacheName: String, lookup: E => I, manager: CacheManager): EntityCache[I, E] =
-    EntityCache.SimpleEntityCache[I, E](
-      manager.getCacheOrNew[I, E](EntityCache.defaultCacheConfig.name(cacheName)),
-      lookup,
-    )
+  private def makeEntityCache[I <: StringValue, E <: EntityWithId[I]](
+    cacheName: String,
+    manager: CacheManager,
+  ): EntityCache[I, E] =
+    EntityCache.SimpleEntityCache[I, E](manager.getCacheOrNew[I, E](EntityCache.defaultCacheConfig.name(cacheName)))
 
-  def layer[I: Tag, E: Tag](cacheName: String, lookup: E => I): URLayer[CacheManager, EntityCache[I, E]] =
-    ZLayer.fromZIO(ZIO.serviceWith[CacheManager](manager => createSimpleCache[I, E](cacheName, lookup, manager)))
+  @nowarn // suppresses warnings about unused type parameters Tag
+  def layer[I <: StringValue: Tag, E <: EntityWithId[I]: Tag](
+    cacheName: String,
+  ): URLayer[CacheManager, EntityCache[I, E]] =
+    ZLayer.fromZIO(ZIO.serviceWith[CacheManager](manager => makeEntityCache[I, E](cacheName, manager)))
 }

@@ -5,11 +5,18 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.valueobjects.LanguageCode
 import org.eclipse.rdf4j.common.net.ParsedIRI
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import zio.Chunk
+import zio.IO
+import zio.NonEmptyChunk
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -31,12 +38,6 @@ import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio.Chunk
-import zio.IO
-import zio.NonEmptyChunk
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
 
 final case class KnoraUserRepoLive(
   private val triplestore: TriplestoreService,
@@ -134,6 +135,6 @@ object KnoraUserRepoLive {
         .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
   }
 
-  val layer = (ZLayer.succeed(mapper) >+> EntityCache.layer[UserIri, KnoraUser]("knoraUser", _.id)) >>> ZLayer
-    .derive[KnoraUserRepoLive]
+  val layer =
+    (ZLayer.succeed(mapper) >+> EntityCache.layer[UserIri, KnoraUser]("knoraUser")) >>> ZLayer.derive[KnoraUserRepoLive]
 }

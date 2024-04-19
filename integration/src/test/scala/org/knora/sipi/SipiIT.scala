@@ -36,7 +36,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.repo.service.CrudRepository
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
@@ -120,7 +119,6 @@ object SipiIT extends ZIOSpecDefault {
         JwtServiceLive.layer,
         AppConfig.layer,
         KnoraProjectService.layer,
-        CacheService.layer,
         KnoraProjectRepoInMemory.layer,
       )
 

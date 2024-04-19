@@ -21,9 +21,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.store.cache.CacheService
 
-final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, cacheService: CacheService) {
+final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo) {
   def findById(id: ProjectIri): Task[Option[KnoraProject]]           = knoraProjectRepo.findById(id)
   def existsById(id: ProjectIri): Task[Boolean]                      = knoraProjectRepo.existsById(id)
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = knoraProjectRepo.findById(id)
@@ -54,7 +53,6 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, cacheSe
                 RestrictedView.default,
               )
     project <- knoraProjectRepo.save(project)
-    _       <- cacheService.clearCache()
   } yield project
 
   private def toNonEmptyChunk(descriptions: List[Description]) =
@@ -98,7 +96,6 @@ final case class KnoraProjectService(knoraProjectRepo: KnoraProjectRepo, cacheSe
                      selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
                    ),
                  )
-      _ <- cacheService.clearCache()
     } yield updated
 }
 

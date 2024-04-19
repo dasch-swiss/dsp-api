@@ -16,13 +16,14 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
-import org.knora.webapi.slice.admin.repo.EntityCache
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
+
+import org.knora.webapi.slice.admin.repo.EntityCache
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError

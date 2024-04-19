@@ -22,7 +22,6 @@ import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -117,7 +116,6 @@ object MaintenanceServiceSpec extends ZIOSpecDefault {
     },
   ).provide(
     MaintenanceService.layer,
-    CacheService.layer,
     KnoraProjectService.layer,
     KnoraProjectRepoInMemory.layer,
     emptyDatasetRefLayer >>> TriplestoreServiceInMemory.layer,
