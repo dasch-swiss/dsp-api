@@ -43,7 +43,7 @@ class GroupsResponderADMSpec extends CoreSpec {
       }
     }
 
-    "asked about a group identified by 'iri' " should {
+    "asked about a group identified by IRI " should {
       "return group info if the group is known " in {
         val iri      = GroupIri.unsafeFrom(imagesReviewerGroup.id)
         val response = UnsafeZioRun.runOrThrow(groupService(_.findById(iri)))
@@ -152,7 +152,7 @@ class GroupsResponderADMSpec extends CoreSpec {
         group.selfjoin should equal(false)
       }
 
-      "return 'NotFoundException' if a not-existing group IRI is submitted during update" in {
+      "return 'ForbiddenException' if a not-existing group IRI is submitted during update" in {
         val groupIri = "http://rdfh.ch/groups/0000/notexisting"
         val exit = UnsafeZioRun.run(
           groupRestService(
@@ -171,9 +171,9 @@ class GroupsResponderADMSpec extends CoreSpec {
             ),
           ),
         )
-        assertFailsWithA[NotFoundException](
+        assertFailsWithA[ForbiddenException](
           exit,
-          s"Group <$groupIri> not found.",
+          s"Group with IRI '$groupIri' not found",
         )
       }
 
