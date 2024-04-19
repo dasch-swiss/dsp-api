@@ -17,14 +17,14 @@ class CacheUtilSpec extends CoreSpec {
   "Caching" should {
 
     "allow to set and get the value " in {
-      CacheUtil.removeAllCaches()
+      CacheUtil.clearAll()
       CacheUtil.createCaches(appConfig.cacheConfigs)
       CacheUtil.put(cacheName, sessionId, SharedTestDataADM2.rootUser)
       CacheUtil.get(cacheName, sessionId) should be(Some(SharedTestDataADM2.rootUser))
     }
 
     "return none if key is not found " in {
-      CacheUtil.removeAllCaches()
+      CacheUtil.clearAll()
       CacheUtil.createCaches(appConfig.cacheConfigs)
       CacheUtil.get(cacheName, 213.toString) should be(None)
     }
