@@ -22,7 +22,6 @@ import org.knora.webapi.slice.admin.domain.model.FamilyName
 import org.knora.webapi.slice.admin.domain.model.GivenName
 import org.knora.webapi.slice.admin.domain.model.Group
 import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraUser
@@ -146,15 +145,8 @@ case class KnoraUserService(
     user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.groupIri)))).orDie
   } yield user
 
-  def removeUserFromKnoraGroup(user: User, group: KnoraGroup): IO[UserServiceError, KnoraUser] =
-    userRepo.findById(user.userIri).someOrFailException.orDie.flatMap(removeUserFromKnoraGroup(_, group))
-
-  def removeUserFromKnoraGroup(user: KnoraUser, group: KnoraGroup): IO[UserServiceError, KnoraUser] = for {
-    _ <- ZIO
-           .fail(UserServiceError(s"User ${user.id.value} is not member of group ${group.id.value}."))
-           .unless(user.isInGroup.contains(group.id))
-    user <- updateUser(user, UserChangeRequest(groups = Some(user.isInGroup.filterNot(_ == group.id)))).orDie
-  } yield user
+  def removeUserFromKnoraGroup(user: KnoraUser, groupIri: GroupIri): UIO[KnoraUser] =
+    userRepo.save(user.copy(isInGroup = user.isInGroup.filterNot(_ == groupIri))).orDie
 
   def addUserToProject(user: KnoraUser, project: Project): IO[UserServiceError, KnoraUser] = for {
     _ <- ZIO

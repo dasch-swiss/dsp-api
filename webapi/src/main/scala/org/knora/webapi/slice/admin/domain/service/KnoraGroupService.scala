@@ -10,7 +10,6 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
@@ -70,9 +69,7 @@ case class KnoraGroupService(
     for {
       group <- knoraGroupRepo.save(groupToUpdate.copy(status = status))
       _ <- ZIO.unless(group.status.value)(knoraUserService.findByGroupMembership(group.id).flatMap { members =>
-             ZIO.foreachDiscard(members)(user =>
-               knoraUserService.removeUserFromKnoraGroup(user, group).mapError(BadRequestException.apply),
-             )
+             ZIO.foreachDiscard(members)(user => knoraUserService.removeUserFromKnoraGroup(user, group.id))
            })
     } yield group
 
