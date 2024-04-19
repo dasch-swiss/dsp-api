@@ -28,7 +28,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.Group
@@ -180,29 +179,6 @@ final case class GroupsResponderADM(
    */
   def groupMembersGetRequest(iri: GroupIri, user: User): Task[GroupMembersGetResponseADM] =
     groupMembersGetADM(iri.value, user).map(GroupMembersGetResponseADM.apply)
-
-  /**
-   * Change group's status.
-   *
-   * @param groupIri             the IRI of the group we want to change.
-   * @param request              the change request.
-   * @param apiRequestID         the unique request ID.
-   * @return a [[GroupGetResponseADM]].
-   */
-  def updateGroupStatus(
-    groupIri: GroupIri,
-    request: GroupStatusUpdateRequest,
-    apiRequestID: UUID,
-  ): Task[GroupGetResponseADM] = {
-    val task = for {
-      // update group status
-      updated <- updateGroupHelper(groupIri, GroupUpdateRequest(None, None, Some(request.status), None))
-
-      // remove all members from group if status is false
-      result <- removeGroupMembersIfNecessary(updated.group)
-    } yield result
-    IriLocker.runWithIriLock(apiRequestID, groupIri.value, task)
-  }
 
   def deleteGroup(
     iri: GroupIri,
