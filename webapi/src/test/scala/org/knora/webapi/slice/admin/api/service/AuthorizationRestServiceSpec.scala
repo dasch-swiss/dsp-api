@@ -24,7 +24,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.Syst
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
-import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
+import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService

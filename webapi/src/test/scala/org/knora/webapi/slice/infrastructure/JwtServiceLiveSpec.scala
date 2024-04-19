@@ -54,7 +54,7 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
+import org.knora.webapi.slice.admin.repo.service.CacheManager
 
 final case class ScopeJs(scope: String)
 object ScopeJs {

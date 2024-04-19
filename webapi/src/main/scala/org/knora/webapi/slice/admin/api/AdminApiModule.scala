@@ -30,7 +30,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
+import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -39,15 +39,39 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object AdminApiModule {
 
   type Dependencies =
-    AppConfig & AdministrativePermissionService & AssetPermissionsResponder & AuthorizationRestService & BaseEndpoints & CacheManager &
-      GroupsResponderADM & GroupService & HandlerMapper & KnoraProjectService & KnoraResponseRenderer &
-      KnoraUserService & KnoraUserToUserConverter & ListsResponder & MaintenanceService & OntologyCache &
-      PasswordService & PermissionsResponder & ProjectExportService & ProjectImportService & ProjectService &
-      TapirToPekkoInterpreter & TriplestoreService & UserService & UsersResponder
+    AppConfig &
+      AdministrativePermissionService &
+      AssetPermissionsResponder &
+      AuthorizationRestService &
+      BaseEndpoints &
+      CacheManager &
+      GroupsResponderADM &
+      GroupService &
+      HandlerMapper &
+      KnoraProjectService &
+      KnoraResponseRenderer &
+      KnoraUserService &
+      KnoraUserToUserConverter &
+      ListsResponder &
+      MaintenanceService &
+      OntologyCache &
+      PasswordService &
+      PermissionsResponder &
+      ProjectExportService &
+      ProjectImportService &
+      ProjectService &
+      TapirToPekkoInterpreter &
+      TriplestoreService &
+      UserService &
+      UsersResponder
 
-  type Provided = AdminApiEndpoints & AdminApiRoutes &
+  type Provided = AdminApiEndpoints &
+    AdminApiRoutes &
     // the `*RestService`s are only exposed for the integration tests
-    GroupRestService & UserRestService & ProjectRestService & PermissionRestService
+    GroupRestService &
+    UserRestService &
+    ProjectRestService &
+    PermissionRestService
 
   val layer: ZLayer[Dependencies, Nothing, Provided] =
     ZLayer.makeSome[Dependencies, Provided](

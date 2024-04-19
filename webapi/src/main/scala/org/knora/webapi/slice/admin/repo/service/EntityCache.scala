@@ -3,20 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.repo
+package org.knora.webapi.slice.admin.repo.service
 
 import izumi.reflect.Tag
 import net.sf.ehcache.Cache
 import net.sf.ehcache.Element
 import net.sf.ehcache.config.CacheConfiguration
-import org.knora.webapi.slice.admin.repo.service.EntityWithId
-import org.knora.webapi.slice.common.Value.StringValue
 import zio.ULayer
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 
 import scala.annotation.nowarn
+
+import org.knora.webapi.slice.admin.repo.service.EntityCache.EhCache
+import org.knora.webapi.slice.common.Value.StringValue
 
 trait EntityCache[I <: StringValue, E <: EntityWithId[I]] {
   def put(value: E): E
@@ -39,17 +40,6 @@ object EntityCache {
     def remove(key: K): Boolean     = cache.remove(key)
   }
 
-  final case class CacheManager(manager: net.sf.ehcache.CacheManager) {
-    def getCacheOrNew[K, V](config: CacheConfiguration): EhCache[K, V] =
-      EhCache[K, V](manager.addCacheIfAbsent(new Cache(config)))
-
-    def clearAll(): Unit = manager.clearAll()
-  }
-
-  object CacheManager {
-    val layer: ULayer[CacheManager] = ZLayer.succeed(CacheManager(net.sf.ehcache.CacheManager.getInstance()))
-  }
-
   // a simple config for an in memory cache with 1000 elements
   private def defaultCacheConfig = new CacheConfiguration().maxEntriesLocalHeap(1_000).eternal(true)
 
@@ -57,11 +47,22 @@ object EntityCache {
     cacheName: String,
     manager: CacheManager,
   ): EntityCache[I, E] =
-    EntityCache.SimpleEntityCache[I, E](manager.getCacheOrNew[I, E](EntityCache.defaultCacheConfig.name(cacheName)))
+    EntityCache.SimpleEntityCache[I, E](manager.addCacheIfAbsent[I, E](EntityCache.defaultCacheConfig.name(cacheName)))
 
   @nowarn // suppresses warnings about unused type parameters Tag
   def layer[I <: StringValue: Tag, E <: EntityWithId[I]: Tag](
     cacheName: String,
   ): URLayer[CacheManager, EntityCache[I, E]] =
     ZLayer.fromZIO(ZIO.serviceWith[CacheManager](manager => makeEntityCache[I, E](cacheName, manager)))
+}
+
+final case class CacheManager(manager: net.sf.ehcache.CacheManager) {
+  def addCacheIfAbsent[K, V](config: CacheConfiguration): EhCache[K, V] =
+    EhCache[K, V](manager.addCacheIfAbsent(new Cache(config)))
+
+  def clearAll(): Unit = manager.clearAll()
+}
+
+object CacheManager {
+  val layer: ULayer[CacheManager] = ZLayer.succeed(CacheManager(net.sf.ehcache.CacheManager.getInstance()))
 }
