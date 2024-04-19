@@ -157,11 +157,7 @@ abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
 ) extends AbstractEntityRepo[E, Id](triplestore, mapper) {
 
   override def findById(id: Id): Task[Option[E]] =
-    cacheGet(id).fold(super.findById(id).map(_.map(cachePut)))(ZIO.some(_))
+    cache.get(id).fold(super.findById(id).map(_.map(cache.put)))(ZIO.some(_))
 
-  override def save(entity: E): Task[E] = super.save(entity).map(cachePut)
-
-  protected def cachePut(entity: E): E       = cache.put(entity)
-  protected def cacheGet(id: Id): Option[E]  = cache.get(id)
-  protected def cacheRemove(id: Id): Boolean = cache.remove(id)
+  override def save(entity: E): Task[E] = super.save(entity).map(cache.put)
 }
