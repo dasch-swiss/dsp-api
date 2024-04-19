@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.2...v0.8.3) (2024-04-19)
+
+
+### Bug Fixes
+
+* Release semaphore after mapping.csv (DEV-3435) ([#198](https://github.com/dasch-swiss/dsp-ingest/issues/198)) ([3bd76b3](https://github.com/dasch-swiss/dsp-ingest/commit/3bd76b367b464509442f4ca70bb39b6cea239f0b))
+
+
+### Maintenance
+
+* Dependency updates ([#202](https://github.com/dasch-swiss/dsp-ingest/issues/202)) ([8f4db88](https://github.com/dasch-swiss/dsp-ingest/commit/8f4db88ee515d7815d56c5a0e3e19c07349dea9e))
+* Minor dependency updates ([#201](https://github.com/dasch-swiss/dsp-ingest/issues/201)) ([6424000](https://github.com/dasch-swiss/dsp-ingest/commit/6424000e8f4e5d8de9d9af1673f7cc8c40ccd4b9))
+* Patch dependency updates ([#200](https://github.com/dasch-swiss/dsp-ingest/issues/200)) ([c030a29](https://github.com/dasch-swiss/dsp-ingest/commit/c030a29d632c725176ee5d356d9fa639dfb0559e))
+* Update knora-sipi to v30.12.0 ([#204](https://github.com/dasch-swiss/dsp-ingest/issues/204)) ([14b3401](https://github.com/dasch-swiss/dsp-ingest/commit/14b3401ae473cd80e1ff1cc760d8403cb89ee526))
+
 ## [0.8.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.8.1...v0.8.2) (2024-04-02)
 
 
