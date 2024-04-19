@@ -11,7 +11,6 @@ import zio.test.Spec
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -24,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.model.GroupSelfJoin
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
@@ -67,6 +67,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
     ).provide(
       AppConfig.layer,
       CacheService.layer,
+      CacheManager.layer,
       GroupService.layer,
       IriConverter.layer,
       IriService.layer,

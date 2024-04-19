@@ -45,7 +45,7 @@ case class KnoraUserService(
   def findById(userIri: UserIri): Task[Option[KnoraUser]]         = userRepo.findById(userIri)
   def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
   def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
-  def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
+  def findAllRegularUsers(): Task[Seq[KnoraUser]]                 = userRepo.findAll().map(_.filter(_.id.isRegularUser))
   def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectMembership(project.id)
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =

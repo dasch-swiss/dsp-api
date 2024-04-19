@@ -6,11 +6,11 @@
 package org.knora.webapi.slice.admin.repo
 
 import zio.ZLayer
-
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
+import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
 import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
@@ -24,6 +24,7 @@ object AdminRepoModule {
   type Provided     = AdministrativePermissionRepo & KnoraGroupRepo & KnoraProjectRepo & KnoraUserRepo
 
   val layer = ZLayer.makeSome[Dependencies, Provided](
+    CacheManager.layer,
     KnoraGroupRepoLive.layer,
     KnoraProjectRepoLive.layer,
     KnoraUserRepoLive.layer,

@@ -9,7 +9,6 @@ import zio.Exit
 import zio.ZIO
 import zio.test.Assertion.failsWithA
 import zio.test._
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -24,6 +23,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.Syst
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.repo.EntityCache.CacheManager
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -137,6 +137,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
     AppConfig.layer,
     AuthorizationRestService.layer,
     CacheService.layer,
+    CacheManager.layer,
     IriConverter.layer,
     IriService.layer,
     KnoraGroupRepoInMemory.layer,

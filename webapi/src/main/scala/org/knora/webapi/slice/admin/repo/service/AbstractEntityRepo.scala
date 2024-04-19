@@ -16,13 +16,13 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
+import org.knora.webapi.slice.admin.repo.EntityCache
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
 import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
-
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
@@ -147,4 +147,20 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
 
     Update(query.getQueryString)
   }
+}
+
+abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
+  triplestore: TriplestoreService,
+  mapper: RdfEntityMapper[E],
+  private val cache: EntityCache[Id, E],
+) extends AbstractEntityRepo[E, Id](triplestore, mapper) {
+
+  override def findById(id: Id): Task[Option[E]] =
+    cacheGet(id).fold(super.findById(id).map(_.map(cachePut)))(ZIO.some(_))
+
+  override def save(entity: E): Task[E] = super.save(entity).map(cachePut)
+
+  protected def cachePut(entity: E): E       = cache.put(entity)
+  protected def cacheGet(id: Id): Option[E]  = cache.get(id)
+  protected def cacheRemove(id: Id): Boolean = cache.remove(id)
 }

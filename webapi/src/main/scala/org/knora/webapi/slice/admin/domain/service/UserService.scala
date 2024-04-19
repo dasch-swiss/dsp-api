@@ -6,57 +6,36 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
-import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
-import org.knora.webapi.store.cache.CacheService
 
 final case class UserService(
   private val knoraUserService: KnoraUserService,
-  private val userToKnoraUserConverter: KnoraUserToUserConverter,
-  private val cacheService: CacheService,
+  private val userConverter: KnoraUserToUserConverter,
 ) {
 
   def findUserByIri(iri: UserIri): Task[Option[User]] =
-    fromCacheOrRepo(iri, cacheService.getUserByIri, knoraUserService.findById)
+    knoraUserService.findById(iri).flatMap(userConverter.toUser)
 
   def findUserByEmail(email: Email): Task[Option[User]] =
-    fromCacheOrRepo(email, cacheService.getUserByEmail, knoraUserService.findByEmail)
+    knoraUserService.findByEmail(email).flatMap(userConverter.toUser)
 
   def findUserByUsername(username: Username): Task[Option[User]] =
-    fromCacheOrRepo(username, cacheService.getUserByUsername, knoraUserService.findByUsername)
+    knoraUserService.findByUsername(username).flatMap(userConverter.toUser)
 
   def findByProjectMembership(project: KnoraProject): Task[Seq[User]] =
-    knoraUserService.findByProjectMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+    knoraUserService.findByProjectMembership(project).flatMap(userConverter.toUser)
 
   def findByProjectAdminMembership(project: KnoraProject): Task[Seq[User]] =
-    knoraUserService.findByProjectAdminMembership(project).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
+    knoraUserService.findByProjectAdminMembership(project).flatMap(userConverter.toUser)
 
   def findAllRegularUsers: Task[Seq[User]] =
-    knoraUserService
-      .findAll()
-      .map(_.filter(_.id.isRegularUser))
-      .flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser))
-
-  private def fromCacheOrRepo[A](
-    id: A,
-    fromCache: A => Task[Option[User]],
-    fromRepo: A => Task[Option[KnoraUser]],
-  ): Task[Option[User]] =
-    fromCache(id).flatMap {
-      case Some(user) => ZIO.some(user)
-      case None =>
-        fromRepo(id).flatMap(ZIO.foreach(_)(userToKnoraUserConverter.toUser)).tap {
-          case Some(user) => cacheService.putUser(user)
-          case None       => ZIO.unit
-        }
-    }
+    knoraUserService.findAllRegularUsers().flatMap(userConverter.toUser)
 }
 
 object UserService {
