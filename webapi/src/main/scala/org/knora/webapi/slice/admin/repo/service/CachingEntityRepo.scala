@@ -5,10 +5,11 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.knora.webapi.slice.common.Value.StringValue
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 import zio.Task
 import zio.ZIO
+
+import org.knora.webapi.slice.common.Value.StringValue
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 abstract class CachingEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   private val triplestore: TriplestoreService,
