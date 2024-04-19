@@ -38,3 +38,16 @@ case class OntologyCacheData(
     })
     .toMap
 }
+object OntologyCacheData {
+  val Empty = OntologyCacheData(
+    ontologies = Map.empty,
+    classToSuperClassLookup = Map.empty,
+    classToSubclassLookup = Map.empty,
+    subPropertyOfRelations = Map.empty,
+    superPropertyOfRelations = Map.empty,
+    classDefinedInOntology = Map.empty,
+    propertyDefinedInOntology = Map.empty,
+    entityDefinedInOntology = Map.empty,
+    standoffProperties = Set.empty,
+  )
+}

@@ -13,12 +13,12 @@ import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * The application bootstrapper
@@ -32,6 +32,7 @@ final case class AppServer(
   sipiService: SipiService,
   hs: HttpServer,
   appConfig: AppConfig,
+  cacheManager: CacheManager,
 ) {
 
   /**
@@ -67,10 +68,7 @@ final case class AppServer(
   private val buildAllCaches: UIO[Unit] =
     for {
       _ <- state.set(AppState.CreatingCaches)
-      _ <- ZIO.attempt {
-             CacheUtil.clearAll()
-             CacheUtil.createCaches(appConfig.cacheConfigs)
-           }.orDie
+      _ <- cacheManager.clearAll()
       _ <- state.set(AppState.CachesReady)
     } yield ()
 
@@ -137,7 +135,7 @@ final case class AppServer(
 object AppServer {
 
   type AppServerEnvironment =
-    State & TriplestoreService & RepositoryUpdater & actor.ActorSystem & OntologyCache & SipiService & HttpServer & AppConfig
+    actor.ActorSystem & AppConfig & CacheManager & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
@@ -152,7 +150,8 @@ object AppServer {
       iiifs    <- ZIO.service[SipiService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c)
+      cm       <- ZIO.service[CacheManager]
+      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c, cm)
     } yield appServer
 
   /**

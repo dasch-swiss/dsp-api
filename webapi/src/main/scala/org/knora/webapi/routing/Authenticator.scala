@@ -16,18 +16,15 @@ import spray.json._
 import zio._
 
 import java.util.Base64
-
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NONE_SUPPLIED
 import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -37,7 +34,8 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.slice.admin.repo.service.CacheManager
+import org.knora.webapi.slice.admin.repo.service.EhCache
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -135,8 +133,6 @@ trait Authenticator {
 object Authenticator {
   val BAD_CRED_NONE_SUPPLIED = "bad credentials: none found"
   val BAD_CRED_NOT_VALID     = "bad credentials: not valid"
-
-  val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 }
 
 final case class AuthenticatorLive(
@@ -144,8 +140,8 @@ final case class AuthenticatorLive(
   private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
-)(private implicit val stringFormatter: StringFormatter)
-    extends Authenticator {
+  private val cache: EhCache[String, String],
+) extends Authenticator {
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
@@ -275,7 +271,7 @@ final case class AuthenticatorLive(
 
     credentials match {
       case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionToken, sessionToken)
+        cache.put(sessionToken, sessionToken)
 
         HttpResponse(
           headers = List(
@@ -301,7 +297,7 @@ final case class AuthenticatorLive(
           ),
         )
       case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, jwtToken, jwtToken)
+        cache.put(jwtToken, jwtToken)
 
         HttpResponse(
           headers = List(
@@ -680,5 +676,8 @@ final case class AuthenticatorLive(
 }
 
 object AuthenticatorLive {
-  val layer = ZLayer.derive[AuthenticatorLive]
+  val AUTHENTICATION_INVALIDATION_CACHE = "authenticationInvalidationCache"
+  val layer = ZLayer.fromZIO(
+    ZIO.serviceWithZIO[CacheManager](_.createCache[String, String](AUTHENTICATION_INVALIDATION_CACHE)),
+  ) >>> ZLayer.derive[AuthenticatorLive]
 }

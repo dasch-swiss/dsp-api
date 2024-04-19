@@ -48,13 +48,14 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.admin.repo.service.CacheManager
+import org.knora.webapi.slice.admin.repo.service.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements
@@ -67,12 +68,13 @@ final case class StandoffResponderV2(
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   projectService: ProjectService,
+  xsltCache: EhCache[String, String],
+  mappingCache: EhCache[String, MappingXMLtoStandoff],
 )(implicit val stringFormatter: StringFormatter)
     extends MessageHandler
     with LazyLogging {
 
-  private val xmlMimeTypes  = Set("text/xml", "application/xml")
-  private val xsltCacheName = "xsltCache"
+  private val xmlMimeTypes = Set("text/xml", "application/xml")
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[StandoffResponderRequestV2]
 
@@ -171,7 +173,7 @@ final case class StandoffResponderV2(
       // check if the XSL transformation is in the cache
       xsltFileUrl <- recoveredXsltUrlFuture
 
-      xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = xsltFileUrl)
+      xsltMaybe: Option[String] = xsltCache.get(xsltFileUrl)
 
       xslt <-
         if (xsltMaybe.nonEmpty) {
@@ -188,7 +190,7 @@ final case class StandoffResponderV2(
                     senderName = this.getClass.getName,
                   ),
                 )
-            _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
+            _ = xsltCache.put(xsltFileUrl, response.content)
           } yield response.content
         }
 
@@ -260,7 +262,7 @@ final case class StandoffResponderV2(
                        requestingUser = requestingUser,
                      )
               } yield Some(transIri)
-            case _ => ZIO.attempt(None)
+            case _ => ZIO.none
           }
 
         // create a collection of a all elements mappingElement
@@ -490,7 +492,7 @@ final case class StandoffResponderV2(
 
       // check if the given project IRI represents an actual project
       projectId <- ZIO
-                     .fromEither(KnoraProject.ProjectIri.from(projectIri.toString()))
+                     .fromEither(KnoraProject.ProjectIri.from(projectIri.toString))
                      .mapError(BadRequestException.apply)
       project <- projectService
                    .findById(projectId)
@@ -665,11 +667,6 @@ final case class StandoffResponderV2(
   }
 
   /**
-   * The name of the mapping cache.
-   */
-  private val mappingCacheName = "mappingCache"
-
-  /**
    * Gets a mapping either from the cache or by making a request to the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
@@ -682,7 +679,7 @@ final case class StandoffResponderV2(
   ): Task[GetMappingResponseV2] = {
 
     val mappingFuture: Task[GetMappingResponseV2] =
-      CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
+      mappingCache.get(mappingIri) match {
         case Some(mapping: MappingXMLtoStandoff) =>
           for {
 
@@ -821,7 +818,7 @@ final case class StandoffResponderV2(
         )
 
       // add the mapping to the cache
-      _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
+      _ = mappingCache.put(mappingIri, mappingXMLToStandoff)
 
     } yield mappingXMLToStandoff
 
@@ -995,8 +992,10 @@ object StandoffResponderV2 {
         cru     <- ZIO.service[ConstructResponseUtilV2]
         stu     <- ZIO.service[StandoffTagUtilV2]
         ps      <- ZIO.service[ProjectService]
+        xc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, String]("xsltCache"))
+        mc      <- ZIO.serviceWithZIO[CacheManager](_.createCache[String, MappingXMLtoStandoff]("mappingCache"))
         sf      <- ZIO.service[StringFormatter]
-        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps)(sf))
+        handler <- mr.subscribe(StandoffResponderV2(ac, mr, ts, cru, stu, ps, xc, mc)(sf))
       } yield handler
     }
 }

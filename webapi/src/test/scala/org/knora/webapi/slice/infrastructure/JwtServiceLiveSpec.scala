@@ -36,7 +36,6 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -126,12 +125,6 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private def getScopeClaimValue(token: String) =
     getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
-
-  private def initCache = for {
-    cacheManager <- ZIO.serviceWith[CacheManager](_.manager)
-    _             = cacheManager.addCacheIfAbsent(AUTHENTICATION_INVALIDATION_CACHE_NAME)
-    _             = cacheManager.clearAll()
-  } yield ()
 
   val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
@@ -227,7 +220,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(!isValid)
       }
     },
-  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(initCache))
+  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(ZIO.serviceWith[CacheManager](_.clearAll())))
     .provide(
       CacheManager.layer,
       JwtServiceLive.layer,

@@ -13,8 +13,6 @@ import zio.config.typesafe._
 
 import java.time.Duration
 
-import org.knora.webapi.util.cache.CacheUtil
-
 /**
  * Represents the configuration as defined in application.conf.
  */
@@ -46,16 +44,6 @@ final case class AppConfig(
   dspIngest: DspIngestConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
-  val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
-    CacheUtil.KnoraCacheConfig(
-      c.cacheName,
-      c.maxElementsInMemory,
-      c.overflowToDisk,
-      c.eternal,
-      c.timeToLiveSeconds,
-      c.timeToIdleSeconds,
-    )
-  }
 }
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
   def issuerAsString(): String = issuer.getOrElse(

@@ -38,6 +38,7 @@ import org.knora.webapi.slice.admin.api.service.PermissionRestService
 import org.knora.webapi.slice.admin.api.service.ProjectRestService
 import org.knora.webapi.slice.admin.api.service.UserRestService
 import org.knora.webapi.slice.admin.domain.service._
+import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
@@ -76,6 +77,7 @@ object LayersLive {
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
+      CacheManager &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       GravsearchTypeInspectionRunner &
