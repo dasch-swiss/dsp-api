@@ -13,7 +13,6 @@ import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -32,7 +31,6 @@ final case class AppServer(
   sipiService: SipiService,
   hs: HttpServer,
   appConfig: AppConfig,
-  cacheManager: CacheManager,
 ) {
 
   /**
@@ -124,12 +122,12 @@ final case class AppServer(
 object AppServer {
 
   type AppServerEnvironment =
-    actor.ActorSystem & AppConfig & CacheManager & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
+    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
    */
-  def init(): ZIO[AppServerEnvironment, Nothing, AppServer] =
+  def init(): URIO[AppServerEnvironment, AppServer] =
     for {
       state    <- ZIO.service[State]
       ts       <- ZIO.service[TriplestoreService]
@@ -139,14 +137,13 @@ object AppServer {
       iiifs    <- ZIO.service[SipiService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      cm       <- ZIO.service[CacheManager]
-      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c, cm)
+      appServer = AppServer(state, ts, ru, as, oc, iiifs, hs, c)
     } yield appServer
 
   /**
    * The live AppServer
    */
-  val make: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val make: URIO[AppServerEnvironment, Unit] =
     for {
       appServer <- AppServer.init()
       _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orDie

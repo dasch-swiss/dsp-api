@@ -27,13 +27,13 @@ final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
 
 final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Ref[Set[EhCache[_, _]]]) {
 
+  def createCache[K: ClassTag, V: ClassTag](alias: String): UIO[EhCache[K, V]] =
+    createCache(alias, defaultCacheConfigBuilder[K, V]().build())
+
   def createCache[K, V](alias: String, config: CacheConfiguration[K, V]): UIO[EhCache[K, V]] = {
     val cache = EhCache[K, V](manager.createCache(alias, config))
     knownCaches.update(_ + cache).as(cache)
   }
-
-  def createCache[K: ClassTag, V: ClassTag](alias: String): UIO[EhCache[K, V]] =
-    createCache(alias, defaultCacheConfigBuilder[K, V]().build())
 
   def clearAll(): UIO[Unit] = knownCaches.get.flatMap(ZIO.foreachDiscard(_)(c => ZIO.succeed(c.clear())))
 }

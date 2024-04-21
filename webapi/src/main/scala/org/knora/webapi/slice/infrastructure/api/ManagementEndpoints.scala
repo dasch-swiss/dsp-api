@@ -60,22 +60,17 @@ object HealthResponse {
     HealthResponse("AppState", "non fatal", false, message)
 
   def from(appState: AppState): HealthResponse = appState match {
-    case AppState.Stopped                => unhealthy("Stopped. Please retry later.")
-    case AppState.StartingUp             => unhealthy("Starting up. Please retry later.")
-    case AppState.WaitingForTriplestore  => unhealthy("Waiting for triplestore. Please retry later.")
-    case AppState.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
-    case AppState.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
-    case AppState.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
-    case AppState.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
-    case AppState.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
-    case AppState.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
-    case AppState.OntologiesReady        => unhealthy("Ontologies ready. Please retry later.")
-    case AppState.WaitingForIIIFService  => unhealthy("Waiting for IIIF service. Please retry later.")
-    case AppState.IIIFServiceReady       => unhealthy("IIIF service ready. Please retry later.")
-    case AppState.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
-    case AppState.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
-    case AppState.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
-    case AppState.Running                => healthy
+    case AppState.Stopped               => unhealthy("Stopped. Please retry later.")
+    case AppState.WaitingForTriplestore => unhealthy("Waiting for triplestore. Please retry later.")
+    case AppState.TriplestoreReady      => unhealthy("Triplestore ready. Please retry later.")
+    case AppState.UpdatingRepository    => unhealthy("Updating repository. Please retry later.")
+    case AppState.RepositoryUpToDate    => unhealthy("Repository up to date. Please retry later.")
+    case AppState.LoadingOntologies     => unhealthy("Loading ontologies. Please retry later.")
+    case AppState.OntologiesReady       => unhealthy("Ontologies ready. Please retry later.")
+    case AppState.WaitingForIIIFService => unhealthy("Waiting for IIIF service. Please retry later.")
+    case AppState.IIIFServiceReady      => unhealthy("IIIF service ready. Please retry later.")
+    case AppState.MaintenanceMode       => unhealthy("Application is in maintenance mode. Please retry later.")
+    case AppState.Running               => healthy
   }
 
   implicit val encoder: JsonCodec[HealthResponse] = DeriveJsonCodec.gen[HealthResponse]

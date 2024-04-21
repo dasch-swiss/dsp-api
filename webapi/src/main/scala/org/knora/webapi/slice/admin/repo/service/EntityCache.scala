@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.admin.repo.service
 
 import izumi.reflect.Tag
-import zio.UIO
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
@@ -25,17 +24,9 @@ final case class EntityCache[I <: StringValue, E <: EntityWithId[I]](cache: EhCa
 
 object EntityCache {
 
-  private def makeEntityCache[I <: StringValue: ClassTag, E <: EntityWithId[I]: ClassTag](
-    cacheName: String,
-    manager: CacheManager,
-  ): UIO[EntityCache[I, E]] =
-    manager
-      .createCache[I, E](cacheName, CacheManager.defaultCacheConfigBuilder[I, E]().build())
-      .map(EntityCache[I, E].apply)
-
   @nowarn // suppresses warnings about unused type parameters Tag
   def layer[I <: StringValue: ClassTag: Tag, E <: EntityWithId[I]: ClassTag: Tag](
     cacheName: String,
   ): URLayer[CacheManager, EntityCache[I, E]] =
-    ZLayer.fromZIO(ZIO.serviceWithZIO[CacheManager](manager => makeEntityCache[I, E](cacheName, manager)))
+    ZLayer.fromZIO(ZIO.serviceWithZIO[CacheManager](_.createCache[I, E](cacheName).map(EntityCache.apply)))
 }
