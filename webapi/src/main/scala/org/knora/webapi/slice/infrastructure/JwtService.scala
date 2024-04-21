@@ -39,7 +39,6 @@ import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.Proje
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative.ProjectResourceCreateRestricted
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.slice.infrastructure.Scope
 import org.knora.webapi.slice.infrastructure.ScopeValue
 import org.knora.webapi.slice.infrastructure.ScopeValue.Write
@@ -85,7 +84,7 @@ final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
   private val dspIngestConfig: DspIngestConfig,
   private val knoraProjectService: KnoraProjectService,
-  private val cacheManager: CacheManager,
+  private val cache: InvalidTokenCache,
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -162,12 +161,10 @@ final case class JwtServiceLive(
    * @return a [[Boolean]].
    */
   override def validateToken(token: String): Task[Boolean] =
-    cacheManager
-      .get[String, String](AuthenticatorLive.AUTHENTICATION_INVALIDATION_CACHE, token)
-      .map(cachedInvalidToken =>
-        if (cachedInvalidToken.isDefined) { false }
-        else { decodeToken(token).isDefined },
-      )
+    if (cache.contains(token)) ZIO.succeed(false)
+    else {
+      ZIO.succeed(decodeToken(token).isDefined)
+    }
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.

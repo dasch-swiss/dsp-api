@@ -88,6 +88,7 @@ object LayersLive {
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
       InstrumentationServerConfig &
+      InvalidTokenCache &
       IriConverter &
       JwtService &
       KnoraUserToUserConverter &
@@ -151,6 +152,7 @@ object LayersLive {
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
+      InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,

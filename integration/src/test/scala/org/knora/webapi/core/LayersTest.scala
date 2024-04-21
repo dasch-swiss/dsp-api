@@ -102,6 +102,7 @@ object LayersTest {
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
+      InvalidTokenCache &
       IriConverter &
       JwtService &
       KnoraUserToUserConverter &
@@ -162,6 +163,7 @@ object LayersTest {
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
+      InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,

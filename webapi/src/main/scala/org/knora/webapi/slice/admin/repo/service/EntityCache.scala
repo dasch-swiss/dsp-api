@@ -24,7 +24,6 @@ import scala.annotation.nowarn
 import scala.reflect.ClassTag
 
 import org.knora.webapi.slice.admin.repo.service.CacheManager.defaultCacheConfigBuilder
-import org.knora.webapi.slice.admin.repo.service.CacheManager.getClassOf
 import org.knora.webapi.slice.common.Value.StringValue
 
 final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
@@ -68,15 +67,6 @@ final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Re
     createCache(alias, defaultCacheConfigBuilder[K, V]().build())
 
   def clearAll(): UIO[Unit] = knownCaches.get.flatMap(ZIO.foreachDiscard(_)(c => ZIO.succeed(c.clear())))
-
-  def get[K: ClassTag, V: ClassTag](cacheName: String, key: K): UIO[Option[V]] =
-    ZIO.succeed(getCache[K, V](cacheName).flatMap(c => Option(c.get(key)))).logError
-
-  private def getCache[K: ClassTag, V: ClassTag](cacheName: String) =
-    Option(manager.getCache(cacheName, getClassOf[K], getClassOf[V]))
-
-  def put[K: ClassTag, V: ClassTag](cacheName: String, key: K, value: V): UIO[Unit] =
-    ZIO.succeed(getCache[K, V](cacheName).map(_.put(key, value))).unit.logError
 }
 
 object CacheManager {

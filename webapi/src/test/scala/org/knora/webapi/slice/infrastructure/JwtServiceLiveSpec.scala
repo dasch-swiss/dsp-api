@@ -36,6 +36,7 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -223,6 +224,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(ZIO.serviceWith[CacheManager](_.clearAll())))
     .provide(
       CacheManager.layer,
+      InvalidTokenCache.layer,
       JwtServiceLive.layer,
       KnoraProjectRepoInMemory.layer,
       KnoraProjectService.layer,

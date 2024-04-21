@@ -35,8 +35,6 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.admin.repo.service.CacheManager
-import org.knora.webapi.slice.admin.repo.service.EhCache
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -141,7 +139,7 @@ final case class AuthenticatorLive(
   private val userService: UserService,
   private val jwtService: JwtService,
   private val passwordService: PasswordService,
-  private val cache: EhCache[String, String],
+  private val cache: InvalidTokenCache,
 ) extends Authenticator {
 
   /**
@@ -272,7 +270,7 @@ final case class AuthenticatorLive(
 
     credentials match {
       case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-        cache.put(sessionToken, sessionToken)
+        cache.put(sessionToken)
 
         HttpResponse(
           headers = List(
@@ -298,7 +296,7 @@ final case class AuthenticatorLive(
           ),
         )
       case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-        cache.put(jwtToken, jwtToken)
+        cache.put(jwtToken)
 
         HttpResponse(
           headers = List(
@@ -677,8 +675,5 @@ final case class AuthenticatorLive(
 }
 
 object AuthenticatorLive {
-  val AUTHENTICATION_INVALIDATION_CACHE = "authenticationInvalidationCache"
-  val layer = ZLayer.fromZIO(
-    ZIO.serviceWithZIO[CacheManager](_.createCache[String, String](AUTHENTICATION_INVALIDATION_CACHE)),
-  ) >>> ZLayer.derive[AuthenticatorLive]
+  val layer = ZLayer.derive[AuthenticatorLive]
 }

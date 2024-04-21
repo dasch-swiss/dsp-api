@@ -29,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -118,6 +119,7 @@ object SipiIT extends ZIOSpecDefault {
       .map(_.jwtString)
       .provide(
         JwtServiceLive.layer,
+        InvalidTokenCache.layer,
         AppConfig.layer,
         CacheManager.layer,
         KnoraProjectService.layer,

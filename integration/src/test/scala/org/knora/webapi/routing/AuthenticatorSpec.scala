@@ -15,11 +15,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.routing.authenticationmessages.CredentialsIdentifier
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.routing.AuthenticatorLive.AUTHENTICATION_INVALIDATION_CACHE
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.repo.service.CacheManager
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 object AuthenticatorSpec {
@@ -74,10 +72,8 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           .run(for {
             token     <- createJwtTokenString(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA"))
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
-            _ <- ZIO.serviceWithZIO[CacheManager](
-                   _.put(AUTHENTICATION_INVALIDATION_CACHE, tokenCreds.jwtToken, tokenCreds.jwtToken),
-                 )
-            result <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
+            _         <- ZIO.serviceWith[InvalidTokenCache](_.put(tokenCreds.jwtToken))
+            result    <- ZIO.serviceWithZIO[Authenticator](_.authenticateCredentialsV2(Some(tokenCreds)))
           } yield result)
         assertFailsWithA[BadCredentialsException](actual)
       }
