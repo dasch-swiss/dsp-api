@@ -3,8 +3,8 @@ package org.knora.webapi.routing
 import zio.ZIO
 import zio.ZLayer
 
-import org.knora.webapi.slice.admin.repo.service.CacheManager
-import org.knora.webapi.slice.admin.repo.service.EhCache
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.EhCache
 
 final case class InvalidTokenCache(cache: EhCache[String, Boolean]) {
   def put(token: String): Unit         = cache.put(token, true)

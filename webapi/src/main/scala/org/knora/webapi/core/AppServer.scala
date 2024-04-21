@@ -13,7 +13,7 @@ import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.slice.admin.repo.service.CacheManager
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
