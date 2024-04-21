@@ -16,8 +16,6 @@ object AppState {
   case object TriplestoreReady       extends AppState
   case object UpdatingRepository     extends AppState
   case object RepositoryUpToDate     extends AppState
-  case object CreatingCaches         extends AppState
-  case object CachesReady            extends AppState
   case object UpdatingSearchIndex    extends AppState
   case object SearchIndexReady       extends AppState
   case object LoadingOntologies      extends AppState

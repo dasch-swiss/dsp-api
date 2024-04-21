@@ -63,16 +63,6 @@ final case class AppServer(
     } yield ()
 
   /**
-   * Initiates building of all caches
-   */
-  private val buildAllCaches: UIO[Unit] =
-    for {
-      _ <- state.set(AppState.CreatingCaches)
-      _ <- cacheManager.clearAll()
-      _ <- state.set(AppState.CachesReady)
-    } yield ()
-
-  /**
    * Initiates population of the ontology caches if `requiresRepository` is `true`
    *
    * @param requiresRepository If `true`, calls the AppRouter to populate the ontology caches, otherwise returns ()
@@ -122,7 +112,6 @@ final case class AppServer(
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
       _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
-      _ <- buildAllCaches
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- checkIIIFService(requiresIIIFService)
       _ <- ZIO.logInfo("=> Startup checks finished")

@@ -66,8 +66,6 @@ object HealthResponse {
     case AppState.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
     case AppState.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
     case AppState.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
-    case AppState.CreatingCaches         => unhealthy("Creating caches. Please retry later.")
-    case AppState.CachesReady            => unhealthy("Caches ready. Please retry later.")
     case AppState.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
     case AppState.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
     case AppState.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
