@@ -29,7 +29,6 @@ final case class AppConfig(
   sipi: Sipi,
   ark: Ark,
   salsah1: Salsah1,
-  caches: List[CacheConfig],
   tmpDatadir: String,
   datadir: String,
   maxResultsPerSearchResultPage: Int,
@@ -37,7 +36,6 @@ final case class AppConfig(
   gui: Gui,
   routesToReject: List[String],
   triplestore: Triplestore,
-  cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
@@ -120,15 +118,6 @@ final case class Salsah1(
   projectIconsBasepath: String,
 )
 
-final case class CacheConfig(
-  cacheName: String,
-  maxElementsInMemory: Int,
-  overflowToDisk: Boolean,
-  eternal: Boolean,
-  timeToLiveSeconds: Int,
-  timeToIdleSeconds: Int,
-)
-
 final case class V2(
   resourcesSequence: ResourcesSequence,
   fulltextSearch: FulltextSearch,
@@ -175,10 +164,6 @@ final case class Fuseki(
   username: String,
   password: String,
   queryLoggingThreshold: Duration = Duration.ofMillis(1000),
-)
-
-final case class CacheService(
-  enabled: Boolean,
 )
 
 final case class ClientTestDataService(
