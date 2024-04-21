@@ -22,7 +22,6 @@ import org.knora.webapi.slice.infrastructure.CacheManager.defaultCacheConfigBuil
 final case class EhCache[K, V](cache: org.ehcache.Cache[K, V]) {
   def put(key: K, value: V): Unit = cache.put(key, value)
   def get(key: K): Option[V]      = Option(cache.get(key))
-  def remove(key: K): Unit        = cache.remove(key)
   def clear(): Unit               = cache.clear()
 }
 
@@ -41,8 +40,6 @@ final case class CacheManager(manager: org.ehcache.CacheManager, knownCaches: Re
 
 object CacheManager {
 
-  private def getClassOf[A: ClassTag]: Class[A] = implicitly[ClassTag[A]].runtimeClass.asInstanceOf[Class[A]]
-
   // a simple config for an in memory cache with 1000 elements
   def defaultCacheConfigBuilder[K: ClassTag, V: ClassTag](entries: Long = 1_000): CacheConfigurationBuilder[K, V] =
     CacheConfigurationBuilder.newCacheConfigurationBuilder[K, V](
@@ -51,11 +48,13 @@ object CacheManager {
       ResourcePoolsBuilder.heap(entries),
     )
 
-  val layer: ULayer[CacheManager] = ZLayer.scoped(
+  private def getClassOf[A: ClassTag]: Class[A] = implicitly[ClassTag[A]].runtimeClass.asInstanceOf[Class[A]]
+
+  val layer: ULayer[CacheManager] = ZLayer.scoped {
+    val acquire = ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true))
+    val release = (cm: org.ehcache.CacheManager) => ZIO.succeed(cm.close())
     ZIO
-      .acquireRelease(ZIO.succeed(CacheManagerBuilder.newCacheManagerBuilder().build(true)))(cacheManager =>
-        ZIO.succeed(cacheManager.close()),
-      )
-      .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _))),
-  )
+      .acquireRelease(acquire)(release)
+      .flatMap(mgr => Ref.make(Set.empty[EhCache[_, _]]).map(CacheManager(mgr, _)))
+  }
 }
