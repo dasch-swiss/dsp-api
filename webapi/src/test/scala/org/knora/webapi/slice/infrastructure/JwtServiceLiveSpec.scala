@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import net.sf.ehcache.CacheManager
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtHeader
@@ -37,7 +36,7 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -53,9 +52,6 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.JwtServiceLive
-import org.knora.webapi.store.cache.CacheService
 
 final case class ScopeJs(scope: String)
 object ScopeJs {
@@ -133,13 +129,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
   private def getScopeClaimValue(token: String) =
     getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
 
-  private def initCache = ZIO.succeed {
-    val cacheManager = CacheManager.getInstance()
-    cacheManager.addCacheIfAbsent(AUTHENTICATION_INVALIDATION_CACHE_NAME)
-    cacheManager.clearAll()
-  }
-
-  val spec: Spec[TestEnvironment with Scope, Any] = suite("JwtService")(
+  val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
         token    <- JwtService(_.createJwt(user, Map("foo" -> JsString("bar"))))
@@ -233,12 +223,14 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(!isValid)
       }
     },
-  ).provide(
-    CacheService.layer,
-    JwtServiceLive.layer,
-    KnoraProjectRepoInMemory.layer,
-    KnoraProjectService.layer,
-    dspIngestConfigLayer,
-    jwtConfigLayer,
-  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(initCache)
+  ) @@ TestAspect.withLiveEnvironment @@ TestAspect.beforeAll(ZIO.serviceWith[CacheManager](_.clearAll())))
+    .provide(
+      CacheManager.layer,
+      InvalidTokenCache.layer,
+      JwtServiceLive.layer,
+      KnoraProjectRepoInMemory.layer,
+      KnoraProjectService.layer,
+      dspIngestConfigLayer,
+      jwtConfigLayer,
+    )
 }

@@ -34,18 +34,16 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.UserServiceError
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
-import org.knora.webapi.store.cache.CacheService
 
 case class KnoraUserService(
   private val userRepo: KnoraUserRepo,
   private val iriService: IriService,
   private val passwordService: PasswordService,
-  private val cacheService: CacheService,
 ) {
   def findById(userIri: UserIri): Task[Option[KnoraUser]]         = userRepo.findById(userIri)
   def findByEmail(email: Email): Task[Option[KnoraUser]]          = userRepo.findByEmail(email)
   def findByUsername(username: Username): Task[Option[KnoraUser]] = userRepo.findByUsername(username)
-  def findAll(): Task[Seq[KnoraUser]]                             = userRepo.findAll()
+  def findAllRegularUsers(): Task[Seq[KnoraUser]]                 = userRepo.findAll().map(_.filter(_.id.isRegularUser))
   def findByProjectMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =
     userRepo.findByProjectMembership(project.id)
   def findByProjectAdminMembership(project: KnoraProject): Task[Chunk[KnoraUser]] =

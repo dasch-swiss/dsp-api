@@ -23,14 +23,13 @@ import org.knora.webapi.slice.admin.repo.rdf.RdfConversions._
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val cacheService: CacheService,
   private val mapper: RdfEntityMapper[KnoraProject],
-) extends AbstractEntityRepo[KnoraProject, ProjectIri](triplestore, mapper)
+  private val cache: EntityCache[ProjectIri, KnoraProject],
+) extends CachingEntityRepo[KnoraProject, ProjectIri](triplestore, mapper, cache)
     with KnoraProjectRepo {
 
   override protected def resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.KnoraProject)
@@ -76,8 +75,8 @@ final case class KnoraProjectRepoLive(
   override def save(project: KnoraProject): Task[KnoraProject] =
     ZIO
       .die(new IllegalArgumentException("Update not supported for built-in projects"))
-      .when(KnoraProjectRepo.builtIn.findOneBy(_.id == project.id).isDefined) *>
-      cacheService.clearCache() *> super.save(project)
+      .when(project.id.isBuiltInProjectIri) *>
+      super.save(project)
 }
 
 object KnoraProjectRepoLive {
@@ -143,5 +142,6 @@ object KnoraProjectRepoLive {
     }
   }
 
-  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraProjectRepoLive]
+  val layer = (ZLayer.succeed(mapper) >+> EntityCache.layer[ProjectIri, KnoraProject]("knoraProject")) >>> ZLayer
+    .derive[KnoraProjectRepoLive]
 }

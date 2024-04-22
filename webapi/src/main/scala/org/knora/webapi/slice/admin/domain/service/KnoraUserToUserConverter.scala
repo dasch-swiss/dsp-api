@@ -26,6 +26,9 @@ final case class KnoraUserToUserConverter(
   private val administrativePermissionService: AdministrativePermissionService,
 ) {
 
+  def toUser(kUser: Option[KnoraUser]): Task[Option[User]] = ZIO.foreach(kUser)(toUser)
+  def toUser(kUser: Seq[KnoraUser]): Task[Seq[User]]       = ZIO.foreach(kUser)(toUser)
+
   def toUser(kUser: KnoraUser): Task[User] = for {
     projects       <- projectsService.findByIds(kUser.isInProject)
     groups         <- groupService.findByIds(kUser.isInGroup)

@@ -27,8 +27,8 @@ import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
@@ -136,7 +136,7 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
   ).provide(
     AppConfig.layer,
     AuthorizationRestService.layer,
-    CacheService.layer,
+    CacheManager.layer,
     IriConverter.layer,
     IriService.layer,
     KnoraGroupRepoInMemory.layer,

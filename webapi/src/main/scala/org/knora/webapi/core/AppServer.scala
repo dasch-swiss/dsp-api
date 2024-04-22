@@ -18,7 +18,6 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * The application bootstrapper
@@ -59,19 +58,6 @@ final case class AppServer(
       _ <- state.set(AppState.UpdatingRepository)
       _ <- ru.maybeUpgradeRepository.flatMap(response => ZIO.logInfo(response.message)).when(requiresRepository)
       _ <- state.set(AppState.RepositoryUpToDate)
-    } yield ()
-
-  /**
-   * Initiates building of all caches
-   */
-  private val buildAllCaches: UIO[Unit] =
-    for {
-      _ <- state.set(AppState.CreatingCaches)
-      _ <- ZIO.attempt {
-             CacheUtil.removeAllCaches()
-             CacheUtil.createCaches(appConfig.cacheConfigs)
-           }.orDie
-      _ <- state.set(AppState.CachesReady)
     } yield ()
 
   /**
@@ -124,7 +110,6 @@ final case class AppServer(
       _ <- ZIO.logInfo("=> Startup checks initiated")
       _ <- checkTriplestoreService
       _ <- upgradeRepository(requiresAdditionalRepositoryChecks)
-      _ <- buildAllCaches
       _ <- populateOntologyCaches(requiresAdditionalRepositoryChecks)
       _ <- checkIIIFService(requiresIIIFService)
       _ <- ZIO.logInfo("=> Startup checks finished")
@@ -137,12 +122,12 @@ final case class AppServer(
 object AppServer {
 
   type AppServerEnvironment =
-    State & TriplestoreService & RepositoryUpdater & actor.ActorSystem & OntologyCache & SipiService & HttpServer & AppConfig
+    actor.ActorSystem & AppConfig & HttpServer & OntologyCache & RepositoryUpdater & SipiService & State & TriplestoreService
 
   /**
    * Initializes the AppServer instance with the required services
    */
-  def init(): ZIO[AppServerEnvironment, Nothing, AppServer] =
+  def init(): URIO[AppServerEnvironment, AppServer] =
     for {
       state    <- ZIO.service[State]
       ts       <- ZIO.service[TriplestoreService]
@@ -158,7 +143,7 @@ object AppServer {
   /**
    * The live AppServer
    */
-  val make: ZIO[AppServerEnvironment, Nothing, Unit] =
+  val make: URIO[AppServerEnvironment, Unit] =
     for {
       appServer <- AppServer.init()
       _         <- appServer.start(requiresAdditionalRepositoryChecks = true, requiresIIIFService = true).orDie
