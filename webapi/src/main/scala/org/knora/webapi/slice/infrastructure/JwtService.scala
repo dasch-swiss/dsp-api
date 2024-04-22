@@ -161,7 +161,7 @@ final case class JwtServiceLive(
    * @return a [[Boolean]].
    */
   override def validateToken(token: String): Task[Boolean] =
-    ZIO.succeed(!cache.contains(token) && decodeToken(token).isDefined )
+    ZIO.succeed(!cache.contains(token) && decodeToken(token).isDefined)
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
