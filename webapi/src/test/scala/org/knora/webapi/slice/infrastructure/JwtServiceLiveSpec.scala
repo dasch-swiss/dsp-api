@@ -38,8 +38,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Description
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -55,6 +53,8 @@ import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.store.cache.CacheService
 
 final case class ScopeJs(scope: String)
@@ -106,13 +106,18 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
       Map(project1.id.value -> Set(PermissionADM.from(Administrative.ProjectAdminAll))),
   )
 
-  private val issuerStr = "https://dsp-api"
+  private val dspIngestAudience = "https://dsp-ingest/audience"
+  private val dspApiIssuer      = "https://dsp-api"
 
   private val dspIngestConfigLayer =
-    ZLayer.succeed(DspIngestConfig("https://dps-ingest", "https://dsp-ingest/audience"))
+    ZLayer.succeed(DspIngestConfig("https://dps-ingest", dspIngestAudience))
 
-  private val jwtConfigLayer =
-    ZLayer.succeed(JwtConfig("n76lPIwWKNeTodFfZPPPYFn7V24R14aE63A+XgS8MMA=", Duration.ofSeconds(10), Some(issuerStr)))
+  private val jwtConfigLayer = ZLayer.succeed(
+    JwtConfig("n76lPIwWKNeTodFfZPPPYFn7V24R14aE63A+XgS8MMA=", Duration.ofSeconds(10), Some(dspApiIssuer)),
+  )
+
+  private val expectedAudience: Set[String] =
+    Set("Knora", "Sipi", dspIngestAudience)
 
   private def decodeToken(token: String): ZIO[JwtConfig, Nothing, (JwtHeader, JwtClaim, String)] =
     ZIO.serviceWithZIO[JwtConfig] { jwtConfig =>
@@ -143,7 +148,7 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         scope    <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(
         userIri.contains(user.id),
-        audience == Set("Knora", "Sipi"),
+        audience == expectedAudience,
         scope == "",
       )
     },
@@ -185,8 +190,8 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
         audience <- getClaim(token.jwtString, _.audience.getOrElse(Set.empty))
         scope    <- getScopeClaimValue(token.jwtString)
       } yield assertTrue(
-        userIri.contains(issuerStr),
-        audience.contains("https://dsp-ingest/audience"),
+        userIri.contains(dspApiIssuer),
+        audience == Set(dspIngestAudience),
         scope == "admin",
       )
     },
@@ -198,9 +203,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     },
     test("fail to validate an invalid token") {
       def createClaim(
-        issuer: Option[String] = Some(issuerStr),
+        issuer: Option[String] = Some(dspApiIssuer),
         subject: Option[String] = Some(UserIri.makeNew.value),
-        audience: Option[Set[String]] = Some(Set("Knora", "Sipi")),
+        audience: Option[Set[String]] = Some(expectedAudience),
         issuedAt: Option[Long] = Some(Instant.now.getEpochSecond),
         expiration: Option[Long] = Some(Instant.now.plusSeconds(10).getEpochSecond),
         jwtId: Option[String] = Some(UuidUtil.base64Encode(UUID.randomUUID())),
