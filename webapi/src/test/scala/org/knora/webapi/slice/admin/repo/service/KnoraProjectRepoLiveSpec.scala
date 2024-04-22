@@ -10,6 +10,7 @@ import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.Gen
 import zio.test.Spec
+import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
@@ -29,7 +30,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
@@ -84,7 +85,7 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(exit.isFailure)
         }
       },
-    ),
+    ) @@ TestAspect.sequential @@ TestAspect.before(ZIO.serviceWith[CacheManager](_.clearAll())),
     suite("findAll")(
       test("return all projects if some exist") {
         for {
@@ -112,9 +113,10 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         },
         test("return None if project does not exist") {
           for {
-            project <- KnoraProjectRepo(
-                         _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/1234")),
-                       )
+            project <-
+              KnoraProjectRepo(
+                _.findById(ProjectIdentifierADM.IriIdentifier.unsafeFrom("http://rdfh.ch/projects/unknown-project")),
+              )
           } yield assertTrue(project.isEmpty)
         },
         test("should find all built in projects") {
@@ -166,5 +168,5 @@ object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         },
       ),
     ),
-  ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, CacheService.layer, StringFormatter.test)
+  ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, CacheManager.layer, StringFormatter.test)
 }

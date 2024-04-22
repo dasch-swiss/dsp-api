@@ -50,6 +50,8 @@ trait KnoraUserRepo extends Repository[KnoraUser, UserIri] {
 
   def findByProjectAdminMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]]
 
+  def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]]
+
   /**
    * Saves a given user. Use the returned instance for further operations as the save operation might have changed the entity instance completely.
    *

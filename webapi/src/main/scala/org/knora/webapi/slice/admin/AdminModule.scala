@@ -13,13 +13,12 @@ import org.knora.webapi.slice.admin.domain.AdminDomainModule
 import org.knora.webapi.slice.admin.repo.AdminRepoModule
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminModule {
 
   type Dependencies =
-    AppConfig & CacheService & IriService & OntologyRepo & PredicateObjectMapper & TriplestoreService
+    AppConfig & IriService & OntologyRepo & PredicateObjectMapper & TriplestoreService
 
   type Provided = AdminDomainModule.Provided
 

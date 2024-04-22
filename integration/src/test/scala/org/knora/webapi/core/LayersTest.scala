@@ -42,6 +42,9 @@ import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.JwtService
+import org.knora.webapi.slice.infrastructure.JwtServiceLive
 import org.knora.webapi.slice.infrastructure.api.ManagementEndpoints
 import org.knora.webapi.slice.infrastructure.api.ManagementRoutes
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -56,9 +59,6 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.slice.search.api.SearchEndpoints
-import org.knora.webapi.store.cache.CacheService
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
-import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.SipiService
@@ -93,7 +93,7 @@ object LayersTest {
       AssetPermissionsResponder &
       Authenticator &
       AuthorizationRestService &
-      CacheServiceRequestMessageHandler &
+      CacheManager &
       CardinalityHandler &
       ConstructResponseUtilV2 &
       DspIngestClient &
@@ -104,6 +104,7 @@ object LayersTest {
       HttpServer &
       IIIFRequestMessageHandler &
       InferenceOptimizationService &
+      InvalidTokenCache &
       IriConverter &
       JwtService &
       KnoraUserToUserConverter &
@@ -153,8 +154,6 @@ object LayersTest {
       AuthenticatorLive.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
-      CacheService.layer,
-      CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       ConstructResponseUtilV2Live.layer,
@@ -166,6 +165,7 @@ object LayersTest {
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
+      InvalidTokenCache.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,

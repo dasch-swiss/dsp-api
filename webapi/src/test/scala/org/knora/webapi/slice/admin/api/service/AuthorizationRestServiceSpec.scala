@@ -19,13 +19,16 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.SystemProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object AuthorizationRestServiceSpec extends ZIOSpecDefault {
@@ -131,16 +134,19 @@ object AuthorizationRestServiceSpec extends ZIOSpecDefault {
       },
     ),
   ).provide(
-    AuthorizationRestService.layer,
-    CacheService.layer,
-    KnoraProjectService.layer,
-    KnoraProjectRepoInMemory.layer,
-    KnoraGroupService.layer,
-    KnoraGroupRepoInMemory.layer,
-    IriService.layer,
-    IriConverter.layer,
-    TriplestoreServiceLive.layer,
-    StringFormatter.live,
     AppConfig.layer,
+    AuthorizationRestService.layer,
+    CacheManager.layer,
+    IriConverter.layer,
+    IriService.layer,
+    KnoraGroupRepoInMemory.layer,
+    KnoraGroupService.layer,
+    KnoraProjectRepoInMemory.layer,
+    KnoraProjectService.layer,
+    KnoraUserRepoLive.layer,
+    KnoraUserService.layer,
+    PasswordService.layer,
+    StringFormatter.live,
+    TriplestoreServiceLive.layer,
   )
 }

@@ -33,9 +33,9 @@ import java.io.IOException
 import scala.concurrent.duration.DurationInt
 
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.infrastructure.JwtService
 
 trait DspIngestClient {
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]

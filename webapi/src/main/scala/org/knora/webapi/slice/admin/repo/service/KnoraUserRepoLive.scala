@@ -36,14 +36,13 @@ import org.knora.webapi.slice.admin.repo.rdf.Vocabulary.KnoraAdmin._
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.store.cache.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraUserRepoLive(
   private val triplestore: TriplestoreService,
-  private val cacheService: CacheService,
   private val mapper: RdfEntityMapper[KnoraUser],
-) extends AbstractEntityRepo[KnoraUser, UserIri](triplestore, mapper)
+  private val entityCache: EntityCache[UserIri, KnoraUser],
+) extends CachingEntityRepo[KnoraUser, UserIri](triplestore, mapper, entityCache)
     with KnoraUserRepo {
 
   override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.User)
@@ -67,6 +66,10 @@ final case class KnoraUserRepoLive(
     findAllByTriplePattern(_.has(isInProject, Rdf.iri(projectIri.value)))
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProject.contains(projectIri)))
 
+  override def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
+    findAllByTriplePattern(_.has(isInGroup, Rdf.iri(groupIri.value)))
+      .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInGroup.contains(groupIri)))
+
   override def findByEmail(mail: Email): Task[Option[KnoraUser]] =
     findOneByTriplePattern(_.has(email, Rdf.literalOf(mail.value)))
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.email == mail)))
@@ -78,8 +81,8 @@ final case class KnoraUserRepoLive(
   override def save(user: KnoraUser): Task[KnoraUser] =
     ZIO
       .die(new IllegalArgumentException("Update not supported for built-in users"))
-      .when(KnoraUserRepo.builtIn.findOneBy(_.id == user.id).isDefined) *>
-      cacheService.invalidateUser(user.id) *> super.save(user)
+      .when(user.id.isBuiltInUser) *>
+      super.save(user)
 }
 
 object KnoraUserRepoLive {
@@ -131,5 +134,6 @@ object KnoraUserRepoLive {
         .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
   }
 
-  val layer = ZLayer.succeed(mapper) >>> ZLayer.derive[KnoraUserRepoLive]
+  val layer =
+    (ZLayer.succeed(mapper) >+> EntityCache.layer[UserIri, KnoraUser]("knoraUser")) >>> ZLayer.derive[KnoraUserRepoLive]
 }
