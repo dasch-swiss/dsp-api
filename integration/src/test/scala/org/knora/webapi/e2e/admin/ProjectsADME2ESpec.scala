@@ -20,9 +20,6 @@ import scala.concurrent.duration._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -45,12 +42,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
   private val projectShortname = SharedTestDataADM.imagesProject.shortname
   private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
-  // Directory path for generated client test data
-  private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
-
-  // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
@@ -68,16 +59,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val projects: Seq[Project] =
           AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[Project]]
         projects.size should be(6)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-projects-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return the information for a single project identified by iri" in {
@@ -86,16 +67,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return the information for a single project identified by shortname" in {
@@ -129,17 +100,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         settings.size should be(Some("!512,512"))
         settings.watermark should be(false)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-project-restricted-view-settings-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return the project's restricted view settings using its shortname" in {
@@ -194,17 +154,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
              |    "selfjoin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-project-with-custom-Iri-request",
-              fileExtension = "json",
-            ),
-            text = createProjectWithCustomIRIRequest,
-          ),
-        )
-
         val request = Post(
           baseApiUrl + s"/admin/projects",
           HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest),
@@ -223,18 +172,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
         result.description should be(Seq(StringLiteralV2.from("a project created with a custom IRI", Some("en"))))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-project-with-custom-Iri-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
-
       }
 
       "return 'BadRequest' if the supplied project IRI is not unique" in {
@@ -281,16 +218,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
              |    "selfjoin": false
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-project-request",
-              fileExtension = "json",
-            ),
-            text = createProjectRequest,
-          ),
-        )
         val request = Post(
           baseApiUrl + s"/admin/projects",
           HttpEntity(ContentTypes.`application/json`, createProjectRequest),
@@ -307,17 +234,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.logo should be(Some("/fu/bar/baz.jpg"))
         result.status should be(true)
         result.selfjoin should be(false)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
 
         newProjectIri.set(result.id)
       }
@@ -426,16 +342,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
              |    "selfjoin": true
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-project-request",
-              fileExtension = "json",
-            ),
-            text = updateProjectRequest,
-          ),
-        )
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
@@ -455,17 +361,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.logo should be(Some("/fu/bar/baz-updated.jpg"))
         result.status should be(true)
         result.selfjoin should be(true)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "UPDATE a project with multi-language description" in {
@@ -477,16 +372,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
              |                    ]
              |}""".stripMargin
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-project-with-multiple-description-request",
-              fileExtension = "json",
-            ),
-            text = updateProjectMultipleDescriptionRequest,
-          ),
-        )
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Put(
           baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
@@ -499,17 +384,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         result.description.size should be(2)
         result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("en")))
         result.description should contain(StringLiteralV2.from(value = "Test Project", language = Some("se")))
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-project-with-multiple-description-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "DELETE a project" in {
@@ -522,19 +396,7 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val result: Project = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[Project]
         result.status should be(false)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-project-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
-
     }
 
     "used to query members [FUNCTIONALITY]" should {
@@ -547,17 +409,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(4)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-project-members-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return all members of a project identified by shortname" in {
@@ -591,16 +442,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val members: Seq[User] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[User]]
         members.size should be(2)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-project-admin-members-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return all admin members of a project identified by shortname" in {
@@ -685,16 +526,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords.size should be(21)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-keywords-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return all keywords for a single project" in {
@@ -707,16 +538,6 @@ class ProjectsADME2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
         keywords should be(SharedTestDataADM.incunabulaProject.keywords)
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "get-project-keywords-response",
-              fileExtension = "json",
-            ),
-            text = responseToString(response),
-          ),
-        )
       }
 
       "return empty list for a project without keywords" in {
