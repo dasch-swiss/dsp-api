@@ -33,7 +33,7 @@ final case class GroupService(
 
   private def toGroups(knoraGroups: Chunk[KnoraGroup]): Task[Chunk[Group]] = ZIO.foreach(knoraGroups)(toGroup)
 
-  private[service] def toGroup(knoraGroup: KnoraGroup): Task[Group] =
+  def toGroup(knoraGroup: KnoraGroup): Task[Group] =
     for {
       project <- knoraGroup.belongsToProject.map(projectService.findById).getOrElse(ZIO.none)
     } yield Group(
@@ -60,9 +60,6 @@ final case class GroupService(
 
   def updateGroup(groupToUpdate: Group, request: GroupUpdateRequest): Task[Group] =
     knoraGroupService.updateGroup(toKnoraGroup(groupToUpdate), request).flatMap(toGroup)
-
-  def updateGroupStatus(groupToUpdate: Group, status: GroupStatus): Task[Group] =
-    knoraGroupService.updateGroupStatus(toKnoraGroup(groupToUpdate), status).flatMap(toGroup)
 }
 
 object GroupService {

@@ -16,8 +16,10 @@ import org.knora.webapi.slice.admin.api.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.admin.api.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
@@ -26,6 +28,7 @@ final case class GroupRestService(
   auth: AuthorizationRestService,
   format: KnoraResponseRenderer,
   groupService: GroupService,
+  knoraGroupService: KnoraGroupService,
   knoraProjectService: KnoraProjectService,
   responder: GroupsResponderADM,
 ) {
@@ -75,19 +78,23 @@ final case class GroupRestService(
 
   def putGroupStatus(iri: GroupIri, request: GroupStatusUpdateRequest, user: User): Task[GroupGetResponseADM] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      groupToUpdate <- groupService
-                         .findById(iri)
-                         .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
-      internal <- groupService.updateGroupStatus(groupToUpdate, request.status).map(GroupGetResponseADM.apply)
+      groupAndProject <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      (group, _)       = groupAndProject
+      internal <- knoraGroupService
+                    .updateGroupStatus(group, request.status)
+                    .flatMap(groupService.toGroup)
+                    .map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
 
   def deleteGroup(iri: GroupIri, user: User): Task[GroupGetResponseADM] =
     for {
-      _        <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      uuid     <- Random.nextUUID
-      internal <- responder.deleteGroup(iri, uuid)
+      groupAndProject <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
+      (group, _)       = groupAndProject
+      internal <- knoraGroupService
+                    .updateGroupStatus(group, GroupStatus.inactive)
+                    .flatMap(groupService.toGroup)
+                    .map(GroupGetResponseADM.apply)
       external <- format.toExternalADM(internal)
     } yield external
 }
