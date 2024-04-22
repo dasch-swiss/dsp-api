@@ -70,7 +70,7 @@ trait JwtService {
    * @param token  the JWT.
    * @return a [[Boolean]].
    */
-  def validateToken(token: String): Task[Boolean]
+  def isTokenValid(token: String): Boolean
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
@@ -159,8 +159,7 @@ final case class JwtServiceLive(
    * @param token  the JWT.
    * @return a [[Boolean]].
    */
-  override def validateToken(token: String): Task[Boolean] =
-    ZIO.succeed(!cache.contains(token) && decodeToken(token).isDefined)
+  override def isTokenValid(token: String): Boolean = !cache.contains(token) && decodeToken(token).isDefined
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
