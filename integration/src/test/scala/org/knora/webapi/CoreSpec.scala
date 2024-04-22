@@ -25,9 +25,9 @@ import org.knora.webapi.core.AppServer
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec

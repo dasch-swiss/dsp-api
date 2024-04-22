@@ -35,6 +35,7 @@ import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.infrastructure.JwtService
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
