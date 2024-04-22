@@ -15,6 +15,7 @@ import zio.RIO
 import zio.ZIO
 import zio.test.Gen
 import zio.test.Spec
+import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
@@ -37,7 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.rdf.Vocabulary
-import org.knora.webapi.store.cache.CacheService
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
@@ -190,7 +191,7 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
       test("should create and find user") {
         for {
           savedUser <- KnoraUserRepo(_.save(testUser))
-          foundUser <- KnoraUserRepo(_.findById(savedUser.id)).someOrFail(new Exception("User not found"))
+          foundUser <- KnoraUserRepo(_.findById(savedUser.id)).someOrFailException
         } yield assertTrue(savedUser == testUser, foundUser == testUser)
       },
       test("should update an existing user's username find user with new username") {
@@ -198,38 +199,35 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _ <- KnoraUserRepo(_.save(testUser)) // create the user
           updated <-
             KnoraUserRepo(_.save(testUser.copy(username = Username.unsafeFrom("newUsername")))) // update the username
-          updatedUser <- KnoraUserRepo(_.findByUsername(updated.username)).someOrFail(new Exception("User not found"))
+          updatedUser <- KnoraUserRepo(_.findByUsername(updated.username)).someOrFailException
         } yield assertTrue(updatedUser.username == Username.unsafeFrom("newUsername"))
       },
       test("should update an existing user isInProject ") {
         for {
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id))))
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
-        } yield assertTrue(updatedUser.isInProject == Chunk(TestDataFactory.someProject.id))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
+          userUpdate   = testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id))
+          _           <- KnoraUserRepo(_.save(userUpdate))
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
+        } yield assertTrue(updatedUser == userUpdate)
       },
       test("should update an existing user isInProject and remove them") {
         for {
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
-          _ <- TestTripleStore.printDataset("After creating user: ")
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id))))
-          _ <- TestTripleStore.printDataset("After adding isInProject: ")
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProject = Chunk.empty)))
-          _ <- TestTripleStore.printDataset("After removing isInProject: ")
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
+          _           <- TestTripleStore.printDataset("After creating user: ")
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProject = Chunk(TestDataFactory.someProject.id))))
+          _           <- TestTripleStore.printDataset("After adding isInProject: ")
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProject = Chunk.empty)))
+          _           <- TestTripleStore.printDataset("After removing isInProject: ")
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
         } yield assertTrue(updatedUser.isInProject.isEmpty)
       },
       test("should update an existing user isInProjectAdminGroup") {
         for {
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
-          _ <- KnoraUserRepo(
-                 _.save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id))),
-               )
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
-        } yield assertTrue(updatedUser.isInProjectAdminGroup == Chunk(TestDataFactory.someProject.id))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
+          userUpdate   = testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id))
+          _           <- KnoraUserRepo(_.save(userUpdate))
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
+        } yield assertTrue(updatedUser == userUpdate)
       },
       test("should update an existing user isInProjectAdminGroup and remove them") {
         for {
@@ -237,28 +235,25 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           _ <- KnoraUserRepo(
                  _.save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk(TestDataFactory.someProject.id))),
                )
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk.empty)))
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInProjectAdminGroup = Chunk.empty)))
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
         } yield assertTrue(updatedUser.isInProjectAdminGroup.isEmpty)
       },
       test("should update an existing user isInGroup ") {
         val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")
         for {
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri))))
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri))))
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
         } yield assertTrue(updatedUser.isInGroup == Chunk(groupIri))
       },
       test("should update an existing user isInGroup and remove them") {
         val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/1234")
         for {
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri))))
-          _ <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk.empty)))
-          updatedUser <-
-            KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFail(new Exception("User not found"))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups)) // create the user
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk(groupIri))))
+          _           <- KnoraUserRepo(_.save(testUserWithoutAnyGroups.copy(isInGroup = Chunk.empty)))
+          updatedUser <- KnoraUserRepo(_.findById(testUserWithoutAnyGroups.id)).someOrFailException
         } yield assertTrue(updatedUser.isInGroup.isEmpty)
       },
       test("die for built in users") {
@@ -268,7 +263,14 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(exit.isFailure)
         }
       },
-    ),
+      test("after save should retrieve user from cache") {
+        for {
+          _        <- KnoraUserRepo(_.save(testUser))
+          _        <- TestTripleStore.setEmptyDataset()
+          userById <- KnoraUserRepo(_.findById(testUser.id)).someOrFailException
+        } yield assertTrue(userById == testUser)
+      },
+    ) @@ TestAspect.before(ZIO.serviceWith[CacheManager](_.clearAll())) @@ TestAspect.sequential,
     suite("find members")(
       test("find project members given a project should return all members") {
         for {
@@ -297,8 +299,8 @@ object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
     ),
   ).provide(
     KnoraUserRepoLive.layer,
+    CacheManager.layer,
     TriplestoreServiceInMemory.emptyLayer,
     StringFormatter.test,
-    CacheService.layer,
   )
 }

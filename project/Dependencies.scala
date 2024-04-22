@@ -84,7 +84,7 @@ object Dependencies {
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.78"
 
   // caching
-  val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
+  val ehcache = "org.ehcache" % "ehcache" % "3.10.8"
 
   // other
   val diff           = "com.sksamuel.diff" % "diff"                % "1.1.11"

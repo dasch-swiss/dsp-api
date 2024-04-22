@@ -30,24 +30,15 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheKey
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheName
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.util.cache.CacheUtil
 
 object OntologyCache {
   // The global ontology cache lock. This is needed because every ontology update replaces the whole ontology cache
   // (because definitions in one ontology can refer to definitions in another ontology). Without a global lock,
   // concurrent updates (even to different ontologies) could overwrite each other.
   val ONTOLOGY_CACHE_LOCK_IRI = "http://rdfh.ch/ontologies"
-
-  // The name of the ontology cache.
-  val OntologyCacheName = "ontologyCache"
-
-  // The cache key under which cached ontology data is stored.
-  val OntologyCacheKey = "ontologyCacheData"
 
   /**
    * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
@@ -485,15 +476,16 @@ trait OntologyCache {
   ): Task[OntologyCacheData]
 }
 
-final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val stringFormatter: StringFormatter)
-    extends OntologyCache
+final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef: Ref[OntologyCacheData])(implicit
+  val stringFormatter: StringFormatter,
+) extends OntologyCache
     with LazyLogging {
 
   /**
    * Loads and caches all ontology information.
    *
    * @param requestingUser the user making the request.
-   * @return a [[SuccessResponseV2]].
+   * @return [[Unit]]
    */
   override def loadOntologies(requestingUser: User): Task[Unit] =
     for {
@@ -505,12 +497,8 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
           )
 
       // Get all ontology metadata.
-      allOntologyMetadataSparql <- ZIO.succeed(
-                                     sparql.v2.txt
-                                       .getAllOntologyMetadata(),
-                                   )
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
-      allOntologyMetadataResponse <- triplestore.query(Select(allOntologyMetadataSparql))
+      allOntologyMetadataResponse <- triplestore.query(Select(sparql.v2.txt.getAllOntologyMetadata()))
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata =
@@ -887,33 +875,15 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
     OntologyCache.checkReferencesBetweenOntologies(ontologyCacheData)
 
     // Update the cache.
-    storeCacheData(ontologyCacheData)
     ontologyCacheData
-  }
-
-  /**
-   * Updates the ontology cache.
-   *
-   * @param cacheData the updated data to be cached.
-   */
-  private def storeCacheData(cacheData: OntologyCacheData): Unit =
-    CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
+  }.tap(cacheDataRef.set)
 
   /**
    * Gets the ontology data from the cache.
    *
    * @return an [[OntologyCacheData]]
    */
-  override def getCacheData: Task[OntologyCacheData] =
-    ZIO.attempt {
-      CacheUtil.get[OntologyCacheData](cacheName = OntologyCacheName, key = OntologyCacheKey) match {
-        case Some(data) => data
-        case None =>
-          throw ApplicationCacheException(
-            s"The Knora API server has not loaded any ontologies, perhaps because of an invalid ontology",
-          )
-      }
-    }
+  override def getCacheData: Task[OntologyCacheData] = cacheDataRef.get
 
   /**
    * Given the IRI of a base class, updates inherited cardinalities in subclasses.
@@ -1004,14 +974,12 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri,
   ): Task[OntologyCacheData] =
-    for {
-      ontologyCache        <- getCacheData
-      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData  = OntologyCache.make(newOntologies)
-      updatedCacheData      = updateSubClasses(updatedClassIri, newOntologyCacheData)
-      _                     = storeCacheData(updatedCacheData)
-      updatedOntologyCache <- getCacheData
-    } yield updatedOntologyCache
+    cacheDataRef.updateAndGet { data =>
+      updateSubClasses(
+        updatedClassIri,
+        OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)),
+      )
+    }
 
   /**
    * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
@@ -1024,13 +992,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] =
-    for {
-      ontologyCache        <- getCacheData
-      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData  = OntologyCache.make(newOntologies)
-      _                     = storeCacheData(newOntologyCacheData)
-      updatedOntologyCache <- getCacheData
-    } yield updatedOntologyCache
+    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
 
   /**
    * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
@@ -1043,13 +1005,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
   ): Task[OntologyCacheData] =
-    for {
-      ontologyCache        <- getCacheData
-      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      updatedCacheData      = ontologyCache.copy(ontologies = newOntologies)
-      _                     = storeCacheData(updatedCacheData)
-      updatedOntologyCache <- getCacheData
-    } yield updatedOntologyCache
+    cacheDataRef.updateAndGet(data => data.copy(data.ontologies + (updatedOntologyIri -> updatedOntologyData)))
 
   /**
    * Deletes an ontology from the cache.
@@ -1058,15 +1014,9 @@ final case class OntologyCacheLive(triplestore: TriplestoreService)(implicit val
    * @return the updated cache data
    */
   override def deleteOntology(ontologyIri: SmartIri): Task[OntologyCacheData] =
-    for {
-      ontologyCache        <- getCacheData
-      newOntologies         = ontologyCache.ontologies - ontologyIri
-      newOntologyCacheData  = OntologyCache.make(newOntologies)
-      _                     = storeCacheData(newOntologyCacheData)
-      updatedOntologyCache <- getCacheData
-    } yield updatedOntologyCache
+    cacheDataRef.updateAndGet(data => OntologyCache.make(data.ontologies - ontologyIri))
 }
 
 object OntologyCacheLive {
-  val layer = ZLayer.derive[OntologyCacheLive]
+  val layer = ZLayer.fromZIO(Ref.make(OntologyCacheData.Empty)) >>> ZLayer.derive[OntologyCacheLive]
 }

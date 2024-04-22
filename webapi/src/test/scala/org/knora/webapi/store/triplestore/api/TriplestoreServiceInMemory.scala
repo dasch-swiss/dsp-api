@@ -69,6 +69,9 @@ object TestTripleStore {
   def setDataset(dataset: Dataset): ZIO[TestTripleStore, Throwable, Unit] =
     ZIO.serviceWithZIO[TestTripleStore](_.setDataset(dataset))
 
+  def setEmptyDataset() =
+    ZIO.serviceWithZIO[TestTripleStore](_.setDataset(TDB2Factory.createDataset()))
+
   def getDataset: RIO[TestTripleStore, Dataset] =
     ZIO.serviceWithZIO[TestTripleStore](_.getDataset)
 

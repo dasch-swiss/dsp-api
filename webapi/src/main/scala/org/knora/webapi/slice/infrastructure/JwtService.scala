@@ -31,7 +31,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.routing.InvalidTokenCache
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.Administrative
@@ -43,7 +43,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.infrastructure.Scope
 import org.knora.webapi.slice.infrastructure.ScopeValue
 import org.knora.webapi.slice.infrastructure.ScopeValue.Write
-import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)
 
@@ -86,6 +85,7 @@ final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
   private val dspIngestConfig: DspIngestConfig,
   private val knoraProjectService: KnoraProjectService,
+  private val cache: InvalidTokenCache,
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -160,13 +160,7 @@ final case class JwtServiceLive(
    * @return a [[Boolean]].
    */
   override def validateToken(token: String): Task[Boolean] =
-    ZIO.attempt(if (CacheUtil.get[User](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
-      // token invalidated so no need to decode
-      logger.debug("validateToken - token found in invalidation cache, so not valid")
-      false
-    } else {
-      decodeToken(token).isDefined
-    })
+    ZIO.succeed(!cache.contains(token) && decodeToken(token).isDefined)
 
   /**
    * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
